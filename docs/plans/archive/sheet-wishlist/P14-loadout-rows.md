@@ -1,6 +1,6 @@
 # Work order P14: Loadout rows (vehicles, and a custom row that folds)
 
-**Plan:** [`../sheet-wishlist.md`](../sheet-wishlist.md) §3, row P14. **Wishes:** [W91](../../WISHLIST.md) (vehicles you can buy and own, Powered Armor among them; first cut) and [W70](../../WISHLIST.md) (a custom item the player is done writing reads like the catalog's). **The book:** `0460` Gear, *Vehicles, Powered Armor & Mech Suits*. **Deighton's rulings** of 2026-10-10 (`reference/rulings-2026-10-10.md`), Q6 and Q16. Decisions 68, 96, 100, 118, 120, 121, 124, 134, 135.
+**Plan:** [`../sheet-wishlist.md`](../sheet-wishlist.md) §3, row P14. **Wishes:** [W91](../../../WISHLIST.md) (vehicles you can buy and own, Powered Armor among them; first cut) and [W70](../../../WISHLIST.md) (a custom item the player is done writing reads like the catalog's). **The book:** `0460` Gear, *Vehicles, Powered Armor & Mech Suits*. **Deighton's rulings** of 2026-10-10 (`reference/rulings-2026-10-10.md`), Q6 and Q16. Decisions 68, 96, 100, 118, 120, 121, 124, 134, 135.
 
 **Scope.**
 - **W91, first cut:** a vehicle catalog in Loadout's picker, and an owned vehicle on Loadout that reads like a catalog line. It covers the Grounders, the Jumpers and Powered Armor, all from `0460`'s tables. Nothing computes a vehicle's damage yet.
@@ -12,7 +12,7 @@ The two share Loadout and its catalog code, and nothing else.
 
 **W70 is split out** (Ken, 2026-10-23) and built on its own as a Fix, app 0.54.1, to this order's PQ9, PQ10 and §9; what's left here is W91.
 
-**Answered.** Deighton's rulings are in [`reference/rulings-2026-10-23.md`](../../reference/rulings-2026-10-23.md), round one (SH1–SH8) and round two (the follow-ups).
+**Answered.** Deighton's rulings are in [`reference/rulings-2026-10-23.md`](../../../reference/rulings-2026-10-23.md), round one (SH1–SH8) and round two (the follow-ups).
 - **PQ1, PQ2, PQ4, PQ5, PQ6, PQ7, PQ8: Default**, by Deighton (SH1, SH2, SH4, SH8, SH5, SH6, SH7).
 - **PQ9 and PQ10 (W70): Default**, by Ken, 2026-10-21: folding is view state, and all three custom kinds fold. Ken on the catalogs: "vehicles or mechs feel like they should be their own category". The defaults already do that: Vehicles is its own Loadout section and catalog kind, and mechs would join as a section of their own.
 
@@ -32,7 +32,7 @@ The two share Loadout and its catalog code, and nothing else.
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
-**Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../WORK-ORDERS.md). Ken starts **P14 build** once the PQs are answered, then a fresh reviewer once the PR is open.
+**Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../../WORK-ORDERS.md). Ken starts **P14 build** once the PQs are answered, then a fresh reviewer once the PR is open.
 
 **Carried over from P21's review.** Each lesson below is applied in this order where it says.
 1. **A field's readers include the ones that aren't about display.** P21 put a flag on Field Medic to show a note, and the flag also stopped IP selling it (`advantageBarred`, Decision 227). The order's sweep had listed only `flagHtml`. **Applied here:** §5 lists every reader of the loadout lists and of the `kind` strings, including the ones that fall through to a default. `catalogGroups` and `loName` both treat any unknown kind as armor. No entry in this order is `flagged`; if one needs to be, grep `flagged` and see what it bars before setting it.

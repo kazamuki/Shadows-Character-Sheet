@@ -15,7 +15,7 @@
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
-**Cadence:** the two-session loop in [`../gm-mode/README.md`](../gm-mode/README.md) (*The cadence*). Ken starts **P9a build** (Sonnet) and, once the PR is open, a fresh reviewer (Opus).
+**Cadence:** the two-session loop in [`../gm-mode/README.md`](../../gm-mode/README.md) (*The cadence*). Ken starts **P9a build** (Sonnet) and, once the PR is open, a fresh reviewer (Opus).
 
 **Carried over from P8b's review:**
 - **The order's miss.** The sweep listed where the HP pill's number shows from memory. It missed two places that show the same number: the popover the pill opens, and the pinned drawer that hides the pill. **Applied here:** every row of §5 was found by grepping the field's readers. Three turned up that a topic read wouldn't have found:

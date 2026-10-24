@@ -20,7 +20,7 @@ That is the inventory's (b) and (c) Skill-row rows: **37 effects**. On top of th
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
-**Cadence:** the two-session loop in [`../gm-mode/README.md`](../gm-mode/README.md). P20 has merged, and the pre-flight below is the re-run. Ken starts **P21 build**, then a fresh reviewer once the PR is open.
+**Cadence:** the two-session loop in [`../gm-mode/README.md`](../../gm-mode/README.md). P20 has merged, and the pre-flight below is the re-run. Ken starts **P21 build**, then a fresh reviewer once the PR is open.
 
 **Carried over from P19's review:**
 - **The miss is this order.** P19's sweep found every reader of `checkBonus`, but its scope was "Advantages and Disadvantages", and nobody asked what else carries the same effects. The review asked, and the inventory found 37. **Applied here:** §5 lists every source the sheet stores an archetype effect in, and says for each one whether `traitRows` reads it.
@@ -195,7 +195,7 @@ visibilityChecks "{mods} on every check"                                ("+1 in 
 - **Anything that needs a saved pick:** Skill Paragon, God Tier, Grace Under Fire, Weapon Expert (a Major's Skill or weapon), Aspect of the Beast (the spirit), Battle Hardened (the immunity). One later order, with a schema bump. God Tier waits on E8 as well.
 - **Weapon and armor rows** (Tuned Edge, Custom Fit, the Signature line, the natural-weapon powers), **stats while a power runs**, **movement**, **Essence checks**, **SFR and RoU numbers**, **magic** (Tremor, Slow Tide), **Luck** (Stunt Driver's Lucky while piloting). The inventory's (c) "Elsewhere", grouped for later orders.
 - **P20's areas**, built by P20a and P20b (Decisions 235, 236): Arcane Fortitude's TOL, SAN, the stat caps, Pain, rest and the trait half of Take a hit. The rider is the one exception, folded in by Ken.
-- **The power half of Take a hit and healing has no order** (found re-running the pre-flight). The inventory sent Odin's Aegis, Null Field, Red Mist, Spectral Veil's immunity, Elemental Blood, Silverscar, Battle Hardened, Regeneration, Bone and Sinew and Vitality Surge to P20 (c44–c53). P20b's order passed them on: *"P21 … owns the reductions that run with a power"*. This order leaves them to "later orders". Nothing here builds them. **Ken parked them as [W132](../../WISHLIST.md)** (2026-10-21), outside this plan, so the plan can close.
+- **The power half of Take a hit and healing has no order** (found re-running the pre-flight). The inventory sent Odin's Aegis, Null Field, Red Mist, Spectral Veil's immunity, Elemental Blood, Silverscar, Battle Hardened, Regeneration, Bone and Sinew and Vitality Surge to P20 (c44–c53). P20b's order passed them on: *"P21 … owns the reductions that run with a power"*. This order leaves them to "later orders". Nothing here builds them. **Ken parked them as [W132](../../../WISHLIST.md)** (2026-10-21), outside this plan, so the plan can close.
 - **Adaptive Skeleton's Natural Armor** (b21): `naturalArmor` would need a `starterPower` scan. A one-line follow-up, but not a Skill row.
 - **Ruling on** Specialist, Make My Own Luck, kicker stacking or Concierge's appraisal: the build opens flags FN–FN+2 and stubs them (§2a), never more. **Aberrations "as" Advantages** (PQ14) and **Life Sense's old Skill names** (PQ8) stay out.
 - **A "running" state for powers** (PQ2, W110).

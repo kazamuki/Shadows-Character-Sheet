@@ -1,6 +1,6 @@
 # Work order P20b: Numbers in play
 
-**Plan:** [`../sheet-wishlist.md`](../sheet-wishlist.md) §3, row P20b (P20, split). **Source:** the effects sign-off, [`../../reference/rulings-2026-10-16.md`](../../reference/rulings-2026-10-16.md) (*Pain Levels*, *Healing*, *Take a hit*, all unanimous; Scrapper's text, Deighton). Decisions 96, 99, 104, 110, 202, 213, 219, 220, 223, 231.
+**Plan:** [`../sheet-wishlist.md`](../sheet-wishlist.md) §3, row P20b (P20, split). **Source:** the effects sign-off, [`../../reference/rulings-2026-10-16.md`](../../../reference/rulings-2026-10-16.md) (*Pain Levels*, *Healing*, *Take a hit*, all unanimous; Scrapper's text, Deighton). Decisions 96, 99, 104, 110, 202, 213, 219, 220, 223, 231.
 
 **Scope.** The numbers a trait changes while the character is played, which today are table rules:
 - **Pain:** Terminal Disease's "always at Pain Level 1" adds, then Pain Tolerance takes 1 off a rank.
@@ -13,7 +13,7 @@
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
-**Cadence:** the two-session loop in [`../gm-mode/README.md`](../gm-mode/README.md). Ken starts **P20b build**, then a fresh reviewer once the PR is open.
+**Cadence:** the two-session loop in [`../gm-mode/README.md`](../../gm-mode/README.md). Ken starts **P20b build**, then a fresh reviewer once the PR is open.
 
 **Amended 2026-10-17 after P20a's review** (PR #216). That review found two things P20a's sweep had missed: what a value is made of, and text that restates a rule. Both are now in §5 as **"Also read"** rows, with a P20b 9 test and a close-out line for characters that are already locked.
 

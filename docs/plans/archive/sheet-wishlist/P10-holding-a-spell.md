@@ -14,7 +14,7 @@ Opens **one flag** (the check's TN and TH, the next free F-number), unless Deigh
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
-**Cadence:** the two-session loop in [`../gm-mode/README.md`](../gm-mode/README.md) (*The cadence*). Ken starts **P10 build** (Sonnet) and, once the PR is open, a fresh reviewer (Opus).
+**Cadence:** the two-session loop in [`../gm-mode/README.md`](../../gm-mode/README.md) (*The cadence*). Ken starts **P10 build** (Sonnet) and, once the PR is open, a fresh reviewer (Opus).
 
 **Carried over from P17's review:**
 - **The order's miss:** §5 named `archetypePowers`' own readers but not *their* readers (`naturalArmor`, `archetypeWeapons`, `powerCpState`, the print sheet). All four were fine, found only by the review's grep. **Applied here:** §5 goes one level further: for each function P10 changes, the readers of the readers that render something.

@@ -11,7 +11,7 @@
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
-**Cadence:** the two-session loop in [`../gm-mode/README.md`](../gm-mode/README.md) (*The cadence*). Ken starts **P11 build** (Sonnet) and, once the PR is open, a fresh reviewer (Opus).
+**Cadence:** the two-session loop in [`../gm-mode/README.md`](../../gm-mode/README.md) (*The cadence*). Ken starts **P11 build** (Sonnet) and, once the PR is open, a fresh reviewer (Opus).
 
 **Carried over from P10's review:**
 - **The order's miss:** the cap equalled the pool, so a full hold rolled 0 dice, and the sheet promised an exploding 10 from nothing. Neither the order nor the build had done the arithmetic at the edges. **Applied here:** §9 pins each edge as a test: a turn count exactly at RoU, one past it, a pool of 0, MOB 1 (Jump rounds to 0), and a Custom pool with no max.

@@ -141,9 +141,9 @@ rev 9's `C1`–`C3` are still forward notes.
 
 **Next is Ken's pick**, each built through a work order (`WORK-ORDERS.md`):
 - **Another of `plans/gm-mode.md`'s *Still to build*** (S7, factions and clocks, is built).
-- **The player sheet's plan** (`plans/sheet-wishlist.md`) has only P14 (loadout
-  rows) and P15 (worn gear modifiers) left, shelved at its end until Deighton
-  finishes the vehicle follow-ups. P16, the Character tab's layout, is built.
+- **The player sheet's plan** (`plans/archive/sheet-wishlist.md`) is closed (2026-10-24): P1–P21 are built. Its
+  last two, P14 (loadout rows) and P15 (worn gear modifiers), move to a new
+  vehicles-and-gear plan, being drafted; both still wait on Deighton's vehicle follow-ups.
 - **W90**, cybernetics: six questions before a plan.
 
 **Ken alone:** F12 and F32, W38's plan (`plans/two-tabs-one-character.md`,
