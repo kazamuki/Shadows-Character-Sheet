@@ -412,7 +412,8 @@ test("every open wish says which plan covers it, and the plans agree (WISHLIST.m
   let rows = 0;
   for (const file of walk("docs/plans")) {
     const rel = file.slice("docs/".length), home = rel.replace(/\.md$/, "/");
-    for (const [row, order] of read(file).matchAll(/^\| \**([PS]\d+[a-z]?)\** \|.*\|$/gm)) {
+    // A plan's session letter: S is GM mode's, L loadout-and-gear's (P was the closed sheet-wishlist's).
+    for (const [row, order] of read(file).matchAll(/^\| \**([PSL]\d+[a-z]?)\** \|.*\|$/gm)) {
       const cells = row.split(" | ");
       if (/Merged|Built/.test(cells[cells.length - 1])) continue;
       rows++;

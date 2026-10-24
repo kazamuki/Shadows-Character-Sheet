@@ -83,7 +83,9 @@ phone's Health card below 30% of the screen. A new control inherits those
 floors rather than re-arguing them.
 
 **W55 — Sticky notes on the Notes tab.** *Ken · 💡*\
-**Plan:** set aside by [sheet-wishlist §4](plans/sheet-wishlist.md): an idea, not shaped
+**Plan:** none yet
+
+*Set aside by the player sheet's plan when it closed (2026-10-24, `plans/archive/sheet-wishlist.md` §4): an idea, not shaped.*
 
 Small notes a player pins as cards at the top of Notes (a contact's number,
 a debt, tonight's lead), with the free-form page still below them. A note is
@@ -93,7 +95,9 @@ locking a power's words (Decision 154), whose Notes field stays free.
 derived from anything.
 
 **W100 — Distances in meters or feet.** *Ken · 💡 · Fix (UI) · raised 2026-10-10 with F31's ruling*\
-**Plan:** set aside by [sheet-wishlist §4](plans/sheet-wishlist.md): distances are text today, so it starts as data work
+**Plan:** none yet
+
+*Set aside by the player sheet's plan when it closed (2026-10-24, `plans/archive/sheet-wishlist.md` §4): distances are text today, so it starts as data work.*
 
 Deighton thinks in feet (the mono-whip reaches "5 or 6 feet"), the sheet in
 meters. Ken's idea: a metric/imperial switch, so a table that plays in feet
@@ -141,7 +145,7 @@ On a phone, the Main tab's Health card starts 35–37% of the way down the scree
 ### Rules in play: powers, rounds, encounters, Sanity
 
 **W107 — An unarmed strike line, and Death Touch's AP on it.** *Ken, with Claude · 💡 · Content (if it follows Iron Shirt) · raised 2026-10-15*\
-**Plan:** none yet
+**Plan:** [loadout-and-gear L3](plans/loadout-and-gear.md) (no order yet)
 
 Raised reviewing P8a. True Warrior's Power Style lists **Death Touch
 [Chi 4]: "Martial Arts attacks are Armor Piercing when not using melee
@@ -195,7 +199,7 @@ P20b taught Take a hit and Rest what a held **trait** does (Scrapper, Giant, Thi
 - **Healing:** Regeneration ("While transformed, regenerate 1 HL per round") and Bone and Sinew (2), Vitality Surge (rank HL a round at 2 SFR each), Blood of Valhalla (rank HL a round, never Withering), Quick Clot (Bleeding ends at the next Reset).
 - **A neighbour:** Adaptive Skeleton's Natural Armor 2 while it runs (inventory b21), which `naturalArmor` misses because it doesn't scan a starter power (P21 §7).
 
-*To respect:* P20b's `meleeTaken` stage (Decision 236: after Natural Armor, before Wither Ward) is where a reduction joins the hit. Most rows need to know a power is **running**, which nothing stores yet (W110, P21's PQ2). Battle Hardened and Elemental Blood need a **saved pick** (a schema bump, with P21 §7's Skill Paragon and Weapon Expert group). Silverscar needs the hit to know **silver**, which `damageTypes` doesn't say. Regeneration reads the Form (Decision 195). Likely two orders: the hit, then healing. Each row's sentence is in `plans/sheet-wishlist/P21-inventory.md` (c44–c53, b21).
+*To respect:* P20b's `meleeTaken` stage (Decision 236: after Natural Armor, before Wither Ward) is where a reduction joins the hit. Most rows need to know a power is **running**, which nothing stores yet (W110, P21's PQ2). Battle Hardened and Elemental Blood need a **saved pick** (a schema bump, with P21 §7's Skill Paragon and Weapon Expert group). Silverscar needs the hit to know **silver**, which `damageTypes` doesn't say. Regeneration reads the Form (Decision 195). Likely two orders: the hit, then healing. Each row's sentence is in `plans/archive/sheet-wishlist/P21-inventory.md` (c44–c53, b21).
 
 **W134 — Sanity Loss and Recovery on the sheet.** *Claude, from the 2026-10-22 mirror · 💡 · Rule or shape · raised 2026-10-22*\
 **Plan:** none yet · **Goes with:** W90
@@ -272,7 +276,7 @@ on P20's stat caps: ask before P20 is written.
 ### Loadout & catalog
 
 **W69 — Gear that changes what you can do while you wear it.** *Ken, from Deighton · ⏭ · Rule or shape · raised 2026-10-08 · answered by Deighton 2026-10-10*\
-**Plan:** [sheet-wishlist P15](plans/sheet-wishlist.md), after P14 (no order yet) · **Goes with:** W91
+**Plan:** [loadout-and-gear L1, L2 and L6](plans/loadout-and-gear.md) (no orders yet) · **Goes with:** W91
 
 Deighton's ask: powered armor worn over the body should show its bonuses where
 they land. Armor giving +5 to BOD skills and damage should raise Melee and
@@ -308,7 +312,7 @@ and caps (`ipCost`, `canBoost`) must keep reading the rank without the worn
 bonus, or taking armor off would change what the next rank costs.
 
 **W91 — Vehicles you can buy and own, Powered Armor among them.** *Ken, from Brogan · 🔎 · Content, then Rule or shape · raised 2026-10-10*\
-**Plan:** [sheet-wishlist P14](plans/sheet-wishlist/P14-loadout-rows.md) · **Goes with:** W69, W90
+**Plan:** [loadout-and-gear L5](plans/loadout-and-gear/L5-vehicles.md), shelved on Deighton (was sheet-wishlist's P14) · **Goes with:** W69, W90
 
 There are no vehicles in the app: only the Pilot skill and Machindo. `0460`
 has the chapter: **Grounders** and **Jumpers** (Seats, PROT, RES, INT, Speed,
@@ -327,7 +331,7 @@ entry's. One MD of Massive damage is 10 Integrity off it, or 1 Health Level to
 the wearer once it gets through (Q6).
 
 **W108 — Magazines sized by the weapon, and combining part-used ones.** *Ken · 💡 · Rule or shape · raised 2026-10-15 with P9b's PQ3 · wants thinking time*\
-**Plan:** none yet
+**Plan:** set aside by [loadout-and-gear §4](plans/loadout-and-gear.md): starts with Ken's CRB change to how magazines fit
 
 Gear sells rounds by the magazine and Weapon Type, so one Rifle Rounds magazine fills a
 3+1 VR-50 "Verdict" or a 30+1 AR-9X (Decision 145). P9b keeps a part-used magazine
@@ -345,13 +349,22 @@ first: what size a combined magazine is; whether specialty rounds can be combine
 with standard ones (they can't share a magazine's tags); and whether it costs an
 action at the table. P9b leaves merging out of scope (its §7).
 
+**W136 — A Major or a power changes one weapon or armor row.** *Claude, from closing the sheet-wishlist plan · 💡 · Rule or shape · raised 2026-10-24*\
+**Plan:** [loadout-and-gear L4](plans/loadout-and-gear.md) (no order yet)
+
+P21's inventory listed these as "later orders" (`plans/archive/sheet-wishlist/P21-inventory.md`, c20 and c22–c34), and the plan closed without them, so nothing covered them. Each is printed on its card and the player does it by hand on the weapon or armor:
+- **A Major on one row the player picks:** Tuned Edge ("it gains +1 to damage", that weapon only), Custom Fit (that armor's damage reduction die a step up, d4 to d6, never past d12), Signature, Iconic and Legendary Weapon (Mod Slots and free Upgrades on one weapon), Weapon Expert ("+1d4 kicker to combat rolls using it; if a +1d4 already applies, it increases to +1d6").
+- **A power on natural weapons or melee, while it runs:** Rend and Tear, Bone Spines, Monstrous Maw, Rending Claws, Blood of Valhalla (Vampire); Let It Loose, Steel Fangs, Serrated Claws (Werewolf).
+
+*To respect:* a Major saves only a `power` today (Decision 223), so a picked row is a schema bump, and the pick has to survive another row being removed (loadout rows are an array). The modifier on the line is W69's, so this follows it. "Combat rolls" are the attacks (P21's PQ6). Nothing stores that a power is running (W110), so the power rows are conditional marks or they wait (Decision 104's pattern).
+
 ### Cybernetics
 
 The Cyborg archetype was cut, and cybernetics are gear, Professionals only
 (W90). Everything here waits on that design, and on F6 and F19.
 
 **W61 — A retired archetype folds its characters into Custom.** *Ken · 🔎 · raised 2026-10-01 with the Cyborg cut; Rule or shape*\
-**Plan:** set aside by [sheet-wishlist §4](plans/sheet-wishlist.md): waits on the cybernetics design (F6, F19) · **Goes with:** W90
+**Plan:** set aside by [loadout-and-gear §4](plans/loadout-and-gear.md): waits on the cybernetics design (F6, F19), with W90 · **Goes with:** W90
 
 The team has cut the Cyborg (`plans/crb-catch-up.md`), and an id can never
 just be deleted (constraint 6). Today a removed archetype leaves a character
@@ -410,7 +423,7 @@ buy doesn't change under it). Lands with the Cyborg's retirement, which needs
 its own numbered decision.
 
 **W90 — Cybernetics.** *Ken, from Brogan; rewritten 2026-10-22 with Deighton's system · 🔎 · Rule or shape · raised 2026-10-10 · needs its own plan; Deighton for the questions below*\
-**Plan:** set aside by [sheet-wishlist §4](plans/sheet-wishlist.md): waits on the cybernetics design (F6, F19); it needs a plan of its own · **Goes with:** W61, W91, W127, W134
+**Plan:** set aside by [loadout-and-gear §4](plans/loadout-and-gear.md): waits on the cybernetics design (F6, F19) and Deighton's six questions; it needs a plan of its own, built on L5's row shape · **Goes with:** W61, W91, W127, W134
 
 Playtesters want chrome, and as of 2026-10-22 there is something to build from. The Cyborg archetype was
 cut (STATE §3); cybernetics are **gear, Professionals only**, and the **Enforcer is the cybernetics
@@ -460,12 +473,12 @@ choice on that check. Issued Hardware, which `0412` leaves as a placeholder, is 
 
 *To respect:* store inputs, compute everything else (constraint 7): a part is a catalog reference on a
 loadout row, never its bonuses copied in. Ids are immutable (constraint 6), so parts get ids before
-anything ships. **Sequence after sheet-wishlist's P14** (loadout rows) and build on its row shape. Retiring
+anything ships. **Sequence after loadout-and-gear's L5** (vehicles, the first new loadout row) and build on its row shape. Retiring
 `cyborg` is W61's question and closes F6; the install cost closes F19. Vampires, Werewolves and Arcanists
 can't take chrome. A rules question stays a flag, never a guess in code.
 
 **W127 — Cyber-Prophetical, once cybernetics are gear.** *Ken, from P18's sign-off · 💡 · Rule or shape · raised 2026-10-16*\
-**Plan:** none yet · **Goes with:** W90
+**Plan:** set aside by [loadout-and-gear §4](plans/loadout-and-gear.md): waits on cybernetics as gear, with W90 · **Goes with:** W90
 
 Cyber-Prophetical means no Sanity loss from cybernetics, and the sheet can't apply it until it knows a character has them. When cybernetics are gear with
 a Sanity cost, this becomes a computed effect that zeroes it.
@@ -488,7 +501,9 @@ trait has no `grants`. *To respect:* how Natural Armor answers a hit is the
 F25 stub, still Deighton's.
 
 **W49 — A resource pool the player names.** *Claude · 💡*\
-**Plan:** set aside by [sheet-wishlist §4](plans/sheet-wishlist.md): an idea, not shaped
+**Plan:** none yet
+
+*Set aside by the player sheet's plan when it closed (2026-10-24, `plans/archive/sheet-wishlist.md` §4): an idea, not shaped.*
 
 Glamour, Chi, a Blood Pool. The plan's checkboxes cover what the rules have
 today (TOL, SFR). A third, **Uses another pool**, would give a tracker whose
@@ -496,7 +511,9 @@ title and max the player types. Tracker titles come from the data today, so
 this needs a little code.
 
 **W50 — Stat changes at creation.** *Claude · 💡*\
-**Plan:** set aside by [sheet-wishlist §4](plans/sheet-wishlist.md): an idea, not shaped
+**Plan:** none yet
+
+*Set aside by the player sheet's plan when it closed (2026-10-24, `plans/archive/sheet-wishlist.md` §4): an idea, not shaped.*
 
 Deighton sets a custom character's stat changes "in the same stroke as
 powers", but the Adjustments ledger is only on the sheet, after lock. Fine at a
@@ -504,20 +521,24 @@ table where characters lock together; awkward for someone building alone.
 *To respect:* a stat change at creation must not read as Stat Points spent.
 
 **W51 — A shapeshifting form toggle for a custom character.** *Claude · 💡*\
-**Plan:** set aside by [sheet-wishlist §4](plans/sheet-wishlist.md): an idea, not shaped
+**Plan:** none yet
+
+*Set aside by the player sheet's plan when it closed (2026-10-24, `plans/archive/sheet-wishlist.md` §4): an idea, not shaped.*
 
 The Werewolf's form toggle has fixed options from the data. A custom
 shapeshifter writes its forms as powers for now; a toggle with options the
 player names would put the form on the sheet.
 
 **W52 — Written-in Major Milestones.** *Claude · 💡*\
-**Plan:** set aside by [sheet-wishlist §4](plans/sheet-wishlist.md): an idea, not shaped
+**Plan:** none yet
+
+*Set aside by the player sheet's plan when it closed (2026-10-24, `plans/archive/sheet-wishlist.md` §4): an idea, not shaped.*
 
 A custom archetype has no Major Milestones of its own; the general Majors are
 open to it. The Adjustments ledger covers a GM's custom reward meanwhile.
 
 **W109 — A custom row can opt into what a book row does.** *Ken · 🔎 · Rule or shape · raised 2026-10-15 with P10's PQ7*\
-**Plan:** none yet · **Goes with:** W48
+**Plan:** set aside by [loadout-and-gear §4](plans/loadout-and-gear.md): wider than gear; L2's LQ6 decides the gear slice · **Goes with:** W48
 
 A written-in spell, piece of gear, weapon or power is text to the engine: the sheet can't
 hold a custom Concentration spell (P10's PQ7), and no other custom row can switch on
@@ -558,7 +579,9 @@ with a button to reload from the newer copy. *To respect:* the app works
 without storage, so the listener is guarded like every other read.
 
 **W62 — Slotting a file in reads it on screen, like a script loading in NYTE City.** *Ken · 💡 · raised 2026-10-02 with GQ10's packs*\
-**Plan:** set aside by [sheet-wishlist §4](plans/sheet-wishlist.md): an idea, not shaped · **Goes with:** W63
+**Plan:** none yet · **Goes with:** W63
+
+*Set aside by the player sheet's plan when it closed (2026-10-24, `plans/archive/sheet-wishlist.md` §4): an idea, not shaped.*
 
 Today a character file imports with a toast that names it, and a Codex pack
 (GQ10) would do the same. Ken's idea: a terminal opens, reads through what's
@@ -583,7 +606,9 @@ the Codex feels like jacking a script into a deck rather than opening a file.
   a pack, and a dispatch once that exists.
 
 **W63 — The hosted sheet is a demo; the full game is a pack you slot in.** *Ken · 🔎 · Rule or shape · raised 2026-10-04 · reopens GQ10 in part*\
-**Plan:** set aside by [sheet-wishlist §4](plans/sheet-wishlist.md): waits on Ken: which slice is free · **Goes with:** W62
+**Plan:** none yet · **Goes with:** W62
+
+*Set aside by the player sheet's plan when it closed (2026-10-24, `plans/archive/sheet-wishlist.md` §4): waits on Ken: which slice is free.*
 
 Today `charactersheet.shadowsrpg.com` is the whole sheet: every archetype,
 the full catalog, all of it, free. Ken wants the live site to be a **demo**: a
@@ -847,7 +872,9 @@ action, not a new tab. Out of S14's scope (§6).
 ### For the designers
 
 **W56 — A tuning bench: change the game's numbers, see what moves, hand back a change request.** *Ken · ⏭ · shaped with Claude 2026-10-01*\
-**Plan:** set aside by [sheet-wishlist §4](plans/sheet-wishlist.md): tooling, best as its own plan · **Goes with:** W116
+**Plan:** none yet · **Goes with:** W116
+
+*Set aside by the player sheet's plan when it closed (2026-10-24, `plans/archive/sheet-wishlist.md` §4): tooling, best as its own plan.*
 
 Raised 2026-10-01. Today a numeric ruling (LUCK starting at 4, not 2) reaches
 the app by Ken relaying it to Claude in a session. `shadows-data.js` is
@@ -1009,7 +1036,7 @@ with no DOM, so both halves have to load that way.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W136.** Everything above is open. What was built is in
+- **Next free number: W137.** Everything above is open. What was built is in
   [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)
