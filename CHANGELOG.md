@@ -23,8 +23,17 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.52.0
+## v0.54.0 — 2026-10-23
 
+- **Vampire and Werewolf powers at creation follow the book:** each Base Power takes one Bloodline or Origin power at rank 1, and Character Points raise a power up to your Max Starting Rank. A character you've already locked keeps every rank it has; a draft that placed two Base Powers in one power asks you to move one.
+
+## v0.53.0 — 2026-10-22
+
+- **CRANK is back.** Your rep and its tier sit beside Çredits on Main again, the ledger of every job is on Trackers, and the print sheet has its field. Rep earned before the pause is still there.
+- **The Enforcer follows the new book:** it requires BOD 8 and COOL 7, Focuses Cybernetics and one Combat Skill you choose in place of Survival, and carries the Duty Grade tweak (Interpreter, Hardwired, Hardened) in place of Hard Knock Life.
+- **A character still owed a Focused Skill is asked for it at the top of the sheet,** whatever tab it opens on. An Enforcer saved before this update picks its Combat Skill there.
+- **Layered Street Clothes are in the armor shop:** everyday clothes that stop a little. PROT 1d4, RES +2, 175Ç.
+- **A Forge Fang's first withdrawal step is named, Talented says it raises an Advantage that has ranks, and Off the Leash names its Difficulty,** as the book now prints them.
 - **Your archetype counts on your Skills.** A Cleaner's Stealth rolls its 1d6 Kicker, a Wheelman's Pilot explodes on a 9 or 10, a Fence's Persuasion can Take 5, and Quick Study's Take 6 shows on Combat Sense. Majors, Werewolf traits, the Arcanist's Aberrations and rolled Aberrations say what they do on the Skill they touch, and which part they come from.
 - **Powers say what they add while they run.** Scent Tracking at rank 3 reads +4 on Tracking; Spectral Veil, Battleborn Instinct and the Werewolf powers grow with rank. A power's bonus is a note, never part of the number, since the sheet can't tell whether it is running.
 - **Take X keeps your Kicker Die.** "Take 6: 13 + 1d4": the die is added to the roll, and the total is still the 6 plus your check.

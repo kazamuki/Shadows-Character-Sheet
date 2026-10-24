@@ -12,6 +12,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { loadEngine } from "./harness.mjs";
 import { ROOT } from "../tools/build.mjs";
+import { expectedGazetteer, readPlaces, readPowers, readEnvironments } from "./gazetteer-book.mjs";
 
 const { Engine, D } = loadEngine();
 
@@ -3357,7 +3358,7 @@ test("newTable stamps kind, a TBL- id, the name, schema 0.11, no notes, cast or 
   assert.equal(t.meta.kind, "shadows-table");
   assert.ok(Engine.isTableId(t.meta.id), t.meta.id);
   assert.equal(t.meta.name, "Tuesday");
-  assert.equal(t.meta.tableSchemaVersion, "0.12");
+  assert.equal(t.meta.tableSchemaVersion, "0.14");
   assert.equal(t.notes.length, 0);
   assert.equal(JSON.stringify(t.cast), "[]");
   assert.equal(JSON.stringify(t.interactions), "[]");
@@ -3432,7 +3433,7 @@ test("a newer table schema stamp is kept and reported; an older or unreadable on
   assert.equal(Engine.migrateTable(n).meta.tableSchemaVersion, "9.0");
   for (const v of ["0.7", "0.6", "0.5", "0.4", "0.2", "0.1", "0.0", "junk", undefined]) {
     const m = Engine.migrateTable({ meta: { tableSchemaVersion: v } });
-    assert.equal(m.meta.tableSchemaVersion, "0.12", String(v));
+    assert.equal(m.meta.tableSchemaVersion, "0.14", String(v));
     assert.equal(Engine.tableCheck(m).length, 0);
   }
 });
@@ -3484,7 +3485,7 @@ test("a 0.1 table migrates to 0.4 with an empty cast and its notes untouched", (
   Engine.addTableNote(old, { title: "B", text: "two" });
   old.meta.tableSchemaVersion = "0.1"; delete old.cast;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.12");
+  assert.equal(m.meta.tableSchemaVersion, "0.14");
   eq(m.cast, []); eq(m.interactions, []);
   assert.equal(JSON.stringify(m.notes), JSON.stringify(old.notes));
   assert.equal(Engine.tableCheck(m).length, 0);
@@ -3707,7 +3708,7 @@ test("a 0.2 table migrates to 0.3 with no interactions and no affiliations, and 
   delete old.interactions; old.meta.tableSchemaVersion = "0.2";
   for (const n of old.cast) delete n.affiliations;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.12");
+  assert.equal(m.meta.tableSchemaVersion, "0.14");
   eq(m.interactions, []);
   for (const n of m.cast) eq(n.affiliations, []);
   const strip = t => { const c = plain(t); delete c.interactions; delete c.meta.tableSchemaVersion; for (const n of c.cast) { delete n.affiliations; delete n.from; } return JSON.stringify(c); };
@@ -4069,7 +4070,7 @@ test("a 0.3 table migrates to 0.4 with from: null, and the rest is byte-identica
   for (const n of old.cast) delete n.from;
   old.meta.tableSchemaVersion = "0.3";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.12");
+  assert.equal(m.meta.tableSchemaVersion, "0.14");
   for (const n of m.cast) assert.equal(n.from, null);
   const strip = t => { const c = plain(t); delete c.meta.tableSchemaVersion; for (const n of c.cast) delete n.from; return JSON.stringify(c); };
   assert.equal(strip(m), strip(old));
@@ -4278,7 +4279,7 @@ test("188: newTable has encounters, and a 0.4 table migrates to 0.5 with none an
   delete old.encounters;
   old.meta.tableSchemaVersion = "0.4";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.12");
+  assert.equal(m.meta.tableSchemaVersion, "0.14");
   eq(m.encounters, []);
   eq(m.cast, old.cast); eq(m.notes, old.notes); eq(m.interactions, old.interactions);
 });
@@ -4794,7 +4795,7 @@ test("191: the hit's rows keep Massive levels and armor wear, and a 0.5 table op
   old.meta.tableSchemaVersion = "0.5";
   for (const r of old.encounters[0].rows) { delete r.massive; delete r.armorLoss; delete r.scrapped; }
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.12");
+  assert.equal(m.meta.tableSchemaVersion, "0.14");
   eq(m, Engine.migrateTable(t), "a 0.5 table is a 0.6 table with nothing worn or gone");
 });
 
@@ -4812,8 +4813,10 @@ test("191: encounterArmor reads the Gear catalog by name, apostrophes folded, an
   a = Engine.encounterArmor({ armor: ["Leather Jacket (PROT 1d4, RES +2) over integrated subdermal plating"] });
   assert.equal(a.extra, "over integrated subdermal plating");
   a = Engine.encounterArmor({ armor: ["Layered Street Clothes (PROT 1d4, RES +2, INT 10)"] });
-  assert.equal(a.piece, null); assert.equal(a.stops, null); assert.equal(a.line, "Layered Street Clothes (PROT 1d4, RES +2, INT 10)");
-  a = Engine.encounterArmor({ armor: ["Layered Street Clothes (PROT 1d4)", "Kevlar Vest (PROT 1d6)", "Leather Jacket (PROT 1d4)"] });
+  assert.equal(a.piece.id, "layered-street-clothes"); eq(a.stops, { prot: 3, res: 2 });
+  a = Engine.encounterArmor({ armor: ["Patched Overcoat (PROT 1d4, RES +2, INT 10)"] });
+  assert.equal(a.piece, null); assert.equal(a.stops, null); assert.equal(a.line, "Patched Overcoat (PROT 1d4, RES +2, INT 10)");
+  a = Engine.encounterArmor({ armor: ["Patched Overcoat (PROT 1d4)", "Kevlar Vest (PROT 1d6)", "Leather Jacket (PROT 1d4)"] });
   assert.equal(a.piece.id, "kevlar-vest", "the first line the catalog knows");
   a = Engine.encounterArmor({ armor: ["Leather Jacket (PROT 1d4)", "Kevlar Vest (PROT 1d6)"] });
   assert.equal(a.piece.id, "leather-jacket", "the first matched wins");
@@ -4900,7 +4903,7 @@ test("191: applyEncounterHit: damage, Massive and wear land on the row", () => {
   const head = Engine.resolveEncounterHit(t, e, id, shot({ location: "left-leg" }));
   eq([head.covered, head.through], [false, 12]);
   // An unmatched armor line stops nothing.
-  ({ t, e, id } = hitTable({ armor: ["Layered Street Clothes (PROT 1d4, RES +2, INT 10)"] }));
+  ({ t, e, id } = hitTable({ armor: ["Patched Overcoat (PROT 1d4, RES +2, INT 10)"] }));
   const bare = Engine.resolveEncounterHit(t, e, id, shot());
   eq([bare.covered, bare.through, bare.armor.piece], [false, 12, null]);
 });
@@ -5115,7 +5118,7 @@ test("193: encounterWrapUp reads the non-PC rows, the crew, the dice and who was
   eq([d.name, d.status, d.row.id], ["Dez", "alive", dezRow]);
   const hl = Engine.encounterView(t, e, []).rows.find(r => r.row.id === dezRow).health;
   eq([d.ended.left, d.ended.levels, d.ended.levelsLeft, d.ended.down, d.ended.conditions], [hl.left, hl.levels, hl.levelsLeft, hl.down, []]);
-  assert.equal(d.line, `Fought them in Warehouse: ${hl.levelsLeft} of ${hl.levels} Health Levels left.`);
+  assert.equal(d.line, `${hl.levelsLeft} of ${hl.levels} Health Levels left.`);
   eq(w.crew, ["Wren", "Rook"]);
   eq(w.hit, [{ id: wren, name: "Wren" }], "only the PC who took damage");
   eq(w.dice.map(x => x.id), Object.keys(D.armorRules.integrityLossByDifficulty), "the data's order");
@@ -5131,7 +5134,7 @@ test("193: encounterWrapUp reads the non-PC rows, the crew, the dice and who was
   rowOf(t, e, g.row.id).block.stats = {};
   const bare = Engine.encounterWrapUp(t, e).rows[2];
   assert.equal(bare.ended.levels, null);
-  assert.equal(bare.line, "Fought them in Warehouse.");
+  assert.equal(bare.line, "");
   // Planned, ended, unknown: empty lists, same dice.
   const p = encTable();
   for (const [tt, id] of [[p.t, p.e], [p.t, "EN-NOPE0000"], [null, "x"], [{}, "x"]]) {
@@ -5266,7 +5269,7 @@ test("193: the kinds are eight, and a 0.6 table opens as 0.7 with no row kept an
   old.meta.tableSchemaVersion = "0.6";
   for (const en of old.encounters) for (const r of en.rows) delete r.kept;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.12");
+  assert.equal(m.meta.tableSchemaVersion, "0.14");
   assert.ok(m.encounters[0].rows.every(r => r.kept === null));
   eq(m, Engine.migrateTable(t));
   // The gate: kept is a link on an entry row, else null.
@@ -5438,7 +5441,7 @@ function vampire(bloodline, { pl = "shadows", bod = 6, locked = true } = {}) {
 }
 const vErrors = ch => Engine.validate("archetype", ch).filter(i => i.level === "error").map(i => i.msg);
 
-test("Decisions 200, 215: Base Powers place one rank each in the Bloodline's powers, never an Innate one, none past Max Starting Rank or the book's own", () => {
+test("Decisions 200, 215, 240: Base Powers take each of the Bloodline's powers once, at rank 1, never an Innate one, whatever Max Starting Rank is", () => {
   const ch = vampire("strigoi", { pl: "street", locked: false });   // 2 Base Powers, Max Starting Rank 1
   const st = Engine.basePowerState(ch);
   same([st.count, st.cap, st.spent, st.left], [2, 1, 0, 2]);
@@ -5446,7 +5449,7 @@ test("Decisions 200, 215: Base Powers place one rank each in the Bloodline's pow
   const held = () => Engine.powerRanks(ch).filter(p => p.kind === "archetype" && !p.learn).map(p => `${p.id}:${p.rank}`);
   same(held(), ["bestial-blessings:1", "vitality-surge:1", "preternatural-speed:1", "cursed-evolution:1"], "the Innate four aren't granted at rank 1");
   assert.ok(Engine.placeBasePower(ch, "shadow-play", 1).ok);
-  assert.match(Engine.placeBasePower(ch, "shadow-play", 1).why, /can start at rank 1 at most/);
+  assert.match(Engine.placeBasePower(ch, "shadow-play", 1).why, /yours already: a Base Power takes a power once, at rank 1/);
   assert.match(Engine.placeBasePower(ch, "iron-hide", 1).why, /isn't one you can take/, "an Upyr power on a Strigoi");
   assert.match(Engine.placeBasePower(ch, "bestial-blessings", 1).why, /Innate powers aren't bought/);
   assert.match(Engine.placeBasePower(ch, "preternatural-speed", 1).why, /Innate powers aren't bought/);
@@ -5458,10 +5461,11 @@ test("Decisions 200, 215: Base Powers place one rank each in the Bloodline's pow
   assert.ok(Engine.placeBasePower(ch, "shadow-play", -1).ok);
   assert.equal("shadow-play" in ch.archetypeChoices.basePowers, false);
 
-  // World Coming Down: 5, up to rank 3, but never past the book's printed max (Iron Hide's 3, Nightmare Visage's 3).
+  // World Coming Down: 5 Base Powers and Max Starting Rank 3, but each power still takes one (Iron Hide went ×3 under Decision 215).
   const w = vampire("upyr", { pl: "wcd", locked: false });
-  for (let i = 0; i < 3; i++) assert.ok(Engine.placeBasePower(w, "iron-hide", 1).ok);
-  assert.match(Engine.placeBasePower(w, "iron-hide", 1).why, /rank 3 at most/);
+  assert.ok(Engine.placeBasePower(w, "iron-hide", 1).ok);
+  assert.match(Engine.placeBasePower(w, "iron-hide", 1).why, /yours already/);
+  same([Engine.basePowerState(w).cap, Engine.basePowerState(w).spent], [3, 1]);
   // A Werewolf buys the same way: its Origin's, never an Innate one (Decision 215).
   const ww = werewolf("trueborn"); ww.creation.locked = false;
   assert.match(Engine.placeBasePower(ww, "primal-leap", 1).why, /Innate powers aren't bought/);
@@ -5469,7 +5473,7 @@ test("Decisions 200, 215: Base Powers place one rank each in the Bloodline's pow
   assert.match(Engine.placeBasePower(ww, "moonlit-vitality", 1).why, /No Base Powers left/, "a Street Werewolf has one Base Power");
 });
 
-test("Decisions 200, 215: validate warns of unplaced Base Powers, blocks over and out of reach, and the lock waits while one can still go", () => {
+test("Decisions 200, 215, 240: validate warns of unplaced Base Powers, blocks over and out of reach, and the lock waits while one can still go", () => {
   const ch = vampire("draugur", { pl: "heroic", locked: false });   // 3 Base Powers, rank 2
   const warn = () => Engine.validate("archetype", ch).filter(i => i.pool === "basePowers").map(i => i.msg);
   same(warn(), ["3 Base Powers unplaced."]);
@@ -5478,13 +5482,13 @@ test("Decisions 200, 215: validate warns of unplaced Base Powers, blocks over an
   ch.archetypeChoices.basePowers = { "battleborn-instinct": 3, "shadow-play": 1, "no-such": 1, "bestial-blessings": 1 };
   const errs = vErrors(ch);
   assert.ok(errs.includes("Base Powers overspent by 3."), errs.join(" | "));
-  assert.ok(errs.includes("Battleborn Instinct is rank 3. It can start at 2 at most."));
+  assert.ok(errs.includes("Battleborn Instinct has 3 Base Powers. One takes it at rank 1: take 2 back, and raise it with CP."));
   assert.ok(errs.includes("Shadow Play (Masked) isn't one of your powers. Take back its Base Power."));
   assert.ok(errs.includes("no-such isn't one of your powers. Take back its Base Power."));
   assert.ok(errs.includes("Bestial Blessings isn't one of your powers. Take back its Base Power."), "a Base Power in an Innate power");
   // A power held only through a stray rank isn't held at all.
   assert.equal(Engine.powerRanks(ch).some(p => p.id === "shadow-play"), false);
-  ch.archetypeChoices.basePowers = { "battleborn-instinct": 2, "deathless-resilience": 1 };
+  ch.archetypeChoices.basePowers = { "battleborn-instinct": 1, "odins-aegis": 1, "deathless-resilience": 1 };
   same(warn(), []);
   assert.equal(Engine.spendable(ch, "basePowers"), false);
   // An archetype that doesn't buy has no state and no check; a Werewolf buys now (Decision 215).
@@ -5510,12 +5514,14 @@ test("Decisions 200, 215: a power with no ranks is held at 1 and never raised; a
 });
 
 test("Decision 215 (F41): Built to Last is no choice; an Upyr buys either power or both, and a hit counts the higher", () => {
-  const ch = vampire("upyr", { pl: "heroic", locked: false });   // 3 Base Powers, rank 2
+  const ch = vampire("upyr", { pl: "heroic", locked: false });   // 3 Base Powers, Max Starting Rank 2
+  ch.creation.rolls = { statPoints: 40, skillPoints: 30 };
   assert.equal(Engine.optionChoices(ch).some(c => c.id === "built-to-last"), false, "Built to Last is still a pick");
   assert.ok(!vErrors(ch).includes("Choose Built to Last."));
   const pool = Engine.powerPool(ch).map(p => p.id);
   assert.ok(pool.includes("iron-hide") && pool.includes("icebound-resilience"), "an Upyr's pool lacks one");
-  assert.ok(Engine.placeBasePower(ch, "iron-hide", 1).ok && Engine.placeBasePower(ch, "iron-hide", 1).ok && Engine.placeBasePower(ch, "icebound-resilience", 1).ok);
+  assert.ok(Engine.placeBasePower(ch, "iron-hide", 1).ok && Engine.placeBasePower(ch, "icebound-resilience", 1).ok);
+  assert.ok(Engine.buyPowerRank(ch, "iron-hide", 1).ok, "CP raises Iron Hide to Max Starting Rank 2");   // Decision 240
   same(Engine.archetypePowers(ch).filter(p => /iron-hide|icebound/.test(p.id)).map(p => `${p.id}:${p.rank}`), ["icebound-resilience:1", "iron-hide:2"]);
   assert.equal(Engine.setOptionPick(ch, "built-to-last", "iron-hide").ok, false);
   assert.equal(Engine.setOptionPick(ch, "ancient-weapon", "blade").ok, false, "an Upyr took a Draugur's choice");
@@ -5662,21 +5668,18 @@ test("Decision 215: a fresh Vampire and Werewolf of each specialization hold eve
   assert.equal(Engine.archetypePowers(vampire("strigoi")).find(p => p.id === "preternatural-speed").ranked, false);
 });
 
-test("Decision 215: CP raises a granted and a bought power at 5 CP a rank, to Max Power Rank or the printed max, never an unranked or unheld one", () => {
-  // Street Strigoi: 2 Base Powers, Max Starting Rank 1, Max Power Rank 2.
-  const ch = vampire("strigoi", { pl: "street", locked: false });
+test("Decisions 215, 240: CP raises a granted and a bought power at 5 CP a rank, to Max Starting Rank or the printed max, never an unranked or unheld one", () => {
+  // Heroic Strigoi: 3 Base Powers, Max Starting Rank 2, Max Power Rank 3 (which no longer binds).
+  const ch = vampire("strigoi", { pl: "heroic", locked: false });
   ch.creation.rolls = { statPoints: 40, skillPoints: 30 };
   const per = Engine.powerRankCost(), before = Engine.cp(ch).spent;
   assert.equal(per, 5);
-  // A Street character has 5 CP, one rank; a Disadvantage's points pay for the rest.
-  const dis = D.disadvantages.find(d => d.pointsGranted >= per);
-  ch.disadvantages = [{ id: dis.id, rank: 1, notes: "" }];
   Engine.placeBasePower(ch, "shadow-play", 1); Engine.placeBasePower(ch, "veil-of-night", 1);
   assert.ok(Engine.buyPowerRank(ch, "bestial-blessings", 1).ok);
   same([Engine.cp(ch).spent - before, ch.archetypeChoices.powerCp], [per, { "bestial-blessings": 1 }]);
   same(Engine.archetypePowers(ch).map(p => `${p.id}:${p.rank}`),
-    ["bestial-blessings:2", "vitality-surge:1", "preternatural-speed:1", "cursed-evolution:1", "shadow-play:1", "veil-of-night:1"], "the worked Street Strigoi");
-  // MSR (1) bound the Base Power, MPR (2) binds CP: a bought power raises to 2 and no further.
+    ["bestial-blessings:2", "vitality-surge:1", "preternatural-speed:1", "cursed-evolution:1", "shadow-play:1", "veil-of-night:1"], "the worked Heroic Strigoi");
+  // Max Starting Rank (2) caps start + CP, Max Power Rank (3) doesn't: a power raises to 2 and no further.
   assert.match(Engine.buyPowerRank(ch, "bestial-blessings", 1).why, /highest starting rank, 2/);
   assert.ok(Engine.buyPowerRank(ch, "shadow-play", 1).ok);
   assert.equal(Engine.buyPowerRank(ch, "shadow-play", 1).ok, false);
@@ -5694,17 +5697,17 @@ test("Decision 215: CP raises a granted and a bought power at 5 CP a rank, to Ma
   assert.ok(Engine.placeBasePower(ch, "shadow-play", -1).ok);
   assert.equal("shadow-play" in ch.archetypeChoices.powerCp, false, "CP stayed on a power nobody holds");
   assert.equal(Engine.validate("character-points", ch).some(i => /Take back the CP/.test(i.msg)), false);
-  // The printed max binds too: Shadows Trueborn (MPR 4), Apex Fury printed 3.
+  // A Shadows Trueborn (Max Starting Rank 2): Apex Fury raises once and stops, short of its printed 3.
   const t = werewolf("trueborn"); t.creation.powerLevel = "shadows"; t.creation.locked = false;
-  Engine.placeBasePower(t, "apex-fury", 1); Engine.placeBasePower(t, "apex-fury", 1);
+  Engine.placeBasePower(t, "apex-fury", 1);
   assert.ok(Engine.buyPowerRank(t, "apex-fury", 1).ok);
-  same(Engine.archetypePowers(t).find(p => p.id === "apex-fury").rank, 3);
-  assert.match(Engine.buyPowerRank(t, "apex-fury", 1).why, /highest starting rank, 3/, "a 4th rank past the printed 3");
+  same(Engine.archetypePowers(t).find(p => p.id === "apex-fury").rank, 2);
+  assert.match(Engine.buyPowerRank(t, "apex-fury", 1).why, /highest starting rank, 2/, "a rank past Max Starting Rank");
   same(Engine.archetypePowers(t).filter(p => !p.origin).map(p => p.rank), [1, 1, 1, 1, 1]);
 });
 
-test("Decision 215: a buy CP can't cover is refused, and a power rank leaves spendable('cp') as it was", () => {
-  const ch = vampire("strigoi", { pl: "street", locked: false });
+test("Decisions 215, 240: a buy CP can't cover is refused, and a power rank leaves spendable('cp') as it was", () => {
+  const ch = vampire("strigoi", { pl: "heroic", locked: false });   // Max Starting Rank 2: the first rank is open, so the budget is what refuses
   const left = Engine.cp(ch).left;
   ch.advantages = [];
   // Spend down to one point under a rank's price with Boosts, each held to the
@@ -5723,19 +5726,107 @@ test("Decision 215: a buy CP can't cover is refused, and a power rank leaves spe
   assert.equal(Engine.spendable(ch, "cp"), Engine.canBoost(ch, "luck", "LUCK").ok || D.stats.some(s => Engine.canBoost(ch, "stat", s.id).ok) || D.skills.some(s => Engine.canBoost(ch, "skill", s.id).ok));
 });
 
-test("Decision 215: validate names CP in a power not held and a rank past the cap", () => {
+test("Decisions 215, 240: validate names CP in a power not held and a rank past the cap", () => {
   const ch = vampire("strigoi", { pl: "street", locked: false });
   const errs = () => Engine.validate("character-points", ch).filter(i => i.level === "error").map(i => i.msg);
   ch.archetypeChoices.powerCp = { "shadow-play": 1, "no-such": 2 };
   assert.ok(errs().includes("Shadow Play (Masked) isn't a power you hold. Take back the CP in it."), errs().join(" | "));
   assert.ok(errs().includes("no-such isn't a power you hold. Take back the CP in it."));
   ch.archetypeChoices.powerCp = { "bestial-blessings": 5 };
-  assert.ok(errs().includes("Bestial Blessings is rank 6. It can start at 2 at most."), errs().join(" | "));
+  assert.ok(errs().includes("Bestial Blessings is rank 6. It can start at 1 at most."), errs().join(" | "));
   // CP on a held power with no ranks is not "not held": it has nothing to raise.
   ch.archetypeChoices.powerCp = { "preternatural-speed": 1 };
   assert.ok(errs().includes("Preternatural Speed has no ranks to raise. Take back the CP in it."), errs().join(" | "));
+  // One rank is within a Heroic character's Max Starting Rank 2.
+  ch.creation.powerLevel = "heroic";
   ch.archetypeChoices.powerCp = { "bestial-blessings": 1 };
   same(errs().filter(m => /Take back the CP|can start at/.test(m)), []);
+});
+
+// ── Decision 240: a Base Power takes a power at rank 1; CP raises it to Max Starting Rank ──
+
+test("Decision 240: a Base Power takes a power once, at rank 1", () => {
+  const ch = vampire("strigoi", { pl: "heroic", locked: false });   // 3 Base Powers, Max Starting Rank 2
+  assert.ok(Engine.placeBasePower(ch, "shadow-play", 1).ok);
+  assert.match(Engine.placeBasePower(ch, "shadow-play", 1).why, /yours already: a Base Power takes a power once, at rank 1/);
+  assert.ok(Engine.placeBasePower(ch, "veil-of-night", 1).ok);
+  assert.ok(Engine.placeBasePower(ch, "bone-spines", 1).ok);
+  assert.match(Engine.placeBasePower(ch, "shadow-play", 1).why, /yours already/, "a fourth placement is refused for the power, not the count");
+  const st = Engine.basePowerState(ch);
+  assert.equal(st.rows.every(r => r.cap === 1), true, "a row's cap isn't 1");
+  assert.equal(st.cap, 2, "the state's own cap is Max Starting Rank, kept for the copy");
+  same(Engine.archetypePowers(ch).filter(p => p.origin).map(p => `${p.id}:${p.rank}`), ["shadow-play:1", "veil-of-night:1", "bone-spines:1"]);
+  assert.ok(Engine.placeBasePower(ch, "shadow-play", -1).ok, "taking one back never refuses");
+  assert.match(Engine.placeBasePower(ch, "no-such", 1).why, /isn't one you can take/);
+  // A World Coming Down Upyr has 5 Base Powers and Max Starting Rank 3, and Iron Hide went ×3 under Decision 215.
+  const w = vampire("upyr", { pl: "wcd", locked: false });
+  assert.ok(Engine.placeBasePower(w, "iron-hide", 1).ok);
+  assert.match(Engine.placeBasePower(w, "iron-hide", 1).why, /yours already: a Base Power takes a power once, at rank 1/);
+  // A power with no ranks keeps its own sentence.
+  const d = vampire("draugur", { pl: "wcd", locked: false });
+  assert.ok(Engine.placeBasePower(d, "deathless-resilience", 1).ok);
+  assert.match(Engine.placeBasePower(d, "deathless-resilience", 1).why, /has no ranks/);
+});
+
+test("Decision 240: CP raises a held power to Max Starting Rank, not Max Power Rank", () => {
+  const heroic = vampire("strigoi", { pl: "heroic", locked: false });   // Max Starting Rank 2, Max Power Rank 3, about 10 CP
+  heroic.creation.rolls = { statPoints: 40, skillPoints: 30 };
+  Engine.placeBasePower(heroic, "shadow-play", 1);
+  assert.ok(Engine.buyPowerRank(heroic, "shadow-play", 1).ok);
+  same(Engine.powerCpState(heroic).find(r => r.id === "shadow-play").rank, 2);
+  assert.match(Engine.buyPowerRank(heroic, "shadow-play", 1).why, /highest starting rank, 2/);
+  // YQ8: an Innate power raises too, and stops at the same cap.
+  assert.ok(Engine.buyPowerRank(heroic, "bestial-blessings", 1).ok);
+  assert.match(Engine.buyPowerRank(heroic, "bestial-blessings", 1).why, /highest starting rank, 2/);
+  // Street: Max Starting Rank 1, so nothing raises.
+  const street = vampire("strigoi", { pl: "street", locked: false });
+  Engine.placeBasePower(street, "shadow-play", 1);
+  assert.equal(Engine.powerCpState(street).every(r => r.rank === r.cap && r.cap === 1), true);
+  assert.match(Engine.buyPowerRank(street, "bestial-blessings", 1).why, /highest starting rank, 1/);
+  assert.match(Engine.buyPowerRank(street, "shadow-play", 1).why, /highest starting rank, 1/);
+  // YQ10: a Werewolf's Max Starting Rank is 1 at Heroic too.
+  const wolf = werewolf("trueborn"); wolf.creation.powerLevel = "heroic"; wolf.creation.locked = false;
+  Engine.placeBasePower(wolf, "apex-fury", 1);
+  assert.match(Engine.buyPowerRank(wolf, "apex-fury", 1).why, /highest starting rank, 1/);
+  // The printed maximum still binds: World Coming Down Max Starting Rank is 3, Spectral Veil prints 3.
+  const d = vampire("draugur", { pl: "wcd", locked: false });
+  d.creation.rolls = { statPoints: 40, skillPoints: 30 };
+  Engine.placeBasePower(d, "spectral-veil", 1);
+  assert.ok(Engine.buyPowerRank(d, "spectral-veil", 1).ok && Engine.buyPowerRank(d, "spectral-veil", 1).ok);
+  same(Engine.powerCpState(d).find(r => r.id === "spectral-veil").rank, 3);
+  assert.match(Engine.buyPowerRank(d, "spectral-veil", 1).why, /highest starting rank, 3/);
+  // Totality: no Power Level, and a scaling row without maxStartingRank, cap at the printed maximum and never NaN.
+  const printedCaps = ch => Engine.powerCpState(ch).map(r => [r.id, r.cap, Engine.archetypePowers(ch).find(p => p.id === r.id).maxRank]);
+  const none = vampire("strigoi", { pl: "heroic", locked: false }); none.creation.powerLevel = null;
+  assert.ok(printedCaps(none).length && printedCaps(none).every(([, cap, printed]) => cap === printed), JSON.stringify(printedCaps(none)));
+  const row = D.archetypes.find(a => a.id === "vampire").campaignPowerScaling.byPowerLevel.heroic;
+  withData(row, "maxStartingRank", undefined, () => {
+    const bare = vampire("strigoi", { pl: "heroic", locked: false });
+    assert.ok(printedCaps(bare).every(([, cap, printed]) => cap === printed), JSON.stringify(printedCaps(bare)));
+  });
+});
+
+test("Decision 240 (YQ4): a draft placed under Decision 215 is refused by name; a locked one keeps its ranks", () => {
+  const msg = ch => Engine.validate("archetype", ch).filter(i => i.level === "error").map(i => i.msg);
+  const ch = vampire("strigoi", { pl: "heroic", locked: false });
+  ch.archetypeChoices.basePowers = { "shadow-play": 2 };
+  assert.ok(msg(ch).includes("Shadow Play (Masked) has 2 Base Powers. One takes it at rank 1: take 1 back, and raise it with CP."), msg(ch).join(" | "));
+  assert.ok(Engine.validate("review", ch).some(i => i.level === "error" && /has 2 Base Powers/.test(i.msg)), "the lock doesn't wait");
+  ch.archetypeChoices.basePowers = { "shadow-play": 1 };
+  ch.archetypeChoices.powerCp = { "bestial-blessings": 2 };
+  assert.ok(Engine.validate("character-points", ch).some(i => i.msg === "Bestial Blessings is rank 3. It can start at 2 at most."));
+  // The same two maps on a locked copy come through migrate() as stored, and the sheet's ranks follow.
+  const locked = vampire("strigoi", { pl: "heroic", locked: true });
+  locked.archetypeChoices.basePowers = { "shadow-play": 2 };
+  locked.archetypeChoices.powerCp = { "bestial-blessings": 2 };
+  const m = Engine.migrate(JSON.parse(JSON.stringify(locked)));
+  same([m.archetypeChoices.basePowers, m.archetypeChoices.powerCp], [{ "shadow-play": 2 }, { "bestial-blessings": 2 }]);
+  const held = Object.fromEntries(Engine.archetypePowers(m).map(p => [p.id, p.rank]));
+  same([held["shadow-play"], held["bestial-blessings"]], [2, 3]);
+  // At Street the cap is 1, so there is nothing to raise and the sentence leaves the clause out.
+  const st = vampire("strigoi", { pl: "street", locked: false });
+  st.archetypeChoices.basePowers = { "shadow-play": 2 };
+  assert.ok(msg(st).includes("Shadow Play (Masked) has 2 Base Powers. One takes it at rank 1: take 1 back."), msg(st).join(" | "));
 });
 
 test("Decision 215: a day without rest takes half RoU and 2 more, stops at empty, and the Thirst panel carries it", () => {
@@ -5808,7 +5899,7 @@ test("203: a new table has no sessions or threads, and a 0.7 table opens as 0.8 
   delete old.sessions; delete old.threads;
   for (const x of old.interactions) delete x.session;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.12");
+  assert.equal(m.meta.tableSchemaVersion, "0.14");
   eq([m.sessions, m.threads], [[], []]);
   assert.ok(m.interactions.every(x => x.session === null));
   eq(m, Engine.migrateTable(t));
@@ -6096,7 +6187,7 @@ test("205: a new session has close null, and a 0.8 table opens as 0.9 with every
   // A 0.8 file that already carries a close (a hand edit) is not converted either.
   old.sessions[0].close = { at: null, lines: [here("Wren", 5)] };
   assert.equal(Engine.migrateTable(old).sessions[0].close, null);
-  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.12");
+  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.14");
 });
 
 test("206: offScreenPay is the tier's minimum to its midpoint, Legendary's to offScreenMax, and an unknown tier is null", () => {
@@ -6461,7 +6552,7 @@ function secretaryTable() {
 const found = (t, q) => Engine.tableSearch(t, q).map(h => [h.kind, h.id, h.field]);
 
 test("208: table schema 0.10; a note's session is null for an old table, kept when real, nulled when not", () => {
-  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.12");
+  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.14");
   const base = v => ({ meta: { tableSchemaVersion: v }, sessions: [{ id: "SE-AAAAAAA1", number: 1 }],
     notes: [{ id: "N-AAAAAAA1", session: "SE-AAAAAAA1" }, { id: "N-AAAAAAA2", session: "S-NOPE0000" }] });
   for (const n of Engine.migrateTable(base("0.9")).notes) assert.equal(n.session, null, "an old table guesses nothing");
@@ -6604,7 +6695,7 @@ const names = (t, e) => Engine.encounterView(t, e, []).rows.map(r => r.name);
 const wave = (t, e) => assert.ok(Engine.editEncounter(t, e, { by: "wave" }).ok);
 
 test("210: table schema 0.11; a 0.10 table opens one at a time with two sides, PCs on the crew's, nobody an ally", () => {
-  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.12");
+  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.14");
   const t = Engine.newTable("Old");
   const e = Engine.addEncounter(t, { name: "E" }).id;
   const m1 = Engine.addCastMember(t, { name: "Marta" }).id;
@@ -6615,7 +6706,7 @@ test("210: table schema 0.11; a 0.10 table opens one at a time with two sides, P
   for (const r of old.encounters[0].rows) delete r.side;
   old.cast[0].ally = true;   // a 0.10 file has none: nothing is guessed
   const m = Engine.migrateTable(old), en = m.encounters[0];
-  assert.equal(m.meta.tableSchemaVersion, "0.12");
+  assert.equal(m.meta.tableSchemaVersion, "0.14");
   eq([en.by, en.sides.length, en.sides[0]], ["person", 2, { id: "crew", name: "" }]);
   eq(en.rows.map(r => r.side), ["crew", en.sides[1].id]);
   eq(m.cast.map(n => n.ally), [false]);
@@ -7272,10 +7363,10 @@ test("212: a table saved before 0.12 loads with an empty trail, and a new table 
   eq(Engine.migrateTable(old).audit, []);
   delete old.audit; delete old.meta.tableSchemaVersion;
   eq(Engine.migrateTable(old).audit, []);
-  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.12");
+  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.14");
   // A file from a newer app keeps its trail gated, not emptied.
   const newer = plain(t);
-  newer.meta.tableSchemaVersion = "0.13";
+  newer.meta.tableSchemaVersion = "0.14";
   newer.audit = [{ seq: 1, date: null, label: "x", patch: [{ path: ["cast", 0, "name"], type: "scalar", before: "x" }] }];
   assert.equal(Engine.migrateTable(newer).audit.length, 1);
   assert.ok(Engine.clearTableActivity(t).ok); eq(t.audit, []);
@@ -7902,7 +7993,7 @@ test("Decision 218: a locked file over the cap loads as it is, and nothing repor
 });
 
 test("Decision 218 / 162: a buyable power rank still counts as CP to spend once LUCK is capped", () => {
-  const ch = vampire("strigoi", { pl: "street", locked: false });
+  const ch = vampire("strigoi", { pl: "heroic", locked: false });   // Street's Max Starting Rank 1 leaves no rank to buy (Decision 240)
   ch.advantages = [];
   for (const s of D.stats) ch.stats[s.id].base = D.statRules.max;
   for (const s of D.skills) { const c = Engine.skillRankCap(ch, s.id); if (c != null) ch.skills[s.id] = { rank: c, notes: "" }; }
@@ -9311,4 +9402,566 @@ test("P21 8b: an Aberration a file holds twice reads once, and every power's Ski
   });
   assert.ok(rows.length >= 12, `found only ${rows.length} power rows`);
   for (const [a, p, g] of rows) assert.ok(typeof g.whenText === "string" && g.whenText.trim(), `${a} · ${p}: a power's ${g.type} needs a whenText, or it lands in the number`);
+});
+
+// ── A line reads as a sentence (Decision 241) ───────────────────────────────
+const sentenceText = (t, x) => Engine.interactionSentence(t, x).parts.map(p => p.kind === "day" ? p.date : p.kind === "text" ? p.text : p.name).join("");
+function sentTable() {
+  const t = Engine.newTable("S");
+  const bob = Engine.addCastMember(t, { name: "Bob" }).id, gull = Engine.addCastMember(t, { name: "Gull" }).id;
+  return { t, bob, gull };
+}
+const L = (kind, cast, crew, text, date, encounter) => ({ kind, cast: cast.map(id => ({ kind: "cast", id })), crew, text, date, encounter: encounter || null });
+
+test("241: interactionSentence reads each kind, crew first, with the words after the day", () => {
+  const { t, bob, gull } = sentTable();
+  const day = "2026-10-08";
+  eq(sentenceText(t, L("shared", [bob], ["Scott"], "the lake is on fire", day)), "Scott told Bob “the lake is on fire” on 2026-10-08");
+  eq(sentenceText(t, L("learned", [bob], ["Scott", "D"], "it is a front", day)), "Scott and D learned from Bob “it is a front” on 2026-10-08");
+  eq(sentenceText(t, L("helped", [bob], ["Scott"], "carried the bags", day)), "Scott helped Bob on 2026-10-08: carried the bags");
+  eq(sentenceText(t, L("wronged", [bob, gull], ["Scott", "D", "Rook"], "", day)), "Scott, D and Rook wronged Bob and Gull on 2026-10-08");
+  eq(sentenceText(t, L("killed", [bob], ["Scott"], "", null)), "Scott killed Bob");
+  eq(sentenceText(t, L("fought", [bob], ["Scott"], "2 of 4 Health Levels left.", day)), "Scott fought Bob on 2026-10-08: 2 of 4 Health Levels left.");
+  // owes agrees with the crew; owed puts the member first and agrees with the members
+  eq(sentenceText(t, L("owes", [bob], ["Scott"], "a favour", day)), "Scott owes Bob on 2026-10-08: a favour");
+  eq(sentenceText(t, L("owes", [bob], ["Scott", "D"], "", null)), "Scott and D owe Bob");
+  eq(sentenceText(t, L("owed", [bob], ["Scott"], "for the van", day)), "Bob owes Scott on 2026-10-08: for the van");
+  eq(sentenceText(t, L("owed", [bob, gull], ["Scott"], "", null)), "Bob and Gull owe Scott");
+  // no kind
+  eq(sentenceText(t, L(null, [bob], ["Scott"], "met at the pier", day)), "Bob, with Scott, on 2026-10-08: met at the pier");
+  eq(sentenceText(t, L(null, [bob], ["Scott"], "met", null)), "Bob, with Scott: met");
+  eq(sentenceText(t, L(null, [bob], [], "met", day)), "Bob, on 2026-10-08: met");
+});
+
+test("241: interactionSentence — no crew, no member, an unnamed one, a gone one, and the part kinds", () => {
+  const { t, bob } = sentTable();
+  eq(sentenceText(t, L("shared", [bob], [], "x", null)), "The crew told Bob “x”");
+  eq(sentenceText(t, L("helped", [], ["Scott"], "", null)), "Scott helped someone");
+  eq(sentenceText(t, L("owed", [], ["Scott"], "", null)), "Someone owes Scott");
+  eq(sentenceText(t, L("owed", [bob], [], "", null)), "Bob owes the crew");
+  const blank = Engine.addCastMember(t, { name: "" }).id;
+  eq(sentenceText(t, L("helped", [blank], ["Scott"], "", null)), "Scott helped them");
+  eq(sentenceText(t, L("owed", [blank], ["Scott"], "", null)), "Unnamed owes Scott");
+  eq(sentenceText(t, L(null, [blank], ["Scott"], "met", null)), "Unnamed, with Scott: met");
+  eq(sentenceText(t, L("owed", [bob], ["Scott"], "", null)), "Bob owes Scott", "a real name is never touched");
+  const gone = Engine.addCastMember(t, { name: "Marta" }).id;
+  Engine.removeCastMember(t, gone);
+  const parts = Engine.interactionSentence(t, { ...L("helped", [bob], ["Scott"], "", "2026-10-08"), cast: [{ kind: "cast", id: gone, name: "Marta" }, { kind: "cast", id: bob }] }).parts;
+  eq(parts.filter(p => p.kind === "cast").map(p => [p.name, p.gone]), [["Marta", true], ["Bob", false]]);
+  eq(parts.find(p => p.kind === "day"), { kind: "day", date: "2026-10-08" });
+  assert.ok(parts.every(p => ["text", "cast", "encounter", "day"].includes(p.kind)));
+});
+
+test("241: interactionSentence is total", () => {
+  const { t } = sentTable();
+  for (const x of [null, undefined, 5, "x", [], {}, { cast: "x" }, { crew: [1, {}] }, { kind: "zap", cast: [null, 3, {}] }, { kind: "fought", encounter: "x" }, { kind: "fought", encounter: { kind: "encounter" } }]) {
+    const r = Engine.interactionSentence(t, x);
+    assert.ok(Array.isArray(r.parts) && r.parts.length > 0, JSON.stringify(x));
+  }
+  for (const tt of [null, undefined, {}, { cast: "x", encounters: 7 }])
+    assert.ok(Engine.interactionSentence(tt, { kind: "fought", cast: [{ kind: "cast", id: "C-X" }], encounter: { kind: "encounter", id: "EN-AAAAAAAA" } }).parts.length > 0);
+});
+
+test("241: a fight's line links its encounter, which follows a rename and survives a removal", () => {
+  const { t, bob } = sentTable();
+  const e = Engine.addEncounter(t, { name: "Dock fight" }).id;
+  const ok = Engine.addInteraction(t, { kind: "fought", cast: [bob], crew: ["Scott"], text: "figures", date: "2026-10-08", encounter: e });
+  const nope = Engine.addInteraction(t, { kind: "fought", cast: [bob], crew: ["Scott"], text: "x", encounter: "EN-AAAAAAAA" });
+  const x = id => t.interactions.find(i => i.id === id);
+  assert.ok(x(ok.id).encounter, "End's caller passed an encounter and the line has no link");
+  eq(x(ok.id).encounter, { kind: "encounter", id: e });
+  assert.equal(x(nope.id).encounter, null, "an encounter not on the table is no link");
+  eq(Engine.linkName(t, x(ok.id).encounter), { name: "Dock fight", gone: false });
+  assert.equal(sentenceText(t, x(ok.id)), "Scott fought Bob in Dock fight on 2026-10-08: figures");
+  Engine.editEncounter(t, e, { name: "The Pier" });
+  eq(Engine.linkName(t, x(ok.id).encounter), { name: "The Pier", gone: false });
+  assert.ok(Engine.removeEncounter(t, e).ok);
+  eq(x(ok.id).encounter, { kind: "encounter", id: e, name: "The Pier" });
+  eq(Engine.linkName(t, x(ok.id).encounter), { name: "The Pier", gone: true });
+  assert.equal(sentenceText(t, x(ok.id)), "Scott fought Bob in The Pier on 2026-10-08: figures");
+  eq(Engine.linkName(t, { kind: "encounter", id: "EN-AAAAAAAA" }), { name: "An encounter removed", gone: true });
+  // only fought and killed name the fight
+  assert.equal(sentenceText(t, { ...L("helped", [bob], ["Scott"], "", null), encounter: x(ok.id).encounter }), "Scott helped Bob");
+});
+
+test("241: End writes the link on every line it writes, at its realistic worst, and undoes deep-equal", () => {
+  const { t } = bigTable();
+  const pack = Engine.migratePack(syntheticPack());
+  const e = Engine.addEncounter(t, { name: "Dock" }).id;
+  const cast = [0, 1, 2].map(i => Engine.addParticipant(t, e, { kind: "cast", id: t.cast[i].id }).id);
+  const gulls = [0, 1].map(() => Engine.participantFromEntry(t, e, pack, "gull").id);
+  Engine.addParticipant(t, e, { kind: "pc", name: "Wren" });
+  assert.ok(Engine.startEncounter(t, e).ok);
+  const base = plain(t);
+  const rows = {};
+  for (const id of cast) rows[id] = { line: true };
+  rows[cast[2]] = { line: true, status: "dead" };
+  rows[gulls[0]] = { keep: true, line: true, text: "Got away." };
+  rows[gulls[1]] = { keep: true, line: true, status: "dead" };
+  const r = recorded(t, () => assert.ok(Engine.endEncounter(t, e, { rows }, [pack]).ok), "Ended Dock");
+  assert.ok(r.ok);
+  const written = t.interactions.slice(0, 5);
+  assert.equal(t.interactions.length, 150 + 5);
+  assert.ok(written.every(x => x.encounter && x.encounter.id === e && x.encounter.kind === "encounter"), "every line carries the link");
+  assert.equal(written.filter(x => x.kind === "killed").length, 2, "the two that died");
+  assert.ok(written.every(x => !/Fought them/.test(x.text)), "the text is the figures alone");
+  assert.equal(written.find(x => x.text === "Got away.").kind, "fought");
+  const size = JSON.stringify(r.entry).length;
+  assert.ok(size < 4096, `End is ${size} bytes`);
+  assert.ok(Engine.undoTableAction(t).ok);
+  eq(undoBase(t), (() => { const o = plain(base); delete o.audit; o.meta.updated = null; return o; })());
+});
+
+test("241: the default text of a fight's line is the figures, then Conditions", () => {
+  const { t, e, dezRow } = endTable();
+  Engine.participantDamage(t, e, dezRow, 7);
+  const hl = Engine.encounterView(t, e, []).rows.find(r => r.row.id === dezRow).health;
+  assert.equal(Engine.encounterWrapUp(t, e).rows[0].line, `${hl.levelsLeft} of ${hl.levels} Health Levels left.`);
+  Engine.participantAddCondition(t, e, dezRow, { id: "bleeding", location: LOC });
+  assert.match(Engine.encounterWrapUp(t, e).rows[0].line, /^\d+ of \d+ Health Levels left; [A-Z][^.]*\.$/);
+});
+
+test("241: Who knows what and Find both find a fight's line by its fight", () => {
+  const { t, bob } = sentTable();
+  const e = Engine.addEncounter(t, { name: "Dock fight" }).id;
+  Engine.addInteraction(t, { kind: "fought", cast: [bob], crew: ["Scott"], text: "2 of 4", encounter: e });
+  Engine.addInteraction(t, { kind: "shared", cast: [bob], crew: ["Scott"], text: "unrelated" });
+  eq(Engine.crewView(t, { q: "dock" }).map(g => [g.name, g.interactions.length]), [["Scott", 1]]);
+  Engine.editEncounter(t, e, { name: "The Pier" });
+  eq(Engine.crewView(t, { q: "pier" }).map(g => g.interactions.length), [1]);
+  eq(Engine.crewView(t, { q: "dock" }), []);
+  const hits = Engine.tableSearch(t, "Pier");
+  assert.ok(JSON.stringify(hits).includes("Fight"), "the Fight field: " + JSON.stringify(hits));
+});
+
+test("241: the gate keeps a good encounter link, drops a bad one, and converts nothing", () => {
+  const t = Engine.newTable("G");
+  const bob = Engine.addCastMember(t, { name: "Bob" }).id;
+  const mk = enc => ({ kind: "fought", cast: [{ kind: "cast", id: bob }], crew: ["Scott"], text: "Fought them in Dock.", encounter: enc });
+  const bad = ["EN-AAAAAAAA", { kind: "cast", id: bob }, { kind: "encounter", id: "__proto__" }, { kind: "encounter", id: "EN-1" }, [], 5, true];
+  const f = Engine.migrateTable({ ...plain(t), interactions: [...bad.map(mk), mk({ kind: "encounter", id: "EN-AAAAAAAA", name: 7 }), mk({ kind: "encounter", id: "EN-AAAAAAAA", name: "Gone", extra: 1 })] });
+  const links = f.interactions.map(x => x.encounter);
+  eq(links.slice(0, bad.length), bad.map(() => null));
+  eq(links[bad.length], { kind: "encounter", id: "EN-AAAAAAAA" }, "a numeric name is dropped, the link kept");
+  eq(links[bad.length + 1], { kind: "encounter", id: "EN-AAAAAAAA", name: "Gone" });
+  assert.ok(f.interactions.every(x => x.text === "Fought them in Dock." && x.crew[0] === "Scott"), "the neighbours are kept");
+  assert.equal(({}).polluted, undefined);
+  // a 0.12 table loads with encounter: null on every line and its text untouched
+  const old = plain(t);
+  old.meta.tableSchemaVersion = "0.12";
+  old.interactions = [{ ...mk({ kind: "encounter", id: "EN-AAAAAAAA" }), id: "I-AAAAAAAA" }];
+  const m = Engine.migrateTable(old);
+  assert.equal(m.meta.tableSchemaVersion, "0.14");
+  assert.equal(m.interactions[0].encounter, null);
+  assert.equal(m.interactions[0].text, "Fought them in Dock.");
+  // constraint 8: new, add, migrate round-trips
+  const r = Engine.newTable("R");
+  const c = Engine.addCastMember(r, { name: "Bob" }).id, en = Engine.addEncounter(r, { name: "Dock" }).id;
+  Engine.addInteraction(r, { kind: "fought", cast: [c], crew: ["Scott"], text: "x", encounter: en });
+  eq(Engine.migrateTable(r).interactions, r.interactions);
+});
+
+// ── The gazetteer (Decision 242) and the crew's places (Decision 243) ─────────
+const G = () => D.gazetteer;
+const gEntry = id => G().entries.find(e => e.id === id);
+
+test("242: the gazetteer holds every Territory, Zone, Site, Business, Faction and place Beyond in 1100", () => {
+  const book = readPlaces();
+  const want = expectedGazetteer();
+  const count = k => G().entries.filter(e => e.kind === k).length;
+  eq([book.territories.length, count("territory")], [6, 6]);
+  const sum = k => book.territories.reduce((n, t) => n + t[k].length, 0);
+  eq([sum("zones"), count("zone")], [34, 34]);
+  eq([sum("sites"), count("site")], [17, 17]);
+  eq([sum("businesses"), count("business")], [42, 42]);
+  eq([sum("factions"), count("faction")], [23, 23]);
+  eq([book.beyond.length, count("region")], [11, 11]);
+  // by name, kind, Territory, zone and real-world place, in the book's order, with no extras. Ids are not compared:
+  // they are permanent (constraint 6), so a rename in the book changes a name here and never an id.
+  const names = list => new Map(list.map(e => [e.id, e.name]));
+  const strip = (e, n) => ({ kind: e.kind, name: e.name, territory: e.territory ? n.get(e.territory) : null, zone: e.zone ? n.get(e.zone) : null, realWorld: e.realWorld, group: e.group });
+  const have = names(G().entries), wantN = names(want.entries);
+  eq(G().entries.map(e => strip(e, have)), want.entries.map(e => strip(e, wantN)));
+});
+
+test("242: the powers are 1200's and the kinds of ground are 1300's", () => {
+  const powers = G().entries.filter(e => e.kind === "power");
+  assert.equal(powers.length, 16);
+  eq(powers.map(p => [p.group, p.name]), readPowers().map(p => [p.group, p.name]));
+  eq([...new Set(powers.map(p => p.group))], ["Corporations", "The Unseen Court", "Other Guys"]);
+  assert.equal(powers.filter(p => p.group === "Corporations").length, 5);
+  eq(powers.filter(p => p.group === "The Unseen Court").map(p => p.name), ["The Unseen Court", "Vampire", "Werewolf", "Deadmen", "Fae"]);
+  assert.equal(powers.filter(p => p.group === "Other Guys").length, 6);
+  eq(G().environments.map(e => e.name), readEnvironments());
+  eq(G().environments.map(e => e.name), ["Combat Zones", "Genius Loci", "Convergences", "Thin Places", "Gates"]);
+  assert.ok(G().entries.every(e => e.bookSource === (e.kind === "power" ? "1200" : "1100")) && G().environments.every(e => e.bookSource === "1300"));
+});
+
+test("242: every territory and zone an entry names is one, and every id is unique and shaped", () => {
+  const ids = [...G().entries, ...G().environments].map(e => e.id);
+  assert.equal(new Set(ids).size, ids.length, "an id repeats");
+  for (const id of ids) assert.match(id, /^[a-z0-9]+(-[a-z0-9]+)*$/);
+  for (const e of G().entries) {
+    if (e.territory) assert.equal(gEntry(e.territory)?.kind, "territory", `${e.id}: territory`);
+    if (e.zone) {
+      const z = gEntry(e.zone);
+      assert.equal(z?.kind, "zone", `${e.id}: zone`);
+      assert.equal(z.territory, e.territory, `${e.id}: a zone in another Territory`);
+    }
+    if (["zone", "site", "business", "faction"].includes(e.kind)) assert.ok(e.territory, `${e.id} has no Territory`);
+    else assert.equal(e.territory, null, `${e.id}: ${e.kind} has a Territory`);
+  }
+});
+
+test("242: every id ever shipped is still there, with the entry it named (constraint 6)", () => {
+  // tests/gazetteer-ids.json is frozen: append a new entry's id to it, never edit or remove one. The data keeps
+  // the book's order, so a new entry may sit anywhere in it; only that every shipped id is still there is checked.
+  const frozen = JSON.parse(readFileSync(join(ROOT, "tests", "gazetteer-ids.json"), "utf8"));
+  const now = new Set([...G().entries, ...G().environments].map(e => e.id));
+  for (const id of frozen) assert.ok(now.has(id), `${id} was shipped and is gone`);
+});
+
+test("242: a zone is set only where the book names a listed one", () => {
+  assert.equal(gEntry("eclipse").zone, "metro-core");
+  assert.equal(gEntry("eclipse").territory, "central-city");
+  assert.equal(gEntry("orion-arms").zone, "riverlands");
+  assert.equal(gEntry("orion-arms").territory, "north-quarter", "HQ in the Daedalus Belt is a qualifier, not the Territory");
+  assert.equal(gEntry("continuum-health").zone, "metro-core");
+  assert.equal(gEntry("reclaim-solutions").zone, "delmarva");
+  assert.equal(gEntry("southern-syndicate").zone, "lowcountry");
+  for (const [id, words] of [["wormwood-swamp", "Okefenokee Swamp, southeast of Atlantix"], ["birmingham-blight", "Birmingham, AL"], ["elysium-fields", "Florida Everglades"]]) {
+    assert.equal(gEntry(id).zone, null, id);
+    assert.equal(gEntry(id).realWorld, words, id);
+    assert.equal(gEntry(id).territory, "southside-consortium");
+  }
+  assert.equal(gEntry("aegis-defense-solutions-ads").name, "Aegis Defense Solutions (ADS)");
+  assert.equal(gEntry("bushido-defenceworks-bdf").name, "Bushido Defenceworks (BDF)");
+});
+
+test("242: every summary is one sentence of at most 20 words", () => {
+  for (const e of [...G().entries, ...G().environments]) {
+    const s = e.summary;
+    assert.equal(typeof s, "string", e.id);
+    const words = s.trim().split(/\s+/).length;
+    assert.ok(words >= 4 && words <= 20, `${e.id}: ${words} words`);
+    assert.match(s, /[.]$/, `${e.id}: one sentence ends with a full stop`);
+    assert.ok(!/[.!?]\s+[A-Z]/.test(s.replace(/St\. /g, "St ")), `${e.id}: more than one sentence`);
+  }
+});
+
+test("242: gazetteer(q) keeps an entry by its name, its line or where it sits, and is total", () => {
+  const all = Engine.gazetteer();
+  assert.equal(all.territories.length, 6);
+  assert.equal(all.beyond.length, 11);
+  eq(all.powers.map(p => p.group), ["Corporations", "The Unseen Court", "Other Guys"]);
+  assert.equal(all.environments.length, 5);
+  const metro = Engine.gazetteer({ q: "metro" });
+  const cc = metro.territories.find(r => r.entry.id === "central-city");
+  assert.ok(cc, "Central City stays while any of its entries match");
+  assert.ok(cc.zones.some(z => z.id === "metro-core"));
+  assert.ok(cc.sites.some(z => z.id === "central-park") && cc.factions.some(z => z.id === "eclipse") && cc.businesses.some(z => z.id === "nexacorp"), "Metro Core's entries come with it");
+  assert.ok(!cc.zones.some(z => z.id === "capital-region"));
+  const ec = Engine.gazetteer({ q: "eclipse" });
+  eq(ec.territories.map(r => r.entry.id), ["central-city"]);
+  eq(ec.territories[0].factions.map(e => e.id), ["eclipse"]);
+  assert.equal(Engine.gazetteer({ q: "okefenokee" }).territories[0].sites[0].id, "wormwood-swamp", "a real-world name finds it");
+  assert.equal(Engine.gazetteer({ q: "qwertyzzz" }).territories.length, 0);
+  for (const f of [null, undefined, 5, "x", [], { q: 5 }, { q: null }]) {
+    const r = Engine.gazetteer(f);
+    assert.ok(Array.isArray(r.territories) && Array.isArray(r.beyond) && Array.isArray(r.powers) && Array.isArray(r.environments), String(f));
+  }
+  const had = D.gazetteer;
+  try {
+    for (const v of [undefined, null, 5, {}, { entries: "x", environments: 3 }]) {
+      D.gazetteer = v;
+      const r = Engine.gazetteer({ q: "metro" });
+      eq([r.territories, r.beyond, r.powers, r.environments], [[], [], [], []]);
+      assert.equal(Engine.gazetteerEntry("eclipse"), null);
+    }
+  } finally { D.gazetteer = had; }
+  assert.equal(Engine.gazetteerEntry("eclipse").name, "Eclipse");
+  assert.equal(Engine.gazetteerEntry("thin-places").name, "Thin Places");
+  for (const v of [null, undefined, 5, {}, [], "__proto__", "constructor"]) assert.equal(Engine.gazetteerEntry(v), null);
+});
+
+const placeTable = () => { const t = Engine.newTable("P"); const bob = Engine.addCastMember(t, { name: "Bob" }).id; return { t, bob }; };
+
+test("243: addPlace from an entry takes its territory and zone; a typed one keeps what it's given", () => {
+  const { t } = placeTable();
+  const cp = Engine.addPlace(t, { from: "central-park" });
+  const p = id => t.places.find(x => x.id === id);
+  assert.ok(cp.ok && /^PL-[0-9A-HJKMNP-TV-Z]{8}$/.test(cp.id));
+  eq([p(cp.id).territory, p(cp.id).zone, p(cp.id).from], ["central-city", "metro-core", { kind: "gazetteer", id: "central-park", name: "Central Park" }]);
+  const mc = Engine.addPlace(t, { from: "metro-core" });
+  eq([p(mc.id).territory, p(mc.id).zone], ["central-city", "metro-core"]);
+  const cc = Engine.addPlace(t, { from: "central-city" });
+  eq([p(cc.id).territory, p(cc.id).zone], ["central-city", null]);
+  const be = Engine.addPlace(t, { from: "cascadia" });
+  eq([p(be.id).territory, p(be.id).zone], [null, null]);
+  const typed = Engine.addPlace(t, { name: "The Rookery", territory: "north-quarter", zone: "riverlands", district: "Old Town", neighborhood: "Dock Row", environment: "thin-places", notes: "Dez's place" });
+  eq(p(typed.id), { ...p(typed.id), name: "The Rookery", from: null, territory: "north-quarter", zone: "riverlands", district: "Old Town", neighborhood: "Dock Row", environment: "thin-places", notes: "Dez's place" });
+  const newest = Engine.addPlace(t, { name: "x" }).id;
+  assert.equal(t.places[0].id, newest, "unshifted: newest first");
+  for (const from of ["eclipse", "thin-places", "nowhere", 5, {}, [], "__proto__"]) {
+    const n = t.places.length;
+    const r = Engine.addPlace(t, { from });
+    assert.equal(r.ok, false, String(from));
+    assert.equal(t.places.length, n, "a refusal adds nothing");
+  }
+  assert.equal(Engine.addPlace(t, { name: "N", territory: "central-city", zone: "riverlands" }).ok, true);
+  assert.equal(t.places[0].zone, null, "a zone in another Territory is not kept");
+});
+
+test("243: a territory that doesn't hold the zone clears it", () => {
+  const { t } = placeTable();
+  const id = Engine.addPlace(t, { from: "central-park" }).id;
+  const p = () => t.places.find(x => x.id === id);
+  Engine.editPlace(t, id, { territory: "daedalus-belt" });
+  eq([p().territory, p().zone], ["daedalus-belt", null]);
+  Engine.editPlace(t, id, { territory: "central-city" });
+  eq([p().territory, p().zone], ["central-city", null], "it does not come back");
+  Engine.editPlace(t, id, { zone: "metro-core" });
+  assert.equal(p().zone, "metro-core");
+  Engine.editPlace(t, id, { territory: "central-city" });
+  assert.equal(p().zone, "metro-core", "the same Territory holds it");
+  Engine.editPlace(t, id, { zone: "garden-state" });
+  assert.equal(p().zone, null, "a zone the Territory doesn't hold");
+  Engine.editPlace(t, id, { zone: "eclipse" });
+  assert.equal(p().zone, null, "a Faction in the Territory isn't a Zone");
+  Engine.editPlace(t, id, { zone: "central-city" });
+  assert.equal(p().zone, null, "nor is the Territory itself");
+  Engine.editPlace(t, id, { zone: "metro-core" });
+  Engine.editPlace(t, id, { territory: null });
+  eq([p().territory, p().zone], [null, null]);
+  Engine.editPlace(t, id, { name: "The Ramble", district: "D", neighborhood: "N", environment: "convergences", notes: "n" });
+  eq([p().name, p().district, p().neighborhood, p().environment, p().notes], ["The Ramble", "D", "N", "convergences", "n"]);
+  Engine.editPlace(t, id, { name: 5, district: null, environment: "Not an id" });
+  eq([p().name, p().district, p().environment], ["", "", null]);
+  assert.equal(Engine.editPlace(t, "PL-AAAAAAAA", { name: "x" }).ok, false);
+});
+
+test("243: placeTitle reads the typed name, then the entry's, then the kept one, then Unnamed place", () => {
+  const { t } = placeTable();
+  const id = Engine.addPlace(t, { from: "central-park" }).id;
+  const p = () => t.places.find(x => x.id === id);
+  assert.equal(Engine.placeTitle(t, p()), "Central Park");
+  Engine.editPlace(t, id, { name: "  the Ramble " });
+  assert.equal(Engine.placeTitle(t, p()), "the Ramble", "as typed, never recased");
+  Engine.editPlace(t, id, { name: "" });
+  p().from = { kind: "gazetteer", id: "retired-entry", name: "Kept Name" };
+  assert.equal(Engine.placeTitle(t, p()), "Kept Name", "an id this data doesn't have reads the kept name");
+  p().from = { kind: "gazetteer", id: "retired-entry" };
+  assert.equal(Engine.placeTitle(t, p()), "Unnamed place");
+  p().from = null;
+  assert.equal(Engine.placeTitle(t, p()), "Unnamed place");
+  for (const v of [null, undefined, 5, "x", [], {}, { name: 5, from: [] }]) assert.equal(typeof Engine.placeTitle(t, v), "string");
+  assert.equal(typeof Engine.placeTitle(null, null), "string");
+});
+
+const PL = (t, name) => Engine.addPlace(t, { name }).id;
+
+test("243: a line names a place; its sentence says at, in each kind's position", () => {
+  const { t, bob } = placeTable();
+  const gull = Engine.addCastMember(t, { name: "Gull" }).id;
+  const pier = PL(t, "the Pier");
+  const day = "2026-10-08";
+  const S = (kind, cast, crew, text, date, enc) => sentenceText(t, { ...L(kind, cast, crew, text, date, enc), place: { kind: "place", id: pier } });
+  eq(S("shared", [bob], ["Scott"], "the lake is on fire", day), "Scott told Bob “the lake is on fire” at the Pier on 2026-10-08");
+  eq(S("learned", [bob], ["Scott"], "", null), "Scott learned from Bob at the Pier");
+  eq(S("helped", [bob], ["Scott"], "carried the bags", day), "Scott helped Bob at the Pier on 2026-10-08: carried the bags");
+  eq(S("wronged", [bob, gull], ["Scott"], "", null), "Scott wronged Bob and Gull at the Pier");
+  eq(S("killed", [bob], ["Scott"], "", day), "Scott killed Bob at the Pier on 2026-10-08");
+  eq(S("owes", [bob], ["Scott", "D"], "a favour", day), "Scott and D owe Bob at the Pier on 2026-10-08: a favour");
+  eq(S("owed", [bob], ["Scott"], "for the van", null), "Bob owes Scott at the Pier: for the van");
+  eq(S(null, [bob], ["Scott"], "met", day), "Bob, with Scott, at the Pier, on 2026-10-08: met");
+  eq(S(null, [bob], [], "met", null), "Bob, at the Pier: met");
+  eq(S(null, [bob], ["Scott"], "", null), "Bob, with Scott, at the Pier");
+  // a fight comes first, then the place
+  const e = Engine.addEncounter(t, { name: "Dock fight" }).id;
+  eq(S("fought", [bob], ["Scott"], "2 of 4", day, { kind: "encounter", id: e }), "Scott fought Bob in Dock fight at the Pier on 2026-10-08: 2 of 4");
+  // the part carries id, name and gone, and never leads
+  const parts = Engine.interactionSentence(t, { ...L("shared", [bob], ["Scott"], "", null), place: { kind: "place", id: pier } }).parts;
+  eq(parts.find(p => p.kind === "place"), { kind: "place", id: pier, name: "the Pier", gone: false });
+  assert.notEqual(parts[0].kind, "place");
+  // added through addInteraction, and the sentence follows a rename
+  const ok = Engine.addInteraction(t, { kind: "shared", cast: [bob], crew: ["Scott"], text: "x", place: pier });
+  const nope = Engine.addInteraction(t, { kind: "shared", cast: [bob], crew: ["Scott"], text: "x", place: "PL-AAAAAAAA" });
+  const x = id => t.interactions.find(i => i.id === id);
+  eq(x(ok.id).place, { kind: "place", id: pier });
+  assert.equal(x(nope.id).place, null, "a place not on the table is no link");
+  Engine.editPlace(t, pier, { name: "the Ramble" });
+  assert.equal(sentenceText(t, x(ok.id)), "Scott told Bob “x” at the Ramble");
+  // editInteraction: set, refuse, clear
+  assert.equal(Engine.editInteraction(t, ok.id, { place: "PL-AAAAAAAA" }).ok, false);
+  assert.equal(Engine.editInteraction(t, ok.id, { place: 5 }).ok, false);
+  eq(x(ok.id).place, { kind: "place", id: pier }, "a refusal changes nothing");
+  const other = PL(t, "Elsewhere");
+  assert.ok(Engine.editInteraction(t, ok.id, { place: other }).ok);
+  eq(x(ok.id).place, { kind: "place", id: other });
+  assert.ok(Engine.editInteraction(t, ok.id, { place: null }).ok);
+  assert.equal(x(ok.id).place, null);
+  assert.ok(Engine.editInteraction(t, ok.id, { place: other }).ok);
+  assert.ok(Engine.editInteraction(t, ok.id, { text: "y" }).ok);
+  eq(x(ok.id).place, { kind: "place", id: other }, "an edit that doesn't name a place leaves it alone");
+});
+
+test("243: interactionSentence and linkName are total with a place", () => {
+  const { t, bob } = placeTable();
+  for (const place of [null, 5, "x", [], {}, { kind: "place" }, { kind: "place", id: 5 }, { kind: "place", id: "PL-AAAAAAAA", name: 7 }, { kind: "cast", id: bob }]) {
+    const r = Engine.interactionSentence(t, { ...L("shared", [bob], ["Scott"], "x", null), place });
+    assert.ok(Array.isArray(r.parts) && r.parts.length > 0, JSON.stringify(place));
+    assert.equal(typeof Engine.linkName(t, place).name, "string");
+  }
+  for (const tt of [null, undefined, {}, { places: "x" }, { places: [null, 3] }])
+    assert.equal(typeof Engine.linkName(tt, { kind: "place", id: "PL-AAAAAAAA" }).name, "string");
+});
+
+test("243: removing a place keeps its name in every line, struck, and undo restores it", () => {
+  const { t, bob } = placeTable();
+  const id = Engine.addPlace(t, { from: "central-park" }).id;
+  const a = Engine.addInteraction(t, { kind: "shared", cast: [bob], crew: ["Scott"], text: "the lake is on fire", place: id, date: "2026-10-23" }).id;
+  Engine.addInteraction(t, { kind: "shared", cast: [bob], crew: ["Scott"], text: "elsewhere" });
+  const base = plain(t);
+  eq(Engine.linkName(t, t.interactions.find(i => i.id === a).place), { name: "Central Park", gone: false });
+  const r = recorded(t, () => assert.ok(Engine.removePlace(t, id).ok));
+  assert.equal(r.entry.label, "Removed Central Park");
+  const link = t.interactions.find(i => i.id === a).place;
+  eq(link, { kind: "place", id, name: "Central Park" });
+  eq(Engine.linkName(t, link), { name: "Central Park", gone: true });
+  eq(Engine.linkName(t, { kind: "place", id: "PL-AAAAAAAA" }), { name: "A place removed", gone: true });
+  assert.equal(sentenceText(t, t.interactions.find(i => i.id === a)), "Scott told Bob “the lake is on fire” at Central Park on 2026-10-23");
+  assert.equal(t.places.length, 0);
+  assert.ok(Engine.undoTableAction(t).ok);
+  eq(undoBase(t), (() => { const o = plain(base); delete o.audit; o.meta.updated = null; return o; })());
+  assert.equal(Engine.removePlace(t, "PL-AAAAAAAA").ok, false);
+  assert.equal(Engine.removePlace(null, id).ok, false);
+});
+
+test("243: placeLines and placeMet read the lines, newest first, each member once", () => {
+  const { t, bob } = placeTable();
+  const gull = Engine.addCastMember(t, { name: "Gull" }).id;
+  const pier = PL(t, "the Pier"), other = PL(t, "Elsewhere");
+  const l1 = Engine.addInteraction(t, { kind: "shared", cast: [bob], crew: ["Scott"], text: "one", place: pier, date: "2026-10-01" }).id;
+  const l2 = Engine.addInteraction(t, { kind: "helped", cast: [gull, bob], crew: ["Scott"], text: "two", place: pier, date: "2026-10-05" }).id;
+  Engine.addInteraction(t, { kind: "shared", cast: [bob], crew: ["Scott"], text: "three", place: other, date: "2026-10-07" });
+  eq(Engine.placeLines(t, pier).map(x => x.id), [l2, l1]);
+  eq(Engine.placeMet(t, pier).map(m => m.name), ["Bob", "Gull"], "in the order first met, once each");
+  eq(Engine.placeLines(t, "PL-AAAAAAAA"), []);
+  eq(Engine.placeMet(t, "PL-AAAAAAAA"), []);
+  for (const v of [null, undefined, 5, {}]) { eq(Engine.placeLines(v, pier), []); eq(Engine.placeMet(v, pier), []); }
+  assert.equal(JSON.stringify(t.places).includes(l1), false, "no visit is stored on the place");
+});
+
+test("243: Find finds a place by any field, and a line by its place; Who knows what too", () => {
+  const { t, bob } = placeTable();
+  const cp = Engine.addPlace(t, { from: "central-park", district: "Upper West", neighborhood: "Strawberry Fields", environment: "convergences", notes: "ley lines" }).id;
+  Engine.editPlace(t, cp, { name: "The Ramble" });
+  const line = Engine.addInteraction(t, { kind: "shared", cast: [bob], crew: ["Scott"], text: "met", place: cp }).id;
+  const kinds = q => Engine.tableSearch(t, q).map(h => [h.kind, h.field]);
+  eq(kinds("ramble"), [["interaction", "Where"], ["place", "Name"]]);
+  eq(kinds("metro core"), [["place", "Zone"]]);
+  eq(kinds("central city"), [["place", "Territory"]]);
+  eq(kinds("upper west"), [["place", "District"]]);
+  eq(kinds("strawberry"), [["place", "Neighborhood"]]);
+  eq(kinds("convergences"), [["place", "Ground"]]);
+  eq(kinds("ley"), [["place", "Notes"]]);
+  const hit = Engine.tableSearch(t, "ramble").find(h => h.kind === "place");
+  assert.equal(hit.id, cp);
+  assert.equal(hit.title, "The Ramble");
+  eq(Engine.crewView(t, { q: "ramble" }).map(g => [g.name, g.interactions.map(x => x.id)]), [["Scott", [line]]]);
+  eq(Engine.crewView(t, { q: "central park" }), []);
+  // a place from the book with no typed name is found by the book's
+  const t2 = Engine.newTable("Q");
+  Engine.addPlace(t2, { from: "central-park" });
+  eq(Engine.tableSearch(t2, "central park").map(h => [h.kind, h.field]), [["place", "Name"]]);
+  // placeList: by title, filtered by words
+  const t3 = Engine.newTable("R");
+  for (const n of ["Zed's", "alpha", "Beta"]) PL(t3, n);
+  eq(Engine.placeList(t3).map(p => p.name), ["alpha", "Beta", "Zed's"]);
+  eq(Engine.placeList(t3, { q: "ZED" }).map(p => p.name), ["Zed's"]);
+  eq(Engine.placeList(t3, { q: 5 }).length, 3);
+  for (const v of [null, undefined, {}, { places: "x" }]) eq(Engine.placeList(v), []);
+});
+
+test("243: the activity log names a place", () => {
+  const { t } = placeTable();
+  let id;
+  assert.equal(recorded(t, () => { id = Engine.addPlace(t, { from: "central-park" }).id; }).entry.label, "Added Central Park");
+  assert.equal(recorded(t, () => Engine.editPlace(t, id, { district: "Upper West" }), null, { fold: false }).entry.label, "Changed Central Park");
+  assert.equal(recorded(t, () => Engine.removePlace(t, id)).entry.label, "Removed Central Park");
+  assert.ok(Engine.diffTable(t, { ...plain(t), places: [{ id: "PL-AAAAAAAA", name: "x" }] }).length > 0, "undo can see a place");
+  // all three undo, last first
+  for (let i = 0; i < 3; i++) assert.ok(Engine.undoTableAction(t).ok);
+  assert.equal(t.places.length, 0);
+  // a crafted op on places in a file is gated like any other record's
+  const good = { seq: 1, date: null, label: "x", patch: [{ path: ["places", 0, "name"], type: "scalar", before: "x" }] };
+  const bad = { seq: 2, date: null, label: "y", patch: [{ path: ["placez", 0, "name"], type: "scalar", before: "x" }] };
+  const m = Engine.migrateTable({ ...plain(t), audit: [good, bad] });
+  eq(m.audit.map(e => e.seq), [1]);
+});
+
+test("243: the gate types places and a line's place, keeps an unknown gazetteer id, and converts nothing", () => {
+  const base = Engine.newTable("G");
+  const bob = Engine.addCastMember(base, { name: "Bob" }).id;
+  const raw = [
+    null, 5, "x", [], { id: "PL-AAAAAAAA", name: "A", district: 5, neighborhood: null, notes: {}, territory: "central-city", zone: "metro-core", environment: "thin-places", from: { kind: "gazetteer", id: "central-park", name: "Central Park" } },
+    { id: "PL-AAAAAAAA", name: "Repeat" },
+    { id: "__proto__", name: "Proto" },
+    { id: "PL-BBBBBBBB", name: 7, from: [], territory: ["central-city"], zone: 5, environment: "Not An Id", extra: 1 },
+    { id: "PL-CCCCCCCC", name: "Newer", from: { kind: "gazetteer", id: "a-newer-entry", name: 9 }, territory: "a-newer-territory" },
+    { id: "PL-DDDDDDDD", name: "Odd kind", from: { kind: "pack", id: "x" } },
+  ];
+  const f = Engine.migrateTable({ ...plain(base), places: raw });
+  assert.equal(f.places.length, 6, "junk records are dropped");
+  const ids = f.places.map(p => p.id);
+  assert.equal(new Set(ids).size, 6);
+  assert.ok(ids.every(i => /^PL-[0-9A-HJKMNP-TV-Z]{8}$/.test(i)));
+  eq([f.places[0].district, f.places[0].neighborhood, f.places[0].notes], ["", "", ""]);
+  eq(f.places[0].from, { kind: "gazetteer", id: "central-park", name: "Central Park" });
+  assert.notEqual(f.places[1].id, "PL-AAAAAAAA", "a repeated id is remade");
+  assert.notEqual(f.places[2].id, "__proto__");
+  eq([f.places[3].name, f.places[3].from, f.places[3].territory, f.places[3].zone, f.places[3].environment, f.places[3].extra], ["", null, null, null, null, 1]);
+  eq([f.places[4].from, f.places[4].territory], [{ kind: "gazetteer", id: "a-newer-entry" }, "a-newer-territory"], "an id this data doesn't have is kept, and reads as nothing");
+  assert.equal(Engine.placeTitle(f, f.places[4]), "Newer");
+  assert.equal(f.places[5].from, null);
+  assert.equal(({}).polluted, undefined);
+  // a line's place
+  const mk = place => ({ kind: "shared", cast: [{ kind: "cast", id: bob }], crew: ["Scott"], text: "x", place });
+  const bad = ["PL-AAAAAAAA", { kind: "cast", id: bob }, { kind: "place", id: "__proto__" }, { kind: "place", id: "PL-1" }, [], 5, true, { kind: "place", id: 7 }];
+  const g = Engine.migrateTable({ ...plain(base), interactions: [...bad.map(mk), mk({ kind: "place", id: "PL-AAAAAAAA", name: 7 }), mk({ kind: "place", id: "PL-AAAAAAAA", name: "Gone", extra: 1 })] });
+  eq(g.interactions.slice(0, bad.length).map(x => x.place), bad.map(() => null));
+  eq(g.interactions[bad.length].place, { kind: "place", id: "PL-AAAAAAAA" }, "a numeric name is dropped, the link kept");
+  eq(g.interactions[bad.length + 1].place, { kind: "place", id: "PL-AAAAAAAA", name: "Gone" }, "a link to no place is kept");
+  // a place link inside cast is still dropped
+  const h = Engine.migrateTable({ ...plain(base), interactions: [{ ...mk(null), cast: [{ kind: "place", id: "PL-AAAAAAAA" }, { kind: "cast", id: bob }] }] });
+  eq(h.interactions[0].cast, [{ kind: "cast", id: bob }]);
+  // a 0.13 table loads with places [] and place null, its text untouched
+  const old = plain(base);
+  old.meta.tableSchemaVersion = "0.13";
+  old.interactions = [{ ...mk(undefined), id: "I-AAAAAAAA", text: "Unchanged." }];
+  old.places = "x";
+  const m = Engine.migrateTable(old);
+  assert.equal(m.meta.tableSchemaVersion, "0.14");
+  eq(m.places, []);
+  assert.equal(m.interactions[0].place, null);
+  assert.equal(m.interactions[0].text, "Unchanged.");
+  // constraint 8: new, add, migrate round-trips
+  const r = Engine.newTable("R");
+  const pid = Engine.addPlace(r, { from: "central-park", district: "d", notes: "n" }).id;
+  Engine.addInteraction(r, { kind: "shared", cast: [Engine.addCastMember(r, { name: "B" }).id], crew: ["S"], text: "x", place: pid });
+  eq(Engine.migrateTable(r), r);
+  eq(Engine.migrateTable(Engine.newTable("N")).places, []);
+});
+
+test("243: the new readers are total on junk", () => {
+  for (const t of [null, undefined, 5, "x", [], {}, { places: "x" }, { places: [null, 3, "x", { name: 5 }] }, { places: {}, interactions: "x" }]) {
+    assert.ok(Array.isArray(Engine.placeList(t)));
+    assert.ok(Array.isArray(Engine.placeLines(t, "PL-AAAAAAAA")));
+    assert.ok(Array.isArray(Engine.placeMet(t, "PL-AAAAAAAA")));
+    assert.ok(Array.isArray(Engine.tableSearch(t, "park")));
+    assert.equal(typeof Engine.linkName(t, { kind: "place", id: "PL-AAAAAAAA" }).name, "string");
+    assert.equal(Engine.editPlace(t, "PL-AAAAAAAA", {}).ok, false);
+    assert.equal(Engine.removePlace(t, "PL-AAAAAAAA").ok, false);
+  }
+  assert.equal(Engine.addPlace(null, {}).ok, false);
 });

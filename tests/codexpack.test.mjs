@@ -46,7 +46,10 @@ const GROUPS = [
 ];
 
 // o.shift renumbers every entry, o.names renames by key, o.extra adds an entry,
-// and the rest each break one thing a check should catch.
+// and the rest each break one thing a check should catch. The shapes are the split
+// Codex's (2610–2617). o.old lists the ones to print the way the old combined document
+// did, o.joined prints the NPC Roles heading on one line, o.unnumbered prints traits
+// with no list number.
 function codex(o = {}) {
   const shift = o.shift || 0, ents = ENTRIES.map(e => ({ ...e, name: (o.names || {})[e.key] || e.name, n: e.n + shift }));
   if (o.extra) ents.push({ key: "x", n: 4 + shift, name: o.extra, sec: 1, role: "Tidecaller", enemy: "Skimmer", tier: 1, s: [5, 5, 5, 5, 5, 5, 5, 5, 1, 1], audit: {},
@@ -85,7 +88,7 @@ ${e.gear}
 
 **TRAITS**
 
-${e.traits.map(([n, t]) => `**${n}.** ${t}`).join("\n\n")}
+${e.traits.map(([n, t], i) => `${o.unnumbered ? "" : `${e.n * 10 + i}.  `}**${n}.** ${t}`).join("\n\n")}
 
 > **GM Note:** *Run ${e.name} quietly.*
 `;
@@ -141,16 +144,15 @@ ${row("Fennick's Promise", "SIGNATURE", "Keeps one back.")}
 </tbody>
 </table>
 `;
-  const human = `<!-- a mirror -->
-
-**How to Read an Entry**
+  const old = k => (o.old || []).includes(k);
+  const human = `${old("overview") ? "**How to Read an Entry**" : "## Codex Overview"}
 
 |  |  |
 |----|----|
 | **FIELD** | **WHAT IT TELLS YOU** |
 ${o.noTierRow ? "" : "| Tier | The weight: T1 (light touch), T2 (hard stop), T4/Apex (one of a kind). See Tier Reference. |"}
 
-**TOL and WILL Calculation**
+${old("overview") ? "**TOL and WILL Calculation**" : "## Entries"}
 
 **PART B**
 
@@ -160,13 +162,19 @@ ${sections}
 A flag.
 
 ${glossary}
-**PART D**
+${old("glossary") ? "**PART D**" : "## The Trait Library"}
 
 **Trait Library**
+
+<table>
+<tbody>
+${row("Decoy Trait", "UNIVERSAL", "A library row, not a glossary one.")}
+</tbody>
+</table>
 `;
   const v2 = `# A Codex
 
-### NPC Roles
+${o.joined ? "### NPC Roles" : "### \\\nNPC Roles"}
 
 | ROLE | IN THE WORLD | RESOURCES AND TOOLS | WHEN TURNED HOSTILE |
 |----|----|----|----|
@@ -180,7 +188,7 @@ ${glossary}
 | Grindstone | T1 | Wears them down. | The grind stops. | Numbers |
 | Skimmer | T2 | Takes the top off. | The surface settles. | Pace |
 
-#### Origin Modifiers
+${old("origins") ? "#### Origin Modifiers" : "### Origins"}
 
 <table>
 <thead>
@@ -391,6 +399,57 @@ test("every check trips on a codex that breaks it", () => {
   assert.match(problems({ names: { b: "Brindle Hound" } }), /two records with one name in entries: "Brindle Hound"/, "two records, one name");
   const noLedger = builder().buildPack({ ...codex(), ledger: null, Engine, D });
   assert.equal(noLedger.pack, null); assert.match(noLedger.problems.join(), /no id ledger/);
+});
+
+// ── The split Codex's shapes (2610–2617), one test each ─────────────────────
+// Each is a made-up codex with the shape changed and nothing else; each fails on the
+// builder that read the old combined document.
+test("split shape 2: a heading the conversion split over two lines reads as the one-line heading", () => {
+  const src = codex(), ledger = ledgerFor(src);
+  assert.match(src.v2, /^### \\\nNPC Roles$/m, "the made-up v2 prints the split heading");
+  const split = build(src, ledger), joined = once({ joined: true }, ledger);
+  assert.deepEqual(split.problems, []);
+  assert.equal(B.serialize(split.pack), B.serialize(joined.pack), "split or joined, one pack");
+  assert.equal(split.pack.npcRoles.length, 2);
+});
+
+test("a CRLF codex builds the same pack (a Windows checkout)", () => {
+  const src = codex(), ledger = ledgerFor(src), crlf = t => t.replace(/\n/g, "\r\n");
+  const r = build({ human: crlf(src.human), v2: crlf(src.v2), audit: crlf(src.audit) }, ledger);
+  assert.deepEqual(r.problems, []);
+  assert.equal(B.serialize(r.pack), B.serialize(build(src, ledger).pack));
+});
+
+test("split shape 3: the origins are under an Origins heading, and the old heading is no longer read", () => {
+  const ledger = ledgerFor(codex());
+  assert.deepEqual(once({}, ledger).problems, []);
+  assert.equal(once({}, ledger).pack.origins.length, 2);
+  const r = once({ old: ["origins"] }, ledger);
+  assert.equal(r.pack, null); assert.match(r.problems.join("\n"), /no Origins table/);
+});
+
+test("split shape 4: the tier labels are in the Codex Overview, and the old How to Read block is no longer read", () => {
+  const ledger = ledgerFor(codex());
+  assert.deepEqual(once({}, ledger).pack.tiers.map(t => t.name), ["Light touch", "Hard stop"]);
+  const r = once({ old: ["overview"] }, ledger);
+  assert.equal(r.pack, null); assert.match(r.problems.join("\n"), /no Tier row/);
+});
+
+test("split shape 5: a trait paragraph that starts with a list number is the same trait", () => {
+  const src = codex(), ledger = ledgerFor(src);
+  assert.match(src.human, /^\d+\.  \*\*Salt Rampart\.\*\*/m, "the made-up traits are numbered");
+  const numbered = build(src, ledger), plain_ = once({ unnumbered: true }, ledger);
+  assert.deepEqual(numbered.problems, []);
+  assert.equal(B.serialize(numbered.pack), B.serialize(plain_.pack), "numbered or not, one pack");
+  assert.deepEqual(numbered.pack.entries[0].block.traits.map(t => t.name), ["Salt Rampart", "Fennick’s Promise"]);
+});
+
+test("split shape 6: the glossary ends at the next ## heading, so the library's rows are not traits", () => {
+  const src = codex(), ledger = ledgerFor(src);
+  assert.match(src.human, /^## The Trait Library$/m); assert.doesNotMatch(src.human, /PART D/);
+  const r = build(src, ledger);
+  assert.deepEqual(r.problems, []);
+  assert.deepEqual(r.pack.traits.map(t => t.name).sort(), ["Fennick's Promise", "Hollow Bell", "Salt Rampart"], "the library's decoy row is not a trait");
 });
 
 test("a record the audit lacks falls back to the book's table, with a warning", () => {

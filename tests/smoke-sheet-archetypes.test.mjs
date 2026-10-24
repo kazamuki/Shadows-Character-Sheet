@@ -609,8 +609,8 @@ test("crb-v4-sync P4: the Bloodline step offers three; a Draugur picks a weapon 
   assert.match(main(), /Innate powers.*Bestial Blessings.*granted · rank 1.*Preternatural Speed.*granted(?! ·)/s, "the Innate powers aren't shown granted");
   assert.match(main(), /place 3 Base Powers/);
   app.click('[data-step="bp|odins-aegis|1"]');
-  app.click('[data-step="bp|odins-aegis|1"]');
-  assert.ok(app.$('[data-step="bp|odins-aegis|1"]').disabled, "a power went past Max Starting Rank 2");
+  assert.ok(app.$('[data-step="bp|odins-aegis|1"]').disabled, "a power took a second Base Power (Decision 240)");
+  app.click('[data-step="bp|battleborn-instinct|1"]');
   // Review: the Base Power left blocks the lock while something can still take it.
   const steps = D.creationFlow.steps.map(s => s.id);
   app.click(`[data-goto="${steps.length}"]`);   // Review follows the data's steps
@@ -618,7 +618,7 @@ test("crb-v4-sync P4: the Bloodline step offers three; a Draugur picks a weapon 
   app.click(`[data-goto="${steps.indexOf("archetype")}"]`);
   app.click('[data-step="bp|deathless-resilience|1"]');
   const draft = stored(app, { locked: false });
-  assert.deepEqual({ ...draft.archetypeChoices.basePowers }, { "odins-aegis": 2, "deathless-resilience": 1 });
+  assert.deepEqual({ ...draft.archetypeChoices.basePowers }, { "odins-aegis": 1, "battleborn-instinct": 1, "deathless-resilience": 1 });
   assert.deepEqual(JSON.parse(JSON.stringify(draft.archetypeChoices.optionPicks)), { "ancient-weapon": "spear", code: { hunt: "Only the guilty" } });
   // Changing Bloodline takes back the old one's ranks and choices; Built to Last is no choice (F41).
   app.click('[data-step="bp|odins-aegis|-1"]');
@@ -707,19 +707,19 @@ test("crb-v4-sync P4: Admin sets a saved Vampire's Bloodline, its choices and it
   assert.deepEqual(app.errors, []);
 });
 
-test("Decision 215: a Street Strigoi's Bloodline step shows the Innate powers granted and the Bloodline's with steppers, and the CP step's Powers raise a rank for 5 CP", () => {
-  const app = onArchetypeStep("vampire", "street");   // 2 Base Powers, Max Starting Rank 1, Max Power Rank 2
+test("Decisions 215, 240: a Street Strigoi's Bloodline step shows the Innate powers granted and the Bloodline's with steppers, and a Heroic one's CP step raises a rank for 5 CP", () => {
+  const app = onArchetypeStep("vampire", "street");   // 2 Base Powers, Max Starting Rank 1
   app.click('[data-spec="strigoi"]');
   const innate = ["bestial-blessings", "vitality-surge", "preternatural-speed", "cursed-evolution"];
   for (const id of innate) assert.equal(app.$(`[data-step^="bp|${id}|"]`), null, `${id} has a Base Power stepper`);
   for (const id of ["shadow-play", "veil-of-night", "bone-spines"]) assert.ok(app.$(`[data-step="bp|${id}|1"]`), `${id} has no stepper`);
-  assert.match(app.$("#main").textContent, /Your Innate powers are yours at rank 1\. Base Powers go into your Bloodline's powers\./);
+  assert.match(app.$("#main").textContent, /Your Innate powers are yours at rank 1\. Each Base Power takes one of your Bloodline's powers at rank 1\. At this Power Level, CP raises no power/);
   app.click('[data-step="bp|shadow-play|1"]'); app.click('[data-step="bp|veil-of-night|1"]');
   const draft = stored(app, { locked: false });
   assert.deepEqual({ ...draft.archetypeChoices.basePowers }, { "shadow-play": 1, "veil-of-night": 1 });
   assert.deepEqual(app.errors, []);
 
-  const cp = onStep("vampire", "street", "character-points", ch => {
+  const cp = onStep("vampire", "heroic", "character-points", ch => {   // Max Starting Rank 2
     ch.archetypeChoices.specialization = ["strigoi"];
     ch.archetypeChoices.basePowers = { "shadow-play": 1, "veil-of-night": 1 };
   });
@@ -731,10 +731,68 @@ test("Decision 215: a Street Strigoi's Bloodline step shows the Innate powers gr
   cp.click('[data-step="apow|bestial-blessings|1"]');
   assert.deepEqual({ ...stored(cp, { locked: false }).archetypeChoices.powerCp }, { "bestial-blessings": 1 });
   assert.equal(left(), before - 5, "a press didn't spend 5 CP");
-  assert.ok(cp.$('[data-step="apow|bestial-blessings|1"]').disabled, "CP passed Max Power Rank 2");
+  assert.ok(cp.$('[data-step="apow|bestial-blessings|1"]').disabled, "CP passed Max Starting Rank 2");
   cp.click('[data-step="apow|bestial-blessings|-1"]');
   assert.equal(left(), before);
   assert.deepEqual(cp.errors, []);
+});
+
+test("Decision 240: a Heroic Strigoi's Bloodline step takes each power once, and the CP step raises one to rank 2, no further", () => {
+  const app = onArchetypeStep("vampire", "heroic");   // 3 Base Powers, Max Starting Rank 2
+  app.click('[data-spec="strigoi"]');
+  assert.match(app.$("#main").textContent, /Each Base Power takes one of your Bloodline's powers at rank 1\. CP raises any of your powers on the Character Points step, up to rank 2\./);
+  app.click('[data-step="bp|shadow-play|1"]');
+  assert.ok(app.$('[data-step="bp|shadow-play|1"]').disabled, "a power took a second Base Power");
+  assert.equal(app.$('[data-step="bp|veil-of-night|1"]').disabled, false);
+  assert.match(app.$('[data-step="bp|shadow-play|1"]').closest(".pick").textContent, /rank 1/);
+  assert.deepEqual(app.errors, []);
+
+  const cp = onStep("vampire", "heroic", "character-points", ch => {
+    ch.archetypeChoices.specialization = ["strigoi"];
+    ch.archetypeChoices.basePowers = { "shadow-play": 1 };
+  });
+  cp.click('[data-step="apow|shadow-play|1"]');
+  assert.ok(cp.$('[data-step="apow|shadow-play|1"]').disabled, "CP passed Max Starting Rank 2");
+  assert.deepEqual({ ...stored(cp, { locked: false }).archetypeChoices.powerCp }, { "shadow-play": 1 });
+  assert.deepEqual(cp.errors, []);
+});
+
+test("Decision 240: a Street Vampire is told CP raises no power, and a locked Vampire placed under Decision 215 keeps rank 2 on Admin", () => {
+  const app = onArchetypeStep("vampire", "street");
+  app.click('[data-spec="strigoi"]');
+  assert.match(app.$("#main").textContent, /At this Power Level, CP raises no power/);
+  assert.doesNotMatch(app.$("#main").textContent, /CP raises any of your powers/);
+  // The CP step says it too, under its header, with the rows kept (Ken, on the review).
+  const cpStreet = onStep("vampire", "street", "character-points", ch => {
+    ch.archetypeChoices.specialization = ["strigoi"];
+    ch.archetypeChoices.basePowers = { "shadow-play": 1 };
+  });
+  assert.match(cpStreet.$("#main").textContent, /Powers — 5 CP per rank\s*At this Power Level, CP raises no power: every one starts at rank 1\./);
+  assert.ok(cpStreet.$('[data-step="apow|shadow-play|1"]'), "the rows went");
+  const cpHeroic = onStep("vampire", "heroic", "character-points", ch => {
+    ch.archetypeChoices.specialization = ["strigoi"];
+    ch.archetypeChoices.basePowers = { "shadow-play": 1 };
+  });
+  assert.doesNotMatch(cpHeroic.$("#main").textContent, /CP raises no power/);
+  assert.deepEqual([app.errors, cpStreet.errors, cpHeroic.errors], [[], [], []]);
+  assert.deepEqual(app.errors, []);
+
+  const ch = lockedVampire();
+  ch.archetypeChoices.basePowers = { "battleborn-instinct": 2 };   // one Base Power left, so a disabled + is the cap's doing
+  const sheet = openSheet(ch, "character");
+  assert.match(sheet.$("#main").textContent, /Battleborn Instinct\s*rank 2/);
+  sheet.click("[data-menu-toggle]"); sheet.click("[data-admin]");
+  // Admin is past creation: its note says what a Base Power is and stops, whatever the Power Level.
+  assert.match(sheet.$(".admin-arch").textContent, /Each Base Power takes one of your Bloodline's powers at rank 1\./);
+  assert.doesNotMatch(sheet.$(".admin-arch").textContent, /CP raises/);
+  const street = lockedVampire(); street.creation.powerLevel = "street"; street.archetypeChoices.basePowers = { "battleborn-instinct": 1 };
+  const streetSheet = openSheet(street, "main");
+  streetSheet.click("[data-menu-toggle]"); streetSheet.click("[data-admin]");
+  assert.doesNotMatch(streetSheet.$(".admin-arch").textContent, /CP raises/);
+  assert.ok(sheet.$('.admin-arch [data-step="bp|battleborn-instinct|1"]').disabled, "Admin's + went past rank 1");
+  assert.equal(sheet.$('.admin-arch [data-step="bp|battleborn-instinct|-1"]').disabled, false);
+  assert.equal(sheet.$('.admin-arch [data-step="bp|odins-aegis|1"]').disabled, false);
+  assert.deepEqual(sheet.errors, []);
 });
 
 test("Decision 215: CP left on a power with no row shows a take-back-only row, and one press clears its error", () => {
@@ -754,11 +812,11 @@ test("Decision 215: CP left on a power with no row shows a take-back-only row, a
   assert.deepEqual(app.errors, []);
 });
 
-test("Decision 215: a Werewolf's Bloodline step is the Vampire's: the Innate five granted, the Origin's powers bought", () => {
+test("Decisions 215, 240: a Werewolf's Bloodline step is the Vampire's: the Innate five granted, the Origin's powers bought", () => {
   const app = onArchetypeStep("werewolf", "street");   // 1 Base Power, Max Starting Rank 1
   app.click('[data-spec="trueborn"]');
   assert.match(app.$("#main").textContent, /place 1 Base Power/);
-  assert.match(app.$("#main").textContent, /Base Powers go into your Origin's powers/);
+  assert.match(app.$("#main").textContent, /Each Base Power takes one of your Origin's powers at rank 1/);
   assert.equal(app.$('[data-step^="bp|primal-leap|"]'), null, "an Innate power has a stepper");
   assert.match(app.$("#main").textContent, /Innate powers.*Primal Leap.*granted · rank 1/s);
   assert.ok(app.$('[data-step="bp|apex-fury|1"]'));

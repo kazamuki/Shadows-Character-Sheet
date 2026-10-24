@@ -37,7 +37,7 @@ function holdingHtml(ch){
 // ════ LIVE SHEET ══════════════════════════════════════════════════════
 // `under` is HTML that sits beneath the title: Main puts the intake number there.
 function sheetHeader(title, note, under){
-  let h = importIssuesHtml();
+  let h = importIssuesHtml() + focusedOwedHtml(S.ch);
   h += `<h1 class="step-title">${esc(title)}</h1>${under||""}`;
   if (note) h += `<p class="step-note">${note}</p>`;
   return h;
@@ -1861,7 +1861,7 @@ function adminArchChoicesHtml(ch){
   return `<div class="trk"><h2>${esc(spec.label||"Specialization")}</h2>
     <select data-admin-spec aria-label="${esc(spec.label||"Specialization")}"><option value="">— none —</option>${spec.options.map(o=>`<option value="${esc(o.id)}" ${cur===o.id?"selected":""}>${esc(o.name)}</option>`).join("")}</select>
     <span class="sub">Changing it clears what the old one asked for, and Base Powers placed in its powers.</span></div>`
-    + `<div class="admin-arch">${optionChoicesHtml(ch)}${basePowersHtml(ch, a)}</div>`;
+    + `<div class="admin-arch">${optionChoicesHtml(ch)}${basePowersHtml(ch, a, false)}</div>`;
 }
 function adminWriteInHtml(ch){
   if (!Engine.writeInOptions(ch)) return "";
@@ -2326,12 +2326,8 @@ function renderShLoadout(){
       if (names.length) h += `<p class="step-note">${names.map(esc).join(" · ")} — advance at ${per}× current rank.</p>`;
       if (f && f.all) h += `<p class="step-note">Every skill advances at ${per}× current rank up to rank ${esc(f.all.throughRank)}.</p>`;
       if (!names.length && !(f && f.all)) h += `<p class="step-note">None.</p>`;
-      if (fp && !fp.complete){
-        const more = fp.need - fp.have, cat = esc(Engine.focusedCategoryName(fp.category));
-        if (more>0) h += `<p class="step-note">Choose ${more} more ${cat} Skill${more===1?"":"s"} to Focus.</p>`;
-        if (fp.invalid.length) h += `<p class="step-note">A pick below can't be a Focused Skill any more. Remove it.</p>`;
-        h += focusedPickHtml(ch, "data-fpick");
-      }
+      // The picker is at the top of the tab (Decision 238), not here.
+      h += focusedOwedLines(fp, true).map(l=>`<p class="step-note">${esc(l)}</p>`).join("");
     }
     if (p.type==="specializationText"){
       const entries = Engine.specializationChosen(ch).map(o=>o[p.field]).filter(x=>x && typeof x==="object");

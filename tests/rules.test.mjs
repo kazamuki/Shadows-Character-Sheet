@@ -969,6 +969,84 @@ test('CRB 0412, Cleaner: "Acrobatics, Combat Sense, Security, Stealth, and 2 Com
   assert.equal(Engine.focusedSkillIds(ch).length, 6);
 });
 
+/** One Professional subtype's section of 0412, with the mirror's CRLFs and the bold markers gone. */
+function subtypeSection(name) {
+  const md = crb("0412_Professional.md").replace(/\r/g, "");
+  const sections = md.split(/^##### /m).slice(1);
+  const sec = sections.find(s => s.split("\n")[0].trim() === name);
+  assert.ok(sec, `0412 has no "##### ${name}" section: it moved or was renamed`);
+  return sec;
+}
+const professionalOptions = () => D.archetypes.find(a => a.id === "professional").specialization.options;
+
+test("CRB 0412: every Professional subtype requires the stats the book prints", () => {
+  const book = crb("0412_Professional.md").replace(/\r/g, "").split(/^##### /m).slice(1)
+    .map(s => ({ name: s.split("\n")[0].trim(), sec: s })).filter(s => /REQUIRED STATS/.test(s.sec));
+  assert.ok(book.length >= 8, "0412 prints fewer subtypes than the data has: the heading moved");
+  const lineAfter = sec => { const lines = sec.split("\n"); const i = lines.findIndex(l => /REQUIRED STATS/.test(l));
+    return lines.slice(i + 1).find(l => l.trim()).replace(/\\/g, ""); };
+  const seen = [];
+  for (const { name, sec } of book) {
+    const opt = professionalOptions().find(o => o.name === name);
+    assert.ok(opt, `0412 prints a Professional the data doesn't have: ${name}`);
+    const printed = lineAfter(sec).split("|").map(x => x.trim()).sort();
+    const held = Object.entries(opt.requires.stats).map(([k, v]) => `${k} ${v}`).sort();
+    assert.deepEqual(held, printed, `${name}: Required Stats`);
+    seen.push(opt.id);
+  }
+  assert.equal(seen.sort().join(), professionalOptions().filter(o => o.requires).map(o => o.id).sort().join(),
+    "the data holds a Professional with requirements 0412 doesn't print");
+});
+
+test('CRB 0412, Enforcer: "Athletics, Combat Sense, Cybernetics, Intimidation, Investigation, and 1 Combat Skill"', () => {
+  assert.match(subtypeSection("Enforcer"), /Athletics, Combat Sense, Cybernetics, Intimidation, Investigation, and 1 Combat Skill/);
+  const ch = professional("enforcer");
+  assert.equal([...Engine.focusedSkillIds(ch)].sort().join(), "athletics,combat-sense,cybernetics,intimidation,investigation");
+  const p = Engine.focusedPicks(ch);
+  assert.equal(p.need, 1, "the Enforcer's sixth Focused Skill isn't asked for");
+  assert.ok(focusedErrors(ch).some(m => /Choose 1 Combat Skill /.test(m)), "validate doesn't ask for the pick");
+  assert.ok(p.options.every(id => Engine.skillById(id).category === "combat"), "the pick offers a skill that isn't Combat");
+  assert.ok(!p.options.includes("combat-sense"), "the pick offers Combat Sense, which the Enforcer already has");
+  assert.equal(Engine.toggleFocusedPick(ch, "rifles").ok, true);
+  assert.equal(Engine.focusedSkillIds(ch).length, 6);
+  assert.deepEqual(focusedErrors(ch), []);
+  assert.equal(Engine.toggleFocusedPick(ch, "melee").ok, false, "a second pick went through");
+});
+
+test("CRB 0412, Enforcer: Duty Grade is the book's words, without Issued Hardware", () => {
+  const sec = subtypeSection("Enforcer").replace(/\*\*/g, "");
+  assert.match(subtypeSection("Enforcer"), /Issued Hardware\.\*\* \\\[Starting chrome, pending the loadout decision\.\\\]/,
+    "0412 wrote Issued Hardware: add it to Duty Grade (YQ3)");
+  const tweak = professionalOptions().find(o => o.id === "enforcer").tweak;
+  assert.equal(tweak.name, "Duty Grade");
+  assert.equal(tweak.benefits.length, 3);
+  for (const t of [tweak.description, ...tweak.benefits]) {
+    assert.ok(sec.includes(t), `Duty Grade's text isn't 0412's: ${t}`);
+    assert.ok(!/Issued Hardware|\[/.test(t), `Duty Grade carries Issued Hardware's placeholder: ${t}`);
+  }
+});
+
+test("Y1: a saved Enforcer keeps its skills; Survival advances at the standard price and Cybernetics at the Focused one", () => {
+  const ch = professional("enforcer");
+  ch.creation.locked = true;
+  ch.skills.survival = { rank: 3, ipe: 0 };
+  ch.skills.cybernetics = { rank: 2, ipe: 0 };
+  const m = Engine.migrate(JSON.parse(JSON.stringify(ch)));
+  assert.deepEqual([...m.archetypeChoices.focusedSkillPicks], [], "migrate() wrote a pick");
+  assert.equal(m.skills.survival.rank, 3);
+  assert.equal(Engine.ipCost(m, "skill", "survival").cost, 15, "Survival is still Focused");
+  assert.equal(Engine.ipCost(m, "skill", "cybernetics").cost, 6, "Cybernetics isn't Focused");
+});
+
+test("Y1: a draft Enforcer is gated by BOD 8 and COOL 7, not REF and MOB", () => {
+  const ch = professional("enforcer");
+  for (const [k, v] of Object.entries({ REF: 4, MOB: 4, BOD: 8, COOL: 7 })) ch.stats[k].base = v;
+  const errs = () => [...Engine.validate("archetype", ch), ...Engine.validate("stats", ch)].map(i => String(i.msg)).filter(m => /Enforcer requires/.test(m));
+  assert.deepEqual(errs(), []);
+  ch.stats.COOL.base = 5;
+  assert.deepEqual(errs(), ["Enforcer requires COOL 7 (you have 5)."]);
+});
+
 test('CRB 0412: the Focused Skill Max Bonus (+1/+2/+3/+4) raises the starting cap of Focused Skills only (B13)', () => {
   // 0420: "The cap on starting rank is a function of Campaign Power Level.
   // Once the campaign begins, it doesn't apply."
@@ -1231,7 +1309,7 @@ test("R15: every Innate and Origin power is the book's, by name, cost, effect an
     for (const [name, cost, effect, perRank] of rows) {
       const p = mine.find(x => x.name === name);
       assert.equal(JSON.stringify([flat(p.cost), flat(p.effect), flat(p.perRank)]), JSON.stringify([cost, effect, perRank]), `${name} isn't as 0414 prints it`);
-      assert.equal(p.maxRank, 3, `${name}: "can eventually raise them up to Rank 3"`);
+      assert.equal(p.maxRank, 3, `${name}: its Per Rank column stops at Rank 3`);
       count++;
     }
   }
@@ -1283,6 +1361,23 @@ test("R15: Werewolf form is the book's +2 REF, +2 MOB, +4 BOD, Claws BOD+8 and F
   assert.equal(WW().vulnerabilities.map(v => v.name + (v.origin ? `@${v.origin}` : "")).join(", "), "Silver, Feral Mind, Call of the Wild, EMP@forge-fang");
 });
 
+// ── 0460's Layered Street Clothes (Y0) ─────────────────────────────────
+
+test("CRB 0460: Layered Street Clothes is the book's row", () => {
+  const md = crb("0460_Gear.md");
+  const at = md.indexOf("### Full Coverage");
+  assert.ok(at >= 0, "0460 has no Full Coverage section");
+  const row = md.slice(at, md.indexOf("###", at + 4)).split("\n").find(l => /^\| Layered Street Clothes \|/.test(l));
+  assert.ok(row, "0460's Full Coverage table has no Layered Street Clothes row");
+  const [, prot, res, int, quality, material, availability, mods, cost] = row.split("|").slice(1, -1).map(c => c.trim());
+  const piece = D.armor.find(a => a.name === "Layered Street Clothes");
+  assert.ok(piece, "the armor catalog has no Layered Street Clothes");
+  assert.equal(piece.coverage, "full");
+  assert.deepEqual(
+    [piece.prot, `+${piece.res}`, String(piece.integrity), piece.quality, piece.material, piece.availability, String(piece.mods), `${piece.cost.toLocaleString("en-US")}Ç`],
+    [prot, res, int, quality, material, availability, mods, cost], "the catalog's piece isn't the book's row");
+});
+
 // ── 0460's grenade table (crb-v4-sync P1, VQ8) ─────────────────────────
 
 test("CRB 0460: every grenade carries its 1x / 2x+ column and its Defense as printed", () => {
@@ -1311,8 +1406,12 @@ test("CRB 0414: the Werewolf's 29 Major Milestones, by name, effect and prerequi
   const md = crb("0414_Werewolf.md");
   const at = md.indexOf("## Growth & Milestones");
   assert.ok(at >= 0, "0414 has no Growth & Milestones section");
-  const rows = md.slice(at).split("\n").filter(l => /^\| [A-Z]/.test(l) && !/^\| Milestone \|/.test(l))
-    .map(l => l.split("|").slice(1, -1).map(c => c.trim()));
+  // The table is HTML. A cell's <br /> and the newlines around it are one space, any other tag is
+  // dropped, and the comparison below is exact (not through `flat`, which drops periods).
+  const table = /<table>[\s\S]*?<\/table>/.exec(md.slice(at));
+  assert.ok(table, "0414's Growth & Milestones has no table");
+  const rows = [...table[0].matchAll(/<tr>([\s\S]*?)<\/tr>/g)].filter(m => !/<th[ >]/.test(m[1]))
+    .map(m => [...m[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map(c => c[1].replace(/\s*<br\s*\/?>\s*/g, " ").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim()));
   const ww = D.archetypes.find(a => a.id === "werewolf");
   const data = ww.growth.majorMilestones;
   assert.equal(data.length, rows.length, "the book and the data list a different number of Majors");
@@ -1361,14 +1460,21 @@ test("R16: the Vampire's Campaign Power Scaling matches 0413, row for row", () =
   assert.equal(seen.sort().join(), D.powerLevels.map(p => p.id).sort().join());
   assert.match(md, /The Focus Stats for the Vampire are BOD, REF, and MOB/);
   assert.equal(VA().campaignPowerScaling.focusStats.join(" "), "BOD REF MOB");
-  // The book's sentence is still F39's old reading; Ken's ruling (Decision 215, W88) is
-  // that Innate powers are granted and Base Powers buy the Bloodline's, none above Max Starting Rank.
-  assert.match(md, /Spend your Base Powers on Innate and Bloodline powers; no power starts above your Max Starting Rank\./);
-  assert.match(VA().campaignPowerScaling.notes, /Innate powers are yours at rank 1\. Spend your Base Powers on your Bloodline's powers; none starts above your Max Starting Rank\./);
+  // The book prints the rule Decision 240 builds (YQ1): every Vampire gets the full set of Innate Powers,
+  // then a number of Bloodline powers at Rank 1; the next test pins the data's notes to it.
+  assert.match(md, /Every Vampire gets the full set of Innate Powers\. You then are granted a number of Bloodline powers during character creation, at Rank 1\./);
+  assert.match(VA().campaignPowerScaling.notes, /Innate powers are yours at rank 1\. Each Base Power takes one of your Bloodline's powers at rank 1, and Character Points raise a power up to your Max Starting Rank\./);
   assert.equal(JSON.stringify(VA().powersBought), JSON.stringify({ countBy: "campaignPowerScaling.basePowers", maxRankBy: "campaignPowerScaling.maxStartingRank", granted: "innate" }));
   // The Werewolf buys the same way, reading the same columns of its own table.
   assert.equal(JSON.stringify(WW().powersBought), JSON.stringify(VA().powersBought));
-  assert.match(WW().campaignPowerScaling.notes, /Innate powers are yours at rank 1\. Spend your Base Powers on your Origin's powers; none starts above your Max Starting Rank\./);
+  assert.match(WW().campaignPowerScaling.notes, /Innate powers are yours at rank 1\. Each Base Power takes one of your Origin's powers at rank 1, and Character Points raise a power up to your Max Starting Rank\./);
+});
+
+test("CRB 0413, 0414: a Base Power takes a power at rank 1, and CP raises it only to Max Starting Rank (Decision 240)", () => {
+  assert.match(crb("0413_Vampire.md"), /You then are granted a number of Bloodline powers during character creation, at Rank 1\. You can raise these up to your Max Starting Rank with Character Points\./);
+  assert.match(crb("0414_Werewolf.md"), /You then are granted a number of Origin powers during character creation, at Rank 1\. You can raise these up to your Max Starting Rank with Character Points\./);
+  assert.match(VA().campaignPowerScaling.notes, /Each Base Power takes one of your Bloodline's powers at rank 1, and Character Points raise a power up to your Max Starting Rank\./);
+  assert.match(WW().campaignPowerScaling.notes, /Each Base Power takes one of your Origin's powers at rank 1, and Character Points raise a power up to your Max Starting Rank\./);
 });
 
 test("R16: every Innate and Bloodline power is the book's, by name, cost, effect, Per Rank and printed maximum", () => {
@@ -1516,9 +1622,7 @@ test("0450: the six Minor Milestones are the book's words, and Improved's roll i
   assert.equal(JSON.stringify(D.milestones.minorShared.map(m => m.id)), JSON.stringify(["skilled", "improved", "talented", "redeemed", "honed", "steadied"]), "the book's order");
   for (const m of D.milestones.minorShared) {
     const book = `${m.name}. ${norm(m.benefit)}`;
-    // Talented's printed text carries an editor's bracket; the sentence before it is the book's.
-    const want = m.id === "talented" ? book.replace(/ existing Advantage\.$/, "") : book;
-    assert.ok(md.includes(want), `0450 doesn't say: ${want}`);
+    assert.ok(md.includes(book), `0450 doesn't say: ${book}`);
   }
   assert.match(md, /Improved\. Everything went into the work\. Gain 3d10\+30 IP\. 10s explode\./);
   assert.deepEqual({ ...Engine.ipRoll("improved") }, { count: 3, sides: 10, plus: 30 });

@@ -30,14 +30,58 @@ are folded into **W69** (below, under Loadout). "A Vampire's Innate powers are
 granted" led Ken to rule F38 and F39 together, for both archetypes, and that
 ruling is built by **W88**.
 
-**W90 — Cybernetics.** *Ken, from Brogan · 🔎 · Rule or shape · raised 2026-10-10 · blocked on design: F6, F19*
-Playtesters want chrome. The design answer is already set (STATE §3, the
-Cyborg row): the Cyborg archetype was cut, and cybernetics become a list and
-an install mini-game, **Professionals only**. `0470` is still an outline
-(Implants, Upgrades, Replacements, Platforms, with no entries and no costs),
-so there is nothing to build from yet. This entry records that players asked;
-the work is STATE's Cyborg row, which retires `cyborg`, closes F6 and F19, and
-gives the Professional Installed Cybernetics.
+**W90 — Cybernetics.** *Ken, from Brogan; rewritten 2026-10-22 with Deighton's system · 🔎 · Rule or shape · raised 2026-10-10 · needs its own plan; Deighton for the questions below*
+Playtesters want chrome, and as of 2026-10-22 there is something to build from. The Cyborg archetype was
+cut (STATE §3); cybernetics are **gear, Professionals only**, and the **Enforcer is the cybernetics
+Professional**, confirmed for the MVP by the Q4 scope freeze (`APPROVED_Q4_Scope_Freeze`). Deighton's
+system is accepted in principle (Ken), and two documents carry it in `private/crb/`:
+
+- **`Cybernetics_Systems`** — the rules. Every system runs through a **Neurocybernetic Interpreter (NCI)**
+  with four functions: an **EM Sheath** (blocks a number of EMP hazards, back 1 an hour), **Auxiliary
+  Power** (a reservoir that stands in for TOL once Exhaustion takes it to 0), a **Firewall** (opposed
+  against Hijack) and a **Neurostatic Buffer** (adds to the System Failure check). Powered systems cost
+  **Energy** (NRG): a weapon draws on TOL until the round resets, a defense commits it until released, and
+  each point past TOL is Exhaustion. **System Failure** is a d100 Breaker Check against Sanity, with an
+  eight-row table from "no penalty" to "incapacitated 1d4 rounds".
+- **`Cybernetics_Worksheet_v2`** — the data. Seven NCI models in five classes (Raptor Z4, Class II, 2,000Ç,
+  to the X-127 Viper, Class V, 10,800Ç) with Efficiency Bonus, Load Capacity, Buffer, Firewall and EMP
+  Resistance; about 80 parts as Augmentations, Features, Implants, Mods and Replacements, each with a
+  **Sanity cost**, Energy, Mod Slots, bonuses, vulnerabilities and a price; cyber weapons and defenses;
+  and the chems. Its hidden "Cyber Sheet Baseline" sheet sketches a sheet: NCI block, a body map, augmented
+  stats, cyber weapons.
+
+What it would give the sheet: an **NCI** card (class, Energy = TOL + its bonus, EMP resist, Firewall,
+Buffer, Load used of Load Capacity), cybernetics as **loadout rows** with a location and their mods,
+their bonuses through `grants` like any trait (a +3 BOD, Natural Armor, a Skill bonus, Take 8), cyber
+weapons on Main's attacks, an Energy tracker beside TOL, and **System Failure** as a roll with its table.
+Installing a part lowers **maximum SAN** by its cost (`APPROVED_SAN_Loss_and_Recovery`), which answers
+F19 and gives W127 (Cyber-Prophetical) and Cyber Allergy something to read. The Enforcer's Duty Grade
+(Interpreter: a free NCI; Hardwired: a 1d4 kicker when a system does the work) waits on this too.
+Hardened (the Enforcer's Duty Grade) is text until an Enforcer can be made to resist EMP; then it's a
+choice on that check. Issued Hardware, which `0412` leaves as a placeholder, is added here when it's written (YQ3).
+
+**Questions for Deighton before a plan** (the two documents disagree, or the worksheet is mid-edit):
+1. **The NCI's numbers.** The rules name EM Sheath, Auxiliary Power, Firewall and Buffer; the NCI list
+   has Efficiency Bonus, Load Capacity, Buffer, Firewall and EMP Resistance, and no Auxiliary Power.
+   Is Efficiency Bonus the "NCI bonus" Energy adds (the Enforcer's Interpreter) and the "Power Core"?
+   Is EMP Resistance (+10 to +35) the EM Sheath's count, or a percentage?
+2. **What a Load Capacity counts.** The worksheet lists four options (parts only; parts and mods; a points
+   pool; replacements 3, augments 2, implants 1) and picks none.
+3. **Which list is the rules.** The visible Cybertech sheet and the hidden catalog disagree part by part
+   (Gyro Stabilizers Take 5 or Take 8; TriClaws 12 + BOD or +12; Thunder Plugs against Stun or Daze;
+   Muscle Fiber Reinforcement's mod slots blank; Wrist Rockets 5 or 10 a burst). Several bonuses use words
+   the book doesn't (HP, "HTH Damage", "Death save", "Fragmentation" as a Condition).
+4. **Sanity cost as dice.** Many parts cost 1d4 or 1d6 Sanity: rolled once at install, and is it points
+   or percent of the 10–95% SAN scale?
+5. **Exhaustion's recovery.** "It takes 1 per point of TOL for fully recover": 1 what?
+6. **Stat bonuses past the cap.** +3 BOD and +3 REF parts: do they push past 10, and do they count for
+   Required Stats and Focus caps?
+
+*To respect:* store inputs, compute everything else (constraint 7): a part is a catalog reference on a
+loadout row, never its bonuses copied in. Ids are immutable (constraint 6), so parts get ids before
+anything ships. **Sequence after sheet-wishlist's P14** (loadout rows) and build on its row shape. Retiring
+`cyborg` is W61's question and closes F6; the install cost closes F19. Vampires, Werewolves and Arcanists
+can't take chrome. A rules question stays a flag, never a guess in code.
 
 **W91 — Vehicles you can buy and own, Powered Armor among them.** *Ken, from Brogan · 🔎 · Content, then Rule or shape · raised 2026-10-10*
 There are no vehicles in the app: only the Pilot skill and Machindo. `0460`
@@ -435,25 +479,6 @@ read-only. It's a quick reference; editing stays on the member's page.
 cast still has to scroll well on a tablet, so the shape (every card, a fold,
 or a toggle like *Who knows what*) needs a look.
 
-**W79 — An interaction reads as a sentence: who, what they did, with whom, what, when.** *Ken · 🔎 · Rule or shape (copy) · raised 2026-10-08*
-Today a member's line is chosen kind first (*Told them*), then the crew,
-the day and the text, and it reads in that order. Ken's order, crew first:
-- *Scott told Bob "the lake is on fire" on 10/08/26*
-- *D learned from Bob "snakes can fly" on 10/08/26*
-- *PC helped Bob · PC wronged Bob · PC killed Bob · PC owes Bob · PC fought Bob*
-- *They owe* (`owed`) needs its own wording, crew first if it can be (*PC is
-  owed by Bob*?). **Open; a voice pass decides.**
-
-The member's name goes where *them* is today; an unnamed member is *them*.
-The add row follows the same order: crew, then the verb, then what, then the
-day. *Who knows what* (Decision 179) and a session's page (S5a) read the same
-sentence.
-*To respect:* the kinds' ids never change (`shared`, `learned`, `helped`,
-`wronged`, `killed`, `owes`, `owed`, `fought`; constraint 6). Only their
-labels and the order move. S8b's SQ4 chose labels *from the crew's side*,
-and this keeps that. Decision 177 says interactions are the one place for
-the sentence. The day's format follows `dayText`.
-
 **W80 — The left column: the page's actions, or gone.** *Ken · 🔎 · Fix (UI) · raised 2026-10-08*
 Outside the wizard the left column is empty on **every** screen: Home, every
 GM table tab, and the pages under them (Ken's screenshot, 2026-10-08: a
@@ -487,32 +512,6 @@ GM type a name the packs don't have.
 *To respect:* free text stays allowed (a member can have an origin or role
 no slotted pack lists); the browser's own datalist styling varies, so check it
 on a tablet.
-
-**W82 — A fight's line links to its encounter.** *Ken · ⏭ · Rule or shape · raised 2026-10-09*
-Ending an encounter writes a *fought* line for each cast member in it, with
-every PC in the room as its crew (Decision 193). Ken: "awesome". But the
-encounter's name is baked into the text: *Fought them in New for the Crew: 2 of
-4 Health Levels left.* Rename the encounter and every line says the old name,
-and nothing leads back to the fight.
-The wish: the line **links** to the encounter, and its text keeps only the
-figures. It reads crew first, as W79's sentence does for every kind (Ken,
-2026-10-09):
-> **Scott, D** fought **Bob** in **New for the Crew** on 10/08/26: 2 of 4 Health Levels left
-
-The member and the encounter are taps: the member's page, and the ended
-encounter, read-only (Decision 188).
-*To respect:*
-- **Decision 178's links:** `{ kind:"encounter", id }`, a deleted encounter's
-  name kept in the link and shown struck through, never an error.
-  `Engine.linkName` reads cast members only today, so it learns the encounter
-  kind.
-- **A table schema bump** with its `migrateTable()` step. Lines already written
-  keep their text as is; the gate converts nothing (as Decision 203 did for
-  sessions).
-- **Decision 193's** wrap-up stays the one writer, and its default text loses
-  the *Fought them in …* prefix.
-- **Build it with W79**, since both change how a line reads, on a member's
-  page, in *Who knows what* (179) and on a session's page (S5a).
 
 **W84 — Print a cast member, an encounter, a session's journal.** *Ken · 🔎 · Fix (UI) · raised 2026-10-09 in S13a's order (SQ4)*
 The plan's S13 lists printing beside the GM screen: a cast member's page
@@ -859,6 +858,19 @@ Wealthy grants Ç2,000 a month per rank, and the sheet doesn't track months. Dei
 every Minor or Major Milestone for everyone ("UBI or your wealthy advantage or something"). Taking a Milestone could add the Çredits through the ledger.
 *To respect:* a rules change to the book's monthly income (Deighton's, then 0430's text); `addCredits`; W124 pays Poverty's debt down on the same beat.
 Wealthy's starting Ç10,000 is P20's (unanimous: once).
+
+**W134 — Sanity Loss and Recovery on the sheet.** *Claude, from the 2026-10-22 mirror · 💡 · Rule or shape · raised 2026-10-22*
+Scott's Sanity proposal was accepted on 2026-09-29 (`private/crb/APPROVED_SAN_Loss_and_Recovery.md`) and
+is in no chapter yet. The sheet's SAN card counts loss and nothing else. The document gives it three
+things: a failed SAN Breaker Check costs **5%, 10% or 20%** by severity (Minor, Major, Severe) and a
+Condition for the scene; **five bands** below 50% (−1 to WILL Essence checks against fear, then to all
+WILL checks, then Minor Insanity at rank 1 and 2, then −2) that last while SAN sits in them; and recovery
+at **5% a day** of rest (+5% overnight with VR therapy), never past maximum. Maximum SAN drops only with
+cyberware (W90).
+*To respect:* the book should carry it first (a `crb-catch-up.md` item, Ken's), since the sheet follows the
+book. Minor Insanity "gained this way" is a band effect, not a held Disadvantage: it doesn't lower SAN
+again (P20a's cut) and leaves when SAN climbs out. A failed spell charge on a failed SAN check is
+Decision 224's hold. Severity buttons go through `commit()` like every SAN change.
 
 **W133 — The game's words inside a sentence are a tap away too.** *Ken, from P21's voice pass · 💡 · Rule or shape · raised 2026-10-21*
 Reading Night Eyes' attack line ("In Dark, your attacks take −1 instead of −3; in Blind, −3 instead of −5"), Ken had to ask what Dim and Dark were. Decision 139 already puts a rule a hover or tap away (`data-tip`, `TIPS` in `shared.js`), but only for a tag, a stat score and a few fixed panels. A term inside a **sentence the app writes** is plain text: a light level, *Kicker Die*, *Take X*, *Defensive Action*, a Condition named in a mark, *Pain Level*. The player has to know it already, or go and find it.

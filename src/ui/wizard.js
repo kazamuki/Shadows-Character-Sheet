@@ -429,15 +429,15 @@ function optionChoicesHtml(ch){
     return h;
   }).join("");
 }
-// Base Powers (Decisions 200, 215): a rank at a time into the powers the
-// chosen specialization offers, none past its cap. Innate powers are
-// granted: listed, with no stepper.
-function basePowersHtml(ch, sel){
+// Base Powers (Decisions 200, 240): one into each power the chosen
+// specialization offers, at rank 1; CP raises it on the Character Points
+// step. Innate powers are granted: listed, with no stepper.
+function basePowersHtml(ch, sel, creating = true){
   const st = Engine.basePowerState(ch);
   if (!st || !Engine.specializationIds(ch).length) return "";
   const spec = Engine.specializationChosen(ch), noun = (sel.specialization && sel.specialization.label) || "specialization";
   let h = `<div class="sect">Powers${st.count!=null?` — place ${st.count} Base Power${st.count>1?"s":""}`:""}</div>
-    <p class="step-note">Your Innate powers are yours at rank 1. Base Powers go into your ${esc(noun)}'s powers. ${st.cap!=null?`One Base Power is one rank. No power starts above rank ${st.cap}. `:""}<em>${st.spent}/${st.count==null?"—":st.count} placed.</em></p>`;
+    <p class="step-note">Your Innate powers are yours at rank 1. Each Base Power takes one of your ${esc(noun)}'s powers at rank 1. ${st.cap==null||!creating?"":st.cap>1?`CP raises any of your powers on the Character Points step, up to rank ${st.cap}. `:"At this Power Level, CP raises no power: every one starts at rank 1. "}<em>${st.spent}/${st.count==null?"—":st.count} placed.</em></p>`;
   const defs = sel.powers||[];
   const innate = Engine.archetypePowers(ch).filter(p=>!p.origin);
   if (innate.length) h += `<h3 class="sub-sect">Innate powers</h3>` + innate.map(p=>`<div class="pick selected"><div class="head"><h2>${esc(p.name)}</h2>
@@ -445,9 +445,9 @@ function basePowersHtml(ch, sel){
       <div class="desc">${esc(p.effect||"")}${p.perRank&&p.ranked?"\nPer rank: "+esc(p.perRank):""}</div></div>`).join("");
   const groups = spec.map(o=>[`${o.name} powers`, st.rows.filter(r=>r.origin===o.id)]);
   const row = r => { const p = defs.find(x=>x && x.id===r.id) || {};
-    const up = (st.left==null || st.left > 0) && (r.cap==null || r.placed < r.cap);
+    const up = (st.left==null || st.left > 0) && r.placed < r.cap;
     return `<div class="pick ${r.placed?"selected":""}"><div class="head"><h2>${esc(r.name)}</h2>
-      ${p.cost?`<span class="cost">${esc(p.cost)}</span>`:""}<span class="cost grant">${r.ranked?`starts at ${r.cap==null?"any rank":"rank "+r.cap+" at most"}`:"no ranks"}</span>
+      ${p.cost?`<span class="cost">${esc(p.cost)}</span>`:""}<span class="cost grant">${r.ranked?"rank 1":"no ranks"}</span>
       <div class="controls">${stepper(r.placed, "bp|"+esc(r.id), r.placed>0, up, "Base Powers in "+r.name)}</div></div>
       <div class="desc">${esc(p.effect||"")}${p.perRank&&r.ranked?"\nPer rank: "+esc(p.perRank):""}</div></div>`; };
   for (const [title, rows] of groups) if (rows.length) h += `<h3 class="sub-sect">${esc(title)}</h3>` + rows.map(row).join("");
@@ -620,13 +620,14 @@ function renderCP(){
         <div class="desc"${foldAttr("disc|"+d.id)}>${esc(d.description)}</div></div>`).join("");
   }
 
-  // Powers CP raises (Decision 215): a held, ranked archetype power, Innate or
-  // bought. The price is the Disciplines'; the cap is Max Power Rank (or the
-  // book's printed maximum), not the lower Max Starting Rank.
+  // Powers CP raises (Decisions 215, 240): a held, ranked archetype power,
+  // Innate or bought. The price is the Disciplines'; the cap is Max Starting
+  // Rank (or the book's printed maximum, if lower).
   const pcs = Engine.powerCpState(ch);
   if (pcs.length){
     const per = Engine.powerRankCost();
     h += secs.sect("Powers", `Powers — ${per} CP per rank`);
+    if (pcs.every(r=>r.cap!=null && r.start >= r.cap)) h += `<p class="step-note">At this Power Level, CP raises no power: every one starts at rank 1.</p>`;
     h += pcs.map(r=>`<div class="pick ${r.cp>0?"selected":""}"><div class="head"><h2>${esc(r.name)}</h2>
         <span class="cost">${r.start>1||r.cp?`starts at ${r.start} · `:""}rank ${r.rank}${r.cap==null?"":` · cap ${r.cap}`}</span>
         <div class="controls">${stepper(r.rank,"apow|"+r.id, r.cp>0, (r.cap==null || r.rank<r.cap) && bal.left>=per, r.name+" with CP")}</div></div></div>`).join("");

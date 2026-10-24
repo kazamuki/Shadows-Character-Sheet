@@ -8,11 +8,29 @@
 
 The two share Loadout and its catalog code, and nothing else.
 
-**Status:** **drafted 2026-10-21 by Claude (Opus)**, P21's reviewer, after #221 merged. **PQ1–PQ8 went to Deighton** (Ken, 2026-10-21: the vehicle and armor calls are his) on the [vehicle rulings page](https://claude.ai/artifact/Pj8TbVShs2UERCRorEABiU): SH1 = PQ1, SH2 = PQ2, SH3 = PQ3, SH4 = PQ4, SH8 = PQ5 (PA5 asks the rule behind it), SH5 = PQ6, SH6 = PQ7, SH7 = PQ8, each with this order's default marked Recommended. Its 23 rules questions (PA, VD, VK, VO) feed the later damage order and W69, not this one. **PQ9 and PQ10 (W70): Ken, 2026-10-21, Default** (folding is view state; all three custom kinds fold). Ken added, on the catalogs: "vehicles or mechs feel like they should be their own category", which the defaults already do (Vehicles is its own Loadout section and catalog kind, and mechs would join it as their own section if PQ1 brings them in). The build waits for Deighton's PQ1–PQ8.
+**Status: ⏸ shelved 2026-10-23 (Ken), waiting on Deighton.** Moved to the end of the plan, with P15 behind it. Drafted 2026-10-21 by Claude (Opus), P21's reviewer, after #221 merged. **Don't start the build** until the items below are settled and this order is revised to match.
+
+**Answered.** Deighton's rulings are in [`reference/rulings-2026-10-23.md`](../../reference/rulings-2026-10-23.md), round one (SH1–SH8) and round two (the follow-ups).
+- **PQ1, PQ2, PQ4, PQ5, PQ6, PQ7, PQ8: Default**, by Deighton (SH1, SH2, SH4, SH8, SH5, SH6, SH7).
+- **PQ9 and PQ10 (W70): Default**, by Ken, 2026-10-21: folding is view state, and all three custom kinds fold. Ken on the catalogs: "vehicles or mechs feel like they should be their own category". The defaults already do that: Vehicles is its own Loadout section and catalog kind, and mechs would join as a section of their own.
+
+**Still open before the build:**
+1. **PQ3, a vehicle the player types in.** Deighton picked the default, then wrote "I don't understand this question at all". It's reworded as round two's SH3, which is unanswered.
+2. **Vehicles without PROT and RES.** Round two's VD1: a hit comes straight off Integrity, so vehicles would lose those columns. Suits keep both (PA4). He wants to "discuss it in person at some point", so the change isn't final.
+3. **The Mods number.** Mod slots are out (VK1, VK4). Round two's VK1b, whether the sheet shows the number at all, is unanswered.
+
+**What revising the order must change:**
+- **Vehicle data.** §6 and §8 drop PROT and RES (and Mods, if VK1b says so) for Grounders and Jumpers, and keep them for Powered Armor (item 2).
+- **The catalog line, §9's copy and the print table** (PQ8's columns) follow the data.
+- **Suit prices are 300% up** (PA9a–d): Glimmer Man 20,020Ç, SS3 17,800Ç, Hyper Tactical 18,300Ç, Renzo X1 13,020Ç+.
+- **P14 1 compares the data with `0460`**, so it fails until the book catches up. The order either waits for Ken's CRB update (`plans/crb-catch-up.md`) or lists these as named exceptions.
+- **The 17 unanswered follow-ups** (VD2c–VD6b, VK1a–VK4, VO3–VO5b) feed the damage order and W69, not this one, except SH3 and VK1b above.
+
+**W70 needs none of this.** It could be split out and built on its own.
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
-**Cadence:** the two-session loop in [`../gm-mode/README.md`](../gm-mode/README.md). Ken starts **P14 build** once the PQs are answered, then a fresh reviewer once the PR is open.
+**Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../WORK-ORDERS.md). Ken starts **P14 build** once the PQs are answered, then a fresh reviewer once the PR is open.
 
 **Carried over from P21's review.** Each lesson below is applied in this order where it says.
 1. **A field's readers include the ones that aren't about display.** P21 put a flag on Field Medic to show a note, and the flag also stopped IP selling it (`advantageBarred`, Decision 227). The order's sweep had listed only `flagHtml`. **Applied here:** §5 lists every reader of the loadout lists and of the `kind` strings, including the ones that fall through to a default. `catalogGroups` and `loName` both treat any unknown kind as armor. No entry in this order is `flagged`; if one needs to be, grep `flagged` and see what it bars before setting it.

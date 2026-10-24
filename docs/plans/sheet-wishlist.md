@@ -16,22 +16,23 @@ stay there.
 
 ## 1. How it runs
 
-The same cadence as GM mode, written once in
-[`gm-mode/README.md`](gm-mode/README.md) (*The cadence*):
+The loop every plan uses, written once in
+[`../WORK-ORDERS.md`](../WORK-ORDERS.md) (Ken, 2026-10-23; it was GM mode's README until then):
 - An orchestrating session (Opus) writes one work order, with its assumption
   sweep and its worked examples as named tests, and pre-flights it against
   the code.
 - Ken approves it: the order **is** the proposal *Rule or shape* asks for.
-- Ken starts a building session (Sonnet, titled `P<n> build`), which builds
-  it on a branch and opens a PR without merging, with evidence for every
-  claim.
-- Ken starts a fresh reviewing session (Opus), which reviews the PR against
-  the order, fixes nits itself, and messages the builder the rest. It
-  re-reviews the fixes narrowly and tells Ken when the PR is ready.
+- A conductor session (Opus), the one Ken talks to, starts a building session
+  (Sonnet, titled `P<n> build`), which builds it on a branch and opens a PR
+  without merging, with evidence for every claim.
+- The conductor then starts a fresh reviewing session (Opus), which reviews the
+  PR against the order, fixes nits itself, and messages the builder the rest. It
+  re-reviews the fixes narrowly and tells the conductor when the PR is ready.
+  Anything for Ken comes to him through the conductor; Ken merges.
 - **The next order is written only after the last PR merges.**
 
 Work orders live in [`sheet-wishlist/`](sheet-wishlist/), one per session,
-`P01-…` onward. Each ends with **Handing it over**: the README's two
+`P01-…` onward. Each ends with **Handing it over**: `WORK-ORDERS.md`'s two
 prompts, plus the order's own traps. The two-session loop ran on trial for
 P8a and P8b and was adopted on 2026-10-15 (Ken), with two refinements from
 their reviews: the sweep is answered by grepping a field's readers, and
@@ -75,7 +76,7 @@ its own save-shape or rules change; the later sessions keep their numbers (Ken).
 **Split 2026-10-15:** P9 became P9a (the text, Content) and P9b (F34, a save
 shape), so the quick text reaches players without waiting on F34's design (Ken).
 
-**Taken in 2026-10-15:** the two passes [`crb-v4-sync.md`](crb-v4-sync.md)
+**Taken in 2026-10-15:** the two passes [`crb-v4-sync.md`](archive/crb-v4-sync.md)
 still had open, so that every session left for the player sheet is in one
 list (Ken; the plans audit found that no order covered them).
 - **Its P4b** (the Vampire's Major Milestones) is **P17**, run right after
@@ -117,9 +118,13 @@ row order, not by number.
 | P20b | Numbers in play | P20, split (2026-10-17). From the sign-off, all unanimous: Pain (Terminal Disease adds, then Pain Tolerance takes off); Rapid Healing multiplying natural healing, stacking with Speed Heal (and Fast Metabolism, from the P21 inventory); Take a hit applying Scrapper, Giant and Thick Skull, **keyed to Melee and Martial Arts attacks** (Deighton), which adds that input to Take a hit | Rule or shape, data (`gamedataVersion`) | Nothing: **Ken answered PQ1–PQ10 on 2026-10-17**, the defaults (a head hit doubles, as `0530` says, and Thick Skull skips it) | ✅ **Built** (Decision 236; app 0.51.0, game data 0.43, no schema bump): Terminal Disease adds Pain and Pain Tolerance takes it off, Rapid Healing and Fast Metabolism multiply a rest with Speed Heal, Take a hit asks Melee or Martial Arts when a held trait reads it (Giant's −4, then Scrapper's halving, after Natural Armor) and doubles an unredirected Regular head hit unless Thick Skull. [`P20b-numbers-in-play.md`](sheet-wishlist/P20b-numbers-in-play.md) |
 | P21 | Skills learn from powers, tweaks and Milestones | From P19's review and Ken (2026-10-17): the Professional's tweaks, taken Majors, held powers at their rank, the Werewolf's traits and starter power, and the Arcanist's Aberrations, on the Skill's row as P19's are (37 effects: [`P21-inventory.md`](sheet-wishlist/P21-inventory.md)'s (b) and (c) Skill rows); **Take X adds a kicker** (Ken: "Take 6: 13 + 1d4"); Night Eyes and Nocturnal from `visibility` | Rule or shape, data (`gamedataVersion`) | Nothing: **Ken answered PQ1–PQ14 on 2026-10-17**, the defaults, except PQ7, PQ9 and PQ10, which go to Deighton as three flags the build opens and stubs (WQ3–WQ6) | **Merged** (Decision 237, #221; app 0.52.0, game data 0.44, no schema bump; flags F45–F47 open for Deighton, F46 on Survival Instinct after review; voice pass run with Ken before merge). Drafted 2026-10-17, amended 2026-10-21: pre-flight re-run after P20a and P20b (v0.51.0), and **Speed Heal lasting 24 hours** folded in as a Fix-tier rider (Ken; PQ15 answered: Default): [`P21-skills-from-powers-and-milestones.md`](sheet-wishlist/P21-skills-from-powers-and-milestones.md). The inventory's other (c) rows (a pick on a Major or Origin, weapon and armor rows, stats while a power runs, Essence checks) are later orders; its P20-area rows went to P20a and P20b |
 | P13 | Expert mode | W95 on the Archetype, Skills and CP steps; Held only on CP; the Skills step's sticky bar; the CP filter's name bug; P18's tags in the four places it missed, and a held card's computed tags stating its total | Rule or shape (from Fix, 2026-10-17: one decision, superseding 231 in part) | Nothing: PQ8–PQ10 (added 2026-10-17, after P18's review) answered the same day, the defaults. PQ1–PQ7 answered (PQ3: no compact steppers, after a side-by-side and a measurement), and Ken widened it on 2026-10-16 | ✅ **Built** 2026-10-17 (Decision 232, app 0.48.0, unreleased). Order drafted 2026-10-16, **after P18**: a folded entry shows P18's effect tags. W121 (typed stepper values) and W122 (Make a copy) are its spin-offs: [`P13-expert-mode.md`](sheet-wishlist/P13-expert-mode.md) |
-| P14 | Loadout rows | W70 a custom item folds, W91 vehicles (first cut, Powered Armor included) | Rule or shape (a save shape: `vehicles`, schema 0.29), W70 as Fix | W91's first-cut columns: the order's PQ1–PQ8 **with Deighton** (the vehicle rulings page), PQ9–PQ10 answered by Ken (Default) | **Order drafted** 2026-10-21, after #221 merged: [`P14-loadout-rows.md`](sheet-wishlist/P14-loadout-rows.md) |
-| P15 | Worn gear modifiers | W69 | Rule or shape | `damageType` for the 25 weapons without one (data work, first) | ⏭ after P14 |
 | P16 | The Character tab's layout | W99, W60's last item | Rule or shape (supersedes 168 in part) + Fix | W99's question, and the layout pinned exactly in the order | 🔎 |
+| P14 | Loadout rows | W70 a custom item folds, W91 vehicles (first cut, Powered Armor included) | Rule or shape (a save shape: `vehicles`, schema 0.29), W70 as Fix | Deighton's vehicle follow-ups ([`rulings-2026-10-23.md`](../reference/rulings-2026-10-23.md)): SH3 (a typed vehicle), VK1b (the Mods number), and his in-person talk on vehicles without PROT and RES (VD1). PQ1, PQ2 and PQ4–PQ8 answered by Deighton, PQ9–PQ10 by Ken (all Default) | ⏸ **Shelved** 2026-10-23 (Ken) until Deighton finishes the follow-ups. The order is revised to his rulings before it's built, and its Status lists what changes. Drafted 2026-10-21: [`P14-loadout-rows.md`](sheet-wishlist/P14-loadout-rows.md) |
+| P15 | Worn gear modifiers | W69 | Rule or shape | `damageType` for the 25 weapons without one (data work, first). Powered Armor's enhancements, which Deighton ruled on 2026-10-23 (PA5–PA8, rounds one and two) | ⏸ after P14, shelved with it |
+
+**Shelved 2026-10-23:** P14 waits on Deighton's vehicle follow-ups, so it
+moved to the end, and P15 moved behind it because it needs P14's Powered Armor.
+P16 depends on neither and goes first (Ken).
 
 **Why this order.** P1 and P2 are small and want to reach players first: the
 bugs playtesters hit, and CRANK hidden before the next release while the team
@@ -140,7 +145,7 @@ most likely to need a design pass.
 are written" fires) and P5 (Splice meets W72's learn-a-power). P12b after P12a
 (Training prices a rank as P12a's journal does). P13 after P4
 (the steppers sit on W59's labels) and P18 (its folded entries show P18's effect tags). P15 after P14 (Powered Armor is
-W91's, and W69 reads weapons' `damageType`). P6 after P1 (P1 moves the
+W91's, and W69 reads weapons' `damageType`), so P15 is shelved with P14. P6 after P1 (P1 moves the
 Improved roll's numbers into the data). Everything else can move.
 
 ## 4. Not scheduled

@@ -108,8 +108,9 @@ function announceStep(dataStep){
 // one on with ?<name>=on (and off with ?<name>=off); the launch release sets
 // it true here. Guarded: without storage, a feature is as the constant says.
 // Decision 214: a switch is either an unfinished feature (gm) or a released
-// one withdrawn until the team decides (crank).
-const FEATURES = { gm:false, crank:false };
+// one withdrawn until the team decides (crank). Decision 239: the team kept
+// CRANK, so its switch is on for everyone.
+const FEATURES = { gm:false, crank:true };
 const FEATURE_PREFIX = "shadows.feature.";
 function featureOn(name){
   if (!Object.prototype.hasOwnProperty.call(FEATURES, name)) return false;
@@ -1039,6 +1040,25 @@ function focusedPickHtml(ch, attr){
     return `<div class="pick ${on?"selected":""}"><div class="head"><h2>${esc(s.name)}</h2>
       <div class="controls"><button class="toggle" ${attr}="${esc(id)}" ${!on && !bad && full?"disabled":""}>${bad?"Remove":on?"Chosen":"Choose"}</button></div></div></div>`;
   }).join("");
+}
+// What a locked character is still owed in Focused Skills (Decision 238): one helper for
+// the block at the top of the tab and the Loadout panel's lines, so the words can't drift.
+// `away` is the panel's: the picker is at the top of the tab, not beside the line.
+function focusedOwedLines(fp, away){
+  if (!fp || fp.complete) return [];
+  const more = fp.need - fp.have, cat = Engine.focusedCategoryName(fp.category), out = [];
+  if (more>0) out.push(`Choose ${more} more ${cat} Skill${more===1?"":"s"} to Focus${away?" at the top of this tab":""}.`);
+  if (fp.invalid.length) out.push(away ? "A pick at the top of this tab can't be a Focused Skill any more. Remove it there."
+    : "A pick below can't be a Focused Skill any more. Remove it.");
+  return out;
+}
+// The ask at the top of every sheet tab: "" unless a locked character is short a pick.
+function focusedOwedHtml(ch){
+  if (!ch || !ch.creation || ch.creation.locked!==true) return "";
+  const lines = focusedOwedLines(Engine.focusedPicks(ch));
+  if (!lines.length) return "";
+  return `<div class="focused-owed" role="group" aria-label="Focused Skills" data-focused-owed><div class="sect">Focused Skills</div>${
+    lines.map(l=>`<p class="step-note">${esc(l)}</p>`).join("")}${focusedPickHtml(ch, "data-fpick")}</div>`;
 }
 function flagHtml(entry){
   return noticeHtml(copy("unsettledLabel"), (entry && entry.playerNote) || copy("unsettledRule"));
