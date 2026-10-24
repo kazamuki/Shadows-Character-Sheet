@@ -4,7 +4,7 @@
 §6 *S6*; §1a (Deighton: the setting as "a reference to improvise from", read
 and searched); GQ10 (one app). Decisions 68, 135, 170, 177, 178, 203, 207,
 208, 212, 241.
-**Status:** **drafted 2026-10-23 by Claude (Opus)**, the S16 reviewer, after
+**Status:** **Built 2026-10-23** (Decisions 242–243, table schema 0.14, switched off, #236). **drafted 2026-10-23 by Claude (Opus)**, the S16 reviewer, after
 #234 (S16, Decision 241) merged (`WORK-ORDERS.md`, step 7). **Ken chose this
 session (2026-10-23).** **Approved by Ken 2026-10-23** (in the conductor session).
 **SQ1–SQ10 answered by Ken 2026-10-23: every default.** He picked SQ5 and SQ2 by name (a place's history read from its lines; the builder drafts the summaries, Ken voice-passes them in the PR). The two CRB-mirror slips (`1100_Places.md:221`, `:225`) are Ken's to fix in the book, listed in `plans/crb-catch-up.md` under 1100.

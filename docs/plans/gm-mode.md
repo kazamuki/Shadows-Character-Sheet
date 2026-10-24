@@ -229,7 +229,7 @@ caution, louder), and S3 measures a realistic table before going on (GQ9).
 | **Work** | CRANK jobs and the generator | S11 |
 | **Notes** | The Session 0 worksheet, freeform notes | S5 |
 
-**As built (S5a, Decision 204; S13a, Decision 207; S14, Decision 208 adds Find and Jot to the header):** the table's tabs are Sessions, Cast, Threats, Encounters, Reference, Notes; Sessions is first, and a new table opens on it.
+**As built (S5a, Decision 204; S13a, Decision 207; S14, Decision 208 adds Find and Jot to the header):** the table's tabs are Sessions, Cast, City (S6, Decisions 242–243), Threats, Encounters, Reference, Notes; Sessions is first, and a new table opens on it.
 
 The tab list is a design sketch for S3; the order and grouping are Scott's
 and Deighton's call (GQ1).
@@ -556,6 +556,7 @@ In the order they merged.
 | S10e | Add to a fight from anywhere; the Codex inside an encounter | 211 | #151 |
 | S15 | The table's memory: an activity log, with undo (W83) | 212 | #153 |
 | S16 | A line reads as a sentence, and a fight's line leads to its fight (W79, W82) | 241 | #234 |
+| S6 | The gazetteer and the crew's places: the City tab, and a line's Where | 242–243 | #236 |
 
 ### Still to build
 
@@ -566,8 +567,7 @@ not a queue. What Scott's use of the table turns up can reorder it.
 |---|---|---|---|---|
 | S12a | Supernatural Orders: the seven Orders and their modifiers in the builder | Content | Nothing (GQ17 approved 2026-10-10). **Source:** the Orders table with its Profile and Formation columns is in Scott's `WIP_Threat_Codex_v2` only, not yet in `2610`; the pre-flight asks Scott which to build from | No order yet |
 | S13b | Printing a cast member, an encounter, a session's journal (W84) | Fix + content | Nothing | No order yet |
-| S6 | The gazetteer and the crew's places | Rule or shape | Nothing | **Order drafted** 2026-10-23 ([order](gm-mode/S6-gazetteer-places.md)); SQ1–SQ10 wait on Ken |
-| S7 | Factions and clocks | Rule or shape | S6 | No order yet |
+| S7 | Factions and clocks | Rule or shape | Nothing (S6 built) | No order yet |
 | S12b | Site Profiles: places with their tracks and clocks (the Expansion is approved) | Content | S7 | No order yet |
 | S10f | The rest of S10: the Encounter Design worksheet, Surprise, Ambush, Delay, an encounter's clocks | Rule or shape | S7 for the clocks | No order yet. **Sources:** the worksheet is `2642` (basics, adversaries, hazards, objectives beyond defeat, escalation, an out, the next scene's hooks); Surprise, Ambush and Delay are `0530` |
 | S17 | The Codex's Shared Rules and card format: a swarm takes at most 1 from a single-target attack; an NPC parries with the weapon's skill plus its Parry; social checks against Difficulty 15, and the Free, Fast and full Action, as a Reference panel; and each entry's Tag line, Role line and Hook on its Threats card | Content + shape | **Scott**: these are in `WIP_Threat_Codex_v2` only. When the entries in `2612` move to v2's format, the pack builder follows first (a Fix in `private/`, the size of Y0's), then this | Waiting on Scott |
@@ -686,6 +686,11 @@ waits on it.
   default the GM edits, one Milestone Point a session); threads as records.
 
 ### S6 — The gazetteer and the crew's places
+
+**Built** (Decisions 242–243, table schema 0.14, switched off; `plans/gm-mode/S6-gazetteer-places.md`, #236; SQ1–SQ10 on their
+defaults). The setting chapters' places, factions and powers are `gazetteer` in the players' data file; a table's **City** tab,
+after Cast, reads and searches them and keeps the crew's own places; a line says where it happened (**Where**), and a place's page lists
+its lines and who was met there, read from the lines.
 
 - **Data:** `gazetteer` from `1100`, `1200`, `1300`, with one-line summaries
   written for it and voice-passed. Ids are permanent.

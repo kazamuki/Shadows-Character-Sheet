@@ -787,7 +787,7 @@ function hostileSessionsTable() {
 test("a hostile table's sessions and threads come out of the gate typed: ids unique, numbers numbers, links null, one current", () => {
   const J = x => JSON.parse(JSON.stringify(x));
   const m = Engine.migrateTable(hostileSessionsTable());
-  assert.equal(m.meta.tableSchemaVersion, "0.13");
+  assert.equal(m.meta.tableSchemaVersion, "0.14");
   const ids = m.sessions.map(s => s.id);
   assert.equal(new Set(ids).size, ids.length, "session ids repeat");
   assert.ok(ids.every(id => /^SE-[0-9A-HJKMNP-TV-Z]{8}$/.test(id)));
@@ -1044,7 +1044,7 @@ test("a table file's trail draws its labels as text, drops every crafted entry, 
     ["__proto__", "polluted"], ["meta", "id"], ["meta", "tableSchemaVersion"], ["audit", 0, "label"], ["evil"], ["constructor", "prototype", "polluted"],
   ].map((path, i) => ({ seq: 10 + i, date: null, label: `crafted ${i}`, patch: [{ path, type: "scalar", before: "PWNED" }] }));
   const t = Engine.migrateTable({
-    meta: { kind: "shadows-table", id, name: "T", tableSchemaVersion: "0.13" },
+    meta: { kind: "shadows-table", id, name: "T", tableSchemaVersion: "0.14" },
     cast: [{ id: "C-AAAAAAAA", name: "After" }],
     audit: [...crafted, good],
   });
@@ -1175,4 +1175,61 @@ test("a line's encounter link renders as text in Who knows what, a member's page
   assert.equal(app.window.eval("({}).polluted"), undefined);
   assert.equal(app.window.eval("S.table.interactions.filter(x => x.encounter).length"), 2, "the gate kept a bad link");
   assert.deepEqual(app.errors, [], "the hostile links threw while rendering");
+});
+
+// ── A table's places, and a line's place, are untrusted too (Decisions 242–243) ──
+test("a place of markup, a hostile gazetteer id and a crafted place link render as text on the City list, a place's page, three lists of lines and Find, and pollute nothing", () => {
+  const t = Engine.newTable(P("tbl.name"));
+  t.cast = [{ id: "C-ABCDEFGH", name: "Dez" }];
+  t.sessions = [{ id: "SE-AAAAAAAA", number: 1, date: "2026-10-05" }];
+  const text = tag => ({ name: P(tag + ".name"), district: P(tag + ".district"), neighborhood: P(tag + ".neighborhood"), notes: P(tag + ".notes") });
+  t.places = [
+    { id: "PL-AAAAAAAA", ...text("a"), from: { kind: "gazetteer", id: "central-park", name: P("a.from") }, territory: "central-city", zone: "metro-core", environment: "thin-places" },
+    { id: "PL-BBBBBBBB", name: "", from: { kind: "gazetteer", id: "__proto__", name: P("b.from") }, territory: ["central-city"], zone: { x: 1 }, environment: P("b.env") },
+    { id: "PL-CCCCCCCC", name: "", from: { kind: "gazetteer", id: "a-newer-entry", name: P("c.from") }, territory: P("c.territory"), zone: "also-newer" },
+    { id: "__proto__", ...text("d"), from: [P("d.from")] },
+  ];
+  const line = (place, text) => ({ kind: "shared", cast: [{ kind: "cast", id: "C-ABCDEFGH" }], crew: ["Rook"], text, date: "2026-10-05", session: "SE-AAAAAAAA", place });
+  t.interactions = [
+    line({ kind: "place", id: "PL-AAAAAAAA" }, "live"),
+    line({ kind: "place", id: "PL-ZZZZZZZZ", name: P("gone") }, "gone"),
+    line({ kind: "place", id: "__proto__", name: P("proto") }, "proto"),
+    line({ kind: "cast", id: "C-ABCDEFGH", name: P("cast") }, "cast"),
+    line([P("array")], "array"),
+    line({ kind: "place", id: "PL-BBBBBBBB" }, "unnamed"),
+  ];
+  const key = "shadows.table.v1." + t.meta.id;
+  const app = boot({ storage: { "shadows.feature.gm": "on", [key]: { table: t, section: "city", changed: "2026-10-05T10:00:00.000Z", exported: null } } });
+  const found = [];
+  app.$("[data-topen]").click();
+  found.push(...injected(app, "the City list"));
+  assert.ok(app.$$(".place-card").length >= 3, "the list drew");
+  assert.ok(app.$$(".place-card").some(el => el.textContent.includes(P("a.name"))), "a place's name wasn't drawn as text");
+  app.click('[data-cityview="city"]');
+  found.push(...injected(app, "The city"));
+  app.click('[data-cityview="places"]');
+  for (const card of app.$$("[data-popen]")) {
+    app.click(`[data-popen="${card.dataset.popen}"]`);
+    found.push(...injected(app, "a place's page"));
+    app.click("[data-pback]");
+  }
+  app.click('[data-tsec="cast"]');
+  app.click('[data-cview="crew"]');
+  assert.ok(app.$(".int-line s"), "the kept name wasn't struck through");
+  assert.ok(app.$$(".int-line").some(el => el.textContent.includes(P("gone"))), "the kept name wasn't drawn as text");
+  found.push(...injected(app, "Who knows what"));
+  app.click('[data-cview="cast"]'); app.click("[data-copen]");
+  found.push(...injected(app, "a member's page"));
+  app.click('[data-iedit]');
+  found.push(...injected(app, "an open line"));
+  app.click('[data-tsec="sessions"]'); app.click("[data-sopen]");
+  found.push(...injected(app, "a session's page"));
+  app.click("[data-tfind]");
+  const q = app.$("[data-findq]"); q.value = "pwn"; q.dispatchEvent(new app.window.Event("input", { bubbles: true }));
+  found.push(...injected(app, "Find"));
+  assert.deepEqual(found, [], "a place's text became markup");
+  assert.equal(app.window.eval("({}).polluted"), undefined);
+  assert.equal(app.window.eval("Object.prototype.x"), undefined);
+  assert.equal(app.window.eval("S.table.interactions.filter(x => x.place).length"), 3, "the gate kept a bad place link, or dropped a good one");
+  assert.deepEqual(app.errors, [], "the hostile places threw while rendering");
 });

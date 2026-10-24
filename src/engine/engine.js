@@ -5544,6 +5544,8 @@ const Engine = (() => {
   const ROW_ID_RE = /^R-[0-9A-HJKMNP-TV-Z]{8}$/;
   const SESSION_ID_RE = /^SE-[0-9A-HJKMNP-TV-Z]{8}$/;
   const THREAD_ID_RE = /^TH-[0-9A-HJKMNP-TV-Z]{8}$/;
+  const PLACE_ID_RE = /^PL-[0-9A-HJKMNP-TV-Z]{8}$/;
+  const GAZETTEER_ID_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
   const isTableId = v => typeof v==="string" && TABLE_ID_RE.test(v);
   function newTableId(){
     const s = randomChars(12);
@@ -5588,6 +5590,11 @@ const Engine = (() => {
   function newThreadId(used){
     let id;
     do id = `TH-${randomChars(8)}`; while (used.has(id));
+    return id;
+  }
+  function newPlaceId(used){
+    let id;
+    do id = `PL-${randomChars(8)}`; while (used.has(id));
     return id;
   }
   // A whole number, or null: "6" is 6, and 6.5, {} and "x" are nothing.
@@ -5679,6 +5686,38 @@ const Engine = (() => {
     if (typeof v.name==="string") out.name = v.name;
     return out;
   }
+  // A link to a place (Decision 243): a line says where it happened. A link to none on the table
+  // is kept (178); a name rides only as a string. A cast-kind link, or anything else, is no link.
+  function _placeLink(v){
+    if (!_isObj(v) || v.kind!=="place" || typeof v.id!=="string" || !PLACE_ID_RE.test(v.id)) return null;
+    const out = { kind:"place", id:v.id };
+    if (typeof v.name==="string") out.name = v.name;
+    return out;
+  }
+  // A gazetteer id, or nothing. One this version's data doesn't have is kept: a newer app may know it.
+  const _gazId = v => typeof v==="string" && GAZETTEER_ID_RE.test(v) ? v : null;
+  // Where a place came from (Decision 243): the gazetteer entry, and its name as it was when copied.
+  function _gazFrom(v){
+    const id = _isObj(v) && v.kind==="gazetteer" ? _gazId(v.id) : null;
+    if (!id) return null;
+    const out = { kind:"gazetteer", id };
+    if (typeof v.name==="string") out.name = v.name;
+    return out;
+  }
+  function _place(p, used){
+    p.name = _str(p.name);
+    p.from = _gazFrom(p.from);
+    p.territory = _gazId(p.territory);
+    p.zone = _gazId(p.zone);
+    p.district = _str(p.district);
+    p.neighborhood = _str(p.neighborhood);
+    p.environment = _gazId(p.environment);
+    p.notes = _str(p.notes);
+    if (!(typeof p.id==="string" && PLACE_ID_RE.test(p.id)) || used.has(p.id)) p.id = newPlaceId(used);
+    used.add(p.id);
+    p.created = _isoOrNull(p.created);
+    p.updated = _isoOrNull(p.updated);
+  }
   // A session (Decision 203): the number is the GM's, the journal is the Campaign
   // Journal's six parts (227). Unknown keys ride along, never read.
   const JOURNAL_PARTS = ["happened","fallout","threads","impact","reflection","seed"];
@@ -5749,6 +5788,7 @@ const Engine = (() => {
     x.kind = _kind(x.kind);
     x.cast = _castLinks(x.cast);
     x.encounter = _encounterLink(x.encounter);
+    x.place = _placeLink(x.place);
     x.crew = _roleList(x.crew);
     x.text = _str(x.text);
     x.date = _day(x.date);
@@ -5758,12 +5798,12 @@ const Engine = (() => {
     x.updated = _isoOrNull(x.updated);
   }
   // The table file's shape. A bump needs a migrateTable() step in the same change.
-  const TABLE_SCHEMA_VERSION = "0.13";
+  const TABLE_SCHEMA_VERSION = "0.14";
   function newTable(name){
     const now = new Date().toISOString();
     return { meta:{ kind:"shadows-table", id:newTableId(), name:String(name ?? ""),
                     tableSchemaVersion:TABLE_SCHEMA_VERSION, created:now, updated:now },
-             notes:[], cast:[], interactions:[], encounters:[], sessions:[], threads:[], audit:[] };
+             notes:[], cast:[], places:[], interactions:[], encounters:[], sessions:[], threads:[], audit:[] };
   }
   // Which kind of file is this? A file with no kind is a character: every file
   // ever exported is. Only a table says so.
@@ -5847,6 +5887,11 @@ const Engine = (() => {
     //   Schema 0.13 (Decision 241): a line may link the encounter it was written at. Nothing is guessed (203).
     if (typeof arrived!=="string" || _versionNewer("0.13", arrived))
       for (const x of (Array.isArray(c.interactions) ? c.interactions : [])) if (_isObj(x)) x.encounter = null;
+    //   Schema 0.14 (Decision 243): a table keeps places, and a line may say where. Nothing is guessed (203).
+    if (typeof arrived!=="string" || _versionNewer("0.14", arrived)){
+      if (!Array.isArray(c.places)) c.places = [];
+      for (const x of (Array.isArray(c.interactions) ? c.interactions : [])) if (_isObj(x)) x.place = null;
+    }
     if (!_versionNewer(m.tableSchemaVersion, TABLE_SCHEMA_VERSION)) m.tableSchemaVersion = TABLE_SCHEMA_VERSION;
     const usedCast = new Set();
     c.cast = (Array.isArray(c.cast) ? c.cast : []).filter(_isObj);
@@ -5867,6 +5912,9 @@ const Engine = (() => {
       n.created = _isoOrNull(n.created);
       n.updated = _isoOrNull(n.updated);
     }
+    const usedPlace = new Set();
+    c.places = (Array.isArray(c.places) ? c.places : []).filter(_isObj);
+    for (const p of c.places) _place(p, usedPlace);
     const usedThread = new Set();
     c.threads = (Array.isArray(c.threads) ? c.threads : []).filter(_isObj);
     for (const x of c.threads) _thread(x, usedThread, usedSession);
@@ -5897,7 +5945,7 @@ const Engine = (() => {
   const TABLE_AUDIT_MAX = 500;            // entries kept; the oldest go first
   const TABLE_FOLD_MS = 5*60*1000;        // typing in one field folds while the last keystroke is this recent
   // The records a table holds, in the order a label names them.
-  const TABLE_RECORDS = ["encounters", "sessions", "cast", "interactions", "threads", "notes"];
+  const TABLE_RECORDS = ["encounters", "sessions", "cast", "places", "interactions", "threads", "notes"];
   const _tableCore = t => { const o = { meta:{ name:_isObj(t) && _isObj(t.meta) ? t.meta.name : undefined } };
     for (const k of TABLE_RECORDS) o[k] = _isObj(t) ? t[k] : undefined; return o; };
   // The ops between two tables. Only the records and the table's name: the
@@ -5911,6 +5959,7 @@ const Engine = (() => {
   const _recName = (coll, r) => coll==="cast" ? (_str(r.name).trim() || "Unnamed")
     : coll==="sessions" ? sessionTitle(r)
     : coll==="encounters" ? encounterTitle(r)
+    : coll==="places" ? placeTitle(null, r)
     : coll==="threads" ? (_str(r.title).trim() || "Untitled")
     : coll==="notes" ? (_str(r.title).trim() || "a note")
     : "a line";
@@ -6222,6 +6271,12 @@ const Engine = (() => {
       const kept = _str(link.name).trim();
       return { name:kept || "An encounter removed", gone:true };
     }
+    if (_isObj(link) && link.kind==="place"){
+      const p = _placeRecords(t).find(x=>x.id===id);
+      if (p) return { name:placeTitle(t, p), gone:false };
+      const kept = _str(link.name).trim();
+      return { name:kept || "A place removed", gone:true };
+    }
     const n = (Array.isArray(t && t.cast) ? t.cast : []).find(x=>_isObj(x) && x.id===id);
     if (n) return { name:_str(n.name).trim() || "Unnamed", gone:false };
     const kept = _isObj(link) ? _str(link.name).trim() : "";
@@ -6246,9 +6301,11 @@ const Engine = (() => {
     const session = _sessions(t).some(e=>e.id===f.session) ? f.session : _sessionOnDay(t, date);
     // Only a fight that is on the table is linked; End is the one caller that passes one (Decision 241).
     const encounter = typeof f.encounter==="string" && _encList(t).some(e=>e.id===f.encounter) ? _encounterLink({ kind:"encounter", id:f.encounter }) : null;
+    // Likewise only a place that is on the table (Decision 243).
+    const place = typeof f.place==="string" && _placeRecords(t).some(p=>p.id===f.place) ? _placeLink({ kind:"place", id:f.place }) : null;
     const x = { id:newInteractionId(used), kind,
                 cast:_castLinks((Array.isArray(f.cast) ? f.cast : []).filter(id=>typeof id==="string").map(id=>({ kind:"cast", id }))),
-                encounter, crew:_roleList(f.crew), text, date, session, created:now, updated:now };
+                encounter, place, crew:_roleList(f.crew), text, date, session, created:now, updated:now };
     t.interactions.unshift(x);
     _killLinked(t, x);
     _tableStamp(t);
@@ -6259,8 +6316,11 @@ const Engine = (() => {
     if (!x) return { ok:false, why:"No such interaction." };
     if (_isObj(f) && "session" in f && f.session!==null && !_sessions(t).some(e=>e.id===f.session))
       return { ok:false, why:"No such session." };
+    if (_isObj(f) && "place" in f && f.place!==null && !(typeof f.place==="string" && _placeRecords(t).some(p=>p.id===f.place)))
+      return { ok:false, why:"No such place." };
     if (_isObj(f)){
       const was = x.kind;
+      if ("place" in f) x.place = f.place===null ? null : _placeLink({ kind:"place", id:f.place });
       if ("session" in f) x.session = f.session;
       if ("kind" in f) x.kind = _kind(f.kind);
       if ("crew" in f) x.crew = _roleList(f.crew);
@@ -6280,7 +6340,7 @@ const Engine = (() => {
   }
   // A line as one sentence (Decision 241): the crew, the verb, the cast, the fight for a fought or
   // killed line, the day, then the words. Returns parts for the UI to join, since the engine has no
-  // locale: { kind:"text", text } | { kind:"cast"|"encounter", id, name, gone } | { kind:"day", date }.
+  // locale: { kind:"text", text } | { kind:"cast"|"encounter"|"place", id, name, gone } | { kind:"day", date }.
   const _SENTENCE_VERBS = { helped:"helped", wronged:"wronged", killed:"killed", fought:"fought" };
   function _nameList(items, one){
     const out = [];
@@ -6306,20 +6366,23 @@ const Engine = (() => {
     const link = _isObj(x.encounter) && x.encounter.kind==="encounter" ? x.encounter : null;
     const fight = link ? linkName(t, link) : null;
     const when = date ? [T(" on "), { kind:"day", date }] : [];
+    const pl = _isObj(x.place) && x.place.kind==="place" ? linkName(t, x.place) : null;
+    const spot = pl ? { kind:"place", id:_str(x.place.id), name:pl.name, gone:pl.gone } : null;
+    const where = spot ? [T(" at "), spot] : [];
     const tail = text ? [T(`: ${text}`)] : [];
     let parts;
     if (kind==="shared" || kind==="learned")
-      parts = [...who, T(kind==="shared" ? " told " : " learned from "), ...whom, ...(text ? [T(` “${text}”`)] : []), ...when];
+      parts = [...who, T(kind==="shared" ? " told " : " learned from "), ...whom, ...(text ? [T(` “${text}”`)] : []), ...where, ...when];
     else if (kind==="owes")
-      parts = [...who, T(crew.length > 1 ? " owe " : " owes "), ...whom, ...when, ...tail];
+      parts = [...who, T(crew.length > 1 ? " owe " : " owes "), ...whom, ...where, ...when, ...tail];
     else if (kind==="owed")
-      parts = [...whom, T(members.length > 1 ? " owe " : " owes "), ...who, ...when, ...tail];
+      parts = [...whom, T(members.length > 1 ? " owe " : " owes "), ...who, ...where, ...when, ...tail];
     else if (kind)
       parts = [...who, T(` ${_SENTENCE_VERBS[kind]} `), ...whom,
                ...(fight && (kind==="killed" || kind==="fought") ? [T(" in "), { kind:"encounter", id:link.id, name:fight.name, gone:fight.gone }] : []),
-               ...when, ...tail];
+               ...where, ...when, ...tail];
     else
-      parts = [...whom, ...(crew.length ? [T(", with "), ..._nameList(crew, name=>T(name))] : []), ...(date ? [T(", on "), { kind:"day", date }] : []), ...tail];
+      parts = [...whom, ...(crew.length ? [T(", with "), ..._nameList(crew, name=>T(name))] : []), ...(spot ? [T(", at "), spot] : []), ...(date ? [T(", on "), { kind:"day", date }] : []), ...tail];
     // The first word is a capital, whatever stood in for a missing name.
     const first = parts[0];
     if (first.kind==="text" && first.text) parts[0] = T(first.text.charAt(0).toUpperCase() + first.text.slice(1));
@@ -6339,7 +6402,8 @@ const Engine = (() => {
     const q = _folded((f||{}).q), groups = new Map(), nameless = [];
     const hit = (x, name) => !q || _fold(name).includes(q) || _fold(x.text).includes(q)
       || (Array.isArray(x.cast) ? x.cast : []).some(l=>_fold(linkName(t, l).name).includes(q))
-      || (_isObj(x.encounter) && _fold(linkName(t, x.encounter).name).includes(q));
+      || (_isObj(x.encounter) && _fold(linkName(t, x.encounter).name).includes(q))
+      || (_isObj(x.place) && _fold(linkName(t, x.place).name).includes(q));
     for (const x of _interactions(t).reverse()){   // oldest first, so the heading is the spelling first written
       const names = (Array.isArray(x.crew) ? x.crew : []).map(r=>_str(r).trim()).filter(Boolean);
       if (!names.length){ if (hit(x, "")) nameless.push(x); continue; }
@@ -6354,6 +6418,150 @@ const Engine = (() => {
     const out = [...groups.entries()].sort((a, b)=>a[0].localeCompare(b[0])).map(e=>e[1]);
     if (nameless.length) out.push({ name:"", interactions:nameless });
     for (const g of out) g.interactions.sort(_newest);
+    return out;
+  }
+
+  // ── The gazetteer and the crew's places (Decisions 242, 243) ───────────────
+  // The gazetteer is data (the book's setting, one line each); a place is a record on the table.
+  // A place stores only what the GM chose: where it came from, the Territory and Zone ids, the
+  // typed District and Neighborhood, one kind of ground, notes. Its history is read from the
+  // lines that name it, never stored (243).
+  const _placeRecords = t => Array.isArray(t && t.places) ? t.places.filter(_isObj) : [];
+  const _gazData = () => { const g = D().gazetteer; return _isObj(g) ? g : {}; };
+  const _gazEntries = () => { const g = _gazData(); return Array.isArray(g.entries) ? g.entries.filter(_isObj) : []; };
+  const _gazEnvironments = () => { const g = _gazData(); return Array.isArray(g.environments) ? g.environments.filter(_isObj) : []; };
+  // The entry or kind of ground with that id, else null.
+  function gazetteerEntry(id){
+    try {
+      if (typeof id!=="string") return null;
+      return _gazEntries().find(e=>e.id===id) || _gazEnvironments().find(e=>e.id===id) || null;
+    } catch (e) { return null; }
+  }
+  const _gazName = id => { const e = gazetteerEntry(id); return e ? _str(e.name) : ""; };
+  // `f.q` keeps an entry when every word is in its name, its real-world place or its line, or in the
+  // name of its Territory or Zone. A Territory stays while any of its entries match.
+  function gazetteer(f){
+    const out = { territories:[], beyond:[], powers:[], environments:[] };
+    try {
+      const q = _refFold(_isObj(f) && typeof f.q==="string" ? f.q : ""), words = q.split(/\s+/).filter(Boolean);
+      const entries = _gazEntries();
+      const keep = e => !words.length || (() => {
+        const hay = _refFold([e.name, e.realWorld, e.summary, _gazName(e.territory), _gazName(e.zone)].map(_str).join(" "));
+        return words.every(w=>hay.includes(w));
+      })();
+      for (const terr of entries.filter(e=>e.kind==="territory")){
+        const mine = entries.filter(e=>e.territory===terr.id);
+        const pick = kind => mine.filter(e=>e.kind===kind && keep(e));
+        const row = { entry:terr, zones:pick("zone"), sites:pick("site"), businesses:pick("business"), factions:pick("faction") };
+        if (!words.length || keep(terr) || row.zones.length || row.sites.length || row.businesses.length || row.factions.length) out.territories.push(row);
+      }
+      out.beyond = entries.filter(e=>e.kind==="region" && keep(e));
+      const groups = [];
+      for (const e of entries.filter(e=>e.kind==="power" && keep(e))){
+        let g = groups.find(x=>x.group===e.group);
+        if (!g){ g = { group:_str(e.group), entries:[] }; groups.push(g); }
+        g.entries.push(e);
+      }
+      out.powers = groups;
+      out.environments = _gazEnvironments().filter(keep);
+    } catch (e) {}
+    return out;
+  }
+  // What a GM can add as a place: the book's Territories, Zones, Sites, Businesses and the places Beyond (SQ7).
+  const PLACE_FROM_KINDS = ["territory", "zone", "site", "business", "region"];
+  // A Territory that doesn't hold the Zone clears it, and so does an entry that isn't a Zone. An id the
+  // data doesn't have can't be judged, and stays.
+  function _fitZone(territory, zone){
+    if (!zone) return null;
+    if (!territory) return null;
+    const z = gazetteerEntry(zone);
+    return z && (z.kind!=="zone" || z.territory!==territory) ? null : zone;
+  }
+  // The typed name, else the entry's (read live), else the name kept when it was copied, else a stand-in.
+  function placeTitle(t, p){
+    try {
+      if (!_isObj(p)) return "Unnamed place";
+      const typed = _str(p.name).trim();
+      if (typed) return typed;
+      const from = _gazFrom(p.from);
+      const live = from ? _gazName(from.id).trim() : "";
+      return live || (from ? _str(from.name).trim() : "") || "Unnamed place";
+    } catch (e) { return "Unnamed place"; }
+  }
+  function addPlace(t, f){
+    f = _isObj(f) ? f : {};
+    if (!_isObj(t)) return { ok:false, why:"That isn't a table." };
+    let from = null, territory = _gazId(f.territory), zone = _gazId(f.zone);
+    if (f.from!==undefined && f.from!==null){
+      const e = gazetteerEntry(f.from);
+      if (!e || !PLACE_FROM_KINDS.includes(e.kind)) return { ok:false, why:"No such place in the city." };
+      from = { kind:"gazetteer", id:e.id, name:_str(e.name) };
+      territory = e.kind==="territory" ? e.id : _gazId(e.territory);
+      zone = e.kind==="zone" ? e.id : _gazId(e.zone);
+    }
+    if (!Array.isArray(t.places)) t.places = [];
+    const now = new Date().toISOString();
+    const p = { id:newPlaceId(new Set(t.places.map(x=>x && x.id))), name:_str(f.name), from, territory, zone:_fitZone(territory, zone),
+                district:_str(f.district), neighborhood:_str(f.neighborhood), environment:_gazId(f.environment),
+                notes:_str(f.notes), created:now, updated:now };
+    t.places.unshift(p);
+    _tableStamp(t);
+    return { ok:true, id:p.id };
+  }
+  function editPlace(t, id, f){
+    const p = _placeRecords(t).find(x=>x.id===id);
+    if (!p) return { ok:false, why:"No such place." };
+    if (_isObj(f)){
+      for (const k of ["name", "district", "neighborhood", "notes"]) if (k in f) p[k] = _str(f[k]);
+      if ("territory" in f) p.territory = _gazId(f.territory);
+      if ("zone" in f) p.zone = _gazId(f.zone);
+      if ("environment" in f) p.environment = _gazId(f.environment);
+      if ("territory" in f || "zone" in f) p.zone = _fitZone(p.territory, p.zone);
+    }
+    _tableStamp(t, p);
+    return { ok:true };
+  }
+  // A line keeps the place's name under its link, as a removed member's does (Decision 178).
+  function removePlace(t, id){
+    const i = _isObj(t) && Array.isArray(t.places) ? t.places.findIndex(p=>_isObj(p) && p.id===id) : -1;
+    if (i < 0) return { ok:false, why:"No such place." };
+    const name = placeTitle(t, t.places[i]);
+    for (const x of _interactions(t)) if (_isObj(x.place) && x.place.id===id) x.place.name = name;
+    t.places.splice(i, 1);
+    _tableStamp(t);
+    return { ok:true };
+  }
+  function _placeFields(t, p){
+    return [["Name", placeTitle(t, p)], ["Territory", _gazName(p.territory)], ["Zone", _gazName(p.zone)],
+            ["District", _str(p.district)], ["Neighborhood", _str(p.neighborhood)], ["Ground", _gazName(p.environment)],
+            ["Notes", _str(p.notes)]].filter(e=>e[1]);
+  }
+  // The crew's places by title, `f.q` read as Find reads its words.
+  function placeList(t, f){
+    try {
+      const words = _foldPlace(_isObj(f) && typeof f.q==="string" ? f.q : "").trim().split(/\s+/).filter(Boolean);
+      const key = p => _fold(placeTitle(t, p));
+      return _placeRecords(t).map((p, i)=>({ p, i, k:key(p) })).sort((a, b)=>a.k < b.k ? -1 : a.k > b.k ? 1 : a.i - b.i).map(e=>e.p).filter(p=>{
+        if (!words.length) return true;
+        const lows = _placeFields(t, p).map(e=>_foldPlace(e[1]));
+        return words.every(w=>lows.some(l=>l.includes(w)));
+      });
+    } catch (e) { return []; }
+  }
+  // The lines that name it, newest first. Read every time and stored nowhere (243).
+  function placeLines(t, id){
+    try { return _interactions(t).filter(x=>_isObj(x.place) && x.place.kind==="place" && x.place.id===id).sort(_newest); }
+    catch (e) { return []; }
+  }
+  // Who was met there: the cast links on those lines, once each, in the order they were first met.
+  function placeMet(t, id){
+    const out = [], seen = new Set();
+    for (const x of placeLines(t, id).reverse()) for (const l of (Array.isArray(x.cast) ? x.cast : [])){
+      if (!_isObj(l) || typeof l.id!=="string" || seen.has(l.id)) continue;
+      seen.add(l.id);
+      const r = linkName(t, l);
+      out.push({ id:l.id, name:r.name, gone:r.gone });
+    }
     return out;
   }
 
@@ -6550,6 +6758,7 @@ const Engine = (() => {
     for (const c of _strList(x.crew)) f.push(["Crew", c]);
     for (const l of (Array.isArray(x.cast) ? x.cast : [])) f.push(["With", linkName(t, l).name]);
     if (_isObj(x.encounter)) f.push(["Fight", linkName(t, x.encounter).name]);
+    if (_isObj(x.place)) f.push(["Where", linkName(t, x.place).name]);
     return f;
   }
   function _encounterFields(t, e){
@@ -6587,6 +6796,7 @@ const Engine = (() => {
       for (const h of threadList(t)) test("thread", h.id, _str(h.title).trim() || "Untitled", [["Thread", _str(h.title)], ["Notes", _str(h.notes)]]);
       for (const n of _byMade(_notes(t))) test("note", n.id, _str(n.title).trim() || "Untitled note", [["Title", _str(n.title)], ["Note", _str(n.text)]]);
       for (const e of _byMade(_encList(t))) test("encounter", e.id, encounterTitle(e), _encounterFields(t, e));
+      for (const p of placeList(t)) test("place", p.id, placeTitle(t, p), _placeFields(t, p));
       return hits;
     } catch (e) { return []; }
   }
@@ -8032,6 +8242,8 @@ const Engine = (() => {
     addThread, editThread, removeThread, threadList, nextSession, blockHasNumber, JOURNAL_PARTS,
     offScreenPay, arcDue, closeOutDraft, writeCloseOut, awardTotals,
     addInteraction, editInteraction, removeInteraction, interactionsFor, interactionSentence, crewView, linkName,
+    // Places: the gazetteer the book names, and the crew's own places
+    gazetteer, gazetteerEntry, PLACE_FROM_KINDS, addPlace, editPlace, removePlace, placeTitle, placeList, placeLines, placeMet,
     // Encounters: who is in one, whose turn it is, and what is still on them
     addEncounter, editEncounter, addSide, renameSide, removeSide, sideTitle, removeEncounter, runningEncounter, encounterFor, addToEncounter, encounterTitle, addParticipant, participantFromEntry,
     participantsFromGroup, editParticipant, removeParticipant, participantDamage, participantAddCondition,

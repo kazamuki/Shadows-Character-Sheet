@@ -1055,7 +1055,7 @@ commit** — a GM's table must never change under them.
     kind: "shadows-table",           // fileKind() reads this; migrateTable() forces it
     id: "TBL-XXXX-XXXX-XXXX",        // newTable() issues it, the TAG's alphabet; never reissued
     name: "",                        // the GM's; "" reads "Untitled table"
-    tableSchemaVersion: "0.13",      // a newer stamp is kept, and tableCheck() reports it
+    tableSchemaVersion: "0.14",      // a newer stamp is kept, and tableCheck() reports it
     created: "<ISO>", updated: "<ISO>"   // null when a file's can't be read: the gate invents none (Decision 63)
   },
   audit: [ {                         // 0.12: the activity log (Decision 212), oldest first, at most 500
@@ -1078,6 +1078,16 @@ commit** — a GM's table must never change under them.
     from: null,                      // 0.4: or { kind: "entry", pack: "PK-…", id, name }, where a Use copied it from (182); the name is stored, the pack lives outside the table
     created: "<ISO>", updated: "<ISO>"
   } ],
+  places: [ {                        // 0.14: the crew's places (Decision 243)
+    id: "PL-XXXXXXXX",               // the TAG alphabet; unique in the table; a bad or repeated one is replaced
+    name: "",                        // the GM's; blank reads the entry's name (placeTitle), else *Unnamed place*
+    from: null,                      // or { kind: "gazetteer", id, name? }: the gazetteer entry it was added from (242); an id this app's data lacks is kept and reads as nothing
+    territory: null, zone: null,     // gazetteer ids, or null; a Territory that doesn't hold the zone clears it
+    district: "", neighborhood: "",  // always typed
+    environment: null,               // one kind of ground (a gazetteer `environments` id) or none
+    notes: "",
+    created: "<ISO>", updated: "<ISO>"
+  } ],                               // its history is read from the lines that name it, never stored
   interactions: [ {                  // 0.3: what passed between the crew and the cast (Decisions 177–179)
     id: "I-XXXXXXXX",                // the TAG alphabet; unique in the table
     kind: "shared",                  // shared | learned | helped | wronged | killed | owes | owed | fought (0.7, Decision 193) | null (anything else reads null)
@@ -1087,6 +1097,7 @@ commit** — a GM's table must never change under them.
     date: "YYYY-MM-DD",              // the GM's local day, a real one, or null
     session: null,                   // 0.8: a session's id in this table, or null (Decision 203); a new line takes the one session on its day, the gate converts nothing
     encounter: null,                 // 0.13: or { kind: "encounter", id: "EN-…", name? } (Decisions 178, 241); only End writes it, removeEncounter adds `name`, the gate keeps a good id and converts nothing
+    place: null,                     // 0.14: or { kind: "place", id: "PL-…", name? } (Decisions 178, 243), set as Where; removePlace adds `name`, the gate keeps a good id (a link to no place too) and converts nothing
     created: "<ISO>", updated: "<ISO>"
   } ],
   sessions: [ {                      // 0.8: what happened, session by session (Decision 203)
@@ -1157,7 +1168,7 @@ StatBlock: {                         // Decision 175: what the Codex prints, not
 
 Step history: **0.2** adds `cast` (`migrateTable()` gives an older table an empty
 one). **0.3** adds `interactions` and each member's `affiliations`. **0.4** adds each member's `from`, null for everyone already there. **0.5** adds `encounters`, empty for everyone already there. **0.6** adds each row's `massive`, `armorLoss`, `scrapped` and `armorId`, 0, false and null for everyone already there. **0.7** adds each row's `kept` and `struck`, null and false for everyone already there, and an interaction may be of kind `fought`. **0.8** adds `sessions` and `threads`, empty for everyone already there, and each interaction's `session`, null (nothing is converted by date on load). **0.9** adds each session's `close`, null for everyone already there (nothing is converted). **0.10** adds each note's `session`, null for everyone already there (nothing is converted). **0.11** adds each encounter's `by` and `sides`, each row's `side` and each cast member's `ally`: one at a time, the crew and one other side, PCs on the crew's, nobody an ally (nothing is guessed). Health, Health Levels, HP and each stat's bonus are `Engine.npc(block)`'s,
-computed and never written into the file (constraint 7). **0.12** adds `audit`, the activity log (Decision 212), empty for everyone already there; a file older than the app comes in with its trail emptied, so an undo never crosses a schema step. **0.13** adds each interaction's `encounter`, null for everyone already there (nothing is converted; Decision 241).
+computed and never written into the file (constraint 7). **0.12** adds `audit`, the activity log (Decision 212), empty for everyone already there; a file older than the app comes in with its trail emptied, so an undo never crosses a schema step. **0.13** adds each interaction's `encounter`, null for everyone already there (nothing is converted; Decision 241). **0.14** adds `places`, empty, and each interaction's `place`, null for everyone already there (Decision 243).
 
 The browser keeps each table as `shadows.table.v1.<id>` =
 `{ table, section, changed, exported }`, by the roster's rules (Decision 141).
@@ -4271,6 +4282,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Built:** as 177.
     → **Superseded in part by Decision 182** — a link to a record outside the table stores its name.
     → **Superseded in part by Decision 241** — a line links its encounter, `{ kind: "encounter", id }`, and deleting the encounter writes its name.
+    → **Superseded in part by Decision 243** — a line links its place, `{ kind: "place", id }`, and removing the place writes its name.
 
 179. **A member carries affiliations as text; the Cast list filters by one; a member's page lists their interactions; and the Cast tab's second view, Who knows what, lists them by crew name.**
      *2026-10-05 · Ken + Claude · Touches: affiliations, cast filters, affiliation filter, castFilter, Cast tab, member page, Between them and the crew, Who knows what, crewView, quick entry, datalist, Decision 176, W29, GQ1*
@@ -4659,6 +4671,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 140 in part (row one on a table's screen also holds Find and Jot) and 171 in part (the table's header holds more than its menu). 203's rule now gives a jot its session too.
      - **Revisit if:** the header can't fit them at phone width, a table grows past what a search per keystroke keeps up with, or seats (S3b) let a player jot.
      - **Built:** table schema 0.10, switched off (173); log 2026-10-09 (the secretary).
+    → **Superseded in part by Decision 243** — Find searches the crew's places.
 
 209. **The Reference's jump bar shows every chip, wrapped: it sticks from 640px, and on a phone it stays at the top of the page.**
      *2026-10-09 · Ken + Claude · Touches: Reference tab, jump bar, jumpBarHtml wrap, jump-wrap, jumpbar.sticky, jumpTo, scroll-row, wheelSideways, phone, Decision 165, Decision 207, SQ8*
@@ -4713,6 +4726,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 171 in part (a table is undoable) and 176 in part (its trail is this, not S10's). Extends 48–50, 107 and 124 to a table.
      - **Revisit if:** a table's trail outgrows storage at 500, a GM asks for redo, or W38's two tabs reach tables.
      - **Built:** table schema 0.12, switched off (173); log 2026-10-10.
+    → **Superseded in part by Decision 243** — `places` is a record the log covers.
 
 213. **A Disadvantage's Pain shift and a Milestone's IP roll are data the engine reads.**
      *2026-10-10 · Ken + Claude · Touches: Pain Sensitive, grants, painLevel grant, painState, fromTraits, painSources, Improved, ipRoll, minorShared, Engine.ipRoll, Engine.ipRollTotal, Take Minor, localDay, W92, W93, W67*
@@ -4995,6 +5009,33 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 178 in part (a second link kind), 179 in part (a line reads as a sentence, opening to edit), 193 in part (the fight's line is figures and a link).
      - **Revisit if:** S3b's seats name the crew, a GM wants a line in their own words, or a voice pass changes a verb.
      - **Built:** table schema 0.13, switched off (173); PR #234; log 2026-10-23.
+    → **Superseded in part by Decision 243** — a line may name a place, and its sentence says where.
+
+242. **The gazetteer is data in the players' file: every place, faction and power the book names, with a permanent id and one line each.**
+     *2026-10-23 · Ken + Claude · Touches: gazetteer, gazetteer.entries, gazetteer.environments, territory, zone, site, business, faction, region, power, realWorld, summary, bookSource, Engine.gazetteer, gazetteerEntry, City tab, The city, GQ10, Decision 68, Decision 207*
+     - **Decided:** `shadows-data.js` gains `gazetteer`: `entries` (id, kind, name, `territory` and `zone` ids, `realWorld`, a one-line `summary`, `bookSource`) for `1100`'s Territories, Zones, Supernatural Sites, Business Interests, Factions and the places Beyond, and `1200`'s powers; and `environments`, `1300`'s five kinds of ground. A zone is set only where the book names a listed one. The summaries are ours, voice-passed; the book's prose stays the book's. No character reads it, so it bumps nothing (68).
+     - **Why:** Deighton wants enough of the setting to improvise from, read and searched (§1a). In the one data file it needs no change to the script order, as `gmReference` didn't (207), and S7's Faction Tracker seeds from the same ids.
+     - **Rejected:**
+       - A data file of its own: a change to constraint 4's script order for about 40 KB.
+       - A pack built from `private/`: the book's setting is player content (GQ10), and a pack is a second thing to hand out.
+       - The chapter's prose: the book's job; a GM reading at the table wants one line.
+       - A zone guessed where the book names none: data that says more than the book (SQ4).
+     - **Replaces:** nothing.
+     - **Revisit if:** the book's setting chapters move to the Workshop (GM-only), or a player sheet wants the city.
+     - **Built:** switched off (173); PR #236; log 2026-10-23.
+
+243. **A table keeps the crew's places; a line can say where it happened, and a place's history is read from its lines.**
+     *2026-10-23 · Ken + Claude · Touches: places, PL- id, from, territory, zone, district, neighborhood, environment, notes, addPlace, editPlace, removePlace, placeTitle, placeLines, place link, linkName, interactionSentence, Where, City tab, The crew's places, tableSearch, crewView, TABLE_RECORDS, table schema 0.14, Decision 178, Decision 208, Decision 212, Decision 241*
+     - **Decided:** Table schema 0.14 adds `places` (`PL-` id, a name, the gazetteer entry it came from, Territory and Zone ids, District and Neighborhood typed, one kind of ground or none, notes) and a line's `place`, 178's link, set on the add row or an open line as **Where**. The sentence says *at* the place. A place's page lists its lines and who was met there, read every time. `TABLE_SECTIONS` gains **City**, after Cast: the crew's places, and the gazetteer. Find, Who knows what and undo cover places. Removing one writes its name into its links.
+     - **Why:** "visited when, what happened, who was met there" are what the lines already record; a place stored beside them would be a second record of the same night (177's `history`, rejected).
+     - **Rejected:**
+       - A visit log on the place: two records of one scene.
+       - A place typed into a line's text: it can't be found or followed.
+       - The gazetteer on the Reference tab: rules there, the city here, and a place is a record, not a rule.
+       - Places as a view of the Cast tab: new records, not a view (179).
+     - **Replaces:** Decision 178 in part (a third link kind), 208 in part (Find searches places), 212 in part (a seventh record), 241 in part (a line names a place).
+     - **Revisit if:** S7's factions or S12b's Site Profiles want a place's own track, or an encounter wants a place.
+     - **Built:** table schema 0.14, switched off (173); PR #236; log 2026-10-23.
 
 
 ## 5. Open Flags

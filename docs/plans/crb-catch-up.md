@@ -171,6 +171,8 @@ This chapter carries most of the creation economy, and almost none of it is writ
 
 - ☐ **Greenwall, just above its heading.** An empty `### ` heading sits between The Public Trust (Capital Heights) and `### Greenwall` (the mirror's `1100_Places.md:221`). Delete it. *(Found by S6's pre-flight, 2026-10-23.)*
 - ☐ **Greenwall › its opening paragraph** (the mirror's `1100_Places.md:225`). It ends in a stray fragment, "— old, disturbed, …", left over from an edit. Finish the sentence or cut the fragment. The sheet's gazetteer summary for Greenwall leaves the fragment out. *(S6's pre-flight, 2026-10-23.)*
+- ☐ **Suncoast City › its cult's name** (the mirror's `1100_Places.md:293` and `:331`). The zone's paragraph calls it *the Shining Path*; its Factions entry is *The Transcendent Path*. Pick one. The sheet's gazetteer id stays `transcendent-path` whatever the book picks. *(S6's build, 2026-10-23.)*
+- ☐ **Neurodyne Industries › its Overview** (the mirror's `1200_Powers.md:151`). The paragraph is cut off mid-sentence ("…the LINK has never"). Finish it. The sheet's summary says only what comes before the cut. *(S6's build, 2026-10-23.)*
 
 ## 2530_Customizing_Characters (GM Workshop)
 
