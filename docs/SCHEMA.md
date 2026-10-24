@@ -1055,7 +1055,7 @@ commit** — a GM's table must never change under them.
     kind: "shadows-table",           // fileKind() reads this; migrateTable() forces it
     id: "TBL-XXXX-XXXX-XXXX",        // newTable() issues it, the TAG's alphabet; never reissued
     name: "",                        // the GM's; "" reads "Untitled table"
-    tableSchemaVersion: "0.14",      // a newer stamp is kept, and tableCheck() reports it
+    tableSchemaVersion: "0.15",      // a newer stamp is kept, and tableCheck() reports it
     created: "<ISO>", updated: "<ISO>"   // null when a file's can't be read: the gate invents none (Decision 63)
   },
   audit: [ {                         // 0.12: the activity log (Decision 212), oldest first, at most 500
@@ -1088,6 +1088,28 @@ commit** — a GM's table must never change under them.
     notes: "",
     created: "<ISO>", updated: "<ISO>"
   } ],                               // its history is read from the lines that name it, never stored
+  factions: [ {                      // 0.15: the Faction Tracker as a record (Decision 244); nothing derived, no standing or score
+    id: "FA-XXXXXXXX",               // the TAG alphabet; unique in the table; a bad or repeated one is replaced
+    name: "",                        // the GM's; blank reads the entry's name (factionTitle), else *Unnamed faction*
+    from: null,                      // or { kind: "gazetteer", id, name? }: a faction or power entry it was added from (242)
+    type: null,                      // gang | corp | government | cult | collective | other, or null (anything else reads null); frozen ids, never guessed from the entry
+    territory: null,                 // a gazetteer id, or null; an id this app's data lacks is kept
+    base: "",                        // typed: the worksheet's Base of Operations
+    keyNpcs: [ { kind: "cast", id: "C-XXXXXXXX" } ],   // cast links (178); removeCastMember adds `name`
+    wants: "", reach: "",
+    tippingFor: [ "" ], tippingAgainst: [ "" ],        // typed lines; a blank row is one being typed, so the gate keeps it
+    stance: null,                    // -2 (Hostile) … 2 (Allied), or null; the ends and the middle are the book's words
+    attention: null,                 // neutral | aware | active (2410), or null
+    notes: "",
+    created: "<ISO>", updated: "<ISO>"
+  } ],                               // who is tied to it by affiliation is read from the cast, never stored
+  clocks: [ {                        // 0.15: a segmented counter (Decision 245)
+    id: "CK-XXXXXXXX",               // the TAG alphabet; unique in the table
+    name: "", segments: 4, filled: 0,   // segments a whole number 2 to 12 (else 4); filled 0 to segments
+    advances: "", whenFull: "",      // typed: what advances it, and what happens when it fills
+    on: { kind: "faction", id: "FA-XXXXXXXX" },   // what owns it, or null; a link to no faction on the table is kept and shown nowhere; removeFaction removes its clocks
+    created: "<ISO>", updated: "<ISO>"
+  } ],
   interactions: [ {                  // 0.3: what passed between the crew and the cast (Decisions 177–179)
     id: "I-XXXXXXXX",                // the TAG alphabet; unique in the table
     kind: "shared",                  // shared | learned | helped | wronged | killed | owes | owed | fought (0.7, Decision 193) | null (anything else reads null)
@@ -1168,7 +1190,7 @@ StatBlock: {                         // Decision 175: what the Codex prints, not
 
 Step history: **0.2** adds `cast` (`migrateTable()` gives an older table an empty
 one). **0.3** adds `interactions` and each member's `affiliations`. **0.4** adds each member's `from`, null for everyone already there. **0.5** adds `encounters`, empty for everyone already there. **0.6** adds each row's `massive`, `armorLoss`, `scrapped` and `armorId`, 0, false and null for everyone already there. **0.7** adds each row's `kept` and `struck`, null and false for everyone already there, and an interaction may be of kind `fought`. **0.8** adds `sessions` and `threads`, empty for everyone already there, and each interaction's `session`, null (nothing is converted by date on load). **0.9** adds each session's `close`, null for everyone already there (nothing is converted). **0.10** adds each note's `session`, null for everyone already there (nothing is converted). **0.11** adds each encounter's `by` and `sides`, each row's `side` and each cast member's `ally`: one at a time, the crew and one other side, PCs on the crew's, nobody an ally (nothing is guessed). Health, Health Levels, HP and each stat's bonus are `Engine.npc(block)`'s,
-computed and never written into the file (constraint 7). **0.12** adds `audit`, the activity log (Decision 212), empty for everyone already there; a file older than the app comes in with its trail emptied, so an undo never crosses a schema step. **0.13** adds each interaction's `encounter`, null for everyone already there (nothing is converted; Decision 241). **0.14** adds `places`, empty, and each interaction's `place`, null for everyone already there (Decision 243).
+computed and never written into the file (constraint 7). **0.12** adds `audit`, the activity log (Decision 212), empty for everyone already there; a file older than the app comes in with its trail emptied, so an undo never crosses a schema step. **0.13** adds each interaction's `encounter`, null for everyone already there (nothing is converted; Decision 241). **0.14** adds `places`, empty, and each interaction's `place`, null for everyone already there (Decision 243). **0.15** adds `factions` and `clocks`, both empty; nothing is converted, and a member's affiliations stay as typed (Decisions 244, 245).
 
 The browser keeps each table as `shadows.table.v1.<id>` =
 `{ table, section, changed, exported }`, by the roster's rules (Decision 141).
@@ -4283,6 +4305,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
     → **Superseded in part by Decision 182** — a link to a record outside the table stores its name.
     → **Superseded in part by Decision 241** — a line links its encounter, `{ kind: "encounter", id }`, and deleting the encounter writes its name.
     → **Superseded in part by Decision 243** — a line links its place, `{ kind: "place", id }`, and removing the place writes its name.
+    → **Superseded in part by Decision 245** — a clock goes with its owner, rather than keeping its name.
 
 179. **A member carries affiliations as text; the Cast list filters by one; a member's page lists their interactions; and the Cast tab's second view, Who knows what, lists them by crew name.**
      *2026-10-05 · Ken + Claude · Touches: affiliations, cast filters, affiliation filter, castFilter, Cast tab, member page, Between them and the crew, Who knows what, crewView, quick entry, datalist, Decision 176, W29, GQ1*
@@ -4727,6 +4750,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** a table's trail outgrows storage at 500, a GM asks for redo, or W38's two tabs reach tables.
      - **Built:** table schema 0.12, switched off (173); log 2026-10-10.
     → **Superseded in part by Decision 243** — `places` is a record the log covers.
+    → **Superseded in part by Decisions 244 and 245** — `factions` and `clocks` are records the log covers.
 
 213. **A Disadvantage's Pain shift and a Milestone's IP roll are data the engine reads.**
      *2026-10-10 · Ken + Claude · Touches: Pain Sensitive, grants, painLevel grant, painState, fromTraits, painSources, Improved, ipRoll, minorShared, Engine.ipRoll, Engine.ipRollTotal, Take Minor, localDay, W92, W93, W67*
@@ -5036,6 +5060,31 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 178 in part (a third link kind), 208 in part (Find searches places), 212 in part (a seventh record), 241 in part (a line names a place).
      - **Revisit if:** S7's factions or S12b's Site Profiles want a place's own track, or an encounter wants a place.
      - **Built:** table schema 0.14, switched off (173); PR #236; log 2026-10-23.
+
+244. **A table keeps the crew's factions as the book's Faction Tracker: its fields, a stance and an attention, and nothing derived.**
+     *2026-10-23 · Ken + Claude · Touches: factions, FA- id, from, type, territory, base, keyNpcs, wants, reach, tippingFor, tippingAgainst, stance, attention, notes, addFaction, editFaction, removeFaction, factionTitle, factionList, factionsKeyFor, factionAffiliated, FACTION_TYPES, Factions view, City tab, CITY_VIEWS, The city, removeCastMember, tableSearch, TABLE_RECORDS, table schema 0.15, Decision 177, Decision 179, Decision 208, Decision 212, Decision 242*
+     - **Decided:** Table schema 0.15 adds `factions`: the worksheet's fields (`2644`) as typed text and lists, a type from the book's six, a Territory from the gazetteer, key NPCs as cast links, a stance on the Hostile↔Allied line in five steps, and `2410`'s attention (Neutral, Aware, Active), each optional. A gazetteer faction or power seeds one. Affiliations stay text: a faction's page lists the cast whose affiliation matches its name, read every time. The City tab gains **Factions**. Find and undo cover them.
+     - **Why:** `2410` says to track factions loosely, in plain language, with no influence scores; the worksheet is what the book hands a GM to do that, so the record is the worksheet and nothing more. Scott keeps records; Deighton doesn't (§1a), so nothing here is required.
+     - **Rejected:**
+       - A computed standing or score: the book rejects it (`2410`).
+       - Converting affiliations to faction links: it guesses which text meant which faction (203).
+       - Factions as a tab of their own: the city's records live on City (§4b).
+       - The stance as free text only: the worksheet draws a line.
+     - **Replaces:** Decision 208 in part (Find searches factions), 212 in part (factions are a record the log covers).
+     - **Revisit if:** a GM wants affiliations as links (179's own trigger), or S11's jobs want a faction's reaction.
+     - **Built:** table schema 0.15, switched off (173); log 2026-10-23.
+
+245. **A clock is one record on the table: a name, segments, how many are filled, what advances it and what happens when it fills; S7 hangs clocks on factions.**
+     *2026-10-23 · Ken + Claude · Touches: clocks, CK- id, segments, filled, advances, whenFull, on, owner link, addClock, editClock, removeClock, clocksOn, clock segments, faction page, removeFaction, tableSearch, TABLE_RECORDS, table schema 0.15, Decision 178, Decision 204, Decision 208, Decision 212*
+     - **Decided:** `clocks` holds every clock, each with an `on` link to what owns it (`{ kind:"faction", id }` in S7). Segments are 2 to 12, 4 by default, as every clock in the approved Expansion has; `filled` is 0 to segments. The app never advances one: the GM taps + or −, and a full clock shows what happens, nothing more. Removing a faction removes its clocks; undo restores both.
+     - **Why:** S10f, S11 and S12b each need a clock; one record with an owner link serves all three without a second shape. The core rulebook gives a clock no shape; the Expansion's sites do, and that is the shape.
+     - **Rejected:**
+       - Clocks stored inside each faction: S10f's and S12b's would need a second shape.
+       - Advancing a clock from play (a job closed, a session ended): the app doesn't know what advances one (`2410`: what a faction does is the GM's).
+       - Keeping an owner's name on its orphaned clocks (178's rule): a clock means nothing without its owner.
+     - **Replaces:** Decision 178 in part (a clock goes with its owner, not under its name), 208 in part (Find searches clocks), 212 in part (clocks are a record the log covers).
+     - **Revisit if:** S10f, S11 or S12b needs a clock with no owner, a reset rule, or a clock that advances itself.
+     - **Built:** table schema 0.15, switched off (173); log 2026-10-23.
 
 
 ## 5. Open Flags
