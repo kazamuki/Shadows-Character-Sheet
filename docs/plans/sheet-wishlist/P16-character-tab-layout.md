@@ -193,6 +193,8 @@ Suggested CHANGELOG lines (player voice):
 - [ ] Run in the dev preview, not only `phone-check`: pin the vitals panel at 1300px and check the solo card and the alignment by eye too.
 - [ ] `npm run verify` and `npm run phone-check` are green; the version case is stated.
 
+**After the review, before merge (Ken, 2026-10-24):** the conductor runs an `/impeccable:impeccable` layout pass on the built tab: the space between sections, whether a heading reads as a row's start, and whether a short section's empty row reads as a gap. Its findings go to Ken with a recommendation each. What he takes goes to the builder as a fix round; the rest becomes a W.
+
 ## 10. Stop and ask
 
 - **A change outside** `sheet.js` (`renderShCharacter` and the line at ~2339 only), `shadows.css`, `phone-check.mjs`, the smoke tests and their helpers, the architecture guard (P16 4), and the docs the close-out names.
