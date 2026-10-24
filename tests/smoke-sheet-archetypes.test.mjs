@@ -39,8 +39,8 @@ test("Character: the archetype, then Advantages beside Disadvantages, one tab, w
   assert.match(app.$$("#main .trait-col")[0].textContent, new RegExp(D.advantages[0].name));
   assert.match(app.$$("#main .trait-col")[1].textContent, new RegExp(D.disadvantages[0].name));
 
-  // Decision 168: the archetype beside its core mechanic, its parts in one
-  // flow of columns, and each side's cards in a grid as many across as fit.
+  // Decision 168: the archetype beside its core mechanic, and each side's cards
+  // in a grid as many across as fit; each part its own row (Decision 246).
   const top = app.$$("#main .arch-top > .arch-top-part");
   assert.equal(top.length, 2, "the archetype and its core mechanic aren't one band");
   assert.match(top[0].textContent, /Arcanist/);

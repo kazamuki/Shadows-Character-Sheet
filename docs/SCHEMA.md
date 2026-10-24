@@ -5089,7 +5089,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Built:** table schema 0.15, switched off (173); log 2026-10-23.
 
 246. **Every section on the Character tab starts its own row, its cards in one shared grid; a lone card spans two columns.**
-     *2026-10-24 · Ken + Claude · Touches: Character tab, renderShCharacter, arch-flow, arch-part, solo, trait-grid, Powers, Origin, Bloodline, Advantages, Disadvantages, vitals pinned, W99*
+     *2026-10-24 · Ken + Claude · Touches: Character tab, renderShCharacter, arch-top, arch-flow, arch-part, solo, trait-cols, trait-grid, Baseline Traits, Powers, Vulnerabilities, Specialization, Origin, Bloodline, Subtype, Aberration, Permanent Aberrations, Disciplines, Advantages, Disadvantages, vitals pinned, phone-check, W99*
      - **Decided:** Each of the archetype's sections begins a row with its heading at the left, its cards beneath in a grid of 300px-or-wider columns with 20px gaps that every section shares. A section with exactly one card (marked `solo` by the renderer, which knows the count) spans two columns when its row has them, by a container query. The top band and Advantages beside Disadvantages stay, on the same gap.
      - **Why:** Brogan, via Ken (W99): headings landed wherever the column flow put them, so the page was hard to scan. Decision 168's *Revisit if* named this.
      - **Rejected:**

@@ -959,8 +959,8 @@ details.pick.trait>summary .effects{flex-basis:100%; margin-top:0}
    heading and notes take the row; a card, and the Disciplines table, one track.
    A part's one card (`solo`, set by the renderer, which knows the count) spans
    two tracks once the part is wide enough to have them: a container query, as
-   W45's lone card (Decision 214), because a span at one track adds a track and
-   scrolls the page sideways. 620px is two tracks and the gap. */
+   W45's lone card (Decision 214), so a one-track part gets no empty implicit
+   track beside its card. 620px is two tracks and the gap. */
 .arch-flow{margin-top:24px}
 .arch-part{display:grid; grid-template-columns:repeat(auto-fill, minmax(min(300px,100%),1fr)); column-gap:20px; align-items:start; padding-bottom:18px; container-type:inline-size}
 .arch-part>.sect:first-child{margin-top:0}
