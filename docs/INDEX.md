@@ -34,7 +34,7 @@ authority and is never read front to back; §1 below says which section to open.
 | What shipped, batch by batch, and which decisions it numbered | `log/shipped.md` |
 | What a past session cost, and what to watch for | `log/2026.md` |
 | Text retired from a live document: the old phase roadmap, `meta.notes`, the closed-flag notes | `log/archive.md` — verbatim, never edited |
-| A designer's ruling in his own words (the answers a flag, a wish or a book fix cites) | `reference/rulings-2026-10-10.md`: Deighton's answers to every open rules question, 2026-10-10; `reference/rulings-2026-10-16.md`: the effects sign-off (P18), Deighton's rulings on 13 Advantages and his notes for W130 |
+| A designer's ruling in his own words (the answers a flag, a wish or a book fix cites) | `reference/rulings-2026-10-10.md`: Deighton's answers to every open rules question, 2026-10-10; `reference/rulings-2026-10-16.md`: the effects sign-off (P18), Deighton's rulings on 13 Advantages and his notes for W130; `reference/rulings-2026-10-23.md`: vehicles and Powered Armor, two rounds (W91, W69), the second still open |
 | Whether a string is allowed to say that | `VOICE-APP.md` |
 | Who the app is for, what sets it apart, the accessibility floor: product truth for design work | `../PRODUCT.md` — points back here and at `SCHEMA.md` rather than restating them |
 | The screen's visual system: colour roles, type, layout, components, what to avoid | `../DESIGN.md` (screen only; the print sheet is `print.css` and its plan). `../.impeccable/design.json` is the same system in machine-readable form, for design tools |

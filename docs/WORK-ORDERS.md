@@ -224,6 +224,22 @@ in the order's header:
 - **Size the order to its tier.** A *Rule or shape* order earns all
   fifteen sections. A *Content* order (S13, S12) gets a page: goal, tier,
   scope, the sweep, tests, review checklist and the hand-over.
+- **Prove "nothing else moves" by a diff, not a pin** (P21's review).
+  Pinning a few numbers on a few characters misses the one that moved. The
+  builder scripts the engine's outputs over every archetype, specialization
+  and trait on `main`, keeps them as a fixture **before** the engine
+  changes, and diffs the branch against it.
+- **A list the order writes by hand is a convenience; the source is
+  checked by script** (P21's review). P21's order named two Skills where two
+  kickers meet, and the data made five reachable. The test reads the book's
+  table or computes the list from the data, and never takes the order's list.
+- **Sweep the readers that aren't about display** (P21's review). A flag put
+  on Field Medic to show a note also stopped IP selling it. Grep every
+  reader of a field and, for a switch on a kind, check what its default
+  branch does with a new one.
+- **The voice pass happens before merge.** The builder pastes every new
+  string into the PR as it renders, and the reviewer drafts rewrites side by
+  side for Ken to pick, through the conductor (P21, 2026-10-21).
 - **Say what isn't a stop.** *Stop and ask* names the breaks the order
   expects, so the builder doesn't have to judge them: the version literals its
   own bump moves, or a test that asserts a note the order deletes. P8b's
