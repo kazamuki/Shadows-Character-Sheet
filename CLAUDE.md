@@ -140,7 +140,13 @@ tests/                  Engine units, CRB conformance, hostile files, voice, gua
                         run in parallel, sharing helpers from smokekit.mjs.
 tools/                  build.mjs (inlines everything into dist/), changelog.mjs,
                         release.mjs (bump, prep, check), fonts.mjs, outputs.mjs,
-                        phone-check.mjs, devserver.mjs, session-start.mjs.
+                        phone-check.mjs, devserver.mjs, session-start.mjs,
+                        sample-table.mjs (builds samples/).
+samples/                A lived-in GM table, "Dead Air" (six sessions in), built by
+                        tools/sample-table.mjs and checked by tests/sample-table.test.mjs.
+                        To see it: with the dev server up, open the app with ?gm=on, seed
+                        shadows.table.v1.<meta.id> = { table, section, changed, exported }
+                        in localStorage from the file, reload and press Open.
 .claude/                settings.json (the SessionStart hook), launch.json (the
                         dev server), skills/ (the procedures as runbooks).
 docs/                   STATE, INDEX, SCHEMA, VOICE-APP, WISHLIST, WORK-ORDERS, and audits/,
