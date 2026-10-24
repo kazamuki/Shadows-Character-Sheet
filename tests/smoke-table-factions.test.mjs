@@ -261,8 +261,12 @@ test("245: + and − move a clock in place, keep focus, and a full clock says wh
   both(app, '[data-kf="segments"]', "6");
   assert.equal(app.$$(".clock-box").length, 6);
   assert.equal(app.$(".clock-count").textContent, "3 of 6");
-  both(app, '[data-kf="segments"]', "99");
-  assert.equal(app.$('[data-kf="segments"]').value, "4", "an out-of-range number reads back as stored");
+  for (const bad of ["", "13", "1", "0", "abc", "2.5"]) {
+    both(app, '[data-kf="segments"]', bad);
+    assert.equal(app.$('[data-kf="segments"]').value, "6", `"${bad}" reads back as stored`);
+    assert.equal(app.$(".clock-count").textContent, "3 of 6", `"${bad}" leaves the clock alone`);
+    assert.equal(app.window.eval("S.table.clocks[0].segments + '/' + S.table.clocks[0].filled"), "6/3");
+  }
   app.click("[data-clkdone]");
   app.click("[data-clkadd]");
   assert.equal(app.$$("[data-clock]").length, 2);
@@ -340,5 +344,21 @@ test("244: a place's Back still works after backPlace became backCity", () => {
   app.click("[data-cback]");
   assert.equal(app.$("[data-ptitle]").textContent, "the Pier");
   assert.match(focusedKey(app), /^data-copen=C-\S+ data-cwhere=met\|C-\S+$/, "Back lands on the member");
+  assert.deepEqual(app.errors, []);
+});
+
+test("244: a faction's own Back survives a Key to round trip", () => {
+  const app = setup();
+  const bob = bobId(app);
+  both(app, "[data-fkeyadd]", bob);
+  app.click(`[data-copen="${bob}"]`);
+  app.click("[data-fopen]");
+  assert.equal(app.$("[data-fback]").textContent, "Back to Bob");
+  app.click("[data-fback]");
+  app.click("[data-cback]");
+  assert.equal(app.$("[data-ftitle]").textContent, "Eclipse");
+  assert.equal(app.$("[data-fback]").textContent, "Back to The city", "the route it was opened by is kept");
+  app.click("[data-fback]");
+  assert.equal(focusedKey(app), "data-gfopen=eclipse", "and lands on its Open");
   assert.deepEqual(app.errors, []);
 });

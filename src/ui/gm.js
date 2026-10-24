@@ -1471,7 +1471,8 @@ function factionPageHtml(f){
 // Opened from a member's page: the page as it was, so Back returns there, on the link (Decision 244).
 function memberRoute(key){
   return { kind:"member", key, tsection:S.tsection, castOpen:S.castOpen, castView:S.castView, castFrom:S.castFrom, backEnc:S.backEnc, backSess:S.backSess,
-    backClose:S.backClose, backCity:S.backCity, placeOpen:S.placeOpen, placeRoute:S.placeRoute, sessOpen:S.sessOpen, castQ:S.castQ, closeView:S.closeOut ? S.closeOut.view : false };
+    backClose:S.backClose, backCity:S.backCity, placeOpen:S.placeOpen, placeRoute:S.placeRoute, sessOpen:S.sessOpen, castQ:S.castQ, closeView:S.closeOut ? S.closeOut.view : false,
+    factionOpen:S.factionOpen, factionRoute:S.factionRoute, cityView:S.cityView };
 }
 function castKeyToHtml(n){
   const of=Engine.factionsKeyFor(S.table, n.id);
@@ -1489,6 +1490,7 @@ function factionBack(){
   if (r && r.kind==="member"){
     Object.assign(S, { tsection:r.tsection, castOpen:r.castOpen, castView:r.castView, castFrom:r.castFrom, backEnc:r.backEnc, backSess:r.backSess, backClose:r.backClose,
       backCity:r.backCity||null, placeOpen:r.placeOpen||null, placeRoute:r.placeRoute||null, sessOpen:r.sessOpen, castQ:r.castQ });
+    S.factionOpen=r.factionOpen||null; S.factionRoute=r.factionRoute||null; if (r.cityView) S.cityView=r.cityView;
     if (S.closeOut) S.closeOut.view=r.closeView;
     window.scrollTo(0,0); update();
     const link=$("main").querySelector(attrSel("data-fopen", r.key));
@@ -1598,7 +1600,11 @@ function bindFactionPage(main, f){
         if (key==="segments"){
           // Typing "12" passes through "1": only a whole number in range is taken while typing; a press away from the field takes what it holds.
           const n=Number(el.value.trim());
-          if (ev.type==="input" && !(el.value.trim()!=="" && Number.isInteger(n) && n>=2 && n<=12)) return;
+          if (!(el.value.trim()!=="" && Number.isInteger(n) && n>=2 && n<=12)){
+            // Writes nothing: a refused number must not reset the clock. Leaving the field puts back what is stored.
+            if (ev.type==="change"){ const c=clockOf(cid); if (c) el.value=c.segments; }
+            return;
+          }
         }
         clockEdit(cid, { [key]:el.value });
         if (key==="name"){ const c=clockOf(cid); root.querySelector("[data-clockname]").textContent=c && c.name.trim() || "A clock"; }
