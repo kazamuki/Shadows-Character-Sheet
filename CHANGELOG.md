@@ -23,7 +23,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.54.2
+## v0.54.2 — 2026-10-24
 
 - **The Character tab reads in rows.** Every section, from Baseline Traits to your Bloodline or Origin, starts on its own line at the left, with its cards lined up beneath. No more hunting for where Powers begins.
 - **A section with one card gets room to breathe:** your Bloodline, Origin or Subtype spans two columns instead of one tall strip.

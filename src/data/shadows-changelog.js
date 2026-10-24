@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.54.2",
-    "date": null,
+    "date": "2026-10-24",
     "intro": [],
     "items": [
       "**The Character tab reads in rows.** Every section, from Baseline Traits to your Bloodline or Origin, starts on its own line at the left, with its cards lined up beneath. No more hunting for where Powers begins.",
