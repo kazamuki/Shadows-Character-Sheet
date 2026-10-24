@@ -20,6 +20,10 @@
  *     share of the screen. A Character tab card with three tags at the narrowest width;
  *   - the fold (W45): the vitals bar and a sheet's jump bar on one row, and
  *     on a phone Main's Health card within a share of the screen;
+ *   - the Character tab's layout (P16, Decision 246): for ten characters, at 1600px, 1100px, 1300px with the
+ *     vitals pinned, and a phone: every section's heading at one x, every card on a track line, a lone card
+ *     two tracks wide (or the row, at one track), the core mechanic and Disadvantages on the third line at
+ *     four tracks, and no sideways scroll;
  *   - Progression with a Major Milestone unlocked, on a Professional, whose
  *     prerequisite chips are the longest (a chip naming three advantages
  *     pushed a phone 30px sideways, found 2026-10-16).
@@ -42,6 +46,7 @@ import { pathToFileURL } from "node:url";
 import { chromium } from "playwright-core";
 import { buildHtml } from "./build.mjs";
 import { loadEngine } from "../tests/harness.mjs";
+import { characterFixtures } from "../tests/character-fixtures.mjs";
 
 // The share of the screen's height the pinned header may take, once scrolled.
 const HEADER_MAX_SHARE = 0.2;
@@ -51,6 +56,13 @@ const HP_MAX_SHARE = 0.3;
 // P13: the sticky bar on the Skills and Points steps may take this share of the screen's height.
 const BAR_MAX_SHARE = 0.34;
 const LONG = "a long name";
+// P16: the Character tab's widths. `pinned` seeds the vitals panel pinned, which takes its columns back.
+const LAYOUT_WIDTHS = [
+  { name: "1600px", width: 1600, height: 1000 },
+  { name: "1100px", width: 1100, height: 900 },
+  { name: "1300px, vitals pinned", width: 1300, height: 900, pinned: true },
+  { name: "390px", width: 390, height: 844 },
+];
 const WIDTHS = [
   { name: "phone", width: 390, height: 844 },
   { name: "tablet, portrait", width: 768, height: 1024 },
@@ -243,6 +255,67 @@ try {
     await measure(MAJOR);
     if (errors.length) rows.push({ width: w.name, screen: "(page errors)", header: errors.join("; "), overflow: "", ok: false });
     await ctx.close();
+  }
+  // P16 (Decision 246): the Character tab's layout. jsdom has no layout, so this is where it's held.
+  for (const w of LAYOUT_WIDTHS) {
+    for (const f of characterFixtures()) {
+      const c = await browser.newContext({ viewport: { width: w.width, height: w.height } });
+      await c.addInitScript(([ch, pinned]) => { try {
+        localStorage.setItem("shadows.active.v1", ch);
+        if (pinned) localStorage.setItem("shadows.ui.vitalsPinned", "pinned");
+      } catch (e) {} }, [JSON.stringify({ ch: f.ch, section: "character" }), !!w.pinned]);
+      const page = await c.newPage();
+      const errors = [];
+      page.on("pageerror", e => errors.push(e.message));
+      await page.goto(pathToFileURL(file).href);
+      await page.click("[data-open]");
+      await page.waitForSelector("#main .arch-flow");
+      const m = await page.evaluate(() => {
+        const T = 1, GAP = 20, bad = [];
+        const near = (a, b) => Math.abs(a - b) <= T;
+        const left = el => el.getBoundingClientRect().left;
+        const parts = [...document.querySelectorAll("#main .arch-flow > .arch-part")];
+        const x0 = left(parts[0].querySelector(".sect"));
+        // (a) every section heading, and Advantages, starts at the first part's x.
+        const heads = [...parts.map(p => p.querySelector(".sect")), document.querySelector("#main .trait-col .sect")];
+        for (const h of heads) if (!near(left(h), x0)) bad.push(`(a) "${h.textContent.trim()}" starts at ${Math.round(left(h) - x0)}px, not 0`);
+        let tracks4 = null;
+        for (const p of parts) {
+          const name = p.querySelector(".sect").textContent.trim();
+          // The part's tracks, from the grid itself: their left edges, and the width of one.
+          const sizes = getComputedStyle(p).gridTemplateColumns.split(" ").map(parseFloat);
+          const lines = []; let at = left(p);
+          for (const sz of sizes) { lines.push(at); at += sz + GAP; }
+          if (!tracks4 && sizes.length === 4) tracks4 = lines;
+          // (b) every card starts on a track line.
+          for (const card of p.querySelectorAll(":scope > .pick, :scope > table.ref"))
+            if (!lines.some(l => near(l, left(card)))) bad.push(`(b) a card in ${name} starts off the track lines (${Math.round(left(card) - x0)}px)`);
+          // (c) a lone card is two tracks and a gap wide, or the whole row at one track.
+          for (const card of p.querySelectorAll(":scope > .solo")) {
+            const want = sizes.length >= 2 ? 2 * sizes[0] + GAP : sizes[0];
+            if (!near(card.getBoundingClientRect().width, want)) bad.push(`(c) the lone card in ${name} is ${Math.round(card.getBoundingClientRect().width)}px, not ${Math.round(want)}`);
+          }
+        }
+        // (d) at four tracks, the core mechanic and Disadvantages start on the third line.
+        const core = document.querySelector("#main .arch-top-part:nth-child(2) .sect");
+        const dis = document.querySelectorAll("#main .trait-col .sect")[1];
+        if (tracks4 && getComputedStyle(document.querySelector("#main .trait-cols")).gridTemplateColumns.split(" ").length === 2)
+          for (const [what, el] of [["the core mechanic", core], ["Disadvantages", dis]])
+            if (el && !near(left(el), tracks4[2])) bad.push(`(d) ${what} starts at ${Math.round(left(el))}px, the third line is ${Math.round(tracks4[2])}px`);
+        // (b, continued) beside each other, Advantages' and Disadvantages' cards are the same four tracks.
+        if (tracks4 && getComputedStyle(document.querySelector("#main .trait-cols")).gridTemplateColumns.split(" ").length === 2)
+          for (const card of document.querySelectorAll("#main .trait-grid > .pick"))
+            if (!tracks4.some(l => near(l, left(card)))) bad.push(`(b) a trait card starts off the track lines (${Math.round(left(card) - x0)}px)`);
+        // (e) no sideways scroll.
+        const de = document.documentElement;
+        if (de.scrollWidth - de.clientWidth > 0) bad.push(`(e) the page scrolls sideways by ${de.scrollWidth - de.clientWidth}px`);
+        return bad;
+      });
+      rows.push({ width: w.name, screen: `layout: ${f.name}`, layout: m.length ? m.join("; ") : "ok",
+        ok: !m.length && !errors.length });
+      if (errors.length) rows.push({ width: w.name, screen: "(page errors)", layout: errors.join("; "), ok: false });
+      await c.close();
+    }
   }
 } finally {
   await browser.close();

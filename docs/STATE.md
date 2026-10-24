@@ -1,7 +1,7 @@
 # State of the build
 
 **Updated:** 2026-10-23
-**Versions:** app `0.54.1` · game data `0.47` · character schema `0.28` · table schema `0.15` · pack schema `0.2` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.54.2` · game data `0.47` · character schema `0.28` · table schema `0.15` · pack schema `0.2` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -137,13 +137,13 @@ rev 9's `C1`–`C3` are still forward notes.
 
 ## 5. Where to start
 
-**The live site is v0.54.1** (data 0.47, schema 0.28), released 2026-10-23.
+**The live site is v0.54.1** (data 0.47, schema 0.28), released 2026-10-23; the Character tab's layout (P16, app 0.54.2) is merged and waits for a release.
 
 **Next is Ken's pick**, each built through a work order (`WORK-ORDERS.md`):
 - **Another of `plans/gm-mode.md`'s *Still to build*** (S7, factions and clocks, is built).
-- **The player sheet's P16** (`plans/sheet-wishlist.md`), the Character tab's
-  layout. P14 (loadout rows) and P15 (worn gear modifiers) are shelved at the
-  plan's end until Deighton finishes the vehicle follow-ups.
+- **The player sheet's plan** (`plans/sheet-wishlist.md`) has only P14 (loadout
+  rows) and P15 (worn gear modifiers) left, shelved at its end until Deighton
+  finishes the vehicle follow-ups. P16, the Character tab's layout, is built.
 - **W90**, cybernetics: six questions before a plan.
 
 **Ken alone:** F12 and F32, W38's plan (`plans/two-tabs-one-character.md`,

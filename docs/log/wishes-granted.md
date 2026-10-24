@@ -612,6 +612,37 @@ pseudo-element, so the look stays), 40px+ on steppers, the two labels to 11px or
 more, the violet text lifted by a token change so the light-theme fold still
 holds. Check that every tip opens from keyboard and touch.
 
+**W60 — Small accessibility and copy fixes from the re-run.** *Claude · 🔎 · critique P2–P3, 2026-10-01 · → 0.36.0, and its last item in app 0.54.2 (P16): the inline style is `.disc-desc`, and `.76rem` is `.78rem`*\
+
+Seven of the eight shipped in 0.36.0 (`docs/log/shipped.md`). Pin from Main
+came with W45 (Decision 165). The other six: placeholders at `--dim`, the picked wizard card reads pressed, step sentences end as
+sentences (and step 7's note no longer says "maxBoost"), the window's title
+names the character, headings no longer skip a level, and the meter's
+transition, which never played, is gone. Each has a W60 smoke test. What's
+left is one:
+- `.76rem` is off the type ramp: an inline style at `sheet.js:1811` and about
+  nine rules in `shadows.css`. A ramp question for a typeset pass, moved here
+  from W46. *Harden.* Anything that steps down stays at or above 11px
+  (`.7rem` is 11.2px; `phone-check` fails below 11), and the inline style
+  should become a class first, since a ramp sweep of `shadows.css` won't find
+  it.
+
+**W99 — The Character tab's section headings line up.** *Ken, from Brogan · → Decision 246, app 0.54.2 (P16): every section starts its own row; a lone card spans two columns*\
+
+On the Character tab, sections like **Baseline Traits** and an Arcanist's
+**Aberrations** start wherever the column flow puts them, so their headings
+sit at different heights and the page is hard to scan. Decision 168 chose
+that flow: "parts flow into ~340px columns that break between cards". Ken's
+ask: **a section heading always starts a row, and its cards flow beneath it**
+in as many columns as fit (3, then 2, then 1 as the screen narrows). Every
+section heading lines up at the left, however many columns there are.
+*To respect:* this trades away part of what 168 won (no gaps, the page's
+width filled), so it's a superseding decision when built. Pinned vitals
+still take their columns back. `npm run phone-check` at phone and tablet
+widths. *Question:* is a short section (one card) allowed to sit beside
+the next one when there's room, or does every section get its own row?
+
+
 ### Skills
 
 **W19 — Choosing a Martial Arts style breaks the Skills grid.** *Ken · → fixed in app 0.19.1: `.alloc > .picks` spans the grid, with a smoke guard (mutation-tested)*

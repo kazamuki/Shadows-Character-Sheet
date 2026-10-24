@@ -23,6 +23,11 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.54.2
+
+- **The Character tab reads in rows.** Every section, from Baseline Traits to your Bloodline or Origin, starts on its own line at the left, with its cards lined up beneath. No more hunting for where Powers begins.
+- **A section with one card gets room to breathe:** your Bloodline, Origin or Subtype spans two columns instead of one tall strip.
+
 ## v0.54.1 — 2026-10-23
 
 - **Custom gear reads like the catalog's.** Once a custom weapon, armor piece or item on Loadout has a name, it shows as a finished line, the way catalog gear does. **Edit** opens it to change, and **Done** closes it again.

@@ -567,18 +567,21 @@ function renderShCharacter(){
     }
     h += `<div class="arch-top">${top.map(x=>`<div class="arch-top-part">${x}</div>`).join("")}</div>`;
 
-    // The archetype's parts flow into as many columns as the page has room
-    // for, and a part never splits across two (Decision 168). Powers are the
-    // data's, then the character's own (`uses`, `effect`), which Loadout &
-    // Powers edits.
+    // Each part starts a row of its own, its cards in one grid every part shares
+    // (Decision 246). A part with exactly one card marks it `solo`, which spans
+    // two columns where the grid has them: the renderer knows the count, so a
+    // note beside the card can't unmark it the way `:only-child` would. Powers
+    // are the data's, then the character's own (`uses`, `effect`), which
+    // Loadout & Powers edits.
     const parts = [];
+    const cardsOf = cards => (cards.length===1 ? [cards[0].replace('class="pick', 'class="pick solo')] : cards).join("");
     const traits = content.traits.filter(t=>t.name);
     const specIds = Engine.specializationIds(ch);
     const powers = content.powers.filter(p=>p.name);
     const vulns = content.vulnerabilities.filter(v=>v.name);
-    if (traits.length) parts.push(secs.sect("Baseline Traits") + traits.map(tr=>
+    if (traits.length) parts.push(secs.sect("Baseline Traits") + cardsOf(traits.map(tr=>
       `<div class="pick"><div class="head"><h2>${esc(tr.name)}</h2></div>
-        <div class="desc">${esc(tr.description||"")}${tr.benefit?"\n"+esc(tr.benefit):""}</div></div>`).join(""));
+        <div class="desc">${esc(tr.description||"")}${tr.benefit?"\n"+esc(tr.benefit):""}</div></div>`)));
     // An archetype's own powers carry a cost and what a rank adds (Decision
     // 196); its Base Powers are shown beside them, and a locked sheet that
     // still has some to place points at Admin, where they go (Decision 215).
@@ -586,16 +589,16 @@ function renderShCharacter(){
     const toPlace = bps && bps.left > 0 && specIds.length ? `<p class="step-note">${bps.left} Base Power${bps.left>1?"s":""} to place, on Admin.</p>` : "";
     const allowHtml = allow && powers.some(p=>!p.custom) ? `<p class="step-note">${[allow.basePowers!=null&&`Base Powers ${allow.basePowers}`, allow.maxStartingRank!=null&&`Max Starting Rank ${allow.maxStartingRank}`].filter(Boolean).join(" · ")}</p>${toPlace}` : "";
     const opening = Engine.specializationOpening(ch);
-    if (powers.length) parts.push(secs.sect("Powers") + allowHtml + powers.map(p=>
+    if (powers.length) parts.push(secs.sect("Powers") + allowHtml + cardsOf(powers.map(p=>
       p.custom && !content.writeIn ? powerCardHtml(p, []) :
       `<div class="pick" ${p.gainsSpecialization?`data-powercard="${esc(p.id)}" tabindex="-1"`:""}><div class="head"><h2>${esc(p.name)}</h2>
         ${p.origin&&!specIds.includes(p.origin)?`<span class="chip">${esc(specNameOf(ch, p.origin))}</span>`:""}
         ${p.rank!=null?`<span class="cost">rank ${p.rank}</span>`:""}${p.cost&&!p.custom?`<span class="cost">${esc(p.cost)}</span>`:""}${p.drain?`<span class="cost">drain ${esc(p.drain)}</span>`:""}${p.uses?`<span class="cost">uses ${esc(p.uses)}</span>`:""}</div>
-        <div class="desc">${esc(p.description||p.effect||"")}${p.perRank?"\nPer rank: "+esc(p.perRank):""}${p.notes?"\n— "+esc(p.notes):""}${[p.damage&&"Damage "+p.damage,p.range&&"Range "+p.range,p.duration&&"Duration "+p.duration].filter(Boolean).map(x=>"\n"+esc(x)).join("")}</div>${p.gainsSpecialization?openingHtml(opening):""}</div>`).join("")
+        <div class="desc">${esc(p.description||p.effect||"")}${p.perRank?"\nPer rank: "+esc(p.perRank):""}${p.notes?"\n— "+esc(p.notes):""}${[p.damage&&"Damage "+p.damage,p.range&&"Range "+p.range,p.duration&&"Duration "+p.duration].filter(Boolean).map(x=>"\n"+esc(x)).join("")}</div>${p.gainsSpecialization?openingHtml(opening):""}</div>`))
       + (content.powersText ? `<p class="step-note">${esc(content.powersText)}</p>` : ""));
-    if (vulns.length) parts.push(secs.sect("Vulnerabilities") + vulns.map(v=>
+    if (vulns.length) parts.push(secs.sect("Vulnerabilities") + cardsOf(vulns.map(v=>
       `<div class="pick"><div class="head"><h2>${esc(v.name)}</h2></div>
-        <div class="desc">${esc(v.description||"")}</div></div>`).join(""));
+        <div class="desc">${esc(v.description||"")}</div></div>`)));
 
     // Specialization — chosen options. A2 closed here: this read only
     // `aberrations`, so a Professional's subtype or a Werewolf's Origin showed
@@ -604,18 +607,18 @@ function renderShCharacter(){
     if (a.specialization && a.specialization.options){
       const label = a.specialization.label||"Specialization";
       parts.push(secs.sect(label, `${esc(label)}${chosen.length?"":" <span class='chip'>none chosen</span>"}`)
-        + chosen.map(o=>`<div class="pick selected"><div class="head"><h2>${esc(o.name)}</h2>
+        + cardsOf(chosen.map(o=>`<div class="pick selected"><div class="head"><h2>${esc(o.name)}</h2>
         ${o.missing?`<span class="cost">no longer in the game data</span>`:""}</div>
-        <div class="desc">${esc(o.description||"")}${o.benefit?"\n— "+esc(o.benefit):""}${o.tweak?"\nTweak — "+esc(o.tweak.name)+": "+esc(o.tweak.description):""}${optionFeaturesText(o)}</div>${optionPowersHtml(o)}${chosenChoicesHtml(ch, o)}</div>`).join(""));
+        <div class="desc">${esc(o.description||"")}${o.benefit?"\n— "+esc(o.benefit):""}${o.tweak?"\nTweak — "+esc(o.tweak.name)+": "+esc(o.tweak.description):""}${optionFeaturesText(o)}</div>${optionPowersHtml(o)}${chosenChoicesHtml(ch, o)}</div>`)));
     }
 
     // Permanent Aberrations a Cascade left (Decision 110), read-only here; the
     // Trackers tab records and removes them.
     const abPerm = Engine.aberrationState(ch).permanent;
     if (abPerm.length){
-      parts.push(secs.sect("Permanent Aberrations") + abPerm.map(x=>`<div class="pick selected"><div class="head"><h2>${esc(x.name)}</h2>
+      parts.push(secs.sect("Permanent Aberrations") + cardsOf(abPerm.map(x=>`<div class="pick selected"><div class="head"><h2>${esc(x.name)}</h2>
         ${x.category?`<span class="cost">${esc(x.category)}</span>`:""}</div>
-        <div class="desc">${x.def?(x.def.as?`As ${esc(x.def.as)}. `:"")+esc(x.def.description)+spTail((Engine.spAmounts(ch, x.def)||{}).description):"This Aberration isn't in the game data any more."}${x.note?"\n— "+esc(x.note):""}</div></div>`).join(""));
+        <div class="desc">${x.def?(x.def.as?`As ${esc(x.def.as)}. `:"")+esc(x.def.description)+spTail((Engine.spAmounts(ch, x.def)||{}).description):"This Aberration isn't in the game data any more."}${x.note?"\n— "+esc(x.note):""}</div></div>`)));
     }
 
     // Disciplines (computed ranks: scaling base + CP-bought), read-only
@@ -631,7 +634,8 @@ function renderShCharacter(){
   }
 
   // Advantages and Disadvantages: two columns from 1000px, like Skills, and
-  // inside each the cards sit as many across as fit (Decision 168). Each
+  // inside each the cards sit as many across as fit, on the same 20px gap as
+  // the parts above so the lines match (Decisions 168, 246). Each
   // is a card that opens on a tap; Expand all opens every one, and the
   // choice is remembered in this browser for the next visit.
   const open = traitsOpen();
@@ -2336,7 +2340,7 @@ function renderShLoadout(){
       if (ranks.length){
         h += `<table class="ref"><tbody>` + ranks.map(d=>
           `<tr><td>${esc(d.name)}</td><td class="num">rank ${d.rank}</td>
-           <td style="font-size:.76rem;color:var(--dim)">${esc(d.description||"")}</td></tr>`).join("") + `</tbody></table>
+           <td class="disc-desc">${esc(d.description||"")}</td></tr>`).join("") + `</tbody></table>
           <p class="step-note">${esc(copy("ranksAdvanceInPlay"))}</p>`;
       } else h += `<p class="step-note">Nothing here yet.</p>`;
     }

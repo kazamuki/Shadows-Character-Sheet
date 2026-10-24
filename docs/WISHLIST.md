@@ -76,7 +76,7 @@ until every point that can buy something is spent); Decision 164 (a press keeps 
 
 The 2026-09-30 design critique (27/40, snapshot in `.impeccable/critique/`)
 and its 2026-10-01 re-run (29/40) are mostly built: W43, W42, W44, W46, W47
-and W57, then W45 and W58 (Decisions 165 and 166). What's left is the last of W60. Since W43, controls are 44px on a touchscreen and
+and W57, then W45 and W58 (Decisions 165 and 166). Since W43, controls are 44px on a touchscreen and
 `npm run phone-check` fails on anything smaller, or on text under 11px; since
 W45 it also fails on a vitals bar or a sheet's jump bar of two rows, and on a
 phone's Health card below 30% of the screen. A new control inherits those
@@ -91,38 +91,6 @@ added, edited and removed like a gear row, and logged. Raised 2026-10-01 while
 locking a power's words (Decision 154), whose Notes field stays free.
 *To respect:* the free-form page stays as it is; cards are the player's, not
 derived from anything.
-
-**W60 — Small accessibility and copy fixes from the re-run.** *Claude · 🔎 · critique P2–P3, 2026-10-01 · mostly shipped in 0.36.0*\
-**Plan:** [sheet-wishlist P16](plans/sheet-wishlist/P16-character-tab-layout.md), its last item · **Goes with:** W99
-
-Seven of the eight shipped in 0.36.0 (`docs/log/shipped.md`). Pin from Main
-came with W45 (Decision 165). The other six: placeholders at `--dim`, the picked wizard card reads pressed, step sentences end as
-sentences (and step 7's note no longer says "maxBoost"), the window's title
-names the character, headings no longer skip a level, and the meter's
-transition, which never played, is gone. Each has a W60 smoke test. What's
-left is one:
-- `.76rem` is off the type ramp: an inline style at `sheet.js:1811` and about
-  nine rules in `shadows.css`. A ramp question for a typeset pass, moved here
-  from W46. *Harden.* Anything that steps down stays at or above 11px
-  (`.7rem` is 11.2px; `phone-check` fails below 11), and the inline style
-  should become a class first, since a ramp sweep of `shadows.css` won't find
-  it.
-
-**W99 — The Character tab's section headings line up.** *Ken, from Brogan · 🔎 · Rule or shape · raised 2026-10-10 · reopens Decision 168 in part*\
-**Plan:** [sheet-wishlist P16](plans/sheet-wishlist/P16-character-tab-layout.md) · **Goes with:** W60
-
-On the Character tab, sections like **Baseline Traits** and an Arcanist's
-**Aberrations** start wherever the column flow puts them, so their headings
-sit at different heights and the page is hard to scan. Decision 168 chose
-that flow: "parts flow into ~340px columns that break between cards". Ken's
-ask: **a section heading always starts a row, and its cards flow beneath it**
-in as many columns as fit (3, then 2, then 1 as the screen narrows). Every
-section heading lines up at the left, however many columns there are.
-*To respect:* this trades away part of what 168 won (no gaps, the page's
-width filled), so it's a superseding decision when built. Pinned vitals
-still take their columns back. `npm run phone-check` at phone and tablet
-widths. *Question:* is a short section (one card) allowed to sit beside
-the next one when there's room, or does every section get its own row?
 
 **W100 — Distances in meters or feet.** *Ken · 💡 · Fix (UI) · raised 2026-10-10 with F31's ruling*\
 **Plan:** set aside by [sheet-wishlist §4](plans/sheet-wishlist.md): distances are text today, so it starts as data work

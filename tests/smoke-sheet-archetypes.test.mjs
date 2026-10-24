@@ -12,6 +12,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { boot, stored } from "./harness.mjs";
+import { characterFixtures } from "./character-fixtures.mjs";
 import { Engine, D, lockedCharacter, onArchetypeStep, onStep, CRANK_ON, openSheet, activeChar, arcanistOnCP, draft, withDownloads, named, card, writtenInCharacter, focused, lockedVampire, fill } from "./smokekit.mjs";
 
 // ── A written-in archetype on the sheet (Decision 153, custom archetype S4) ──
@@ -875,4 +876,50 @@ test("P18 6: a folded Character card shows its tags, held for its rank and picks
   assert.equal(card("Hard to Kill").querySelector("summary .effects .etag.computed").textContent, "+2 max HP on every Health Level");   // Decision 232: a held ×2 states its total
   assert.equal(card("Bullseye").querySelector("summary .effects .etag.rule").textContent, "Called Shots: +6 damage.");
   assert.equal(card("Common Sense").querySelector("summary .effects .etag.computed").textContent, "Take 6 on Investigation; choose before you roll");   // P19: a computed Take X now
+});
+
+// ── P16: each section its own row, a lone card spanning two columns (Decision 246) ──
+// jsdom has no layout, so these pin the markup the grid relies on; where a heading
+// and a card actually land is measured in Chromium by tools/phone-check.mjs.
+const archParts = app => app.$$("#main .arch-flow > .arch-part");
+const partCards = p => [...p.children].filter(c => c.matches(".pick, table.ref"));
+
+test("P16 1: a section with exactly one card marks it solo, and only then", () => {
+  const part = (app, label) => { const p = archParts(app).find(x => x.querySelector(".sect").textContent.startsWith(label)); assert.ok(p, `no ${label} part`); return p; };
+  for (const f of characterFixtures()) {
+    const app = openSheet(f.ch, "character");
+    for (const p of archParts(app)) {
+      const cards = partCards(p), name = `${f.name}: ${p.querySelector(".sect").textContent}`;
+      assert.ok(cards.length, `${name} has no card`);
+      assert.deepEqual(cards.map(c => c.classList.contains("solo")), cards.map(() => cards.length === 1 && cards[0].matches(".pick")), name);
+    }
+  }
+  assert.ok(part(openSheet(characterFixtures().find(f => f.name === "vampire/draugur").ch, "character"), "Bloodline").querySelector(".pick.solo"));
+  assert.ok(part(openSheet(characterFixtures().find(f => f.name === "werewolf/trueborn").ch, "character"), "Origin").querySelector(".pick.solo"));
+  assert.equal(archParts(openSheet(characterFixtures().find(f => f.name === "arcanist/2 aberrations").ch, "character")).flatMap(partCards).filter(c => c.classList.contains("solo")).length, 0, "two Aberrations: neither is solo");
+  assert.ok(part(openSheet(characterFixtures().find(f => f.name === "arcanist/1 aberration").ch, "character"), "Aberration").querySelector(".pick.solo"));
+  assert.ok(part(openSheet(characterFixtures().find(f => f.name === "custom/one trait").ch, "character"), "Baseline Traits").querySelector(".pick.solo"));
+  // A note beside the card: the Powers part with its allowance note and a lone power. The renderer counts
+  // cards, so the note doesn't unmark it (:only-child and :last-child would).
+  const app = openSheet(characterFixtures().find(f => f.name === "werewolf/trueborn").ch, "character");
+  app.window.eval("{const o = Engine.archetypeContent; Engine.archetypeContent = function (c) { const r = o(c); r.powers = r.powers.slice(0, 1); return r; }}");
+  app.window.eval("update()");
+  const powers = part(app, "Powers");
+  assert.ok(powers.querySelectorAll(":scope > .step-note").length >= 1, "the Powers part has no note to test beside");
+  assert.equal(partCards(powers).length, 1);
+  assert.ok(powers.querySelector(".pick.solo"), "a note beside a lone power unmarked it");
+  assert.ok(powers.querySelector(".pick.solo").parentElement.lastElementChild !== powers.querySelector(".pick.solo"), "the note isn't after the card, so this proves nothing about :last-child");
+});
+
+test("P16 2: every part opens with its heading, and its notes sit outside the cards", () => {
+  for (const f of characterFixtures()) {
+    const app = openSheet(f.ch, "character");
+    assert.deepEqual(app.errors, [], f.name);
+    const parts = archParts(app);
+    assert.ok(parts.length, `${f.name} has no parts`);
+    for (const p of parts) {
+      assert.ok(p.firstElementChild.matches(".sect"), `${f.name}: ${p.textContent.slice(0, 20)} doesn't open with its heading`);
+      for (const n of p.querySelectorAll(".step-note")) assert.ok(!n.closest(".pick") && n.parentElement === p, `${f.name}: a part note sits inside a card`);
+    }
+  }
 });

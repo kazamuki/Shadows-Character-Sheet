@@ -367,3 +367,14 @@ test("release:prep dates a release by the local calendar day, not the UTC one (W
   const src = readFileSync(join(ROOT, "tools/release.mjs"), "utf8");
   assert.match(src, /export function prep\(date = localDay\(\)\)/, "prep() no longer defaults to localDay()");
 });
+
+// W60 / P16: a size no rule uses elsewhere (.76rem) and a font-size written into the markup
+// are how the type scale drifts. Sizes live in the stylesheet, on the sizes it already uses.
+test("P16 4: no inline font size in the UI, and no .76rem in the stylesheets", () => {
+  const ui = BROWSER_JS.filter(f => f.startsWith("src/ui/")).map(f => [f, readFileSync(join(ROOT, f), "utf8")]);
+  const inline = ui.filter(([, src]) => /style="[^"]*font-size/.test(src)).map(([f]) => f);
+  assert.deepEqual(inline, [], "a renderer writes font-size into a style attribute");
+  const css = readdirSync(join(ROOT, "src/styles")).filter(f => f.endsWith(".css") && f !== "fonts.css");
+  const odd = css.filter(f => /\.76rem/.test(readFileSync(join(ROOT, "src/styles", f), "utf8")));
+  assert.deepEqual(odd, [], ".76rem is back");
+});
