@@ -47,6 +47,7 @@ authority and is never read front to back; §1 below says which section to open.
 | How a release reaches players and the live site | `../CLAUDE.md`, *Working rhythm*, and `../.github/workflows/release.yml` (Decision 138) |
 | What a PR body says, section by section | `../.github/pull_request_template.md`; what each tier must touch stays in `../CLAUDE.md` |
 | How to report a security problem, or a conduct one | `../SECURITY.md` and `../CODE_OF_CONDUCT.md` (Ken is the contact for both) |
+| The public accessibility statement: the goal, how it's checked, known limits, how to report a barrier | `../ACCESSIBILITY.md` (the design floor itself stays in `../PRODUCT.md`) |
 | A finding by id (A1, B2, C3) | `audits/` — the dated audits; look the id up before working on it |
 
 **The trap worth naming:** `CHANGELOG.md` never describes upcoming work, and

@@ -75,6 +75,10 @@ tools/                  build.mjs (the single file), changelog.mjs, release.mjs,
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md). Short version: run `npm run verify`, flag design questions in `docs/SCHEMA.md` §5 rather than deciding them in code, report bugs as GitHub issues, and update `docs/SCHEMA.md` in the same commit as any decision.
 
+## Accessibility
+
+We aim for WCAG 2.2 AA in both themes: keyboard, screen readers, contrast, reduced motion, and controls sized for a phone. [`ACCESSIBILITY.md`](ACCESSIBILITY.md) says how it's checked, what's known not to work yet, and how to report a barrier.
+
 ---
 
 © Get Dangerous Games. All rights reserved. Licensing is deliberately unset pending entity formation — do not add a license file without a founders' decision.
