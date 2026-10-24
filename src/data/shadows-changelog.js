@@ -6,7 +6,7 @@ window.SHADOWS_CHANGELOG = [
     "date": null,
     "intro": [],
     "items": [
-      "**Your own gear folds when it's done.** A custom weapon, armor piece or item you've named reads like the catalog's on Loadout. **Edit** opens it again, and **Done** folds it."
+      "**Custom gear reads like the catalog's.** Once a custom weapon, armor piece or item on Loadout has a name, it shows as a finished line, the way catalog gear does. **Edit** opens it to change, and **Done** closes it again."
     ]
   },
   {
