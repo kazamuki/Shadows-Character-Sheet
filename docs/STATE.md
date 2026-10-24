@@ -137,7 +137,7 @@ rev 9's `C1`–`C3` are still forward notes.
 
 ## 5. Where to start
 
-**The live site is v0.54.0** (data 0.47, schema 0.28), released 2026-10-23.
+**The live site is v0.54.1** (data 0.47, schema 0.28), released 2026-10-23.
 
 **Next is Ken's pick**, each built through a work order (`WORK-ORDERS.md`):
 - **GM mode's S7** (factions and clocks), or another of `plans/gm-mode.md`'s *Still to build*.

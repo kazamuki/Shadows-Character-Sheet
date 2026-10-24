@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.54.1",
-    "date": null,
+    "date": "2026-10-23",
     "intro": [],
     "items": [
       "**Custom gear reads like the catalog's.** Once a custom weapon, armor piece or item on Loadout has a name, it shows as a finished line, the way catalog gear does. **Edit** opens it to change, and **Done** closes it again."
