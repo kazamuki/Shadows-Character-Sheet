@@ -56,5 +56,6 @@ applies, and nothing above it does.
 - [ ] Commit subjects in the imperative, naming the finding or decision:
       `fix(ui): render aberrations once (A1)`.
 - [ ] The PR title names the batch; the body gives Ken the 50,000-foot view
-      first, then anything he must decide or check.
+      first, then anything he must decide or check, under
+      `.github/pull_request_template.md`'s headings.
 - [ ] Releasing is separate: the `cut-a-release` skill.

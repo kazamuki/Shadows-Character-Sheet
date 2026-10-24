@@ -372,8 +372,10 @@ rewrites the **Plan** line of every wish it takes up or sets aside
 13. **Stop and ask.** The conditions that end the session early, and the
     expected breaks that don't.
 14. **Close-out.** The `close-the-session` skill's items for this tier, the
-    changelog lines, the PR title, and the PR body's sections, always
-    including **Where the order didn't fit** (empty is a fine answer). Then
+    changelog lines, the PR title, and the PR body's sections (the
+    template's, `.github/pull_request_template.md`, unless the order needs
+    more), always including **Where the order didn't fit** (empty is a fine
+    answer). Then
     the **review checklist**: what the reviewer checks in the PR, beyond the
     tests passing.
 15. **Handing it over.** The two prompts (above) with this order's path, plus
