@@ -133,6 +133,11 @@ Reading Night Eyes' attack line ("In Dark, your attacks take −1 instead of −
 The shape: a list of game terms in the data, each with the rule it opens (a sentence, or a table such as `visibility`, drawn with its numbers). The renderer wraps each known term it finds in a Skill-row mark, an attack or check note, a rest line or a `playerNote` as a tip trigger. Hover or focus shows the tip, and a tap pins it, as Decision 139's do.
 *To respect:* the engine still returns text and never markup (constraint 5), so the UI finds the terms; or the engine returns `{ text, terms }` and the UI wraps them (decide in the order). Decision 139's primitive, not a second one: hover, focus, tap to pin, and it works inside a modal. Terms come from data and are never typed in code (Decision 135), and a term's tip reads the same table the number came from, so it can't drift. Print gets no tips. On a phone a 44px tap target can't fit a word inside a sentence, so check `phone-check`'s floor and how a tapped word reads before choosing (an underline, or a ⓘ after the line). Not every capitalised word is a term: the list is explicit, and a term inside a book quote or a `whenText` stays a match on the list, never a guess.
 
+**W135 — Main's Health card is over the phone budget.** *Ken, from P16's review · 🔎 · Fix · raised 2026-10-24*\
+**Plan:** none yet
+
+On a phone, the Main tab's Health card starts 35–37% of the way down the screen (311px at 390×844, 297px on the touch phone) against `phone-check`'s 30% budget (W45). It's the only red row in `npm run phone-check`, and it's red on `main` before P16: P16 doesn't touch Main. Find what grew above the card (the hero, the vitals row, the pin button) and bring it back under, or move the budget with a decision if the card's place is right.
+
 ### Rules in play: powers, rounds, encounters, Sanity
 
 **W107 — An unarmed strike line, and Death Touch's AP on it.** *Ken, with Claude · 💡 · Content (if it follows Iron Shirt) · raised 2026-10-15*\
@@ -1004,7 +1009,7 @@ with no DOM, so both halves have to load that way.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W135.** Everything above is open. What was built is in
+- **Next free number: W136.** Everything above is open. What was built is in
   [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)

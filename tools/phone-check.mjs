@@ -23,7 +23,7 @@
  *   - the Character tab's layout (P16, Decision 246): for ten characters, at 1600px, 1100px, 1300px with the
  *     vitals pinned, and a phone: every section's heading at one x, every card on a track line, a lone card
  *     two tracks wide (or the row, at one track), the core mechanic and Disadvantages on the third line at
- *     four tracks, and no sideways scroll;
+ *     four tracks, cards on a row one height, and no sideways scroll;
  *   - Progression with a Major Milestone unlocked, on a Professional, whose
  *     prerequisite chips are the longest (a chip naming three advantages
  *     pushed a phone 30px sideways, found 2026-10-16).
@@ -290,6 +290,10 @@ try {
           // (b) every card starts on a track line.
           for (const card of p.querySelectorAll(":scope > .pick, :scope > table.ref"))
             if (!lines.some(l => near(l, left(card)))) bad.push(`(b) a card in ${name} starts off the track lines (${Math.round(left(card) - x0)}px)`);
+          // (f) cards on one row are one height (Ken's layout pass: even rows).
+          const rows = new Map();
+          for (const card of p.querySelectorAll(":scope > .pick")) { const t = Math.round(card.getBoundingClientRect().top); rows.set(t, [...(rows.get(t) || []), card.getBoundingClientRect().height]); }
+          for (const hs of rows.values()) if (Math.max(...hs) - Math.min(...hs) > T) bad.push(`(f) a row in ${name} has cards of ${Math.round(Math.min(...hs))} to ${Math.round(Math.max(...hs))}px`);
           // (c) a lone card is two tracks and a gap wide, or the whole row at one track.
           for (const card of p.querySelectorAll(":scope > .solo")) {
             const want = sizes.length >= 2 ? 2 * sizes[0] + GAP : sizes[0];

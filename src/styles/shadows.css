@@ -962,12 +962,14 @@ details.pick.trait>summary .effects{flex-basis:100%; margin-top:0}
    W45's lone card (Decision 214), so a one-track part gets no empty implicit
    track beside its card. 620px is two tracks and the gap. */
 .arch-flow{margin-top:24px}
-.arch-part{display:grid; grid-template-columns:repeat(auto-fill, minmax(min(300px,100%),1fr)); column-gap:20px; align-items:start; padding-bottom:18px; container-type:inline-size}
+.arch-part{display:grid; grid-template-columns:repeat(auto-fill, minmax(min(300px,100%),1fr)); column-gap:20px; align-items:stretch; padding-bottom:18px; container-type:inline-size}
 .arch-part>.sect:first-child{margin-top:0}
 .arch-part>.sect,.arch-part>.step-note{grid-column:1/-1}
 .arch-part>.step-note{max-width:70ch}
 .arch-part .ref{width:100%}
 @container (min-width:620px){ .arch-part>.solo{grid-column:span 2} }
+/* A lone card is two tracks wide; its text stays a readable line. */
+.arch-part>.solo :is(.desc,p){max-width:75ch}
 /* Advantages beside Disadvantages from 1000px, like Skills; inside each, the
    cards sit as many across as fit, and opening one doesn't stretch its row. */
 .trait-cols{display:grid; grid-template-columns:1fr; column-gap:20px; align-items:start}
