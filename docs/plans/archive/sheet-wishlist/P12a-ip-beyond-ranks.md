@@ -13,7 +13,7 @@
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
-**Cadence:** the two-session loop in [`../gm-mode/README.md`](../gm-mode/README.md) (*The cadence*). Ken starts **P12a build** (Sonnet), then a fresh reviewer (Opus) once the PR is open.
+**Cadence:** the two-session loop in [`../gm-mode/README.md`](../../gm-mode/README.md) (*The cadence*). Ken starts **P12a build** (Sonnet), then a fresh reviewer (Opus) once the PR is open.
 
 **Carried over from P11's review:**
 - **The order's miss:** it made Turn Reset the round count's only clearer, and never asked where Turn Reset is pressed. It sat a tab away, and before P11 its Apply was disabled whenever nothing ticked. So no player had a habit of pressing it, and the count's warning was false from round two. The sweep asked where a result *renders*, never where its control *lives* or what else ends the state.

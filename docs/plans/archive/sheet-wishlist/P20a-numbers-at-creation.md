@@ -1,6 +1,6 @@
 # Work order P20a: Numbers at creation
 
-**Plan:** [`../sheet-wishlist.md`](../sheet-wishlist.md) §3, row P20a (P20, split). **Source:** the effects sign-off, [`../../reference/rulings-2026-10-16.md`](../../reference/rulings-2026-10-16.md) (*Sanity cuts*, *Stat maximums*, *Starting Çredits*, all unanimous; *Dwarf and Giant exclude each other*, Deighton). Decisions 77, 110, 135, 150, 152, 227, 231, 232.
+**Plan:** [`../sheet-wishlist.md`](../sheet-wishlist.md) §3, row P20a (P20, split). **Source:** the effects sign-off, [`../../reference/rulings-2026-10-16.md`](../../../reference/rulings-2026-10-16.md) (*Sanity cuts*, *Stat maximums*, *Starting Çredits*, all unanimous; *Dwarf and Giant exclude each other*, Deighton). Decisions 77, 110, 135, 150, 152, 227, 231, 232.
 
 **Scope.** The numbers a trait sets on a character's build, which today are table rules the sheet shows and doesn't apply:
 - **Sanity cuts:** Blood Lust −5, Berserker −15, Fanatic −15, Hallucinations −25 and Minor Insanity −5 a rank come off max SAN as points ("5% is 5 points").
@@ -15,7 +15,7 @@
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
-**Cadence:** the two-session loop in [`../gm-mode/README.md`](../gm-mode/README.md) (*The cadence*). Ken starts **P20a build**, then a fresh reviewer once the PR is open.
+**Cadence:** the two-session loop in [`../gm-mode/README.md`](../../gm-mode/README.md) (*The cadence*). Ken starts **P20a build**, then a fresh reviewer once the PR is open.
 
 **Carried over from P19's review:**
 - **The order's miss:** P19 computed only Advantages and Disadvantages, and the same effects sit on Milestones, archetype ranks, specializations and powers. **Applied here:** the new `grants` types are read from every source `naturalArmor()` already scans (Advantages, Disadvantages, taken Majors, `specializationChosen`, `archetypePowers`). That's how Arcane Fortitude, a specialization, gets in. The P21 inventory owns the rest of those sources.

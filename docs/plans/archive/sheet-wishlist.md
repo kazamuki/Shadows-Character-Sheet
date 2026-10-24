@@ -1,5 +1,7 @@
 # Plan — the player sheet's wishlist, in sessions
 
+**Closed 2026-10-24, kept as history** (Ken). P1–P21 are built, except P14 (loadout rows, W91) and P15 (worn gear modifiers, W69), which were shelved on Deighton's vehicle follow-ups and move to a plan of their own for vehicles and gear. Before 2026-10-24 the log cites this plan at `plans/sheet-wishlist.md`.
+
 **Status:** proposed 2026-10-10 by Claude (Opus), after the first playtest
 (W87–W99, #154) and Deighton's rulings (#156,
 `reference/rulings-2026-10-10.md`). **Approved by Ken 2026-10-10** (WQ1: the
@@ -17,7 +19,7 @@ stay there.
 ## 1. How it runs
 
 The loop every plan uses, written once in
-[`../WORK-ORDERS.md`](../WORK-ORDERS.md) (Ken, 2026-10-23; it was GM mode's README until then):
+[`../WORK-ORDERS.md`](../../WORK-ORDERS.md) (Ken, 2026-10-23; it was GM mode's README until then):
 - An orchestrating session (Opus) writes one work order, with its assumption
   sweep and its worked examples as named tests, and pre-flights it against
   the code.
@@ -76,7 +78,7 @@ its own save-shape or rules change; the later sessions keep their numbers (Ken).
 **Split 2026-10-15:** P9 became P9a (the text, Content) and P9b (F34, a save
 shape), so the quick text reaches players without waiting on F34's design (Ken).
 
-**Taken in 2026-10-15:** the two passes [`crb-v4-sync.md`](archive/crb-v4-sync.md)
+**Taken in 2026-10-15:** the two passes [`crb-v4-sync.md`](crb-v4-sync.md)
 still had open, so that every session left for the player sheet is in one
 list (Ken; the plans audit found that no order covered them).
 - **Its P4b** (the Vampire's Major Milestones) is **P17**, run right after
@@ -119,7 +121,7 @@ row order, not by number.
 | P21 | Skills learn from powers, tweaks and Milestones | From P19's review and Ken (2026-10-17): the Professional's tweaks, taken Majors, held powers at their rank, the Werewolf's traits and starter power, and the Arcanist's Aberrations, on the Skill's row as P19's are (37 effects: [`P21-inventory.md`](sheet-wishlist/P21-inventory.md)'s (b) and (c) Skill rows); **Take X adds a kicker** (Ken: "Take 6: 13 + 1d4"); Night Eyes and Nocturnal from `visibility` | Rule or shape, data (`gamedataVersion`) | Nothing: **Ken answered PQ1–PQ14 on 2026-10-17**, the defaults, except PQ7, PQ9 and PQ10, which go to Deighton as three flags the build opens and stubs (WQ3–WQ6) | **Merged** (Decision 237, #221; app 0.52.0, game data 0.44, no schema bump; flags F45–F47 open for Deighton, F46 on Survival Instinct after review; voice pass run with Ken before merge). Drafted 2026-10-17, amended 2026-10-21: pre-flight re-run after P20a and P20b (v0.51.0), and **Speed Heal lasting 24 hours** folded in as a Fix-tier rider (Ken; PQ15 answered: Default): [`P21-skills-from-powers-and-milestones.md`](sheet-wishlist/P21-skills-from-powers-and-milestones.md). The inventory's other (c) rows (a pick on a Major or Origin, weapon and armor rows, stats while a power runs, Essence checks) are later orders; its P20-area rows went to P20a and P20b |
 | P13 | Expert mode | W95 on the Archetype, Skills and CP steps; Held only on CP; the Skills step's sticky bar; the CP filter's name bug; P18's tags in the four places it missed, and a held card's computed tags stating its total | Rule or shape (from Fix, 2026-10-17: one decision, superseding 231 in part) | Nothing: PQ8–PQ10 (added 2026-10-17, after P18's review) answered the same day, the defaults. PQ1–PQ7 answered (PQ3: no compact steppers, after a side-by-side and a measurement), and Ken widened it on 2026-10-16 | ✅ **Built** 2026-10-17 (Decision 232, app 0.48.0, unreleased). Order drafted 2026-10-16, **after P18**: a folded entry shows P18's effect tags. W121 (typed stepper values) and W122 (Make a copy) are its spin-offs: [`P13-expert-mode.md`](sheet-wishlist/P13-expert-mode.md) |
 | P16 | The Character tab's layout | W99, W60's last item | Rule or shape (supersedes 168 in part) + Fix | Nothing: **Ken answered W99's question on 2026-10-24** (every section its own row, no filling), kept Advantages beside Disadvantages, and gave a lone card two columns. PQ1–PQ5 have defaults | ✅ **Built** 2026-10-24 (Decision 246, app 0.54.2, unreleased). Order, approved by Ken with PQ1–PQ5 on their defaults: [`P16-character-tab-layout.md`](sheet-wishlist/P16-character-tab-layout.md) |
-| P14 | Loadout rows | W91 vehicles (first cut, Powered Armor included). W70 (a custom item folds) was split out and built on its own, app 0.54.1 | Rule or shape (a save shape: `vehicles`, schema 0.29) | Deighton's vehicle follow-ups ([`rulings-2026-10-23.md`](../reference/rulings-2026-10-23.md)): SH3 (a typed vehicle), VK1b (the Mods number), and his in-person talk on vehicles without PROT and RES (VD1). PQ1, PQ2 and PQ4–PQ8 answered by Deighton, PQ9–PQ10 by Ken (all Default) | ⏸ **Shelved** 2026-10-23 (Ken) until Deighton finishes the follow-ups. The order is revised to his rulings before it's built, and its Status lists what changes. Drafted 2026-10-21: [`P14-loadout-rows.md`](sheet-wishlist/P14-loadout-rows.md) |
+| P14 | Loadout rows | W91 vehicles (first cut, Powered Armor included). W70 (a custom item folds) was split out and built on its own, app 0.54.1 | Rule or shape (a save shape: `vehicles`, schema 0.29) | Deighton's vehicle follow-ups ([`rulings-2026-10-23.md`](../../reference/rulings-2026-10-23.md)): SH3 (a typed vehicle), VK1b (the Mods number), and his in-person talk on vehicles without PROT and RES (VD1). PQ1, PQ2 and PQ4–PQ8 answered by Deighton, PQ9–PQ10 by Ken (all Default) | ⏸ **Shelved** 2026-10-23 (Ken) until Deighton finishes the follow-ups. The order is revised to his rulings before it's built, and its Status lists what changes. Drafted 2026-10-21: [`P14-loadout-rows.md`](sheet-wishlist/P14-loadout-rows.md) |
 | P15 | Worn gear modifiers | W69 | Rule or shape | `damageType` for the 25 weapons without one (data work, first). Powered Armor's enhancements, which Deighton ruled on 2026-10-23 (PA5–PA8, rounds one and two) | ⏸ after P14, shelved with it |
 
 **Shelved 2026-10-23:** P14 waits on Deighton's vehicle follow-ups, so it

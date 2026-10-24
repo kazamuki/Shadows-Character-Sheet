@@ -1,6 +1,6 @@
 # Work order P19: Skills learn from traits
 
-**Plan:** [`../sheet-wishlist.md`](../sheet-wishlist.md) §3, row P19. **Source:** the effects sign-off, [`../../reference/rulings-2026-10-16.md`](../../reference/rulings-2026-10-16.md) (*A Skill's check*, unanimous; *Take X: choose first*; *Light levels*). Decisions 96, 156, 229, 231, 232.
+**Plan:** [`../sheet-wishlist.md`](../sheet-wishlist.md) §3, row P19. **Source:** the effects sign-off, [`../../reference/rulings-2026-10-16.md`](../../../reference/rulings-2026-10-16.md) (*A Skill's check*, unanimous; *Take X: choose first*; *Light levels*). Decisions 96, 156, 229, 231, 232.
 
 **Scope.** The Advantages and Disadvantages that change a Skill's check stop being table rules and show on the Skill's row:
 - **the number:** Ghost Step +3 on Stealth, Defect/Flaw −2 on each Skill it names. These go into the check, so every reader of it follows: the row, attacks, a maneuver's check, print;
@@ -14,7 +14,7 @@
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
-**Cadence:** the two-session loop in [`../gm-mode/README.md`](../gm-mode/README.md) (*The cadence*). Ken starts **P19 build** (Sonnet), then a fresh reviewer (Opus) once the PR is open.
+**Cadence:** the two-session loop in [`../gm-mode/README.md`](../../gm-mode/README.md) (*The cadence*). Ken starts **P19 build** (Sonnet), then a fresh reviewer (Opus) once the PR is open.
 
 **Carried over from P13's review:**
 - **The order's miss:** P13's sweep grepped `src/ui` for where Advantages are *read* and missed Redeemed, whose options are built in the engine. **Applied here:** §5 sweeps the readers of `skillLine().checkBonus` across `src/engine`, `src/ui` and `tools`, not just the Skills tab.

@@ -8,7 +8,7 @@
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
-**Cadence:** the two-session loop in [`../gm-mode/README.md`](../gm-mode/README.md) (*The cadence*). Ken starts **P17 build** (Sonnet) and, once the PR is open, a fresh reviewer (Opus).
+**Cadence:** the two-session loop in [`../gm-mode/README.md`](../../gm-mode/README.md) (*The cadence*). Ken starts **P17 build** (Sonnet) and, once the PR is open, a fresh reviewer (Opus).
 
 **Carried over from P9b's review:**
 - **The order's misses:**

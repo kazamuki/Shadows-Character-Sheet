@@ -50,7 +50,7 @@ The page gets longer, by roughly a third. That is the cost Ken chose for heading
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
-**Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../WORK-ORDERS.md). The conductor starts **P16 build** (Sonnet), then a fresh **P16 review** (Opus) once the PR is open.
+**Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../../WORK-ORDERS.md). The conductor starts **P16 build** (Sonnet), then a fresh **P16 review** (Opus) once the PR is open.
 
 **Carried over:** no P-order reviewer since P13's precedes this one (W70 was built on its own, P14 is shelved). From P13's review, still true: **a layout claim is measured in the preview, not eyeballed**, and **every reader of a class is grepped** before it changes. Applied here: §4's rows come from grep, and §6's layout checks are numbers from Chromium.
 
