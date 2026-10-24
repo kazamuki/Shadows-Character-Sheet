@@ -1480,7 +1480,7 @@ h2.city-name{font-size:1.15rem}
 .clock-row{display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; min-width:0}
 .clock-boxes{display:flex; flex-wrap:wrap; gap:4px; min-width:0; max-width:100%}
 .clock-box{width:22px; height:22px; border:2px solid var(--dim); border-radius:3px; background:transparent}
-.clock-box.on{background:var(--cyan); border-color:var(--cyan)}
+.clock-box.on{background:var(--cyan); border-color:var(--cyan); color:var(--ink)}
 .clock-count{font-family:var(--mono); font-size:.85rem}
 .clock-btns{display:inline-flex; flex-wrap:wrap; gap:6px; align-items:center}
 .clock-step{min-width:44px}
