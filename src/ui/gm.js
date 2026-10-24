@@ -272,7 +272,7 @@ function renderTableChrome(){
   ctx.textContent = tableName(t);
   nav.innerHTML = tableTabButtonsHtml();
   // The tab you're on also takes you back from a member's page to the list.
-  nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>{ S.tsection=b.dataset.tsec; S.backFromLine=null; S.placeRoute=null; S.backCity=null; if (S.tsection==="city") S.placeOpen=null; if (S.tsection==="sessions") S.sessOpen=null; if (S.tsection==="cast"){ S.castOpen=null; S.backEnc=null; S.backSess=false; S.backClose=false; S.backCity=null; } if (S.tsection==="threats"){ S.threatOpen=null; S.threatGroup=null; S.threatMember=null; S.threatEnc=null; } window.scrollTo(0,0); update(); });
+  nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>{ S.tsection=b.dataset.tsec; S.backFromLine=null; S.placeRoute=null; S.factionRoute=null; S.clockEdit=null; S.backCity=null; if (S.tsection==="city"){ S.placeOpen=null; S.factionOpen=null; } if (S.tsection==="sessions") S.sessOpen=null; if (S.tsection==="cast"){ S.castOpen=null; S.backEnc=null; S.backSess=false; S.backClose=false; S.backCity=null; } if (S.tsection==="threats"){ S.threatOpen=null; S.threatGroup=null; S.threatMember=null; S.threatEnc=null; } window.scrollTo(0,0); update(); });
   showActiveTab(nav);
   if (!act) return;
   act.innerHTML = `<button type="button" class="hdr-act" data-tfind>Find</button><button type="button" class="hdr-act" data-tjot>Jot</button>
@@ -319,17 +319,17 @@ function renderTable(){
   const threatPage = S.tsection==="threats" && threatPageNow();
   const encPage = S.tsection==="encounters" && encOpenNow();
   const sessPage = S.tsection==="sessions" && sessOpenNow();
-  const placePage = cityPageNow();
-  const onPage = (S.tsection==="cast" && castOpenMember()) || threatPage || encPage || sessPage || placePage;
+  const placePage = cityPageNow(), factionPage = placePage ? null : factionPageNow();
+  const onPage = (S.tsection==="cast" && castOpenMember()) || threatPage || encPage || sessPage || placePage || factionPage;
   const head = onPage ? "" :
     `<h1 class="step-title tbl-title">${esc(tableName(t))}</h1>
     <p class="step-note">Table${Number.isFinite(made)?` · created ${esc(new Date(made).toLocaleDateString())}`:""}</p>`;
   const body = S.tsection==="sessions" ? (sessPage ? (closeSheetNow(sessPage) ? closeSheetHtml(sessPage) : sessionPageHtml(sessPage)) : sessionsTabHtml(t))
     : S.tsection==="cast" ? (onPage ? castPageHtml(onPage) : castTabHtml(t))
-    : S.tsection==="city" ? (placePage ? placePageHtml(placePage) : cityTabHtml(t))
+    : S.tsection==="city" ? (placePage ? placePageHtml(placePage) : factionPage ? factionPageHtml(factionPage) : cityTabHtml(t))
     : S.tsection==="threats" ? (threatPage ? threatPage.html : threatsTabHtml(t)) : S.tsection==="encounters" ? encountersTabHtml(t) : S.tsection==="reference" ? referenceTabHtml() : notesTabHtml(t);
   // A redraw a press causes keeps the keyboard's place (Decision 164).
-  keepPlace(main, ()=>{ main.innerHTML = failed + head + body; bindTable(); }, ["[data-cadd-name]", "[data-padd-name]", "[data-tnew]", "[data-tsearch]", "[data-pslot]", "[data-enc-new]", "[data-thadd]", "[data-snew]", "[data-jumpfilter]"]);
+  keepPlace(main, ()=>{ main.innerHTML = failed + head + body; bindTable(); }, ["[data-cadd-name]", "[data-padd-name]", "[data-fadd-name]", "[data-tnew]", "[data-tsearch]", "[data-pslot]", "[data-enc-new]", "[data-thadd]", "[data-snew]", "[data-jumpfilter]"]);
 }
 function bindTable(){
   const main=$("main");
@@ -410,7 +410,7 @@ function openActivity(){
 // included. Find is Engine.tableSearch, computed on every keystroke and stored nowhere;
 // S.findQ is the search as typed, S.jotDraft an unsaved jot, and both go with the table.
 // The field is never redrawn while typing: the results below it are.
-const FIND_KINDS = [["cast", "Cast"], ["session", "Sessions"], ["interaction", "Lines"], ["thread", "Threads"], ["note", "Notes"], ["encounter", "Encounters"], ["place", "Places"]];
+const FIND_KINDS = [["cast", "Cast"], ["session", "Sessions"], ["interaction", "Lines"], ["thread", "Threads"], ["note", "Notes"], ["encounter", "Encounters"], ["place", "Places"], ["faction", "Factions"], ["clock", "Clocks"]];
 const findFieldLabel = f => f.indexOf("journal.")===0 ? (JOURNAL.find(j=>"journal."+j[0]===f) || [0, f])[1] : f;
 const findSnipHtml = s => `${esc(s.before)}<mark>${esc(s.hit)}</mark>${esc(s.after)}`;
 function findResultsHtml(q){
@@ -440,7 +440,7 @@ function openFind(){
 }
 // A hit opens its record and lands on its title (Decision 164: focus never falls to <body>).
 function openFound(kind, id){
-  S.backFromLine=null; S.placeRoute=null; S.backCity=null;
+  S.backFromLine=null; S.placeRoute=null; S.factionRoute=null; S.backCity=null;
   const t=S.table, main=()=>$("main");
   const land=sel=>{ const el=main().querySelector(sel); if (el){ takeFocus(el, true); if (el.scrollIntoView) el.scrollIntoView({ block:"center" }); } return el; };
   const toMember=cid=>{ S.tsection="cast"; S.castOpen=cid; S.castView="cast"; S.backEnc=null; S.backSess=false; S.backClose=false; S.backCity=null; S.castFrom=null; S.intAdd=null; };
@@ -457,7 +457,14 @@ function openFound(kind, id){
   }
   else if (kind==="thread"){ S.tsection="sessions"; S.sessOpen=null; renderTableChrome(); showThread(id); }
   else if (kind==="note") openNote(id);
-  else if (kind==="place"){ S.tsection="city"; S.placeOpen=id; S.cityView="places"; update(); land("[data-ptitle]"); }
+  else if (kind==="place"){ S.tsection="city"; S.placeOpen=id; S.factionOpen=null; S.cityView="places"; update(); land("[data-ptitle]"); }
+  else if (kind==="faction"){ S.tsection="city"; S.factionOpen=id; S.placeOpen=null; S.cityView="factions"; update(); land("[data-ftitle]"); }
+  else if (kind==="clock"){
+    const c=(t.clocks||[]).find(x=>x && x.id===id), owner=c && c.on && c.on.kind==="faction" ? c.on.id : null;
+    if (!owner) return;
+    S.tsection="city"; S.factionOpen=owner; S.placeOpen=null; S.cityView="factions"; update();
+    land(attrSel("data-clock", id) + " [data-clockname]") || land("[data-ftitle]");
+  }
   else if (kind==="encounter"){
     S.tsection="encounters"; S.encOpen=id; S.encWrap=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; S.encPick=false; S.encQ=""; S.encCodex=false; S.encCodexQ="";
     update(); land("[data-enc-h]") || land("[data-esrc], [data-efinish]:not([disabled]), [data-enext]") || land("[data-enc-title]") || land("h1");
@@ -735,7 +742,7 @@ function castRolesHtml(n){
 }
 const datalistHtml = (id, names) => names.length ? `<datalist id="${id}">${names.map(x=>`<option value="${esc(x)}"></option>`).join("")}</datalist>` : "";
 function castPageHtml(n){
-  const c=Engine.packChoices(packsMemo), packs=packsMemo.length, back=encBackTitle() || (S.backClose && S.closeOut ? "the close-out" : S.backSess ? (sessOpenNow() ? Engine.sessionTitle(sessOpenNow()) : "sessions") : S.backCity && placeBackNow() ? Engine.placeTitle(S.table, placeBackNow()) : "");
+  const c=Engine.packChoices(packsMemo), packs=packsMemo.length, back=encBackTitle() || (S.backClose && S.closeOut ? "the close-out" : S.backSess ? (sessOpenNow() ? Engine.sessionTitle(sessOpenNow()) : "sessions") : cityBackTitle());
   return `<p><button class="btn sm" data-cback>${back ? `Back to ${esc(back)}` : "Back to the cast"}</button>${encAddBtnHtml("data-cenc", "")}</p>
     <h1 class="step-title tbl-title cast-title" data-ctitle>${esc(n.name.trim() || "Unnamed")}</h1>
     ${castFromHtml(n)}
@@ -756,6 +763,7 @@ function castPageHtml(n){
     ${castText(n,"ifPushed","If pushed","What happens when they are.",true)}
     ${castText(n,"gmNote","GM note","Yours alone.",true)}
     <label class="field"><span>Affiliations</span><input type="text" data-cf="affiliations" value="${esc(n.affiliations.join(" / "))}" placeholder="Who they answer to" autocomplete="off"></label>
+    ${castKeyToHtml(n)}
     ${castInteractionsHtml(n)}
     ${castStatBlockHtml(n)}
     <p class="cast-delete"><button class="btn danger" data-cdel>Delete</button></p>`;
@@ -1056,6 +1064,10 @@ function bindCastPage(main, n){
     block(b=>{ b.traits.push({ name:t.name, text:t.text }); at=b.traits.length-1; }, true);
     focus(`[data-ctname="${at}"]`);
   });
+  main.querySelectorAll("[data-fopen]").forEach(b=>b.onclick=()=>{
+    const fid=b.dataset.fopen; if (!factionRecords().some(f=>f.id===fid)) return;
+    openFactionPage(fid, memberRoute(b.dataset.fopen));
+  });
   const addEnc=main.querySelector("[data-cenc]");
   if (addEnc) addEnc.onclick=()=>{
     encAddPress({ kind:"cast", id }, own().name.trim() || "Unnamed");
@@ -1075,9 +1087,12 @@ function bindCastPage(main, n){
       const el=(back && $("main").querySelector(back)) || $("main").querySelector(S.sessOpen ? "[data-sback]" : "[data-snew]"); if (el) el.focus();
       return;
     }
-    if (S.backCity && placeBackNow()){
-      const back=S.castFrom; S.placeOpen=S.backCity.id; S.backCity=null; S.castFrom=null; S.castOpen=null; S.intAdd=null; S.tsection="city"; window.scrollTo(0,0); update();
-      const el=(back && $("main").querySelector(back)) || $("main").querySelector("[data-ptitle]"); if (el) takeFocus(el, true);
+    const cb=cityBackNow();
+    if (cb){
+      const back=S.castFrom;
+      if (cb.kind==="faction"){ S.factionOpen=cb.id; S.placeOpen=null; S.cityView="factions"; } else { S.placeOpen=cb.id; S.factionOpen=null; }
+      S.backCity=null; S.castFrom=null; S.castOpen=null; S.intAdd=null; S.tsection="city"; window.scrollTo(0,0); update();
+      const el=(back && $("main").querySelector(back)) || $("main").querySelector(cb.kind==="faction" ? "[data-ftitle]" : "[data-ptitle]"); if (el) takeFocus(el, true);
       return;
     }
     S.backCity=null; S.backEnc=null;
@@ -1107,10 +1122,17 @@ function bindCastPage(main, n){
 // searches), S.placeRoute (where a place's Back goes: null for the list, { kind:"city", sel }, or the page a
 // sentence was tapped on), S.backCity (a member opened from a place or faction page). A place's history is read from
 // its lines every time and stored nowhere.
-const CITY_VIEWS = [["places","The crew's places"], ["city","The city"]];
+const CITY_VIEWS = [["places","The crew's places"], ["factions","Factions"], ["city","The city"]];
 const placeRecords = () => Array.isArray(S.table.places) ? S.table.places.filter(p=>p && typeof p==="object") : [];
 const cityPageNow = () => S.tsection==="city" && S.placeOpen ? placeRecords().find(p=>p.id===S.placeOpen) || null : null;
-function placeBackNow(){ return S.backCity && S.backCity.kind==="place" ? placeRecords().find(p=>p.id===S.backCity.id) || null : null; }
+// The page a member was opened from, if it is still there: { kind, id, title }.
+function cityBackNow(){
+  const b=S.backCity; if (!b || typeof b!=="object") return null;
+  if (b.kind==="place"){ const p=placeRecords().find(x=>x.id===b.id); return p ? { kind:"place", id:p.id, title:Engine.placeTitle(S.table, p) } : null; }
+  if (b.kind==="faction"){ const f=factionRecords().find(x=>x.id===b.id); return f ? { kind:"faction", id:f.id, title:Engine.factionTitle(S.table, f) } : null; }
+  return null;
+}
+const cityBackTitle = () => { const b=cityBackNow(); return b ? b.title : ""; };
 const gazName = id => { const e=Engine.gazetteerEntry(id); return e ? String(e.name||"") : ""; };
 function placeCardHtml(t, p){
   const n=Engine.placeLines(t, p.id).length;
@@ -1127,7 +1149,11 @@ function placeListHtml(t){
 // A gazetteer entry: its name, the real-world place beside it, its line, and the button that makes it a place (SQ7).
 function gazEntryHtml(e, tag){
   const mine=placeRecords().find(p=>p.from && p.from.id===e.id);
-  const act=!Engine.PLACE_FROM_KINDS.includes(e.kind) ? ""
+  const fmine=factionRecords().find(f=>f.from && f.from.id===e.id);
+  const act=Engine.FACTION_FROM_KINDS.includes(e.kind) ? (fmine
+      ? `<button type="button" class="btn sm" data-gfopen="${esc(e.id)}" aria-label="Open ${esc(e.name)}">Open</button>`
+      : `<button type="button" class="btn sm" data-gfadd="${esc(e.id)}" aria-label="Add ${esc(e.name)} to the crew's factions">Add to the crew's factions</button>`)
+    : !Engine.PLACE_FROM_KINDS.includes(e.kind) ? ""
     : mine ? `<button type="button" class="btn sm" data-gopen="${esc(e.id)}" aria-label="Open ${esc(e.name)}">Open</button>`
     : `<button type="button" class="btn sm" data-gadd="${esc(e.id)}" aria-label="Add ${esc(e.name)} to the crew's places">Add to the crew's places</button>`;
   return `<article class="city-entry" data-gentry="${esc(e.id)}"><${tag} class="city-name"${tag==="h2" ? ` id="gz-${esc(e.id)}" tabindex="-1"` : ""}>${esc(e.name)}${e.realWorld ? ` <span class="city-rw">${esc(e.realWorld)}</span>` : ""}</${tag}>
@@ -1151,7 +1177,7 @@ function cityPanelsHtml(g){
   return terr + beyond + powers + ground;
 }
 function cityTabHtml(t){
-  const view=S.cityView==="city" ? "city" : "places";
+  const view=S.cityView==="city" ? "city" : S.cityView==="factions" ? "factions" : "places";
   const toggle=`<div class="form-toggle cast-view" role="group" aria-label="View">${CITY_VIEWS.map(([k, name])=>
     `<button type="button" data-cityview="${k}" class="${k===view ? "on" : ""}" aria-pressed="${k===view}">${esc(name)}</button>`).join("")}</div>`;
   if (view==="city"){
@@ -1159,6 +1185,7 @@ function cityTabHtml(t){
     return `${toggle}${jumpBarHtml(cityChips(g), { sticky:true, wrap:true, filter:{ value:S.cityQ||"", placeholder:"Search the city" } })}
       <div data-citypanels>${cityPanelsHtml(g)}</div>`;
   }
+  if (view==="factions") return `${toggle}${factionsViewHtml(t)}`;
   return `${toggle}<div class="cast-add">
       <label class="field"><span>Name</span><input type="text" data-padd-name placeholder="Where did they go?" autocomplete="off"></label>
       <button class="btn primary" data-padd>Add</button></div>
@@ -1208,7 +1235,7 @@ function bindPlaceLinks(main){
     if (!placeRecords().some(p=>p.id===pid)) return;
     S.placeRoute={ kind:"line", key, tsection:S.tsection, castOpen:S.castOpen, castView:S.castView, castFrom:S.castFrom, backEnc:S.backEnc, backSess:S.backSess,
       backClose:S.backClose, backCity:S.backCity, placeOpen:S.placeOpen, placeRoute:S.placeRoute, sessOpen:S.sessOpen, castQ:S.castQ, closeView:S.closeOut ? S.closeOut.view : false };
-    S.intEdit=null; S.tsection="city"; S.placeOpen=pid; S.cityView="places";
+    S.intEdit=null; S.tsection="city"; S.placeOpen=pid; S.factionOpen=null; S.cityView="places";
     window.scrollTo(0,0); update();
     const h=$("main").querySelector("[data-ptitle]"); if (h) takeFocus(h, true);
   });
@@ -1233,12 +1260,14 @@ function placeBack(){
 function bindCity(main){
   const p=cityPageNow();
   if (p){ bindPlacePage(main, p); return; }
+  const fp=factionPageNow();
+  if (fp){ bindFactionPage(main, fp); return; }
   main.querySelectorAll("[data-cityview]").forEach(b=>b.onclick=()=>{
     S.cityView=b.dataset.cityview; renderTable(); const el=$("main").querySelector(`[data-cityview="${S.cityView}"]`); if (el) el.focus(); });
-  if (S.cityView==="city") bindCityView(main); else bindPlaceList(main);
+  if (S.cityView==="city") bindCityView(main); else if (S.cityView==="factions") bindFactionList(main); else bindPlaceList(main);
 }
 function openPlacePage(id, route){
-  S.placeOpen=id; S.placeRoute=route||null; window.scrollTo(0,0); update();
+  S.placeOpen=id; S.factionOpen=null; S.placeRoute=route||null; window.scrollTo(0,0); update();
   const h=$("main").querySelector("[data-ptitle]"); if (h) takeFocus(h, true);
 }
 function bindPlaceList(main){
@@ -1280,6 +1309,16 @@ function bindCityBody(main){
     const eid=b.dataset.gopen, p=placeRecords().find(x=>x.from && x.from.id===eid);
     if (p) openPlacePage(p.id, { kind:"city", sel:attrSel("data-gopen", eid) });
   });
+  main.querySelectorAll("[data-gfadd]").forEach(b=>b.onclick=()=>{
+    const eid=b.dataset.gfadd;
+    tableChange(()=>{ Engine.addFaction(S.table, { from:eid }); }, false);
+    redrawCity(main);
+    const el=$("main").querySelector(attrSel("data-gfopen", eid)); if (el) el.focus();
+  });
+  main.querySelectorAll("[data-gfopen]").forEach(b=>b.onclick=()=>{
+    const eid=b.dataset.gfopen, f=factionRecords().find(x=>x.from && x.from.id===eid);
+    if (f) openFactionPage(f.id, { kind:"city", sel:attrSel("data-gfopen", eid) });
+  });
 }
 function bindCityView(main){
   main.querySelector("[data-jumpfilter]").oninput=ev=>{ S.cityQ=ev.target.value; redrawCity(main); };
@@ -1317,6 +1356,276 @@ function bindPlacePage(main, p){
         S.placeOpen=null; S.placeRoute=null; S.cityView="places";
         tableChange(()=>Engine.removePlace(S.table, id));
         const el=$("main").querySelector("[data-padd-name]") || $("main").querySelector("[data-cityview][aria-pressed=true]"); if (el) el.focus();
+      } });
+  };
+}
+
+// ── Factions and clocks (Decisions 244–245) ─────────────────────────────
+// The Factions view of the City tab, a faction's page and the clocks on it. State is on S: S.cityView
+// "factions", S.factionOpen (a faction's id, or null), S.factionQ (the search), S.factionRoute (where its Back
+// goes: null for the list, { kind:"city", sel }, or { kind:"member", ... } for the member's page it was opened
+// from), S.clockEdit (the clock whose fields are open, view state only). Everything saves as typed, like a place.
+// What is tied to a faction by affiliation is read from the cast every time and stored nowhere.
+const FACTION_ATTENTION_LABELS = { neutral:"Neutral", aware:"Aware", active:"Active" };
+// [step, the words on the button, the name a screen reader hears]: the book labels only the ends and the middle.
+const FACTION_STANCE_STEPS = [[-2, "Hostile", "Hostile"], [-1, "", "One step toward Hostile"], [0, "Neutral", "Neutral"], [1, "", "One step toward Allied"], [2, "Allied", "Allied"]];
+const stanceWord = s => s===-2 ? "Hostile" : s===0 ? "Neutral" : s===2 ? "Allied" : "";
+const factionRecords = () => Array.isArray(S.table.factions) ? S.table.factions.filter(f=>f && typeof f==="object") : [];
+const factionPageNow = () => S.tsection==="city" && S.factionOpen ? factionRecords().find(f=>f.id===S.factionOpen) || null : null;
+const factionClocks = f => Engine.clocksOn(S.table, { kind:"faction", id:f.id });
+function factionCardHtml(t, f){
+  const clocks=factionClocks(f), full=clocks.filter(c=>c.filled>=c.segments).length;
+  const bits=[Engine.FACTION_TYPE_LABELS[f.type], gazName(f.territory), stanceWord(f.stance),
+    clocks.length ? `${clocks.length} ${clocks.length===1 ? "clock" : "clocks"}${full ? ` · ${full} full` : ""}` : ""].filter(Boolean).map(esc).join(" · ");
+  return `<li class="roster-card cast-card place-card" data-fcard="${esc(f.id)}"><button class="cast-open" data-fcardopen="${esc(f.id)}">${esc(Engine.factionTitle(t, f))}</button>
+    ${bits ? `<div class="roster-meta cast-meta">${bits}</div>` : ""}</li>`;
+}
+function factionListHtml(t){
+  if (!factionRecords().length) return `<p class="step-note">No factions yet. Add one, or find it in The city.</p>`;
+  const list=Engine.factionList(t, { q:S.factionQ||"" });
+  return list.length ? `<ul class="roster-list">${list.map(f=>factionCardHtml(t, f)).join("")}</ul>` : `<p class="step-note">No faction matches.</p>`;
+}
+function factionsViewHtml(t){
+  return `<div class="cast-add">
+      <label class="field"><span>Name</span><input type="text" data-fadd-name placeholder="Who are they?" autocomplete="off"></label>
+      <button class="btn primary" data-fadd>Add</button></div>
+    <div class="cast-filters"><label class="field"><span>Search</span><input type="search" data-fsearch placeholder="Search the crew's factions" autocomplete="off" value="${esc(S.factionQ||"")}"></label></div>
+    <div data-factionlist>${factionListHtml(t)}</div>`;
+}
+function factionBackTitle(){
+  const r=S.factionRoute;
+  return !r ? "Factions" : r.kind==="city" ? "The city" : routeTitle(r) || "Factions";
+}
+// A group of toggles, one pressed or none.
+const factionToggleHtml = (attr, label, items, current) => `<div class="form-toggle int-kinds" role="group" aria-label="${esc(label)}">${items.map(([v, text, name])=>
+  `<button type="button" ${attr}="${esc(v)}" class="${v===current ? "on" : ""}" aria-pressed="${v===current}"${name ? ` aria-label="${esc(name)}"` : ""}>${text ? esc(text) : `<span aria-hidden="true">·</span>`}</button>`).join("")}</div>`;
+function factionKeysHtml(t, f){
+  const keys=(Array.isArray(f.keyNpcs) ? f.keyNpcs : []).filter(l=>l && typeof l==="object");
+  const listed=new Set(keys.map(l=>l.id));
+  const cast=(t.cast||[]).filter(n=>n && !listed.has(n.id)).sort((a, b)=>String(a.name||"").toLowerCase().localeCompare(String(b.name||"").toLowerCase()));
+  return `${keys.length ? `<ul class="int-list">${keys.map(l=>{ const r=Engine.linkName(t, l);
+      return `<li class="int-line fac-key">${r.gone ? goneHtml(r.name) : `<button class="cast-open int-who" data-copen="${esc(l.id)}" data-cwhere="key|${esc(l.id)}">${esc(r.name)}</button>`}
+        <button type="button" class="btn sm" data-fkeydel="${esc(l.id)}" aria-label="Remove ${esc(r.name)}">Remove</button></li>`; }).join("")}</ul>` : `<p class="step-note">No one yet.</p>`}
+    <label class="field"><span>Add a key NPC</span><select data-fkeyadd><option value="">Pick someone</option>${cast.map(n=>`<option value="${esc(n.id)}">${esc(String(n.name||"").trim() || "Unnamed")}</option>`).join("")}</select></label>`;
+}
+function factionTipHtml(f, which){
+  const list=which==="for" ? f.tippingFor : f.tippingAgainst, rows=Array.isArray(list) ? list : [];
+  const name=which==="for" ? "For the crew" : "Against the crew";
+  return `<h3 class="ref-sub">${name}</h3>${rows.length ? `<ul class="int-list">${rows.map((x, i)=>
+      `<li class="int-line fac-tip"><input type="text" data-ftip="${which}|${i}" value="${esc(x)}" aria-label="${name}, line ${i+1}" autocomplete="off">
+        <button type="button" class="btn sm" data-ftipdel="${which}|${i}" aria-label="Remove line ${i+1} of ${name}">Remove</button></li>`).join("")}</ul>` : ""}
+    <p><button type="button" class="btn sm" data-ftipadd="${which}" aria-label="Add a line to ${name}">Add a line</button></p>`;
+}
+function clockHtml(c){
+  const editing=S.clockEdit===c.id, full=c.filled>=c.segments, nm=String(c.name||"").trim() || "A clock";
+  const fields=editing ? `<div class="cast-codex clock-fields">
+      <label class="field"><span>Name</span><input type="text" data-kf="name" value="${esc(c.name)}" autocomplete="off"></label>
+      <label class="field"><span>Segments</span><input type="number" step="1" min="2" max="12" inputmode="numeric" data-kf="segments" value="${esc(c.segments)}"></label>
+    </div>
+    <label class="field"><span>What advances it</span><textarea data-kf="advances">${esc(c.advances)}</textarea></label>
+    <label class="field"><span>When it fills</span><textarea data-kf="whenFull">${esc(c.whenFull)}</textarea></label>
+    <p class="clock-btns"><button type="button" class="btn danger" data-clkdel>Delete</button> <button type="button" class="btn" data-clkdone>Done</button></p>` : "";
+  return `<div class="clock${full ? " full" : ""}" data-clock="${esc(c.id)}">
+    <h3 class="clock-name" data-clockname tabindex="-1">${esc(nm)}</h3>
+    <div class="clock-row"><div class="clock-boxes" aria-hidden="true">${clockBoxesHtml(c)}</div>
+      <span class="clock-count" role="status">${c.filled} of ${c.segments}</span>
+      <span class="clock-btns"><button type="button" class="btn sm clock-step" data-clkminus aria-label="Take one off ${esc(nm)}"${c.filled<=0 ? " disabled" : ""}>−</button>
+      <button type="button" class="btn sm clock-step" data-clkplus aria-label="Add one to ${esc(nm)}"${full ? " disabled" : ""}>+</button>
+      ${editing ? "" : `<button type="button" class="btn sm" data-clkedit aria-label="Edit ${esc(nm)}">Edit</button>`}</span></div>
+    <p class="clock-full" data-clockfull${full ? "" : " hidden"}><strong>Full</strong>${c.whenFull.trim() ? ` · ${esc(c.whenFull)}` : ""}</p>
+    ${fields}</div>`;
+}
+const clockBoxesHtml = c => Array.from({ length:c.segments }, (_, i)=>`<span class="clock-box${i<c.filled ? " on" : ""}"></span>`).join("");
+function factionPageHtml(f){
+  const t=S.table, entry=Engine.gazetteerEntry(f.from && f.from.id), g=Engine.gazetteer({});
+  const opt=(value, name, on) => `<option value="${esc(value)}"${on ? " selected" : ""}>${esc(name)}</option>`;
+  const terr=g.territories.find(r=>r.entry.id===f.territory);
+  const unknownT=f.territory && !terr ? opt(f.territory, f.territory, true) : "";
+  const tied=Engine.factionAffiliated(t, f.id), clocks=factionClocks(f), title=Engine.factionTitle(t, f);
+  return `<p><button class="btn sm" data-fback>Back to ${esc(factionBackTitle())}</button></p>
+    <h1 class="step-title tbl-title cast-title" data-ftitle tabindex="-1">${esc(title)}</h1>
+    <label class="field"><span>Name</span><input type="text" data-ff="name" value="${esc(f.name)}" placeholder="${esc(entry ? entry.name : f.from && f.from.name || "Who are they?")}" autocomplete="off"></label>
+    <div class="tag-choice"><span>Type</span><div data-ftypes>${factionToggleHtml("data-ftype", "Type", Engine.FACTION_TYPES.map(k=>[k, Engine.FACTION_TYPE_LABELS[k], ""]), f.type)}</div></div>
+    <div class="cast-codex">
+      <label class="field"><span>Territory</span><select data-ff="territory"><option value=""${!f.territory ? " selected" : ""}>None</option>${g.territories.map(r=>opt(r.entry.id, r.entry.name, r.entry.id===f.territory)).join("")}${unknownT}</select></label>
+      <label class="field"><span>Base</span><input type="text" data-ff="base" value="${esc(f.base)}" autocomplete="off"></label>
+    </div>
+    <h2 class="cast-h">Key NPCs</h2>
+    <div data-fkeys>${factionKeysHtml(t, f)}</div>
+    <label class="field"><span>What they want</span><textarea data-ff="wants">${esc(f.wants)}</textarea></label>
+    <label class="field"><span>Resources &amp; reach</span><textarea data-ff="reach">${esc(f.reach)}</textarea></label>
+    <h2 class="cast-h">Tipping points</h2>
+    <div data-ftipgroup="for">${factionTipHtml(f, "for")}</div>
+    <div data-ftipgroup="against">${factionTipHtml(f, "against")}</div>
+    <div class="tag-choice"><span>Stance</span><div data-fstances>${factionToggleHtml("data-fstance", "Stance", FACTION_STANCE_STEPS.map(([v, text, name])=>[String(v), text, name]), f.stance===null ? "" : String(f.stance))}</div></div>
+    <div class="tag-choice"><span>Attention</span><div data-fattns>${factionToggleHtml("data-fattn", "Attention", Engine.FACTION_ATTENTION.map(k=>[k, FACTION_ATTENTION_LABELS[k], ""]), f.attention)}</div></div>
+    <label class="field"><span>Notes</span><textarea data-ff="notes" placeholder="What the crew should remember about them.">${esc(f.notes)}</textarea></label>
+    ${entry && entry.summary ? `<h2 class="cast-h">From the book</h2><p class="city-sum">${esc(entry.summary)}</p>` : ""}
+    ${tied.length ? `<h2 class="cast-h">Tied by affiliation</h2><ul class="int-list">${tied.map(n=>
+      `<li class="int-line"><button class="cast-open int-who" data-copen="${esc(n.id)}" data-cwhere="aff|${esc(n.id)}">${esc(String(n.name||"").trim() || "Unnamed")}</button></li>`).join("")}</ul>` : ""}
+    <h2 class="cast-h">Clocks</h2>
+    <div data-fclocks>${clocks.map(clockHtml).join("")}</div>
+    <p><button type="button" class="btn sm" data-clkadd>Add a clock</button></p>
+    <p class="cast-delete"><button class="btn danger" data-fdel>Delete</button></p>`;
+}
+// Opened from a member's page: the page as it was, so Back returns there, on the link (Decision 244).
+function memberRoute(key){
+  return { kind:"member", key, tsection:S.tsection, castOpen:S.castOpen, castView:S.castView, castFrom:S.castFrom, backEnc:S.backEnc, backSess:S.backSess,
+    backClose:S.backClose, backCity:S.backCity, placeOpen:S.placeOpen, placeRoute:S.placeRoute, sessOpen:S.sessOpen, castQ:S.castQ, closeView:S.closeOut ? S.closeOut.view : false };
+}
+function castKeyToHtml(n){
+  const of=Engine.factionsKeyFor(S.table, n.id);
+  return of.length ? `<h2 class="cast-h">Key to</h2><ul class="int-list">${of.map(f=>
+    `<li class="int-line"><button class="cast-open int-who" data-fopen="${esc(f.id)}">${esc(Engine.factionTitle(S.table, f))}</button></li>`).join("")}</ul>` : "";
+}
+function openFactionPage(id, route){
+  S.factionOpen=id; S.factionRoute=route||null; S.placeOpen=null; S.clockEdit=null; S.cityView="factions"; S.tsection="city";
+  window.scrollTo(0,0); update();
+  const h=$("main").querySelector("[data-ftitle]"); if (h) takeFocus(h, true);
+}
+function factionBack(){
+  const r=S.factionRoute, id=S.factionOpen, focus=sel=>{ const el=$("main").querySelector(sel); if (el) el.focus(); return !!el; };
+  S.factionOpen=null; S.factionRoute=null; S.clockEdit=null;
+  if (r && r.kind==="member"){
+    Object.assign(S, { tsection:r.tsection, castOpen:r.castOpen, castView:r.castView, castFrom:r.castFrom, backEnc:r.backEnc, backSess:r.backSess, backClose:r.backClose,
+      backCity:r.backCity||null, placeOpen:r.placeOpen||null, placeRoute:r.placeRoute||null, sessOpen:r.sessOpen, castQ:r.castQ });
+    if (S.closeOut) S.closeOut.view=r.closeView;
+    window.scrollTo(0,0); update();
+    const link=$("main").querySelector(attrSel("data-fopen", r.key));
+    if (link) link.focus(); else { const h=$("main").querySelector("h1"); if (h) takeFocus(h, true); }
+    return;
+  }
+  S.tsection="city"; window.scrollTo(0,0);
+  if (r && r.kind==="city"){ S.cityView="city"; update(); focus(r.sel) || focus('[data-cityview="city"]'); return; }
+  S.cityView="factions"; update();
+  focus(attrSel("data-fcardopen", id)) || focus("[data-fadd-name]") || focus('[data-cityview="factions"]');
+}
+function bindFactionList(main){
+  const nameEl=main.querySelector("[data-fadd-name]");
+  const add=()=>{
+    const name=nameEl.value; if (!name.trim()) return;
+    let id; tableChange(()=>{ id=Engine.addFaction(S.table, { name }).id; });
+    if (!Engine.factionList(S.table, { q:S.factionQ||"" }).some(f=>f.id===id)){ S.factionQ=""; renderTable(); }
+    const el=$("main").querySelector("[data-fadd-name]"); if (el) el.focus();
+  };
+  main.querySelector("[data-fadd]").onclick=add;
+  nameEl.addEventListener("keydown", ev=>{ if (ev.key==="Enter"){ ev.preventDefault(); add(); } });
+  main.querySelector("[data-fsearch]").oninput=ev=>{ S.factionQ=ev.target.value; main.querySelector("[data-factionlist]").innerHTML=factionListHtml(S.table); bindFactionCards(main); };
+  bindFactionCards(main);
+}
+function bindFactionCards(main){
+  main.querySelectorAll("[data-fcardopen]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation(); openFactionPage(b.dataset.fcardopen, null); });
+  main.querySelectorAll("[data-fcard]").forEach(li=>li.onclick=ev=>{ if (!ev.target.closest("button")) openFactionPage(li.dataset.fcard, null); });
+}
+function bindFactionPage(main, f){
+  const id=f.id, own=()=>factionRecords().find(x=>x.id===id) || f;
+  const focus = sel => { const el=$("main").querySelector(sel); if (el) el.focus(); };
+  const edit = o => tableChange(()=>Engine.editFaction(S.table, id, o), false);
+  main.querySelectorAll("[data-ff]").forEach(el=>{
+    const key=el.dataset.ff, fn=()=>{
+      edit({ [key]:el.value });
+      if (key==="name"){ const h=main.querySelector("[data-ftitle]"); if (h) h.textContent=Engine.factionTitle(S.table, own()); }
+    };
+    el.addEventListener("input", fn); el.addEventListener("change", fn);
+  });
+  // A group of toggles: the pressed one is cleared by a second press; only that group repaints.
+  const toggles = (attr, key, parse) => main.querySelectorAll(`[${attr}]`).forEach(b=>b.onclick=()=>{
+    const v=parse(b.getAttribute(attr)), on=own()[key]===v ? null : v;
+    edit({ [key]:on });
+    main.querySelectorAll(`[${attr}]`).forEach(x=>{ const pressed=on!==null && parse(x.getAttribute(attr))===on; x.classList.toggle("on", pressed); x.setAttribute("aria-pressed", String(pressed)); });
+  });
+  toggles("data-ftype", "type", v=>v);
+  toggles("data-fstance", "stance", v=>Number(v));
+  toggles("data-fattn", "attention", v=>v);
+  bindFightLinks(main);
+  const bindKeys = () => {
+    const box=main.querySelector("[data-fkeys]");
+    box.querySelectorAll("[data-copen]").forEach(b=>b.onclick=ev=>openMember(ev, b));
+    box.querySelectorAll("[data-fkeydel]").forEach(b=>b.onclick=()=>{ edit({ removeKey:b.dataset.fkeydel }); redrawKeys(); focus("[data-fkeyadd]"); });
+    const sel=box.querySelector("[data-fkeyadd]");
+    sel.addEventListener("change", ()=>{ if (!sel.value) return; edit({ addKey:sel.value }); redrawKeys(); focus("[data-fkeyadd]"); });
+  };
+  const redrawKeys = () => { main.querySelector("[data-fkeys]").innerHTML=factionKeysHtml(S.table, own()); bindKeys(); };
+  const openMember = (ev, b) => { ev.stopPropagation();
+    S.tsection="cast"; S.castOpen=b.dataset.copen; S.backEnc=null; S.backSess=false; S.backClose=false; S.backCity={ kind:"faction", id };
+    S.castFrom=b.dataset.cwhere ? attrSel("data-cwhere", b.dataset.cwhere) : null; S.intAdd=null;
+    window.scrollTo(0,0); update(); focus("[data-cback]"); };
+  bindKeys();
+  main.querySelectorAll(".int-list [data-copen]").forEach(b=>{ if (!b.closest("[data-fkeys]")) b.onclick=ev=>openMember(ev, b); });
+  // Tipping points: typed lines, added and removed one at a time.
+  const tipKey = which => which==="for" ? "tippingFor" : "tippingAgainst";
+  const bindTips = which => {
+    const box=main.querySelector(`[data-ftipgroup="${which}"]`);
+    box.querySelectorAll("[data-ftip]").forEach(el=>{
+      const i=+el.dataset.ftip.split("|")[1], fn=()=>{ const list=[...own()[tipKey(which)]]; list[i]=el.value; edit({ [tipKey(which)]:list }); };
+      el.addEventListener("input", fn); el.addEventListener("change", fn);
+    });
+    box.querySelectorAll("[data-ftipdel]").forEach(b=>b.onclick=()=>{
+      const i=+b.dataset.ftipdel.split("|")[1], list=[...own()[tipKey(which)]]; list.splice(i, 1);
+      edit({ [tipKey(which)]:list }); redrawTips(which);
+      focus(`[data-ftip="${which}|${Math.min(i, list.length-1)}"]`); if (!list.length) focus(`[data-ftipadd="${which}"]`);
+    });
+    box.querySelector("[data-ftipadd]").onclick=()=>{
+      const list=[...own()[tipKey(which)], ""]; edit({ [tipKey(which)]:list }); redrawTips(which); focus(`[data-ftip="${which}|${list.length-1}"]`);
+    };
+  };
+  const redrawTips = which => { main.querySelector(`[data-ftipgroup="${which}"]`).innerHTML=factionTipHtml(own(), which); bindTips(which); };
+  bindTips("for"); bindTips("against");
+  // Clocks.
+  const clockEdit = (cid, o) => tableChange(()=>Engine.editClock(S.table, cid, o), false);
+  const clockOf = cid => Engine.clocksOn(S.table, { kind:"faction", id }).find(c=>c.id===cid);
+  const paintClock = cid => {
+    const c=clockOf(cid), root=main.querySelector(attrSel("data-clock", cid)); if (!c || !root) return;
+    const full=c.filled>=c.segments;
+    root.querySelector(".clock-boxes").innerHTML=clockBoxesHtml(c);
+    root.querySelector(".clock-count").textContent=`${c.filled} of ${c.segments}`;
+    root.querySelector("[data-clkminus]").disabled=c.filled<=0;
+    root.querySelector("[data-clkplus]").disabled=full;
+    root.classList.toggle("full", full);
+    const msg=root.querySelector("[data-clockfull]");
+    msg.hidden=!full;
+    msg.innerHTML=`<strong>Full</strong>${c.whenFull.trim() ? ` · ${esc(c.whenFull)}` : ""}`;
+  };
+  const redrawClocks = () => { main.querySelector("[data-fclocks]").innerHTML=factionClocks(own()).map(clockHtml).join(""); bindClocks(); };
+  const bindClocks = () => main.querySelectorAll("[data-clock]").forEach(root=>{
+    const cid=root.dataset.clock, q = sel => root.querySelector(sel);
+    q("[data-clkplus]").onclick=()=>{ const c=clockOf(cid); if (!c) return; clockEdit(cid, { filled:c.filled+1 }); paintClock(cid); if (q("[data-clkplus]").disabled) q("[data-clkminus]").focus(); };
+    q("[data-clkminus]").onclick=()=>{ const c=clockOf(cid); if (!c) return; clockEdit(cid, { filled:c.filled-1 }); paintClock(cid); if (q("[data-clkminus]").disabled) q("[data-clkplus]").focus(); };
+    const ed=q("[data-clkedit]");
+    if (ed) ed.onclick=()=>{ S.clockEdit=cid; redrawClocks(); focus(`${attrSel("data-clock", cid)} [data-kf="name"]`); };
+    root.querySelectorAll("[data-kf]").forEach(el=>{
+      const key=el.dataset.kf, fn=ev=>{
+        if (key==="segments"){
+          // Typing "12" passes through "1": only a whole number in range is taken while typing; a press away from the field takes what it holds.
+          const n=Number(el.value.trim());
+          if (ev.type==="input" && !(el.value.trim()!=="" && Number.isInteger(n) && n>=2 && n<=12)) return;
+        }
+        clockEdit(cid, { [key]:el.value });
+        if (key==="name"){ const c=clockOf(cid); root.querySelector("[data-clockname]").textContent=c && c.name.trim() || "A clock"; }
+        if (key==="segments" || key==="whenFull") paintClock(cid);
+        if (key==="segments" && ev.type==="change"){ const c=clockOf(cid); if (c) el.value=c.segments; }
+      };
+      el.addEventListener("input", fn); el.addEventListener("change", fn);
+    });
+    const done=q("[data-clkdone]");
+    if (done) done.onclick=()=>{ S.clockEdit=null; redrawClocks(); focus(`${attrSel("data-clock", cid)} [data-clkedit]`); };
+    const del=q("[data-clkdel]");
+    if (del) del.onclick=()=>{ tableChange(()=>Engine.removeClock(S.table, cid), false); S.clockEdit=null; redrawClocks(); focus("[data-clkadd]"); };
+  });
+  bindClocks();
+  main.querySelector("[data-clkadd]").onclick=()=>{
+    let cid; tableChange(()=>{ cid=Engine.addClock(S.table, { on:{ kind:"faction", id }, name:"New clock", segments:4 }).id; }, false);
+    S.clockEdit=cid; redrawClocks();
+    const el=$("main").querySelector(`${attrSel("data-clock", cid)} [data-kf="name"]`); if (el){ el.focus(); el.select(); }
+  };
+  main.querySelector("[data-fback]").onclick=factionBack;
+  main.querySelector("[data-fdel]").onclick=()=>{
+    const title=Engine.factionTitle(S.table, own()), n=factionClocks(own()).length;
+    askFirst({ title:`Delete ${title}?`, text:`Its page goes with it${n ? `, and its ${n} ${n===1 ? "clock" : "clocks"}` : ""}. Key NPCs stay in the cast.`, yes:"Delete",
+      then(){
+        S.factionOpen=null; S.factionRoute=null; S.clockEdit=null; S.cityView="factions";
+        tableChange(()=>Engine.removeFaction(S.table, id));
+        const el=$("main").querySelector("[data-fadd-name]") || $("main").querySelector("[data-cityview][aria-pressed=true]"); if (el) el.focus();
       } });
   };
 }
