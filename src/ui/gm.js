@@ -272,7 +272,7 @@ function renderTableChrome(){
   ctx.textContent = tableName(t);
   nav.innerHTML = tableTabButtonsHtml();
   // The tab you're on also takes you back from a member's page to the list.
-  nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>{ S.tsection=b.dataset.tsec; S.backFromLine=null; S.placeRoute=null; S.backPlace=null; if (S.tsection==="city") S.placeOpen=null; if (S.tsection==="sessions") S.sessOpen=null; if (S.tsection==="cast"){ S.castOpen=null; S.backEnc=null; S.backSess=false; S.backClose=false; S.backPlace=null; } if (S.tsection==="threats"){ S.threatOpen=null; S.threatGroup=null; S.threatMember=null; S.threatEnc=null; } window.scrollTo(0,0); update(); });
+  nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>{ S.tsection=b.dataset.tsec; S.backFromLine=null; S.placeRoute=null; S.backCity=null; if (S.tsection==="city") S.placeOpen=null; if (S.tsection==="sessions") S.sessOpen=null; if (S.tsection==="cast"){ S.castOpen=null; S.backEnc=null; S.backSess=false; S.backClose=false; S.backCity=null; } if (S.tsection==="threats"){ S.threatOpen=null; S.threatGroup=null; S.threatMember=null; S.threatEnc=null; } window.scrollTo(0,0); update(); });
   showActiveTab(nav);
   if (!act) return;
   act.innerHTML = `<button type="button" class="hdr-act" data-tfind>Find</button><button type="button" class="hdr-act" data-tjot>Jot</button>
@@ -440,10 +440,10 @@ function openFind(){
 }
 // A hit opens its record and lands on its title (Decision 164: focus never falls to <body>).
 function openFound(kind, id){
-  S.backFromLine=null; S.placeRoute=null; S.backPlace=null;
+  S.backFromLine=null; S.placeRoute=null; S.backCity=null;
   const t=S.table, main=()=>$("main");
   const land=sel=>{ const el=main().querySelector(sel); if (el){ takeFocus(el, true); if (el.scrollIntoView) el.scrollIntoView({ block:"center" }); } return el; };
-  const toMember=cid=>{ S.tsection="cast"; S.castOpen=cid; S.castView="cast"; S.backEnc=null; S.backSess=false; S.backClose=false; S.backPlace=null; S.castFrom=null; S.intAdd=null; };
+  const toMember=cid=>{ S.tsection="cast"; S.castOpen=cid; S.castView="cast"; S.backEnc=null; S.backSess=false; S.backClose=false; S.backCity=null; S.castFrom=null; S.intAdd=null; };
   const toSession=sid=>{ S.tsection="sessions"; S.sessOpen=sid; if (S.closeOut) S.closeOut.view=false; };
   window.scrollTo(0,0);
   if (kind==="cast"){ toMember(id); update(); land("[data-ctitle]"); }
@@ -735,7 +735,7 @@ function castRolesHtml(n){
 }
 const datalistHtml = (id, names) => names.length ? `<datalist id="${id}">${names.map(x=>`<option value="${esc(x)}"></option>`).join("")}</datalist>` : "";
 function castPageHtml(n){
-  const c=Engine.packChoices(packsMemo), packs=packsMemo.length, back=encBackTitle() || (S.backClose && S.closeOut ? "the close-out" : S.backSess ? (sessOpenNow() ? Engine.sessionTitle(sessOpenNow()) : "sessions") : S.backPlace && placeBackNow() ? Engine.placeTitle(S.table, placeBackNow()) : "");
+  const c=Engine.packChoices(packsMemo), packs=packsMemo.length, back=encBackTitle() || (S.backClose && S.closeOut ? "the close-out" : S.backSess ? (sessOpenNow() ? Engine.sessionTitle(sessOpenNow()) : "sessions") : S.backCity && placeBackNow() ? Engine.placeTitle(S.table, placeBackNow()) : "");
   return `<p><button class="btn sm" data-cback>${back ? `Back to ${esc(back)}` : "Back to the cast"}</button>${encAddBtnHtml("data-cenc", "")}</p>
     <h1 class="step-title tbl-title cast-title" data-ctitle>${esc(n.name.trim() || "Unnamed")}</h1>
     ${castFromHtml(n)}
@@ -779,7 +779,7 @@ function bindFightLinks(main){
     const [line, enc]=b.dataset.eopenline.split("|"), key=b.dataset.eopenline;
     if (!encList().some(e=>e.id===enc)) return;
     S.backFromLine={ line, enc, key, tsection:S.tsection, castOpen:S.castOpen, castView:S.castView, castFrom:S.castFrom, backEnc:S.backEnc, backSess:S.backSess,
-      backClose:S.backClose, backPlace:S.backPlace, placeOpen:S.placeOpen, placeRoute:S.placeRoute, sessOpen:S.sessOpen, castQ:S.castQ, closeView:S.closeOut ? S.closeOut.view : false };
+      backClose:S.backClose, backCity:S.backCity, placeOpen:S.placeOpen, placeRoute:S.placeRoute, sessOpen:S.sessOpen, castQ:S.castQ, closeView:S.closeOut ? S.closeOut.view : false };
     S.intEdit=null; S.tsection="encounters"; S.encOpen=enc; S.encWrap=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; S.encPick=false; S.encQ=""; S.encCodex=false; S.encCodexQ="";
     window.scrollTo(0,0); update();
     const h=$("main").querySelector("[data-enc-h]"); if (h) takeFocus(h, true);
@@ -802,7 +802,7 @@ function routeTitle(r){
 function bindCastCards(main){
   bindFightLinks(main);
   // A member opened from Who knows what remembers which name it was, so Back lands on it.
-  const open = (id, from) => { S.castOpen=id; S.backEnc=null; S.backSess=false; S.backClose=false; S.backPlace=null; S.castFrom=from||null; S.intAdd=null; window.scrollTo(0,0); update(); const el=$("main").querySelector("[data-cback]"); if (el) el.focus(); };
+  const open = (id, from) => { S.castOpen=id; S.backEnc=null; S.backSess=false; S.backClose=false; S.backCity=null; S.castFrom=from||null; S.intAdd=null; window.scrollTo(0,0); update(); const el=$("main").querySelector("[data-cback]"); if (el) el.focus(); };
   main.querySelectorAll("[data-copen]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation();
     open(b.dataset.copen, b.dataset.cwhere ? attrSel("data-cwhere", b.dataset.cwhere) : null); });
   main.querySelectorAll("[data-ccard]").forEach(li=>li.onclick=ev=>{ if (!ev.target.closest("button")) open(li.dataset.ccard); });
@@ -1075,12 +1075,12 @@ function bindCastPage(main, n){
       const el=(back && $("main").querySelector(back)) || $("main").querySelector(S.sessOpen ? "[data-sback]" : "[data-snew]"); if (el) el.focus();
       return;
     }
-    if (S.backPlace && placeBackNow()){
-      const back=S.castFrom; S.placeOpen=S.backPlace; S.backPlace=null; S.castFrom=null; S.castOpen=null; S.intAdd=null; S.tsection="city"; window.scrollTo(0,0); update();
+    if (S.backCity && placeBackNow()){
+      const back=S.castFrom; S.placeOpen=S.backCity.id; S.backCity=null; S.castFrom=null; S.castOpen=null; S.intAdd=null; S.tsection="city"; window.scrollTo(0,0); update();
       const el=(back && $("main").querySelector(back)) || $("main").querySelector("[data-ptitle]"); if (el) takeFocus(el, true);
       return;
     }
-    S.backPlace=null; S.backEnc=null;
+    S.backCity=null; S.backEnc=null;
     const from=S.castFrom;
     S.castOpen=null; S.castFrom=null; S.intAdd=null; window.scrollTo(0,0); update();
     // Back to Who knows what lands on the name that was pressed; to the list, on the card, or quick-add if the filter hides them.
@@ -1105,12 +1105,12 @@ function bindCastPage(main, n){
 // Two views (S.cityView): the crew's places, which are the table's own records, and the city, which is the
 // gazetteer read and searched. State is on S: S.placeOpen (a place's id, or null), S.placeQ and S.cityQ (the
 // searches), S.placeRoute (where a place's Back goes: null for the list, { kind:"city", sel }, or the page a
-// sentence was tapped on), S.backPlace (a member opened from a place's page). A place's history is read from
+// sentence was tapped on), S.backCity (a member opened from a place or faction page). A place's history is read from
 // its lines every time and stored nowhere.
 const CITY_VIEWS = [["places","The crew's places"], ["city","The city"]];
 const placeRecords = () => Array.isArray(S.table.places) ? S.table.places.filter(p=>p && typeof p==="object") : [];
 const cityPageNow = () => S.tsection==="city" && S.placeOpen ? placeRecords().find(p=>p.id===S.placeOpen) || null : null;
-function placeBackNow(){ return S.backPlace ? placeRecords().find(p=>p.id===S.backPlace) || null : null; }
+function placeBackNow(){ return S.backCity && S.backCity.kind==="place" ? placeRecords().find(p=>p.id===S.backCity.id) || null : null; }
 const gazName = id => { const e=Engine.gazetteerEntry(id); return e ? String(e.name||"") : ""; };
 function placeCardHtml(t, p){
   const n=Engine.placeLines(t, p.id).length;
@@ -1207,7 +1207,7 @@ function bindPlaceLinks(main){
     const key=b.dataset.popenline, pid=key.split("|")[1];
     if (!placeRecords().some(p=>p.id===pid)) return;
     S.placeRoute={ kind:"line", key, tsection:S.tsection, castOpen:S.castOpen, castView:S.castView, castFrom:S.castFrom, backEnc:S.backEnc, backSess:S.backSess,
-      backClose:S.backClose, backPlace:S.backPlace, placeOpen:S.placeOpen, placeRoute:S.placeRoute, sessOpen:S.sessOpen, castQ:S.castQ, closeView:S.closeOut ? S.closeOut.view : false };
+      backClose:S.backClose, backCity:S.backCity, placeOpen:S.placeOpen, placeRoute:S.placeRoute, sessOpen:S.sessOpen, castQ:S.castQ, closeView:S.closeOut ? S.closeOut.view : false };
     S.intEdit=null; S.tsection="city"; S.placeOpen=pid; S.cityView="places";
     window.scrollTo(0,0); update();
     const h=$("main").querySelector("[data-ptitle]"); if (h) takeFocus(h, true);
@@ -1218,7 +1218,7 @@ function placeBack(){
   S.placeOpen=null; S.placeRoute=null;
   if (r && r.kind==="line"){
     Object.assign(S, { tsection:r.tsection, castOpen:r.castOpen, castView:r.castView, castFrom:r.castFrom, backEnc:r.backEnc, backSess:r.backSess, backClose:r.backClose,
-      backPlace:r.backPlace||null, placeOpen:r.placeOpen||null, placeRoute:r.placeRoute||null, sessOpen:r.sessOpen, castQ:r.castQ });
+      backCity:r.backCity||null, placeOpen:r.placeOpen||null, placeRoute:r.placeRoute||null, sessOpen:r.sessOpen, castQ:r.castQ });
     if (S.closeOut) S.closeOut.view=r.closeView;
     window.scrollTo(0,0); update();
     const link=$("main").querySelector(attrSel("data-popenline", r.key));
@@ -1306,7 +1306,7 @@ function bindPlacePage(main, p){
   });
   bindFightLinks(main);
   main.querySelectorAll("[data-copen]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation();
-    S.tsection="cast"; S.castOpen=b.dataset.copen; S.backEnc=null; S.backSess=false; S.backClose=false; S.backPlace=id;
+    S.tsection="cast"; S.castOpen=b.dataset.copen; S.backEnc=null; S.backSess=false; S.backClose=false; S.backCity={ kind:"place", id };
     S.castFrom=b.dataset.cwhere ? attrSel("data-cwhere", b.dataset.cwhere) : null; S.intAdd=null;
     window.scrollTo(0,0); update(); focus("[data-cback]"); });
   main.querySelector("[data-pback]").onclick=placeBack;
@@ -1452,7 +1452,7 @@ function bindSessionOpeners(main){
     S.sessOpen=b.dataset.sopen; if (S.closeOut) S.closeOut.view=false; window.scrollTo(0,0); update();
     const el=$("main").querySelector("[data-sback]"); if (el) el.focus(); });
   main.querySelectorAll("[data-copen]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation();
-    S.tsection="cast"; S.castOpen=b.dataset.copen; S.backEnc=null; S.backSess=true; S.backClose=false; S.backPlace=null; S.castFrom=b.dataset.cwhere ? attrSel("data-cwhere", b.dataset.cwhere) : null; S.intAdd=null;
+    S.tsection="cast"; S.castOpen=b.dataset.copen; S.backEnc=null; S.backSess=true; S.backClose=false; S.backCity=null; S.castFrom=b.dataset.cwhere ? attrSel("data-cwhere", b.dataset.cwhere) : null; S.intAdd=null;
     window.scrollTo(0,0); update(); const el=$("main").querySelector("[data-cback]"); if (el) el.focus(); });
 }
 // Open a thread's row in Threads, its More open, and land on its title.
@@ -2622,7 +2622,7 @@ function bindEncounters(main){
     "data-enc-back": () => { const r=backFromLineNow();
       if (r){
         S.backFromLine=null; S.encOpen=null; S.encWrap=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; S.intEdit=null;
-        Object.assign(S, { tsection:r.tsection, castOpen:r.castOpen, castView:r.castView, castFrom:r.castFrom, backEnc:r.backEnc, backSess:r.backSess, backClose:r.backClose, backPlace:r.backPlace||null, placeOpen:r.placeOpen||null, placeRoute:r.placeRoute||null, sessOpen:r.sessOpen, castQ:r.castQ });
+        Object.assign(S, { tsection:r.tsection, castOpen:r.castOpen, castView:r.castView, castFrom:r.castFrom, backEnc:r.backEnc, backSess:r.backSess, backClose:r.backClose, backCity:r.backCity||null, placeOpen:r.placeOpen||null, placeRoute:r.placeRoute||null, sessOpen:r.sessOpen, castQ:r.castQ });
         if (S.closeOut) S.closeOut.view=r.closeView;
         window.scrollTo(0,0); update();
         const link=$("main").querySelector(attrSel("data-eopenline", r.key)); if (link) link.focus(); else { const h=$("main").querySelector("h1"); if (h) takeFocus(h, true); }
