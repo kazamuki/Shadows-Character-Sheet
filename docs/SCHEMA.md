@@ -4695,6 +4695,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** the header can't fit them at phone width, a table grows past what a search per keystroke keeps up with, or seats (S3b) let a player jot.
      - **Built:** table schema 0.10, switched off (173); log 2026-10-09 (the secretary).
     → **Superseded in part by Decision 243** — Find searches the crew's places.
+    → **Superseded in part by Decisions 244 and 245** — Find searches factions and clocks.
 
 209. **The Reference's jump bar shows every chip, wrapped: it sticks from 640px, and on a phone it stays at the top of the page.**
      *2026-10-09 · Ken + Claude · Touches: Reference tab, jump bar, jumpBarHtml wrap, jump-wrap, jumpbar.sticky, jumpTo, scroll-row, wheelSideways, phone, Decision 165, Decision 207, SQ8*
