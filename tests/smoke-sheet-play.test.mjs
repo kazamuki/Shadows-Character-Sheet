@@ -1302,6 +1302,9 @@ test("W70 (sheet): a custom row folds, opens and folds again, and saves nothing"
   assert.equal(focused(app), app.$('[data-cell="weapons|4|name"]'), "focus isn't in the new weapon");
   assert.ok(app.$('[data-cell="weapons|3|name"]'), "a row named while open folded on the next render");
   app.click('[data-locustom="armor"]');
+  assert.equal(focused(app), app.$('[data-armorfield="1|name"]'), "focus isn't in the new armor");
+  app.click('[data-rowadd="gear"]');
+  assert.equal(focused(app), app.$('[data-cell="gear|1|name"]'), "focus isn't in the new gear row");
   const plate = app.$('[data-armorfield="1|name"]');
   plate.value = "Shield"; plate.dispatchEvent(new app.window.Event("change", { bubbles: true }));
   assert.ok(app.$('[data-armorfield="1|name"]'), "naming new armor folded it before Done");
