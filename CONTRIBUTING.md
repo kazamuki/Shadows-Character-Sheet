@@ -5,10 +5,17 @@ report** template. Say what happened, what you expected, the app version from
 the page footer, your device and browser, and attach your exported
 `.shadows.json` if you can.
 
+**Found a security problem?** Don't open an issue. [`SECURITY.md`](SECURITY.md)
+says how to report it privately. Everyone here follows the
+[code of conduct](CODE_OF_CONDUCT.md).
+
 **Changing the repo?** [`CLAUDE.md`](CLAUDE.md) is the rulebook for everyone,
 human or Claude: the hard constraints, the four version numbers, and what each
 kind of change must touch. It isn't repeated here, because a second copy drifts.
-Then read [`docs/STATE.md`](docs/STATE.md) for where things stand.
+Then read [`docs/STATE.md`](docs/STATE.md) for where things stand. A pull
+request's body follows [the template](.github/pull_request_template.md): the
+view from 50,000 feet first, then evidence for every claim, then anything Ken
+has to decide.
 
 ## Who edits what
 

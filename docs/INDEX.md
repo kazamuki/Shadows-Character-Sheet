@@ -45,6 +45,8 @@ authority and is never read front to back; §1 below says which section to open.
 | The commands and scripts (bump, release, test:fast, phone-check, dev server) | `../CLAUDE.md`, *Commands* |
 | A procedure step by step: close a session, number a decision, open or close a flag, cut a release | `../.claude/skills/` (the rules they follow stay in `CLAUDE.md`) |
 | How a release reaches players and the live site | `../CLAUDE.md`, *Working rhythm*, and `../.github/workflows/release.yml` (Decision 138) |
+| What a PR body says, section by section | `../.github/pull_request_template.md`; what each tier must touch stays in `../CLAUDE.md` |
+| How to report a security problem, or a conduct one | `../SECURITY.md` and `../CODE_OF_CONDUCT.md` (Ken is the contact for both) |
 | A finding by id (A1, B2, C3) | `audits/` — the dated audits; look the id up before working on it |
 
 **The trap worth naming:** `CHANGELOG.md` never describes upcoming work, and
