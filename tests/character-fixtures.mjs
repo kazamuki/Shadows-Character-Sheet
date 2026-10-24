@@ -30,6 +30,10 @@ export function characterFixtures() {
   for (const id of ["werewolf", "vampire"]) for (const o of optionIds(id)) add(`${id}/${o}`, make(id, "heroic", [o]));
   const aberrations = optionIds("arcanist");
   for (const n of [1, 2]) add(`arcanist/${n} aberration${n > 1 ? "s" : ""}`, make("arcanist", null, aberrations.slice(0, n)));
+  // A Vampire who has opened a second Bloodline: its power card carries "Opened: …" notes inside the card.
+  const opened = make("vampire", "heroic", ["strigoi"]);
+  opened.progression.specializationsGained = ["upyr"];
+  add("vampire/strigoi, upyr opened", opened);
   add("professional/" + optionIds("professional")[0], make("professional", null, [optionIds("professional")[0]]));
   const custom = make(D.archetypes.find(a => a.writeIn).id);
   Object.assign(custom.archetypeChoices.writeIn, { name: "Changeling", description: "Stolen as a child.",

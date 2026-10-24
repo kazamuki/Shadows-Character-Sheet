@@ -919,7 +919,11 @@ test("P16 2: every part opens with its heading, and its notes sit outside the ca
     assert.ok(parts.length, `${f.name} has no parts`);
     for (const p of parts) {
       assert.ok(p.firstElementChild.matches(".sect"), `${f.name}: ${p.textContent.slice(0, 20)} doesn't open with its heading`);
-      for (const n of p.querySelectorAll(".step-note")) assert.ok(!n.closest(".pick") && n.parentElement === p, `${f.name}: a part note sits inside a card`);
+      // A part-level note is a direct child of the part; the only notes inside a card are a power's "Opened: …" lines.
+      for (const n of p.querySelectorAll(".step-note")) {
+        const card = n.closest(".pick");
+        assert.ok(card ? card.matches("[data-powercard]") && /^Opened: | bars it.$/.test(n.textContent) : n.parentElement === p, `${f.name}: a part note sits inside a card, or a card note inside a plain one`);
+      }
     }
   }
 });
