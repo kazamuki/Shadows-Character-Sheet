@@ -10,6 +10,8 @@ The two share Loadout and its catalog code, and nothing else.
 
 **Status: ⏸ shelved 2026-10-23 (Ken), waiting on Deighton.** Moved to the end of the plan, with P15 behind it. Drafted 2026-10-21 by Claude (Opus), P21's reviewer, after #221 merged. **Don't start the build** until the items below are settled and this order is revised to match.
 
+**W70 is split out** (Ken, 2026-10-23) and built on its own as a Fix, app 0.54.1, to this order's PQ9, PQ10 and §9; what's left here is W91.
+
 **Answered.** Deighton's rulings are in [`reference/rulings-2026-10-23.md`](../../reference/rulings-2026-10-23.md), round one (SH1–SH8) and round two (the follow-ups).
 - **PQ1, PQ2, PQ4, PQ5, PQ6, PQ7, PQ8: Default**, by Deighton (SH1, SH2, SH4, SH8, SH5, SH6, SH7).
 - **PQ9 and PQ10 (W70): Default**, by Ken, 2026-10-21: folding is view state, and all three custom kinds fold. Ken on the catalogs: "vehicles or mechs feel like they should be their own category". The defaults already do that: Vehicles is its own Loadout section and catalog kind, and mechs would join as a section of their own.

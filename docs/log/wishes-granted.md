@@ -562,6 +562,20 @@ Ruled 2026-10-10 (`reference/rulings-2026-10-10.md` Q11). The rest of W104 (F26,
   (Decisions 145, 149), so carried magazines need their counts: a save-file
   shape change, with a decision, a schema bump and a `migrate()` step.
 
+**W70 — A custom item the player is done writing reads like the catalog's.** *Ken · → app 0.54.1: a named custom weapon, armor or gear row reads folded, Edit opens it and Done folds it; view state, never saved (P14's PQ9, PQ10)*
+A custom gear, weapon or armor row (`custom: true`, Decisions 120–121) stays
+a set of open inputs on Loadout for as long as the character has it, so it
+looks unfinished beside catalog rows and is easy to change by accident.
+Ken's ask: a **Done** (or "complete") control that folds the row into the same
+read-only line a catalog item gets, with an **Edit** to reopen it.
+*To respect:* whether a row is open is either view state (nothing saved) or a
+stored flag on the row. A stored flag is a save-file shape change (a schema
+bump and a `migrate()` step, and an old file's custom rows come in folded or
+open by rule), so prefer view state unless Ken wants the choice to survive a
+reload. The folded line goes through `Engine.catalogLine` or its custom
+equivalent, so a custom item reads exactly as a catalog one does. Player-
+visible: a CHANGELOG line and a patch bump.
+
 ### Theme & polish
 
 **W7 — Primary buttons are unreadable in light mode.** *Ken · → Decision 107, app 0.16.0, with a contrast guard in `build.test.mjs`*

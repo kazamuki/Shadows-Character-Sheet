@@ -189,20 +189,6 @@ so the rest need one. Prices
 and caps (`ipCost`, `canBoost`) must keep reading the rank without the worn
 bonus, or taking armor off would change what the next rank costs.
 
-**W70 — A custom item the player is done writing reads like the catalog's.** *Ken · ⏭ · Fix (UI) · raised 2026-10-08*
-A custom gear, weapon or armor row (`custom: true`, Decisions 120–121) stays
-a set of open inputs on Loadout for as long as the character has it, so it
-looks unfinished beside catalog rows and is easy to change by accident.
-Ken's ask: a **Done** (or "complete") control that folds the row into the same
-read-only line a catalog item gets, with an **Edit** to reopen it.
-*To respect:* whether a row is open is either view state (nothing saved) or a
-stored flag on the row. A stored flag is a save-file shape change (a schema
-bump and a `migrate()` step, and an old file's custom rows come in folded or
-open by rule), so prefer view state unless Ken wants the choice to survive a
-reload. The folded line goes through `Engine.catalogLine` or its custom
-equivalent, so a custom item reads exactly as a catalog one does. Player-
-visible: a CHANGELOG line and a patch bump.
-
 **W107 — An unarmed strike line, and Death Touch's AP on it.** *Ken, with Claude · 💡 · Content (if it follows Iron Shirt) · raised 2026-10-15*
 Raised reviewing P8a. True Warrior's Power Style lists **Death Touch
 [Chi 4]: "Martial Arts attacks are Armor Piercing when not using melee

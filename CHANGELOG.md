@@ -23,6 +23,10 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.54.1
+
+- **Custom gear reads like the catalog's.** Once a custom weapon, armor piece or item on Loadout has a name, it shows as a finished line, the way catalog gear does. **Edit** opens it to change, and **Done** closes it again.
+
 ## v0.54.0 — 2026-10-23
 
 - **Vampire and Werewolf powers at creation follow the book:** each Base Power takes one Bloodline or Origin power at rank 1, and Character Points raise a power up to your Max Starting Rank. A character you've already locked keeps every rank it has; a draft that placed two Base Powers in one power asks you to move one.

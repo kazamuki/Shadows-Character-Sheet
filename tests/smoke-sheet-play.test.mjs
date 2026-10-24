@@ -1251,3 +1251,96 @@ test("P21 11 (sheet): Speed Heal doubles one day, the sum line and the log say s
   assert.match(app.$("#main").textContent, /Rested 3 days \(Speed Heal doubled one day\)/);
   assert.deepEqual(app.errors, []);
 });
+
+// ── W70: a custom row folds ─────────────────────────────────────────────
+test("W70 (sheet): a custom row folds, opens and folds again, and saves nothing", () => {
+  const ch = lockedCharacter();
+  Engine.addLoadout(ch, "weapons", D.weapons[0].id);
+  const own = (name, extra = {}) => Object.assign({ custom: true, name, type: "", damage: "", rof: "", capacity: "", ammo: "", features: "", notes: "", roundsSpent: 0 }, extra);
+  ch.weapons.push(own("Grandad's Revolver", { type: "Pistol", damage: "2d6", rof: "S", capacity: "6", ammo: ".38", features: "Engraved" }),
+    own("Zip Gun"), own(""));
+  ch.armor.push({ custom: true, name: "Riot Plate", prot: "1d6", res: 2, integrity: 20, coverage: "light", integrityLoss: 0, notes: "", worn: false, scrapped: false, upgrades: [] });
+  ch.gear.push({ custom: true, name: "Lockpicks", type: "Tools", notes: "" });
+  const app = openSheet(ch, "loadout");
+  const audit = () => activeChar(app).audit.length, shown = sel => { const el = app.$(sel); return !!el && !el.hidden; };
+
+  // A named row reads folded, as a catalog line does: in the catalog's table, with no fields.
+  for (const sel of ['[data-cell="weapons|1|name"]', '[data-cell="weapons|2|name"]', '[data-armorfield="0|name"]', '[data-cell="gear|0|name"]'])
+    assert.equal(app.$(sel), null, `${sel} isn't folded`);
+  const table = app.$("table.lo-weapons").textContent;
+  for (const t of ["Grandad's Revolver", "Pistol", "2d6", "Engraved", ".38", "Zip Gun"]) assert.ok(table.includes(t), `the folded weapon doesn't show ${t}`);
+  assert.match(app.$(".lo-armor").textContent, /Riot Plate/);
+  assert.match(app.$(".lo-gear").textContent, /Lockpicks/);
+  assert.match(app.$(".lo-gear").textContent, /Tools/);
+
+  // A nameless row reads open, and Done waits for a name.
+  assert.ok(app.$('[data-cell="weapons|3|name"]'), "the nameless weapon isn't open");
+  assert.equal(shown('[data-lodone="weapons|3"]'), false, "Done is offered before the row has a name");
+
+  // Edit opens a row, focus in its first field; Done folds it, focus on its Edit. Neither is saved.
+  const before = audit(), rows = JSON.stringify(activeChar(app).weapons);
+  for (const [kind, i, field] of [["weapons", 1, '[data-cell="weapons|1|name"]'], ["armor", 0, '[data-armorfield="0|name"]'], ["gear", 0, '[data-cell="gear|0|name"]']]) {
+    app.click(`[data-loedit="${kind}|${i}"]`);
+    assert.ok(app.$(field), `Edit didn't open the ${kind} row`);
+    assert.equal(focused(app), app.$(field), `Edit didn't put focus in the ${kind} row's first field`);
+    assert.ok(shown(`[data-lodone="${kind}|${i}"]`), `the open ${kind} row offers no Done`);
+    app.click(`[data-lodone="${kind}|${i}"]`);
+    assert.equal(app.$(field), null, `Done didn't fold the ${kind} row`);
+    assert.equal(focused(app), app.$(`[data-loedit="${kind}|${i}"]`), `Done didn't put focus on the ${kind} row's Edit`);
+  }
+  assert.equal(audit(), before, "folding or opening a row wrote to the audit trail");
+  assert.equal(JSON.stringify(activeChar(app).weapons), rows, "folding or opening a row saved something");
+
+  // Naming the open row offers Done, and a re-render doesn't fold it under the player.
+  const name = app.$('[data-cell="weapons|3|name"]');
+  name.value = "Shiv"; name.dispatchEvent(new app.window.Event("input", { bubbles: true }));
+  assert.ok(shown('[data-lodone="weapons|3"]'), "a named open row offers no Done");
+
+  // "+ Custom weapon" adds a row that reads open, focus in it.
+  app.click('[data-locustom="weapons"]');
+  assert.ok(app.$('[data-cell="weapons|4|name"]'), "the new weapon doesn't read open");
+  assert.equal(focused(app), app.$('[data-cell="weapons|4|name"]'), "focus isn't in the new weapon");
+  assert.ok(app.$('[data-cell="weapons|3|name"]'), "a row named while open folded on the next render");
+  app.click('[data-locustom="armor"]');
+  assert.equal(focused(app), app.$('[data-armorfield="1|name"]'), "focus isn't in the new armor");
+  app.click('[data-rowadd="gear"]');
+  assert.equal(focused(app), app.$('[data-cell="gear|1|name"]'), "focus isn't in the new gear row");
+  const plate = app.$('[data-armorfield="1|name"]');
+  plate.value = "Shield"; plate.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  assert.ok(app.$('[data-armorfield="1|name"]'), "naming new armor folded it before Done");
+
+  // Done straight from an armor field it hasn't left: one press keeps focus there, commits the edit once, and folds.
+  const prot = app.$('[data-armorfield="1|prot"]');
+  prot.focus(); prot.value = "1d8";
+  const press = new app.window.MouseEvent("mousedown", { bubbles: true, cancelable: true });
+  app.$('[data-lodone="armor|1"]').dispatchEvent(press);
+  assert.ok(press.defaultPrevented, "pressing Done takes focus out of the field, so the change re-renders under the click");
+  const was = audit();
+  app.click('[data-lodone="armor|1"]');
+  assert.equal(activeChar(app).armor[1].prot, "1d8", "Done dropped the edit it was pressed over");
+  assert.equal(audit(), was + 1, "Done's edit isn't one logged change");
+  assert.equal(app.$('[data-armorfield="1|name"]'), null, "Done didn't fold the armor in one press");
+
+  // An undo puts back copies of the rows, so an open row reads folded after one, without errors.
+  // Ken accepted this: an undo folds open custom rows, the way a reload does.
+  app.click('[data-loedit="weapons|1"]');                       // the revolver
+  const kept = JSON.stringify(activeChar(app).weapons);
+  app.click('[data-fire="1|S"]');
+  app.click("#undotoast [data-toastundo]");
+  assert.equal(JSON.stringify(activeChar(app).weapons), kept, "the undo lost something from the weapons");
+  assert.equal(app.$('[data-cell="weapons|1|name"]'), null, "an undo left a copied row open");
+  assert.deepEqual(app.errors, []);
+
+  // The open state follows the row, not its index.
+  app.click('[data-loedit="weapons|2"]');                       // Zip Gun
+  app.click('[data-lorm="weapons|1"]');                          // the revolver, above it
+  assert.equal((app.$('[data-cell="weapons|1|name"]') || {}).value, "Zip Gun", "removing a row above closed the open one");
+
+  // A reload folds every named row again.
+  const again = openSheet(activeChar(app), "loadout");
+  for (const sel of ['[data-cell="weapons|1|name"]', '[data-cell="weapons|2|name"]', '[data-armorfield="0|name"]', '[data-armorfield="1|name"]', '[data-cell="gear|0|name"]'])
+    assert.equal(again.$(sel), null, `${sel} is open after a reload`);
+  assert.ok(again.$('[data-cell="weapons|3|name"]'), "the nameless row folded on a reload");
+  assert.deepEqual(app.errors, []);
+  assert.deepEqual(again.errors, []);
+});

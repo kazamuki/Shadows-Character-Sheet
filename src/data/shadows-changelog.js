@@ -2,6 +2,14 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.54.1",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**Custom gear reads like the catalog's.** Once a custom weapon, armor piece or item on Loadout has a name, it shows as a finished line, the way catalog gear does. **Edit** opens it to change, and **Done** closes it again."
+    ]
+  },
+  {
     "version": "0.54.0",
     "date": "2026-10-23",
     "intro": [],
