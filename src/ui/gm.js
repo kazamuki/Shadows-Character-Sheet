@@ -1598,7 +1598,7 @@ function bindFactionPage(main, f){
     root.querySelectorAll("[data-kf]").forEach(el=>{
       const key=el.dataset.kf, fn=ev=>{
         if (key==="segments"){
-          // Typing "12" passes through "1": only a whole number in range is taken while typing; a press away from the field takes what it holds.
+          // Typing "12" passes through "1": only a whole number from 2 to 12 is taken, while typing or on leaving the field.
           const n=Number(el.value.trim());
           if (!(el.value.trim()!=="" && Number.isInteger(n) && n>=2 && n<=12)){
             // Writes nothing: a refused number must not reset the clock. Leaving the field puts back what is stored.
