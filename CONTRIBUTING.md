@@ -6,8 +6,10 @@ the page footer, your device and browser, and attach your exported
 `.shadows.json` if you can.
 
 **Found a security problem?** Don't open an issue. [`SECURITY.md`](SECURITY.md)
-says how to report it privately. Everyone here follows the
-[code of conduct](CODE_OF_CONDUCT.md).
+says how to report it privately. **Something hard to use with a screen reader,
+the keyboard or your device?** Use the **Accessibility barrier** template;
+[`ACCESSIBILITY.md`](ACCESSIBILITY.md) says what we aim for and what a UI change
+must check. Everyone here follows the [code of conduct](CODE_OF_CONDUCT.md).
 
 **Changing the repo?** [`CLAUDE.md`](CLAUDE.md) is the rulebook for everyone,
 human or Claude: the hard constraints, the four version numbers, and what each
