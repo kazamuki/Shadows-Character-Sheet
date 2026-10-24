@@ -6,7 +6,8 @@
 68, 135, 173, 177, 178, 179, 203, 204, 208, 212, 242, 243.
 **Status:** **drafted 2026-10-23 by Claude (Opus)**, the S6 reviewer, after
 #236 (S6, Decisions 242–243) merged (`WORK-ORDERS.md`, step 7). **Ken chose this
-session (2026-10-23).** Not approved. SQ0–SQ11 unanswered.
+session (2026-10-23).** **Approved by Ken 2026-10-23** (in the conductor session).
+**SQ0–SQ11 answered by Ken 2026-10-23: every default.** He picked SQ0 by name (*Both, lean*: the worksheet as a record, clocks on factions), and the rest as one set (*Every default*).
 **Branch:** from `main` at `d9eed51` or later, PR to `main`, switched off
 (Decision 173).
 **Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../WORK-ORDERS.md):
@@ -274,18 +275,18 @@ If the ledger search at build time finds another, stop and ask.
 
 | # | Question | Default | Answer |
 |---|---|---|---|
-| SQ0 | **Build S7 at all, and how much?** §1a: Deighton has no use for it; Scott keeps records; clocks are what S10f, S11 and S12b wait on. Build both as drafted (lean: the worksheet, clocks on factions)? Clocks only, on nothing yet (no UI until S10f or S12b)? Or defer S7 and pick another session? | **Both, as drafted** | |
-| SQ1 | **The stance line.** The worksheet draws a line labelled only *Hostile* and *Allied*. Five steps (−2 to +2), labelled *Hostile*, two unlabelled steps either side of *Neutral*, *Allied* (screen readers: "one step toward Hostile")? Or three (Hostile, Neutral, Allied)? Or seven? | **Five steps; only the ends and the middle named** | |
-| SQ2 | **`2410`'s attention** (*Neutral: the faction observes. Aware: beginning to respond indirectly. Active: working for or against the crew*). Keep it beside the stance, as the book has both? Or stance only? | **Both** (and the mismatch goes to `crb-catch-up.md`) | |
-| SQ3 | **What seeds a faction:** the gazetteer's 23 Factions and its 16 powers (Corporations, the Unseen Court and its houses, Other Guys)? Or Factions only? | **Factions and powers** | |
-| SQ4 | **The type**: one of the worksheet's six (*Gang, Corp, Government, Cult, Collective, Other*) or none. Never seeded from the gazetteer (it gives no type; nothing guessed)? | **As written** | |
-| SQ5 | **Affiliations.** A faction's page lists, read-only, every member whose affiliation matches its name (case and apostrophes folded, 187). Nothing stored, nothing converted? Or convert matching text to links on load (a guess, 203)? Or neither? | **Read them, store nothing** | |
-| SQ6 | **Tipping points**: two lists of typed lines, *For the crew* and *Against the crew*, added, edited and removed one at a time, no cap (the sheet's six rows are paper's limit)? | **As written** | |
-| SQ7 | **A clock's segments**: 2 to 12, 4 by default (every Expansion clock is 4)? Or fixed choices (4, 6, 8)? | **2 to 12, default 4** | |
-| SQ8 | **A full clock**: shows *Full* and its *When it fills* text, highlighted; the GM empties it with − or edits it. No reset rule, no auto-advance (the Expansion's resets differ per clock)? | **As written** | |
-| SQ9 | **Where factions live:** a third City view, **Factions**, between *The crew's places* and *The city*? Or a fourth table tab? | **A City view** | |
-| SQ10 | **Removing a faction** removes its clocks: it asks, names the count (*and its 2 clocks*), and one undo restores all of it? Or the clocks stay, orphaned and hidden? | **They go with it** | |
-| SQ11 | **A member's page** shows *Key to Eclipse, the Volkov Group* (links, read from the factions) under their affiliations? Or nothing on the member's page? | **Shown** | |
+| SQ0 | **Build S7 at all, and how much?** §1a: Deighton has no use for it; Scott keeps records; clocks are what S10f, S11 and S12b wait on. Build both as drafted (lean: the worksheet, clocks on factions)? Clocks only, on nothing yet (no UI until S10f or S12b)? Or defer S7 and pick another session? | **Both, as drafted** | Default (Ken, 2026-10-23) |
+| SQ1 | **The stance line.** The worksheet draws a line labelled only *Hostile* and *Allied*. Five steps (−2 to +2), labelled *Hostile*, two unlabelled steps either side of *Neutral*, *Allied* (screen readers: "one step toward Hostile")? Or three (Hostile, Neutral, Allied)? Or seven? | **Five steps; only the ends and the middle named** | Default (Ken, 2026-10-23) |
+| SQ2 | **`2410`'s attention** (*Neutral: the faction observes. Aware: beginning to respond indirectly. Active: working for or against the crew*). Keep it beside the stance, as the book has both? Or stance only? | **Both** (and the mismatch goes to `crb-catch-up.md`) | Default (Ken, 2026-10-23) |
+| SQ3 | **What seeds a faction:** the gazetteer's 23 Factions and its 16 powers (Corporations, the Unseen Court and its houses, Other Guys)? Or Factions only? | **Factions and powers** | Default (Ken, 2026-10-23) |
+| SQ4 | **The type**: one of the worksheet's six (*Gang, Corp, Government, Cult, Collective, Other*) or none. Never seeded from the gazetteer (it gives no type; nothing guessed)? | **As written** | Default (Ken, 2026-10-23) |
+| SQ5 | **Affiliations.** A faction's page lists, read-only, every member whose affiliation matches its name (case and apostrophes folded, 187). Nothing stored, nothing converted? Or convert matching text to links on load (a guess, 203)? Or neither? | **Read them, store nothing** | Default (Ken, 2026-10-23) |
+| SQ6 | **Tipping points**: two lists of typed lines, *For the crew* and *Against the crew*, added, edited and removed one at a time, no cap (the sheet's six rows are paper's limit)? | **As written** | Default (Ken, 2026-10-23) |
+| SQ7 | **A clock's segments**: 2 to 12, 4 by default (every Expansion clock is 4)? Or fixed choices (4, 6, 8)? | **2 to 12, default 4** | Default (Ken, 2026-10-23) |
+| SQ8 | **A full clock**: shows *Full* and its *When it fills* text, highlighted; the GM empties it with − or edits it. No reset rule, no auto-advance (the Expansion's resets differ per clock)? | **As written** | Default (Ken, 2026-10-23) |
+| SQ9 | **Where factions live:** a third City view, **Factions**, between *The crew's places* and *The city*? Or a fourth table tab? | **A City view** | Default (Ken, 2026-10-23) |
+| SQ10 | **Removing a faction** removes its clocks: it asks, names the count (*and its 2 clocks*), and one undo restores all of it? Or the clocks stay, orphaned and hidden? | **They go with it** | Default (Ken, 2026-10-23) |
+| SQ11 | **A member's page** shows *Key to Eclipse, the Volkov Group* (links, read from the factions) under their affiliations? Or nothing on the member's page? | **Shown** | Default (Ken, 2026-10-23) |
 
 ## 5. The assumption sweep
 
