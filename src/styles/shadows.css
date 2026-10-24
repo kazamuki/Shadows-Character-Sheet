@@ -1469,3 +1469,23 @@ h2.city-name{font-size:1.15rem}
 .city-entry .btn{max-width:100%; white-space:normal; text-align:left}
 .place-card .cast-open{display:block}
 .place-ground .form-toggle{width:auto; max-width:100%; flex-wrap:wrap}
+
+/* Factions and clocks (Decisions 244–245). A clock's boxes wrap at any width; a full clock takes the gold rule. */
+.fac-key, .fac-tip{display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; justify-content:space-between}
+.fac-key .int-who{flex:1 1 160px; min-width:0; text-align:left; overflow-wrap:anywhere}
+.fac-tip input{flex:1 1 200px; min-width:0; width:100%}
+.clock{background:var(--panel); border:1px solid var(--frame); border-radius:6px; padding:10px 14px 12px; margin-bottom:10px; min-width:0}
+.clock.full{border-color:var(--gold); border-width:2px}
+.clock-name{margin:0 0 8px; font-size:1rem; overflow-wrap:anywhere; scroll-margin-top:calc(var(--hdr-off) + 64px)}
+.clock-row{display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; min-width:0}
+.clock-boxes{display:flex; flex-wrap:wrap; gap:4px; min-width:0; max-width:100%}
+.clock-box{width:22px; height:22px; border:2px solid var(--dim); border-radius:3px; background:transparent}
+.clock-box.on{background:var(--cyan); border-color:var(--cyan)}
+.clock-count{font-family:var(--mono); font-size:.85rem}
+.clock-btns{display:inline-flex; flex-wrap:wrap; gap:6px; align-items:center}
+.clock-step{min-width:44px}
+.clock-full{margin:8px 0 0; overflow-wrap:anywhere}
+.clock-full strong{color:var(--text); letter-spacing:.04em; text-transform:uppercase}
+.clock-fields{margin-top:10px}
+.clock-fields input, .clock .field textarea{min-width:0; width:100%}
+.form-toggle button[data-fstance]{min-width:44px}
