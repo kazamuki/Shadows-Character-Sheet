@@ -364,3 +364,71 @@ test("the table schema version in STATE.md is the one newTable() stamps (Decisio
   const { Engine } = loadEngine();
   assert.equal(Engine.newTable().meta.tableSchemaVersion, m[1], "STATE.md's table schema version is stale");
 });
+
+test("every open wish says which plan covers it, and the plans agree (WISHLIST.md)", () => {
+  // The plans named the wishes they took up, but the wishlist never said so:
+  // 30 of 53 open items were named in a live plan and two said it on their own
+  // entry (2026-10-24). So each item carries a Plan line under its heading, and
+  // this checks it from both ends. The rule is WISHLIST.md's header.
+  const WISH = read("docs/WISHLIST.md");
+  const GRANTED = read("docs/log/wishes-granted.md");
+  const ids = s => new Set([...s.matchAll(/^\*\*(W\d+) — /gm)].map(m => m[1]));
+  const open = ids(WISH), granted = ids(GRANTED);
+  // A range like "W49–W52" names every id in it.
+  const named = text => {
+    const out = new Set([...text.matchAll(/\bW(\d+)\b/g)].map(m => "W" + m[1]));
+    for (const [, a, b] of text.matchAll(/\bW(\d+)[–-]W(\d+)\b/g)) for (let n = +a; n <= +b; n++) out.add("W" + n);
+    return out;
+  };
+  const bad = [];
+
+  const plan = new Map(), goes = new Map();
+  for (const [, w, line] of WISH.matchAll(/^\*\*(W\d+) — .*\\\n\*\*Plan:\*\* (.+)$/gm)) {
+    const [p, g = ""] = line.split(" · **Goes with:** ");
+    plan.set(w, p);
+    goes.set(w, new Set(g ? g.split(", ") : []));
+  }
+  for (const w of open) {
+    if (granted.has(w)) bad.push(`${w} is open in WISHLIST.md and built in wishes-granted.md`);
+    if (!plan.has(w)) { bad.push(`${w} has no **Plan:** line under its heading (a link, "set aside by …", or "none yet")`); continue; }
+    const p = plan.get(w);
+    const links = [...p.matchAll(/\]\((plans\/[^)]+\.md)\)/g)].map(m => m[1]);
+    if (!links.length && p !== "none yet") bad.push(`${w}'s Plan line links no plan and isn't "none yet": ${p}`);
+    for (const l of links) {
+      if (l.startsWith("plans/archive/")) { bad.push(`${w}'s plan ${l} is archived: the item is built (wishes-granted) or its Plan line moves on`); continue; }
+      if (!existsSync(join(ROOT, "docs", l))) { bad.push(`${w}'s plan ${l} doesn't exist`); continue; }
+      if (!named(read(join("docs", l))).has(w)) bad.push(`${w} points at ${l}, which never names it`);
+    }
+    for (const o of goes.get(w)) {
+      if (!open.has(o)) bad.push(`${w} goes with ${o}, which isn't open`);
+      else if (!goes.get(o)?.has(w)) bad.push(`${w} goes with ${o}, but ${o} doesn't say it goes with ${w}`);
+    }
+  }
+
+  // The other end: a plan's order that isn't built yet, with an open wish in
+  // its row, is covering that wish, so the wish's Plan line must say so.
+  const walk = dir => readdirSync(join(ROOT, dir), { withFileTypes: true }).flatMap(e =>
+    e.isDirectory() ? (e.name === "archive" ? [] : walk(`${dir}/${e.name}`)) : e.name.endsWith(".md") ? [`${dir}/${e.name}`] : []);
+  let rows = 0;
+  for (const file of walk("docs/plans")) {
+    const rel = file.slice("docs/".length), home = rel.replace(/\.md$/, "/");
+    for (const [row, order] of read(file).matchAll(/^\| \**([PS]\d+[a-z]?)\** \|.*\|$/gm)) {
+      const cells = row.split(" | ");
+      if (/Merged|Built/.test(cells[cells.length - 1])) continue;
+      rows++;
+      for (const w of named(cells.slice(1, -1).join(" | "))) {
+        if (!open.has(w)) continue;
+        const links = [...(plan.get(w) || "").matchAll(/\]\((plans\/[^)]+\.md)\)/g)].map(m => m[1]);
+        if (!links.some(l => l === rel || l.startsWith(home)))
+          bad.push(`${rel}'s ${order} names ${w}, and isn't built, but ${w}'s Plan line doesn't point at ${rel}`);
+      }
+    }
+  }
+  assert.ok(rows >= 3, `found only ${rows} pending order rows in docs/plans — did the plans' tables change shape?`);
+
+  const max = Math.max(...[...open, ...granted].map(w => +w.slice(1)));
+  const next = /\*\*Next free number: W(\d+)\.\*\*/.exec(WISH);
+  assert.ok(next, "WISHLIST.md §2 lost its Next free number line");
+  if (+next[1] !== max + 1) bad.push(`WISHLIST.md says the next free number is W${next[1]}; it is W${max + 1}`);
+  assert.deepEqual(bad, []);
+});
