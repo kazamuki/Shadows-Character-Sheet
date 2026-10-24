@@ -2,6 +2,14 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.54.1",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**Your own gear folds when it's done.** A custom weapon, armor piece or item you've named reads like the catalog's on Loadout. **Edit** opens it again, and **Done** folds it."
+    ]
+  },
+  {
     "version": "0.54.0",
     "date": "2026-10-23",
     "intro": [],

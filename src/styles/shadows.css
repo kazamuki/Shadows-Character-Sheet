@@ -469,6 +469,11 @@ table.lo-weapons .x:hover,.lo-armor .x:hover,.lo-gear-row .x:hover{color:var(--m
 .lo-armor-head{display:flex; flex-wrap:wrap; align-items:center; gap:10px}
 .lo-armor-head label.check{display:flex; align-items:center; gap:6px; font-size:.8rem}
 .lo-armor-head .x{margin-left:auto}
+/* W70: a folded custom row's Edit sits beside its ✕; an open one's Done does. */
+.lo-armor-head [data-loedit]{margin-left:auto}
+.lo-armor-head [data-loedit] + .x{margin-left:0}
+table.lo-weapons td.rm.lo-btns,table.edit td.rm.lo-btns{width:auto; white-space:nowrap}
+table.edit .lo-rounds .fire{flex-wrap:nowrap}   /* its width counts, so Done doesn't sit on Reload */
 .lo-armor-stats{margin-top:6px}
 .lo-armor-int{display:flex; align-items:center; gap:10px; margin:4px 0}
 .lo-int{font-family:var(--mono); font-size:.74rem; color:var(--dim); white-space:nowrap}

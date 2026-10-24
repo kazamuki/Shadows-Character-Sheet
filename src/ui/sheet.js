@@ -1842,6 +1842,21 @@ function loadoutAddHtml(kind){
     ${kind==="gear" ? `<button class="btn sm" data-rowadd="gear">+ Your own</button>`
       : `<button class="btn sm" data-locustom="${kind}">+ Custom ${kind==="armor"?"armor":"weapon"}</button>`}</div>`;
 }
+// W70: a custom row the player has named reads folded, like a catalog line;
+// Edit opens it and Done folds it. It's view state, never saved: S.loOpen
+// holds the row objects open this visit, so it follows a row when one above
+// it goes, and a fresh S (another character, a reload) folds every named row.
+// A row drawn open stays open until Done, so naming it doesn't fold it away.
+function loOpen(e){
+  if (!e || typeof e!=="object") return true;
+  if (!S.loOpen) S.loOpen = new WeakSet();
+  if (S.loOpen.has(e)) return true;
+  if (String((e && e.name)||"").trim()) return false;
+  S.loOpen.add(e);
+  return true;
+}
+const loDoneHtml = (kind, i, e) => `<button class="btn sm" data-lodone="${kind}|${i}" ${String(e.name||"").trim()?"":"hidden"}>Done</button>`;
+const loEditHtml = (kind, i, name) => `<button class="btn sm" data-loedit="${kind}|${i}" aria-label="Edit ${esc(name)}">Edit</button>`;
 // ── Gear (W17 + W27, Decision 121) ───────────────────────────────────
 // Catalog rows count what you carry: a consumable says how many and takes
 // one off with Use one; a charged Talisman shows its charges; an inscribed
@@ -1951,9 +1966,10 @@ function openImprovePower(ch, id){
 
 function gearRowsHtml(ch){
   const lines = (ch.gear||[]).map((e,i)=>Engine.gearLine(ch,i)).filter(Boolean);
-  const cat = lines.filter(l=>!l.custom), own = lines.filter(l=>l.custom);
+  const cat = lines.filter(l=>!l.custom), mine = lines.filter(l=>l.custom);
+  const own = mine.filter(l=>loOpen(ch.gear[l.index])), folded = mine.filter(l=>!own.includes(l));
   let h = "";
-  if (cat.length) h += `<div class="lo-gear">` + cat.map(l=>{
+  if (cat.length || folded.length) h += `<div class="lo-gear">` + cat.map(l=>{
     if (l.missing) return `<div class="lo-gear-row"><div class="lo-gear-name"><b>${esc(l.name)}</b> <span class="chip pain">no longer in the game data</span></div>
       <div class="lo-gear-ctl"></div><input type="text" data-lonote="gear|${l.index}" value="${esc(l.notes)}" aria-label="notes">
       <button class="x" data-lorm="gear|${l.index}" title="Remove">✕</button></div>`;
@@ -1975,12 +1991,15 @@ function gearRowsHtml(ch){
       <div class="lo-gear-ctl">${count}</div>
       <input type="text" data-lonote="gear|${l.index}" value="${esc(l.notes)}" placeholder="notes" aria-label="${esc(l.name)} notes">
       <button class="x" data-lorm="gear|${l.index}" title="Remove" aria-label="Remove ${esc(l.name)}">✕</button></div>`;
-  }).join("") + `</div>`;
+  }).join("") + folded.map(l=>`<div class="lo-gear-row"><div class="lo-gear-name"><b>${esc(l.name)}</b>${l.type?`<div class="lo-sub">${esc(l.type)}</div>`:""}</div>
+      <div class="lo-gear-ctl">${loEditHtml("gear", l.index, l.name)}</div>
+      <input type="text" data-lonote="gear|${l.index}" value="${esc(l.notes)}" placeholder="notes" aria-label="${esc(l.name)} notes">
+      <button class="x" data-rowdel="gear|${l.index}" title="Remove" aria-label="Remove ${esc(l.name)}">✕</button></div>`).join("") + `</div>`;
   if (own.length){
     h += `<div class="lo-scroll"><table class="edit"><thead><tr>${GEAR_COLS.map(c=>`<th>${esc(c)}</th>`).join("")}<th></th></tr></thead><tbody>` +
       own.map(l=>{ const r=ch.gear[l.index];
         return `<tr>` + GEAR_COLS.map(c=>`<td><input type="text" data-cell="gear|${l.index}|${esc(c)}" value="${esc(r[c]||"")}" aria-label="${esc(c)}"></td>`).join("") +
-          `<td class="rm"><button class="x" data-rowdel="gear|${l.index}" title="remove row">✕</button></td></tr>`; }).join("") + `</tbody></table></div>`;
+          `<td class="rm lo-btns">${loDoneHtml("gear", l.index, r)}<button class="x" data-rowdel="gear|${l.index}" title="remove row">✕</button></td></tr>`; }).join("") + `</tbody></table></div>`;
   }
   if (!lines.length) h += `<p class="step-note">Nothing carried yet.</p>`;
   return h + loadoutAddHtml("gear");
@@ -2051,9 +2070,10 @@ function weaponModsHtml(ch, l){
 }
 function weaponRowsHtml(ch){
   const lines = ch.weapons.map((e,i)=>Engine.weaponLine(ch,i)).filter(Boolean);
-  const cat = lines.filter(l=>!l.custom), custom = lines.filter(l=>l.custom);
+  const cat = lines.filter(l=>!l.custom), mine = lines.filter(l=>l.custom);
+  const custom = mine.filter(l=>loOpen(ch.weapons[l.index])), folded = mine.filter(l=>!custom.includes(l));
   let h = "";
-  if (cat.length){
+  if (cat.length || folded.length){
     h += `<div class="lo-scroll"><table class="ref lo-weapons"><thead><tr><th>Weapon</th><th>Attack</th><th>Damage</th><th>Range</th><th>RoF</th><th>Cap.</th><th>Notes</th><th></th></tr></thead><tbody>` +
       cat.map(l=>{
         if (l.missing) return `<tr><td><b>${esc(l.name)}</b> <span class="chip pain">no longer in the game data</span></td><td colspan="5"></td>
@@ -2070,15 +2090,20 @@ function weaponRowsHtml(ch){
           <td><input type="text" data-lonote="weapons|${l.index}" value="${esc(l.notes)}" aria-label="notes"></td>
           <td class="rm"><button class="x" data-lorm="weapons|${l.index}" title="Remove">✕</button></td></tr>${
           mods?`<tr class="lo-modrow"><td colspan="8">${mods}</td></tr>`:""}`;
-      }).join("") + `</tbody></table></div>`;
+      }).join("") + folded.map(l=>{ const r=ch.weapons[l.index], t=c=>String(r[c]||"");
+        return `<tr><td><b>${esc(l.name)}</b>${t("type")?`<div class="lo-sub">${esc(t("type"))}</div>`:""}${t("features")?`<div class="lo-sub">${esc(t("features"))}</div>`:""}</td>
+          <td class="num">—</td><td class="num">${esc(t("damage")||"—")}</td><td>—</td><td class="num">${esc(t("rof")||"—")}</td>
+          <td class="num lo-rounds">${roundsHtml(l, t("capacity"))}${t("ammo")?`<div class="lo-sub">${esc(t("ammo"))}</div>`:""}</td>
+          <td><input type="text" data-lonote="weapons|${l.index}" value="${esc(l.notes)}" aria-label="${esc(l.name)} notes"></td>
+          <td class="rm lo-btns">${loEditHtml("weapons", l.index, l.name)}<button class="x" data-lorm="weapons|${l.index}" title="Remove" aria-label="Remove ${esc(l.name)}">✕</button></td></tr>`; }).join("") + `</tbody></table></div>`;
     const pain = Engine.painState(ch);
-    h += `<p class="step-note">Attack is 1d10 + the weapon's skill${pain.level?", with Pain and Conditions already in it":""}. Single fire adds the weapon's ACC.</p>`;
+    if (cat.length) h += `<p class="step-note">Attack is 1d10 + the weapon's skill${pain.level?", with Pain and Conditions already in it":""}. Single fire adds the weapon's ACC.</p>`;
   }
   if (custom.length){
     h += `<div class="lo-scroll"><table class="edit"><thead><tr>${WEAPON_COLS.map(c=>`<th>${esc(c)}</th>`).join("")}<th>rounds</th><th></th></tr></thead><tbody>` +
       custom.map(l=>{ const r=ch.weapons[l.index];
         return `<tr>` + WEAPON_COLS.map(c=>`<td><input type="text" data-cell="weapons|${l.index}|${esc(c)}" value="${esc(r[c]||"")}" aria-label="${esc(c)}"></td>`).join("") +
-          `<td class="num lo-rounds">${roundsHtml(l, "")}</td><td class="rm"><button class="x" data-lorm="weapons|${l.index}" title="Remove">✕</button></td></tr>`; }).join("") + `</tbody></table></div>`;
+          `<td class="num lo-rounds">${roundsHtml(l, "")}</td><td class="rm lo-btns">${loDoneHtml("weapons", l.index, r)}<button class="x" data-lorm="weapons|${l.index}" title="Remove">✕</button></td></tr>`; }).join("") + `</tbody></table></div>`;
   }
   if (!lines.length) h += `<p class="step-note">Nothing carried yet.</p>`;
   return h + loadoutAddHtml("weapons");
@@ -2096,17 +2121,17 @@ function armorStatLine(p){
 }
 function armorRowHtml(ch, p){
   const R = D.armorRules||{}, e = ch.armor[p.index], body = p.slot==="body";
-  const slotName = (R.slotNames||{})[p.slot]||titleCase(p.slot);
+  const slotName = (R.slotNames||{})[p.slot]||titleCase(p.slot), open = p.custom && loOpen(e);
   let h = `<div class="lo-armor${p.worn?" worn":""}"><div class="lo-armor-head">
     <label class="check"><input type="checkbox" data-worn="${p.index}" ${p.worn?"checked":""}> Worn</label>
     <b>${esc(p.name)}</b> <span class="chip">${esc(slotName)}</span>
     ${p.missing?'<span class="chip pain">no longer in the game data</span>':""}
-    <button class="x" data-lorm="armor|${p.index}" title="Remove" aria-label="Remove ${esc(p.name)}">✕</button></div>`;
-  if (p.custom){
+    ${p.custom && !open ? loEditHtml("armor", p.index, p.name) : ""}<button class="x" data-lorm="armor|${p.index}" title="Remove" aria-label="Remove ${esc(p.name)}">✕</button></div>`;
+  if (open){
     const f=(k,label,type)=>`<label class="field"><span>${label}</span><input type="${type}" ${type==="number"?'min="0"':""} data-armorfield="${p.index}|${k}" value="${esc(e[k]==null?"":e[k])}"></label>`;
     h += `<div class="hitrow">${f("name","Name","text")}${f("prot","PROT die","text")}${f("res","RES","number")}${f("integrity","Integrity","number")}
       <label class="field"><span>Coverage</span><select data-armorfield="${p.index}|coverage">${Object.keys(R.coverageLocations||{}).map(c=>
-        `<option value="${esc(c)}" ${(e.coverage||R.defaultCoverage)===c?"selected":""}>${esc((R.coverageNames||{})[c]||c)}</option>`).join("")}</select></label></div>`;
+        `<option value="${esc(c)}" ${(e.coverage||R.defaultCoverage)===c?"selected":""}>${esc((R.coverageNames||{})[c]||c)}</option>`).join("")}</select></label>${loDoneHtml("armor", p.index, e)}</div>`;
   }
   if (body){
     h += `<div class="lo-armor-stats"><span class="hitarmor">${armorStatLine(p)}</span></div>
@@ -3840,6 +3865,7 @@ function bindSheet(){
   main.querySelectorAll("[data-rowadd]").forEach(b=>b.onclick=()=>{
     const key=b.dataset.rowadd;
     commit("loadout", `Add ${key} row`, ()=>{ panelRows(ch, key).push(key==="gear" ? { custom:true } : {}); });
+    if (key==="gear") takeFocus(document.querySelector(`#main [data-cell="gear|${ch.gear.length-1}|name"]`));
   });
   main.querySelectorAll("[data-rowdel]").forEach(b=>b.onclick=()=>{
     const [key,i]=b.dataset.rowdel.split("|");
@@ -3849,6 +3875,9 @@ function bindSheet(){
     const [key,i,col]=inp.dataset.cell.split("|");
     const rows=panelRows(ch, key);
     if (rows[Number(i)]) rows[Number(i)][col]=inp.value;
+    // W70: an open custom row offers Done once it has a name.
+    const done = col==="name" && main.querySelector(`[data-lodone="${key}|${i}"]`);
+    if (done) done.hidden = !inp.value.trim();
     lite();
   });
 
@@ -3883,6 +3912,22 @@ function bindSheet(){
   main.querySelectorAll("[data-locustom]").forEach(b=>b.onclick=()=>{
     const kind=b.dataset.locustom;
     commit("loadout", `Added custom ${kind==="armor"?"armor":"weapon"}`, ()=>{ Engine.addCustomLoadout(ch, kind); });
+    takeFocus(document.querySelector(kind==="armor" ? `#main [data-armorfield="${ch.armor.length-1}|name"]` : `#main [data-cell="weapons|${ch.weapons.length-1}|name"]`));
+  });
+  // W70: Edit and Done change only what's drawn. Nothing is saved or logged.
+  const loFirst = (kind, i) => kind==="armor" ? `#main [data-armorfield="${i}|name"]` : `#main [data-cell="${kind}|${i}|name"]`;
+  main.querySelectorAll("[data-loedit]").forEach(b=>b.onclick=()=>{
+    const [kind,i]=b.dataset.loedit.split("|"), e=(ch[kind]||[])[Number(i)];
+    if (!e || typeof e!=="object") return;
+    if (!S.loOpen) S.loOpen = new WeakSet();
+    S.loOpen.add(e); renderMain();
+    takeFocus(document.querySelector(loFirst(kind, i)));
+  });
+  main.querySelectorAll("[data-lodone]").forEach(b=>b.onclick=()=>{
+    const [kind,i]=b.dataset.lodone.split("|"), e=(ch[kind]||[])[Number(i)];
+    if (S.loOpen && e && typeof e==="object") S.loOpen.delete(e);
+    renderMain();
+    takeFocus(document.querySelector(`#main [data-loedit="${kind}|${i}"]`));
   });
   main.querySelectorAll("[data-lorm]").forEach(b=>b.onclick=()=>{
     const [kind,i]=b.dataset.lorm.split("|"), n=loName(kind, Number(i));
