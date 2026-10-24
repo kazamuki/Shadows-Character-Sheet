@@ -14,7 +14,9 @@ applies, and nothing above it does.
 - [ ] `npm run verify` passes. Any `todo` count matches `docs/STATE.md`'s
       suite line; a new `todo` is a confirmed defect, so say so.
 - [ ] A new guard was mutation-tested: put the old code back and watch it fail.
-- [ ] Ideas that came up and weren't done went to `docs/WISHLIST.md` as `W` ids.
+- [ ] Ideas that came up and weren't done went to `docs/WISHLIST.md` as `W` ids,
+      under their area, each with a **Plan** line. A wish a plan took up, set
+      aside or dropped this batch has its Plan line rewritten.
 - [ ] A `W` item this batch built moved, whole, to `docs/log/wishes-granted.md`
       with its pointer (Decision 144); a leftover half stays as a new `W` id.
 

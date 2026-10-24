@@ -339,7 +339,9 @@ Every order has a header (plan link, status, branch, what it runs beside,
 **the pre-flight's commit and findings**, and a *Carried over* note of what
 the last review found in the last order), then these sections, in this
 order. An order that can't fill one isn't ready to hand over; a *Content*
-order may fold them down (see *How exact to be*).
+order may fold them down (see *How exact to be*). Drafting an order also
+rewrites the **Plan** line of every wish it takes up or sets aside
+(`WISHLIST.md`'s header has the rule).
 
 1. **Goal and Done when.** What a player or GM can do afterwards, and the
    observable checks that prove it.
