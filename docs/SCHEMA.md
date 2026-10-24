@@ -4161,6 +4161,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 158 in part (its "a column each from 1000px" for traits, powers and vulnerabilities; the order, the jump bar and Expand all stand).
      - **Revisit if:** a column that opens on a card instead of its heading reads as a separate section at the table, or the print sheet's archetype page wants the same layout.
      - **Built:** app 0.36.1, no data or schema bump; `smoke.test.mjs`, mutation-tested; checked in Chromium at 1600, 1300 pinned, 1100 and 390px. Log 2026-10-02 (the Character layout).
+    → **Superseded in part by Decision 246** — the parts no longer flow in columns, and a heading is no longer kept with its first card: each part starts its own row.
 
 169. **CRANK reputation is a resource on the character: +1 a job done, −2 a job walked out on, read as five tiers from the data.**
      *2026-10-05 · Ken + Claude · Touches: CRANK, crank rep, trackers.crank, resources.crank, crankState, addCrankRep, Main CRANK card, Trackers CRANK section, crank tip, print front page, Reputation Advantage, schema 0.17, F37, W29, GQ7, GQ11, GQ14*
@@ -5087,6 +5088,19 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** S10f, S11 or S12b needs a clock with no owner, a reset rule, or a clock that advances itself.
      - **Built:** table schema 0.15, switched off (173); log 2026-10-23.
 
+246. **Every section on the Character tab starts its own row, its cards in one shared grid; a lone card spans two columns.**
+     *2026-10-24 · Ken + Claude · Touches: Character tab, renderShCharacter, arch-top, arch-flow, arch-part, solo, trait-cols, trait-grid, Baseline Traits, Powers, Vulnerabilities, Specialization, Origin, Bloodline, Subtype, Aberration, Permanent Aberrations, Disciplines, Advantages, Disadvantages, vitals pinned, phone-check, W99*
+     - **Decided:** Each of the archetype's sections begins a row with its heading at the left, its cards beneath in a grid of 300px-or-wider columns with 20px gaps that every section shares. A section with exactly one card (marked `solo` by the renderer, which knows the count) spans two columns when its row has them, by a container query, its text capped at 75ch. A row's cards are one height. The top band and Advantages beside Disadvantages stay, on the same gap.
+     - **Why:** Brogan, via Ken (W99): headings landed wherever the column flow put them, so the page was hard to scan. Decision 168's *Revisit if* named this.
+     - **Rejected:**
+       - Keeping 168's flow: a heading's place depends on the cards before it.
+       - A short section sitting beside the next (Ken): its heading leaves the left edge.
+       - Advantages and Disadvantages each a full row: 130–500px longer, for headings that already share a line.
+       - A lone card one column wide: a tall strip beside empty columns.
+       - Spanning by screen width or `:only-child`: pinned vitals take width the screen can't see, and a note beside the card unmarks it.
+     - **Replaces:** Decision 168 in part (its column flow and "a heading kept with its first card"; the top band, Advantages beside Disadvantages, and cards as many across as fit stand).
+     - **Revisit if:** a section often holds one short card and its empty row reads as a gap, or the print sheet's archetype page wants this layout.
+     - **Built:** app 0.54.2, no data or schema bump; `phone-check` holds the layout, smoke tests the markup. Log 2026-10-24.
 
 ## 5. Open Flags
 

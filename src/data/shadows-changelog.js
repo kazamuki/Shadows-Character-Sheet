@@ -2,6 +2,15 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.54.2",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**The Character tab reads in rows.** Every section, from Baseline Traits to your Bloodline or Origin, starts on its own line at the left, with its cards lined up beneath. No more hunting for where Powers begins.",
+      "**A section with one card gets room to breathe:** your Bloodline, Origin or Subtype spans two columns instead of one tall strip."
+    ]
+  },
+  {
     "version": "0.54.1",
     "date": "2026-10-23",
     "intro": [],

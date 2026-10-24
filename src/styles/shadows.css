@@ -249,7 +249,7 @@ textarea{min-height:150px; resize:vertical; line-height:1.6}
 .pick .power table.ref{margin-top:4px}
 .pick .controls{margin-left:auto; display:flex; align-items:center; gap:8px}
 .pick .toggle{background:var(--panel-2); border:1px solid var(--frame); border-radius:4px;
-  color:var(--text); padding:4px 12px; font-size:.76rem}
+  color:var(--text); padding:4px 12px; font-size:.78rem}
 .pick.selected .toggle{border-color:var(--green); color:var(--green)}
 /* Batch 3 — the inputs a trait or skill demands once it is taken. Sits inside
    the card it belongs to, indented off a rule so it reads as consequence of
@@ -428,13 +428,13 @@ aside.vitals:empty{display:none}
 .hitrow label.field{margin:0; min-width:110px}
 .hitrow input[type=number], .hitrow input[inputmode=numeric]{width:84px; text-align:center}
 .hitrow label.check{display:flex; align-items:center; gap:6px; font-size:.82rem; padding-bottom:8px}
-.hitarmor{font-family:var(--mono); font-size:.76rem; color:var(--cyan); padding-bottom:8px}
+.hitarmor{font-family:var(--mono); font-size:.78rem; color:var(--cyan); padding-bottom:8px}
 /* Decision 226: movement at the top of Main's Combat section. It wraps, never scrolls sideways. */
 .main-move{font-family:var(--mono); font-size:.8rem; line-height:1.5; margin:0 0 10px; overflow-wrap:anywhere}
 .main-move .move-while{color:var(--cyan)}
 .main-move .move-cond{opacity:.85}
 .sfr-round.bad{color:var(--magenta-text)}
-.hitnote{font-size:.76rem; color:var(--dim); margin:4px 0}
+.hitnote{font-size:.78rem; color:var(--dim); margin:4px 0}
 .hitwhy{font-size:.82rem; color:var(--gold); margin:10px 0}
 .hitresult{border-left:2px solid var(--violet); padding:4px 0 4px 12px; margin:10px 0; font-size:.86rem}
 .hitresult p{margin:3px 0}
@@ -448,7 +448,7 @@ aside.vitals:empty{display:none}
 .hitcheck b{font-family:var(--display); letter-spacing:.04em}
 .hitcheck p{color:var(--dim); margin:4px 0 8px}
 .hitconds{display:flex; flex-wrap:wrap; gap:6px 16px; align-items:center; margin:8px 0; font-size:.84rem}
-.hitconds > span{flex-basis:100%; color:var(--dim); font-size:.76rem}
+.hitconds > span{flex-basis:100%; color:var(--dim); font-size:.78rem}
 .hitconds label.check{display:flex; align-items:center; gap:6px}
 /* Decision 100 — Loadout pickers, armor rows, recovery buttons */
 .trk-actions{display:flex; flex-wrap:wrap; gap:8px; flex-basis:100%}
@@ -493,7 +493,7 @@ table.edit .lo-rounds .fire{flex-wrap:nowrap}   /* its width counts, so Done doe
 .admin-banner{display:flex; align-items:center; gap:10px; flex-wrap:wrap; background:rgba(214,168,72,.1);
   border:1px solid var(--gold); border-radius:6px; padding:9px 13px; margin-bottom:12px; font-size:.82rem}
 .admin-banner b{font-family:var(--display); letter-spacing:.1em; color:var(--gold)}
-.admin-banner .note{color:var(--dim); font-size:.76rem}
+.admin-banner .note{color:var(--dim); font-size:.78rem}
 .admin-banner .sp{flex:1; min-width:8px}
 .admin-banner .dot{width:9px; height:9px; border-radius:50%; background:var(--gold); animation:pulseDot 1.6s infinite}
 @keyframes pulseDot{0%,100%{opacity:1} 50%{opacity:.3}}
@@ -637,8 +637,8 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta-text)}
 .spell.mastered{border-color:var(--violet-hi)}
 .spell.missing{padding:8px 12px; color:var(--dim)}
 .spell > summary{cursor:pointer; list-style:none; display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px; padding:8px 12px}
-.spell > summary .sub{color:var(--dim); font-size:.76rem}
-.spell > summary .num{font-family:var(--mono); font-size:.76rem; color:var(--cyan)}
+.spell > summary .sub{color:var(--dim); font-size:.78rem}
+.spell > summary .num{font-family:var(--mono); font-size:.78rem; color:var(--cyan)}
 .spell > summary .eff{flex-basis:100%; font-size:.84rem}
 .spell-body{padding:0 12px 10px; font-size:.84rem}
 .spell-body p{margin:4px 0}
@@ -818,7 +818,7 @@ tr.lo-modrow td{border-top:0; padding-top:0}
   opacity:0; visibility:hidden; transition:opacity .26s}
 .vdrawer-scrim.open{opacity:1; visibility:visible}
 .vdrawer .dpin{display:none; margin-left:auto; background:none; border:1px solid var(--frame); border-radius:4px;
-  color:var(--dim); padding:3px 10px; font:inherit; font-size:.76rem}
+  color:var(--dim); padding:3px 10px; font:inherit; font-size:.78rem}
 .vdrawer .dpin:hover, .vdrawer .dpin:focus-visible{border-color:var(--cyan); color:var(--cyan)}
 .vdrawer .dpin + .dclose{margin-left:8px}
 /* The panel's vitals open their popover, to the left (Decision 160). */
@@ -947,25 +947,35 @@ details.pick.trait>summary .cost{margin-left:auto}
 .effects .etag.over{color:var(--magenta-text)}
 details.pick.trait>summary .effects{flex-basis:100%; margin-top:0}
 
-/* Character (Decisions 158, 168). Every count here follows the width the page
+/* Character (Decisions 158, 168, 246). Every count here follows the width the page
    has, not the screen's, so pinning the vitals panel takes its columns back.
-   The top band: what the archetype is beside its core mechanic, once both fit. */
-.arch-top{display:flex; flex-wrap:wrap; gap:0 32px; align-items:flex-start}
+   One gap, 20px, in the top band, the parts and the trait grids, so their
+   columns share lines. The top band: what the archetype is beside its core
+   mechanic, once both fit. */
+.arch-top{display:flex; flex-wrap:wrap; gap:0 20px; align-items:flex-start}
 .arch-top-part{flex:1 1 420px; min-width:0}
-/* The archetype's parts flow into ~340px columns. A column may break between
-   two cards, never inside one, and a heading stays with its first card, so
-   four traits share the width instead of standing in one column. */
-.arch-flow{columns:340px; column-gap:28px; margin-top:24px}
-.arch-part{padding-bottom:18px}
-.arch-part>.sect:first-child{margin-top:0; break-after:avoid}
-.arch-part .pick,.arch-part .ref{break-inside:avoid}
+/* Each part starts a row of its own, its heading at the left, and its cards sit in
+   a grid of 300px-or-wider tracks that every part shares (Decision 246). Its
+   heading and notes take the row; a card, and the Disciplines table, one track.
+   A part's one card (`solo`, set by the renderer, which knows the count) spans
+   two tracks once the part is wide enough to have them: a container query, as
+   W45's lone card (Decision 214), so a one-track part gets no empty implicit
+   track beside its card. 620px is two tracks and the gap. */
+.arch-flow{margin-top:24px}
+.arch-part{display:grid; grid-template-columns:repeat(auto-fill, minmax(min(300px,100%),1fr)); column-gap:20px; align-items:stretch; padding-bottom:18px; container-type:inline-size}
+.arch-part>.sect:first-child{margin-top:0}
+.arch-part>.sect,.arch-part>.step-note{grid-column:1/-1}
+.arch-part>.step-note{max-width:70ch}
 .arch-part .ref{width:100%}
+@container (min-width:620px){ .arch-part>.solo{grid-column:span 2} }
+/* A lone card is two tracks wide; its text stays a readable line. */
+.arch-part>.solo :is(.desc,p){max-width:75ch}
 /* Advantages beside Disadvantages from 1000px, like Skills; inside each, the
    cards sit as many across as fit, and opening one doesn't stretch its row. */
-.trait-cols{display:grid; grid-template-columns:1fr; column-gap:24px; align-items:start}
+.trait-cols{display:grid; grid-template-columns:1fr; column-gap:20px; align-items:start}
 @media (min-width:1000px){ .trait-cols{grid-template-columns:1fr 1fr} }
 .trait-col{min-width:0}
-.trait-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(min(260px,100%),1fr)); column-gap:10px; align-items:start}
+.trait-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(min(300px,100%),1fr)); column-gap:20px; align-items:start}
 .jump-end{margin-left:auto}
 .tab-links{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:18px}
 .tab-links .step-note{margin:0}
@@ -1110,7 +1120,7 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
   font-size:.74rem; padding:4px 11px; cursor:pointer}
 .jump:hover, .jump:focus-visible{border-color:var(--violet-hi)}
 .jump-count{font-family:var(--mono); font-size:.7rem; color:var(--dim)}
-.jump-cp{margin-left:auto; font-family:var(--mono); font-size:.76rem; color:var(--gold); white-space:nowrap}
+.jump-cp{margin-left:auto; font-family:var(--mono); font-size:.78rem; color:var(--gold); white-space:nowrap}
 .jump-cp.over{color:var(--magenta-text)}
 .sect[tabindex]:focus{outline:none}
 /* W47: the card or row a greyed control hands the keyboard to shows where it is. */
@@ -1489,3 +1499,6 @@ h2.city-name{font-size:1.15rem}
 .clock-fields{margin-top:10px}
 .clock-fields input, .clock .field textarea{min-width:0; width:100%}
 .form-toggle button[data-fstance]{min-width:44px}
+
+/* A Discipline's description on Loadout & Powers (W60: no inline style). */
+.disc-desc{font-size:.78rem; color:var(--dim)}
