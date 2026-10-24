@@ -380,6 +380,7 @@ line, and notes. A gazetteer faction (Eclipse, the Volkov Group) seeds one.
 **Clocks** are one primitive (segments, filled, a label, what fills it), used
 by a faction's escalation, a Site Profile's Drift (once approved), a job's
 deadline and the Encounter Design worksheet's escalation.
+**As built (S7, Decision 245):** `clocks` is one record with an `on` owner link (a faction, so far), a name, 2 to 12 segments (4 by default), `filled`, what advances it and what happens when it fills. The app never advances one.
 
 ### 4g. Sessions
 
@@ -567,9 +568,8 @@ not a queue. What Scott's use of the table turns up can reorder it.
 |---|---|---|---|---|
 | S12a | Supernatural Orders: the seven Orders and their modifiers in the builder | Content | Nothing (GQ17 approved 2026-10-10). **Source:** the Orders table with its Profile and Formation columns is in Scott's `WIP_Threat_Codex_v2` only, not yet in `2610`; the pre-flight asks Scott which to build from | No order yet |
 | S13b | Printing a cast member, an encounter, a session's journal (W84) | Fix + content | Nothing | No order yet |
-| S7 | Factions and clocks | Rule or shape | Nothing (S6 built) | [Order drafted](gm-mode/S7-factions-clocks.md), awaiting Ken |
-| S12b | Site Profiles: places with their tracks and clocks (the Expansion is approved) | Content | S7 | No order yet |
-| S10f | The rest of S10: the Encounter Design worksheet, Surprise, Ambush, Delay, an encounter's clocks | Rule or shape | S7 for the clocks | No order yet. **Sources:** the worksheet is `2642` (basics, adversaries, hazards, objectives beyond defeat, escalation, an out, the next scene's hooks); Surprise, Ambush and Delay are `0530` |
+| S12b | Site Profiles: places with their tracks and clocks (the Expansion is approved) | Content | Nothing (S7's clocks are built) | No order yet |
+| S10f | The rest of S10: the Encounter Design worksheet, Surprise, Ambush, Delay, an encounter's clocks | Rule or shape | Nothing (S7's clocks are built) | No order yet. **Sources:** the worksheet is `2642` (basics, adversaries, hazards, objectives beyond defeat, escalation, an out, the next scene's hooks); Surprise, Ambush and Delay are `0530` |
 | S17 | The Codex's Shared Rules and card format: a swarm takes at most 1 from a single-target attack; an NPC parries with the weapon's skill plus its Parry; social checks against Difficulty 15, and the Free, Fast and full Action, as a Reference panel; and each entry's Tag line, Role line and Hook on its Threats card | Content + shape | **Scott**: these are in `WIP_Threat_Codex_v2` only. When the entries in `2612` move to v2's format, the pack builder follows first (a Fix in `private/`, the size of Y0's), then this | Waiting on Scott |
 | S3b | Seats: players, import, the card spread, the read-only sheet | Rule or shape | Nothing | No order yet |
 | S2 | The dispatch and the inbox (a player sees one) | Rule or shape | Nothing (S1 built) | No order yet |
@@ -702,6 +702,13 @@ its lines and who was met there, read from the lines.
   to constraint 4's script order, so it's a decision either way.
 
 ### S7 — Factions and clocks
+
+**Built** (Decisions 244–245, table schema 0.15, switched off; `plans/gm-mode/S7-factions-clocks.md`; SQ0–SQ11 on their
+defaults). The Faction Tracker is a record (`factions`), a third **City** view, **Factions**, with a page per faction: type, Territory,
+key NPCs as cast links, tipping points, a five-step stance, attention, and the clocks it owns. Nothing is derived; affiliations stay text.
+A key NPC's member removed keeps their name; a faction removed takes its clocks, and one undo restores both.
+
+The bullets below are the plan as written.
 
 - The **Faction Tracker** as a record; gazetteer factions seed one.
 - The stance line, tipping points, key NPCs as cast links (stubs until S8).

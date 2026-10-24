@@ -51,3 +51,5 @@ something a GM can see adds its line here.
 - **The City tab.** The book's places, factions and powers to read and
   search, and the crew's own places. A line can say where it happened, and a
   place lists what happened there and who you met.
+- **Factions.** The City tab keeps the book's Faction Tracker for each
+  faction the crew deals with, with clocks to count down what they do next.

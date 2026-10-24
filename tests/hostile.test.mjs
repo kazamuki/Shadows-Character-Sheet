@@ -787,7 +787,7 @@ function hostileSessionsTable() {
 test("a hostile table's sessions and threads come out of the gate typed: ids unique, numbers numbers, links null, one current", () => {
   const J = x => JSON.parse(JSON.stringify(x));
   const m = Engine.migrateTable(hostileSessionsTable());
-  assert.equal(m.meta.tableSchemaVersion, "0.14");
+  assert.equal(m.meta.tableSchemaVersion, "0.15");
   const ids = m.sessions.map(s => s.id);
   assert.equal(new Set(ids).size, ids.length, "session ids repeat");
   assert.ok(ids.every(id => /^SE-[0-9A-HJKMNP-TV-Z]{8}$/.test(id)));
@@ -1044,7 +1044,7 @@ test("a table file's trail draws its labels as text, drops every crafted entry, 
     ["__proto__", "polluted"], ["meta", "id"], ["meta", "tableSchemaVersion"], ["audit", 0, "label"], ["evil"], ["constructor", "prototype", "polluted"],
   ].map((path, i) => ({ seq: 10 + i, date: null, label: `crafted ${i}`, patch: [{ path, type: "scalar", before: "PWNED" }] }));
   const t = Engine.migrateTable({
-    meta: { kind: "shadows-table", id, name: "T", tableSchemaVersion: "0.14" },
+    meta: { kind: "shadows-table", id, name: "T", tableSchemaVersion: "0.15" },
     cast: [{ id: "C-AAAAAAAA", name: "After" }],
     audit: [...crafted, good],
   });
@@ -1232,4 +1232,56 @@ test("a place of markup, a hostile gazetteer id and a crafted place link render 
   assert.equal(app.window.eval("Object.prototype.x"), undefined);
   assert.equal(app.window.eval("S.table.interactions.filter(x => x.place).length"), 3, "the gate kept a bad place link, or dropped a good one");
   assert.deepEqual(app.errors, [], "the hostile places threw while rendering");
+});
+
+// ── A table's factions and clocks are untrusted too (Decisions 244–245) ──
+test("a faction and a clock of markup, a hostile id, type, link and owner render as text on the Factions list, a faction's page, its clocks, a member's Key to and Find, and pollute nothing", () => {
+  const t = Engine.newTable(P("tbl.name"));
+  t.cast = [{ id: "C-ABCDEFGH", name: "Dez" }];
+  const text = tag => ({ name: P(tag + ".name"), base: P(tag + ".base"), wants: P(tag + ".wants"), reach: P(tag + ".reach"), notes: P(tag + ".notes") });
+  t.factions = [
+    { id: "FA-AAAAAAAA", ...text("a"), type: "gang", stance: 1, attention: "aware", territory: "central-city", from: { kind: "gazetteer", id: "eclipse", name: P("a.from") },
+      keyNpcs: [{ kind: "cast", id: "C-ABCDEFGH" }, { kind: "cast", id: "C-ZZZZZZZZ", name: P("a.key") }, { kind: "cast", id: "__proto__", name: P("a.proto") }],
+      tippingFor: [P("a.for1"), P("a.for2")], tippingAgainst: [P("a.against")] },
+    { id: "FA-BBBBBBBB", name: "", from: { kind: "gazetteer", id: "__proto__", name: P("b.from") }, type: [P("b.type")], territory: ["central-city"], stance: P("b.stance"), attention: { x: 1 } },
+    { id: "FA-CCCCCCCC", name: "", from: { kind: "gazetteer", id: "a-newer-entry", name: P("c.from") }, territory: P("c.territory"), keyNpcs: P("c.keys"), tippingFor: P("c.for") },
+    { id: "__proto__", ...text("d"), from: [P("d.from")] },
+  ];
+  t.clocks = [
+    { id: "CK-AAAAAAAA", name: P("k1.name"), advances: P("k1.adv"), whenFull: P("k1.full"), segments: 6, filled: 6, on: { kind: "faction", id: "FA-AAAAAAAA" } },
+    { id: "CK-BBBBBBBB", name: P("k2.name"), advances: P("k2.adv"), whenFull: P("k2.full"), segments: "1e9", filled: {}, on: { kind: "faction", id: "FA-AAAAAAAA" } },
+    { id: "CK-CCCCCCCC", name: P("k3.name"), segments: 12, filled: 99, on: [P("k3.on")] },
+    { id: "CK-DDDDDDDD", name: P("k4.name"), on: { kind: "faction", id: "FA-ZZZZZZZZ" } },
+  ];
+  const key = "shadows.table.v1." + t.meta.id;
+  const app = boot({ storage: { "shadows.feature.gm": "on", [key]: { table: t, section: "city", changed: "2026-10-05T10:00:00.000Z", exported: null } } });
+  const found = [];
+  app.$("[data-topen]").click();
+  app.click('[data-cityview="factions"]');
+  found.push(...injected(app, "the Factions list"));
+  assert.ok(app.$$(".place-card").length >= 3, "the list drew");
+  assert.ok(app.$$(".place-card").some(el => el.textContent.includes(P("a.name"))), "a faction's name wasn't drawn as text");
+  app.click('[data-cityview="city"]');
+  found.push(...injected(app, "The city"));
+  app.click('[data-cityview="factions"]');
+  for (const card of app.$$("[data-fcardopen]")) {
+    app.click(`[data-fcardopen="${card.dataset.fcardopen}"]`);
+    found.push(...injected(app, "a faction's page"));
+    for (const e of app.$$("[data-clkedit]")) { e.click(); found.push(...injected(app, "a clock's fields")); }
+    app.click("[data-fback]");
+  }
+  app.click('[data-tsec="cast"]');
+  app.click("[data-copen]");
+  found.push(...injected(app, "a member's page"));
+  app.click("[data-tfind]");
+  const q = app.$("[data-findq]"); q.value = "pwn"; q.dispatchEvent(new app.window.Event("input", { bubbles: true }));
+  found.push(...injected(app, "Find"));
+  assert.deepEqual(found, [], "a faction's or clock's text became markup");
+  assert.equal(app.window.eval("({}).polluted"), undefined);
+  assert.equal(app.window.eval("Object.prototype.x"), undefined);
+  assert.equal(app.window.eval("S.table.factions.length"), 4 - 0, "the gate keeps every object record");
+  assert.equal(app.window.eval("S.table.clocks.map(c => c.segments).join()"), "6,4,12,4", "a hostile segment count is the default");
+  assert.equal(app.window.eval("S.table.clocks.map(c => c.filled).join()"), "6,0,12,0");
+  assert.equal(app.window.eval("S.table.clocks[2].on"), null, "an array owner is no owner");
+  assert.deepEqual(app.errors, [], "the hostile factions threw while rendering");
 });
