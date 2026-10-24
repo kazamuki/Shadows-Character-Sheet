@@ -558,6 +558,7 @@ In the order they merged.
 | S15 | The table's memory: an activity log, with undo (W83) | 212 | #153 |
 | S16 | A line reads as a sentence, and a fight's line leads to its fight (W79, W82) | 241 | #234 |
 | S6 | The gazetteer and the crew's places: the City tab, and a line's Where | 242–243 | #236 |
+| S7 | Factions and clocks: the Faction Tracker per faction, and clocks on it | 244–245 | #240 |
 
 ### Still to build
 
