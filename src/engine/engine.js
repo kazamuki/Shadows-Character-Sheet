@@ -22,7 +22,7 @@ const Engine = (() => {
   const INTAKE_RE = new RegExp(`^TAG-${INTAKE_BODY}$`);
   const OLD_INTAKE_RE = new RegExp(`^NCR-(${INTAKE_BODY})$`);
   // The character file's shape. A bump needs a migrate() step in the same change.
-  const SCHEMA_VERSION = "0.28";
+  const SCHEMA_VERSION = "0.29";
   const isIntakeId = v => typeof v==="string" && INTAKE_RE.test(v);
   function randomChars(n){
     const c = typeof globalThis!=="undefined" && globalThis.crypto && typeof globalThis.crypto.getRandomValues==="function" ? globalThis.crypto : null;
@@ -1769,25 +1769,70 @@ const Engine = (() => {
   }
 
   // "BOD+3" is "calculated by adding the BOD score to the bonus" (0530): BOD 5
-  // does 8. A number is fixed damage; anything else ("6/round") stays text.
+  // does 8. A number is fixed damage, and so is a string of digits (a written-in
+  // weapon's "8", Decision 247); anything else ("6/round") stays text.
   function weaponDamage(ch, d){
     if (typeof d==="number") return { value:d, formula:null };
+    if (typeof d==="string" && /^\s*\d+\s*$/.test(d)) return { value:Number(d), formula:null };
     const m = /^\s*([A-Za-z]+)\s*\+\s*(\d+)\s*$/.exec(String(d==null ? "" : d));
     const stat = m && normStat(m[1]);
     if (stat) return { value: statTable(ch)[stat].value + Number(m[2]), formula: `${stat}+${m[2]}` };
     return { value:null, formula: d==null || d==="" ? null : String(d) };
   }
 
+  // A written-in weapon's four picks (Decision 247): a weapon type (its
+  // Skill), a damage type, a range band and an ACC. Each is real or it reads
+  // as empty, from a file and from a call. Returns the stored value, or
+  // undefined when it isn't one.
+  const CUSTOM_WEAPON_PICKS = ["category", "damageType", "range", "acc"];
+  function customWeaponPick(field, v){
+    if (field==="category") return typeof v==="string" && (D().weaponCategories||[]).some(c=>c.id===v) ? v : undefined;
+    if (field==="damageType") return typeof v==="string" && (D().damageTypes||[]).some(t=>t.id===v && !t.magical) ? v : undefined;
+    if (field==="range") return typeof v==="string" && ((D().weaponRules||{}).rangeBands||[]).includes(v) ? v : undefined;
+    if (field==="acc") return typeof v==="number" && Number.isInteger(v) && v>=0 ? v : undefined;
+    return undefined;
+  }
+  const customText = v => typeof v==="string" && v.trim() ? v : null;
+  function customWeaponLine(ch, e){
+    const category = customWeaponPick("category", e.category)||null;
+    const def = category && (D().weaponCategories||[]).find(c=>c.id===category);
+    const sk = def && def.skill && skillById(def.skill) ? skillLine(ch, def.skill) : null;
+    const dmg = weaponDamage(ch, typeof e.damage==="string" || Number.isFinite(e.damage) ? e.damage : "");
+    const dt = customWeaponPick("damageType", e.damageType);
+    const acc = customWeaponPick("acc", e.acc);
+    return { category,
+             skill: sk ? { id:sk.def.id, name:sk.def.name, trained:sk.trained } : null,
+             attack: sk ? sk.checkBonus : null, acc: acc==null ? null : acc,
+             damage: dmg.value, damageFormula: dmg.formula,
+             damageType: dt ? damageTypeById(dt).name : null,
+             range: customWeaponPick("range", e.range)||null, rof: customText(e.rof), capacity: customText(e.capacity),
+             typeText: category ? null : customText(e.type), tags: [], features: [] };
+  }
+  // One pick on a written-in weapon. "" or null clears it. A refusal writes nothing.
+  function setCustomWeapon(ch, index, field, value){
+    const e = ch && typeof ch==="object" ? listOf(ch, "weapons")[index] : null;
+    if (!e || typeof e!=="object") return { ok:false, why:"That weapon isn't on the sheet." };
+    if (!e.custom && e.id) return { ok:false, why:"Only a weapon you wrote in can be changed here." };
+    if (!CUSTOM_WEAPON_PICKS.includes(field)) return { ok:false, why:"That can't be changed here." };
+    if (value==="" || value==null){ delete e[field]; return { ok:true, field, value:null }; }
+    const v = customWeaponPick(field, value);
+    if (v===undefined) return { ok:false, why: field==="acc" ? "ACC is a whole number, 0 or more."
+      : field==="category" ? "Pick one of the weapon types." : field==="damageType" ? "Pick one of the damage types listed." : "Pick one of the range bands." };
+    e[field] = v;
+    return { ok:true, field, value:v };
+  }
+
   // Everything a player reads off the sheet to make an attack with a catalog
   // weapon. The attack total is the skill's, so Pain and Conditions are in it;
   // ACC is apart because only Single fire adds it (0530). A custom weapon is
-  // whatever was typed, so there's nothing to compute.
+  // weapon of its type's Skill, with the damage, damage type, range and ACC
+  // the player picked or typed (Decision 247).
   function weaponLine(ch, index){
     const e = listOf(ch, "weapons")[index];
     if (!e || typeof e!=="object") return null;
     const notes = typeof e.notes==="string" ? e.notes : "";
-    if (e.custom || !e.id) return { index, custom:true, name:String(e.name||""), notes,
-      rounds: roundsOf(e.capacity, e), fireModes: fireModesOf(e.rof) };
+    if (e.custom || !e.id) return Object.assign({ index, custom:true, name:String(e.name||""), notes },
+      customWeaponLine(ch, e), { rounds: roundsOf(e.capacity, e), fireModes: fireModesOf(e.rof) });
     const def = weaponDefById(e.id);
     if (!def) return { index, missing:true, name:String(e.id), notes };
     const line = Object.assign({ index, notes }, weaponDefLine(ch, def));
@@ -2230,7 +2275,7 @@ const Engine = (() => {
   function addCustomLoadout(ch, kind){
     if (kind==="armor") ch.armor.push({ custom:true, name:"", prot:"", res:0, integrity:0, coverage:"light",
                                         integrityLoss:0, notes:"", worn:false, scrapped:false, upgrades:[] });
-    else if (kind==="weapons") ch.weapons.push({ custom:true, name:"", type:"", damage:"", rof:"", capacity:"", ammo:"", features:"", notes:"", roundsSpent:0 });
+    else if (kind==="weapons") ch.weapons.push({ custom:true, name:"", damage:"", rof:"", capacity:"", ammo:"", features:"", notes:"", roundsSpent:0 });
     else return { ok:false, why:"Weapons or armor only." };
     return { ok:true, index:ch[kind].length-1 };
   }
@@ -4728,6 +4773,12 @@ const Engine = (() => {
     c.weapons.forEach(w => {
       if (!w || typeof w!=="object") return;
       w.roundsSpent = nonNegInt(w.roundsSpent);
+      // Schema 0.29 (Decision 247): a written-in weapon's four picks are kept
+      // only when they're real. `type` (the old free text) is left as it is.
+      if (w.custom) for (const f of CUSTOM_WEAPON_PICKS){
+        const v = customWeaponPick(f, w[f]);
+        if (v===undefined) delete w[f]; else w[f] = v;
+      }
       if (w.custom) delete w.mods;
       else w.mods = Array.isArray(w.mods) ? w.mods.filter(x=>typeof x==="string") : [];
       // Schema 0.14 (W40): `loaded` is a specialty round's id; standard
@@ -8439,7 +8490,7 @@ const Engine = (() => {
     hlState, armorState, resolveHit, applyHit, hitAsks, naturalArmor, nanomedKit,
     naturalHealing, heal, healStep, resolveReset, applyReset,
     // Loadout: weapons, gear, armor
-    weaponLine, catalogLine, addLoadout, weaponModOptions, addWeaponMod, removeWeaponMod, fireWeapon, reloadWeapon,
+    weaponLine, weaponDamage, setCustomWeapon, catalogLine, addLoadout, weaponModOptions, addWeaponMod, removeWeaponMod, fireWeapon, reloadWeapon,
     gearLine, carriedGear, useGear, useCharge, rechargeGear, addCustomLoadout, removeLoadout, setWorn,
     upgradeOptions, addUpgrade, removeUpgrade, armorWear, repairArmor,
     // Magic: the Cascade, Aberrations, the Grimoire, starting spells

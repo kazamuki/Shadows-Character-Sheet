@@ -3385,5 +3385,5 @@ test("L2 3b (rules): CRB 0530: a custom weapon's range bands are the book's", ()
   const head = text.slice(at).split("\n").find(l => l.startsWith("|"));
   const bands = head.split("|").map(s => s.trim()).filter(Boolean);
   assert.deepEqual(bands, ["Close", "Short", "Medium", "Long", "Extreme"], "the book's range bands moved: ask before editing the data");
-  assert.deepEqual(D.weaponRules.rangeBands, bands);
+  assert.deepEqual([...D.weaponRules.rangeBands], bands);
 });

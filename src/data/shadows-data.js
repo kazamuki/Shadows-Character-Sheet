@@ -4134,13 +4134,16 @@ window.SHADOWS_DATA = {
   /* Rate of fire and the magazine (W16, Decision 120). 0530: "Ammunition is
      spent by mode" -- Single 1 round, Burst 3, Full Auto 10. A weapon's
      `capacity` ("15+1", "100 (belt)", "10 bursts") is read for its leading
-     number plus any chambered "+N"; one the engine can't read isn't tracked. */
+     number plus any chambered "+N"; one the engine can't read isn't tracked.
+     `rangeBands` are 0530's Range bands, in order: what a written-in weapon's
+     Range picks from (Decision 247). A catalog weapon keeps the catalog's own word. */
   "weaponRules": {
     "rofModes": [
       { "id": "S", "name": "Single", "rounds": 1 },
       { "id": "B", "name": "Burst", "rounds": 3 },
       { "id": "F", "name": "Full Auto", "rounds": 10 }
     ],
+    "rangeBands": ["Close", "Short", "Medium", "Long", "Extreme"],
     "reloadNote": "Reloading is a Fast Action: a fresh magazine, a grenade off the belt, an arrow from the quiver.",
     "swap": { "text": "A Reload can swap one kind of rounds for another, once a turn. The magazine you take out goes back in your gear with what's left in it." },
     "modNote": "Mod slots are fixed at purchase. Removing a mod frees its slot, but may damage the mod."
