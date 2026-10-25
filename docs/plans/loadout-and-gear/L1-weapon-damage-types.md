@@ -2,7 +2,7 @@
 
 **Plan:** [`../loadout-and-gear.md`](../loadout-and-gear.md) §3, row L1. **Wish:** [W69](../../WISHLIST.md) (worn gear modifiers), its data step. **The book:** `0460` Gear, *Damage Types* and the weapon tables. **Rulings:** Deighton's Q14 (2026-10-10: Electric and Burning count as energy, `reference/rulings-2026-10-10.md`). Ken's LQ2 (2026-10-24: flag what the book doesn't type). Decisions 68, 135.
 
-**Status: drafted 2026-10-24 by Claude (Opus), the plan's conductor. Waiting on Ken's LQ11–LQ13** (§4). Don't start the build until they're answered here.
+**Status: drafted 2026-10-24 by Claude (Opus), the plan's conductor. Approved by Ken 2026-10-24, with LQ11–LQ13 on their defaults** (§4). Ready for **L1 build**.
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
@@ -68,9 +68,9 @@ None. The choice this order makes, keeping the book's display word with no class
 
 | Id | Question | Default |
 |---|---|---|
-| LQ11 | The IG-7 Cinder's Notes say "Incendiary, Burning", and the data already types the Hellmouth flamethrower Burning from its Burning tag. Type the Cinder **Burning** now, or put it in the flag with the rest? | **In the flag,** as LQ2 said: the callout's Burning names "incendiary rounds", not grenades. The flag suggests Burning for it |
-| LQ12 | Three grenades deal no damage (Shockwave, Curtain and Sunburst: the book's DMG is "—"). A damage type means nothing for them. Leave them untyped and **out of the flag**, which narrows LQ2's 13 to 10? | **Yes:** no type, no flag. The guard accepts an untyped weapon that has no damage |
-| LQ13 | Where the flag's note shows | **On the Loadout weapon card**, under its row, the way a flagged weapon mod's does (`flagHtml`). Not in the catalog picker, on Main or in print, where the type doesn't show either |
+| LQ11 | The IG-7 Cinder's Notes say "Incendiary, Burning", and the data already types the Hellmouth flamethrower Burning from its Burning tag. Type the Cinder **Burning** now, or put it in the flag with the rest? | **In the flag,** as LQ2 said: the callout's Burning names "incendiary rounds", not grenades. The flag suggests Burning for it. **Ken, 2026-10-24: Default** |
+| LQ12 | Three grenades deal no damage (Shockwave, Curtain and Sunburst: the book's DMG is "—"). A damage type means nothing for them. Leave them untyped and **out of the flag**, which narrows LQ2's 13 to 10? | **Yes:** no type, no flag. The guard accepts an untyped weapon that has no damage. **Ken, 2026-10-24: Default** |
+| LQ13 | Where the flag's note shows | **On the Loadout weapon card**, under its row, the way a flagged weapon mod's does (`flagHtml`). Not in the catalog picker, on Main or in print, where the type doesn't show either. **Ken, 2026-10-24: Default** |
 
 ## 5. The assumption sweep
 
