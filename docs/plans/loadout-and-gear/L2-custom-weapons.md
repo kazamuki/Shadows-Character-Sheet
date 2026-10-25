@@ -2,7 +2,7 @@
 
 **Plan:** [`../loadout-and-gear.md`](../loadout-and-gear.md) §3, row L2, and its *What each order settles* bullet. **Wish:** [W137](../../WISHLIST.md). **Ken's answers that stand:** LQ8 (a custom weapon's Skill comes from its weapon type, as data on each `weaponCategories` row) and LQ9 (a saved free-text `type` is kept as text, shown until the player picks a type), both "Default", 2026-10-24. **The book:** `0460` *Reading the Tables* (Skill, DMG, Dam Type, ACC, Range) and its weapon tables; `0530` *Range bands*. Decisions 100, 120, 135, 145.
 
-**Status: drafted 2026-10-24 by Claude (Opus), L1's reviewer, as the plan's orchestrator.** Not yet approved. LQ14–LQ18 (§4) are open, each with a default.
+**Status: drafted 2026-10-24 by Claude (Opus), L1's reviewer, as the plan's orchestrator.** Not yet approved. Ken answered LQ14–LQ18 on 2026-10-24 (§4): LQ16 is the book's range bands, not the default, and the order is revised to it (re-pre-flighted, below). The rest are Default.
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
@@ -34,9 +34,21 @@ Weapon types             weaponCategories: 14 rows, id and name only (grenades a
 Damage                   weaponDamage ~1773: a number is fixed; "BOD+3" → BOD + 3; anything else stays text. A typed "8" is a
                          string, so it would read as text: the order coerces a digits-only string. No catalog damage is one
 Damage types             damageTypes: blade, blunt, ballistic, electric, energy, burning (non-magical); elemental, spirit, aether
-                         (magical: true). A catalog weapon's damageType is the book's display word (L1), "Normal" included
-Ranges                   A catalog weapon's range is Low 8, Medium 14, Long 10, Extreme 2 (20 have none). No data list holds
-                         these words. 0530's range bands are Close, Short, Medium, Long, Extreme: "Low" isn't one (LQ16)
+                         (magical: true). Nine in all. A catalog weapon's damageType is the book's display word (L1), "Normal"
+                         included. "Regular" isn't a damage type: it's a damageCategories entry (Regular, Withering, Massive:
+                         how a hit resolves), picked per hit in the hit modal and never stored on a weapon
+Ranges (re-pre-flighted  A catalog weapon's range is Low 8, Medium 14, Long 10, Extreme 2 (20 have none). 0530's range bands
+  for LQ16)                are Close 0–3m, Short 3–40m, Medium 40–120m, Long 120–400m, Extreme 400m+, so the catalog's "Low"
+                           isn't a band. The bands are in the data once, as display text: the quick reference's `modifiers`
+                           panel, its "Range bands" part (data ~4830, `columns`), shown by gmReference. No data list holds them
+                           as a vocabulary
+                         Readers of a weapon's range: weaponDefLine ~2038 (passes it through); sheet.js ~1794 (catalog picker),
+                           ~2089 (Loadout card's Range cell), ~2725 (print). All display: no rule, modifier or guard reads a
+                           range, and none reads the catalog's words beside the bands. Main's Weapons has no Range column
+                         After L2, Loadout's Range column and the print sheet's hold both vocabularies: a catalog Cheapshot
+                           "Low" above a custom pistol's "Short". The catalog picker shows catalog weapons only, so it's unchanged
+                         L3 addresses weapons by ranged or melee and by kinetic or energy (plan §3); neither reads a range
+                           word. No decision governs a weapon's range (ledger searched for "range band" and weapon range)
 ACC                      0, 1, 2, 3, 5 on the catalog; never negative
 Readers of a custom      engine: weaponLine ~1789 (the line), fireWeapon ~1857 and reloadWeapon ~1917 (rounds only), reloadSource
   weapon row               ~1884 (a custom row reloads from nothing, so a Reload is free), weaponModOptions ~1998 (null: no mods),
@@ -52,14 +64,17 @@ Text that points at it   engine ~1783 ("A custom weapon is whatever was typed, s
                          ~2715 ("a custom one what was typed"); SCHEMA §2's weapons comment (~955, ~969); Decision 100 ("A custom
                          weapon reads back what was typed"). CHANGELOG's past lines stay as they shipped
 Guards                   engine.test "every catalog weapon resolves" (~1509) and the R6 reference sweep (~200: weaponCategory is a
-                         set; a category's skill would be a new reference, not yet listed). The key guard is by key name, and
-                         both new keys collide with names already read (`skill`, `ranges` on statRules): it passes them for the
-                         wrong reason, so L2 3 and L2 4 are what prove they're read. hostile.test (~80) gives a custom weapon a
+                         set; a category's skill would be a new reference, not yet listed). The key guard is by key name.
+                         `skill` collides with a name already read (a weapon's own), so the guard passes it for the wrong
+                         reason, and L2 4 is what proves it's read. `rangeBands` is a new name, so the guard sees it, and
+                         fails until the custom line reads it. hostile.test (~80) gives a custom weapon a
                          payload in every typed field, `type` included
 Prototype                The data keys, the engine line, weaponDamage's coercion, migrate's step and WEAPON_COLS without `type`, on
                          a scratch copy: 1346 pass, 25 fail, and all 25 are the schema literal "0.28" → "0.29" (23 tests across
                          engine, hostile and smoke-sheet-play; docs.test's versions check; "newCharacter matches the documented
-                         character schema"). No other test pins a custom weapon's line or its type column
+                         character schema"). No other test pins a custom weapon's line or its type column. The prototype used
+                         the catalog's words under `ranges`; LQ16's bands under `rangeBands` change only which words, and add
+                         the key guard as a check that the line reads them (above)
 ```
 
 ---
@@ -71,7 +86,7 @@ Prototype                The data keys, the engine line, weaponDamage's coercion
 **Done when:**
 - A custom weapon can pick a **type** from `weaponCategories`. Its attack is then that type's Skill's check bonus, the same number a catalog weapon of that type shows, on Loadout, Main and the printed sheet.
 - Its typed damage computes as a catalog weapon's: `BOD+3` is BOD + 3, `8` is 8, and anything else stays text.
-- It can pick a **damage type** (the six non-magical ones, LQ15) and a **range** (LQ16), and type an **ACC** (a whole number, 0 or more). Each shows where a catalog weapon's does.
+- It can pick a **damage type** (the six non-magical ones, LQ15) and a **range band** (0530's Close, Short, Medium, Long or Extreme, LQ16), and type an **ACC** (a whole number, 0 or more). Each shows where a catalog weapon's does.
 - Each pick is one undoable action in the audit trail. The text fields stay as they are.
 - A saved weapon with a free-text `type` keeps it, shows it until a type is picked, and loses nothing in `migrate()`.
 - Junk in any of the four picks reads as empty, from a file and from a call (constraints 8 and 10).
@@ -79,7 +94,7 @@ Prototype                The data keys, the engine line, weaponDamage's coercion
 
 ## 2. Tier, versions, numbers
 
-- **Tier: Rule or shape.** A save-file shape changes (four new fields on a custom weapon row), a data shape changes (`weaponCategories[].skill`, `weaponRules.ranges`), and the line is a player-facing behaviour someone could have chosen otherwise. One decision (§3).
+- **Tier: Rule or shape.** A save-file shape changes (four new fields on a custom weapon row), a data shape changes (`weaponCategories[].skill`, `weaponRules.rangeBands`), and the line is a player-facing behaviour someone could have chosen otherwise. One decision (§3).
 - **Character schema:** 0.28 → **N** (0.29 today), with a `migrate()` step (§8). Take the next minor if another branch lands first.
 - **Game data:** `gamedataVersion` 0.48 → **0.49** (Decision 68): a custom weapon's computed values and choices change. Take the next minor if another branch lands first.
 - **App:** a minor, 0.54.3 → **0.55.0** (`npm run bump -- 0.55.0`), or the next minor: a capability players didn't have.
@@ -91,10 +106,10 @@ Paste this into SCHEMA §4 with N filled in, add its INDEX §3 line under Loadou
 
 ```
 N. **A custom weapon picks its weapon type, damage type and range and types its ACC, and its line is computed like a catalog weapon's.**
-   *2026-10-24 · Ken + Claude · Touches: weaponLine, customWeaponLine, setCustomWeapon, weaponDamage, weaponCategories.skill, weaponRules.ranges, weapons[i].category, weapons[i].damageType, weapons[i].range, weapons[i].acc, weapons[i].type, WEAPON_COLS, addCustomLoadout, Loadout's custom weapon row, Main's Weapons, the print sheet's weapons, character schema N, W137, LQ8, LQ9, LQ14–LQ18*
-   - **Decided:** A custom weapon stores four picks: `category` (a `weaponCategories` id), `damageType` (a non-magical `damageTypes` id), `range` (one of `weaponRules.ranges`) and `acc` (a whole number, 0 or more). Its Skill is its category's `skill`, so its attack is that Skill's check bonus. Its typed damage reads as a catalog weapon's: a number, `BOD+3`, or text. A saved free-text `type` is kept and shown until a type is picked, and new rows have none. Each pick is one audited action; the typed fields stay unaudited keystrokes.
+   *2026-10-24 · Ken + Claude · Touches: weaponLine, customWeaponLine, setCustomWeapon, weaponDamage, weaponCategories.skill, weaponRules.rangeBands, range bands, weapons[i].category, weapons[i].damageType, weapons[i].range, weapons[i].acc, weapons[i].type, WEAPON_COLS, addCustomLoadout, Loadout's custom weapon row, Main's Weapons, the print sheet's weapons, character schema N, W137, LQ8, LQ9, LQ14–LQ18*
+   - **Decided:** A custom weapon stores four picks: `category` (a `weaponCategories` id), `damageType` (a non-magical `damageTypes` id), `range` (one of 0530's range bands, `weaponRules.rangeBands`) and `acc` (a whole number, 0 or more). Its Skill is its category's `skill`, so its attack is that Skill's check bonus. Its typed damage reads as a catalog weapon's: a number, `BOD+3`, or text. A saved free-text `type` is kept and shown until a type is picked, and new rows have none. Each pick is one audited action; the typed fields stay unaudited keystrokes.
    - **Why:** Ken (W137): a weapon the player writes in should read like the catalog's, and L3's class modifiers need a type and a damage type to find it. One pick gives the Skill (LQ8), and the file stays the player's (LQ9).
-   - **Rejected:** the player picks the Skill as well as the type (LQ8: two picks that can disagree); matching an old `type` to a weapon type (LQ9: a guess can pick the wrong Skill); storing the damage type's display name, as a catalog weapon does (a name may change, an id can't, constraint 6); the combat chapter's range bands (no catalog weapon uses them, LQ16); auditing the text fields' keystrokes (W70's rows type freely, and a pick is the only part that changes a number).
+   - **Rejected:** the player picks the Skill as well as the type (LQ8: two picks that can disagree); matching an old `type` to a weapon type (LQ9: a guess can pick the wrong Skill); storing the damage type's display name, as a catalog weapon does (a name may change, an id can't, constraint 6); the catalog's range words, Low to Extreme (Ken, LQ16: the book's bands, though a catalog "Low" and a custom "Short" then share Loadout's Range column); reading the bands from the quick reference's display table (a vocabulary shouldn't hang off a panel's columns: a test ties the two instead); auditing the text fields' keystrokes (W70's rows type freely, and a pick is the only part that changes a number).
    - **Replaces:** Decision 100 in part: "A custom weapon reads back what was typed." Its four picks and its damage now compute; its other fields still read as typed.
    - **Revisit if:** L3's class reading finds that the catalog's display word and a custom row's id want one resolver, or a custom weapon should take mods or reload from carried ammunition (LQ14).
    - **Built:** app 0.55.0, game data 0.49, character schema N, PR #…, log entry.
@@ -108,18 +123,19 @@ LQ8 and LQ9 are answered (above) and aren't asked again.
 
 | Id | Question | Default |
 |---|---|---|
-| LQ14 | Once a custom weapon has a type, should Reload take matching ammunition from what's carried, the way a catalog weapon of that type does (Decision 145)? Today a custom weapon reloads for free. | **Not in L2.** It reloads as it does now. Ammunition fitting a written-in gun is W109's question (a custom row opting into what a book row does). |
-| LQ15 | Which damage types a custom weapon can pick | **The six non-magical ones:** Blade, Blunt, Ballistic, Electric, Energy, Burning. Elemental, Spirit and Aether are magic's, and Warding answers them. "Normal" isn't offered: it's the book's word for melee, and a written-in melee weapon picks Blade or Blunt instead. |
-| LQ16 | A custom weapon's Range. The catalog's words are Low, Medium, Long and Extreme, but 0530's range bands are Close, Short, Medium, Long and Extreme, so "Low" isn't a band | **The catalog's words,** as data (`weaponRules.ranges`), so a custom weapon reads like the catalog's. The mismatch goes on the CRB catch-up list for Ken's book. |
-| LQ17 | Reach and Parry for a written-in melee weapon | **Not in L2.** W137 asks for the type, damage type, range and ACC. A melee weapon's Reach and Parry stay in its Notes. |
-| LQ18 | Picking a type: should it fill in that type's usual damage type (Handguns → Ballistic)? | **No.** Nothing is guessed. The damage type is its own pick, and starts empty. |
+| LQ14 | Once a custom weapon has a type, should Reload take matching ammunition from what's carried, the way a catalog weapon of that type does (Decision 145)? Today a custom weapon reloads for free. | **Not in L2.** It reloads as it does now. Ammunition fitting a written-in gun is W109's question (a custom row opting into what a book row does). **Ken, 2026-10-24: Default** |
+| LQ15 | Which damage types a custom weapon can pick | **The six non-magical ones:** Blade, Blunt, Ballistic, Electric, Energy, Burning. Elemental, Spirit and Aether are magic's, and Warding answers them. "Normal" isn't offered: it's the book's word for melee, and a written-in melee weapon picks Blade or Blunt instead. "Regular" isn't offered either: it isn't a damage type but a damage category (Regular, Withering, Massive: how a hit resolves), which the hit modal asks for on each hit and no weapon stores. **Ken, 2026-10-24: Default** |
+| LQ16 | A custom weapon's Range. The catalog's words are Low, Medium, Long and Extreme, but 0530's range bands are Close, Short, Medium, Long and Extreme, so "Low" isn't a band | The catalog's words, as data, so a custom weapon reads like the catalog's. **Ken, 2026-10-24: the book's bands.** A custom weapon picks from 0530's five bands, kept as data (`weaponRules.rangeBands`). The catalog's own ranges don't change (§7), so its "Low" stays a mismatch with the book, now on the catalog's side. It goes on the CRB catch-up list |
+| LQ17 | Reach and Parry for a written-in melee weapon | **Not in L2.** W137 asks for the type, damage type, range and ACC. A melee weapon's Reach and Parry stay in its Notes. **Ken, 2026-10-24: Default** |
+| LQ18 | Picking a type: should it fill in that type's usual damage type (Handguns → Ballistic)? | **No.** Nothing is guessed. The damage type is its own pick, and starts empty. **Ken, 2026-10-24: Default** |
 
 ## 5. The assumption sweep
 
 | What | Today | Where | After |
 |---|---|---|---|
 | `weaponCategories` rows | `id`, `name` (grenades: `note`) | data ~4153 | + `skill` on all 14, from the catalog's own (pre-flight) |
-| `weaponRules.ranges` | absent | data ~4138 | `["Low", "Medium", "Long", "Extreme"]` (LQ16) |
+| `weaponRules.rangeBands` | absent; the bands exist only as the quick reference's display columns | data ~4138; the reference ~4830 | `["Close", "Short", "Medium", "Long", "Extreme"]` (LQ16). The reference table is unchanged, and L2 3 ties the two |
+| A catalog weapon's `range` | Low, Medium, Long, Extreme | data, weapons | unchanged (§7); its "Low" now sits beside a custom weapon's band in one column |
 | A custom row's stored fields | 8 typed fields + `roundsSpent` | engine `addCustomLoadout` ~2233 | + `category`, `damageType`, `range`, `acc` when picked; a new row has no `type` |
 | `weaponLine` on a custom row | name, notes, rounds, fireModes | engine ~1789 | the full line (§8): skill, attack, acc, damage, damageFormula, damageType (the name), range, rof, capacity, typeText, tags [], features [], rounds, fireModes |
 | `weaponDamage` on `"8"` | text, value null | engine ~1773 | 8. No catalog damage is a digits-only string (L2 7) |
@@ -127,7 +143,9 @@ LQ8 and LQ9 are answered (above) and aren't asked again.
 | `fireWeapon`, `reloadWeapon` | read `rounds` | engine ~1857, ~1917 | unchanged; a custom weapon still reloads from nothing (LQ14) |
 | `weaponModOptions` | null for custom | engine ~1998 | unchanged |
 | Main's Weapons, a custom row | the raw row; Attack "—" | sheet.js ~464 | the line, as a catalog row: Attack, ACC on Single, Dmg, RoF, Cap |
-| Loadout, a folded custom row | the raw row, type and features as sub lines | sheet.js ~2100 | the line, as a catalog row: sub line "Skill · damage type" (or the old `type` text while there's no type), Attack, Damage, Range, RoF, Cap, Notes, Edit and ✕ |
+| Loadout, a folded custom row | the raw row, type and features as sub lines | sheet.js ~2100 | the line, as a catalog row: sub line "Skill · damage type" (or the old `type` text while there's no type), Attack, Damage, Range (a band), RoF, Cap, Notes, Edit and ✕ |
+| Loadout's Range column, catalog rows | the catalog's word | sheet.js ~2089 | unchanged, beside custom rows' bands |
+| The catalog picker's range | the catalog's word | sheet.js ~1794 | unchanged: it lists catalog weapons only |
 | Loadout, an open custom row | 8 text cells | sheet.js ~2109, `WEAPON_COLS` | 7 text cells (no `type`) and four controls: Type, Damage type, Range, ACC |
 | Loadout's step note | only with a catalog weapon carried | sheet.js ~2107 | also when a custom weapon has an attack |
 | Print sheet's weapons | name · type, damage, rof, capacity; no attack or range | sheet.js ~2720 | attack and range from the line; the name carries the old `type` only while there's no type |
@@ -156,7 +174,8 @@ LQ8 and LQ9 are answered (above) and aren't asked again.
 - **No mods on a custom weapon** (Decision 120), and **no reload from carried ammunition** (LQ14).
 - **No Reach or Parry** (LQ17), and **no style.** A written-in melee weapon picks Blade or Blunt as its damage type.
 - **No class field and no reader of class.** L3 decides how a damage type becomes kinetic or energy, for catalog and custom rows alike.
-- **No change to a catalog weapon's line,** its data or its display (L2 7).
+- **No change to a catalog weapon's line,** its data or its display (L2 7). That includes its `range`: the catalog keeps "Low" though a custom weapon picks 0530's bands (LQ16). Moving the catalog to the bands is a book change first (§14's catch-up note), and a question for Ken if a builder finds it must move.
+- **No change to the quick reference's "Range bands" table.** L2 3 checks it agrees with `rangeBands`; it isn't rebuilt from it.
 - **No matching of an old `type` to a weapon type** (LQ9), and no prefilled damage type (LQ18).
 - **Features stay text.** A custom weapon's `features` isn't read as tags.
 - **Not custom armor or custom gear.** LQ6 already keeps their modifiers out of L3.
@@ -177,10 +196,10 @@ LQ8 and LQ9 are answered (above) and aren't asked again.
   { "id": "beamSidearms", "skill": "beam-weapons", … }, … (all four beam rows),
   { "id": "archery", "skill": "archery", "name": "Archery" }
 ],
-"weaponRules": { …, "ranges": ["Low", "Medium", "Long", "Extreme"], … }
+"weaponRules": { …, "rangeBands": ["Close", "Short", "Medium", "Long", "Extreme"], … }
 ```
 
-Each category's `skill` is the one every catalog weapon in it already names. L2 4 checks that by script, never from this list. The comment above `weaponCategories` gains a line saying `skill` is what a custom weapon of that type attacks with. Grenades' Skill is Melee because the book's grenade table says so (thrown).
+Each category's `skill` is the one every catalog weapon in it already names. L2 4 checks that by script, never from this list. The comment above `weaponCategories` gains a line saying `skill` is what a custom weapon of that type attacks with. Grenades' Skill is Melee because the book's grenade table says so (thrown). `rangeBands` are 0530's *Range bands*, in their order; the comment above `weaponRules` says they're what a custom weapon's Range picks from, and that a catalog weapon keeps the catalog's own word. The quick reference's "Range bands" part (~4830) stays as it is: L2 3 checks the two agree.
 
 **The saved row** (character schema N):
 
@@ -188,7 +207,7 @@ Each category's `skill` is the one every catalog weapon in it already names. L2 
 { custom: true, name, damage, rof, capacity, ammo, features, notes, roundsSpent: 0,
   category: "handguns",       // a weaponCategories id; absent until picked
   damageType: "ballistic",    // a damageTypes id with no `magical: true`; absent until picked
-  range: "Low",               // one of weaponRules.ranges; absent until picked
+  range: "Short",             // one of weaponRules.rangeBands; absent until picked
   acc: 1,                     // a whole number >= 0; absent until typed
   type: "pistol" }            // only on a row saved before N (LQ9); never written again
 ```
@@ -206,7 +225,7 @@ Each category's `skill` is the one every catalog weapon in it already names. L2 
     attack: <that skill's checkBonus> | null,
     acc: 1 | null, damage: 8 | null, damageFormula: "BOD+3" | "2d6" | null,
     damageType: "Ballistic" | null,           // the damageTypes entry's NAME, as a catalog line shows it
-    range: "Low" | null, rof: "S" | null, capacity: "4" | null,
+    range: "Short" | null, rof: "S" | null, capacity: "4" | null,
     typeText: "pistol" | null,                // the old type, only while category is null
     tags: [], features: [], rounds, fireModes }
   ```
@@ -226,7 +245,7 @@ Each category's `skill` is the one every catalog weapon in it already names. L2 
 - **Four controls**, each committing one audited action on change, through `setCustomWeapon`, like the custom armor form's picks:
   - **Type:** "—" then every `weaponCategories` name, in the data's order.
   - **Damage type:** "—" then the six non-magical names.
-  - **Range:** "—" then `weaponRules.ranges`.
+  - **Range:** "—" then `weaponRules.rangeBands` (Close, Short, Medium, Long, Extreme).
   - **ACC:** a number field, min 0. Blank clears it.
 - While there's no type and the row has an old `type`, a hint beside Type shows it (drafted: *You wrote "pistol". Pick its type.*, for the voice pass).
 
@@ -236,7 +255,7 @@ Each category's `skill` is the one every catalog weapon in it already names. L2 
 |---|---|---|---|
 | Type picked | `category` | `<name>: type → Handguns` | stays on the Type control; the row stays open |
 | Type set back to "—" | `category` deleted | `<name>: type → —` | the same |
-| Damage type or Range picked | `damageType` / `range` | `<name>: damage type → Ballistic` / `<name>: range → Low` | stays on that control |
+| Damage type or Range picked | `damageType` / `range` | `<name>: damage type → Ballistic` / `<name>: range → Short` | stays on that control |
 | ACC typed, field left | `acc` | `<name>: ACC → 2` | stays on the field |
 | ACC refused (−1, 1.5) | nothing | — | a notice with the `why`; the field shows the stored value once it loses focus |
 | Done | nothing (view state) | — | Edit, as W70 has it |
@@ -255,13 +274,13 @@ The character for L2 1–3 and L2 8: `subject()`-like, BOD 5, Handguns rank 3, a
 |---|---|
 | `L2 1 (engine): a custom weapon typed Handguns attacks with Handguns, the same number a catalog handgun shows` (`engine.test.mjs`) | With `category: "handguns"`: `line.skill.id === "handguns"`, and `line.attack` equals `weaponLine` of a carried Cheapshot's `attack` (8 for this character). With no category: `skill` and `attack` null. On `main`, a custom line has no `attack` at all |
 | `L2 2 (engine): a custom weapon's damage reads as the book's: BOD+3 is BOD + 3, a number is fixed, anything else is text` (`engine.test.mjs`) | `BOD+3` → damage 8, formula "BOD+3"; `"8"` → 8, formula null; `"2d6"` → null, "2d6"; `""` → null, null. And `weaponDamage(ch, "8")` → 8 on its own |
-| `L2 3 (engine): a custom weapon's damage type, range and ACC are its picks, and its damage type reads by name` (`engine.test.mjs`) | `damageType: "ballistic"` → line `"Ballistic"`; `range: "Long"` → `"Long"`; `acc: 2` → 2. `damageType: "elemental"` (magical) → null. Every offered range is in `weaponRules.ranges`, read from the data, not this order |
+| `L2 3 (engine): a custom weapon's damage type, range and ACC are its picks, and its damage type reads by name` (`engine.test.mjs`) | `damageType: "ballistic"` → line `"Ballistic"`; `range: "Short"` → `"Short"`; `acc: 2` → 2. `damageType: "elemental"` (magical) → null; `range: "Low"` (the catalog's word, not a band) → null. `weaponRules.rangeBands` equals the columns of 0530's *Range bands* table, parsed from the CRB, and the quick reference's "Range bands" part's columns. The rules half goes in `rules.test.mjs` as `L2 3b (rules): CRB 0530: a custom weapon's range bands are the book's` |
 | `L2 4 (engine): every weapon type names a Skill, and every catalog weapon's Skill is its type's` (`engine.test.mjs`) | For each `weaponCategories` row, `skill` is a real Skill. For each catalog weapon, `w.skill === category.skill`. Computed over the data, never from §8's list |
-| `L2 5 (engine): junk in a custom weapon's picks reads as empty, from a file and from a call` (`engine.test.mjs`) | `migrate()` on a row with `category: "__proto__"`, `damageType: "x"`, `range: "Close"`, `acc: -1` (and in turn `"2"`, `1.5`, `NaN`, `{}`): each key is gone, and a second migrate changes nothing. `setCustomWeapon` refuses each with `ok:false`, writes nothing, and refuses on a catalog row and on a field outside the four. `weaponLine` never throws on any of them |
+| `L2 5 (engine): junk in a custom weapon's picks reads as empty, from a file and from a call` (`engine.test.mjs`) | `migrate()` on a row with `category: "__proto__"`, `damageType: "x"`, `range: "Low"` (the catalog's word, not a band), `acc: -1` (and in turn `"2"`, `1.5`, `NaN`, `{}`): each key is gone, and a second migrate changes nothing. `setCustomWeapon` refuses each with `ok:false`, writes nothing, and refuses on a catalog row and on a field outside the four. `weaponLine` never throws on any of them |
 | `L2 6 (engine): migrate to N keeps a saved type as text, shows it until a type is picked, and adds nothing` (`engine.test.mjs`) | A 0.28 file with `{ custom:true, name:"Old iron", type:"pistol", … }`: after `migrate()` the schema is N, `type` is still "pistol", and no pick was added. `line.typeText === "pistol"` until `category` is set, then null, and `type` stays in the row. A new row from `addCustomLoadout` has no `type` key |
 | `L2 7 (engine): no catalog weapon's line moves` (`engine.test.mjs`) | A fixture captured on `main` **before** the engine changes (`tests/l2-weapon-lines.json`): `catalogLine` and a carried `weaponLine` for every catalog weapon, for BOD 3, 5 and 8 (so every `BOD+N` resolves three ways). The branch's lines match it exactly. Deleted with its fixture at close-out (§12, step 8), once the PR shows it passing |
-| `L2 8 (sheet): a typed custom weapon's folded row on Loadout reads like a catalog row` (`smoke-sheet-play.test.mjs`) | The Zip gun with `category: "handguns"`, `damageType: "ballistic"`, `range: "Low"`, `acc: 1`, folded. **Its own row** (found by its name, as L1 5's `card()` does): sub line exactly "Handguns · Ballistic", the Attack cell `1d10 + 8`, "+1 ACC on Single", Damage 8, Range "Low". The Cheapshot's row beside it reads the same Attack. On `main`, the row has none of these |
-| `L2 9 (sheet): Main and the print sheet show a typed custom weapon's attack and range` (`smoke-sheet-play.test.mjs`) | Main's Weapons row for the Zip gun has Attack `1d10 + 8`. `pWeaponRows` (or the printed sheet's row) has attack `1d10+8 (+1 ACC)` and range "Low" |
+| `L2 8 (sheet): a typed custom weapon's folded row on Loadout reads like a catalog row` (`smoke-sheet-play.test.mjs`) | The Zip gun with `category: "handguns"`, `damageType: "ballistic"`, `range: "Short"`, `acc: 1`, folded. **Its own row** (found by its name, as L1 5's `card()` does): sub line exactly "Handguns · Ballistic", the Attack cell `1d10 + 8`, "+1 ACC on Single", Damage 8, Range "Short". The Cheapshot's row beside it reads the same Attack, and its Range is still "Low" (LQ16 leaves the catalog's word). On `main`, the Zip gun's row has none of these |
+| `L2 9 (sheet): Main and the print sheet show a typed custom weapon's attack and range` (`smoke-sheet-play.test.mjs`) | Main's Weapons row for the Zip gun has Attack `1d10 + 8`. `pWeaponRows` (or the printed sheet's row) has attack `1d10+8 (+1 ACC)` and range "Short" |
 | `L2 10 (sheet): each pick on an open custom weapon is one undoable action, and a saved type shows until a type is picked` (`smoke-sheet-play.test.mjs`) | On an open row with `type: "pistol"`: the hint is in **that row** and contains "pistol". Picking Handguns stores `category`, adds one audit entry naming the weapon and "Handguns", keeps the row open, keeps focus on the Type control, and removes the hint. Undo restores no `category` and the hint. Typing in the name cell adds no audit entry. An ACC of −1 is refused with a notice and stores nothing |
 
 ## 11. Tests beyond the examples
@@ -270,6 +289,7 @@ The character for L2 1–3 and L2 8: `subject()`-like, BOD 5, Handguns rank 3, a
   - L2 4: change grenades' `skill` to `"archery"`; separately, give a catalog handgun `skill: "smgs"`.
   - L2 5: let `customWeaponFields` (or its equivalent) accept any string id. Also check whether a second path, the number gate (~4580), already covers `acc`. If it does, say so; the mutant has to beat both.
   - L2 1: read the attack from the custom row's `type` text instead of `category`.
+  - L2 3 and 3b: drop "Close" from `rangeBands`; separately, put the catalog's "Low" in it. Each must fail.
   - L2 8: draw the sub line on the next row instead of this one (the off-row mutant L1 missed). L2 8 must fail.
   - L2 10: commit the pick without `setCustomWeapon`'s refusal check, so −1 is stored.
 - **Hostile:** `hostile.test.mjs`'s custom weapon gains a payload in `category`, `damageType`, `range` and `acc`. Its existing `type` payload must still render escaped, now as the hint and the sub line.
@@ -281,8 +301,8 @@ The character for L2 1–3 and L2 8: `subject()`-like, BOD 5, Handguns rank 3, a
 
 1. `git submodule update --init private`, `npm ci`, `npm run test:fast` (a fresh branch from `main`).
 2. **Capture L2 7's fixture on unchanged code,** and commit it alone. Then write L2 1–10 and show them failing on `main` (L2 7 passes there by design, since nothing has moved yet: say so).
-3. **The data:** the 14 `skill`s, `weaponRules.ranges`, `gamedataVersion` 0.49, the comment. Then the R6 sweep's new reference. `npm run verify`.
-4. **The engine:** `weaponDamage`, the custom line, `setCustomWeapon`, `addCustomLoadout`, `migrate()`'s step, `SCHEMA_VERSION` N and the 23 test literals. `npm run verify`.
+3. **The data:** the 14 `skill`s, `gamedataVersion` 0.49, the comment. Then the R6 sweep's new reference. `npm run verify`.
+4. **The engine:** `weaponRules.rangeBands` and its comment (here, not in step 3: the key guard fails on it until the custom line reads it), `weaponDamage`, the custom line, `setCustomWeapon`, `addCustomLoadout`, `migrate()`'s step, `SCHEMA_VERSION` N and the 23 test literals. `npm run verify`.
 5. **The UI:** the folded row, the open row's four controls and hint, Main, print and the step note. `npm run verify`.
 6. **The dev preview** (`shadows-dev-preview`; seed `shadows.active.v1` with a locked character holding the Zip gun, typed and untyped, a saved `type`, and a Cheapshot; then Open sheet). Check the folded row, the open row, every pick, an undo, Main and Print, and the open row at 375 px. Screenshots if the tool draws. If it times out, paste the DOM read of both rows and the phone-width metrics (`scrollWidth` against `clientWidth`, no element in `main` past the right edge) into the PR.
 7. **Mutation tests** (§11), each recorded in the PR with its output.
@@ -294,7 +314,8 @@ The character for L2 1–3 and L2 8: `subject()`-like, BOD 5, Handguns rank 3, a
 - Any catalog weapon in a category names a different Skill from the rest of that category (L2 4). The data has moved since this pre-flight, and §4's LQ8 note no longer holds.
 - Any catalog weapon's line moves in L2 7.
 - A reader of a custom weapon row turns up that §5 doesn't list, in `src/` or in GM mode.
-- `weaponRules` already has a `ranges` key, or `weaponCategories` a `skill`, when you start.
+- `weaponRules` already has a `rangeBands` key, or `weaponCategories` a `skill`, when you start.
+- 0530's *Range bands* table doesn't read Close, Short, Medium, Long, Extreme (L2 3b). The book has moved: don't edit the data to fit.
 - A W70 test fails for a reason other than the schema literal.
 
 **Not a stop** (expected):
@@ -302,7 +323,8 @@ The character for L2 1–3 and L2 8: `subject()`-like, BOD 5, Handguns rank 3, a
 - The version literals the bumps move (`APP_VERSION`, `package.json`, `package-lock.json`, `README.md`, `STATE.md`, `meta.gamedataVersion`).
 - `npm run changelog` regenerating `src/data/shadows-changelog.js`.
 - L2 7 passing on `main`.
-- The key guard passing for `skill` and `ranges` before any reader exists (their names are read elsewhere). L2 3 and L2 4 prove they're read.
+- The key guard passing for `skill` before any reader exists (a weapon's own `skill` is read under that name). L2 4 proves it's read.
+- The key guard failing on `rangeBands` if it's added before the custom line reads it. Step 4 adds both together.
 
 ## 14. Close-out
 
@@ -316,7 +338,7 @@ The character for L2 1–3 and L2 8: `subject()`-like, BOD 5, Handguns rank 3, a
   - SCHEMA §2's weapons comment.
   - The plan's L2 row status (Merged, with the PR and versions). W137's Plan line.
   - A `docs/log/2026.md` entry, a `docs/log/shipped.md` row, and STATE rewritten (versions; L2 done, L3 next).
-  - LQ16's book mismatch ("Low" isn't a 0530 band) on `plans/crb-catch-up.md`.
+  - LQ16's mismatch on `plans/crb-catch-up.md`, now on the catalog's side: Gear's weapon tables use "Low" for a Range, which isn't one of 0530's bands, while a written-in weapon picks a band. Ken's call whether the tables move to the bands. The data doesn't until the book does.
 - **PR title:** `L2: custom weapons read like the catalog's: type, damage type, range, ACC (W137; Decision N)`.
 - **PR body:** the template's sections, including **Where the order didn't fit**. Paste every new string as it renders: the four labels, the hint, the audit lines, the refusals and the changelog line.
 
@@ -336,7 +358,8 @@ The character for L2 1–3 and L2 8: `subject()`-like, BOD 5, Handguns rank 3, a
 The two prompts in `WORK-ORDERS.md` (*The prompts*), with `<plan>/<order>` = `loadout-and-gear/L2-custom-weapons.md` and `<id>` = **L2**, plus these traps:
 
 - **Stored and shown damage types differ.** A custom row stores the id (`"ballistic"`); its line shows the name (`"Ballistic"`), as a catalog line shows the book's word. Don't compare a catalog weapon's `damageType` with a custom row's stored one.
-- **The key guard can't see these keys.** `skill` and `ranges` are already read under those names elsewhere, so the guard passes before any reader exists. L2 3 and L2 4 are the proof.
+- **The key guard sees one of the two keys.** `skill` is already read under that name (a weapon's own), so the guard passes it before any reader exists, and L2 4 is the proof. `rangeBands` is a new name: add it in step 4 with its reader, or the guard fails.
+- **Two range vocabularies share one column, on purpose** (LQ16). A custom weapon's range is one of 0530's bands; a catalog weapon keeps the catalog's word ("Low"). Don't map one to the other, and don't touch a catalog weapon's `range`.
 - **A digits-only damage string is new.** `weaponDamage` now reads `"8"` as 8. No catalog damage is a string of digits, and L2 7 proves no catalog line moved. Don't widen it to `"8 "` plus text.
 - **Keep the `data-cell` hooks.** W70's tests find the open row by `[data-cell="weapons|i|name"]`. The new controls are extra, not a replacement.
 - **A pick must not fold the row.** It mutates the row in place, so `S.loOpen` keeps it open. Check this in the browser, not only in jsdom.
