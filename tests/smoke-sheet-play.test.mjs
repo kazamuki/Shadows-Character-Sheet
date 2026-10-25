@@ -1445,6 +1445,14 @@ test("L2 10 (sheet): each pick on an open custom weapon is one undoable action, 
   assert.equal(activeChar(app).weapons[1].type, "pistol", "a pick cleared the saved type");
   assert.ok(open().querySelector('[data-cell="weapons|1|name"]'), "the pick folded the row");
   assert.equal(open().querySelector("[data-weapontypehint]"), null, "the hint stayed after a type was picked");
+  // Undo takes the type back (the row folds, as W70 recorded) and the saved type shows again.
+  app.click("#undotoast [data-toastundo]");
+  assert.equal(audit().length, before, "undo left the audit entry");
+  assert.ok(!Object.hasOwn(activeChar(app).weapons[1], "category"), "undo left the type");
+  assert.equal(activeChar(app).weapons[1].type, "pistol");
+  app.click('[data-loedit="weapons|1"]');
+  assert.match(open().querySelector("[data-weapontypehint]").textContent, /pistol/);
+  pick("category", "handguns");
   // Damage type, range, ACC.
   pick("damageType", "blade");
   pick("range", "Long");
@@ -1462,12 +1470,5 @@ test("L2 10 (sheet): each pick on an open custom weapon is one undoable action, 
   assert.equal(activeChar(app).weapons[1].acc, 2, "a refused ACC was stored");
   assert.equal(audit().length, n);
   assert.match(app.$("#main").textContent + (app.$("#notice") ? app.$("#notice").textContent : "") + app.window.document.body.textContent, /ACC is a whole number, 0 or more/);
-  // Undo takes the ACC back (the row folds, as W70 recorded); undoing the type brings the hint back.
-  while (audit().length > before) app.click("#undotoast [data-toastundo]");
-  const back = activeChar(app).weapons[1];
-  assert.ok(!Object.hasOwn(back, "category"), "undo left the type");
-  assert.equal(back.type, "pistol");
-  app.click('[data-loedit="weapons|1"]');
-  assert.match(open().querySelector("[data-weapontypehint]").textContent, /pistol/);
   assert.deepEqual(app.errors, []);
 });

@@ -78,7 +78,8 @@ function hostileCharacter({ locked = true, archetype = "arcanist" } = {}) {
   });
   ch.weapons = [
     { custom: true, name: P("w.name"), type: P("w.type"), damage: P("w.dmg"), rof: P("w.rof"), capacity: P("w.cap"),
-      ammo: P("w.ammo"), features: P("w.feat"), notes: P("w.notes"), roundsSpent: P("w.rounds") },
+      ammo: P("w.ammo"), features: P("w.feat"), notes: P("w.notes"), roundsSpent: P("w.rounds"),
+      category: P("w.cat"), damageType: P("w.dtype"), range: P("w.range"), acc: P("w.acc") },
     { id: P("w.id"), notes: P("w.notes2") },
     { id: handgun, notes: P("w.notes3"), mods: [P("w.mod")], roundsSpent: P("w.rounds2") }];
   ch.armor = [
@@ -1284,4 +1285,17 @@ test("a faction and a clock of markup, a hostile id, type, link and owner render
   assert.equal(app.window.eval("S.table.clocks.map(c => c.filled).join()"), "6,0,12,0");
   assert.equal(app.window.eval("S.table.clocks[2].on"), null, "an array owner is no owner");
   assert.deepEqual(app.errors, [], "the hostile factions threw while rendering");
+});
+
+test("L2: an open written-in weapon with a payload in its type and its four picks renders as text, hint and controls included", () => {
+  const ch = hostileCharacter();
+  ch.weapons = [{ custom: true, name: "", type: P("w.type"), damage: P("w.dmg"), rof: "", capacity: "", ammo: "", features: "", notes: "",
+    roundsSpent: 0, category: P("w.cat"), damageType: P("w.dtype"), range: P("w.range"), acc: P("w.acc") }];
+  const app = boot({ storage: { "shadows.active.v1": { ch, section: "loadout" } } });
+  app.$$("#main button").find(b => /Open sheet/.test(b.textContent)).dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  app.click('[data-sec="loadout"]');
+  assert.ok(app.$('[data-weaponrow="0"] [data-weapontypehint]'), "the nameless row's hint isn't drawn");
+  assert.deepEqual(injected(app, "loadout"), []);
+  assert.equal(app.$('[data-weaponpick="0|category"]').value, "", "a junk type was selected");
+  assert.deepEqual(app.errors, []);
 });
