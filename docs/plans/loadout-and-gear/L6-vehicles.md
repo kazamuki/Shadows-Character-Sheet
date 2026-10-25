@@ -1,6 +1,13 @@
-# Work order P14: Loadout rows (vehicles, and a custom row that folds)
+# Work order L6: Vehicles (was P14, Loadout rows)
 
-**Plan:** [`../sheet-wishlist.md`](../sheet-wishlist.md) §3, row P14. **Wishes:** [W91](../../WISHLIST.md) (vehicles you can buy and own, Powered Armor among them; first cut) and [W70](../../WISHLIST.md) (a custom item the player is done writing reads like the catalog's). **The book:** `0460` Gear, *Vehicles, Powered Armor & Mech Suits*. **Deighton's rulings** of 2026-10-10 (`reference/rulings-2026-10-10.md`), Q6 and Q16. Decisions 68, 96, 100, 118, 120, 121, 124, 134, 135.
+**Moved 2026-10-24.** This was P14 in the player sheet's plan, now closed
+([`../archive/sheet-wishlist.md`](../archive/sheet-wishlist.md)). It is L6 in
+[`../loadout-and-gear.md`](../loadout-and-gear.md) §3. The text below still
+calls itself P14, its tests `P14 1`…, and its questions PQ1–PQ10. They are
+renamed in the revision the Status asks for (tests `L6 1`…), not before, so
+Deighton's answers keep the ids he answered.
+
+**Plan:** [`../loadout-and-gear.md`](../loadout-and-gear.md) §3, row L6 (was the sheet-wishlist plan's row P14). **Wishes:** [W91](../../WISHLIST.md) (vehicles you can buy and own, Powered Armor among them; first cut) and [W70](../../WISHLIST.md) (a custom item the player is done writing reads like the catalog's). **The book:** `0460` Gear, *Vehicles, Powered Armor & Mech Suits*. **Deighton's rulings** of 2026-10-10 (`reference/rulings-2026-10-10.md`), Q6 and Q16. Decisions 68, 96, 100, 118, 120, 121, 124, 134, 135.
 
 **Scope.**
 - **W91, first cut:** a vehicle catalog in Loadout's picker, and an owned vehicle on Loadout that reads like a catalog line. It covers the Grounders, the Jumpers and Powered Armor, all from `0460`'s tables. Nothing computes a vehicle's damage yet.
@@ -415,7 +422,7 @@ Suggested CHANGELOG lines, in player voice and marked for the voice pass:
 
 ## 15. Handing it over
 
-The README's two prompts (`gm-mode/README.md`, *How exact to be*), with `<order>` = `sheet-wishlist/P14-loadout-rows.md` and `<id>` = **P14**, and these traps under the builder's:
+The README's two prompts (`gm-mode/README.md`, *How exact to be*), with `<order>` = `loadout-and-gear/L6-vehicles.md` and `<id>` = **P14**, and these traps under the builder's:
 
 > 1. **Every kind switch has a default, and the default is armor or weapons.** `addLoadout` saves an unknown kind as a weapon row; `catalogGroups`, `catalogCellsHtml`, `catalogResultsHtml` and `loName` read it as armor. Give vehicles their own branch in each (§5), and grep for any switch §5 missed.
 > 2. **The book is the source of every number and every line.** P14 1 parses `0460` and compares. Don't type a number from §8.

@@ -10,7 +10,7 @@
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
-**Cadence:** the two-session loop in [`../gm-mode/README.md`](../gm-mode/README.md) (*The cadence*). Ken starts **P12b build** (Sonnet), then a fresh reviewer (Opus) once the PR is open.
+**Cadence:** the two-session loop in [`../gm-mode/README.md`](../../gm-mode/README.md) (*The cadence*). Ken starts **P12b build** (Sonnet), then a fresh reviewer (Opus) once the PR is open.
 
 **Carried over from P12a's review:**
 - **The order's miss:** §5 said a SAN restore "never reads the max, only the loss", and never asked what bounds the loss's *writers* put on it. The SAN stepper floors it at 0 but never caps it, so a character at 0 SAN could carry 60 loss against a max of 50, and the first fix-round must-fix was IP that bought nothing.

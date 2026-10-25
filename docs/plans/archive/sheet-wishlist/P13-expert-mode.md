@@ -14,7 +14,7 @@
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
-**Cadence:** the two-session loop in [`../gm-mode/README.md`](../gm-mode/README.md) (*The cadence*). Ken starts **P13 build** (Sonnet), then a fresh reviewer (Opus) once the PR is open. A *Fix* order gets a page (*How exact to be*): this is one.
+**Cadence:** the two-session loop in [`../gm-mode/README.md`](../../gm-mode/README.md) (*The cadence*). Ken starts **P13 build** (Sonnet), then a fresh reviewer (Opus) once the PR is open. A *Fix* order gets a page (*How exact to be*): this is one.
 
 **Carried over from P12b's review:**
 - **The order's miss:** §8.6 said to drop a training "whose skill is unknown, or whose rank would pass `maxRank`", and didn't ask what else ends the precondition (Admin removing the skill). The training brought the skill back at rank 1.
