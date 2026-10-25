@@ -2,7 +2,7 @@
 
 **Plan:** [`../loadout-and-gear.md`](../loadout-and-gear.md) §3, row L2, and its *What each order settles* bullet. **Wish:** [W137](../../WISHLIST.md). **Ken's answers that stand:** LQ8 (a custom weapon's Skill comes from its weapon type, as data on each `weaponCategories` row) and LQ9 (a saved free-text `type` is kept as text, shown until the player picks a type), both "Default", 2026-10-24. **The book:** `0460` *Reading the Tables* (Skill, DMG, Dam Type, ACC, Range) and its weapon tables; `0530` *Range bands*. Decisions 100, 120, 135, 145.
 
-**Status: drafted 2026-10-24 by Claude (Opus), L1's reviewer, as the plan's orchestrator.** Not yet approved. Ken answered LQ14–LQ18 on 2026-10-24 (§4): LQ16 is the book's range bands, not the default, and the order is revised to it (re-pre-flighted, below). The rest are Default.
+**Status: drafted 2026-10-24 by Claude (Opus), L1's reviewer, as the plan's orchestrator. Approved by Ken 2026-10-24 ("approved"), as revised at `2649ca2`.** Ready for **L2 build**. Ken answered LQ14–LQ18 on 2026-10-24 (§4): LQ16 is the book's range bands, not the default, and the order is revised to it (re-pre-flighted, below). The rest are Default.
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
