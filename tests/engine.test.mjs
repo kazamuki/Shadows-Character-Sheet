@@ -10229,3 +10229,19 @@ test("245: the activity log names a clock and a faction, and a crafted op on the
   const m = Engine.migrateTable({ ...plain(t), audit: [mk(1, "factions"), mk(2, "clocks"), mk(3, "factionz"), mk(4, "clockz")] });
   eq(m.audit.map(e => e.seq), [1, 2]);
 });
+
+// ── Weapon damage types (loadout-and-gear L1, W69) ─────────────────────
+
+test("L1 3 (engine): every weapon's damage type is the book's word, and an untyped weapon is flagged or does no damage", () => {
+  // A weapon's damageType is the book's display word: "Normal" (melee and Martial Arts) is the book's
+  // own and isn't a damageTypes name; every other value is one, by name.
+  const names = D.damageTypes.map(t => t.name);
+  assert.ok(D.weapons.length > 0);
+  for (const w of D.weapons) {
+    if (w.damageType === undefined) {
+      assert.ok(!w.damage || (w.flagged && /\bF\d+\b/.test(w.flagNote || "")), `${w.name} deals damage, has no damage type, and isn't flagged under an F-number`);
+    } else {
+      assert.ok(w.damageType === "Normal" || names.includes(w.damageType), `${w.name}'s damage type "${w.damageType}" isn't a damage type's name or the book's Normal`);
+    }
+  }
+});

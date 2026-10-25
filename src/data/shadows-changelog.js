@@ -2,6 +2,15 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.54.3",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**Handguns and SMGs say their damage type, Ballistic,** on Loadout and in the catalog.",
+      "**Bows, the Strix crossbow, most grenades, the Thunderhead and the Absolute say on Loadout that your GM calls their damage type.**"
+    ]
+  },
+  {
     "version": "0.54.2",
     "date": "2026-10-24",
     "intro": [],

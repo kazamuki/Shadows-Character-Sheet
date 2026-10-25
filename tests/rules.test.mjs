@@ -3335,3 +3335,44 @@ test("P21 10b: Field Medic is still sold for IP (F46 sits on a Major, not on it)
   assert.equal(c.ok, true, JSON.stringify(c));
   assert.equal(c.cost, 50);
 });
+
+// ── 0460's weapon damage types (loadout-and-gear L1, W69) ───────────────
+
+test("L1 1 (rules): CRB 0460: every handgun and SMG is Ballistic, firearms of all categories", () => {
+  const md = crb("0460_Gear.md");
+  const dt = md.slice(md.indexOf("Damage Types"));
+  assert.match(dt.replace(/\s+/g, " "), /Ballistic[^|]{0,12}High-velocity projectiles: firearms of all categories/, "0460's Damage Types callout no longer types firearms of all categories");
+  const norm = s => s.replace(/[“”"]/g, "").toLowerCase();
+  for (const [heading, category] of [["### Handguns", "handguns"], ["### Submachine Guns", "smgs"]]) {
+    const at = md.indexOf(heading);
+    assert.ok(at >= 0, `0460 has no ${heading} section`);
+    const rows = md.slice(at, md.indexOf("###", at + 4)).split("\n")
+      .filter(l => /^\|/.test(l) && !/\*\*Weapon\*\*/.test(l) && !/^\|[-|]+$/.test(l) && l.split("|")[1].trim())
+      .map(l => l.split("|")[1].trim());
+    const data = D.weapons.filter(w => w.category === category);
+    assert.equal(rows.length, data.length, `the book and the data list a different number of ${category}`);
+    assert.ok(rows.length > 0);
+    for (const name of rows) {
+      const w = data.find(g => norm(g.name) === norm(name));
+      assert.ok(w, `no ${category} weapon in the data for the book's ${name}`);
+      assert.equal(w.damageType, "Ballistic", `${name} isn't Ballistic`);
+    }
+  }
+});
+
+test("L1 2 (rules): CRB 0460: a grenade the book gives no damage has no damage type, and isn't flagged", () => {
+  const md = crb("0460_Gear.md");
+  const at = md.indexOf("### Grenades");
+  const rows = md.slice(at, md.indexOf("###", at + 4)).split("\n")
+    .filter(l => /^\|/.test(l) && /\| Melee \|/.test(l))
+    .map(l => l.split("|").slice(1, -1).map(c => c.trim()));
+  const norm = s => s.replace(/[“”"]/g, "").toLowerCase();
+  const none = rows.filter(r => r[2] === "—").map(r => r[0]);
+  assert.equal(none.length, 3, "the book's no-damage grenades are no longer three");
+  for (const name of none) {
+    const w = D.weapons.find(g => g.category === "grenades" && norm(g.name) === norm(name));
+    assert.ok(w, `no grenade in the data for the book's ${name}`);
+    assert.equal(w.damageType, undefined, `${name} deals no damage but has a damage type`);
+    assert.ok(!w.flagged, `${name} deals no damage but is flagged`);
+  }
+});

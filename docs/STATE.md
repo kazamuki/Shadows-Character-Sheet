@@ -1,7 +1,7 @@
 # State of the build
 
 **Updated:** 2026-10-24
-**Versions:** app `0.54.2` · game data `0.47` · character schema `0.28` · table schema `0.15` · pack schema `0.2` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.54.3` · game data `0.48` · character schema `0.28` · table schema `0.15` · pack schema `0.2` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -155,7 +155,7 @@ GQ6 block session (TOL and WILL, 175 reopened) waits on Scott's answer for WILL.
 GM sessions merge switched off (173), and releases go on as usual.
 
 **Waiting on others:**
-- **Deighton** answered every open rules question on 2026-10-10 (`reference/rulings-2026-10-10.md`). Still his: what a rank of Educated bought in play gives (F44: the IP buy refuses it until then), the TN and TH of the WILL check that keeps a held spell (F43), and whether a Supernatural's Skills and Powers share its stats' headroom past 10 (Ken asked). **One ruling on kickers may clear F46 and F47 together:** do dice stack, and which one is "your Kicker Die"; F45 is Concierge's appraising Skill. **CRANK** is kept and back on for everyone (239, 2026-10-23); GQ7, F37 and GQ28 are still open.
+- **Deighton** answered every open rules question on 2026-10-10 (`reference/rulings-2026-10-10.md`). Still his: what a rank of Educated bought in play gives (F44: the IP buy refuses it until then), the TN and TH of the WILL check that keeps a held spell (F43), and whether a Supernatural's Skills and Powers share its stats' headroom past 10 (Ken asked). **One ruling on kickers may clear F46 and F47 together:** do dice stack, and which one is "your Kicker Die"; F45 is Concierge's appraising Skill. **F48** is which damage type the book's ten untyped weapons deal (bows, damaging grenades, the HRL-1 and HXC-1). **CRANK** is kept and back on for everyone (239, 2026-10-23); GQ7, F37 and GQ28 are still open.
 - **Deighton, on vehicles:** 17 of the 28 follow-up questions
   (`reference/rulings-2026-10-23.md`). L6 waits on SH3 (a typed vehicle),
   VK1b (the Mods number), and his in-person talk on vehicles without PROT and RES.
