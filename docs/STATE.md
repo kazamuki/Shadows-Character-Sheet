@@ -141,9 +141,11 @@ rev 9's `C1`–`C3` are still forward notes.
 
 **Next is Ken's pick**, each built through a work order (`WORK-ORDERS.md`):
 - **Another of `plans/gm-mode.md`'s *Still to build*** (S7, factions and clocks, is built).
-- **The vehicles-and-gear plan** (`plans/loadout-and-gear.md`) is approved (Ken, 2026-10-24, LQ1–LQ7 on their defaults); L1's order is next.
-  L1–L4 (weapon damage types, worn modifiers, an unarmed strike, a Major on one row)
-  are buildable now; L5 (vehicles, was P14) and L6 (Powered Armor) wait on Deighton.
+- **The vehicles-and-gear plan** (`plans/loadout-and-gear.md`) is approved (Ken, 2026-10-24, LQ1–LQ7 on their defaults; LQ8–LQ10 open); L1's order is next.
+  L1–L5 (weapon damage types, custom weapons, worn modifiers, natural attacks and the
+  unarmed strike, a Major on one row) are buildable now; L6 (vehicles, was P14) and L7
+  (Powered Armor) wait on Deighton. The 2026-10-23 meeting's natural attacks (two a
+  round) are in `reference/meeting-2026-10-23.md`, with five details for Deighton.
   The player sheet's plan (`plans/archive/sheet-wishlist.md`) closed 2026-10-24, P1–P21 built.
 - **W90**, cybernetics: six questions before a plan.
 
@@ -155,7 +157,7 @@ GM sessions merge switched off (173), and releases go on as usual.
 **Waiting on others:**
 - **Deighton** answered every open rules question on 2026-10-10 (`reference/rulings-2026-10-10.md`). Still his: what a rank of Educated bought in play gives (F44: the IP buy refuses it until then), the TN and TH of the WILL check that keeps a held spell (F43), and whether a Supernatural's Skills and Powers share its stats' headroom past 10 (Ken asked). **One ruling on kickers may clear F46 and F47 together:** do dice stack, and which one is "your Kicker Die"; F45 is Concierge's appraising Skill. **CRANK** is kept and back on for everyone (239, 2026-10-23); GQ7, F37 and GQ28 are still open.
 - **Deighton, on vehicles:** 17 of the 28 follow-up questions
-  (`reference/rulings-2026-10-23.md`). L5 waits on SH3 (a typed vehicle),
+  (`reference/rulings-2026-10-23.md`). L6 waits on SH3 (a typed vehicle),
   VK1b (the Mods number), and his in-person talk on vehicles without PROT and RES.
   The plan's §6 lists everything else it asks him.
 - **GM mode's open questions** (`GQ`_n_) and who holds each: `plans/gm-mode.md` §9.
