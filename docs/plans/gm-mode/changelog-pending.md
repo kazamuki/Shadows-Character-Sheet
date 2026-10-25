@@ -1,55 +1,67 @@
 # GM mode's changelog lines, waiting for its launch
 
-Lines in player voice that move into `CHANGELOG.md`'s `[Unreleased]` section,
-with a minor app bump, in the release that sets `FEATURES.gm` to `true`
-(Decision 173). Until then GM mode is switched off and a player can see none of
-it, so none of this goes in the changelog yet. Each GM-mode session that adds
-something a GM can see adds its line here.
+The lines below become `CHANGELOG.md`'s `[Unreleased]` section, with a minor app
+bump, in the release that sets `FEATURES.gm` to `true` (Decision 173). Until then
+GM mode is switched off and a player can see none of it, so none of this goes in
+the changelog yet.
 
-- **Run a table.** A GM can keep a table in the app: name it, write notes
-  in it, and export it as a file of its own. Home's Import reads it.
-- **The cast.** A table keeps its NPCs: a name in one press mid-session,
-  or a whole stat block, with Health worked out for you.
-- **Who knows what.** The cast remembers what passed between them and
-  the crew, and a second view lists it by who was there. Affiliations
-  too, so a roster of goblins comes apart.
-- **Threats.** Slot in a pack and its threats, people and groups are a
-  tab away, ready to read or to copy into your cast.
-- **Build from the book.** With a pack slotted in, a cast member's page
-  offers its origins, roles and tiers, shows what each means beside the
-  stat block, and adds traits straight from the glossary.
-- **Encounters.** Plan them ahead and run them at the table, from a
-  negotiation to a firefight: who goes when, everyone's Health and Pain,
-  their Conditions with where they came from and when they run out, and a
-  Reset that lists what ticks, what ends and what needs a check.
-- **The hit.** Hit an NPC the way the sheet takes a hit: their armor,
-  Shock, Massive damage, At Zero and Dying, by the book's rules for enemies,
-  and their traits on screen when it's their turn.
-- **The encounter's end.** End a fight with a wrap-up: keep the survivors
-  worth keeping, write the fight onto each NPC's record, and tell the
-  players which die to roll for armor wear.
-- **Sessions and threads.** Keep your sessions: who came, what happened and what it
-  set up, in the book's Campaign Journal. Threads you can follow, one of them the
-  current quest, and a Next session page that says what's still open.
-- **Close out a session.** Everyone's IP worked out from the hours, the
-  Milestone Point, an off-screen job for whoever missed it, and a written
-  award log to read out at the table.
-- **A Reference tab.** Conditions, the Codex's tiers, roles and traits,
-  defense, checks, modifiers and the rest of the book's quick reference, on
-  one page you can search.
-- **Find and Jot, on every page of a table.** Search everything you've
-  written, and jot a line down mid-fight without leaving it.
-- **Wave Initiative.** Run a fight the way your table does: one at a time by
-  Combat Sense, or side by side, the best roll's side first, with as many sides
-  as the fight has.
-- **Add anyone to a fight from wherever you are.** Every cast member, Codex
-  entry and Threats card names the encounter it goes to, or starts a new one,
-  and an encounter searches the Codex itself.
-- **Undo at the table.** Every change to your table, from a hit to a close-out,
-  can be taken back, last first: from the toast, or from Activity in the menu.
-- **A line reads as a sentence.** Every line between the crew and the cast reads crew first: *Scott told Bob “the lake is on fire”*. A fight's line names its fight, and a tap opens it; Back returns to where you were.
-- **The City tab.** The book's places, factions and powers to read and
-  search, and the crew's own places. A line can say where it happened, and a
-  place lists what happened there and who you met.
-- **Factions.** The City tab keeps the book's Faction Tracker for each
-  faction the crew deals with, with clocks to count down what they do next.
+**It's written as the launch, not as a history.** GM mode ships as one feature, so
+these lines describe what a GM can do on the day it switches on, in the order a GM
+would meet it: the table, its sessions, its people, the city, the fight, then the
+tools that work everywhere. They are plain bullets because the changelog takes no
+sub-headings inside a release (`tools/changelog.mjs` throws on one).
+
+**A session that adds something a GM can see edits the line it belongs to,** and
+adds a line only for new ground. A new kind of encounter goes into *Encounters*; a
+new tab gets its own line. Keep each line to what a GM can do, in player voice, with
+no session, decision or question ids. Read the whole list again at the launch: by
+then some lines will have outgrown themselves.
+
+- **GM mode is here.** Home has a second door, **Run a table**: a place to run your
+  game, with its sessions, its cast, the city, the Codex's threats and every fight
+  in one table. It's kept in your browser and exported as a file of its own, which
+  Home's **Import** reads back.
+- **Sessions and threads.** Keep each session in the book's Campaign Journal: who
+  came, what happened and what it set up. Follow threads, one of them the current
+  quest, and a **Next session** page lists what's still open.
+- **Close out a session.** Everyone's IP worked out from the hours, the Milestone
+  Point, an off-screen job for whoever missed it, and an award log written out to
+  read at the table.
+- **The cast.** Every NPC, from a name added in one press mid-session to a full stat
+  block with Health worked out for you. With a pack slotted in, a cast member's page
+  offers the book's origins, roles and tiers, shows what each means beside the stat
+  block, and adds traits straight from the glossary.
+- **Who knows what.** Every line between the crew and the cast reads as a sentence,
+  crew first: *Scott told Bob “the lake is on fire”*. A second view lists them by who
+  was there. Affiliations sort the cast into its crowds, so a roster of goblins comes
+  apart, and a cast member's page says which factions count them as key.
+- **The City tab.** The book's places, factions and powers to read and search, and the
+  crew's own places beside them. A line can say where it happened, and a place lists
+  what happened there and who you met.
+- **Factions.** Each faction the crew deals with keeps the book's Faction Tracker:
+  what they want, their reach, their key people, how they stand with the crew, and
+  clocks to count down what they do next.
+- **Threats.** Slot in a pack, the Threat Codex among them, and its threats, people
+  and groups are a tab away, ready to read or to copy into your cast.
+- **Encounters.** Plan them ahead and run them at the table: who goes when, one at a
+  time by Combat Sense or by **Wave Initiative**, side by side with as many sides as
+  the fight has; everyone's Health and Pain; their Conditions, with where they came
+  from and when they run out; and a Reset that lists what ticks, what ends and what
+  needs a check.
+- **Add anyone to a fight from wherever you are.** Every cast member, Codex entry and
+  Threats card names the encounter it goes to, or starts a new one, and an encounter
+  searches the Codex itself.
+- **The hit.** An NPC takes a hit the way your sheet does: armor, Shock, Massive
+  damage, At Zero and Dying, by the book's rules for enemies, with their traits on
+  screen when it's their turn.
+- **The end of a fight.** A wrap-up keeps the survivors worth keeping, writes the
+  fight onto each NPC's record, where a tap opens it again, and tells the players
+  which die to roll for armor wear.
+- **The Reference tab.** Conditions, the Codex's tiers, roles and traits, defense,
+  checks, modifiers and the rest of the book's quick reference, on one page you can
+  search.
+- **Find and Jot, from any page of a table.** Search everything you've written, and
+  jot a line down mid-fight: it lands in your notes, and in tonight's session when
+  there is one.
+- **Undo at the table.** Every change to your table, from a hit to a close-out, can be
+  taken back, newest first: right after, or later from **Activity** in the menu.
