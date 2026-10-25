@@ -5123,7 +5123,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - Auditing the text fields' keystrokes: a pick is the only part that changes a number.
      - **Replaces:** Decision 100 in part: "A custom weapon reads back what was typed." Its four picks and its damage now compute; its other fields still read as typed.
      - **Revisit if:** L3's class reading finds that the catalog's display word and a custom row's id want one resolver, or a custom weapon should take mods or reload from carried ammunition (LQ14).
-     - **Built:** app 0.55.0, game data 0.49, character schema 0.29, PR #…. Log 2026-10-25 (L2).
+     - **Built:** app 0.55.0, game data 0.49, character schema 0.29, PR #254. Log 2026-10-25 (L2).
 
 ## 5. Open Flags
 
