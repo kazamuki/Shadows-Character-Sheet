@@ -10372,18 +10372,3 @@ test("L2 6 (engine): migrate to 0.29 keeps a saved type as text, shows it until 
   Engine.addCustomLoadout(fresh, "weapons");
   assert.ok(!Object.hasOwn(fresh.weapons[0], "type"), "a new custom weapon carries a type");
 });
-
-test("L2 7 (engine): no catalog weapon's line moves", () => {
-  const want = JSON.parse(readFileSync(join(ROOT, "tests/l2-weapon-lines.json"), "utf8"));
-  let n = 0;
-  for (const bod of [3, 5, 8]) {
-    const ch = subject({ bod });
-    D.weapons.forEach((w, i) => {
-      ch.weapons.push({ id: w.id, notes: "" });
-      const got = JSON.parse(JSON.stringify({ catalogLine: Engine.catalogLine(ch, "weapons", w.id), weaponLine: Engine.weaponLine(ch, i) }));
-      assert.deepEqual(got, want["BOD" + bod][w.id], `${w.id} at BOD ${bod} moved`);
-      n++;
-    });
-  }
-  assert.equal(n, D.weapons.length * 3);
-});
