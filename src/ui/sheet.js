@@ -4011,7 +4011,8 @@ function bindSheet(){
   // it and the row stays open. A refusal puts the stored value back.
   main.querySelectorAll("[data-weaponpick]").forEach(el=>el.onchange=()=>{
     const [i,f]=el.dataset.weaponpick.split("|"), idx=Number(i), e=ch.weapons[idx];
-    const value = f==="acc" ? (el.value.trim()==="" ? "" : Number(el.value)) : el.value;
+    // A number field reads junk ("1e") as "", which would clear the ACC: NaN lets the engine refuse it.
+    const value = f==="acc" ? (el.validity && el.validity.badInput ? NaN : el.value.trim()==="" ? "" : Number(el.value)) : el.value;
     const pre = Engine.setCustomWeapon(clone(ch), idx, f, value);
     if (!pre.ok){ notice(pre.why); el.value = e && e[f]!=null ? e[f] : ""; return; }
     const names = { category:D.weaponCategories, damageType:D.damageTypes }, what = { category:"type", damageType:"damage type", range:"range", acc:"ACC" }[f];
