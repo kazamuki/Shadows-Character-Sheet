@@ -23,7 +23,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.55.0
+## v0.55.0 — 2026-10-25
 
 - **Weapons you write in work like the catalog's.** Give one a type, a damage type, a range and its ACC, and it attacks with that type's Skill. Write its damage as BOD+3 and the sheet works it out.
 - **Handguns and SMGs say their damage type, Ballistic,** on Loadout and in the catalog.

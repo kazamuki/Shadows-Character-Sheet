@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.55.0",
-    "date": null,
+    "date": "2026-10-25",
     "intro": [],
     "items": [
       "**Weapons you write in work like the catalog's.** Give one a type, a damage type, a range and its ACC, and it attacks with that type's Skill. Write its damage as BOD+3 and the sheet works it out.",
