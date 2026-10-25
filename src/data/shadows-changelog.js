@@ -7,7 +7,7 @@ window.SHADOWS_CHANGELOG = [
     "intro": [],
     "items": [
       "**Handguns and SMGs say their damage type, Ballistic,** on Loadout and in the catalog.",
-      "**Bows, most grenades and the two launchers say their damage type is your GM's call,** until it's settled."
+      "**Bows, the Strix crossbow, most grenades, the Thunderhead and the Absolute say on Loadout that your GM calls their damage type.**"
     ]
   },
   {
