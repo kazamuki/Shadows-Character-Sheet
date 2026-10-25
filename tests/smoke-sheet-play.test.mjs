@@ -1469,6 +1469,6 @@ test("L2 10 (sheet): each pick on an open custom weapon is one undoable action, 
   acc2.value = "-1"; acc2.dispatchEvent(new app.window.Event("change", { bubbles: true }));
   assert.equal(activeChar(app).weapons[1].acc, 2, "a refused ACC was stored");
   assert.equal(audit().length, n);
-  assert.match(app.$("#main").textContent + (app.$("#notice") ? app.$("#notice").textContent : "") + app.window.document.body.textContent, /ACC is a whole number, 0 or more/);
+  assert.match(app.$("#undotoast").textContent, /ACC is a whole number, 0 or more/, "a refused ACC gave no reason");
   assert.deepEqual(app.errors, []);
 });
