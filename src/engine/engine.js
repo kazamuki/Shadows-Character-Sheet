@@ -1824,9 +1824,9 @@ const Engine = (() => {
 
   // Everything a player reads off the sheet to make an attack with a catalog
   // weapon. The attack total is the skill's, so Pain and Conditions are in it;
-  // ACC is apart because only Single fire adds it (0530). A custom weapon is
-  // weapon of its type's Skill, with the damage, damage type, range and ACC
-  // the player picked or typed (Decision 247).
+  // ACC is apart because only Single fire adds it (0530). A custom weapon
+  // attacks with its type's Skill, with the damage, damage type, range and
+  // ACC the player picked or typed (Decision 247).
   function weaponLine(ch, index){
     const e = listOf(ch, "weapons")[index];
     if (!e || typeof e!=="object") return null;

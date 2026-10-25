@@ -5111,13 +5111,13 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Built:** app 0.54.2, no data or schema bump; `phone-check` holds the layout, smoke tests the markup. Log 2026-10-24.
 
 247. **A custom weapon picks its weapon type, damage type and range and types its ACC, and its line is computed like a catalog weapon's.**
-     *2026-10-24 · Ken + Claude · Touches: weaponLine, setCustomWeapon, weaponDamage, weaponCategories.skill, weaponRules.rangeBands, weapons[i].category, weapons[i].damageType, weapons[i].range, weapons[i].acc, weapons[i].type, Loadout's custom weapon row, character schema 0.29, W137, LQ8, LQ9, LQ16*
-     - **Decided:** A custom weapon stores four picks: `category` (a `weaponCategories` id), `damageType` (a non-magical `damageTypes` id), `range` (one of 0530's range bands, `weaponRules.rangeBands`) and `acc` (a whole number, 0 or more). Its Skill is its category's `skill`, and its attack that Skill's check bonus. Typed damage reads as a catalog weapon's: a number, `BOD+3`, or text. A saved free-text `type` is kept and shown until a type is picked; new rows have none. Each pick is one audited action; typed fields stay unaudited.
+     *2026-10-24 · Ken + Claude · Touches: weaponLine, customWeaponLine, setCustomWeapon, weaponDamage, addCustomLoadout, WEAPON_COLS, weaponCategories.skill, weaponRules.rangeBands, range bands, weapons[i].category, weapons[i].damageType, weapons[i].range, weapons[i].acc, weapons[i].type, Loadout's custom weapon row, Main's Weapons, the print sheet's weapons, character schema 0.29, W137, LQ8, LQ9, LQ14–LQ18*
+     - **Decided:** A custom weapon stores four picks: `category` (a `weaponCategories` id), `damageType` (a non-magical `damageTypes` id), `range` (one of 0530's range bands, `weaponRules.rangeBands`) and `acc` (a whole number, 0 or more). Its Skill is its category's `skill`, and its attack that Skill's check bonus. Typed damage reads as a catalog weapon's. A saved free-text `type` is kept and shown until a type is picked; new rows have none. Each pick is one audited action; typed fields stay unaudited.
      - **Why:** Ken (W137): a written-in weapon should read like the catalog's, and L3's class modifiers need a type and damage type to find it.
      - **Rejected:**
        - The player picks the Skill as well as the type (LQ8): two picks that can disagree.
        - Matching an old `type` to a weapon type (LQ9): a guess can pick the wrong Skill.
-       - Storing the damage type's display name, as a catalog weapon does: a name may change, an id can't (constraint 6).
+       - Storing the damage type's display name: a name may change, an id can't (constraint 6).
        - The catalog's range words (Ken, LQ16: the book's bands, so a catalog "Low" and a custom "Short" share Loadout's Range column).
        - Reading the bands from the quick reference's table: a test ties the two instead.
        - Auditing the text fields' keystrokes: a pick is the only part that changes a number.

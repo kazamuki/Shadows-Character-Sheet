@@ -1434,9 +1434,10 @@ test("L2 10 (sheet): each pick on an open custom weapon is one undoable action, 
   // Picking a type: one entry, the row stays open, focus stays on the control, the hint goes.
   const pick = (field, value) => {
     const el = open().querySelector(`[data-weaponpick="1|${field}"]`);
-    el.value = value; el.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+    el.focus(); el.value = value; el.dispatchEvent(new app.window.Event("change", { bubbles: true }));
   };
   pick("category", "handguns");
+  assert.equal((app.window.document.activeElement.dataset || {}).weaponpick, "1|category", "a pick moved focus off the Type control");
   const last = audit().at(-1);
   assert.equal(audit().length, before + 1);
   assert.match(last.label, /Zip gun/);
