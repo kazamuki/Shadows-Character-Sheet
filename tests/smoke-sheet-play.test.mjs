@@ -1356,10 +1356,9 @@ test("L1 5 (sheet): a handgun's Loadout card says Ballistic, and a bow's says it
   const rows = [...app.$$("table.lo-weapons tbody tr")].filter(r => r.querySelector("b"));
   const cheap = rows.find(r => /Cheapshot/.test(r.textContent));
   assert.equal(cheap.querySelector(".lo-sub").textContent, "Handguns · Ballistic");
-  const main = app.$("#main").textContent;
-  assert.ok(main.includes(bow.playerNote), "the bow's note isn't on its card");
-  assert.ok(main.includes(D.appCopy.unsettledLabel));
   const card = (name) => { const r = rows.find(x => x.textContent.includes(name)); return r.textContent + (r.nextElementSibling && r.nextElementSibling.classList.contains("lo-modrow") ? r.nextElementSibling.textContent : ""); };
+  assert.ok(card("Urban Recurve Bow").includes(bow.playerNote), "the bow's note isn't on its card");
+  assert.ok(card("Urban Recurve Bow").includes(D.appCopy.unsettledLabel));
   assert.ok(!card("Cheapshot").includes(D.appCopy.unsettledLabel));
   assert.ok(!card("Cheapshot").includes(bow.playerNote));
   assert.equal(app.errors.length, 0);
