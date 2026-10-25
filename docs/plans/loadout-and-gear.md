@@ -5,7 +5,7 @@ closed ([`archive/sheet-wishlist.md`](archive/sheet-wishlist.md)). **Approved by
 Ken 2026-10-24**, with LQ1–LQ7 on their defaults (§5) and W136 kept. **Widened
 the same day** (Ken): custom weapons that read like the catalog's (W137, now
 L2), and the meeting's natural attacks in the unarmed strike's session (now
-L4). LQ8–LQ10 are open. Each session's status is its row in §3; the next step
+L4), with LQ8–LQ10 on their defaults. Each session's status is its row in §3; the next step
 is L1's work order.
 **Tier of this document:** *Docs*. Each session names its own tier.
 
@@ -172,9 +172,9 @@ Plan line says the same.
 | LQ5 | L5: the powers that change natural weapons or melee damage while they run (Bone Spines, Rending Claws, Steel Fangs and five more, inventory c27–c34). Nothing stores that a power is running (W110). Show them as conditional marks on the line, as Decision 104 does for Natural Armor, or wait for W110? | **Conditional marks:** "+3 melee damage while Bone Spines runs", never summed. **Ken, 2026-10-24: Default** |
 | LQ6 | L3: can a custom gear or armor row carry modifiers the player types, or only catalog entries? | **Catalog only** in the first cut. A typed modifier is W109's question, and balance stays the table's. A custom *weapon* still receives modifiers through its class (L2). **Ken, 2026-10-24: Default** |
 | LQ7 | Raise a wish for the timed consumables (a bonus for the scene, then a penalty)? | **Not yet.** It's a timer, which W128 (the sheet knows when an encounter ends) would give it. **Ken, 2026-10-24: Default** |
-| LQ8 | L2: a custom weapon's Skill. Does it come from the weapon type the player picks (Handguns → Handguns, Beam Sidearms → Beam Weapons), or does the player pick the Skill? | **From the type.** Each `weaponCategories` row gets its Skill as data, read the same way for the catalog. One pick, and the attack number follows it. A type that could take either of two Skills is named in the order |
-| LQ9 | L2: a saved custom weapon's free-text `type` ("pistol", "big knife"). When the file is opened, should it be matched to a weapon type, or kept as text? | **Kept as text,** shown under the name until the player picks a type. A guess could pick the wrong Skill, and the file stays the player's |
-| LQ10 | L4: how the sheet says "two natural attacks a round" | **Once, above the natural lines** ("Natural attacks: 2 a round, any mix"), with fists, claws and fangs listed under it. Not a "×2" on each line, which would read as four |
+| LQ8 | L2: a custom weapon's Skill. Does it come from the weapon type the player picks (Handguns → Handguns, Beam Sidearms → Beam Weapons), or does the player pick the Skill? | **From the type.** Each `weaponCategories` row gets its Skill as data, read the same way for the catalog. One pick, and the attack number follows it. A type that could take either of two Skills is named in the order. **Ken, 2026-10-24: Default** |
+| LQ9 | L2: a saved custom weapon's free-text `type` ("pistol", "big knife"). When the file is opened, should it be matched to a weapon type, or kept as text? | **Kept as text,** shown under the name until the player picks a type. A guess could pick the wrong Skill, and the file stays the player's. **Ken, 2026-10-24: Default** |
+| LQ10 | L4: how the sheet says "two natural attacks a round" | **Once, above the natural lines** ("Natural attacks: 2 a round, any mix"), with fists, claws and fangs listed under it. Not a "×2" on each line, which would read as four. **Ken, 2026-10-24: Default** |
 
 ## 6. Waiting on Deighton
 
