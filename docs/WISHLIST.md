@@ -278,7 +278,7 @@ on P20's stat caps: ask before P20 is written.
 ### Loadout & catalog
 
 **W69 — Gear that changes what you can do while you wear it.** *Ken, from Deighton · ⏭ · Rule or shape · raised 2026-10-08 · answered by Deighton 2026-10-10*\
-**Plan:** [loadout-and-gear L1, L3 and L7](plans/loadout-and-gear.md) (no orders yet) · **Goes with:** W91, W137
+**Plan:** [loadout-and-gear L1, L3 and L7](plans/loadout-and-gear.md) (L1's order drafted: [L1-weapon-damage-types](plans/loadout-and-gear/L1-weapon-damage-types.md)) · **Goes with:** W91, W137
 
 Deighton's ask: powered armor worn over the body should show its bonuses where
 they land. Armor giving +5 to BOD skills and damage should raise Melee and
