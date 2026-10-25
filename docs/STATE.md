@@ -141,7 +141,7 @@ rev 9's `C1`–`C3` are still forward notes.
 
 **Next is Ken's pick**, each built through a work order (`WORK-ORDERS.md`):
 - **Another of `plans/gm-mode.md`'s *Still to build*** (S7, factions and clocks, is built).
-- **The vehicles-and-gear plan** (`plans/loadout-and-gear.md`) is proposed, waiting on Ken's LQ1–LQ7.
+- **The vehicles-and-gear plan** (`plans/loadout-and-gear.md`) is approved (Ken, 2026-10-24, LQ1–LQ7 on their defaults); L1's order is next.
   L1–L4 (weapon damage types, worn modifiers, an unarmed strike, a Major on one row)
   are buildable now; L5 (vehicles, was P14) and L6 (Powered Armor) wait on Deighton.
   The player sheet's plan (`plans/archive/sheet-wishlist.md`) closed 2026-10-24, P1–P21 built.

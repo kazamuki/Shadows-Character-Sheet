@@ -1,8 +1,9 @@
 # Plan — vehicles and worn gear, in sessions
 
-**Status: proposed 2026-10-24** by Claude (Opus), when the player sheet's plan
-closed ([`archive/sheet-wishlist.md`](archive/sheet-wishlist.md)). **Waiting on
-Ken's LQ1–LQ7** (§5). No work order is drafted until he approves the plan.
+**Status:** proposed 2026-10-24 by Claude (Opus), when the player sheet's plan
+closed ([`archive/sheet-wishlist.md`](archive/sheet-wishlist.md)). **Approved by
+Ken 2026-10-24**, with LQ1–LQ7 on their defaults (§5) and W136 kept. Each
+session's status is its row in §3; the next step is L1's work order.
 **Tier of this document:** *Docs*. Each session names its own tier.
 
 Ken, 2026-10-24: close the sheet-wishlist plan, which "has done a lot of good
@@ -71,10 +72,10 @@ need a vehicle,** so this plan splits it:
 
 | # | Session | Wishes | Tier | Waits on | Status |
 |---|---|---|---|---|---|
-| **L1** | Weapon damage types | W69's data step: `damageType` for the 12 firearms `0460` types as Ballistic, and a flag for the 13 it doesn't | Content (`gamedataVersion`: a handgun's line starts saying Ballistic) | Nothing for the twelve. The 13 untyped (3 bows, 8 grenades, 2 launchers) go to Deighton as one flag (LQ2) | Proposed · buildable now |
-| **L2** | Worn modifiers, first cut | W69 without Powered Armor: a catalog entry's modifiers to Skills (ranks only), weapons by class (ranged or melee, kinetic or energy) and by feature (SMART Link), applied while the piece is worn or in use | Rule or shape (a data shape, a decision; a schema bump if "in use" is a new stored input on gear) | Nothing blocking: Deighton's Q12–Q16 answered stacking, the cap, the energy types and the stat reach. Two items' Skills are unclear (LQ4), stubbed and flagged | Proposed · buildable now, after L1 |
-| **L3** | An unarmed strike | W107: a Martial Arts strike line on Loadout and Main, and Death Touch's grant on it | Content, or Rule or shape if the line needs a data shape | Nothing. Whether someone else's Death Touch pierces Natural Armor is Deighton's, asked beside F42, and doesn't block the line | Proposed · buildable now |
-| **L4** | One weapon or armor row, changed by a Major | W136: Tuned Edge, Custom Fit, Signature, Iconic and Legendary Weapon, Weapon Expert; and the powers on natural weapons (LQ5) | Rule or shape, character schema (a Major saves which row it changed; today a Major saves only a `power`, Decision 223) | Nothing from Deighton: Weapon Expert's text says how its kicker meets a 1d4, and P21's PQ6 answered "combat rolls" (the attacks). Reuses L2's line modifier | Proposed · buildable now, after L2 |
+| **L1** | Weapon damage types | W69's data step: `damageType` for the 12 firearms `0460` types as Ballistic, and a flag for the 13 it doesn't | Content (`gamedataVersion`: a handgun's line starts saying Ballistic) | Nothing for the twelve. The 13 untyped (3 bows, 8 grenades, 2 launchers) go to Deighton as one flag (LQ2) | Approved · buildable now |
+| **L2** | Worn modifiers, first cut | W69 without Powered Armor: a catalog entry's modifiers to Skills (ranks only), weapons by class (ranged or melee, kinetic or energy) and by feature (SMART Link), applied while the piece is worn or in use | Rule or shape (a data shape, a decision; a schema bump if "in use" is a new stored input on gear) | Nothing blocking: Deighton's Q12–Q16 answered stacking, the cap, the energy types and the stat reach. Two items' Skills are unclear (LQ4), stubbed and flagged | Approved · buildable now, after L1 |
+| **L3** | An unarmed strike | W107: a Martial Arts strike line on Loadout and Main, and Death Touch's grant on it | Content, or Rule or shape if the line needs a data shape | Nothing. Whether someone else's Death Touch pierces Natural Armor is Deighton's, asked beside F42, and doesn't block the line | Approved · buildable now |
+| **L4** | One weapon or armor row, changed by a Major | W136: Tuned Edge, Custom Fit, Signature, Iconic and Legendary Weapon, Weapon Expert; and the powers on natural weapons (LQ5) | Rule or shape, character schema (a Major saves which row it changed; today a Major saves only a `power`, Decision 223) | Nothing from Deighton: Weapon Expert's text says how its kicker meets a 1d4, and P21's PQ6 answered "combat rolls" (the attacks). Reuses L2's line modifier | Approved · buildable now, after L2 |
 | **L5** | Vehicles, first cut | W91 (Powered Armor included): the order was P14, [`L5-vehicles.md`](loadout-and-gear/L5-vehicles.md) | Rule or shape (a save shape: `vehicles`, a schema bump) | **Deighton:** SH3 (a typed vehicle), VK1b (the Mods number), VD1 (vehicles without PROT and RES, his in-person talk). Then the order is revised to his rulings, as its Status lists | ⏸ Shelved 2026-10-23 (Ken), until Deighton answers |
 | **L6** | Powered Armor's enhancements | W69's suit half: Chipped Skill's +3 ranks (PA6), BOD-based Skills as Athletics and Survival (PA7), Enhanced Mobility doubling after every other bonus (PA8), changed between scenes (PA5) | Rule or shape | L5 (a suit is a vehicle) and L2 (the modifier). The rulings are in (PA5–PA8, both rounds) | ⏸ After L5 |
 
@@ -120,13 +121,13 @@ Plan line says the same.
 
 | Id | Question | Default |
 |---|---|---|
-| LQ1 | Is this the order, with W69 split into L2 (worn kit, now) and L6 (Powered Armor, after vehicles)? | As §3 |
-| LQ2 | L1: the 13 weapons `0460` gives no damage type (3 bows, 8 grenades, the two launchers). Flag them for Deighton, or type them yourself from the book's descriptions as its author? | **One flag for Deighton.** Until he rules they stay untyped, no class modifier reaches them, and their line says nothing new |
-| LQ3 | L2: a Smart Deck is carried, not worn. Does a carried tool's bonus count while it's "in use"? | **Yes:** a gear row with modifiers gets an In use toggle; armor keeps Worn. One stored boolean either way |
-| LQ4 | L2: which Skills are "electronic interface and hacking checks" (Hacking Visor, Hacking Gloves) and "precision skill checks" (PrecisionGrip Gloves)? Interface alone, or Interface, Programming and Security? | **A flag for Deighton.** The Smart Decks (Interface, named) are computed; these three keep their text, with a `playerNote` that the GM rules |
-| LQ5 | L4: the powers that change natural weapons or melee damage while they run (Bone Spines, Rending Claws, Steel Fangs and five more, inventory c27–c34). Nothing stores that a power is running (W110). Show them as conditional marks on the line, as Decision 104 does for Natural Armor, or wait for W110? | **Conditional marks:** "+3 melee damage while Bone Spines runs", never summed |
-| LQ6 | L2: can a custom gear or armor row carry modifiers the player types, or only catalog entries? | **Catalog only** in the first cut. A typed modifier is W109's question, and balance stays the table's |
-| LQ7 | Raise a wish for the timed consumables (a bonus for the scene, then a penalty)? | **Not yet.** It's a timer, which W128 (the sheet knows when an encounter ends) would give it |
+| LQ1 | Is this the order, with W69 split into L2 (worn kit, now) and L6 (Powered Armor, after vehicles)? | As §3. **Ken, 2026-10-24: Default** |
+| LQ2 | L1: the 13 weapons `0460` gives no damage type (3 bows, 8 grenades, the two launchers). Flag them for Deighton, or type them yourself from the book's descriptions as its author? | **One flag for Deighton.** Until he rules they stay untyped, no class modifier reaches them, and their line says nothing new. **Ken, 2026-10-24: Default** |
+| LQ3 | L2: a Smart Deck is carried, not worn. Does a carried tool's bonus count while it's "in use"? | **Yes:** a gear row with modifiers gets an In use toggle; armor keeps Worn. One stored boolean either way. **Ken, 2026-10-24: Default** |
+| LQ4 | L2: which Skills are "electronic interface and hacking checks" (Hacking Visor, Hacking Gloves) and "precision skill checks" (PrecisionGrip Gloves)? Interface alone, or Interface, Programming and Security? | **A flag for Deighton.** The Smart Decks (Interface, named) are computed; these three keep their text, with a `playerNote` that the GM rules. **Ken, 2026-10-24: Default** |
+| LQ5 | L4: the powers that change natural weapons or melee damage while they run (Bone Spines, Rending Claws, Steel Fangs and five more, inventory c27–c34). Nothing stores that a power is running (W110). Show them as conditional marks on the line, as Decision 104 does for Natural Armor, or wait for W110? | **Conditional marks:** "+3 melee damage while Bone Spines runs", never summed. **Ken, 2026-10-24: Default** |
+| LQ6 | L2: can a custom gear or armor row carry modifiers the player types, or only catalog entries? | **Catalog only** in the first cut. A typed modifier is W109's question, and balance stays the table's. **Ken, 2026-10-24: Default** |
+| LQ7 | Raise a wish for the timed consumables (a bonus for the scene, then a penalty)? | **Not yet.** It's a timer, which W128 (the sheet knows when an encounter ends) would give it. **Ken, 2026-10-24: Default** |
 
 ## 6. Waiting on Deighton
 
