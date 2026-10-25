@@ -1,0 +1,2048 @@
+{
+ "combat-knife": {
+  "id": "combat-knife",
+  "name": "Combat Knife",
+  "category": "melee",
+  "skill": {
+   "id": "melee",
+   "name": "Melee",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": null,
+  "damage": 4,
+  "damageFormula": "BOD+3",
+  "style": "Blade",
+  "damageType": "Normal",
+  "reach": "1m",
+  "parry": null,
+  "range": null,
+  "radius": null,
+  "rof": null,
+  "capacity": null,
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "Conceal"
+  ],
+  "features": [],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 100,
+  "availability": "Common",
+  "flavorLine": "No frills, no tech, no modifications -- just a sharp edge.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 100Ç. You have 0Ç."
+  }
+ },
+ "shock-knucks": {
+  "id": "shock-knucks",
+  "name": "Shock Knucks",
+  "category": "melee",
+  "skill": {
+   "id": "melee",
+   "name": "Melee",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": null,
+  "damage": 5,
+  "damageFormula": "BOD+4",
+  "style": "Blunt",
+  "damageType": "Electric",
+  "reach": "1m",
+  "parry": null,
+  "range": null,
+  "radius": null,
+  "rof": null,
+  "capacity": null,
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "Stunning"
+  ],
+  "features": [],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 350,
+  "availability": "Common",
+  "flavorLine": "A taser you can punch someone with.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 350Ç. You have 0Ç."
+  }
+ },
+ "autobaton": {
+  "id": "autobaton",
+  "name": "Autobaton",
+  "category": "melee",
+  "skill": {
+   "id": "melee",
+   "name": "Melee",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": null,
+  "damage": 7,
+  "damageFormula": "BOD+6",
+  "style": "Blunt",
+  "damageType": "Normal",
+  "reach": "2m",
+  "parry": "+1",
+  "range": null,
+  "radius": null,
+  "rof": null,
+  "capacity": null,
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "Conceal"
+  ],
+  "features": [],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 800,
+  "availability": "Uncommon",
+  "flavorLine": "An extendable security baton that deploys in under a second.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 800Ç. You have 0Ç."
+  }
+ },
+ "razorwhip": {
+  "id": "razorwhip",
+  "name": "Razorwhip",
+  "category": "melee",
+  "skill": {
+   "id": "melee",
+   "name": "Melee",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": null,
+  "damage": 7,
+  "damageFormula": "BOD+6",
+  "style": "Blade",
+  "damageType": "Normal",
+  "reach": "2m",
+  "parry": null,
+  "range": null,
+  "radius": null,
+  "rof": null,
+  "capacity": null,
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "AP",
+   "Reach"
+  ],
+  "features": [],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 1600,
+  "availability": "Rare",
+  "flavorLine": "A length of monomolecular-edged cable on a reinforced grip.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 1,600Ç. You have 0Ç."
+  }
+ },
+ "crusher": {
+  "id": "crusher",
+  "name": "Crusher",
+  "category": "melee",
+  "skill": {
+   "id": "melee",
+   "name": "Melee",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": null,
+  "damage": 9,
+  "damageFormula": "BOD+8",
+  "style": "Blunt",
+  "damageType": "Electric",
+  "reach": "1m",
+  "parry": "+1",
+  "range": null,
+  "radius": null,
+  "rof": null,
+  "capacity": null,
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "Stunning"
+  ],
+  "features": [],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 2800,
+  "availability": "Rare",
+  "flavorLine": "An industrial vibration driver with an integrated electric discharge. Hits like a hydraulic press.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 2,800Ç. You have 0Ç."
+  }
+ },
+ "orion-mw1-filament": {
+  "id": "orion-mw1-filament",
+  "name": "Orion MW-1 \"Filament\"",
+  "category": "melee",
+  "skill": {
+   "id": "melee",
+   "name": "Melee",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": null,
+  "damage": 11,
+  "damageFormula": "BOD+10",
+  "style": "Blade",
+  "damageType": "Energy",
+  "reach": "2m",
+  "parry": null,
+  "range": null,
+  "radius": null,
+  "rof": null,
+  "capacity": null,
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "AP",
+   "Reach"
+  ],
+  "features": [],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 12000,
+  "availability": "Exotic",
+  "flavorLine": "A single monowire filament on a powered reel, nearly invisible in motion.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 12,000Ç. You have 0Ç."
+  }
+ },
+ "carbon-fiber-bo-staff": {
+  "id": "carbon-fiber-bo-staff",
+  "name": "Carbon Fiber Bo Staff",
+  "category": "martialArts",
+  "skill": {
+   "id": "martial-arts",
+   "name": "Martial Arts",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": null,
+  "damage": 5,
+  "damageFormula": "BOD+4",
+  "style": "Blunt",
+  "damageType": "Normal",
+  "reach": "2m",
+  "parry": "+1",
+  "range": null,
+  "radius": null,
+  "rof": null,
+  "capacity": null,
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "Knockdown",
+   "Reach"
+  ],
+  "features": [
+   "2H"
+  ],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 250,
+  "availability": "Common",
+  "flavorLine": "Lightweight, durable, and unassuming until it isn't.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 250Ç. You have 0Ç."
+  }
+ },
+ "kusarigama": {
+  "id": "kusarigama",
+  "name": "Kusarigama",
+  "category": "martialArts",
+  "skill": {
+   "id": "martial-arts",
+   "name": "Martial Arts",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": null,
+  "damage": 6,
+  "damageFormula": "BOD+5",
+  "style": "Blade/Blunt",
+  "damageType": "Normal",
+  "reach": "2m",
+  "parry": "+1",
+  "range": null,
+  "radius": null,
+  "rof": null,
+  "capacity": null,
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "Disarming",
+   "Reach"
+  ],
+  "features": [
+   "2H"
+  ],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 900,
+  "availability": "Uncommon",
+  "flavorLine": "A weighted chain attached to a short-bladed weapon; centuries-old design that still works.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 900Ç. You have 0Ç."
+  }
+ },
+ "tekko-kagi": {
+  "id": "tekko-kagi",
+  "name": "Tekko-Kagi",
+  "category": "martialArts",
+  "skill": {
+   "id": "martial-arts",
+   "name": "Martial Arts",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": null,
+  "damage": 7,
+  "damageFormula": "BOD+6",
+  "style": "Blade",
+  "damageType": "Normal",
+  "reach": "1m",
+  "parry": "+1",
+  "range": null,
+  "radius": null,
+  "rof": null,
+  "capacity": null,
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "AP",
+   "Conceal"
+  ],
+  "features": [
+   "Paired"
+  ],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 1800,
+  "availability": "Uncommon",
+  "flavorLine": "A strapped hand fitting extending into raking blades along the dorsal hand.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 1,800Ç. You have 0Ç."
+  }
+ },
+ "vibro-sai": {
+  "id": "vibro-sai",
+  "name": "Vibro Sai",
+  "category": "martialArts",
+  "skill": {
+   "id": "martial-arts",
+   "name": "Martial Arts",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": null,
+  "damage": 7,
+  "damageFormula": "BOD+6",
+  "style": "Blade",
+  "damageType": "Electric",
+  "reach": "1m",
+  "parry": "+2",
+  "range": null,
+  "radius": null,
+  "rof": null,
+  "capacity": null,
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "AP"
+  ],
+  "features": [
+   "Paired"
+  ],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 3200,
+  "availability": "Rare",
+  "flavorLine": "A three-pronged weapon with a micro-vibration generator built to trap, deflect, and penetrate.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 3,200Ç. You have 0Ç."
+  }
+ },
+ "shock-eskrima-sticks": {
+  "id": "shock-eskrima-sticks",
+  "name": "Shock Eskrima Sticks",
+  "category": "martialArts",
+  "skill": {
+   "id": "martial-arts",
+   "name": "Martial Arts",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": null,
+  "damage": 7,
+  "damageFormula": "BOD+6",
+  "style": "Blunt",
+  "damageType": "Electric",
+  "reach": "1m",
+  "parry": "+1",
+  "range": null,
+  "radius": null,
+  "rof": null,
+  "capacity": null,
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "Stunning"
+  ],
+  "features": [
+   "Paired"
+  ],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 3000,
+  "availability": "Rare",
+  "flavorLine": "Paired hardwood-composite sticks with integrated charge cells along the striking surface.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 3,000Ç. You have 0Ç."
+  }
+ },
+ "bdf-koen": {
+  "id": "bdf-koen",
+  "name": "BDF Kōen",
+  "category": "martialArts",
+  "skill": {
+   "id": "martial-arts",
+   "name": "Martial Arts",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": null,
+  "damage": 9,
+  "damageFormula": "BOD+8",
+  "style": "Blade",
+  "damageType": "Energy",
+  "reach": "1m",
+  "parry": "+2",
+  "range": null,
+  "radius": null,
+  "rof": null,
+  "capacity": null,
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "AP",
+   "Burning"
+  ],
+  "features": [],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 16000,
+  "availability": "Exotic",
+  "flavorLine": "Kōen: crimson flame. A traditionally-proportioned blade with a plasma-sheathed edge.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 16,000Ç. You have 0Ç."
+  }
+ },
+ "cheapshot": {
+  "id": "cheapshot",
+  "name": "\"Cheapshot\"",
+  "category": "handguns",
+  "skill": {
+   "id": "handguns",
+   "name": "Handguns",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 0,
+  "damage": 5,
+  "damageFormula": null,
+  "style": null,
+  "damageType": null,
+  "reach": null,
+  "parry": null,
+  "range": "Low",
+  "radius": null,
+  "rof": "S",
+  "capacity": "6+1",
+  "escalation": null,
+  "defense": null,
+  "tags": [],
+  "features": [],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 150,
+  "availability": "Common",
+  "flavorLine": "Not a gun so much as a category.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 150Ç. You have 0Ç."
+  }
+ },
+ "ads-lp9-viper": {
+  "id": "ads-lp9-viper",
+  "name": "ADS LP-9 \"Viper\"",
+  "category": "handguns",
+  "skill": {
+   "id": "handguns",
+   "name": "Handguns",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 2,
+  "damage": 6,
+  "damageFormula": null,
+  "style": null,
+  "damageType": null,
+  "reach": null,
+  "parry": null,
+  "range": "Low",
+  "radius": null,
+  "rof": "S/B",
+  "capacity": "15+1",
+  "escalation": null,
+  "defense": null,
+  "tags": [],
+  "features": [
+   "Conceal"
+  ],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 1200,
+  "availability": "Common",
+  "flavorLine": "Sleek, lightweight, and sized for a jacket pocket without printing.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 1,200Ç. You have 0Ç."
+  }
+ },
+ "vs4-ironside": {
+  "id": "vs4-ironside",
+  "name": "VS-4 \"Ironside\"",
+  "category": "handguns",
+  "skill": {
+   "id": "handguns",
+   "name": "Handguns",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 1,
+  "damage": 7,
+  "damageFormula": null,
+  "style": null,
+  "damageType": null,
+  "reach": null,
+  "parry": null,
+  "range": "Low",
+  "radius": null,
+  "rof": "S/B",
+  "capacity": "12+1",
+  "escalation": null,
+  "defense": null,
+  "tags": [],
+  "features": [],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 1800,
+  "availability": "Common",
+  "flavorLine": "Vanguard doesn't make elegant weapons; they make weapons that work.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 1,800Ç. You have 0Ç."
+  }
+ },
+ "ap7-sentry": {
+  "id": "ap7-sentry",
+  "name": "AP-7 \"Sentry\"",
+  "category": "handguns",
+  "skill": {
+   "id": "handguns",
+   "name": "Handguns",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 3,
+  "damage": 6,
+  "damageFormula": null,
+  "style": null,
+  "damageType": null,
+  "reach": null,
+  "parry": null,
+  "range": "Low",
+  "radius": null,
+  "rof": "S/B",
+  "capacity": "17+1",
+  "escalation": null,
+  "defense": null,
+  "tags": [],
+  "features": [
+   "SMART Link"
+  ],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 3500,
+  "availability": "Uncommon",
+  "flavorLine": "AI-assisted targeting compensates for movement, tremor, and interference.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 3,500Ç. You have 0Ç."
+  }
+ },
+ "hk5-breach": {
+  "id": "hk5-breach",
+  "name": "HK-5 \"Breach\"",
+  "category": "handguns",
+  "skill": {
+   "id": "handguns",
+   "name": "Handguns",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 0,
+  "damage": 8,
+  "damageFormula": null,
+  "style": null,
+  "damageType": null,
+  "reach": null,
+  "parry": null,
+  "range": "Low",
+  "radius": null,
+  "rof": "S/B",
+  "capacity": "10+1",
+  "escalation": null,
+  "defense": null,
+  "tags": [],
+  "features": [],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 2400,
+  "availability": "Uncommon",
+  "flavorLine": "It is not pretty. It hits harder than anything else at this price.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 2,400Ç. You have 0Ç."
+  }
+ },
+ "bdf-oni": {
+  "id": "bdf-oni",
+  "name": "BDF Oni",
+  "category": "handguns",
+  "skill": {
+   "id": "handguns",
+   "name": "Handguns",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 1,
+  "damage": 9,
+  "damageFormula": null,
+  "style": null,
+  "damageType": null,
+  "reach": null,
+  "parry": null,
+  "range": "Low",
+  "radius": null,
+  "rof": "S/B",
+  "capacity": "10+1",
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "AP"
+  ],
+  "features": [],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 7500,
+  "availability": "Rare",
+  "flavorLine": "Engraved at the slide, balanced to its owner's grip, chambered for armor-penetrating rounds as standard.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 7,500Ç. You have 0Ç."
+  }
+ },
+ "chatter": {
+  "id": "chatter",
+  "name": "\"Chatter\"",
+  "category": "smgs",
+  "skill": {
+   "id": "smgs",
+   "name": "SMGs",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 0,
+  "damage": 5,
+  "damageFormula": null,
+  "style": null,
+  "damageType": null,
+  "reach": null,
+  "parry": null,
+  "range": "Medium",
+  "radius": null,
+  "rof": "S/B/F",
+  "capacity": "25+1",
+  "escalation": null,
+  "defense": null,
+  "tags": [],
+  "features": [],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 300,
+  "availability": "Common",
+  "flavorLine": "Spray it in the right direction and hope the other person has somewhere to be.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 300Ç. You have 0Ç."
+  }
+ },
+ "ads-cs4-whisper": {
+  "id": "ads-cs4-whisper",
+  "name": "ADS CS-4 \"Whisper\"",
+  "category": "smgs",
+  "skill": {
+   "id": "smgs",
+   "name": "SMGs",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 2,
+  "damage": 5,
+  "damageFormula": null,
+  "style": null,
+  "damageType": null,
+  "reach": null,
+  "parry": null,
+  "range": "Medium",
+  "radius": null,
+  "rof": "S/B",
+  "capacity": "30+1",
+  "escalation": null,
+  "defense": null,
+  "tags": [],
+  "features": [
+   "Suppressor"
+  ],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 2200,
+  "availability": "Uncommon",
+  "flavorLine": "Built for covert operations and VIP protection where noise is its own problem.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 2,200Ç. You have 0Ç."
+  }
+ },
+ "ts7-bulldog": {
+  "id": "ts7-bulldog",
+  "name": "TS-7 \"Bulldog\"",
+  "category": "smgs",
+  "skill": {
+   "id": "smgs",
+   "name": "SMGs",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 1,
+  "damage": 6,
+  "damageFormula": null,
+  "style": null,
+  "damageType": null,
+  "reach": null,
+  "parry": null,
+  "range": "Medium",
+  "radius": null,
+  "rof": "S/B/F",
+  "capacity": "30+1",
+  "escalation": null,
+  "defense": null,
+  "tags": [],
+  "features": [],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 1600,
+  "availability": "Common",
+  "flavorLine": "Front-line hardware for people who use it every day.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 1,600Ç. You have 0Ç."
+  }
+ },
+ "hs3-phantom": {
+  "id": "hs3-phantom",
+  "name": "HS-3 \"Phantom\"",
+  "category": "smgs",
+  "skill": {
+   "id": "smgs",
+   "name": "SMGs",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 1,
+  "damage": 7,
+  "damageFormula": null,
+  "style": null,
+  "damageType": null,
+  "reach": null,
+  "parry": null,
+  "range": "Medium",
+  "radius": null,
+  "rof": "S/B/F",
+  "capacity": "25+1",
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "Volatile"
+  ],
+  "features": [],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 3200,
+  "availability": "Uncommon",
+  "flavorLine": "\"An experimental fusion of ballistic and directed-energy discharge.\"",
+  "buy": {
+   "ok": false,
+   "why": "Costs 3,200Ç. You have 0Ç."
+  }
+ },
+ "vs12-rampart": {
+  "id": "vs12-rampart",
+  "name": "VS-12 \"Rampart\"",
+  "category": "smgs",
+  "skill": {
+   "id": "smgs",
+   "name": "SMGs",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 0,
+  "damage": 7,
+  "damageFormula": null,
+  "style": null,
+  "damageType": null,
+  "reach": null,
+  "parry": null,
+  "range": "Medium",
+  "radius": null,
+  "rof": "S/B/F",
+  "capacity": "40+1",
+  "escalation": null,
+  "defense": null,
+  "tags": [],
+  "features": [],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 2400,
+  "availability": "Uncommon",
+  "flavorLine": "A squad support tool. The drum magazine keeps it running through sustained fire.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 2,400Ç. You have 0Ç."
+  }
+ },
+ "ads-sr1-specter": {
+  "id": "ads-sr1-specter",
+  "name": "ADS SR-1 \"Specter\"",
+  "category": "smgs",
+  "skill": {
+   "id": "smgs",
+   "name": "SMGs",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 2,
+  "damage": 6,
+  "damageFormula": null,
+  "style": null,
+  "damageType": null,
+  "reach": null,
+  "parry": null,
+  "range": "Medium",
+  "radius": null,
+  "rof": "S/B/F",
+  "capacity": "30+1",
+  "escalation": null,
+  "defense": null,
+  "tags": [],
+  "features": [
+   "Suppressor"
+  ],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 6000,
+  "availability": "Rare",
+  "flavorLine": "Suppressed, accurate, and fully controllable on full-auto.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 6,000Ç. You have 0Ç."
+  }
+ },
+ "fg1-thunderclap": {
+  "id": "fg1-thunderclap",
+  "name": "FG-1 \"Thunderclap\"",
+  "category": "grenades",
+  "skill": {
+   "id": "melee",
+   "name": "Melee",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": null,
+  "damage": 10,
+  "damageFormula": null,
+  "style": null,
+  "damageType": null,
+  "reach": null,
+  "parry": null,
+  "range": null,
+  "radius": "5m",
+  "rof": null,
+  "capacity": null,
+  "escalation": {
+   "1x": "+5 dmg",
+   "2x+": "Injured"
+  },
+  "defense": "TN 8 TH 2",
+  "tags": [
+   "Siege"
+  ],
+  "features": [],
+  "weaponNotes": "Frag",
+  "kind": "weapons",
+  "price": 400,
+  "availability": "Uncommon",
+  "flavorLine": "Hammerlock's standard fragmentation grenade -- the benchmark other frags are measured against.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 400Ç. You have 0Ç."
+  }
+ },
+ "sg2-shockwave": {
+  "id": "sg2-shockwave",
+  "name": "SG-2 \"Shockwave\"",
+  "category": "grenades",
+  "skill": {
+   "id": "melee",
+   "name": "Melee",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": null,
+  "damage": null,
+  "damageFormula": null,
+  "style": null,
+  "damageType": null,
+  "reach": null,
+  "parry": null,
+  "range": null,
+  "radius": "10m",
+  "rof": null,
+  "capacity": null,
+  "escalation": {
+   "1x": "Stunned",
+   "2x+": "Unconscious"
+  },
+  "defense": "TN 8 TH 3",
+  "tags": [],
+  "features": [],
+  "weaponNotes": "Disoriented, Non-lethal",
+  "kind": "weapons",
+  "price": 200,
+  "availability": "Common",
+  "flavorLine": "Non-lethal concussive grenade for incapacitation and crowd control.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 200Ç. You have 0Ç."
+  }
+ },
+ "eg3-blackout": {
+  "id": "eg3-blackout",
+  "name": "EG-3 \"Blackout\"",
+  "category": "grenades",
+  "skill": {
+   "id": "melee",
+   "name": "Melee",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": null,
+  "damage": null,
+  "damageFormula": "EMP",
+  "style": null,
+  "damageType": null,
+  "reach": null,
+  "parry": null,
+  "range": null,
+  "radius": "5m",
+  "rof": null,
+  "capacity": null,
+  "escalation": {
+   "1x": "DeSync",
+   "2x+": "Cyberware offline until repaired"
+  },
+  "defense": "TN 8 TH 2",
+  "tags": [],
+  "features": [],
+  "weaponNotes": "EMP",
+  "kind": "weapons",
+  "price": 600,
+  "availability": "Uncommon",
+  "flavorLine": "Precision-engineered to disable electronics and cybernetics without indiscriminate structural damage.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 600Ç. You have 0Ç."
+  }
+ },
+ "vs3-curtain": {
+  "id": "vs3-curtain",
+  "name": "VS-3 \"Curtain\"",
+  "category": "grenades",
+  "skill": {
+   "id": "melee",
+   "name": "Melee",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": null,
+  "damage": null,
+  "damageFormula": null,
+  "style": null,
+  "damageType": null,
+  "reach": null,
+  "parry": null,
+  "range": null,
+  "radius": "10m",
+  "rof": null,
+  "capacity": null,
+  "escalation": {
+   "1x": "+1 round",
+   "2x+": "+2 rounds"
+  },
+  "defense": "TN 8 TH 3",
+  "tags": [],
+  "features": [],
+  "weaponNotes": "Smoke, Blinded, 3 rounds",
+  "kind": "weapons",
+  "price": 150,
+  "availability": "Common",
+  "flavorLine": "A ten-meter obscurement cloud that lasts long enough to matter.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 150Ç. You have 0Ç."
+  }
+ },
+ "ig7-cinder": {
+  "id": "ig7-cinder",
+  "name": "IG-7 \"Cinder\"",
+  "category": "grenades",
+  "skill": {
+   "id": "melee",
+   "name": "Melee",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": null,
+  "damage": null,
+  "damageFormula": "6/round",
+  "style": null,
+  "damageType": null,
+  "reach": null,
+  "parry": null,
+  "range": null,
+  "radius": "5m",
+  "rof": null,
+  "capacity": null,
+  "escalation": {
+   "1x": "+1 round",
+   "2x+": "+2 rounds"
+  },
+  "defense": "TN 8 TH 2",
+  "tags": [],
+  "features": [],
+  "weaponNotes": "Incendiary, Burning",
+  "kind": "weapons",
+  "price": 800,
+  "availability": "Rare",
+  "flavorLine": "Creates a sustained burn zone for area denial. Hammerlock recommends against indoor use.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 800Ç. You have 0Ç."
+  }
+ },
+ "junk-bomb": {
+  "id": "junk-bomb",
+  "name": "\"Junk Bomb\"",
+  "category": "grenades",
+  "skill": {
+   "id": "melee",
+   "name": "Melee",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": null,
+  "damage": null,
+  "damageFormula": "Varies",
+  "style": null,
+  "damageType": null,
+  "reach": null,
+  "parry": null,
+  "range": null,
+  "radius": "Varies",
+  "rof": null,
+  "capacity": null,
+  "escalation": {
+   "1x": "+1d4 dmg",
+   "2x+": "Injured"
+  },
+  "defense": "TN 8 TH 2",
+  "tags": [
+   "Siege"
+  ],
+  "features": [],
+  "weaponNotes": "Unstable -- roll 1d4 (1 Frag DMG8/5m, 2 Stun 10m non-lethal, 3 Smoke 10m, 4 Dud)",
+  "kind": "weapons",
+  "price": 75,
+  "availability": "Common",
+  "flavorLine": "Somebody's best guess at a grenade, assembled from optimism and scavenged casings.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 75Ç. You have 0Ç."
+  }
+ },
+ "star-dust-grenade": {
+  "id": "star-dust-grenade",
+  "name": "Star Dust Grenade",
+  "category": "grenades",
+  "skill": {
+   "id": "melee",
+   "name": "Melee",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": null,
+  "damage": null,
+  "damageFormula": "1/round",
+  "style": null,
+  "damageType": null,
+  "reach": null,
+  "parry": null,
+  "range": null,
+  "radius": "5m cloud",
+  "rof": null,
+  "capacity": null,
+  "escalation": {
+   "1x": "+1 min",
+   "2x+": "+2 min"
+  },
+  "defense": "TN 8 TH 2",
+  "tags": [
+   "Withering"
+  ],
+  "features": [],
+  "weaponNotes": "Anti-Regen -- disperses a silver-laced cloud making regeneration impossible for 1d4+1 minutes",
+  "kind": "weapons",
+  "price": 600,
+  "availability": "By Practice",
+  "flavorLine": "Developed by those who hunt lycanthropes and their kindred.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 600Ç. You have 0Ç."
+  }
+ },
+ "sunburst-grenade": {
+  "id": "sunburst-grenade",
+  "name": "Sunburst Grenade",
+  "category": "grenades",
+  "skill": {
+   "id": "melee",
+   "name": "Melee",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": null,
+  "damage": null,
+  "damageFormula": null,
+  "style": null,
+  "damageType": null,
+  "reach": null,
+  "parry": null,
+  "range": null,
+  "radius": "10m",
+  "rof": null,
+  "capacity": null,
+  "escalation": {
+   "1x": "Blinded",
+   "2x+": "Stunned"
+  },
+  "defense": "TN 8 TH 3",
+  "tags": [
+   "Withering",
+   "Stunning"
+  ],
+  "features": [],
+  "weaponNotes": "Disoriented, Withering (UV) -- a modified flashbang; the concussive effect hits everyone in range regardless of supernatural status",
+  "kind": "weapons",
+  "price": 500,
+  "availability": "By Practice",
+  "flavorLine": "A concentrated burst of UV radiation alongside a standard concussive discharge.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 500Ç. You have 0Ç."
+  }
+ },
+ "vr8-sentinel": {
+  "id": "vr8-sentinel",
+  "name": "VR-8 \"Sentinel\"",
+  "category": "urbanRifles",
+  "skill": {
+   "id": "rifles",
+   "name": "Rifles",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 1,
+  "damage": 7,
+  "damageFormula": null,
+  "style": null,
+  "damageType": "Ballistic",
+  "reach": null,
+  "parry": null,
+  "range": "Long",
+  "radius": null,
+  "rof": "S/B/F",
+  "capacity": "30+1",
+  "escalation": null,
+  "defense": null,
+  "tags": [],
+  "features": [],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 2800,
+  "availability": "Common",
+  "flavorLine": "What front-line professionals carry when they expect a long field assignment.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 2,800Ç. You have 0Ç."
+  }
+ },
+ "ar9x-guardian": {
+  "id": "ar9x-guardian",
+  "name": "AR-9X \"Guardian\"",
+  "category": "urbanRifles",
+  "skill": {
+   "id": "rifles",
+   "name": "Rifles",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 2,
+  "damage": 7,
+  "damageFormula": null,
+  "style": null,
+  "damageType": "Ballistic",
+  "reach": null,
+  "parry": null,
+  "range": "Long",
+  "radius": null,
+  "rof": "S/B/F",
+  "capacity": "30+1",
+  "escalation": null,
+  "defense": null,
+  "tags": [],
+  "features": [
+   "SMART Link"
+  ],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 4500,
+  "availability": "Uncommon",
+  "flavorLine": "AI targeting compensation for marksman precision without giving up full-auto.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 4,500Ç. You have 0Ç."
+  }
+ },
+ "the-preacher": {
+  "id": "the-preacher",
+  "name": "\"The Preacher\"",
+  "category": "shotguns",
+  "skill": {
+   "id": "rifles",
+   "name": "Rifles",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 0,
+  "damage": 8,
+  "damageFormula": null,
+  "style": null,
+  "damageType": "Ballistic",
+  "reach": null,
+  "parry": null,
+  "range": "Low",
+  "radius": null,
+  "rof": "S",
+  "capacity": "2",
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "Spread"
+  ],
+  "features": [
+   "Conceal"
+  ],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 400,
+  "availability": "Common",
+  "flavorLine": "A sawed-off shotgun. No ACC bonus, because at that distance ACC is a formality.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 400Ç. You have 0Ç."
+  }
+ },
+ "sg88-siege-breaker": {
+  "id": "sg88-siege-breaker",
+  "name": "SG-88 \"Siege Breaker\"",
+  "category": "shotguns",
+  "skill": {
+   "id": "rifles",
+   "name": "Rifles",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 1,
+  "damage": 9,
+  "damageFormula": null,
+  "style": null,
+  "damageType": "Ballistic",
+  "reach": null,
+  "parry": null,
+  "range": "Medium",
+  "radius": null,
+  "rof": "S/B",
+  "capacity": "8+1",
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "Spread"
+  ],
+  "features": [],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 3200,
+  "availability": "Uncommon",
+  "flavorLine": "Semi-automatic with burst capability. Will breach most doors and whoever's behind them.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 3,200Ç. You have 0Ç."
+  }
+ },
+ "bdf-tora": {
+  "id": "bdf-tora",
+  "name": "BDF Tora",
+  "category": "sniperRifles",
+  "skill": {
+   "id": "rifles",
+   "name": "Rifles",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 5,
+  "damage": 9,
+  "damageFormula": null,
+  "style": null,
+  "damageType": "Ballistic",
+  "reach": null,
+  "parry": null,
+  "range": "Long",
+  "radius": null,
+  "rof": "S",
+  "capacity": "10+1",
+  "escalation": null,
+  "defense": null,
+  "tags": [],
+  "features": [
+   "Scope"
+  ],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 11000,
+  "availability": "Rare",
+  "flavorLine": "A marksman rifle built around a tradition of marksmanship. Single shot only, by design.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 11,000Ç. You have 0Ç."
+  }
+ },
+ "bdf-ryu": {
+  "id": "bdf-ryu",
+  "name": "BDF Ryū",
+  "category": "sniperRifles",
+  "skill": {
+   "id": "rifles",
+   "name": "Rifles",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 3,
+  "damage": 10,
+  "damageFormula": null,
+  "style": null,
+  "damageType": "Ballistic",
+  "reach": null,
+  "parry": null,
+  "range": "Extreme",
+  "radius": null,
+  "rof": "S",
+  "capacity": "5+1",
+  "escalation": null,
+  "defense": null,
+  "tags": [],
+  "features": [
+   "Scope"
+  ],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 20000,
+  "availability": "Exotic",
+  "flavorLine": "Exists at a distance most weapons can't reach and most operators can't fully use.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 20,000Ç. You have 0Ç."
+  }
+ },
+ "vr50-verdict": {
+  "id": "vr50-verdict",
+  "name": "VR-50 \"Verdict\"",
+  "category": "sniperRifles",
+  "skill": {
+   "id": "rifles",
+   "name": "Rifles",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 2,
+  "damage": 12,
+  "damageFormula": null,
+  "style": null,
+  "damageType": "Ballistic",
+  "reach": null,
+  "parry": null,
+  "range": "Extreme",
+  "radius": null,
+  "rof": "S",
+  "capacity": "3+1",
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "Anti-Materiel"
+  ],
+  "features": [
+   "Bipod Mount",
+   "Scope"
+  ],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 14000,
+  "availability": "Rare",
+  "flavorLine": "Not a sniper rifle -- an anti-materiel rifle. Built to destroy things, not just people.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 14,000Ç. You have 0Ç."
+  }
+ },
+ "vlw6-titan": {
+  "id": "vlw6-titan",
+  "name": "VLW-6 \"Titan\"",
+  "category": "heavyWeapons",
+  "skill": {
+   "id": "heavy-weapons",
+   "name": "Heavy Weapons",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 0,
+  "damage": 7,
+  "damageFormula": null,
+  "style": null,
+  "damageType": "Ballistic",
+  "reach": null,
+  "parry": null,
+  "range": "Long",
+  "radius": null,
+  "rof": "S/B/F",
+  "capacity": "100 (belt)",
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "Suppression"
+  ],
+  "features": [
+   "Bipod Mount"
+  ],
+  "weaponNotes": "Two-Handed",
+  "kind": "weapons",
+  "price": 3500,
+  "availability": "Uncommon",
+  "flavorLine": "Belt-fed, bipod-equipped, built for sustained suppressive fire.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 3,500Ç. You have 0Ç."
+  }
+ },
+ "vhw12-ironwall": {
+  "id": "vhw12-ironwall",
+  "name": "VHW-12 \"Ironwall\"",
+  "category": "heavyWeapons",
+  "skill": {
+   "id": "heavy-weapons",
+   "name": "Heavy Weapons",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 0,
+  "damage": 9,
+  "damageFormula": null,
+  "style": null,
+  "damageType": "Ballistic",
+  "reach": null,
+  "parry": null,
+  "range": "Long",
+  "radius": null,
+  "rof": "S/B/F",
+  "capacity": "200 (belt)",
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "Suppression"
+  ],
+  "features": [
+   "Vehicle Mount"
+  ],
+  "weaponNotes": "Two-Handed; requires a proper mount, not just a bipod",
+  "kind": "weapons",
+  "price": 9500,
+  "availability": "Rare",
+  "flavorLine": "Larger caliber, higher damage, a 200-round belt that turns a position into a problem.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 9,500Ç. You have 0Ç."
+  }
+ },
+ "hgl4-anvil": {
+  "id": "hgl4-anvil",
+  "name": "HGL-4 \"Anvil\"",
+  "category": "heavyWeapons",
+  "skill": {
+   "id": "heavy-weapons",
+   "name": "Heavy Weapons",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 1,
+  "damage": 9,
+  "damageFormula": null,
+  "style": null,
+  "damageType": "Ballistic",
+  "reach": null,
+  "parry": null,
+  "range": "Medium",
+  "radius": null,
+  "rof": "S",
+  "capacity": "6",
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "Area (5m)",
+   "Blast",
+   "Siege"
+  ],
+  "features": [],
+  "weaponNotes": "Two-Handed; six-round revolving grenade launcher, ammunition sold in four varieties",
+  "kind": "weapons",
+  "price": 7000,
+  "availability": "Rare",
+  "flavorLine": "Area denial and indirect fire -- aim at the vicinity, let the blast radius handle the rest.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 7,000Ç. You have 0Ç."
+  }
+ },
+ "hrl1-thunderhead": {
+  "id": "hrl1-thunderhead",
+  "name": "HRL-1 \"Thunderhead\"",
+  "category": "heavyWeapons",
+  "skill": {
+   "id": "heavy-weapons",
+   "name": "Heavy Weapons",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 0,
+  "damage": 15,
+  "damageFormula": null,
+  "style": null,
+  "damageType": null,
+  "reach": null,
+  "parry": null,
+  "range": "Long",
+  "radius": null,
+  "rof": "S",
+  "capacity": "1",
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "Blast (10m)",
+   "Siege"
+  ],
+  "features": [],
+  "weaponNotes": "Two-Handed; one round, then a full action to reload",
+  "kind": "weapons",
+  "price": 15000,
+  "availability": "Exotic",
+  "flavorLine": "Single shot, shoulder-fired, built for targets that believe cover will protect them.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 15,000Ç. You have 0Ç."
+  }
+ },
+ "hft3-hellmouth": {
+  "id": "hft3-hellmouth",
+  "name": "HFT-3 \"Hellmouth\"",
+  "category": "heavyWeapons",
+  "skill": {
+   "id": "heavy-weapons",
+   "name": "Heavy Weapons",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 0,
+  "damage": null,
+  "damageFormula": "6/round",
+  "style": null,
+  "damageType": "Burning",
+  "reach": null,
+  "parry": null,
+  "range": "Low",
+  "radius": null,
+  "rof": "Continuous",
+  "capacity": "10 bursts",
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "Burning",
+   "Area (cone)"
+  ],
+  "features": [],
+  "weaponNotes": "Two-Handed; ongoing damage every round until the target is no longer burning",
+  "kind": "weapons",
+  "price": 6000,
+  "availability": "Rare",
+  "flavorLine": "Ten bursts of sustained burning discharge in a forward cone.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 6,000Ç. You have 0Ç."
+  }
+ },
+ "hxc1-absolute": {
+  "id": "hxc1-absolute",
+  "name": "HXC-1 \"Absolute\"",
+  "category": "heavyWeapons",
+  "skill": {
+   "id": "heavy-weapons",
+   "name": "Heavy Weapons",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 0,
+  "damage": 20,
+  "damageFormula": null,
+  "style": null,
+  "damageType": null,
+  "reach": null,
+  "parry": null,
+  "range": "Medium",
+  "radius": null,
+  "rof": "S",
+  "capacity": "1",
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "Blast (15m)",
+   "Siege"
+  ],
+  "features": [
+   "Vehicle Mount"
+  ],
+  "weaponNotes": "Two-Handed; a man-portable siege weapon",
+  "kind": "weapons",
+  "price": null,
+  "availability": "By Contract",
+  "flavorLine": "There is no diplomatic way to describe what the Absolute does.",
+  "buy": {
+   "ok": false,
+   "why": "No street price. Add it, then log what it cost under Çredits."
+  }
+ },
+ "ads-le4-falcon": {
+  "id": "ads-le4-falcon",
+  "name": "ADS LE-4 \"Falcon\"",
+  "category": "beamSidearms",
+  "skill": {
+   "id": "beam-weapons",
+   "name": "Beam Weapons",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 2,
+  "damage": 5,
+  "damageFormula": null,
+  "style": null,
+  "damageType": "Energy",
+  "reach": null,
+  "parry": null,
+  "range": "Medium",
+  "radius": null,
+  "rof": "S/B",
+  "capacity": "20",
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "No Recoil"
+  ],
+  "features": [],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 2500,
+  "availability": "Uncommon",
+  "flavorLine": "Compact laser sidearm: no recoil, no muzzle flash, no ballistic signature.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 2,500Ç. You have 0Ç."
+  }
+ },
+ "ads-ls7-whisper-e": {
+  "id": "ads-ls7-whisper-e",
+  "name": "ADS LS-7 \"Whisper-E\"",
+  "category": "beamLongarms",
+  "skill": {
+   "id": "beam-weapons",
+   "name": "Beam Weapons",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 1,
+  "damage": 6,
+  "damageFormula": null,
+  "style": null,
+  "damageType": "Energy",
+  "reach": null,
+  "parry": null,
+  "range": "Medium",
+  "radius": null,
+  "rof": "S/B/F",
+  "capacity": "30",
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "No Recoil"
+  ],
+  "features": [],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 3200,
+  "availability": "Uncommon",
+  "flavorLine": "The Falcon's platform extended into an SMG form factor.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 3,200Ç. You have 0Ç."
+  }
+ },
+ "orion-pc6-inferno": {
+  "id": "orion-pc6-inferno",
+  "name": "Orion PC-6 \"Inferno\"",
+  "category": "beamLongarms",
+  "skill": {
+   "id": "beam-weapons",
+   "name": "Beam Weapons",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 0,
+  "damage": 8,
+  "damageFormula": null,
+  "style": null,
+  "damageType": "Energy",
+  "reach": null,
+  "parry": null,
+  "range": "Long",
+  "radius": null,
+  "rof": "S/B",
+  "capacity": "15",
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "Burning",
+   "Volatile"
+  ],
+  "features": [],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 4500,
+  "availability": "Uncommon",
+  "flavorLine": "A plasma discharge that keeps burning after the initial hit.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 4,500Ç. You have 0Ç."
+  }
+ },
+ "orion-pb2-oblivion": {
+  "id": "orion-pb2-oblivion",
+  "name": "Orion PB-2 \"Oblivion\"",
+  "category": "beamLongarms",
+  "skill": {
+   "id": "beam-weapons",
+   "name": "Beam Weapons",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 2,
+  "damage": 10,
+  "damageFormula": null,
+  "style": null,
+  "damageType": "Energy",
+  "reach": null,
+  "parry": null,
+  "range": "Long",
+  "radius": null,
+  "rof": "S",
+  "capacity": "5",
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "Disintegration",
+   "Volatile"
+  ],
+  "features": [],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 11000,
+  "availability": "Rare",
+  "flavorLine": "A focused particle beam that disrupts matter at a molecular level on contact.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 11,000Ç. You have 0Ç."
+  }
+ },
+ "argus-er3-nullifier": {
+  "id": "argus-er3-nullifier",
+  "name": "Argus ER-3 \"Nullifier\"",
+  "category": "beamSpecialist",
+  "skill": {
+   "id": "beam-weapons",
+   "name": "Beam Weapons",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 1,
+  "damage": 4,
+  "damageFormula": null,
+  "style": null,
+  "damageType": "Energy",
+  "reach": null,
+  "parry": null,
+  "range": "Long",
+  "radius": null,
+  "rof": "S/B",
+  "capacity": "10",
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "EMP"
+  ],
+  "features": [
+   "SMART Link"
+  ],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 3800,
+  "availability": "Uncommon",
+  "flavorLine": "Against an unaugmented target, underwhelming. Against a heavily cybered operative, decisive.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 3,800Ç. You have 0Ç."
+  }
+ },
+ "hammerlock-pc1-sundown": {
+  "id": "hammerlock-pc1-sundown",
+  "name": "Hammerlock PC-1 \"Sundown\"",
+  "category": "beamHeavy",
+  "skill": {
+   "id": "beam-weapons",
+   "name": "Beam Weapons",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 0,
+  "damage": 12,
+  "damageFormula": null,
+  "style": null,
+  "damageType": "Energy",
+  "reach": null,
+  "parry": null,
+  "range": "Medium",
+  "radius": null,
+  "rof": "S",
+  "capacity": "1",
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "Area (5m)",
+   "Blast",
+   "Siege"
+  ],
+  "features": [
+   "Vehicle Mount Required"
+  ],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": null,
+  "availability": "By Contract",
+  "flavorLine": "What it would take to make directed energy weapons worse, in the best possible way.",
+  "buy": {
+   "ok": false,
+   "why": "No street price. Add it, then log what it cost under Çredits."
+  }
+ },
+ "urban-recurve-bow": {
+  "id": "urban-recurve-bow",
+  "name": "Urban Recurve Bow",
+  "category": "archery",
+  "skill": {
+   "id": "archery",
+   "name": "Archery",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 1,
+  "damage": 6,
+  "damageFormula": null,
+  "style": null,
+  "damageType": null,
+  "reach": null,
+  "parry": null,
+  "range": "Medium",
+  "radius": null,
+  "rof": "S",
+  "capacity": null,
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "Silent",
+   "Payload"
+  ],
+  "features": [],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 400,
+  "availability": "Common",
+  "flavorLine": "A takedown recurve bow collapsible into a configuration that fits a gear bag.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 400Ç. You have 0Ç."
+  }
+ },
+ "bdf-yumi": {
+  "id": "bdf-yumi",
+  "name": "BDF Yumi",
+  "category": "archery",
+  "skill": {
+   "id": "archery",
+   "name": "Archery",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 2,
+  "damage": 8,
+  "damageFormula": null,
+  "style": null,
+  "damageType": null,
+  "reach": null,
+  "parry": null,
+  "range": "Long",
+  "radius": null,
+  "rof": "S",
+  "capacity": null,
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "Silent",
+   "Payload"
+  ],
+  "features": [],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 6000,
+  "availability": "Rare",
+  "flavorLine": "A traditional longbow reinterpreted in carbon fiber, hand-fitted to its owner's draw length.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 6,000Ç. You have 0Ç."
+  }
+ },
+ "ads-tc1-strix": {
+  "id": "ads-tc1-strix",
+  "name": "ADS TC-1 \"Strix\"",
+  "category": "archery",
+  "skill": {
+   "id": "archery",
+   "name": "Archery",
+   "trained": false
+  },
+  "attack": 1,
+  "acc": 2,
+  "damage": 7,
+  "damageFormula": null,
+  "style": null,
+  "damageType": null,
+  "reach": null,
+  "parry": null,
+  "range": "Medium",
+  "radius": null,
+  "rof": "S/B",
+  "capacity": "6",
+  "escalation": null,
+  "defense": null,
+  "tags": [
+   "Silent",
+   "Payload"
+  ],
+  "features": [
+   "Conceal"
+  ],
+  "weaponNotes": null,
+  "kind": "weapons",
+  "price": 2800,
+  "availability": "Uncommon",
+  "flavorLine": "A magazine-fed tactical crossbow with a folding stock and repeating bolt mechanism.",
+  "buy": {
+   "ok": false,
+   "why": "Costs 2,800Ç. You have 0Ç."
+  }
+ }
+}
