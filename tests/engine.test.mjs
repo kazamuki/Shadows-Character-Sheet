@@ -10263,6 +10263,6 @@ test("L1 4 (engine): only the twelve firearms' lines change", () => {
     }
     assert.deepEqual(now, was, `${w.id}'s line moved beyond its damageType`);
   }
-  assert.deepEqual(changed.sort(), D.weapons.filter(w => w.category === "handguns" || w.category === "smgs").map(w => w.id).sort());
+  assert.equal([...changed].sort().join(), D.weapons.filter(w => w.category === "handguns" || w.category === "smgs").map(w => w.id).sort().join());
   assert.equal(changed.length, 12);
 });

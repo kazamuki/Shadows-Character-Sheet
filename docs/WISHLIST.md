@@ -286,6 +286,7 @@ Martial Arts while it's checked as worn, **without touching the BOD bonus**,
 because it reinforces the body for a while rather than changing it. The same
 goes for REF, MOB and the rest. Today a worn piece answers a hit and nothing
 else; a bonus it prints is text the player applies by hand.
+*L1 (PR #PRN) typed the 12 handguns and SMGs Ballistic and flagged the 10 weapons the book doesn't type (F48); the three grenades that deal no damage stay untyped.*
 **Ken's reading (2026-10-08):** a piece of gear or armor carries **modifiers**
 that apply only while it's worn, to **stats, skills, weapons and powers**.
 Weapons are addressed by class, **ranged or melee** and **kinetic or energy**,

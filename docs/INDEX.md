@@ -148,6 +148,7 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 | `F45` | Which Skill appraises (Concierge's 1d4 kicker names none). Stubbed: left as the tweak's text (Decision 237) | Deighton |
 | `F46` | (on Survival Instinct) Do kicker dice stack, and do two combine into the next die size up (Ken believes so, unconfirmed)? Stubbed: each kicker shows on its own, nothing combines (Decision 237) | Deighton |
 | `F47` | Which kicker is "your Kicker Die" for Specialist and Make My Own Luck? Stubbed: no kicker grows or rolls twice (Decision 237) | Deighton |
+| `F48` | Which damage type the book's untyped weapons deal (3 bows, 5 damaging grenades, 2 launchers). Stubbed: untyped, the Loadout card says the GM rules (L1) | Deighton |
 Every `flagged: true` in the data names an F-number open here; `tests/docs.test.mjs`
 fails on one that doesn't (audit A7).
 

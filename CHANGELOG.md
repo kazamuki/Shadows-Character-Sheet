@@ -23,6 +23,11 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.54.3
+
+- **Handguns and SMGs say their damage type, Ballistic,** on Loadout and in the catalog.
+- **Bows, most grenades and the two launchers say their damage type is your GM's call,** until it's settled.
+
 ## v0.54.2 — 2026-10-24
 
 - **The Character tab reads in rows.** Every section, from Baseline Traits to your Bloodline or Origin, starts on its own line at the left, with its cards lined up beneath. No more hunting for where Powers begins.
