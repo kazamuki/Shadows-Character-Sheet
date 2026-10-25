@@ -13,7 +13,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { boot, stored } from "./harness.mjs";
-import { Engine, D, lockedCharacter, openSheet, activeChar, pickFromCatalog, search, clickIn, draft, draftOn, wizCss, writtenInCharacter, focused, lockedVampire } from "./smokekit.mjs";
+import { Engine, D, lockedCharacter, openSheet, activeChar, pickFromCatalog, search, clickIn, draft, draftOn, wizCss, writtenInCharacter, focused, lockedVampire, type } from "./smokekit.mjs";
 
 // ── Adversarial review of PR #7 — the UI half ─────────────────────────
 
@@ -1365,4 +1365,109 @@ test("L1 5 (sheet): a handgun's Loadout card says Ballistic, and a bow's says it
   app.click('[data-sec="main"]');
   const m = app.$("#main").textContent;
   assert.ok(!m.includes(bow.playerNote) && !m.includes(D.appCopy.unsettledLabel), "Main shows the note");
+});
+
+// ── L2: a custom weapon reads like the catalog's ────────────────────────
+function l2Character(zip = {}) {
+  const ch = lockedCharacter();
+  ch.skills.handguns = { rank: 3, ipe: 0 };
+  Engine.addLoadout(ch, "weapons", "cheapshot");
+  ch.weapons.push(Object.assign({ custom: true, name: "Zip gun", damage: "BOD+3", rof: "S", capacity: "4", ammo: "", features: "", notes: "", roundsSpent: 0 }, zip));
+  return ch;
+}
+const l2Typed = { category: "handguns", damageType: "ballistic", range: "Short", acc: 1 };
+const rowOf = (app, i) => app.$(`#main [data-weaponrow="${i}"]`);
+const cellsOf = row => [...row.querySelectorAll("td")].map(td => td.textContent.replace(/\s+/g, " ").trim());
+
+test("L2 8 (sheet): a typed custom weapon's folded row on Loadout reads like a catalog row", () => {
+  const app = openSheet(l2Character(l2Typed), "loadout");
+  const zip = rowOf(app, 1), cheap = rowOf(app, 0);
+  assert.ok(zip && cheap, "the weapon rows aren't found by their index");
+  assert.equal(zip.querySelector(".lo-sub").textContent, "Handguns · Ballistic");
+  const [name, attack, damage, range] = cellsOf(zip);
+  assert.match(name, /^Zip gun/);
+  assert.match(attack, /^1d10 \+ 8/);
+  assert.match(attack, /\+1 ACC on Single/);
+  assert.equal(damage, "8BOD+3");
+  assert.equal(range, "Short");
+  // The catalog row beside it reads the same attack, and keeps the catalog's own range word.
+  assert.match(cellsOf(cheap)[1], /^1d10 \+ 8/);
+  assert.equal(cellsOf(cheap)[3], "Low");
+  // An untyped one has no attack and says so.
+  const bare = openSheet(l2Character(), "loadout");
+  assert.equal(cellsOf(rowOf(bare, 1))[1], "—");
+  assert.deepEqual([...app.errors, ...bare.errors], []);
+});
+
+test("L2 9 (sheet): Main and the print sheet show a typed custom weapon's attack and range", () => {
+  const ch = l2Character(l2Typed);
+  const app = openSheet(ch, "main");
+  const row = app.$$("#main table.ref tbody tr").find(tr => /Zip gun/.test(tr.textContent));
+  assert.ok(row, "Main has no row for the Zip gun");
+  assert.match(cellsOf(row)[1], /^1d10 \+ 8/);
+  assert.match(cellsOf(row)[2], /^8/);
+  const page = app.window.renderPrintView(ch);
+  const tr = page.split("<tr>").find(r => /Zip gun/.test(r));
+  assert.ok(tr, "the printed sheet has no row for the Zip gun");
+  assert.match(tr, /1d10\+8 \(\+1 ACC\)/);
+  assert.match(tr, />Short</);
+  // The old type text names a printed row only while there's no type.
+  const old = l2Character({ type: "pistol" });
+  assert.match(app.window.renderPrintView(old), /Zip gun · pistol/);
+  assert.doesNotMatch(app.window.renderPrintView(l2Character({ type: "pistol", category: "handguns" })), /Zip gun · pistol/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("L2 10 (sheet): each pick on an open custom weapon is one undoable action, and a saved type shows until a type is picked", () => {
+  const app = openSheet(l2Character({ type: "pistol" }), "loadout");
+  const audit = () => activeChar(app).audit;
+  app.click('[data-loedit="weapons|1"]');
+  const open = () => rowOf(app, 1);
+  assert.ok(open().querySelector('[data-cell="weapons|1|name"]'), "Edit didn't open the row");
+  assert.equal(open().querySelector('[data-cell="weapons|1|type"]'), null, "the old type is still a typed cell");
+  assert.match(open().querySelector("[data-weapontypehint]").textContent, /pistol/);
+  // Typing is not audited.
+  const before = audit().length;
+  type(app, '[data-cell="weapons|1|name"]', "Zip gunner");
+  assert.equal(audit().length, before, "a keystroke was audited");
+  type(app, '[data-cell="weapons|1|name"]', "Zip gun");
+  // Picking a type: one entry, the row stays open, focus stays on the control, the hint goes.
+  const pick = (field, value) => {
+    const el = open().querySelector(`[data-weaponpick="1|${field}"]`);
+    el.value = value; el.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  };
+  pick("category", "handguns");
+  const last = audit().at(-1);
+  assert.equal(audit().length, before + 1);
+  assert.match(last.label, /Zip gun/);
+  assert.match(last.label, /Handguns/);
+  assert.equal(activeChar(app).weapons[1].category, "handguns");
+  assert.equal(activeChar(app).weapons[1].type, "pistol", "a pick cleared the saved type");
+  assert.ok(open().querySelector('[data-cell="weapons|1|name"]'), "the pick folded the row");
+  assert.equal(open().querySelector("[data-weapontypehint]"), null, "the hint stayed after a type was picked");
+  // Damage type, range, ACC.
+  pick("damageType", "blade");
+  pick("range", "Long");
+  assert.equal(activeChar(app).weapons[1].damageType, "blade");
+  assert.equal(activeChar(app).weapons[1].range, "Long");
+  const acc = open().querySelector('[data-weaponpick="1|acc"]');
+  acc.value = "2"; acc.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  assert.equal(activeChar(app).weapons[1].acc, 2);
+  assert.match(audit().at(-1).label, /ACC/);
+  assert.ok(open().querySelector('[data-cell="weapons|1|name"]'), "a pick folded the row");
+  // A refused ACC stores nothing and says why.
+  const n = audit().length;
+  const acc2 = open().querySelector('[data-weaponpick="1|acc"]');
+  acc2.value = "-1"; acc2.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  assert.equal(activeChar(app).weapons[1].acc, 2, "a refused ACC was stored");
+  assert.equal(audit().length, n);
+  assert.match(app.$("#main").textContent + (app.$("#notice") ? app.$("#notice").textContent : "") + app.window.document.body.textContent, /ACC is a whole number, 0 or more/);
+  // Undo takes the ACC back (the row folds, as W70 recorded); undoing the type brings the hint back.
+  while (audit().length > before) app.click("#undotoast [data-toastundo]");
+  const back = activeChar(app).weapons[1];
+  assert.ok(!Object.hasOwn(back, "category"), "undo left the type");
+  assert.equal(back.type, "pistol");
+  app.click('[data-loedit="weapons|1"]');
+  assert.match(open().querySelector("[data-weapontypehint]").textContent, /pistol/);
+  assert.deepEqual(app.errors, []);
 });

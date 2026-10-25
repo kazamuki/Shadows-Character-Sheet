@@ -10245,3 +10245,144 @@ test("L1 3 (engine): every weapon's damage type is the book's word, and an untyp
     }
   }
 });
+
+// ── L2: a custom weapon reads like the catalog's ───────────────────────
+function zipGun(extra = {}) {
+  const ch = subject({ bod: 5 });
+  ch.skills.handguns = { rank: 3, ipe: 0 };
+  ch.weapons.push(Object.assign({ custom: true, name: "Zip gun", damage: "BOD+3", rof: "S", capacity: "4", ammo: "", features: "", notes: "", roundsSpent: 0 }, extra));
+  return ch;
+}
+
+test("L2 1 (engine): a custom weapon typed Handguns attacks with Handguns, the same number a catalog handgun shows", () => {
+  const ch = zipGun({ category: "handguns" });
+  const line = Engine.weaponLine(ch, 0);
+  assert.equal(line.category, "handguns");
+  assert.equal(line.skill.id, "handguns");
+  Engine.addLoadout(ch, "weapons", "cheapshot");
+  const cat = Engine.weaponLine(ch, 1);
+  assert.equal(typeof line.attack, "number");
+  assert.equal(line.attack, cat.attack, "a custom handgun doesn't attack as a catalog one does");
+  assert.equal(line.attack, 8);
+  const bare = Engine.weaponLine(zipGun(), 0);
+  assert.equal(bare.skill, null);
+  assert.equal(bare.attack, null);
+});
+
+test("L2 2 (engine): a custom weapon's damage reads as the book's: BOD+3 is BOD + 3, a number is fixed, anything else is text", () => {
+  const read = d => { const l = Engine.weaponLine(zipGun({ damage: d }), 0); return [l.damage, l.damageFormula]; };
+  assert.deepEqual(read("BOD+3"), [8, "BOD+3"]);
+  assert.deepEqual(read("8"), [8, null]);
+  assert.deepEqual(read("2d6"), [null, "2d6"]);
+  assert.deepEqual(read(""), [null, null]);
+  assert.deepEqual(read("8 plus"), [null, "8 plus"], "a digits-only rule widened to text with a number in it");
+  assert.deepEqual(Engine.weaponDamage(zipGun(), "8"), { value: 8, formula: null });
+});
+
+test("L2 3 (engine): a custom weapon's damage type, range and ACC are its picks, and its damage type reads by name", () => {
+  const l = Engine.weaponLine(zipGun({ damageType: "ballistic", range: "Short", acc: 2 }), 0);
+  assert.equal(l.damageType, "Ballistic");
+  assert.equal(l.range, "Short");
+  assert.equal(l.acc, 2);
+  const bad = Engine.weaponLine(zipGun({ damageType: "elemental", range: "Low", acc: 2 }), 0);
+  assert.equal(bad.damageType, null, "a magical damage type was read");
+  assert.equal(bad.range, null, "the catalog's word was read as a band");
+  const none = Engine.weaponLine(zipGun(), 0);
+  assert.deepEqual([none.damageType, none.range, none.acc], [null, null, null]);
+  // The bands agree with the quick reference's table (the book's half is L2 3b, in rules.test.mjs).
+  const bands = D.weaponRules.rangeBands;
+  const ref = D.gmReference.panels.find(p => p.id === "modifiers").parts.find(p => p.title === "Range bands");
+  assert.deepEqual(bands, ref.columns, "weaponRules.rangeBands and the quick reference's Range bands disagree");
+});
+
+test("L2 4 (engine): every weapon type names a Skill, and every catalog weapon's Skill is its type's", () => {
+  const cats = new Map(D.weaponCategories.map(c => [c.id, c]));
+  for (const c of D.weaponCategories) assert.ok(Engine.skillById(c.skill), `${c.id}: skill "${c.skill}" isn't a Skill`);
+  for (const w of D.weapons) assert.equal(w.skill, cats.get(w.category).skill, `${w.id}: its Skill isn't ${w.category}'s`);
+  // …and the engine reads it: every type, picked on a custom row, attacks with that Skill.
+  for (const c of D.weaponCategories) {
+    const l = Engine.weaponLine(zipGun({ category: c.id }), 0);
+    assert.equal(l.skill.id, c.skill, `${c.id}: the custom line doesn't read its type's Skill`);
+  }
+});
+
+test("L2 5 (engine): junk in a custom weapon's picks reads as empty, from a file and from a call", () => {
+  const junk = { category: "__proto__", damageType: "x", range: "Low", acc: -1 };
+  const m = Engine.migrate(zipGun(junk));
+  for (const k of Object.keys(junk)) assert.ok(!Object.hasOwn(m.weapons[0], k), `${k} survived migrate()`);
+  assert.deepEqual(Engine.migrate(JSON.parse(JSON.stringify(m))).weapons, m.weapons);
+  for (const acc of ["2", 1.5, NaN, {}, null, -1, Infinity]) {
+    const r = Engine.migrate(zipGun({ acc }));
+    assert.ok(!Object.hasOwn(r.weapons[0], "acc"), `acc ${String(acc)} survived migrate()`);
+  }
+  for (const [k, v] of [["category", "constructor"], ["category", {}], ["damageType", "elemental"], ["damageType", "toString"], ["range", "Medium "], ["range", 3]]) {
+    const r = Engine.migrate(zipGun({ [k]: v }));
+    assert.ok(!Object.hasOwn(r.weapons[0], k), `${k} ${String(v)} survived migrate()`);
+    assert.doesNotThrow(() => Engine.weaponLine(zipGun({ [k]: v }), 0));
+  }
+  // …and from a call
+  const ch = zipGun();
+  const was = JSON.stringify(ch.weapons);
+  for (const [f, v] of [["category", "__proto__"], ["category", "nope"], ["damageType", "elemental"], ["damageType", "spirit"], ["damageType", "x"],
+    ["range", "Low"], ["range", "short"], ["acc", -1], ["acc", 1.5], ["acc", "2"], ["acc", NaN], ["acc", {}], ["skill", "handguns"], ["name", "x"], ["type", "x"], ["category", 5]]) {
+    const r = Engine.setCustomWeapon(ch, 0, f, v);
+    assert.equal(r.ok, false, `${f} ← ${String(v)} was accepted`);
+    assert.equal(typeof r.why, "string");
+    assert.equal(JSON.stringify(ch.weapons), was, `${f} ← ${String(v)} wrote on a refusal`);
+  }
+  Engine.addLoadout(ch, "weapons", "cheapshot");
+  assert.equal(Engine.setCustomWeapon(ch, 1, "category", "handguns").ok, false, "a catalog row took a pick");
+  assert.equal(Engine.setCustomWeapon(ch, 7, "category", "handguns").ok, false);
+  assert.equal(Engine.setCustomWeapon(ch, -1, "acc", 1).ok, false);
+  assert.equal(Engine.setCustomWeapon(null, 0, "acc", 1).ok, false);
+  // good picks, then cleared
+  for (const [f, v] of [["category", "handguns"], ["damageType", "blade"], ["range", "Extreme"], ["acc", 0], ["acc", 3]])
+    assert.deepEqual(Engine.setCustomWeapon(ch, 0, f, v), { ok: true, field: f, value: v });
+  assert.equal(ch.weapons[0].acc, 3);
+  for (const f of ["category", "damageType", "range", "acc"]) {
+    assert.equal(Engine.setCustomWeapon(ch, 0, f, "").ok, true);
+    assert.ok(!Object.hasOwn(ch.weapons[0], f), `${f} wasn't cleared`);
+  }
+  assert.equal(Engine.setCustomWeapon(ch, 0, "acc", null).ok, true);
+  // a custom row with all four picks round-trips
+  const full = Engine.migrate(zipGun({ category: "handguns", damageType: "ballistic", range: "Short", acc: 1 }));
+  assert.equal(full.weapons[0].category, "handguns");
+  assert.deepEqual(Engine.migrate(JSON.parse(JSON.stringify(full))), full);
+  // totality: a non-object row, a bad index
+  const odd = zipGun(); odd.weapons.push(null, 5, "x");
+  for (let i = -2; i < 6; i++) assert.doesNotThrow(() => { Engine.setCustomWeapon(odd, i, "acc", 1); Engine.weaponLine(odd, i); });
+});
+
+test("L2 6 (engine): migrate to 0.29 keeps a saved type as text, shows it until a type is picked, and adds nothing", () => {
+  const old = zipGun({ type: "pistol", name: "Old iron" });
+  old.meta.schemaVersion = "0.28";
+  const m = Engine.migrate(old);
+  assert.equal(m.meta.schemaVersion, "0.29");
+  assert.equal(m.weapons[0].type, "pistol");
+  for (const k of ["category", "damageType", "range", "acc"]) assert.ok(!Object.hasOwn(m.weapons[0], k), `migrate added ${k}`);
+  assert.equal(Engine.weaponLine(m, 0).typeText, "pistol");
+  Engine.setCustomWeapon(m, 0, "category", "handguns");
+  assert.equal(Engine.weaponLine(m, 0).typeText, null);
+  assert.equal(m.weapons[0].type, "pistol", "a pick cleared the saved type");
+  Engine.setCustomWeapon(m, 0, "category", "");
+  assert.equal(m.weapons[0].type, "pistol");
+  assert.equal(Engine.weaponLine(m, 0).typeText, "pistol");
+  const fresh = Engine.newCharacter();
+  Engine.addCustomLoadout(fresh, "weapons");
+  assert.ok(!Object.hasOwn(fresh.weapons[0], "type"), "a new custom weapon carries a type");
+});
+
+test("L2 7 (engine): no catalog weapon's line moves", () => {
+  const want = JSON.parse(readFileSync(join(ROOT, "tests/l2-weapon-lines.json"), "utf8"));
+  let n = 0;
+  for (const bod of [3, 5, 8]) {
+    const ch = subject({ bod });
+    D.weapons.forEach((w, i) => {
+      ch.weapons.push({ id: w.id, notes: "" });
+      const got = JSON.parse(JSON.stringify({ catalogLine: Engine.catalogLine(ch, "weapons", w.id), weaponLine: Engine.weaponLine(ch, i) }));
+      assert.deepEqual(got, want["BOD" + bod][w.id], `${w.id} at BOD ${bod} moved`);
+      n++;
+    });
+  }
+  assert.equal(n, D.weapons.length * 3);
+});

@@ -3376,3 +3376,14 @@ test("L1 2 (rules): CRB 0460: a grenade the book gives no damage has no damage t
     assert.ok(!w.flagged, `${name} deals no damage but is flagged`);
   }
 });
+
+test("L2 3b (rules): CRB 0530: a custom weapon's range bands are the book's", () => {
+  // "**Range bands**" then | Close | Short | Medium | Long | Extreme |
+  const text = crb("0530_Combat_Encounters.md");
+  const at = text.indexOf("**Range bands**");
+  assert.ok(at >= 0, "0530 no longer has a Range bands table");
+  const head = text.slice(at).split("\n").find(l => l.startsWith("|"));
+  const bands = head.split("|").map(s => s.trim()).filter(Boolean);
+  assert.deepEqual(bands, ["Close", "Short", "Medium", "Long", "Extreme"], "the book's range bands moved: ask before editing the data");
+  assert.deepEqual(D.weaponRules.rangeBands, bands);
+});
