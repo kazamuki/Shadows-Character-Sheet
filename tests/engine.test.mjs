@@ -256,6 +256,7 @@ test("every id the game data points at exists (R6, the 2026-09-24 audit)", () =>
     }
   }
   for (const w of D.weapons) { ref("skill", w.skill, `weapon ${w.id}`); ref("weaponCategory", w.category, `weapon ${w.id}`); }
+  for (const c of D.weaponCategories) ref("skill", c.skill, `weaponCategory ${c.id}`);   // L2: what a written-in weapon of this type attacks with
   for (const g of D.weaponModGlossary || []) {
     for (const id of ((g.onlyFor || {}).weapons || [])) ref("weapon", id, `mod ${g.id}.onlyFor`);
     for (const c of [...((g.onlyFor || {}).categories || []), ...((g.notFor || {}).categories || [])]) ref("weaponCategory", c, `mod ${g.id}`);
