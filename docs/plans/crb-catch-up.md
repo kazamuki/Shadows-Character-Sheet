@@ -125,6 +125,7 @@ This chapter carries most of the creation economy, and almost none of it is writ
 - ☐ ⚖ **Equipment › Field & Recovery › Nanomed Kit.** "Clears Bleeding, Poisoned, and Agonized" should add **Paralyzed**, to match 0540 (Decision 105, CQ12).
 - ☐ ⚖ **Introduction › The TAG (Black TAG paragraph).** Say a Black TAG *is* the Ghost TAG(s) Advantage (Decision 146), unless you put it in 0430 instead.
 - ☐ ⚖ **Weapons › Grenades table** (built in the app, Decision 219; the book still to say it) (Deighton, 2026-10-10; `reference/rulings-2026-10-10.md`). **Grenades and explosives deal Massive damage.** Say so in the table (or its lead-in), and the 2x+ Injured stands.
+- ☐ **Weapons › the weapon tables' Range column** (L2, Decision 247). The tables say Low, Medium, Long or Extreme, and 0530's Range bands are Close, Short, Medium, Long and Extreme, so "Low" isn't a band. A weapon the player writes in picks one of 0530's bands; the catalog keeps the tables' word until the book moves. Ken's call whether the tables move to the bands (the data doesn't until the book does).
 - ✅ **Siege** now reads "This weapon deals Massive damage", and the Massive category covers people (CQ4).
 - ✅ **The Conditions table is gone**, leaving a pointer to Conditions & Recovery (CQ8).
 - ✅ **Suppression** and **Blast** now have rules. That answers F28 and F29 from the book's side; the sheet needs to catch up (see the end of this list).

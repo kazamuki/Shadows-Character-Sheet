@@ -759,7 +759,7 @@ It renders on the Character tab (Decision 158).
 ```js
 {
   meta: {
-    schemaVersion: "0.28",
+    schemaVersion: "0.29",
     // (0.11, Decisions 128 and 133) The character's TAG, its permanent
     // identity: TAG- + 12 Crockford base-32 characters. Issued by
     // newCharacter(), backfilled by migrate(), never reissued. 0.12 renamed
@@ -964,9 +964,17 @@ It renders on the Character tab (Decision 158).
   // (0.14, Decision 149) `loaded`: the specialty round in the magazine (an
   // equipment id whose `reload.specialty` is true); absent for standard
   // rounds. migrate() drops anything but a string, and any on a custom weapon.
+  // (0.29, Decision 247) A custom weapon's four picks: `category` (a
+  // weaponCategories id, whose `skill` is what it attacks with), `damageType`
+  // (a non-magical damageTypes id), `range` (one of weaponRules.rangeBands)
+  // and `acc` (a whole number, 0 or more). Each is absent until picked, and
+  // migrate() deletes one that isn't real. The free-text `type` of a row from
+  // before 0.29 is kept as typed and shown until a type is picked; new rows
+  // have none. Damage reads as a catalog weapon's (a number, BOD+3, or text).
   weapons: [ { id: "combat-knife", notes: "", mods: [], roundsSpent: 0 },
              { id: "ads-lp9-viper", notes: "", mods: [], roundsSpent: 3, loaded: "silver-rounds" },
-             { custom: true, name, type, damage, rof, capacity, ammo, features, notes, roundsSpent: 0 } ],
+             { custom: true, name, damage, rof, capacity, ammo, features, notes, roundsSpent: 0,
+               category, damageType, range, acc } ],   // the last four are optional picks (0.29)
   // (0.6) Same split as weapons. `integrityLoss` is current-state input (like
   // trackers.damage), not derived — max Integrity comes from the catalog.
   // (0.8, plan P5) worn: the one body piece that rolls PROT (CQ7) · scrapped:
@@ -2725,7 +2733,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
       while 055 says Focused Healing is required (plan CQ13). The app's
       Focused Healing clears it either way.
     (Ken + Claude, 2026-09-22)
-    → **Superseded in part by Decisions 104, 105, 219 and 220** — the deferred Natural Armor and Nanomed Kit are built; Resistance is no longer one repeatable upgrade but three typed ones, each installed once (219); Dying at a Reset is the check plus a mark per ticking source, and F24 is closed (220).
+    → **Superseded in part by Decisions 104, 105, 219, 220 and 247** — a custom weapon's type, damage type, range, ACC and damage now compute (247); the deferred Natural Armor and Nanomed Kit are built; Resistance is no longer one repeatable upgrade but three typed ones, each installed once (219); Dying at a Reset is the check plus a mark per ticking source, and F24 is closed (220).
 101. **(Docs)** **The batch board leaves `STATE.md` for `docs/log/shipped.md`,
     and unscheduled ideas get `docs/WISHLIST.md`.** Decision 74 put the board
     in STATE. By 2026-09-22 it was twenty-odd rows of merged history, and STATE
@@ -5101,6 +5109,21 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 168 in part (its column flow and "a heading kept with its first card"; the top band, Advantages beside Disadvantages, and cards as many across as fit stand).
      - **Revisit if:** a section often holds one short card and its empty row reads as a gap, or the print sheet's archetype page wants this layout.
      - **Built:** app 0.54.2, no data or schema bump; `phone-check` holds the layout, smoke tests the markup. Log 2026-10-24.
+
+247. **A custom weapon picks its weapon type, damage type and range and types its ACC, and its line is computed like a catalog weapon's.**
+     *2026-10-24 · Ken + Claude · Touches: weaponLine, setCustomWeapon, weaponDamage, weaponCategories.skill, weaponRules.rangeBands, weapons[i].category, weapons[i].damageType, weapons[i].range, weapons[i].acc, weapons[i].type, Loadout's custom weapon row, character schema 0.29, W137, LQ8, LQ9, LQ16*
+     - **Decided:** A custom weapon stores four picks: `category` (a `weaponCategories` id), `damageType` (a non-magical `damageTypes` id), `range` (one of 0530's range bands, `weaponRules.rangeBands`) and `acc` (a whole number, 0 or more). Its Skill is its category's `skill`, and its attack that Skill's check bonus. Typed damage reads as a catalog weapon's: a number, `BOD+3`, or text. A saved free-text `type` is kept and shown until a type is picked; new rows have none. Each pick is one audited action; typed fields stay unaudited.
+     - **Why:** Ken (W137): a written-in weapon should read like the catalog's, and L3's class modifiers need a type and damage type to find it.
+     - **Rejected:**
+       - The player picks the Skill as well as the type (LQ8): two picks that can disagree.
+       - Matching an old `type` to a weapon type (LQ9): a guess can pick the wrong Skill.
+       - Storing the damage type's display name, as a catalog weapon does: a name may change, an id can't (constraint 6).
+       - The catalog's range words (Ken, LQ16: the book's bands, so a catalog "Low" and a custom "Short" share Loadout's Range column).
+       - Reading the bands from the quick reference's table: a test ties the two instead.
+       - Auditing the text fields' keystrokes: a pick is the only part that changes a number.
+     - **Replaces:** Decision 100 in part: "A custom weapon reads back what was typed." Its four picks and its damage now compute; its other fields still read as typed.
+     - **Revisit if:** L3's class reading finds that the catalog's display word and a custom row's id want one resolver, or a custom weapon should take mods or reload from carried ammunition (LQ14).
+     - **Built:** app 0.55.0, game data 0.49, character schema 0.29, PR #…. Log 2026-10-25 (L2).
 
 ## 5. Open Flags
 
