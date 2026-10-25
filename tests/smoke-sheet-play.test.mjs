@@ -1344,3 +1344,26 @@ test("W70 (sheet): a custom row folds, opens and folds again, and saves nothing"
   assert.deepEqual(app.errors, []);
   assert.deepEqual(again.errors, []);
 });
+
+// ── L1: a weapon's damage type, and the note on one the book doesn't type ──
+test("L1 5 (sheet): a handgun's Loadout card says Ballistic, and a bow's says its type is the GM's call", () => {
+  const ch = lockedCharacter();
+  Engine.addLoadout(ch, "weapons", "cheapshot");
+  Engine.addLoadout(ch, "weapons", "urban-recurve-bow");
+  const bow = D.weapons.find(w => w.id === "urban-recurve-bow");
+  assert.ok(bow.playerNote, "the bow has no playerNote");
+  const app = openSheet(ch, "loadout");
+  const rows = [...app.$$("table.lo-weapons tbody tr")].filter(r => r.querySelector("b"));
+  const cheap = rows.find(r => /Cheapshot/.test(r.textContent));
+  assert.equal(cheap.querySelector(".lo-sub").textContent, "Handguns · Ballistic");
+  const main = app.$("#main").textContent;
+  assert.ok(main.includes(bow.playerNote), "the bow's note isn't on its card");
+  assert.ok(main.includes(D.appCopy.unsettledLabel));
+  const card = (name) => { const r = rows.find(x => x.textContent.includes(name)); return r.textContent + (r.nextElementSibling && r.nextElementSibling.classList.contains("lo-modrow") ? r.nextElementSibling.textContent : ""); };
+  assert.ok(!card("Cheapshot").includes(D.appCopy.unsettledLabel));
+  assert.ok(!card("Cheapshot").includes(bow.playerNote));
+  assert.equal(app.errors.length, 0);
+  app.click('[data-sec="main"]');
+  const m = app.$("#main").textContent;
+  assert.ok(!m.includes(bow.playerNote) && !m.includes(D.appCopy.unsettledLabel), "Main shows the note");
+});

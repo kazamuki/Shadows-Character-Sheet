@@ -10229,3 +10229,40 @@ test("245: the activity log names a clock and a faction, and a crafted op on the
   const m = Engine.migrateTable({ ...plain(t), audit: [mk(1, "factions"), mk(2, "clocks"), mk(3, "factionz"), mk(4, "clockz")] });
   eq(m.audit.map(e => e.seq), [1, 2]);
 });
+
+// ── Weapon damage types (loadout-and-gear L1, W69) ─────────────────────
+
+test("L1 3 (engine): every weapon's damage type is the book's word, and an untyped weapon is flagged or does no damage", () => {
+  // A weapon's damageType is the book's display word: "Normal" (melee and Martial Arts) is the book's
+  // own and isn't a damageTypes name; every other value is one, by name.
+  const names = D.damageTypes.map(t => t.name);
+  assert.equal(D.weapons.length, 54);
+  for (const w of D.weapons) {
+    if (w.damageType === undefined) {
+      assert.ok(!w.damage || (w.flagged && /\bF\d+\b/.test(w.flagNote || "")), `${w.name} deals damage, has no damage type, and isn't flagged under an F-number`);
+    } else {
+      assert.ok(w.damageType === "Normal" || names.includes(w.damageType), `${w.name}'s damage type "${w.damageType}" isn't a damage type's name or the book's Normal`);
+    }
+  }
+});
+
+test("L1 4 (engine): only the twelve firearms' lines change", () => {
+  const before = JSON.parse(readFileSync(join(ROOT, "tests/l1-weapon-lines.json"), "utf8"));
+  const ch = Engine.newCharacter();
+  ch.creation.powerLevel = D.powerLevels[0].id;
+  const changed = [];
+  for (const w of D.weapons) {
+    const now = JSON.parse(JSON.stringify(Engine.catalogLine(ch, "weapons", w.id)));
+    const was = before[w.id];
+    assert.ok(was, `${w.id} isn't in the fixture`);
+    if (now.damageType !== was.damageType) {
+      assert.equal(was.damageType, null);
+      assert.equal(now.damageType, "Ballistic");
+      changed.push(w.id);
+      now.damageType = null;
+    }
+    assert.deepEqual(now, was, `${w.id}'s line moved beyond its damageType`);
+  }
+  assert.deepEqual(changed.sort(), D.weapons.filter(w => w.category === "handguns" || w.category === "smgs").map(w => w.id).sort());
+  assert.equal(changed.length, 12);
+});
