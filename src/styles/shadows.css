@@ -459,6 +459,7 @@ aside.vitals:empty{display:none}
 .ref tr.off td{opacity:.6}
 .feed-row{flex-wrap:wrap; gap:8px; align-items:center}
 .lo-scroll{overflow-x:auto; max-width:100%}
+.lo-picks .hitrow{position:sticky; left:0; max-width:calc(100vw - 40px)}   /* L2: the picks stay on screen while the typed cells scroll */
 table.lo-weapons td{vertical-align:top}
 table.lo-weapons input[type=text]{padding:4px 6px; font-size:.78rem; min-width:90px}
 table.lo-weapons td.rm{width:34px; text-align:center}
