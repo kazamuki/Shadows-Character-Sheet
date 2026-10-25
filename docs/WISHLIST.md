@@ -278,7 +278,7 @@ on P20's stat caps: ask before P20 is written.
 ### Loadout & catalog
 
 **W69 — Gear that changes what you can do while you wear it.** *Ken, from Deighton · ⏭ · Rule or shape · raised 2026-10-08 · answered by Deighton 2026-10-10*\
-**Plan:** [loadout-and-gear L1, L3 and L7](plans/loadout-and-gear.md) (L1's order drafted: [L1-weapon-damage-types](plans/loadout-and-gear/L1-weapon-damage-types.md)) · **Goes with:** W91, W137
+**Plan:** [loadout-and-gear L1, L3 and L7](plans/loadout-and-gear.md) (L1's order drafted: [L1-weapon-damage-types](plans/loadout-and-gear/L1-weapon-damage-types.md)) · **Goes with:** W91
 
 Deighton's ask: powered armor worn over the body should show its bonuses where
 they land. Armor giving +5 to BOD skills and damage should raise Melee and
@@ -360,12 +360,6 @@ P21's inventory listed these as "later orders" (`plans/archive/sheet-wishlist/P2
 - **A power on natural weapons or melee, while it runs:** Rend and Tear, Bone Spines, Monstrous Maw, Rending Claws, Blood of Valhalla (Vampire); Let It Loose, Steel Fangs, Serrated Claws (Werewolf).
 
 *To respect:* a Major saves only a `power` today (Decision 223), so a picked row is a schema bump, and the pick has to survive another row being removed (loadout rows are an array). The modifier on the line is W69's, so this follows it. The natural-weapon rows sit beside W107's natural attacks. "Combat rolls" are the attacks (P21's PQ6). Nothing stores that a power is running (W110), so the power rows are conditional marks or they wait (Decision 104's pattern).
-
-**W137 — A custom weapon reads like the catalog's.** *Ken · 💡 · Rule or shape · raised 2026-10-24*\
-**Plan:** [loadout-and-gear L2](plans/loadout-and-gear.md) (L2's order drafted: [L2-custom-weapons](plans/loadout-and-gear/L2-custom-weapons.md)) · **Goes with:** W69
-
-A weapon the player writes in is eight text boxes (name, type, damage, rof, capacity, ammo, features, notes), and its line computes nothing: no Skill, no attack number, no damage worked out from BOD, no damage type, ACC or range. A catalog weapon has all of them. Ken: a custom weapon should have its damage type, its attack and its range as the catalog shows them, and its **weapon type**, so a Skill applies to it.
-*To respect:* the custom row's shape changes, so it's a schema bump with a `migrate()` step for the free-text `type` already in saved files (`plans/loadout-and-gear.md` LQ9). The Skill comes from the type as data, never from code (LQ8; Decision 135). It reads L1's damage types, and once it has a class, W69's modifiers reach it. A custom weapon never takes a catalog `id` (constraint 6), and a junk field reads as empty (constraint 8). W109 is the wider question of a custom row switching on what a book row does.
 
 ### Cybernetics
 

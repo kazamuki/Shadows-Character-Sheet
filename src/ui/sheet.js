@@ -449,8 +449,8 @@ function renderShMain(){
   if (pain.level) h += `<p class="step-note" style="margin-bottom:10px">${esc(pain.label)} — all checks take ${pain.skillPenalty}; totals below include it.</p>`;
   h += movementLineHtml(ch);   // Decision 226
   h += conditionTotalsNote(ch, true);
-  // Weapons: a catalog piece is computed (Decision 100); a custom one reads
-  // back what was typed.
+  // Weapons: a catalog piece is computed (Decision 100); a custom one is
+  // computed from its picks (Decision 247) and reads the rest as typed.
   // A form the archetype shifts into (Decision 195) is switched here as well
   // as on Loadout, and while it's on, its natural weapons lead the weapons.
   for (const p of Engine.archPanels(ch).filter(x=>x.type==="toggle" && Engine.toggleView(ch, x).some(o=>o.does || o.text)))
@@ -462,8 +462,10 @@ function renderShMain(){
       <table class="ref"><thead><tr><th>Weapon</th><th>Attack</th><th>Dmg</th><th>RoF</th><th>Cap.</th></tr></thead><tbody>` + natural +
       lines.map(l=>{
         if (l.custom){ const w=ch.weapons[l.index];
-          return `<tr><td>${esc(w.name)||"—"}${w.features?`<div class="lo-sub">${esc(w.features)}</div>`:""}</td><td class="num">—</td><td class="num">${esc(w.damage)||"—"}</td>
-            <td class="num">${esc(w.rof)||"—"}</td><td class="num lo-rounds">${roundsHtml(l, w.capacity)}${w.ammo?` (${esc(w.ammo)})`:""}</td></tr>`; }
+          return `<tr><td>${esc(w.name)||"—"}${w.features?`<div class="lo-sub">${esc(w.features)}</div>`:""}</td>
+            <td class="num">${attackText(l.attack)}${l.acc?`<div class="lo-sub">+${l.acc} ACC Single</div>`:""}</td>
+            <td class="num">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}</td>
+            <td class="num">${esc(l.rof||"—")}</td><td class="num lo-rounds">${roundsHtml(l, w.capacity)}${w.ammo?` (${esc(w.ammo)})`:""}</td></tr>`; }
         return `<tr><td>${esc(l.name)}${(l.tags||[]).length+(l.features||[]).length?`<div class="tags">${tagChipsHtml([...(l.tags||[]), ...(l.features||[])])}</div>`:""}</td>
           <td class="num">${attackText(l.attack)}${l.acc?`<div class="lo-sub">+${l.acc} ACC Single</div>`:""}${aimedHtml(l)}</td>
           <td class="num">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}</td>
@@ -2074,6 +2076,24 @@ function weaponModsHtml(ch, l){
       u.options.map(o=>`<option value="${esc(o.id)}" ${o.ok?"":"disabled"} title="${esc(o.why||o.description)}">${esc(o.id)} (${o.slots} slot${o.slots===1?"":"s"})${o.ok?"":" — "+esc(o.why)}</option>`).join("")}</select>
     <button class="btn sm" data-wmodadd="${l.index}">Install</button>`:""}</div>${flagged.map(flagHtml).join("")}`;
 }
+// An open written-in weapon: its typed fields (keystrokes, unaudited) and the
+// four picks that change its numbers, each one audited (Decision 247). The old
+// free-text `type` shows as a hint until a type is picked.
+function weaponOpenRowHtml(ch, l){
+  const r = ch.weapons[l.index], i = l.index;
+  const pick = (field, label, opts, cur) => `<label class="field"><span>${label}</span><select data-weaponpick="${i}|${field}"><option value="">—</option>${
+    opts.map(o=>`<option value="${esc(o.id)}" ${o.id===cur?"selected":""}>${esc(o.name)}</option>`).join("")}</select></label>`;
+  const bands = ((D.weaponRules||{}).rangeBands||[]).map(b=>({ id:b, name:b }));
+  return `<tbody data-weaponrow="${i}"><tr>` + WEAPON_COLS.map(c=>`<td><input type="text" data-cell="weapons|${i}|${esc(c)}" value="${esc(r[c]||"")}" aria-label="${esc(c)}"></td>`).join("") +
+    `<td class="num lo-rounds">${roundsHtml(l, "")}</td><td class="rm lo-btns">${loDoneHtml("weapons", i, r)}<button class="x" data-lorm="weapons|${i}" title="Remove">✕</button></td></tr>` +
+    `<tr class="lo-picks"><td colspan="${WEAPON_COLS.length+2}"><div class="hitrow">` +
+    pick("category", "Type", D.weaponCategories||[], l.category) +
+    pick("damageType", "Damage type", (D.damageTypes||[]).filter(t=>!t.magical), r.damageType) +
+    pick("range", "Range", bands, l.range) +
+    `<label class="field"><span>ACC</span><input type="number" min="0" step="1" data-weaponpick="${i}|acc" value="${l.acc==null?"":l.acc}"></label>` +
+    (l.typeText ? `<span class="hitnote" data-weapontypehint>You wrote "${esc(l.typeText)}". Pick a type to give it an attack.</span>` : "") +
+    `</div></td></tr></tbody>`;
+}
 function weaponRowsHtml(ch){
   const lines = ch.weapons.map((e,i)=>Engine.weaponLine(ch,i)).filter(Boolean);
   const cat = lines.filter(l=>!l.custom), mine = lines.filter(l=>l.custom);
@@ -2089,7 +2109,7 @@ function weaponRowsHtml(ch){
         const range = [l.reach ? `Reach ${l.reach}` : l.range, l.radius ? `Radius ${l.radius}` : null, l.parry ? `Parry ${l.parry}` : null].filter(Boolean).join(" · ");
         const def = (D.weapons||[]).find(w=>w.id===l.id);
         const mods = weaponModsHtml(ch, l) + (def && def.flagged ? flagHtml(def) : "");
-        return `<tr><td><b>${esc(l.name)}</b><div class="lo-sub">${esc(sub.join(" · "))}</div>${(l.tags||[]).length+(l.features||[]).length?`<div class="tags">${tagChipsHtml([...(l.tags||[]), ...(l.features||[])])}</div>`:""}</td>
+        return `<tr data-weaponrow="${l.index}"><td><b>${esc(l.name)}</b><div class="lo-sub">${esc(sub.join(" · "))}</div>${(l.tags||[]).length+(l.features||[]).length?`<div class="tags">${tagChipsHtml([...(l.tags||[]), ...(l.features||[])])}</div>`:""}</td>
           <td class="num">${attackText(l.attack)}${l.acc?`<div class="lo-sub">+${l.acc} ACC on Single</div>`:""}${aimedHtml(l)}</td>
           <td class="num">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}${l.damage!=null&&l.damageFormula?`<div class="lo-sub">${esc(l.damageFormula)}</div>`:""}${
             l.damageBonus?`<div class="lo-sub">+${l.damageBonus} from mods</div>`:""}</td>
@@ -2098,19 +2118,20 @@ function weaponRowsHtml(ch){
           <td class="rm"><button class="x" data-lorm="weapons|${l.index}" title="Remove">✕</button></td></tr>${
           mods?`<tr class="lo-modrow"><td colspan="8">${mods}</td></tr>`:""}`;
       }).join("") + folded.map(l=>{ const r=ch.weapons[l.index], t=c=>String(r[c]||"");
-        return `<tr><td><b>${esc(l.name)}</b>${t("type")?`<div class="lo-sub">${esc(t("type"))}</div>`:""}${t("features")?`<div class="lo-sub">${esc(t("features"))}</div>`:""}</td>
-          <td class="num">—</td><td class="num">${esc(t("damage")||"—")}</td><td>—</td><td class="num">${esc(t("rof")||"—")}</td>
+        const sub = [l.skill ? l.skill.name : l.typeText, l.damageType].filter(Boolean);
+        return `<tr data-weaponrow="${l.index}"><td><b>${esc(l.name)}</b>${sub.length?`<div class="lo-sub">${esc(sub.join(" · "))}</div>`:""}${t("features")?`<div class="lo-sub">${esc(t("features"))}</div>`:""}</td>
+          <td class="num">${attackText(l.attack)}${l.acc?`<div class="lo-sub">+${l.acc} ACC on Single</div>`:""}</td>
+          <td class="num">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}${l.damage!=null&&l.damageFormula?`<div class="lo-sub">${esc(l.damageFormula)}</div>`:""}</td>
+          <td>${esc(l.range||"—")}</td><td class="num">${esc(l.rof||"—")}</td>
           <td class="num lo-rounds">${roundsHtml(l, t("capacity"))}${t("ammo")?`<div class="lo-sub">${esc(t("ammo"))}</div>`:""}</td>
           <td><input type="text" data-lonote="weapons|${l.index}" value="${esc(l.notes)}" aria-label="${esc(l.name)} notes"></td>
           <td class="rm lo-btns">${loEditHtml("weapons", l.index, l.name)}<button class="x" data-lorm="weapons|${l.index}" title="Remove" aria-label="Remove ${esc(l.name)}">✕</button></td></tr>`; }).join("") + `</tbody></table></div>`;
     const pain = Engine.painState(ch);
-    if (cat.length) h += `<p class="step-note">Attack is 1d10 + the weapon's skill${pain.level?", with Pain and Conditions already in it":""}. Single fire adds the weapon's ACC.</p>`;
+    if (lines.some(l=>l.attack!=null)) h += `<p class="step-note">Attack is 1d10 + the weapon's skill${pain.level?", with Pain and Conditions already in it":""}. Single fire adds the weapon's ACC.</p>`;
   }
   if (custom.length){
-    h += `<div class="lo-scroll"><table class="edit"><thead><tr>${WEAPON_COLS.map(c=>`<th>${esc(c)}</th>`).join("")}<th>rounds</th><th></th></tr></thead><tbody>` +
-      custom.map(l=>{ const r=ch.weapons[l.index];
-        return `<tr>` + WEAPON_COLS.map(c=>`<td><input type="text" data-cell="weapons|${l.index}|${esc(c)}" value="${esc(r[c]||"")}" aria-label="${esc(c)}"></td>`).join("") +
-          `<td class="num lo-rounds">${roundsHtml(l, "")}</td><td class="rm lo-btns">${loDoneHtml("weapons", l.index, r)}<button class="x" data-lorm="weapons|${l.index}" title="Remove">✕</button></td></tr>`; }).join("") + `</tbody></table></div>`;
+    h += `<div class="lo-scroll"><table class="edit"><thead><tr>${WEAPON_COLS.map(c=>`<th>${esc(c)}</th>`).join("")}<th>rounds</th><th></th></tr></thead>` +
+      custom.map(l=>weaponOpenRowHtml(ch, l)).join("") + `</table></div>`;
   }
   if (!lines.length) h += `<p class="step-note">Nothing carried yet.</p>`;
   return h + loadoutAddHtml("weapons");
@@ -2712,13 +2733,14 @@ function pDefenseHtml(ch){
     pField("Features", feats.length ? [...new Set(feats)].join(", ") : null)}${pField("Warding", w ? D.damageTypes.filter(t=>t.magical && w.resAgainst.includes(t.resClass)).map(t=>t.name).join(", ") || null : null)}</div>`;
   return h;
 }
-// The Loadout page's weapons: a catalog piece prints its computed line, a
-// custom one what was typed.
+// The Loadout page's weapons: a catalog piece prints its computed line, and a
+// written-in one its picks the same way (Decision 247), the rest as typed.
 function pWeaponRows(ch){
   if (!ch) return [];
   return ch.weapons.map((e,i)=>Engine.weaponLine(ch,i)).filter(Boolean).map(l=>{
     if (l.custom){ const w=ch.weapons[l.index];
-      return { name:[w.name,w.type].filter(Boolean).join(" · "), attack:"", damage:w.damage, range:"", rof:w.rof,
+      return { name:[w.name,l.typeText].filter(Boolean).join(" · "), attack:l.attack==null?"":"1d10+"+l.attack+(l.acc?` (+${l.acc} ACC)`:""),
+               damage: l.damage!=null ? String(l.damage)+(l.damageFormula?` (${l.damageFormula})`:"") : (l.damageFormula||""), range:l.range||"", rof:w.rof,
                capacity:[w.capacity, w.ammo?`(${w.ammo})`:""].filter(Boolean).join(" "), features:w.features, notes:w.notes }; }
     return { name:l.name, attack:l.attack==null?"":"1d10+"+l.attack+(l.acc?` (+${l.acc} ACC)`:""),
              damage: l.damage!=null ? String(l.damage)+(l.damageFormula?` (${l.damageFormula})`:"") : (l.damageFormula||""),
@@ -3983,6 +4005,19 @@ function bindSheet(){
     if (!e) return;
     const v = el.type==="number" ? Math.max(0, Math.floor(Number(el.value)||0)) : el.value;
     commit("loadout", `${e.name||"Custom armor"}: ${k} → ${v===""?"—":v}`, ()=>{ e[k]=v; });
+  });
+  // A written-in weapon's picks (Decision 247): each one commit(), through the
+  // engine's refusal. The pick changes the row in place, so S.loOpen still holds
+  // it and the row stays open. A refusal puts the stored value back.
+  main.querySelectorAll("[data-weaponpick]").forEach(el=>el.onchange=()=>{
+    const [i,f]=el.dataset.weaponpick.split("|"), idx=Number(i), e=ch.weapons[idx];
+    // A number field reads junk ("1e") as "", which would clear the ACC: NaN lets the engine refuse it.
+    const value = f==="acc" ? (el.validity && el.validity.badInput ? NaN : el.value.trim()==="" ? "" : Number(el.value)) : el.value;
+    const pre = Engine.setCustomWeapon(clone(ch), idx, f, value);
+    if (!pre.ok){ notice(pre.why); el.value = e && e[f]!=null ? e[f] : ""; return; }
+    const names = { category:D.weaponCategories, damageType:D.damageTypes }, what = { category:"type", damageType:"damage type", range:"range", acc:"ACC" }[f];
+    const shown = value==="" ? "—" : names[f] ? names[f].find(x=>x.id===value).name : value;
+    commit("loadout", `${(e&&e.name)||"Custom weapon"}: ${what} → ${shown}`, ()=>{ Engine.setCustomWeapon(ch, idx, f, value); });
   });
   // W16: mods and the magazine (Decision 120), each one commit(). Firing and
   // Reload are bound on Main as well as Loadout, where a weapon line is drawn.

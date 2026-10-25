@@ -2,10 +2,11 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
-    "version": "0.54.3",
+    "version": "0.55.0",
     "date": null,
     "intro": [],
     "items": [
+      "**Weapons you write in work like the catalog's.** Give one a type, a damage type, a range and its ACC, and it attacks with that type's Skill. Write its damage as BOD+3 and the sheet works it out.",
       "**Handguns and SMGs say their damage type, Ballistic,** on Loadout and in the catalog.",
       "**Bows, the Strix crossbow, most grenades, the Thunderhead and the Absolute say on Loadout that your GM calls their damage type.**"
     ]

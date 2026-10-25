@@ -78,7 +78,8 @@ function hostileCharacter({ locked = true, archetype = "arcanist" } = {}) {
   });
   ch.weapons = [
     { custom: true, name: P("w.name"), type: P("w.type"), damage: P("w.dmg"), rof: P("w.rof"), capacity: P("w.cap"),
-      ammo: P("w.ammo"), features: P("w.feat"), notes: P("w.notes"), roundsSpent: P("w.rounds") },
+      ammo: P("w.ammo"), features: P("w.feat"), notes: P("w.notes"), roundsSpent: P("w.rounds"),
+      category: P("w.cat"), damageType: P("w.dtype"), range: P("w.range"), acc: P("w.acc") },
     { id: P("w.id"), notes: P("w.notes2") },
     { id: handgun, notes: P("w.notes3"), mods: [P("w.mod")], roundsSpent: P("w.rounds2") }];
   ch.armor = [
@@ -1085,7 +1086,7 @@ test("Decision 216: powerIpe naming another Bloodline's or a nonexistent power h
 const same = (a, b, msg) => assert.equal(JSON.stringify(a), JSON.stringify(b), msg);
 test("P12b 10: migrate keeps the house rule, a running training and a landed entry's fields, and nothing else", () => {
   const mk = patch => { const c = Engine.newCharacter(); patch(c); return Engine.migrate(JSON.parse(JSON.stringify(c))); };
-  assert.equal(Engine.newCharacter().meta.schemaVersion, "0.28");
+  assert.equal(Engine.newCharacter().meta.schemaVersion, "0.29");
   assert.equal(mk(c => { c.houseRules.training = true; }).houseRules.training, true, "true survives");
   for (const junk of ["yes", 1, "true", {}, [], null])
     assert.equal(mk(c => { c.houseRules.training = junk; }).houseRules.training, false, `houseRules.training ${JSON.stringify(junk)}`);
@@ -1104,7 +1105,7 @@ test("P12b 10: migrate keeps the house rule, a running training and a landed ent
   assert.equal(log({ via: "training", mp: 3 }).mp, 3);
   for (const via of ["x", {}, 7, null, ["training"]]) assert.equal("via" in log({ via }), false, `via ${JSON.stringify(via)}`);
   for (const mp of ["3", -1, {}, 1.5, null, NaN]) assert.equal("mp" in log({ via: "training", mp }), false, `mp ${JSON.stringify(mp)}`);
-  assert.equal(Engine.migrate({}).meta.schemaVersion, "0.28");
+  assert.equal(Engine.migrate({}).meta.schemaVersion, "0.29");
 });
 
 test("a rule's text of markup renders as text on the CP step and a folded Character card (Decision 231)", () => {
@@ -1284,4 +1285,17 @@ test("a faction and a clock of markup, a hostile id, type, link and owner render
   assert.equal(app.window.eval("S.table.clocks.map(c => c.filled).join()"), "6,0,12,0");
   assert.equal(app.window.eval("S.table.clocks[2].on"), null, "an array owner is no owner");
   assert.deepEqual(app.errors, [], "the hostile factions threw while rendering");
+});
+
+test("L2: an open written-in weapon with a payload in its type and its four picks renders as text, hint and controls included", () => {
+  const ch = hostileCharacter();
+  ch.weapons = [{ custom: true, name: "", type: P("w.type"), damage: P("w.dmg"), rof: "", capacity: "", ammo: "", features: "", notes: "",
+    roundsSpent: 0, category: P("w.cat"), damageType: P("w.dtype"), range: P("w.range"), acc: P("w.acc") }];
+  const app = boot({ storage: { "shadows.active.v1": { ch, section: "loadout" } } });
+  app.$$("#main button").find(b => /Open sheet/.test(b.textContent)).dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  app.click('[data-sec="loadout"]');
+  assert.ok(app.$('[data-weaponrow="0"] [data-weapontypehint]'), "the nameless row's hint isn't drawn");
+  assert.deepEqual(injected(app, "loadout"), []);
+  assert.equal(app.$('[data-weaponpick="0|category"]').value, "", "a junk type was selected");
+  assert.deepEqual(app.errors, []);
 });

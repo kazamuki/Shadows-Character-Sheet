@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.48",
+    "gamedataVersion": "0.49",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-10-08"
   },
@@ -4134,13 +4134,16 @@ window.SHADOWS_DATA = {
   /* Rate of fire and the magazine (W16, Decision 120). 0530: "Ammunition is
      spent by mode" -- Single 1 round, Burst 3, Full Auto 10. A weapon's
      `capacity` ("15+1", "100 (belt)", "10 bursts") is read for its leading
-     number plus any chambered "+N"; one the engine can't read isn't tracked. */
+     number plus any chambered "+N"; one the engine can't read isn't tracked.
+     `rangeBands` are 0530's Range bands, in order: what a written-in weapon's
+     Range picks from (Decision 247). A catalog weapon keeps the catalog's own word. */
   "weaponRules": {
     "rofModes": [
       { "id": "S", "name": "Single", "rounds": 1 },
       { "id": "B", "name": "Burst", "rounds": 3 },
       { "id": "F", "name": "Full Auto", "rounds": 10 }
     ],
+    "rangeBands": ["Close", "Short", "Medium", "Long", "Extreme"],
     "reloadNote": "Reloading is a Fast Action: a fresh magazine, a grenade off the belt, an arrow from the quiver.",
     "swap": { "text": "A Reload can swap one kind of rounds for another, once a turn. The magazine you take out goes back in your gear with what's left in it." },
     "modNote": "Mod slots are fixed at purchase. Removing a mod frees its slot, but may damage the mod."
@@ -4149,22 +4152,24 @@ window.SHADOWS_DATA = {
 
   /* The catalog's own section headings, in the book's order -- what the
      Loadout picker groups by (Decision 100). A weapon's `category` is one of
-     these ids; a new category is a row here, not an app change. */
+     these ids; a new category is a row here, not an app change. `skill` is the
+     Skill a weapon of this type attacks with: the one every catalog weapon in
+     it already names, and what a written-in weapon of this type uses (Decision 247). */
   "weaponCategories": [
-    { "id": "melee", "name": "Melee" },
-    { "id": "martialArts", "name": "Martial Arts" },
-    { "id": "handguns", "name": "Handguns" },
-    { "id": "smgs", "name": "Submachine Guns" },
-    { "id": "grenades", "name": "Grenades", "note": "Every grenade escalates on the throw. Each 10 on the Melee check explodes and moves it one step up its column: 1x for the first, 2x+ for the second and any past it. One throw, one result, for everyone who didn't get clear. Damage and duration stack as it climbs; Conditions replace rather than pile up. BOD doesn't add to a grenade's damage. A grenade's blast is Massive damage." },
-    { "id": "urbanRifles", "name": "Urban Combat Rifles" },
-    { "id": "shotguns", "name": "Shotguns" },
-    { "id": "sniperRifles", "name": "Sniper Rifles" },
-    { "id": "heavyWeapons", "name": "Heavy Weapons" },
-    { "id": "beamSidearms", "name": "Beam Sidearms" },
-    { "id": "beamLongarms", "name": "Beam Longarms" },
-    { "id": "beamSpecialist", "name": "Beam Specialist" },
-    { "id": "beamHeavy", "name": "Beam Heavy" },
-    { "id": "archery", "name": "Archery" }
+    { "id": "melee", "skill": "melee", "name": "Melee" },
+    { "id": "martialArts", "skill": "martial-arts", "name": "Martial Arts" },
+    { "id": "handguns", "skill": "handguns", "name": "Handguns" },
+    { "id": "smgs", "skill": "smgs", "name": "Submachine Guns" },
+    { "id": "grenades", "skill": "melee", "name": "Grenades", "note": "Every grenade escalates on the throw. Each 10 on the Melee check explodes and moves it one step up its column: 1x for the first, 2x+ for the second and any past it. One throw, one result, for everyone who didn't get clear. Damage and duration stack as it climbs; Conditions replace rather than pile up. BOD doesn't add to a grenade's damage. A grenade's blast is Massive damage." },
+    { "id": "urbanRifles", "skill": "rifles", "name": "Urban Combat Rifles" },
+    { "id": "shotguns", "skill": "rifles", "name": "Shotguns" },
+    { "id": "sniperRifles", "skill": "rifles", "name": "Sniper Rifles" },
+    { "id": "heavyWeapons", "skill": "heavy-weapons", "name": "Heavy Weapons" },
+    { "id": "beamSidearms", "skill": "beam-weapons", "name": "Beam Sidearms" },
+    { "id": "beamLongarms", "skill": "beam-weapons", "name": "Beam Longarms" },
+    { "id": "beamSpecialist", "skill": "beam-weapons", "name": "Beam Specialist" },
+    { "id": "beamHeavy", "skill": "beam-weapons", "name": "Beam Heavy" },
+    { "id": "archery", "skill": "archery", "name": "Archery" }
   ],
 
   "weapons": [

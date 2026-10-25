@@ -576,6 +576,12 @@ reload. The folded line goes through `Engine.catalogLine` or its custom
 equivalent, so a custom item reads exactly as a catalog one does. Player-
 visible: a CHANGELOG line and a patch bump.
 
+**W137 — A custom weapon reads like the catalog's.** *Ken · → Decision 247, app 0.55.0: a written-in weapon picks its type, damage type and range and types its ACC; its line is computed like a catalog weapon's*
+A weapon the player writes in is eight text boxes (name, type, damage, rof, capacity, ammo, features, notes), and its line computes nothing: no Skill, no attack number, no damage worked out from BOD, no damage type, ACC or range. A catalog weapon has all of them. Ken: a custom weapon should have its damage type, its attack and its range as the catalog shows them, and its **weapon type**, so a Skill applies to it.
+*To respect:* the custom row's shape changes, so it's a schema bump with a `migrate()` step for the free-text `type` already in saved files (`plans/loadout-and-gear.md` LQ9). The Skill comes from the type as data, never from code (LQ8; Decision 135). It reads L1's damage types, and once it has a class, W69's modifiers reach it. A custom weapon never takes a catalog `id` (constraint 6), and a junk field reads as empty (constraint 8). W109 is the wider question of a custom row switching on what a book row does.
+
+*Built as loadout-and-gear L2 (2026-10-25): character schema 0.29, game data 0.49. A saved free-text `type` is kept as text and shown until a type is picked.*
+
 ### Theme & polish
 
 **W7 — Primary buttons are unreadable in light mode.** *Ken · → Decision 107, app 0.16.0, with a contrast guard in `build.test.mjs`*
