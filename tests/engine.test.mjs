@@ -1448,6 +1448,8 @@ test("the Loadout and recovery functions are total on every degenerate character
       weaponLine: () => [-1, 0, 1, 2, 3, 4, 99].forEach(i => Engine.weaponLine(ch, i)),
       upgradeOptions: () => [-1, 0, 1, 2, 3, 99].forEach(i => Engine.upgradeOptions(ch, i)),
       setWorn: () => [0, 1, 2, 3, 99].forEach(i => Engine.setWorn(ch, i, true)),
+      weaponClass: () => [-1, 0, 1, 2, 3, 4, 99].forEach(i => Engine.weaponClass(ch, i)),
+      setInUse: () => [-1, 0, 1, 2, 3, 4, 99].forEach(i => { Engine.setInUse(ch, i, true); Engine.setInUse(ch, i, false); }),
       addUpgrade: () => [0, 2, 3, 99].forEach(i => Engine.addUpgrade(ch, i, "Tri-Weave")),
       removeUpgrade: () => [0, 2, 3, 99].forEach(i => Engine.removeUpgrade(ch, i, 0)),
       armorWear: () => [0, 2, 3, 99].forEach(i => Engine.armorWear(ch, i, { difficulty: "hard", roll: 3, selfHealCheck: 4, selfHealRoll: 2 })),

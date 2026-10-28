@@ -1512,7 +1512,7 @@ test("L3 9 (sheet): a gear row with modifiers has an In use toggle, and turning 
   assert.match(row.textContent, /\+2 SMART Deck II/);
   assert.match(row.textContent, /untrained/);
   app.click('[data-sec="loadout"]');
-  app.click("button[data-undolast]");
+  app.click("[data-toastundo]");
   assert.equal(activeChar(app).gear[0].inUse, undefined, "undo left it in use");
   app.click('[data-sec="skills"]');
   assert.match(cellsOf(interfaceRow(app))[2], new RegExp(`^1d10 \\+ ${bare}(?!\\d)`));

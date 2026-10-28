@@ -1035,6 +1035,21 @@ const Engine = (() => {
     });
     return out;
   }
+  // What an entry's well-formed gear grants say, as the sheet words them (Decision 248): "+2 Interface",
+  // "+2 ACC on SMART Link weapons", "+2 damage on energy weapons". Empty for an entry with none.
+  function givesOf(def){
+    if (!isPlainObj(def) || !Array.isArray(def.grants)) return [];
+    return def.grants.filter(wornGrant).map(g=>{
+      if (g.type==="checkMod"){
+        const names = g.skills.map(id=>{ const sk = skillById(id); return sk ? txt(sk.name) : ""; }).filter(Boolean);
+        return names.length ? `+${g.amount} ${joinList(names, "and")}` : null;
+      }
+      if (g.to!=="acc" && g.to!=="damage") return null;
+      const kinds = [g.class, g.feature].filter(v=>typeof v==="string" && v);
+      if (!kinds.length || (g.class!==undefined && !BONUS_CLASSES.includes(g.class))) return null;
+      return `+${g.amount} ${g.to==="acc" ? "ACC" : "damage"} on ${kinds.join(" ")} weapons`;
+    }).filter(Boolean);
+  }
   // The traits whose `grants` change a Skill's check (Decisions 233, 237), one per source however many rows hold it
   // (natural and bought ranks sum, heldRank), with the Skills each row names: held Advantages and Disadvantages, taken
   // Majors, the chosen specialization's options, held powers (at their rank), the archetype's baseline traits, the
@@ -1415,7 +1430,7 @@ const Engine = (() => {
              integrityMax, integrityLoss, integrity,
              compromised: tracks && integrity<=0, scrapped: entry.scrapped===true,
              resAgainst, halves, coverage, features, upgrades,
-             quality: src.quality || null, mods: def ? (Number(def.mods)||0) : null,
+             quality: src.quality || null, mods: def ? (Number(def.mods)||0) : null, gives: givesOf(def),
              coverageName: tracks ? (src.coverage || R.defaultCoverage) : null };
   }
 
@@ -2255,7 +2270,7 @@ const Engine = (() => {
              chargesMax: nonNegInt(def.charges)||null, material:def.material||null,
              spell: sp ? { id:sp.id, name:sp.name, tn:sp.tn, th:sp.th, effect:sp.effect||"" } : null,
              spellName: def.spellName||null, action:def.action||null, itemNotes:def.notes||null, costText:def.costText||null,
-             startsEmpty: !!def.startsEmpty, tags: def.tags||[] };
+             startsEmpty: !!def.startsEmpty, tags: def.tags||[], gives: givesOf(def) };
   }
   // P9b (Decision 222): a part-used magazine is a catalog row of an ammo entry
   // that fills by the magazine and holds a `roundsLeft`. The one place that is
@@ -2288,6 +2303,7 @@ const Engine = (() => {
     const l = Object.assign({ index, notes, qty: part ? 1 : nonNegInt(e.qty) }, gearDefLine(def), { flavorLine: def.flavorLine||null });
     // P9b: a part-used magazine says how many it holds, and in what word.
     l.roundsLeft = part ? nonNegInt(e.roundsLeft) : null;
+    l.inUse = e.inUse===true && l.gives.length>0;
     l.countUnit = part ? countUnitOf(def) : null;
     if (l.chargesMax){ const used = Math.min(l.chargesMax, nonNegInt(e.chargesUsed));
       l.charges = { max:l.chargesMax, used, left:l.chargesMax-used }; }

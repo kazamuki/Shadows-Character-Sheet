@@ -946,7 +946,12 @@ It renders on the Character tab (Decision 158).
   // magazine (`qty` is written 1 and ignored), never stacks, counts as no whole
   // one and takes no +1. `roundsLeft` on any other row is ignored. 0 is empty.
   // migrate() reads it as a whole number; no row from before has one.
+  // (0.30, Decision 248) `inUse`: `true`, or absent (never false), on a catalog row whose entry carries `grants`
+  // (a SMART Deck). While it is on, the entry's `grants` count: a Skill's check, a weapon's line. A row of two
+  // is one row and counts once. migrate() keeps it only where it is exactly true, and drops it from a written-in row
+  // and from a part-used magazine; no row from before has one.
   gear:    [ { id: "quickstitch", qty: 4, notes: "" },
+             { id: "smart-deck-ii", qty: 1, inUse: true, notes: "" },
              { id: "shield-charm", qty: 1, chargesUsed: 1, notes: "" },
              { id: "rifle-rounds", qty: 1, roundsLeft: 18, notes: "" },
              { custom: true, name, type, notes } ],
@@ -977,6 +982,8 @@ It renders on the Character tab (Decision 158).
                category, damageType, range, acc } ],   // the last four are optional picks (0.29)
   // (0.6) Same split as weapons. `integrityLoss` is current-state input (like
   // trackers.damage), not derived — max Integrity comes from the catalog.
+  // (0.30, Decision 248) `worn` also turns on what a catalog piece's `grants` carry (SMARTLink Gloves), unless it is
+  // `scrapped`: a modifier to a weapon's line. Nothing about it is stored.
   // (0.8, plan P5) worn: the one body piece that rolls PROT (CQ7) · scrapped:
   // driven to 0 by Massive, which integrityLoss alone can't say · upgrades:
   // armorUpgradeGlossary ids. Compromised is derived. Read by armorState()
@@ -5124,6 +5131,15 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 100 in part: "A custom weapon reads back what was typed." Its four picks and its damage now compute; its other fields still read as typed.
      - **Revisit if:** L3's class reading finds that the catalog's display word and a custom row's id want one resolver, or a custom weapon should take mods or reload from carried ammunition (LQ14).
      - **Built:** app 0.55.0, game data 0.49, character schema 0.29, PR #254. Log 2026-10-25 (L2).
+
+248. **Worn armor and gear in use carry modifiers: a Skill's check, and a weapon's ACC or damage by its class or feature.**
+     *2026-10-25 · Ken + Claude · Touches: grants on armor and equipment, wornGrants, traitRows, skillLine checkBonus, weaponLine, weaponClass, weaponBonus, checkMod, skills.melee, armor[i].worn, gear[i].inUse, setInUse, Loadout's armor card, Loadout's gear row, print gear rows, SMART Deck I–III, SMARTLink Gloves, Hacking Visor, Hacking Gloves, PrecisionGrip Gloves, F49, character schema 0.30, W69, LQ3, LQ4, LQ6, LQ19–LQ22, Deighton Q12–Q15*
+     - **Decided:** A catalog armor or equipment entry carries modifiers as `grants`, read only while its piece is worn and not scrapped, or its gear row is in use (`inUse`). A `checkMod` adds to the Skill's check, never its rank, so an untrained Skill gets the number without its Synergy, and prices, caps and prerequisites read the held rank. A `weaponBonus` adds to a weapon's ACC or damage, by class (`melee`, `ranged`, `kinetic`, `energy`) or by a catalog feature. A weapon's class is data: its Skill's `melee` (so a grenade is melee), and its damage type's `resClass` (a catalog word read as a damage type's name, or its style's when the word is "Normal"; a custom row's id). They stack, are never negative, and custom rows carry none.
+     - **Why:** W69 (Ken, Deighton Q12–Q15): what a worn piece prints should land where it applies.
+     - **Rejected:** worn ranks in `rank` (an untrained Skill would take its Synergy, and its price would move); "Normal" as a code word (its style names a damage type); the catalog's words as ids (L1 kept them); grenades as ranged (Ken, LQ19: a weapon follows its Skill); a class on each weapon (its Skill says it); typed modifiers on a custom row (LQ6); counting gear only carried (LQ3).
+     - **Replaces:** nothing; extends Decisions 237 (traitRows' sources) and 120 (a line's ACC and damage).
+     - **Revisit if:** Deighton rules F49; L5 or L7 needs a stat modifier or another source.
+     - **Built:** app 0.56.0, game data 0.50, character schema 0.30, PR #PRNUM. Log 2026-10-28 (L3).
 
 ## 5. Open Flags
 

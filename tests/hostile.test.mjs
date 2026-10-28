@@ -85,10 +85,13 @@ function hostileCharacter({ locked = true, archetype = "arcanist" } = {}) {
   ch.armor = [
     { custom: true, name: P("a.name"), prot: P("a.prot"), res: P("a.res"), integrity: P("a.int"), coverage: P("a.cov"),
       integrityLoss: P("a.loss"), notes: P("a.notes"), worn: true, scrapped: false, upgrades: [P("a.upg")] },
-    { id: D.armor[0].id, integrityLoss: P("a.loss2"), notes: P("a.notes2"), worn: false, scrapped: false, upgrades: [P("a.upg2")] }];
-  ch.gear = [{ custom: true, name: P("g.name"), type: P("g.type"), notes: P("g.notes") },
-    { id: P("g.id"), qty: P("g.qty") }, { id: D.equipment[0].id, qty: P("g.qty2"), notes: P("g.notes2") },
-    { id: "rifle-rounds", qty: P("g.qty3"), roundsLeft: P("g.rounds"), notes: P("g.notes3") }];   // P9b: a part-used magazine whose count is a payload
+    { id: D.armor[0].id, integrityLoss: P("a.loss2"), notes: P("a.notes2"), worn: false, scrapped: false, upgrades: [P("a.upg2")] },
+    // L3: a piece that carries modifiers, worn, with a scrapped flag that isn't a boolean
+    { id: "smartlink-gloves", integrityLoss: 0, notes: P("a.notes3"), worn: true, scrapped: P("a.scrap"), upgrades: [] }];
+  ch.gear = [{ custom: true, name: P("g.name"), type: P("g.type"), notes: P("g.notes"), inUse: P("g.inuse1") },
+    { id: P("g.id"), qty: P("g.qty"), inUse: P("g.inuse2") }, { id: D.equipment[0].id, qty: P("g.qty2"), notes: P("g.notes2"), inUse: P("g.inuse3") },
+    { id: "smart-deck-ii", qty: P("g.qty4"), notes: P("g.notes4"), inUse: P("g.inuse4") },   // L3: a row with modifiers, in use by a payload
+    { id: "rifle-rounds", qty: P("g.qty3"), roundsLeft: P("g.rounds"), notes: P("g.notes3"), inUse: P("g.inuse5") }];   // P9b: a part-used magazine whose count is a payload
   ch.panelData = { form: archetype === "werewolf" ? "Werewolf" : P("form"), code: archetype === "vampire" ? "Broken" : P("code"), grimoire: [
     { custom: true, "Spell Name": P("sp.name"), Discipline: P("sp.disc"), TN: P("sp.tn"), TH: P("sp.th"),
       Effect: P("sp.effect"), Overflow: P("sp.over"), Notes: P("sp.notes") },
