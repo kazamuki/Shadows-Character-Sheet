@@ -23,6 +23,11 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.56.0
+
+- **Gear you wear or use now counts.** Wear SMARTLink Gloves and your SMART Link guns show the +2 ACC. Switch a SMART Deck to In use and your Interface checks go up by its rating.
+- The Hacking Visor, Hacking Gloves and PrecisionGrip Gloves now say on their card that your GM picks which checks they help.
+
 ## v0.55.0 — 2026-10-25
 
 - **Weapons you write in work like the catalog's.** Give one a type, a damage type, a range and its ACC, and it attacks with that type's Skill. Write its damage as BOD+3 and the sheet works it out.

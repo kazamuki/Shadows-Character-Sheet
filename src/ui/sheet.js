@@ -1993,10 +1993,12 @@ function gearRowsHtml(ch){
       ? `<span class="gear-count">×${l.qty}${l.unit?` <small>${esc(l.unit)}${l.qty===1?"":"s"}</small>`:""}</span>
          <button class="btn sm" data-gearuse="${l.index}">Use one</button><button class="btn sm" data-gearplus="${l.index}" aria-label="One more ${esc(l.name)}">+1</button>`
       : l.qty>1 ? `<span class="gear-count">×${l.qty}</span>` : "";
+    const inUse = l.gives.length ? `<label class="check"><input type="checkbox" data-inuse="${l.index}" ${l.inUse?"checked":""}> In use</label>` : "";
+    const gives = l.gives.length && l.inUse ? `<div class="lo-sub" data-inuseline>${esc(l.gives.join(" · "))}</div>` : "";
     const spell = l.spell ? `<div class="lo-sub">Holds <b>${esc(l.spell.name)}</b> (${esc(tnth(l.spell))}): ${esc(l.spell.effect)}</div>`
                 : l.spellName ? `<div class="lo-sub">Holds ${esc(l.spellName)}</div>` : "";
-    return `<div class="lo-gear-row"><div class="lo-gear-name"><b>${esc(l.name)}</b><div class="lo-sub">${esc(sub.join(" · "))}</div>${(l.tags||[]).length?`<div class="tags">${tagChipsHtml(l.tags)}</div>`:""}${spell}</div>
-      <div class="lo-gear-ctl">${count}</div>
+    return `<div class="lo-gear-row"><div class="lo-gear-name"><b>${esc(l.name)}</b><div class="lo-sub">${esc(sub.join(" · "))}</div>${gives}${(l.tags||[]).length?`<div class="tags">${tagChipsHtml(l.tags)}</div>`:""}${spell}</div>
+      <div class="lo-gear-ctl">${count}${inUse}</div>
       <input type="text" data-lonote="gear|${l.index}" value="${esc(l.notes)}" placeholder="notes" aria-label="${esc(l.name)} notes">
       <button class="x" data-lorm="gear|${l.index}" title="Remove" aria-label="Remove ${esc(l.name)}">✕</button></div>`;
   }).join("") + folded.map(l=>`<div class="lo-gear-row"><div class="lo-gear-name"><b>${esc(l.name)}</b>${l.type?`<div class="lo-sub">${esc(l.type)}</div>`:""}</div>
@@ -2012,6 +2014,8 @@ function gearRowsHtml(ch){
   if (!lines.length) h += `<p class="step-note">Nothing carried yet.</p>`;
   return h + loadoutAddHtml("gear");
 }
+// Decision 248: what a worn piece or a tool in use added to a weapon's line, one sub line each.
+const bonusLinesHtml = (l, to) => (l.bonuses||[]).filter(b=>b.to===to).map(b=>`<div class="lo-sub">+${b.amount} from ${esc(b.from)}</div>`).join("");
 // W16: the magazine, where a weapon line is drawn (Loadout and Main). One
 // button per rate of fire the weapon has, each spending that mode's rounds
 // (0530), and Reload. A weapon whose capacity doesn't read shows it as text.
@@ -2090,7 +2094,7 @@ function weaponOpenRowHtml(ch, l){
     pick("category", "Type", D.weaponCategories||[], l.category) +
     pick("damageType", "Damage type", (D.damageTypes||[]).filter(t=>!t.magical), r.damageType) +
     pick("range", "Range", bands, l.range) +
-    `<label class="field"><span>ACC</span><input type="number" min="0" step="1" data-weaponpick="${i}|acc" value="${l.acc==null?"":l.acc}"></label>` +
+    `<label class="field"><span>ACC</span><input type="number" min="0" step="1" data-weaponpick="${i}|acc" value="${l.accPicked==null?"":l.accPicked}"></label>` +
     (l.typeText ? `<span class="hitnote" data-weapontypehint>You wrote "${esc(l.typeText)}". Pick a type to give it an attack.</span>` : "") +
     `</div></td></tr></tbody>`;
 }
@@ -2110,9 +2114,9 @@ function weaponRowsHtml(ch){
         const def = (D.weapons||[]).find(w=>w.id===l.id);
         const mods = weaponModsHtml(ch, l) + (def && def.flagged ? flagHtml(def) : "");
         return `<tr data-weaponrow="${l.index}"><td><b>${esc(l.name)}</b><div class="lo-sub">${esc(sub.join(" · "))}</div>${(l.tags||[]).length+(l.features||[]).length?`<div class="tags">${tagChipsHtml([...(l.tags||[]), ...(l.features||[])])}</div>`:""}</td>
-          <td class="num">${attackText(l.attack)}${l.acc?`<div class="lo-sub">+${l.acc} ACC on Single</div>`:""}${aimedHtml(l)}</td>
+          <td class="num">${attackText(l.attack)}${l.acc?`<div class="lo-sub">+${l.acc} ACC on Single</div>`:""}${bonusLinesHtml(l, "acc")}${aimedHtml(l)}</td>
           <td class="num">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}${l.damage!=null&&l.damageFormula?`<div class="lo-sub">${esc(l.damageFormula)}</div>`:""}${
-            l.damageBonus?`<div class="lo-sub">+${l.damageBonus} from mods</div>`:""}</td>
+            l.damageBonus?`<div class="lo-sub">+${l.damageBonus} from mods</div>`:""}${bonusLinesHtml(l, "damage")}</td>
           <td>${esc(range||"—")}${l.defense?`<div class="lo-sub">${esc(defenseText(l))}</div>`:""}${l.escalation?`<div class="lo-sub">${esc(escalationText(l))}</div>`:""}</td><td class="num">${esc(l.rof||"—")}</td><td class="num lo-rounds">${roundsHtml(l, l.capacity)}</td>
           <td><input type="text" data-lonote="weapons|${l.index}" value="${esc(l.notes)}" aria-label="notes"></td>
           <td class="rm"><button class="x" data-lorm="weapons|${l.index}" title="Remove">✕</button></td></tr>${
@@ -2120,8 +2124,8 @@ function weaponRowsHtml(ch){
       }).join("") + folded.map(l=>{ const r=ch.weapons[l.index], t=c=>String(r[c]||"");
         const sub = [l.skill ? l.skill.name : l.typeText, l.damageType].filter(Boolean);
         return `<tr data-weaponrow="${l.index}"><td><b>${esc(l.name)}</b>${sub.length?`<div class="lo-sub">${esc(sub.join(" · "))}</div>`:""}${t("features")?`<div class="lo-sub">${esc(t("features"))}</div>`:""}</td>
-          <td class="num">${attackText(l.attack)}${l.acc?`<div class="lo-sub">+${l.acc} ACC on Single</div>`:""}</td>
-          <td class="num">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}${l.damage!=null&&l.damageFormula?`<div class="lo-sub">${esc(l.damageFormula)}</div>`:""}</td>
+          <td class="num">${attackText(l.attack)}${l.acc?`<div class="lo-sub">+${l.acc} ACC on Single</div>`:""}${bonusLinesHtml(l, "acc")}</td>
+          <td class="num">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}${l.damage!=null&&l.damageFormula?`<div class="lo-sub">${esc(l.damageFormula)}</div>`:""}${bonusLinesHtml(l, "damage")}</td>
           <td>${esc(l.range||"—")}</td><td class="num">${esc(l.rof||"—")}</td>
           <td class="num lo-rounds">${roundsHtml(l, t("capacity"))}${t("ammo")?`<div class="lo-sub">${esc(t("ammo"))}</div>`:""}</td>
           <td><input type="text" data-lonote="weapons|${l.index}" value="${esc(l.notes)}" aria-label="${esc(l.name)} notes"></td>
@@ -2165,6 +2169,10 @@ function armorRowHtml(ch, p){
     h += `<div class="lo-armor-stats"><span class="hitarmor">${armorStatLine(p)}</span></div>
       <div class="lo-armor-int">${intBar(p)}</div>`;
   }
+  const piece = p.custom ? null : (D.armor||[]).find(a=>a.id===p.id);
+  // A scrapped piece adds nothing though it's worn (wornGrants), so its line dims as an unworn one's does.
+  if (p.gives.length) h += `<p class="lo-sub lo-gives${p.worn && !p.scrapped?"":" off"}" data-gives>${p.worn ? "" : "When worn: "}${esc(p.gives.join(" · "))}</p>`;
+  if (piece && piece.flagged) h += flagHtml(piece);
   if (p.features.length) h += `<p class="lo-sub">Built in: ${p.features.map(f=>{
     const g=(D.armorFeatureGlossary||[]).find(x=>x.id===f)||(D.armorUpgradeGlossary||[]).find(x=>x.id===f);
     return `<span title="${esc(g?g.description:"")}">${esc(f)}</span>`; }).join(" · ")}</p>`;
@@ -2751,7 +2759,7 @@ function pWeaponRows(ch){
 // Gear on paper: a catalog row prints its count or charges as its type.
 function pGearRows(ch){
   return (ch.gear||[]).map((e,i)=>Engine.gearLine(ch,i)).filter(Boolean).map(l=>l.custom ? ch.gear[l.index]
-    : { name:l.name, type:[l.categoryName, l.charges?`${l.charges.left}/${l.charges.max} charges`:l.roundsLeft!=null?`${plural(l.roundsLeft, l.countUnit)} left`:l.qty>1||l.consumable?`×${l.qty}`:""].filter(Boolean).join(" · "),
+    : { name:l.name, type:[l.categoryName, l.charges?`${l.charges.left}/${l.charges.max} charges`:l.roundsLeft!=null?`${plural(l.roundsLeft, l.countUnit)} left`:l.qty>1||l.consumable?`×${l.qty}`:"", l.inUse?"in use":""].filter(Boolean).join(" · "),
         notes:[l.spellName?`Holds ${l.spellName}`:"", l.notes].filter(Boolean).join(" · ") });
 }
 function pArmorRows(ch){
@@ -3999,6 +4007,13 @@ function bindSheet(){
   main.querySelectorAll("[data-worn]").forEach(cb=>cb.onchange=()=>{
     const i=Number(cb.dataset.worn), n=loName("armor", i);
     commit("loadout", `${cb.checked?"Put on":"Took off"} ${n}`, ()=>{ Engine.setWorn(ch, i, cb.checked); });
+  });
+  // Decision 248: a gear row switched on or off is one commit() through setInUse, which says why not.
+  main.querySelectorAll("[data-inuse]").forEach(cb=>cb.onchange=()=>{
+    const i=Number(cb.dataset.inuse), on=cb.checked, n=loName("gear", i);
+    const pre=Engine.setInUse(clone(ch), i, on);
+    if (!pre.ok){ cb.checked=!on; notice(pre.why); return; }
+    commit("loadout", `${on?"Started using":"Put away"} ${n}`, ()=>{ Engine.setInUse(ch, i, on); });
   });
   main.querySelectorAll("[data-armorfield]").forEach(el=>el.onchange=()=>{
     const [i,k]=el.dataset.armorfield.split("|"), e=ch.armor[Number(i)];

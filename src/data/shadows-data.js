@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.49",
+    "gamedataVersion": "0.50",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-10-08"
   },
@@ -422,7 +422,9 @@ window.SHADOWS_DATA = {
      `covers` is the bullet list shown under the skill's "?" expander. Character
      files reference skills by `id`, so adding is safe but renaming an id is not.
      A Professional subtype's `focusedSkills.ids` name skills here by id, and
-     `focusedSkills.choose.category` names a `category` (Decision 134). */
+     `focusedSkills.choose.category` names a `category` (Decision 134).
+     `melee: true` marks a Skill whose weapons are melee ones (a grenade's Skill is Melee, so a
+     grenade is a melee weapon, Decision 248); a weapon that attacks with any other Skill is ranged. */
   "skills": [
     {
       "id": "archery",
@@ -513,6 +515,7 @@ window.SHADOWS_DATA = {
     },
     {
       "id": "martial-arts",
+      "melee": true,
       "picks": [
         {
           "id": "style",
@@ -600,6 +603,7 @@ window.SHADOWS_DATA = {
     },
     {
       "id": "melee",
+      "melee": true,
       "name": "Melee",
       "category": "combat",
       "primaryStat": "REF",
@@ -4334,6 +4338,9 @@ window.SHADOWS_DATA = {
     { "id": "Self-mending", "minQuality": "Mid", "availability": "By Practice", "description": "Ironhide, worked in for good: the armor closes its own holes after a fight. Mark the Integrity it gets back with Repair. A practitioner's work: 15,000Ç." }
   ],
 
+  /* ARMOR -- `grants` on a piece apply while it is worn and not scrapped (Decision 248): a `weaponBonus`
+     (`to`: "acc" or "damage"; `amount` a whole number of 1 or more; a `class` of melee, ranged, kinetic
+     or energy, or a `feature` a catalog weapon carries) or a `checkMod` on named Skills. */
   "armor": [
     { "id": "reinforced-denim-vest", "name": "Reinforced Denim Vest", "slot": "body", "coverage": "light", "prot": "1d4", "res": 4, "integrity": 10, "quality": "Low", "material": "Medium", "availability": "Common", "mods": 0, "cost": 150, "flavorLine": "Denim with ballistic padding stitched between lining and shell. Looks like a work vest because it mostly is one." },
     { "id": "heavy-denim-vest", "name": "Heavy Denim Vest", "slot": "body", "coverage": "light", "prot": "1d4", "res": 6, "integrity": 10, "quality": "Low", "material": "Heavy", "availability": "Common", "mods": 0, "cost": 175, "flavorLine": "The armor of people who can't afford to look like they're wearing armor." },
@@ -4369,14 +4376,14 @@ window.SHADOWS_DATA = {
     { "id": "m88a2-enhanced-helmet", "name": "M-88A2 Enhanced Helmet", "slot": "head", "quality": "Mid", "material": "Heavy", "availability": "Uncommon", "cost": 700, "feature": "Headshot Defense", "flavorLine": "Military surplus in origin, still military-grade in performance." },
     { "id": "sentinel-vanguard-helmet", "name": "Sentinel Vanguard Helmet", "slot": "head", "quality": "High", "material": "Light", "availability": "Uncommon", "cost": 2000, "feature": "Gas / Sonic / Dazzle Immunity", "flavorLine": "A sealed tactical helmet for operators who expect the environment itself to be weaponized." },
     { "id": "ghostsuit-helmet", "name": "Ghostsuit Helmet", "slot": "head", "quality": "High", "material": "Exotic", "availability": "Rare", "cost": 3500, "feature": "Augmentable Senses", "notes": "IR / UV / Thermal imaging built into the visor", "flavorLine": "The world looks different through a Ghostsuit -- sometimes literally." },
-    { "id": "hacking-visor", "name": "Hacking Visor", "slot": "head", "quality": "Custom", "material": "Exotic", "availability": "By Contract", "cost": null, "notes": "+5 to electronic interface and hacking checks", "flavorLine": "Not available through standard channels. The people who use these know how to find them." },
+    { "id": "hacking-visor", "name": "Hacking Visor", "slot": "head", "quality": "Custom", "material": "Exotic", "availability": "By Contract", "cost": null, "notes": "+5 to electronic interface and hacking checks", "flavorLine": "Not available through standard channels. The people who use these know how to find them.", "flagged": true, "flagNote": "F49 -- 0460 gives +5 to electronic interface and hacking checks and names no Skills. Computes nothing until Deighton rules which Skills (L3, LQ4).", "playerNote": "Your GM names the Skills its +5 adds to. Add it to those rolls yourself." },
 
     { "id": "infernoshield-gloves", "name": "InfernoShield Gloves", "slot": "hand", "quality": "Mid", "material": "Heavy", "availability": "Uncommon", "cost": 600, "feature": "Elemental Immunity", "notes": "Heat immunity (<6 sec), 50% damage reduction (>6 sec)", "flavorLine": "Rated for brief contact with high-temperature surfaces." },
     { "id": "zapgrip-gloves", "name": "ZapGrip Gloves", "slot": "hand", "quality": "Mid", "material": "Heavy", "availability": "Uncommon", "cost": 600, "feature": "Elemental Immunity", "notes": "Electric immunity (<6 sec), 50% damage reduction (>6 sec)", "flavorLine": "Faraday-woven gloves providing electrical isolation for brief contact with live systems." },
     { "id": "chemguard-gloves", "name": "ChemGuard Gloves", "slot": "hand", "quality": "Mid", "material": "Heavy", "availability": "Uncommon", "cost": 600, "feature": "Elemental Immunity", "notes": "Acid immunity (<6 sec), 50% damage reduction (>6 sec)", "flavorLine": "Acid-resistant composite gloves rated for brief immersion in corrosive substances." },
-    { "id": "hacking-gloves", "name": "Hacking Gloves", "slot": "hand", "quality": "High", "material": "Exotic", "availability": "Rare", "cost": 2500, "notes": "+2 to electronic interface and hacking checks", "flavorLine": "Embedded sensor arrays and haptic feedback enhance interaction with electronic systems." },
-    { "id": "smartlink-gloves", "name": "SMARTLink Gloves", "slot": "hand", "quality": "High", "material": "Exotic", "availability": "Rare", "cost": 2800, "notes": "+2 ACC when using SMARTLink-compatible weapons", "flavorLine": "Extends a weapon's SMARTLink targeting system through the grip." },
-    { "id": "precisiongrip-gloves", "name": "PrecisionGrip Gloves", "slot": "hand", "quality": "High", "material": "Exotic", "availability": "Rare", "cost": 2500, "notes": "+2 to precision skill checks", "flavorLine": "High-sensitivity haptic gloves for surgery, lockpicking, or any margin measured in millimeters." }
+    { "id": "hacking-gloves", "name": "Hacking Gloves", "slot": "hand", "quality": "High", "material": "Exotic", "availability": "Rare", "cost": 2500, "notes": "+2 to electronic interface and hacking checks", "flavorLine": "Embedded sensor arrays and haptic feedback enhance interaction with electronic systems.", "flagged": true, "flagNote": "F49 -- 0460 gives +2 to electronic interface and hacking checks and names no Skills. Computes nothing until Deighton rules which Skills (L3, LQ4).", "playerNote": "Your GM names the Skills its +2 adds to. Add it to those rolls yourself." },
+    { "id": "smartlink-gloves", "name": "SMARTLink Gloves", "slot": "hand", "quality": "High", "material": "Exotic", "availability": "Rare", "cost": 2800, "notes": "+2 ACC when using SMARTLink-compatible weapons", "flavorLine": "Extends a weapon's SMARTLink targeting system through the grip.", "grants": [{ "type": "weaponBonus", "to": "acc", "amount": 2, "feature": "SMART Link" }] },
+    { "id": "precisiongrip-gloves", "name": "PrecisionGrip Gloves", "slot": "hand", "quality": "High", "material": "Exotic", "availability": "Rare", "cost": 2500, "notes": "+2 to precision skill checks", "flavorLine": "High-sensitivity haptic gloves for surgery, lockpicking, or any margin measured in millimeters.", "flagged": true, "flagNote": "F49 -- 0460 gives +2 to precision skill checks and names no Skills. Computes nothing until Deighton rules which Skills (L3, LQ4).", "playerNote": "Your GM names the precision Skills its +2 adds to. Add it to those rolls yourself." }
   ],
 
   /* EQUIPMENT (W17 + W27, Decision 121) -- everything carried that isn't a
@@ -4414,6 +4421,8 @@ window.SHADOWS_DATA = {
     { "id": "wards", "name": "Wards and Traps", "book": "Magic", "note": "Placed rather than carried. Proximity triggers, set at inscription." },
     { "id": "artifacts", "name": "Artifacts", "book": "Magic", "note": "Artifacts cannot be jammed, shorted, or traced, and an EMP that takes down a crew's tech leaves them working." }
   ],
+  /* EQUIPMENT -- `grants` on an entry apply while its row is marked in use (Decision 248), read as
+     armor's are. */
   "equipment": [
     { "id": "slate", "name": "Slate", "category": "tech", "availability": "Common", "cost": 250, "notes": "Handheld PC and commlink", "flavorLine": "The standard mobile device of NYTE City: part handheld PC, part commlink, part everything else." },
     { "id": "monocle", "name": "Monocle", "category": "tech", "availability": "Common", "cost": 375, "notes": "Retractable AR lens", "flavorLine": "A retractable lens worn over one eye providing video conferencing, augmented reality overlays, and heads-up data display." },
@@ -4422,9 +4431,9 @@ window.SHADOWS_DATA = {
     { "id": "smart-brace", "name": "SMART Brace", "category": "tech", "availability": "Common", "cost": null, "costText": "Varies", "notes": "Wrist-mounted comms platform", "flavorLine": "A wrist-mounted computer and communications platform running on SMART Link protocol." },
     { "id": "subvocal-commlink", "name": "Subvocal CommLINK", "category": "tech", "availability": "Uncommon", "cost": 385, "notes": "Short range encrypted, throat-mounted", "flavorLine": "A throat-mounted encrypted radio link that picks up subvocalizations rather than audible voice." },
     { "id": "smart-link", "name": "SMART Link", "category": "tech", "availability": "Uncommon", "cost": 150, "notes": "Neural-device interface", "flavorLine": "A neural interface that connects the user to SMART-compatible devices and weapons, enabling full SMART Targeting integration and high-tier tech interactions." },
-    { "id": "smart-deck-i", "name": "SMART Deck I", "category": "tech", "availability": "Common", "cost": 800, "notes": "Entry LINK/terminal rig, +1 Interface", "flavorLine": "The entry-level terminal intrusion rig." },
-    { "id": "smart-deck-ii", "name": "SMART Deck II", "category": "tech", "availability": "Uncommon", "cost": 2200, "notes": "Professional LINK/terminal rig, +2 Interface", "flavorLine": "A professional-grade intrusion platform running more sophisticated programs and handling higher-security terminal environments." },
-    { "id": "smart-deck-iii", "name": "SMART Deck III", "category": "tech", "availability": "Rare", "cost": 5500, "notes": "Specialist LINK/terminal rig, +3 Interface", "flavorLine": "Specialist hardware for serious terminal intrusion." },
+    { "id": "smart-deck-i", "name": "SMART Deck I", "category": "tech", "availability": "Common", "cost": 800, "notes": "Entry LINK/terminal rig, +1 Interface", "flavorLine": "The entry-level terminal intrusion rig.", "grants": [{ "type": "checkMod", "skills": ["interface"], "amount": 1 }] },
+    { "id": "smart-deck-ii", "name": "SMART Deck II", "category": "tech", "availability": "Uncommon", "cost": 2200, "notes": "Professional LINK/terminal rig, +2 Interface", "flavorLine": "A professional-grade intrusion platform running more sophisticated programs and handling higher-security terminal environments.", "grants": [{ "type": "checkMod", "skills": ["interface"], "amount": 2 }] },
+    { "id": "smart-deck-iii", "name": "SMART Deck III", "category": "tech", "availability": "Rare", "cost": 5500, "notes": "Specialist LINK/terminal rig, +3 Interface", "flavorLine": "Specialist hardware for serious terminal intrusion.", "grants": [{ "type": "checkMod", "skills": ["interface"], "amount": 3 }] },
     { "id": "nanotech-disguise-kit", "name": "Nanotech Disguise Kit", "category": "tech", "availability": "Rare", "cost": 2800, "consumable": true, "notes": "Single use, 1 hour, full body", "flavorLine": "A single-use aerosol applicator containing nanoscale surface-alteration agents that restructure the appearance of skin, hair, and clothing across the full body." },
     { "id": "energy-shield-cartridge", "name": "Energy Shield Cartridge", "category": "tech", "availability": "Rare", "cost": 1800, "consumable": true, "notes": "Single use, SMART Brace required", "flavorLine": "A single-use cartridge that slots into a SMART Brace and auto-triggers against incoming ballistic or kinetic attacks." },
     { "id": "silver-card", "name": "Silver Card", "category": "medical", "availability": "Common", "cost": 800, "consumable": true, "action": "Fast", "notes": "Emergency medical beacon — 5 minute response", "flavorLine": "Healthcare that fits in your wallet." },

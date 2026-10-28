@@ -456,6 +456,8 @@ aside.vitals:empty{display:none}
 .lo-add{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:8px 0 14px}
 .lo-add select{flex:1; min-width:0; max-width:420px}
 .lo-sub{font-size:.72rem; color:var(--dim); margin:2px 0}
+.lo-gives.off{opacity:.7}
+.lo-gear-ctl .check{white-space:nowrap}
 .ref tr.off td{opacity:.6}
 .feed-row{flex-wrap:wrap; gap:8px; align-items:center}
 .lo-scroll{overflow-x:auto; max-width:100%}
