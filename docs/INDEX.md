@@ -149,6 +149,7 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 | `F46` | (on Survival Instinct) Do kicker dice stack, and do two combine into the next die size up (Ken believes so, unconfirmed)? Stubbed: each kicker shows on its own, nothing combines (Decision 237) | Deighton |
 | `F47` | Which kicker is "your Kicker Die" for Specialist and Make My Own Luck? Stubbed: no kicker grows or rolls twice (Decision 237) | Deighton |
 | `F48` | Which damage type the book's untyped weapons deal (3 bows, 5 damaging grenades, the HRL-1 and HXC-1). Stubbed: untyped, the Loadout card says the GM rules (L1) | Deighton |
+| `F49` | Which Skills the Hacking Visor's and Hacking Gloves' "electronic interface and hacking checks" and the PrecisionGrip Gloves' "precision skill checks" add to. Stubbed: they compute nothing, the Loadout card says the GM rules it (L3) | Deighton |
 Every `flagged: true` in the data names an F-number open here; `tests/docs.test.mjs`
 fails on one that doesn't (audit A7).
 

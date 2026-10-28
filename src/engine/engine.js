@@ -22,7 +22,7 @@ const Engine = (() => {
   const INTAKE_RE = new RegExp(`^TAG-${INTAKE_BODY}$`);
   const OLD_INTAKE_RE = new RegExp(`^NCR-(${INTAKE_BODY})$`);
   // The character file's shape. A bump needs a migrate() step in the same change.
-  const SCHEMA_VERSION = "0.29";
+  const SCHEMA_VERSION = "0.30";
   const isIntakeId = v => typeof v==="string" && INTAKE_RE.test(v);
   function randomChars(n){
     const c = typeof globalThis!=="undefined" && globalThis.crypto && typeof globalThis.crypto.getRandomValues==="function" ? globalThis.crypto : null;
@@ -1012,6 +1012,29 @@ const Engine = (() => {
     return (alias && known(alias)) ? alias : null;
   }
 
+  // What a worn piece of armor and a piece of gear in use carry (Decision 248): a catalog armor entry that is worn
+  // and not scrapped, and a catalog gear row marked `inUse`, whose entry has `grants`. A row counts once however
+  // many it holds. Only the well-formed grants come through (a whole number of 1 or more, never negative), as a
+  // source with no `kind`, so a `skillsFromPick` on gear reads as none. traitGrants() and naturalArmor() read
+  // grantSources() and never see these: gear reaches only a Skill's row and a weapon's line. Total.
+  const goodWhole = n => typeof n==="number" && Number.isInteger(n) && n>=1;
+  const wornGrant = g => isPlainObj(g) && ((g.type==="checkMod" && Array.isArray(g.skills) && goodWhole(g.amount))
+    || (g.type==="weaponBonus" && goodWhole(g.amount)));
+  function wornGrants(ch){
+    const out = [];
+    const take = (def, from, index) => {
+      if (!isPlainObj(def) || !Array.isArray(def.grants)) return;
+      const grants = def.grants.filter(wornGrant);
+      if (grants.length) out.push({ def: { name: txt(def.name), grants }, rank: 1, from, index });
+    };
+    listOf(ch, "armor").forEach((e, index)=>{
+      if (isPlainObj(e) && !e.custom && e.worn===true && e.scrapped!==true) take(armorDefById(e.id), "armor", index);
+    });
+    listOf(ch, "gear").forEach((e, index)=>{
+      if (isPlainObj(e) && !e.custom && e.inUse===true) take(equipmentById(e.id), "gear", index);
+    });
+    return out;
+  }
   // The traits whose `grants` change a Skill's check (Decisions 233, 237), one per source however many rows hold it
   // (natural and bought ranks sum, heldRank), with the Skills each row names: held Advantages and Disadvantages, taken
   // Majors, the chosen specialization's options, held powers (at their rank), the archetype's baseline traits, the
@@ -1019,7 +1042,7 @@ const Engine = (() => {
   // part's. Total: a row the data or a file got wrong is not here.
   function traitRows(ch){
     const out = [];
-    for (const { def, rank, kind, id } of grantSources(ch, true)){
+    for (const { def, rank, kind, id } of [...grantSources(ch, true), ...wornGrants(ch)]){
       if (!isPlainObj(def) || !Array.isArray(def.grants) || !(rank >= 1)) continue;
       for (const g of def.grants){
         if (!isPlainObj(g) || !TRAIT_TYPES.includes(g.type)) continue;
@@ -1827,12 +1850,63 @@ const Engine = (() => {
   // ACC is apart because only Single fire adds it (0530). A custom weapon
   // attacks with its type's Skill, with the damage, damage type, range and
   // ACC the player picked or typed (Decision 247).
+  // A weapon's class (Decision 248), read from the data and never stored: `melee` is its Skill's flag (a grenade's Skill
+  // is Melee), `damageClass` the `resClass` of its damage type when that is kinetic or energy. A catalog weapon's
+  // `damageType` is the book's word, so it is read as a damage type's NAME; one that names none reads its `style`
+  // instead (each word, split on "/", a type's name, all of one class). A written-in weapon stores the type's id
+  // and its Skill is its weapon type's. `melee` is null with no Skill; null for a row that isn't there.
+  function weaponClass(ch, index){
+    const e = listOf(ch, "weapons")[index];
+    if (!isPlainObj(e)) return null;
+    let skillId = null, type = null;
+    if (e.custom || !e.id){
+      const cat = customWeaponPick("category", e.category), c = cat && (D().weaponCategories||[]).find(x=>x.id===cat);
+      skillId = c ? c.skill : null;
+      const dt = customWeaponPick("damageType", e.damageType);
+      type = dt ? damageTypeById(dt) : null;
+    } else {
+      const def = weaponDefById(e.id);
+      if (!def) return null;
+      skillId = def.skill;
+      const byName = n => (D().damageTypes||[]).find(t=>isPlainObj(t) && t.name===n) || null;
+      type = typeof def.damageType==="string" ? byName(def.damageType) : null;
+      if (!type && typeof def.style==="string"){
+        const words = def.style.split("/").map(w=>byName(w.trim()));
+        if (words.every(Boolean) && new Set(words.map(t=>t.resClass)).size===1) type = words[0];
+      }
+    }
+    const sk = skillId ? skillById(skillId) : null;
+    const cls = isPlainObj(type) ? type.resClass : null;
+    return { melee: sk ? sk.melee===true : null, damageClass: cls==="kinetic" || cls==="energy" ? cls : null };
+  }
+  // The worn and in-use `weaponBonus`es that reach this weapon (Decision 248), each { to, amount, from }. It reaches by
+  // `class` (melee, ranged, kinetic, energy), by `feature` (a string a catalog weapon's features carry, matched whole;
+  // a written-in row's `features` is text, so no feature reaches it), or by both, when it must match both. Neither, or
+  // an unknown class or `to`, reaches nothing. They add into `acc` (a null acc becomes the amount) and into a numeric
+  // `damage`; a text damage keeps its text and the bonus is still listed.
+  const BONUS_CLASSES = ["melee", "ranged", "kinetic", "energy"];
+  function applyWeaponBonuses(ch, index, line, features){
+    line.bonuses = [];
+    const cls = weaponClass(ch, index);
+    if (!cls) return line;
+    for (const { def } of wornGrants(ch)) for (const g of def.grants){
+      if (g.type!=="weaponBonus" || (g.to!=="acc" && g.to!=="damage")) continue;
+      const hasClass = g.class!==undefined, hasFeature = g.feature!==undefined;
+      if (!hasClass && !hasFeature) continue;
+      if (hasClass && !(BONUS_CLASSES.includes(g.class) && (g.class==="melee" ? cls.melee===true : g.class==="ranged" ? cls.melee===false : cls.damageClass===g.class))) continue;
+      if (hasFeature && !(typeof g.feature==="string" && features.includes(g.feature))) continue;
+      if (g.to==="acc") line.acc = (line.acc||0) + g.amount;
+      else if (typeof line.damage==="number") line.damage += g.amount;
+      line.bonuses.push({ to:g.to, amount:g.amount, from:def.name });
+    }
+    return line;
+  }
   function weaponLine(ch, index){
     const e = listOf(ch, "weapons")[index];
     if (!e || typeof e!=="object") return null;
     const notes = typeof e.notes==="string" ? e.notes : "";
-    if (e.custom || !e.id) return Object.assign({ index, custom:true, name:String(e.name||""), notes },
-      customWeaponLine(ch, e), { rounds: roundsOf(e.capacity, e), fireModes: fireModesOf(e.rof) });
+    if (e.custom || !e.id) return applyWeaponBonuses(ch, index, Object.assign({ index, custom:true, name:String(e.name||""), notes },
+      customWeaponLine(ch, e), { rounds: roundsOf(e.capacity, e), fireModes: fireModesOf(e.rof) }), []);
     const def = weaponDefById(e.id);
     if (!def) return { index, missing:true, name:String(e.id), notes };
     const line = Object.assign({ index, notes }, weaponDefLine(ch, def));
@@ -1860,6 +1934,7 @@ const Engine = (() => {
       line.loaded = { id:loadedDef.id, name:loadedDef.name, tags:ammoTags(loadedDef) };
       line.tags = [...new Set([...line.tags, ...line.loaded.tags])];
     }
+    applyWeaponBonuses(ch, index, line, Array.isArray(def.features) ? def.features : []);
     // W30: what Reload would take, and how much of it you carry. W40: every
     // kind carried, and whether one would swap what's loaded.
     // P9b: `carried` is whole magazines; `parts` the part-used ones, their
@@ -2295,6 +2370,16 @@ const Engine = (() => {
     if (on) list.forEach((o,i)=>{ if (i!==index && o && typeof o==="object" && armorPiece(o,i).slot===slot) o.worn = false; });
     e.worn = !!on;
     return { ok:true };
+  }
+  // Decision 248: a gear row whose entry carries `grants` is either in use or carried. On writes `inUse: true`, off
+  // deletes the key; a written-in row and an entry with nothing to switch on are refused, and a refusal writes nothing.
+  function setInUse(ch, index, on){
+    const e = listOf(ch, "gear")[index];
+    if (!isPlainObj(e)) return { ok:false, why:"That isn't on the sheet." };
+    const def = !e.custom && typeof e.id==="string" ? equipmentById(e.id) : null;
+    if (!def || !Array.isArray(def.grants) || !def.grants.some(wornGrant)) return { ok:false, why:"Nothing on this works by being in use." };
+    if (on) e.inUse = true; else delete e.inUse;
+    return { ok:true, name:def.name };
   }
 
   // Which upgrades a piece can take, and why not when it can't (Gear: one mod
@@ -4757,12 +4842,14 @@ const Engine = (() => {
     // (custom:true). Every row from before is typed text, so it's tagged
     // custom, never matched to a catalog name, as the 0.6 step did weapons.
     c.gear = (Array.isArray(c.gear) ? c.gear : []).filter(g=>g && typeof g==="object").map(g=>{
-      if (g.custom || typeof g.id!=="string"){ g.custom = true; return g; }
+      if (g.custom || typeof g.id!=="string"){ g.custom = true; delete g.inUse; return g; }
       g.qty = g.qty==null ? 1 : nonNegInt(g.qty);
       if (g.chargesUsed!=null) g.chargesUsed = nonNegInt(g.chargesUsed);
       // Schema 0.24 (Decision 222): a part-used magazine's `roundsLeft`. No row from before has one.
       if (g.roundsLeft!=null) g.roundsLeft = nonNegInt(g.roundsLeft);
       if (typeof g.notes!=="string") g.notes = "";
+      // Schema 0.30 (Decision 248): `inUse` is true or absent, on a catalog row that isn't a part-used magazine.
+      if (g.inUse!==true || isPartMag(g)) delete g.inUse;
       return g;
     });
     // Schema 0.10 (W16, Decision 120): a weapon keeps its installed mods (a
@@ -8491,7 +8578,7 @@ const Engine = (() => {
     naturalHealing, heal, healStep, resolveReset, applyReset,
     // Loadout: weapons, gear, armor
     weaponLine, weaponDamage, setCustomWeapon, catalogLine, addLoadout, weaponModOptions, addWeaponMod, removeWeaponMod, fireWeapon, reloadWeapon,
-    gearLine, carriedGear, useGear, useCharge, rechargeGear, addCustomLoadout, removeLoadout, setWorn,
+    gearLine, carriedGear, useGear, useCharge, rechargeGear, addCustomLoadout, removeLoadout, setWorn, setInUse, weaponClass,
     upgradeOptions, addUpgrade, removeUpgrade, armorWear, repairArmor,
     // Magic: the Cascade, Aberrations, the Grimoire, starting spells
     cascade, aberrationState, recordAberration, removeAberration,

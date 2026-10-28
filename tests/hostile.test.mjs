@@ -1086,7 +1086,7 @@ test("Decision 216: powerIpe naming another Bloodline's or a nonexistent power h
 const same = (a, b, msg) => assert.equal(JSON.stringify(a), JSON.stringify(b), msg);
 test("P12b 10: migrate keeps the house rule, a running training and a landed entry's fields, and nothing else", () => {
   const mk = patch => { const c = Engine.newCharacter(); patch(c); return Engine.migrate(JSON.parse(JSON.stringify(c))); };
-  assert.equal(Engine.newCharacter().meta.schemaVersion, "0.29");
+  assert.equal(Engine.newCharacter().meta.schemaVersion, "0.30");
   assert.equal(mk(c => { c.houseRules.training = true; }).houseRules.training, true, "true survives");
   for (const junk of ["yes", 1, "true", {}, [], null])
     assert.equal(mk(c => { c.houseRules.training = junk; }).houseRules.training, false, `houseRules.training ${JSON.stringify(junk)}`);
@@ -1105,7 +1105,7 @@ test("P12b 10: migrate keeps the house rule, a running training and a landed ent
   assert.equal(log({ via: "training", mp: 3 }).mp, 3);
   for (const via of ["x", {}, 7, null, ["training"]]) assert.equal("via" in log({ via }), false, `via ${JSON.stringify(via)}`);
   for (const mp of ["3", -1, {}, 1.5, null, NaN]) assert.equal("mp" in log({ via: "training", mp }), false, `mp ${JSON.stringify(mp)}`);
-  assert.equal(Engine.migrate({}).meta.schemaVersion, "0.29");
+  assert.equal(Engine.migrate({}).meta.schemaVersion, "0.30");
 });
 
 test("a rule's text of markup renders as text on the CP step and a folded Character card (Decision 231)", () => {
