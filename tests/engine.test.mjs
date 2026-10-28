@@ -10456,6 +10456,10 @@ test("L3 3 (engine): SMARTLink Gloves worn add 2 ACC to every SMART Link weapon 
   assert.equal(Engine.weaponLine(ch, sentry).acc, main[sentry].acc + 2);
   ch.weapons.push(customRow({ category: "handguns", features: "SMART Link" }));
   assert.deepEqual(plain(Engine.weaponLine(ch, ch.weapons.length - 1).bonuses), [], "a custom row's typed features matched a feature bonus");
+  // a feature matches whole: "SMART" is a piece of "SMART Link", not a feature any weapon carries
+  withGloves([{ type: "weaponBonus", to: "acc", amount: 2, feature: "SMART" }], () => {
+    D.weapons.forEach((w, i) => assert.deepEqual(plain(Engine.weaponLine(ch, i).bonuses), [], `${w.id} matched a piece of a feature`));
+  });
 });
 
 test("L3 4 (engine): a weapon's class is read from the data, for catalog and custom weapons alike", () => {

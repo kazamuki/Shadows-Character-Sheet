@@ -1524,6 +1524,16 @@ test("L3 9 (sheet): a gear row with modifiers has an In use toggle, and turning 
   assert.match(audit()[audit().length - 1].label, /^Put away SMART Deck II$/);
   assert.equal(app.window.document.activeElement, gearRowOf(app, "SMART Deck II").querySelector("input[data-inuse]"), "focus left the toggle");
   assert.ok(!Object.hasOwn(activeChar(app).gear[0], "inUse"));
+  // A page the engine refuses (the entry loses its modifiers after it was drawn): nothing is written, the toggle reads the stored state again, and a notice says why.
+  const deckDef = app.window.SHADOWS_DATA.equipment.find(e => e.id === "smart-deck-ii"), kept = deckDef.grants;
+  deckDef.grants = undefined;
+  const cb = gearRowOf(app, "SMART Deck II").querySelector("input[data-inuse]"), logged = audit().length;
+  flip(app, cb, true);
+  deckDef.grants = kept;
+  assert.equal(audit().length, logged, "a refused toggle was audited");
+  assert.ok(!Object.hasOwn(activeChar(app).gear[0], "inUse"), "a refused toggle wrote");
+  assert.equal(cb.checked, false, "the toggle shows a state that wasn't stored");
+  assert.match(app.$("#undotoast").textContent, /Nothing on this works by being in use/);
   assert.deepEqual(app.errors, []);
 });
 
