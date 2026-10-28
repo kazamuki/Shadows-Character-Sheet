@@ -25,8 +25,8 @@ own in the footer.
 
 ## [Unreleased] — app 0.56.0
 
-- **Gear you wear or use now counts.** Put on SMARTLink Gloves and your SMART Link guns show the extra ACC. Mark a SMART Deck as in use and Interface goes up by what it gives.
-- **The Hacking Visor, Hacking Gloves and PrecisionGrip Gloves say your GM rules which checks they add to.**
+- **Gear you wear or use now counts.** Wear SMARTLink Gloves and your SMART Link guns show the +2 ACC. Switch a SMART Deck to In use and your Interface checks go up by its rating.
+- The Hacking Visor, Hacking Gloves and PrecisionGrip Gloves now say on their card that your GM picks which checks they help.
 
 ## v0.55.0 — 2026-10-25
 

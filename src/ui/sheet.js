@@ -2171,7 +2171,7 @@ function armorRowHtml(ch, p){
   }
   const piece = p.custom ? null : (D.armor||[]).find(a=>a.id===p.id);
   // A scrapped piece adds nothing though it's worn (wornGrants), so its line dims as an unworn one's does.
-  if (p.gives.length) h += `<p class="lo-sub lo-gives${p.worn && !p.scrapped?"":" off"}" data-gives>${p.worn ? "" : "Worn: "}${esc(p.gives.join(" · "))}</p>`;
+  if (p.gives.length) h += `<p class="lo-sub lo-gives${p.worn && !p.scrapped?"":" off"}" data-gives>${p.worn ? "" : "When worn: "}${esc(p.gives.join(" · "))}</p>`;
   if (piece && piece.flagged) h += flagHtml(piece);
   if (p.features.length) h += `<p class="lo-sub">Built in: ${p.features.map(f=>{
     const g=(D.armorFeatureGlossary||[]).find(x=>x.id===f)||(D.armorUpgradeGlossary||[]).find(x=>x.id===f);
@@ -4013,7 +4013,7 @@ function bindSheet(){
     const i=Number(cb.dataset.inuse), on=cb.checked, n=loName("gear", i);
     const pre=Engine.setInUse(clone(ch), i, on);
     if (!pre.ok){ cb.checked=!on; notice(pre.why); return; }
-    commit("loadout", `${on?"Using":"Put away"} ${n}`, ()=>{ Engine.setInUse(ch, i, on); });
+    commit("loadout", `${on?"Started using":"Put away"} ${n}`, ()=>{ Engine.setInUse(ch, i, on); });
   });
   main.querySelectorAll("[data-armorfield]").forEach(el=>el.onchange=()=>{
     const [i,k]=el.dataset.armorfield.split("|"), e=ch.armor[Number(i)];

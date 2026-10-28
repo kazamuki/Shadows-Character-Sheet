@@ -1500,11 +1500,11 @@ test("L3 9 (sheet): a gear row with modifiers has an In use toggle, and turning 
   const before = audit().length;
   flip(app, deck.querySelector("input[data-inuse]"), true);
   assert.equal(audit().length, before + 1, "turning it on wasn't one audit entry");
-  assert.match(audit()[audit().length - 1].label, /^Using SMART Deck II$/);
+  assert.match(audit()[audit().length - 1].label, /^Started using SMART Deck II$/);
   assert.equal(activeChar(app).gear[0].inUse, true);
   const now = gearRowOf(app, "SMART Deck II");
   assert.equal(app.window.document.activeElement, now.querySelector("input[data-inuse]"), "focus left the toggle");
-  assert.match(now.querySelector("[data-inuseline]").textContent, /\+2 Interface/);
+  assert.match(now.querySelector("[data-inuseline]").textContent, /\+2 to Interface checks/);
   assert.equal(gearRowOf(app, "SMART Brace").querySelector("[data-inuseline]"), null, "the sub line drew on the next row");
   app.click('[data-sec="skills"]');
   const row = interfaceRow(app);
@@ -1533,7 +1533,7 @@ test("L3 9 (sheet): a gear row with modifiers has an In use toggle, and turning 
   assert.equal(audit().length, logged, "a refused toggle was audited");
   assert.ok(!Object.hasOwn(activeChar(app).gear[0], "inUse"), "a refused toggle wrote");
   assert.equal(cb.checked, false, "the toggle shows a state that wasn't stored");
-  assert.match(app.$("#undotoast").textContent, /Nothing on this works by being in use/);
+  assert.match(app.$("#undotoast").textContent, /This has nothing to switch on/);
   assert.deepEqual(app.errors, []);
 });
 
@@ -1546,8 +1546,8 @@ test("L3 10 (sheet): SMARTLink Gloves worn raise a SMART Link weapon's ACC on Lo
   bare.armor[0].worn = false;
   const base = Engine.weaponLine(bare, 0).acc;
   const app = openSheet(ch, "loadout");
-  assert.match(armorCardOf(app, "SMARTLink Gloves").textContent, /\+2 ACC on SMART Link weapons/);
-  assert.doesNotMatch(armorCardOf(app, "SMARTLink Gloves").textContent, /Worn: \+2 ACC/);
+  assert.match(armorCardOf(app, "SMARTLink Gloves").textContent, /\+2 ACC with SMART Link weapons/);
+  assert.doesNotMatch(armorCardOf(app, "SMARTLink Gloves").textContent, /When worn: \+2 ACC/);
   const ap = rowOf(app, 0), cheap = rowOf(app, 1);
   assert.match(cellsOf(ap)[1], new RegExp(`\\+${base + 2} ACC on Single`));
   assert.match(ap.textContent, /\+2 from SMARTLink Gloves/);
@@ -1562,7 +1562,7 @@ test("L3 10 (sheet): SMARTLink Gloves worn raise a SMART Link weapon's ACC on Lo
   flip(app, armorCardOf(app, "SMARTLink Gloves").querySelector("input[data-worn]"), false);
   assert.match(cellsOf(rowOf(app, 0))[1], new RegExp(`\\+${base} ACC on Single`));
   assert.doesNotMatch(rowOf(app, 0).textContent, /from SMARTLink Gloves/);
-  assert.match(armorCardOf(app, "SMARTLink Gloves").textContent, /Worn: \+2 ACC on SMART Link weapons/);
+  assert.match(armorCardOf(app, "SMARTLink Gloves").textContent, /When worn: \+2 ACC with SMART Link weapons/);
   assert.deepEqual(app.errors, []);
   // worn but scrapped (a hand-edited file): it adds nothing, so its line is dimmed, not shown as working
   assert.equal(armorCardOf(app, "SMARTLink Gloves").querySelector("[data-gives]").classList.contains("off"), true);

@@ -1035,19 +1035,19 @@ const Engine = (() => {
     });
     return out;
   }
-  // What an entry's well-formed gear grants say, as the sheet words them (Decision 248): "+2 Interface",
-  // "+2 ACC on SMART Link weapons", "+2 damage on energy weapons". Empty for an entry with none.
+  // What an entry's well-formed gear grants say, as the sheet words them (Decision 248): "+2 to Interface checks",
+  // "+2 ACC with SMART Link weapons", "+2 damage with energy weapons". Empty for an entry with none.
   function givesOf(def){
     if (!isPlainObj(def) || !Array.isArray(def.grants)) return [];
     return def.grants.filter(wornGrant).map(g=>{
       if (g.type==="checkMod"){
         const names = g.skills.map(id=>{ const sk = skillById(id); return sk ? txt(sk.name) : ""; }).filter(Boolean);
-        return names.length ? `+${g.amount} ${joinList(names, "and")}` : null;
+        return names.length ? `+${g.amount} to ${joinList(names, "and")} checks` : null;
       }
       if (g.to!=="acc" && g.to!=="damage") return null;
       const kinds = [g.class, g.feature].filter(v=>typeof v==="string" && v);
       if (!kinds.length || (g.class!==undefined && !BONUS_CLASSES.includes(g.class))) return null;
-      return `+${g.amount} ${g.to==="acc" ? "ACC" : "damage"} on ${kinds.join(" ")} weapons`;
+      return `+${g.amount} ${g.to==="acc" ? "ACC" : "damage"} with ${kinds.join(" ")} weapons`;
     }).filter(Boolean);
   }
   // The traits whose `grants` change a Skill's check (Decisions 233, 237), one per source however many rows hold it
@@ -2393,7 +2393,7 @@ const Engine = (() => {
     const e = listOf(ch, "gear")[index];
     if (!isPlainObj(e)) return { ok:false, why:"That isn't on the sheet." };
     const def = !e.custom && typeof e.id==="string" ? equipmentById(e.id) : null;
-    if (!def || !Array.isArray(def.grants) || !def.grants.some(wornGrant)) return { ok:false, why:"Nothing on this works by being in use." };
+    if (!def || !Array.isArray(def.grants) || !def.grants.some(wornGrant)) return { ok:false, why:"This has nothing to switch on." };
     if (on) e.inUse = true; else delete e.inUse;
     return { ok:true, name:def.name };
   }
