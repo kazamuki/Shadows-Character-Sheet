@@ -3387,3 +3387,20 @@ test("L2 3b (rules): CRB 0530: a custom weapon's range bands are the book's", ()
   assert.deepEqual(bands, ["Close", "Short", "Medium", "Long", "Extreme"], "the book's range bands moved: ask before editing the data");
   assert.deepEqual([...D.weaponRules.rangeBands], bands);
 });
+
+// ── 0460's Smart Decks and SMARTLink Gloves (L3) ───────────────────────
+test("L3 3b (rules): CRB 0460: the decks' Interface and the SMARTLink Gloves' ACC are the book's", () => {
+  const md = crb("0460_Gear.md");
+  for (const [id, n] of [["smart-deck-i", 1], ["smart-deck-ii", 2], ["smart-deck-iii", 3]]) {
+    const def = D.equipment.find(e => e.id === id);
+    assert.match(md, new RegExp(`\| ${def.name} \|[^\n]*\+${n} Interface`), `${def.name}'s row`);
+    assert.deepEqual(def.grants, [{ type: "checkMod", skills: ["interface"], amount: n }], `${def.name}'s grants`);
+  }
+  assert.match(md, /\| SMARTLink Gloves \|[^\n]*\+2 ACC when using SMARTLink-compatible weapons/);
+  assert.deepEqual(D.armor.find(a => a.id === "smartlink-gloves").grants, [{ type: "weaponBonus", to: "acc", amount: 2, feature: "SMART Link" }]);
+  // The three whose Skills the book doesn't name stay text (the GM rules them).
+  assert.match(md, /\| Hacking Visor \|[^\n]*\+5 to electronic interface and hacking checks/);
+  assert.match(md, /\| Hacking Gloves \|[^\n]*\+2 to electronic interface and hacking checks/);
+  assert.match(md, /\| PrecisionGrip Gloves \|[^\n]*\+2 to precision skill checks/);
+  for (const id of ["hacking-visor", "hacking-gloves", "precisiongrip-gloves"]) assert.equal(D.armor.find(a => a.id === id).grants, undefined, `${id} computes something the book doesn't name`);
+});

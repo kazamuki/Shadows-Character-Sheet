@@ -1473,3 +1473,102 @@ test("L2 10 (sheet): each pick on an open custom weapon is one undoable action, 
   assert.match(app.$("#undotoast").textContent, /ACC is a whole number, 0 or more/, "a refused ACC gave no reason");
   assert.deepEqual(app.errors, []);
 });
+
+// ── L3: worn armor and gear in use carry modifiers ──────────────────────
+function l3Character() {
+  const ch = lockedCharacter();
+  ch.stats.TECH.base = 8;
+  ch.skills.handguns = { rank: 3, ipe: 0 };
+  return ch;
+}
+const gearRowOf = (app, name) => app.$$("#main .lo-gear-row").find(r => r.querySelector("b") && r.querySelector("b").textContent === name);
+const armorCardOf = (app, name) => app.$$("#main .lo-armor").find(r => r.querySelector(".lo-armor-head b") && r.querySelector(".lo-armor-head b").textContent === name);
+const flip = (app, el, on) => { el.focus(); el.checked = on; el.dispatchEvent(new app.window.Event("change", { bubbles: true })); };
+const interfaceRow = app => app.$$("#main tr.skill-line").find(tr => tr.querySelector('[data-skillname="interface"]'));
+
+test("L3 9 (sheet): a gear row with modifiers has an In use toggle, and turning it on is one undoable action that moves Interface's check", () => {
+  const ch = l3Character();
+  Engine.addLoadout(ch, "gear", "smart-deck-ii");
+  Engine.addLoadout(ch, "gear", "smart-brace");
+  const bare = Engine.skillLine(ch, "interface").checkBonus;
+  const app = openSheet(ch, "loadout");
+  const deck = gearRowOf(app, "SMART Deck II"), brace = gearRowOf(app, "SMART Brace");
+  assert.ok(deck && brace, "the gear rows aren't found by their names");
+  assert.ok(deck.querySelector("input[data-inuse]"), "the deck has no In use toggle");
+  assert.equal(brace.querySelector("input[data-inuse]"), null, "a row with no modifiers has a toggle");
+  const audit = () => activeChar(app).audit;
+  const before = audit().length;
+  flip(app, deck.querySelector("input[data-inuse]"), true);
+  assert.equal(audit().length, before + 1, "turning it on wasn't one audit entry");
+  assert.match(audit()[audit().length - 1].label, /^Using SMART Deck II$/);
+  assert.equal(activeChar(app).gear[0].inUse, true);
+  const now = gearRowOf(app, "SMART Deck II");
+  assert.equal(app.window.document.activeElement, now.querySelector("input[data-inuse]"), "focus left the toggle");
+  assert.match(now.querySelector("[data-inuseline]").textContent, /\+2 Interface/);
+  assert.equal(gearRowOf(app, "SMART Brace").querySelector("[data-inuseline]"), null, "the sub line drew on the next row");
+  app.click('[data-sec="skills"]');
+  const row = interfaceRow(app);
+  assert.match(cellsOf(row)[2], new RegExp(`^1d10 \\+ ${bare + 2}`));
+  assert.match(row.textContent, /\+2 SMART Deck II/);
+  assert.match(row.textContent, /untrained/);
+  app.click('[data-sec="loadout"]');
+  app.click("button[data-undolast]");
+  assert.equal(activeChar(app).gear[0].inUse, undefined, "undo left it in use");
+  app.click('[data-sec="skills"]');
+  assert.match(cellsOf(interfaceRow(app))[2], new RegExp(`^1d10 \\+ ${bare}(?!\\d)`));
+  app.click('[data-sec="loadout"]');
+  flip(app, gearRowOf(app, "SMART Deck II").querySelector("input[data-inuse]"), true);
+  const n = audit().length;
+  flip(app, gearRowOf(app, "SMART Deck II").querySelector("input[data-inuse]"), false);
+  assert.equal(audit().length, n + 1);
+  assert.match(audit()[audit().length - 1].label, /^Put away SMART Deck II$/);
+  assert.equal(app.window.document.activeElement, gearRowOf(app, "SMART Deck II").querySelector("input[data-inuse]"), "focus left the toggle");
+  assert.ok(!Object.hasOwn(activeChar(app).gear[0], "inUse"));
+  assert.deepEqual(app.errors, []);
+});
+
+test("L3 10 (sheet): SMARTLink Gloves worn raise a SMART Link weapon's ACC on Loadout, Main and print, and say so on their card", () => {
+  const ch = l3Character();
+  Engine.addLoadout(ch, "weapons", "ap7-sentry");
+  Engine.addLoadout(ch, "weapons", "cheapshot");
+  Engine.addLoadout(ch, "armor", "smartlink-gloves");
+  const bare = JSON.parse(JSON.stringify(ch));
+  bare.armor[0].worn = false;
+  const base = Engine.weaponLine(bare, 0).acc;
+  const app = openSheet(ch, "loadout");
+  assert.match(armorCardOf(app, "SMARTLink Gloves").textContent, /\+2 ACC on SMART Link weapons/);
+  assert.doesNotMatch(armorCardOf(app, "SMARTLink Gloves").textContent, /Worn: \+2 ACC/);
+  const ap = rowOf(app, 0), cheap = rowOf(app, 1);
+  assert.match(cellsOf(ap)[1], new RegExp(`\\+${base + 2} ACC on Single`));
+  assert.match(ap.textContent, /\+2 from SMARTLink Gloves/);
+  assert.doesNotMatch(cheap.textContent, /from SMARTLink Gloves/);
+  assert.doesNotMatch(cellsOf(cheap)[1], /ACC on Single/);
+  app.click('[data-sec="main"]');
+  const mainRow = app.$$("#main table.ref tbody tr").find(tr => /AP-7/.test(tr.textContent));
+  assert.match(cellsOf(mainRow)[1], new RegExp(`\\+${base + 2} ACC Single`));
+  const page = app.window.renderPrintView(activeChar(app));
+  assert.match(page.split("<tr>").find(r => /AP-7/.test(r)), new RegExp(`\\(\\+${base + 2} ACC\\)`));
+  app.click('[data-sec="loadout"]');
+  flip(app, armorCardOf(app, "SMARTLink Gloves").querySelector("input[data-worn]"), false);
+  assert.match(cellsOf(rowOf(app, 0))[1], new RegExp(`\\+${base} ACC on Single`));
+  assert.doesNotMatch(rowOf(app, 0).textContent, /from SMARTLink Gloves/);
+  assert.match(armorCardOf(app, "SMARTLink Gloves").textContent, /Worn: \+2 ACC on SMART Link weapons/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("L3 11 (sheet): a flagged piece says the GM rules it, on its own card, and moves no number", () => {
+  const visor = D.armor.find(a => a.id === "hacking-visor"), gloves = D.armor.find(a => a.id === "hacking-gloves");
+  assert.ok(visor.playerNote && gloves.playerNote && visor.playerNote !== gloves.playerNote);
+  const ch = l3Character();
+  Engine.addLoadout(ch, "armor", "hacking-visor");
+  Engine.addLoadout(ch, "armor", "hacking-gloves");
+  assert.equal(ch.armor[0].worn, true);
+  const off = JSON.parse(JSON.stringify(ch));
+  off.armor.forEach(a => { a.worn = false; });
+  for (const s of D.skills) assert.equal(Engine.skillLine(ch, s.id).checkBonus, Engine.skillLine(off, s.id).checkBonus, s.id);
+  const app = openSheet(ch, "loadout");
+  assert.ok(armorCardOf(app, "Hacking Visor").textContent.includes(visor.playerNote), "the visor's note isn't on its card");
+  assert.ok(!armorCardOf(app, "Hacking Gloves").textContent.includes(visor.playerNote), "the visor's note is on the next card");
+  assert.ok(armorCardOf(app, "Hacking Gloves").textContent.includes(gloves.playerNote));
+  assert.deepEqual(app.errors, []);
+});

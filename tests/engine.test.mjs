@@ -10372,3 +10372,260 @@ test("L2 6 (engine): migrate to 0.29 keeps a saved type as text, shows it until 
   Engine.addCustomLoadout(fresh, "weapons");
   assert.ok(!Object.hasOwn(fresh.weapons[0], "type"), "a new custom weapon carries a type");
 });
+
+// ── L3: worn armor and gear in use carry modifiers ─────────────────────
+function l3Char(base = 5) {
+  const ch = subject({ base });
+  ch.stats.TECH.base = 8;
+  ch.skills.handguns = { rank: 3, ipe: 0 };
+  return ch;
+}
+const l3Have = (ch, kind, id) => { const r = Engine.addLoadout(ch, kind, id); assert.equal(r.ok, true, `${id} was refused`); return r.index; };
+const interfaceCheck = ch => Engine.skillLine(ch, "interface");
+const DECKS = [["smart-deck-i", 1], ["smart-deck-ii", 2], ["smart-deck-iii", 3]];
+const smartLinkIds = () => D.weapons.filter(w => (w.features || []).includes("SMART Link")).map(w => w.id);
+function allWeapons(ch) { D.weapons.forEach(w => ch.weapons.push({ id: w.id, notes: "" })); return ch; }
+const customRow = extra => Object.assign({ custom: true, name: "Row", damage: "3", rof: "S", capacity: "", ammo: "", features: "", notes: "", roundsSpent: 0 }, extra);
+// The gloves' grants, replaced for one test.
+const withGloves = (grants, fn) => withData(D.armor.find(a => a.id === "smartlink-gloves"), "grants", grants, fn);
+
+test("L3 1 (engine): a Smart Deck in use adds to Interface's check, an untrained one without its Synergy, and its rank, price and caps don't move", () => {
+  for (const [id, n] of DECKS) {
+    for (const rank of [0, 2]) {
+      const ch = l3Char();
+      if (rank) ch.skills.interface = { rank, ipe: 0 };
+      const bare = interfaceCheck(ch), at = l3Have(ch, "gear", id);
+      assert.equal(interfaceCheck(ch).checkBonus, bare.checkBonus, `${id}: carried counted`);
+      assert.equal(Engine.setInUse(ch, at, true).ok, true);
+      const on = interfaceCheck(ch);
+      assert.equal(on.checkBonus, bare.checkBonus + n, `${id} rank ${rank}`);
+      assert.equal(on.rank, rank);
+      assert.equal(on.trained, rank > 0);
+      assert.deepEqual(on.breakdown.synergy, bare.breakdown.synergy, "the deck moved the Synergy");
+      assert.ok(on.breakdown.traitParts.some(p => p.amount === n && /SMART Deck/.test(p.name)), "traitParts doesn't name the deck");
+      const req = { skills: { all: [["interface", 1]] } };
+      const read = () => [Engine.ipCost(ch, "skill", "interface"), Engine.canBoost(ch, "skill", "interface"), Engine.skillRankCap(ch, "interface"), Engine.checkPrereqs(ch, req).ok];
+      const withDeck = read();
+      assert.equal(Engine.setInUse(ch, at, false).ok, true);
+      assert.equal(interfaceCheck(ch).checkBonus, bare.checkBonus, "put away didn't take it off");
+      assert.deepEqual(read(), withDeck, "rank, price or caps moved with the deck in use");
+    }
+  }
+});
+
+test("L3 2 (engine): worn and in-use modifiers stack, and a row counts once however many it holds", () => {
+  const ch = l3Char(), bare = interfaceCheck(ch).checkBonus;
+  Engine.setInUse(ch, l3Have(ch, "gear", "smart-deck-i"), true);
+  Engine.setInUse(ch, l3Have(ch, "gear", "smart-deck-iii"), true);
+  assert.equal(interfaceCheck(ch).checkBonus, bare + 4);
+  const two = l3Char();
+  l3Have(two, "gear", "smart-deck-ii");
+  const at = l3Have(two, "gear", "smart-deck-ii");
+  assert.equal(two.gear.length, 1);
+  assert.equal(two.gear[0].qty, 2);
+  Engine.setInUse(two, at, true);
+  assert.equal(interfaceCheck(two).checkBonus, bare + 2);
+});
+
+test("L3 3 (engine): SMARTLink Gloves worn add 2 ACC to every SMART Link weapon and to nothing else", () => {
+  const ch = allWeapons(l3Char());
+  const main = D.weapons.map((w, i) => JSON.parse(JSON.stringify(Engine.weaponLine(ch, i))));
+  const gloves = l3Have(ch, "armor", "smartlink-gloves");
+  assert.equal(ch.armor[gloves].worn, true, "buying the gloves doesn't wear them");
+  assert.ok(smartLinkIds().length >= 3);
+  D.weapons.forEach((w, i) => {
+    const l = JSON.parse(JSON.stringify(Engine.weaponLine(ch, i)));
+    const rest = { ...l }; delete rest.bonuses;
+    if (smartLinkIds().includes(w.id)) {
+      assert.equal(l.acc, (main[i].acc || 0) + 2, w.id);
+      assert.deepEqual(l.bonuses, [{ to: "acc", amount: 2, from: "SMARTLink Gloves" }]);
+    } else {
+      assert.deepEqual(rest, main[i], `${w.id} moved`);
+      assert.deepEqual(l.bonuses, []);
+    }
+  });
+  const sentry = D.weapons.findIndex(w => w.id === "ap7-sentry");
+  Engine.setWorn(ch, gloves, false);
+  assert.equal(Engine.weaponLine(ch, sentry).acc, main[sentry].acc);
+  Engine.setWorn(ch, gloves, true);
+  ch.armor[gloves].scrapped = true;
+  assert.equal(Engine.weaponLine(ch, sentry).acc, main[sentry].acc, "a scrapped piece still counted");
+  ch.armor[gloves].scrapped = false;
+  assert.equal(Engine.weaponLine(ch, sentry).acc, main[sentry].acc + 2);
+  ch.weapons.push(customRow({ category: "handguns", features: "SMART Link" }));
+  assert.deepEqual(Engine.weaponLine(ch, ch.weapons.length - 1).bonuses, [], "a custom row's typed features matched a feature bonus");
+});
+
+test("L3 4 (engine): a weapon's class is read from the data, for catalog and custom weapons alike", () => {
+  const ch = allWeapons(l3Char());
+  const byName = new Map(D.damageTypes.map(t => [t.name, t]));
+  const skillMelee = id => (D.skills.find(s => s.id === id) || {}).melee === true;
+  D.weapons.forEach((w, i) => {
+    let type = byName.get(w.damageType);
+    if (!type && w.style) {
+      const words = String(w.style).split("/").map(s => byName.get(s.trim()));
+      if (words.every(Boolean) && new Set(words.map(t => t.resClass)).size === 1) type = words[0];
+    }
+    const want = type && (type.resClass === "kinetic" || type.resClass === "energy") ? type.resClass : null;
+    assert.deepEqual(Engine.weaponClass(ch, i), { melee: skillMelee(w.skill), damageClass: want }, w.id);
+  });
+  const cls = id => Engine.weaponClass(ch, D.weapons.findIndex(w => w.id === id));
+  assert.deepEqual(cls("ap7-sentry"), { melee: false, damageClass: "kinetic" });
+  const normalBlade = D.weapons.find(w => w.damageType === "Normal" && /Blade/.test(w.style || ""));
+  assert.deepEqual(cls(normalBlade.id), { melee: true, damageClass: "kinetic" });
+  const electricMelee = D.weapons.find(w => w.damageType === "Electric" && skillMelee(w.skill));
+  assert.deepEqual(cls(electricMelee.id), { melee: true, damageClass: "energy" });
+  const beam = D.weapons.find(w => w.skill === "beam-weapons");
+  assert.deepEqual(cls(beam.id), { melee: false, damageClass: "energy" });
+  const burning = D.weapons.find(w => w.damageType === "Burning");
+  assert.equal(cls(burning.id).damageClass, "energy");
+  const grenades = D.weapons.filter(w => w.category === "grenades");
+  assert.ok(grenades.length >= 8);
+  for (const g of grenades) assert.equal(cls(g.id).melee, true, `${g.id}: a grenade is a melee weapon`);
+  assert.equal(cls(grenades.find(g => g.damageType === undefined).id).damageClass, null);
+  const cw = extra => { const c = l3Char(); c.weapons.push(customRow(extra)); return Engine.weaponClass(c, 0); };
+  assert.deepEqual(cw({ category: "handguns", damageType: "ballistic" }), { melee: false, damageClass: "kinetic" });
+  assert.deepEqual(cw({ category: "melee", damageType: "burning" }), { melee: true, damageClass: "energy" });
+  assert.equal(cw({ category: "grenades" }).melee, true);
+  assert.deepEqual(cw({}), { melee: null, damageClass: null });
+  assert.equal(Engine.weaponClass(ch, 999), null);
+  // every grants row on armor and equipment is a real checkMod, or a weaponBonus some catalog weapon can match
+  const carriers = [...D.armor, ...D.equipment].filter(d => d.grants !== undefined);
+  assert.ok(carriers.length >= 4, "the walk found no gear grants");
+  for (const d of carriers) for (const g of d.grants) {
+    if (g.type === "checkMod") {
+      assert.ok(g.skills.every(s => Engine.skillById(s)), `${d.id}: unknown Skill`);
+      assert.ok(Number.isInteger(g.amount) && g.amount >= 1, `${d.id}: amount`);
+    } else {
+      assert.equal(g.type, "weaponBonus", `${d.id}: ${g.type}`);
+      assert.ok(["acc", "damage"].includes(g.to) && Number.isInteger(g.amount) && g.amount >= 1, `${d.id}: weaponBonus shape`);
+      assert.ok(g.class || g.feature, `${d.id}: neither class nor feature`);
+      if (g.feature) assert.ok(D.weapons.some(w => (w.features || []).includes(g.feature)), `${d.id}: no weapon carries ${g.feature}`);
+      if (g.class) assert.ok(["melee", "ranged", "kinetic", "energy"].includes(g.class));
+    }
+  }
+});
+
+test("L3 5 (engine): a class modifier reaches every weapon of its class, catalog and custom", () => {
+  const build = () => {
+    const ch = allWeapons(l3Char());
+    ch.weapons.push(customRow({ category: "melee", damageType: "burning" }), customRow({ category: "grenades" }));
+    return ch;
+  };
+  const plain = build(), worn = build();
+  l3Have(worn, "armor", "smartlink-gloves");
+  const lines = ch => ch.weapons.map((_, i) => JSON.parse(JSON.stringify(Engine.weaponLine(ch, i))));
+  const base = lines(plain), torchAt = worn.weapons.length - 2, nadeAt = worn.weapons.length - 1;
+  const check = (grant, reaches, prop) => withGloves([grant], () => {
+    const now = lines(worn);
+    let hit = 0;
+    now.forEach((l, i) => {
+      const rest = { ...l }, was = { ...base[i] }; delete rest.bonuses; delete was.bonuses;
+      if (reaches(Engine.weaponClass(worn, i))) {
+        hit++;
+        assert.deepEqual(l.bonuses.map(b => [b.to, b.amount]), [[grant.to, grant.amount]], `${l.name}: bonus not listed`);
+        if (prop === "damage") assert.equal(l.damage, typeof was.damage === "number" ? was.damage + grant.amount : was.damage, l.name);
+        if (prop === "acc") assert.equal(l.acc, (was.acc || 0) + grant.amount, l.name);
+      } else assert.deepEqual([rest, l.bonuses], [was, []], `${l.name} moved`);
+    });
+    assert.ok(hit > 0, "the class reached nothing");
+    return now;
+  });
+  const energy = check({ type: "weaponBonus", to: "damage", amount: 2, class: "energy" }, c => c.damageClass === "energy", "damage");
+  assert.equal(energy[torchAt].bonuses.length, 1, "the custom burning Melee row missed an energy bonus");
+  const melee = check({ type: "weaponBonus", to: "acc", amount: 1, class: "melee" }, c => c.melee === true, "acc");
+  assert.equal(melee[nadeAt].bonuses.length, 1, "a custom Grenades row isn't melee");
+  D.weapons.filter(w => w.category === "grenades").forEach(g => assert.equal(melee[D.weapons.indexOf(g)].bonuses.length, 1, g.id));
+  const ranged = check({ type: "weaponBonus", to: "acc", amount: 1, class: "ranged" }, c => c.melee === false, "acc");
+  D.weapons.filter(w => w.category === "grenades").forEach(g => assert.deepEqual(ranged[D.weapons.indexOf(g)].bonuses, [], `${g.id}: a grenade took a ranged bonus`));
+  assert.deepEqual(ranged[nadeAt].bonuses, []);
+  withGloves([{ type: "weaponBonus", to: "acc", amount: 1, feature: "SMART Link" }], () => {
+    const c = build();
+    l3Have(c, "armor", "smartlink-gloves");
+    c.weapons.push(customRow({ category: "handguns", features: "SMART Link" }));
+    assert.deepEqual(Engine.weaponLine(c, c.weapons.length - 1).bonuses, []);
+  });
+});
+
+test("L3 6 (engine): junk in a modifier or in inUse reaches nothing, from a file and from a call", () => {
+  const deck = () => { const ch = l3Char(); l3Have(ch, "gear", "smart-deck-ii"); return ch; };
+  const bare = interfaceCheck(l3Char()).checkBonus;
+  for (const junk of ["true", 1, false, {}, null, [true]]) {
+    const ch = deck();
+    ch.gear[0].inUse = junk;
+    assert.equal(interfaceCheck(ch).checkBonus, bare, `${JSON.stringify(junk)} counted as in use`);
+    const m = Engine.migrate(JSON.parse(JSON.stringify(ch)));
+    assert.ok(!Object.hasOwn(m.gear[0], "inUse"), `${JSON.stringify(junk)} survived migrate`);
+  }
+  const custom = deck();
+  custom.gear.push({ custom: true, name: "Rig", type: "tech", notes: "", inUse: true });
+  const mag = deck();
+  mag.gear.push({ id: "smart-deck-ii", qty: 1, notes: "", inUse: true, roundsLeft: 3 });
+  for (const ch of [custom, mag]) {
+    const m = Engine.migrate(JSON.parse(JSON.stringify(ch)));
+    assert.ok(m.gear.every(r => !Object.hasOwn(r, "inUse")), "inUse survived on a row that can't carry it");
+  }
+  const kept = deck();
+  kept.gear[0].inUse = true;
+  const m1 = Engine.migrate(JSON.parse(JSON.stringify(kept)));
+  assert.equal(m1.gear[0].inUse, true);
+  assert.deepEqual(Engine.migrate(JSON.parse(JSON.stringify(m1))), m1);
+  const junkGrants = [{ amount: -2 }, { amount: 1.5 }, { amount: 0 }, { amount: "2" }, { to: "rof" }, { class: "plasma" }, { class: undefined, feature: undefined }];
+  for (const j of junkGrants) {
+    const g = Object.assign({ type: "weaponBonus", to: "acc", amount: 2, class: "ranged" }, j);
+    withGloves([g], () => {
+      const ch = allWeapons(l3Char()), plain = allWeapons(l3Char());
+      l3Have(ch, "armor", "smartlink-gloves");
+      ch.weapons.forEach((_, i) => {
+        assert.doesNotThrow(() => Engine.weaponClass(ch, i));
+        assert.deepEqual(Engine.weaponLine(ch, i).bonuses, [], `${JSON.stringify(j)} reached ${i}`);
+        assert.equal(Engine.weaponLine(ch, i).acc, Engine.weaponLine(plain, i).acc);
+      });
+    });
+  }
+  for (const amount of [-2, 1.5, 0, "2", NaN]) withData(D.equipment.find(e => e.id === "smart-deck-ii"), "grants", [{ type: "checkMod", skills: ["interface"], amount }], () => {
+    const ch = deck();
+    ch.gear[0].inUse = true;
+    assert.equal(interfaceCheck(ch).checkBonus, bare, `checkMod ${amount} moved a check`);
+  });
+  const ch = deck();
+  ch.gear.push({ custom: true, name: "Rig", type: "tech", notes: "" }, { id: "smart-brace", qty: 1, notes: "" }, null, 7);
+  const before = JSON.stringify(ch);
+  for (const i of [1, 2, 3, 4, -1, 99]) { const r = Engine.setInUse(ch, i, true); assert.equal(r.ok, false, `index ${i}`); assert.ok(r.why); }
+  assert.equal(JSON.stringify(ch), before, "a refusal wrote");
+  assert.equal(Engine.setInUse(ch, 0, true).ok, true);
+  assert.equal(Engine.setInUse(ch, 0, false).ok, true);
+  assert.ok(!Object.hasOwn(ch.gear[0], "inUse"));
+  for (const bad of [null, 5, "x", { gear: 4 }]) assert.doesNotThrow(() => Engine.setInUse(bad, 0, true));
+  assert.equal(Engine.setInUse(l3Char(), 0, true).ok, false);
+});
+
+test("L3 7 (engine): with nothing worn or in use, no weapon's line and no Skill's check moves", () => {
+  const fx = JSON.parse(readFileSync(join(ROOT, "tests", "l3-lines.json"), "utf8"));
+  for (const base of [3, 5, 8]) {
+    const ch = subject({ bod: base, base });
+    D.weapons.forEach(w => ch.weapons.push({ id: w.id, notes: "" }));
+    const now = Array.from(D.weapons, (w, i) => { const l = { ...Engine.weaponLine(ch, i) }; delete l.bonuses; return JSON.parse(JSON.stringify(l)); });
+    assert.deepEqual(now, fx.weapons[base], `weapon lines at ${base}`);
+    for (const rank of [0, 3]) {
+      const c = subject({ bod: base, base });
+      if (rank) for (const s of D.skills) c.skills[s.id] = { rank, ipe: 0 };
+      assert.deepEqual(JSON.parse(JSON.stringify(D.skills.map(s => Engine.skillLine(c, s.id)))), fx.skills[`${base}/${rank}`], `skills at ${base}/${rank}`);
+    }
+  }
+});
+
+test("L3 8 (engine): migrate to 0.30 keeps inUse only where it's true on a catalog row, and adds nothing", () => {
+  const old = l3Char();
+  l3Have(old, "gear", "smart-deck-ii");
+  old.gear.push({ custom: true, name: "Rig", type: "tech", notes: "" }, { id: "smart-brace", qty: 1, notes: "" });
+  old.meta.schemaVersion = "0.29";
+  const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
+  assert.equal(m.meta.schemaVersion, "0.30");
+  assert.ok(m.gear.every(r => !Object.hasOwn(r, "inUse")), "migrate added inUse");
+  old.gear[0].inUse = true;
+  const k = Engine.migrate(JSON.parse(JSON.stringify(old)));
+  assert.equal(k.gear[0].inUse, true);
+  assert.deepEqual(Engine.migrate(JSON.parse(JSON.stringify(k))), k);
+  assert.deepEqual(Engine.migrate(JSON.parse(JSON.stringify(m))), m);
+});
