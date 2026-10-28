@@ -1564,6 +1564,15 @@ test("L3 10 (sheet): SMARTLink Gloves worn raise a SMART Link weapon's ACC on Lo
   assert.doesNotMatch(rowOf(app, 0).textContent, /from SMARTLink Gloves/);
   assert.match(armorCardOf(app, "SMARTLink Gloves").textContent, /Worn: \+2 ACC on SMART Link weapons/);
   assert.deepEqual(app.errors, []);
+  // worn but scrapped (a hand-edited file): it adds nothing, so its line is dimmed, not shown as working
+  assert.equal(armorCardOf(app, "SMARTLink Gloves").querySelector("[data-gives]").classList.contains("off"), true);
+  const scrapped = JSON.parse(JSON.stringify(ch));
+  scrapped.armor[0].scrapped = true;
+  const app2 = openSheet(scrapped, "loadout");
+  assert.equal(scrapped.armor[0].worn, true);
+  assert.equal(armorCardOf(app2, "SMARTLink Gloves").querySelector("[data-gives]").classList.contains("off"), true, "a scrapped piece's line reads as working");
+  assert.doesNotMatch(cellsOf(rowOf(app2, 0))[1], new RegExp(`\\+${base + 2} ACC`));
+  assert.deepEqual(app2.errors, []);
 });
 
 test("L3 11 (sheet): a flagged piece says the GM rules it, on its own card, and moves no number", () => {

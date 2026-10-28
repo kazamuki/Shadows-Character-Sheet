@@ -10479,6 +10479,10 @@ test("L3 4 (engine): a weapon's class is read from the data, for catalog and cus
   assert.deepEqual(plain(cls("ap7-sentry")), { melee: false, damageClass: "kinetic" });
   const normalBlade = D.weapons.find(w => w.damageType === "Normal" && /Blade/.test(w.style || ""));
   assert.deepEqual(plain(cls(normalBlade.id)), { melee: true, damageClass: "kinetic" });
+  // "Normal" is no class of its own: the style decides, so a Normal weapon whose style is energy reads energy, and one
+  // whose style words split across classes reads none (no catalog weapon does either today, so the data can't show it)
+  withData(normalBlade, "style", "Electric", () => assert.equal(cls(normalBlade.id).damageClass, "energy"));
+  withData(normalBlade, "style", "Blade/Electric", () => assert.equal(cls(normalBlade.id).damageClass, null));
   const electricMelee = D.weapons.find(w => w.damageType === "Electric" && skillMelee(w.skill));
   assert.deepEqual(plain(cls(electricMelee.id)), { melee: true, damageClass: "energy" });
   const beam = D.weapons.find(w => w.skill === "beam-weapons");
