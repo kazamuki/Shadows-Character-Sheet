@@ -5139,7 +5139,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** worn ranks in `rank` (an untrained Skill would take its Synergy, and its price would move); "Normal" as a code word (its style names a damage type); the catalog's words as ids (L1 kept them); grenades as ranged (Ken, LQ19: a weapon follows its Skill); a class on each weapon (its Skill says it); typed modifiers on a custom row (LQ6); counting gear only carried (LQ3).
      - **Replaces:** nothing; extends Decisions 237 (traitRows' sources) and 120 (a line's ACC and damage).
      - **Revisit if:** Deighton rules F49; L5 or L7 needs a stat modifier or another source.
-     - **Built:** app 0.56.0, game data 0.50, character schema 0.30, PR #PRNUM. Log 2026-10-28 (L3).
+     - **Built:** app 0.56.0, game data 0.50, character schema 0.30, PR #257. Log 2026-10-28 (L3).
 
 ## 5. Open Flags
 
