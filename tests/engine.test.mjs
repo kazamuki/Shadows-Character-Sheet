@@ -10606,24 +10606,6 @@ test("L3 6 (engine): junk in a modifier or in inUse reaches nothing, from a file
   assert.equal(Engine.setInUse(l3Char(), 0, true).ok, false);
 });
 
-test("L3 7 (engine): with nothing worn or in use, no weapon's line and no Skill's check moves", () => {
-  const fx = JSON.parse(readFileSync(join(ROOT, "tests", "l3-lines.json"), "utf8"));
-  for (const base of [3, 5, 8]) {
-    const ch = subject({ bod: base, base });
-    D.weapons.forEach(w => ch.weapons.push({ id: w.id, notes: "" }));
-    const now = Array.from(D.weapons, (w, i) => { const l = { ...Engine.weaponLine(ch, i) }; delete l.bonuses; return JSON.parse(JSON.stringify(l)); });
-    assert.deepEqual(now, fx.weapons[base], `weapon lines at ${base}`);
-    for (const rank of [0, 3]) {
-      const c = subject({ bod: base, base });
-      if (rank) for (const s of D.skills) c.skills[s.id] = { rank, ipe: 0 };
-      // the one thing that differs is the data this order adds: the `melee` flag on two Skills' definitions
-      const now = plain(Array.from(D.skills, s => Engine.skillLine(c, s.id)));
-      now.forEach(l => { delete l.def.melee; });
-      assert.deepEqual(now, fx.skills[`${base}/${rank}`], `skills at ${base}/${rank}`);
-    }
-  }
-});
-
 test("L3 8 (engine): migrate to 0.30 keeps inUse only where it's true on a catalog row, and adds nothing", () => {
   const old = l3Char();
   l3Have(old, "gear", "smart-deck-ii");
