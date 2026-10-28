@@ -2094,7 +2094,7 @@ function weaponOpenRowHtml(ch, l){
     pick("category", "Type", D.weaponCategories||[], l.category) +
     pick("damageType", "Damage type", (D.damageTypes||[]).filter(t=>!t.magical), r.damageType) +
     pick("range", "Range", bands, l.range) +
-    `<label class="field"><span>ACC</span><input type="number" min="0" step="1" data-weaponpick="${i}|acc" value="${l.acc==null?"":l.acc}"></label>` +
+    `<label class="field"><span>ACC</span><input type="number" min="0" step="1" data-weaponpick="${i}|acc" value="${l.accPicked==null?"":l.accPicked}"></label>` +
     (l.typeText ? `<span class="hitnote" data-weapontypehint>You wrote "${esc(l.typeText)}". Pick a type to give it an attack.</span>` : "") +
     `</div></td></tr></tbody>`;
 }

@@ -1591,3 +1591,17 @@ test("L3 11 (sheet): a flagged piece says the GM rules it, on its own card, and 
   assert.ok(armorCardOf(app, "Hacking Gloves").textContent.includes(gloves.playerNote));
   assert.deepEqual(app.errors, []);
 });
+
+test("L3 12 (sheet): a written-in weapon's open ACC field shows the stored pick, not the pick plus a worn class bonus", () => {
+  const ch = l2Character(l2Typed);
+  Engine.addLoadout(ch, "armor", "smartlink-gloves");
+  const app = openSheet(ch, "loadout");
+  const gloves = app.window.SHADOWS_DATA.armor.find(a => a.id === "smartlink-gloves");
+  gloves.grants = [{ type: "weaponBonus", to: "acc", amount: 2, class: "ranged" }];
+  app.click('[data-loedit="weapons|1"]');
+  const input = rowOf(app, 1).querySelector('[data-weaponpick="1|acc"]');
+  assert.ok(input, "the open row has no ACC field");
+  assert.equal(input.value, "1", "the field shows the pick plus the bonus");
+  assert.equal(activeChar(app).weapons[1].acc, 1);
+  assert.deepEqual(app.errors, []);
+});

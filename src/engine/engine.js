@@ -1840,7 +1840,7 @@ const Engine = (() => {
     const acc = customWeaponPick("acc", e.acc);
     return { category,
              skill: sk ? { id:sk.def.id, name:sk.def.name, trained:sk.trained } : null,
-             attack: sk ? sk.checkBonus : null, acc: acc==null ? null : acc,
+             attack: sk ? sk.checkBonus : null, acc: acc==null ? null : acc, accPicked: acc==null ? null : acc,   // accPicked: the stored pick, before any worn bonus
              damage: dmg.value, damageFormula: dmg.formula,
              damageType: dt ? damageTypeById(dt).name : null,
              range: customWeaponPick("range", e.range)||null, rof: customText(e.rof), capacity: customText(e.capacity),
