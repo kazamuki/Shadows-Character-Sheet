@@ -41,10 +41,10 @@ function setup() {
   return app;
 }
 
-test("243: the tabs are Sessions, Cast, City, Threats, Encounters, Reference, Notes", () => {
+test("243: the tabs are Sessions, Players, Cast, City, Threats, Encounters, Reference, Notes", () => {
   const app = boot({ storage: GM_ON });
   runTable(app, "Tabs", { stay: true });
-  assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Sessions", "Cast", "City", "Threats", "Encounters", "Reference", "Notes"]);
+  assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Sessions", "Players", "Cast", "City", "Threats", "Encounters", "Reference", "Notes"]);
   cityTab(app);
   assert.equal(app.$("#topnav .tab.active").textContent.trim(), "City");
   assert.ok(app.$('[data-cityview="places"][aria-pressed="true"]'), "it opens on the crew's places");

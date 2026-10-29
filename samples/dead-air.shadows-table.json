@@ -3,7 +3,7 @@
     "kind": "shadows-table",
     "id": "TBL-8E8Z-R2TG-6C8Z",
     "name": "Dead Air",
-    "tableSchemaVersion": "0.17",
+    "tableSchemaVersion": "0.18",
     "created": "2026-07-18T17:00:00.000Z",
     "updated": "2026-10-17T23:50:00.000Z"
   },
@@ -4743,5 +4743,7 @@
       "created": "2026-07-18T21:40:00.000Z",
       "updated": "2026-07-18T22:20:00.000Z"
     }
-  ]
+  ],
+  "players": [],
+  "copies": []
 }

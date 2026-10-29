@@ -1078,7 +1078,7 @@ commit** — a GM's table must never change under them.
     kind: "shadows-table",           // fileKind() reads this; migrateTable() forces it
     id: "TBL-XXXX-XXXX-XXXX",        // newTable() issues it, the TAG's alphabet; never reissued
     name: "",                        // the GM's; "" reads "Untitled table"
-    tableSchemaVersion: "0.17",      // a newer stamp is kept, and tableCheck() reports it
+    tableSchemaVersion: "0.18",      // a newer stamp is kept, and tableCheck() reports it
     created: "<ISO>", updated: "<ISO>"   // null when a file's can't be read: the gate invents none (Decision 63)
   },
   audit: [ {                         // 0.12: the activity log (Decision 212), oldest first, at most 500
@@ -1140,7 +1140,7 @@ commit** — a GM's table must never change under them.
     id: "I-XXXXXXXX",                // the TAG alphabet; unique in the table
     kind: "shared",                  // shared | learned | helped | wronged | killed | owes | owed | fought (0.7, Decision 193) | null (anything else reads null)
     cast: [ { kind: "cast", id: "C-XXXXXXXX" } ],   // links (178); a name joins one only when its member is deleted
-    crew: [ "" ],                    // typed names, trimmed, no empties, until S3b's seats claim them
+    crew: [ "" ],                    // typed names, trimmed, no empties, read as the seat that answers to them (Decision 254)
     text: "",
     date: "YYYY-MM-DD",              // the GM's local day, a real one, or null
     session: null,                   // 0.8: a session's id in this table, or null (Decision 203); a new line takes the one session on its day, the gate converts nothing
@@ -1152,7 +1152,7 @@ commit** — a GM's table must never change under them.
     id: "SE-XXXXXXXX",               // the TAG alphabet; unique in the table
     number: 1,                       // a whole number from 0, or null; the GM's, one past the highest by default
     date: "YYYY-MM-DD",              // the GM's local day, a real one, or null
-    present: [ "" ],                 // typed names, trimmed, no empties, until S3b's seats claim them
+    present: [ "" ],                 // typed names, trimmed, no empties, read as the seat that answers to them (Decision 254)
     hours: null,                     // half hours from 0 to 24, or null; the close-out works IP out from it (Decision 206)
     journal: { happened: "", fallout: "", threads: "", impact: "", reflection: "", seed: "" },   // the Campaign Journal's six parts (2270), text
     close: null,                     // 0.9: null until the GM writes the close-out (Decision 205), then:
@@ -1166,6 +1166,21 @@ commit** — a GM's table must never change under them.
                                      //                note: "" } ] }    // a line that makes no sense is dropped; a log whose lines all drop keeps lines: []
     created: "<ISO>", updated: "<ISO>"
   } ],
+  players: [ {                       // 0.18: who sits at the table, and the characters they bring (Decisions 254, 255)
+    id: "PY-XXXXXXXX",               // the TAG alphabet; unique in the table (a bad or repeated one is replaced)
+    name: "",                        // the GM's; blank reads "Unnamed player"
+    seats: [ {
+      tag: "TAG-XXXX-XXXX-XXXX",     // the character's meta.id; a seat's identity, unique across the whole table (the first kept; a bad tag is no seat)
+      status: "active",              // active | benched | retired | dead; anything else reads active
+      names: [ "" ]                  // typed names it answers to besides its character's own; trimmed, a blank row kept (it is being typed), non-strings dropped
+    } ],
+    created: "<ISO>", updated: "<ISO>"
+  } ],
+  copies: [ {                        // 0.18: not in TABLE_RECORDS, so outside the activity log (Decision 254)
+    tag: "TAG-XXXX-XXXX-XXXX",       // a seat's TAG; one copy per TAG (the later meta.updated kept, else the first); a copy no seat names is dropped at the next gate
+    importedAt: "<ISO>",             // when the GM imported it, or null
+    character: { }                   // migrate()'s output on every gate; a copy whose migrated meta.id isn't its tag, or that isn't an object, is dropped
+  } ],                               // a typed name reads as the seat that answers to it (seatFor): its character's name or one of its names, case aside; a name two seats answer to reads as neither
   threads: [ {                       // 0.8: what's still open (Decision 204)
     id: "TH-XXXXXXXX",               // the TAG alphabet; unique in the table
     title: "", notes: "",
@@ -1227,7 +1242,7 @@ StatBlock: {                         // Decision 175: what the Codex prints, not
 
 Step history: **0.2** adds `cast` (`migrateTable()` gives an older table an empty
 one). **0.3** adds `interactions` and each member's `affiliations`. **0.4** adds each member's `from`, null for everyone already there. **0.5** adds `encounters`, empty for everyone already there. **0.6** adds each row's `massive`, `armorLoss`, `scrapped` and `armorId`, 0, false and null for everyone already there. **0.7** adds each row's `kept` and `struck`, null and false for everyone already there, and an interaction may be of kind `fought`. **0.8** adds `sessions` and `threads`, empty for everyone already there, and each interaction's `session`, null (nothing is converted by date on load). **0.9** adds each session's `close`, null for everyone already there (nothing is converted). **0.10** adds each note's `session`, null for everyone already there (nothing is converted). **0.11** adds each encounter's `by` and `sides`, each row's `side` and each cast member's `ally`: one at a time, the crew and one other side, PCs on the crew's, nobody an ally (nothing is guessed). Health, Health Levels, HP and each stat's bonus are `Engine.npc(block)`'s,
-computed and never written into the file (constraint 7). **0.12** adds `audit`, the activity log (Decision 212), empty for everyone already there; a file older than the app comes in with its trail emptied, so an undo never crosses a schema step. **0.13** adds each interaction's `encounter`, null for everyone already there (nothing is converted; Decision 241). **0.14** adds `places`, empty, and each interaction's `place`, null for everyone already there (Decision 243). **0.15** adds `factions` and `clocks`, both empty; nothing is converted, and a member's affiliations stay as typed (Decisions 244, 245). **0.16** gives each place `site`, `siteLevel` and `exposure`, empty for everyone already there; nothing is converted and no profile is guessed from a place's ground (Decision 251). **0.17** gives each encounter `design` (the empty plan) and `opening` (null), and each row `delay` (null); nothing is converted, and no opening is guessed from a row's Stealth (Decisions 252, 253).
+computed and never written into the file (constraint 7). **0.12** adds `audit`, the activity log (Decision 212), empty for everyone already there; a file older than the app comes in with its trail emptied, so an undo never crosses a schema step. **0.13** adds each interaction's `encounter`, null for everyone already there (nothing is converted; Decision 241). **0.14** adds `places`, empty, and each interaction's `place`, null for everyone already there (Decision 243). **0.15** adds `factions` and `clocks`, both empty; nothing is converted, and a member's affiliations stay as typed (Decisions 244, 245). **0.16** gives each place `site`, `siteLevel` and `exposure`, empty for everyone already there; nothing is converted and no profile is guessed from a place's ground (Decision 251). **0.17** gives each encounter `design` (the empty plan) and `opening` (null), and each row `delay` (null); nothing is converted, and no opening is guessed from a row's Stealth (Decisions 252, 253). **0.18** gives a table `players` and `copies`, both empty; nothing is converted, and no seat is guessed from a typed name (Decisions 254, 255).
 
 The browser keeps each table as `shadows.table.v1.<id>` =
 `{ table, section, changed, exported }`, by the roster's rules (Decision 141).
@@ -4339,6 +4354,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** S5's sessions can't match interactions by date, or a GM needs a kind the seven lack.
      - **Built:** table schema 0.3; PR #117; log 2026-10-05 (interactions and affiliations).
     → **Superseded in part by Decision 193** — an eighth kind, fought, written by an encounter's end.
+     → **Superseded in part by Decision 254** — the crew stays typed names, read as the seat that answers to them.
 
 178. **A table record links another as `{ kind, id }`; deleting the target writes its last name into each link, and a link with no target reads as that name, struck through.**
      *2026-10-05 · Ken + Claude · Touches: links, cast link, { kind, id }, removeCastMember, deleted link, struck-through name, linkName, interactions, constraint 7, constraint 8, W29*
@@ -4369,6 +4385,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** S7 makes affiliations faction links, or a GM's crew list outgrows typed names before S3b.
      - **Built:** as 177.
     → **Superseded in part by Decision 241** — a line reads as a sentence; Edit opens it in place.
+     → **Superseded in part by Decision 254** — *Who knows what* folds a seat's names into one group.
 
 180. **A pack is its own file, `.shadows-pack.json`, gated by `migratePack()`, with its own id, a pack schema version, and the author's content version.**
      *2026-10-06 · Ken + Claude · Touches: pack, .shadows-pack.json, migratePack, packCheck, fileKind, meta.kind, PK- id, packSchemaVersion, contentVersion, origins, npcRoles, enemyRoles, tiers, entries, groups, versions table, CLAUDE.md, Decision 170, W63, GQ10*
@@ -4675,6 +4692,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. It builds what 177 promised.
      - **Revisit if:** GQ27 asks for the prompts as fields, S3b's seats claim attendance, or a GM often runs two sessions in a day.
      - **Built:** table schema 0.8, switched off (173); log 2026-10-08 (sessions and threads).
+     → **Superseded in part by Decision 254** — attendance stays typed names, read as seats.
 
 204. **Threads are records, one of them current; a table opens on Sessions, which leads with Next session, computed from the threads, last session's seed and who was met without a stat block.**
      *2026-10-08 · Ken + Claude · Touches: threads, table.threads, TH- id, thread status, open, resolved, dropped, current, opened, closed, Next session, Met last session, Sessions tab, TABLE_SECTIONS, landing page, Decision 171, Decision 176, W29, GQ1*
@@ -4702,6 +4720,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. It builds the close-out §4g promised.
      - **Revisit if:** S3b's seats arrive (the lines name seats), S2's dispatch carries the log, or GQ8 says the GM awards Milestones.
      - **Built:** table schema 0.9, switched off (173); log 2026-10-09 (the close-out).
+     → **Superseded in part by Decision 254** — the award log's lines stay typed, and its totals fold a seat's names.
 
 206. **The close-out works it out: IP at 5 an hour rounded up, the absent at an off-screen job's pay, the Milestone reminder by session number, and tonight's new faces.**
      *2026-10-09 · Ken + Claude · Touches: closeOutDraft, ip.perHour, IP rounding, absent, off-screen job, offScreenPay, offScreenMax, CRANK tier, Legendary, arc reminder, Minor Milestone, Major Milestone, anyone new, editThread closed, Decision 11, Decision 13, Decision 169, Decision 204, GQ28*
@@ -4751,6 +4770,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
     → **Superseded in part by Decisions 244 and 245** — Find searches factions and clocks.
      → **Superseded in part by Decision 251** — Find searches a place's site and Exposure, and its clocks.
      → **Superseded in part by Decision 252** — Find searches an encounter's plan, and finds its clocks.
+     → **Superseded in part by Decision 255** — Find finds a seat.
 
 209. **The Reference's jump bar shows every chip, wrapped: it sticks from 640px, and on a phone it stays at the top of the page.**
      *2026-10-09 · Ken + Claude · Touches: Reference tab, jump bar, jumpBarHtml wrap, jump-wrap, jumpbar.sticky, jumpTo, scroll-row, wheelSideways, phone, Decision 165, Decision 207, SQ8*
@@ -4807,6 +4827,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Built:** table schema 0.12, switched off (173); log 2026-10-10.
     → **Superseded in part by Decision 243** — `places` is a record the log covers.
     → **Superseded in part by Decisions 244 and 245** — `factions` and `clocks` are records the log covers.
+     → **Superseded in part by Decision 254** — `players` is a record the log covers; a seat's copy isn't.
 
 213. **A Disadvantage's Pain shift and a Milestone's IP roll are data the engine reads.**
      *2026-10-10 · Ken + Claude · Touches: Pain Sensitive, grants, painLevel grant, painState, fromTraits, painSources, Improved, ipRoll, minorShared, Engine.ipRoll, Engine.ipRollTotal, Take Minor, localDay, W92, W93, W67*
@@ -5243,6 +5264,29 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 189 in part (round 1 passes an Ambush's defenders; Reset lists a missed delay).
      - **Revisit if:** a Silent sniper's continuing Ambush needs tracking, GQ30 reorders a wave, or the app rolls checks.
      - **Built:** table schema 0.17, switched off (173); PR #266; log 2026-10-29 (S10f).
+
+254. **A table seats its players' characters: a seat is a character by its TAG, with a status and the names it answers to; its copy is the last file imported, gated by migrate(), outside the activity log.**
+     *2026-10-29 · Ken + Claude · Touches: players, seats, tag, status, names, answers to, copies, importedAt, migrate, migrateTable, importSeat, setSeat, removeSeat, seatFor, seatView, TABLE_RECORDS, activity log, crewView, awardTotals, typed names, present, crew, close.lines, table schema 0.18, Decision 141, Decision 177, Decision 179, Decision 203, Decision 205, Decision 212*
+     - **Decided:** Table schema 0.18 adds `players`, each with seats (a TAG, a status: active, benched, retired or dead, and the names it answers to), and `copies`, one per seated TAG: the last character file imported. The gate runs each copy through `migrate()` and drops one no seat names. A typed name anywhere reads as the seat that answers to it, ignoring case, the character's own name included; a name two seats answer to reads as neither. Nothing typed is rewritten. Players and seats are in the activity log; copies aren't.
+     - **Why:** a seated character lives in the table, never the GM's roster (plan §4a). Names that answer to a seat carry typed history over without converting a record (constraint 7). A copy in the log would carry a whole character per import.
+     - **Rejected:**
+       - Rewriting typed names into seat links: it converts five record kinds, guesses which *Dez* is which, and loses the spelling.
+       - The copy inside the seat: every re-import would put a whole character into the activity log.
+     - **Replaces:** Decisions 177, 203 and 205 in part (crew, attendance and the award log stay typed, read as seats), 179 in part (*Who knows what* folds a seat's names), 212 in part (players are logged; copies aren't).
+     - **Revisit if:** S3c or S3d needs more of the copy than its file, a table outgrows storage (GQ9), or the dispatch (S2) needs a seat to address.
+     - **Built:** table schema 0.18, switched off (173); PR #…; log 2026-10-29 (S3b).
+
+255. **A table's Players tab is its card spread: one card per active seat grouped by player, Health, Awareness and Conditions first; import takes several files onto a player, a newer copy updates its seat and an older one asks.**
+     *2026-10-29 · Ken + Claude · Touches: Players tab, TABLE_SECTIONS, card spread, seat card, seat page, Import characters, answers to, status, Benched, Retired, Dead, older copy, draft, Find, FIND_KINDS, openFound, datalist, PC name, GQ13, GQ19, Decision 204, Decision 208*
+     - **Decided:** A tab **Players** after Sessions lists each player and their active seats as cards: Health, Awareness and Conditions, then name, archetype and TAG, then Pain, SAN, Luck, Çredits, IP to spend, the CRANK tier when CRANK is on, and how old the copy is. Other statuses fold below their player. **Import characters** on a player takes several files: a new TAG is seated there; a newer copy updates its seat wherever it is; the same copy says so; an older one asks; a draft or a non-character is refused by name. A card opens the seat's page: its status, its names, Replace and Remove. Find finds a seat by its names.
+     - **Why:** Scott's three come first (§1a); the rest is what a GM reads off a sheet. A copy is a snapshot (GQ19), so the card says how old it is.
+     - **Rejected:**
+       - Opening the sheet from a card now: the read-only sheet is its own order (S3c).
+       - A tab named Crew: the Cast tab has a Crew view (179).
+       - A select for status: a toggle group (S12b's ruling).
+     - **Replaces:** Decision 208 in part (Find finds a seat).
+     - **Revisit if:** S3c builds the read-only sheet (a card opens it), GQ1 reorders the tabs, or a GM wants a seat moved between players without a re-import.
+     - **Built:** table schema 0.18, switched off (173); PR #…; log 2026-10-29 (S3b).
 
 ## 5. Open Flags
 

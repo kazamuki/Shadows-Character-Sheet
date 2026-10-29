@@ -791,7 +791,7 @@ function hostileSessionsTable() {
 test("a hostile table's sessions and threads come out of the gate typed: ids unique, numbers numbers, links null, one current", () => {
   const J = x => JSON.parse(JSON.stringify(x));
   const m = Engine.migrateTable(hostileSessionsTable());
-  assert.equal(m.meta.tableSchemaVersion, "0.17");
+  assert.equal(m.meta.tableSchemaVersion, "0.18");
   const ids = m.sessions.map(s => s.id);
   assert.equal(new Set(ids).size, ids.length, "session ids repeat");
   assert.ok(ids.every(id => /^SE-[0-9A-HJKMNP-TV-Z]{8}$/.test(id)));
@@ -1048,7 +1048,7 @@ test("a table file's trail draws its labels as text, drops every crafted entry, 
     ["__proto__", "polluted"], ["meta", "id"], ["meta", "tableSchemaVersion"], ["audit", 0, "label"], ["evil"], ["constructor", "prototype", "polluted"],
   ].map((path, i) => ({ seq: 10 + i, date: null, label: `crafted ${i}`, patch: [{ path, type: "scalar", before: "PWNED" }] }));
   const t = Engine.migrateTable({
-    meta: { kind: "shadows-table", id, name: "T", tableSchemaVersion: "0.17" },
+    meta: { kind: "shadows-table", id, name: "T", tableSchemaVersion: "0.18" },
     cast: [{ id: "C-AAAAAAAA", name: "After" }],
     audit: [...crafted, good],
   });
@@ -1432,4 +1432,64 @@ test("an encounter's plan, opening, delay and clock owner of markup render as te
   assert.equal(app.window.eval("JSON.stringify(S.table.encounters[0].design.beyond)"), '["protect"]', "an id the list doesn't know is dropped");
   assert.equal(app.window.eval("JSON.stringify(S.table.clocks.map(c => c.on && c.on.id))"), JSON.stringify(["EN-AAAAAAA3", null, "EN-AAAAAAA2"]));
   assert.deepEqual(app.errors, [], "the hostile plan threw while rendering");
+});
+
+// ── A table's players, seats and copies are untrusted too (Decisions 254, 255, 124) ──
+test("a table file's players, seats and copies are gated, and draw as text on the Players tab, a seat's page and Find", () => {
+  const id = Engine.newTable().meta.id;
+  const DEZ = "TAG-AAAA-AAAA-AAAA", WREN = "TAG-BBBB-BBBB-BBBB", BIG = "TAG-CCCC-CCCC-CCCC";
+  const char = (name, tag, extra = {}) => {
+    const ch = Engine.newCharacter();
+    ch.identity.name = name; ch.identity.archetype = "arcanist"; ch.creation.powerLevel = D.powerLevels[0].id;
+    ch.creation.rolls = { statPoints: 40, skillPoints: 30, credits: 1000 }; ch.creation.locked = true; ch.meta.id = tag;
+    return Object.assign(ch, extra);
+  };
+  const raw = {
+    meta: { kind: "shadows-table", id, name: "T", tableSchemaVersion: "0.18" },
+    players: [
+      { id: "PY-AAAAAAAA", name: P("player"), seats: [
+        { tag: DEZ, status: {}, names: [P("n1"), 5, null] }, { tag: "__proto__", status: "active", names: [] }, { tag: "<img>", status: "active", names: [] },
+        { tag: WREN, status: "benched", names: [P("n2")] }, { tag: BIG, status: "active", names: [] }] },
+      { id: "PY-AAAAAAAA", name: "Ana", seats: [{ tag: DEZ, status: "dead", names: [] }] },
+    ],
+    copies: [
+      { tag: DEZ, importedAt: P("at"), character: "a string" },
+      { tag: WREN, importedAt: null, character: char(P("charname"), WREN) },
+      { tag: BIG, importedAt: null, character: char("Big", BIG, { bigNote: "x".repeat(2 * 1024 * 1024) }) },
+      { tag: "__proto__", character: char("Proto", "TAG-DDDD-DDDD-DDDD") }, 5, null,
+    ],
+  };
+  raw.copies[1].character.stats.BOD.base = "lots";
+  const t = Engine.migrateTable(raw);
+  assert.equal(t.players.length, 2);
+  assert.equal(new Set(t.players.map(p => p.id)).size, 2, "a repeated player id is replaced");
+  same(t.players[0].seats.map(s => s.tag), [DEZ, WREN, BIG], "a bad tag is no seat; a TAG is a seat once across the table");
+  same(t.players[1].seats, [], "the second claim on a TAG is dropped");
+  assert.equal(t.players[0].seats[0].status, "active");
+  same(t.players[0].seats[0].names, [P("n1")]);
+  same(t.copies.map(c => c.tag), [WREN, BIG], "a copy with a string for a character, a mismatched TAG and a non-object are dropped");
+  assert.equal(typeof t.copies[0].character.stats.BOD.base, "number");
+  const app = boot({ storage: { "shadows.feature.gm": "on", ["shadows.table.v1." + id]: { table: t, section: "players", changed: "2026-10-05T10:00:00.000Z", exported: null } } });
+  app.$("[data-topen]").click();
+  const found = [];
+  found.push(...injected(app, "the Players tab"));
+  assert.ok(app.$("#main").textContent.includes("data-pwn"), "the player's name didn't show as text");
+  assert.equal(app.$("#main img"), null);
+  app.$$("[data-seat]").forEach(b => assert.ok(b.textContent.length > 0));
+  for (const tag of [DEZ, WREN, BIG]) {
+    app.click(`[data-seat="${tag}"]`);
+    assert.ok(app.$("h1[data-seath]"), tag);
+    found.push(...injected(app, "a seat's page " + tag));
+    assert.equal(app.$("#main img"), null);
+    app.click("[data-seatback]");
+  }
+  app.click("[data-tfind]");
+  const q = app.$("[data-findq]"); q.value = "data-pwn"; q.dispatchEvent(new app.window.Event("input", { bubbles: true }));
+  assert.ok(app.$$('[data-fkind="seat"]').length >= 1, "Find didn't find the hostile seat");
+  found.push(...injected(app, "Find"));
+  assert.equal(app.$("#modal img"), null);
+  assert.deepEqual(found, [], "a name became markup");
+  assert.equal(Object.keys(Object.prototype).length, 0);
+  assert.equal(app.window.eval("({}).polluted"), undefined);
+  assert.deepEqual(app.errors, []);
 });
