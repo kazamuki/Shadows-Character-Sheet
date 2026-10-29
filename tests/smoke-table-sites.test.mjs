@@ -40,7 +40,7 @@ const find = (app, q, kind) => {
   assert.ok(hit, `a ${kind} hit for ${q}`);
   app.click(`#modal [data-fkind="${kind}"]`);
 };
-const pickSite = (app, id) => pick(app, "[data-psite]", `${PK}|${id}`);
+const pickSite = (app, id) => { pick(app, "[data-psite]", `${PK}|${id}`); app.click("[data-psite-use]"); };
 
 // A table with the sites slotted in and The Old Pike (from the book) open on its page.
 function setup(extra = {}) {
@@ -91,7 +91,7 @@ test("251: a place's own kind of ground comes first in the select, and None clea
   pickSite(app, "dead-block");
   assert.equal(app.$$("[data-clock]").length, 1, "Attention is copied");
   assert.equal(app.$(".clock-count").textContent, "0 of 4");
-  pick(app, "[data-psite]", "");
+  pick(app, "[data-psite]", ""); app.click("[data-psite-use]");
   assert.equal(app.$("[data-psite-profile]"), null);
   assert.equal(app.$$("[data-clock]").length, 1, "the clock stays");
   assert.deepEqual(pressed(app, "data-pground"), ["combat-zones"], "and so does the ground");
@@ -209,7 +209,7 @@ test("251: with its pack gone, a place keeps its site and says so", () => {
   store.removeItem("shadows.pack.v1." + PK);
   app.window.eval("renderTable()");
   assert.equal(app.$("[data-psite-profile]"), null);
-  assert.match(app.$("[data-psite-gone]").textContent, /^The Long Stretch: its pack isn't slotted in\.$/);
+  assert.match(app.$("[data-psite-gone]").textContent, /^The Long Stretch isn't in any pack slotted in\.$/);
   assert.ok(app.$("[data-psite]"), "the select is still offered");
   assert.equal(app.$$("[data-clock]").length, 1, "the clocks show");
   assert.equal(app.window.eval("JSON.stringify(S.table.places[0].exposure)"), JSON.stringify([{ name: "Vex", n: 1 }]), "the rows are kept");
@@ -336,5 +336,27 @@ test("251: Met here → member → Back, and Key to → Back, still return", () 
   assert.equal(app.$("[data-ctitle]").textContent, "Bob");
   app.click("[data-cback]");
   assert.equal(app.$("[data-ptitle]").textContent, "The Old Pike");
+  assert.deepEqual(app.errors, []);
+});
+
+test("251: the select only chooses, and Use commits once", () => {
+  const app = setup();
+  const n = auditLen(app), stored = () => app.window.eval("JSON.stringify([S.table.places[0].site, S.table.clocks.length])");
+  const before = stored();
+  assert.equal(app.$("[data-psite-use]").disabled, true, "Use waits for a different choice");
+  // Arrow keys walk the options, one change each: nothing is written.
+  for (const id of ["burn", "dead-block", "long-stretch"]) { if (!app.$(`[data-psite] option[value="${PK}|${id}"]`)) continue; pick(app, "[data-psite]", `${PK}|${id}`); }
+  assert.equal(stored(), before, "a change on the select alone writes nothing");
+  assert.equal(auditLen(app), n);
+  assert.equal(app.$("[data-psite-use]").disabled, false);
+  assert.equal(app.$$("[data-clock]").length, 0);
+  app.click("[data-psite-use]");
+  assert.equal(app.$$("[data-clock]").length, 1, "Use commits: one clock");
+  assert.equal(auditLen(app), n + 1, "as one entry");
+  assert.equal(app.$("[data-psite-use]").disabled, true, "and rests until the choice differs again");
+  assert.equal(focusedKey(app), "data-psite=", "focus goes to the select");
+  pick(app, "[data-psite]", `${PK}|old-growth`); pick(app, "[data-psite]", `${PK}|long-stretch`);
+  assert.equal(app.$("[data-psite-use]").disabled, true, "back on the current choice, Use is off");
+  assert.equal(app.$$("[data-clock]").length, 1);
   assert.deepEqual(app.errors, []);
 });

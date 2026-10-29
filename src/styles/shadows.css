@@ -1504,6 +1504,8 @@ h2.city-name{font-size:1.15rem}
 .form-toggle button[data-fstance]{min-width:44px}
 
 /* A place's Site Profile (Decisions 250–251). The profile's text is the book's: wrapped, never cut. */
+.place-site{display:flex; flex-wrap:wrap; align-items:flex-end; gap:8px}
+.place-site .field{flex:1 1 240px; min-width:0}
 .place-site select{max-width:100%}
 .site-profile{margin:4px 0 10px; min-width:0}
 .site-name, .site-h3, .site-h{overflow-wrap:anywhere}

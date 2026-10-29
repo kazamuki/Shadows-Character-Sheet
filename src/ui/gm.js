@@ -1218,10 +1218,11 @@ function siteSelectHtml(p, info){
   const picked=info.link ? `${info.link.pack}|${info.link.id}` : "";
   const opt=(v, name) => `<option value="${esc(v)}"${v===picked ? " selected" : ""}>${esc(name)}</option>`;
   const lost=info.link && !info.here ? opt(picked, String(info.link.name||"").trim() || "A site profile") : "";
-  return `<label class="field place-site"><span>Site profile</span><select data-psite><option value=""${picked ? "" : " selected"}>None</option>${lost}${groups.map(g=>{
+  return `<div class="place-site"><label class="field"><span>Site profile</span><select data-psite><option value=""${picked ? "" : " selected"}>None</option>${lost}${groups.map(g=>{
     const items=g.items.map(e=>opt(siteValue(e), e.site.name)).join("");
     return g.cat ? `<optgroup label="${esc(gazName(g.cat) || g.cat)}">${items}</optgroup>` : items;
-  }).join("")}</select></label>`;
+  }).join("")}</select></label>
+    <button type="button" class="btn" data-psite-use disabled>Use</button></div>`;
 }
 // A part of the profile is an h3, beside the track's; a part of the track (What moves it, Marks here) is an h4 under it.
 const siteText = (label, text, h="h3") => String(text||"").trim() ? `<${h} class="site-h">${esc(label)}</${h}><p class="site-text">${esc(text)}</p>` : "";
@@ -1264,7 +1265,7 @@ function siteTrackHtml(p, site, info){
 function siteProfileHtml(p, info){
   if (!info.link) return "";
   const s=info.site;
-  if (!s) return `<p class="step-note" data-psite-gone>${esc(String(info.link.name||"").trim() || "This site profile")}: its pack isn't slotted in.</p>`;
+  if (!s) return `<p class="step-note" data-psite-gone>${esc(String(info.link.name||"").trim() || "This site profile")} isn't in any pack slotted in.</p>`;
   return `<div class="site-profile" data-psite-profile>
     <h2 class="cast-h site-name">${esc(s.name)}</h2>
     <p class="roster-meta">${esc([gazName(s.category), s.canon].filter(x=>String(x||"").trim()).join(" · "))}</p>
@@ -1278,13 +1279,18 @@ function siteProfileHtml(p, info){
 function bindSiteProfile(main, id, own, focus){
   const packs=()=>packsMemo, info=()=>Engine.placeSite(S.table, packs(), own());
   const sel=main.querySelector("[data-psite]");
-  if (sel) sel.onchange=()=>{
-    const cur=info().link, same=cur ? `${cur.pack}|${cur.id}` : "";
-    if (sel.value===same) return;
-    const ref=sel.value ? { pack:sel.value.split("|")[0], id:sel.value.split("|")[1] } : null;
-    tableChange(()=>{ const r=Engine.setPlaceSite(S.table, id, packs(), ref); if (!r.ok) notice(r.why); });
-    focus("[data-psite]");
-  };
+  // The select only chooses (an arrow key fires a change per option); Use commits, once, as a cast member takes a pack entry (182).
+  const same=()=>{ const cur=info().link; return cur ? `${cur.pack}|${cur.id}` : ""; };
+  const use=main.querySelector("[data-psite-use]");
+  if (sel && use){
+    sel.onchange=()=>{ use.disabled=sel.value===same(); };
+    use.onclick=()=>{
+      if (sel.value===same()) return;
+      const ref=sel.value ? { pack:sel.value.split("|")[0], id:sel.value.split("|")[1] } : null;
+      tableChange(()=>{ const r=Engine.setPlaceSite(S.table, id, packs(), ref); if (!r.ok) notice(r.why); });
+      focus("[data-psite]");
+    };
+  }
   // A levels track: one level is always pressed; a tap sets it, and only that group and its text repaint.
   main.querySelectorAll("[data-slevel]").forEach(b=>b.onclick=()=>{
     const now=info();

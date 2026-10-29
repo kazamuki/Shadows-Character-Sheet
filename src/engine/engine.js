@@ -6263,6 +6263,13 @@ const Engine = (() => {
   // encounter's rows, sides or Conditions belong to the encounter.
   // The collections whose records own clocks, and the kind a clock's `on` names them by.
   const CLOCK_OWNER_RECORDS = { factions:"faction", places:"place" };
+  function _clockOwnerChanged(before, after, c){
+    const coll = _isObj(c.on) ? Object.keys(CLOCK_OWNER_RECORDS).find(k=>CLOCK_OWNER_RECORDS[k]===c.on.kind) : null;
+    if (!coll) return false;
+    const find = t => (_isObj(t) && Array.isArray(t[coll]) ? t[coll] : []).find(r=>_isObj(r) && r.id===c.on.id);
+    const was = find(before), now = find(after);
+    return !!was && !!now && !_eq(was, now);
+  }
   function tableActionLabel(before, after, patch){
     const fallback = "Changed the table";
     try {
@@ -6282,6 +6289,8 @@ const Engine = (() => {
         for (const r of (_isObj(after) && Array.isArray(after[coll]) ? after[coll] : [])){
           if (!_isObj(r)) continue;
           now.add(r.id);
+          // A clock added with its owner changed in the same patch is collateral of that change (251): a profile's clock copied onto a place.
+          if (!was.has(r.id) && coll==="clocks" && _clockOwnerChanged(before, after, r)) continue;
           if (!was.has(r.id)) came.push(_recLabel("Added", coll, r));
           else if (!_eq(was.get(r.id), r)) changed.push(_recLabel("Changed", coll, was.get(r.id)));
         }

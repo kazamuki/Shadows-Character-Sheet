@@ -10992,3 +10992,15 @@ test("251: the gate types a place's site, level and rows, and converts nothing",
   eq(Engine.migrateTable(plain(fresh)), plain(fresh));
   assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.16");
 });
+
+test("251: picking a profile reads as a change to the place; its copied clock is collateral, and an added clock alone still reads as added", () => {
+  const { t, id, packs } = siteTable();
+  assert.equal(recorded(t, () => pickSite(t, id, packs, "long-stretch")).entry.label, "Changed The Old Pike", "a clock copied with the profile");
+  Engine.editPlace(t, id, { exposure: [{ name: "Vex", n: 4 }] });
+  const r = recorded(t, () => pickSite(t, id, packs, "old-growth"), null, { fold: false });
+  assert.equal(r.entry.label, "Changed The Old Pike", "an Exposure row wiped, no clock copied");
+  assert.equal(recorded(t, () => pickSite(t, id, packs, "dead-block")).entry.label, "Changed The Old Pike", "over another profile, a clock copied");
+  assert.equal(recorded(t, () => Engine.addClock(t, { on: { kind: "place", id }, name: "Alone" })).entry.label, "Added Alone", "Add a clock on a page is still an add");
+  const fid = Engine.addFaction(t, { name: "Crew" }).id;
+  assert.equal(recorded(t, () => Engine.addClock(t, { on: { kind: "faction", id: fid }, name: "Heat" })).entry.label, "Added Heat");
+});
