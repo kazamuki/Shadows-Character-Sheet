@@ -36,7 +36,7 @@ test("engine loads without a DOM", () => {
 
 test("newCharacter matches the documented character schema", () => {
   const ch = Engine.newCharacter();
-  assert.equal(ch.meta.schemaVersion, "0.30");
+  assert.equal(ch.meta.schemaVersion, "0.31");
   assert.equal(ch.meta.gamedataVersion, D.meta.gamedataVersion);
   for (const k of ["identity", "creation", "archetypeChoices", "stats", "skills",
                    "advantages", "disadvantages", "trackers"]) {
@@ -158,7 +158,7 @@ test("migrate upgrades an older save in place", () => {
   old.meta.schemaVersion = "0.3";
   delete old.audit;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.30");
+  assert.equal(old.meta.schemaVersion, "0.31");
   assert.ok(Array.isArray(old.audit), "audit was not seeded");
 });
 
@@ -170,7 +170,7 @@ test("migrate drops the retired exhaustion tracker (schema 0.7, Decision 93)", (
   old.meta.schemaVersion = "0.6";
   old.trackers.exhaustion = 3;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.30");
+  assert.equal(old.meta.schemaVersion, "0.31");
   assert.equal(old.trackers.exhaustion, undefined);
 });
 
@@ -551,7 +551,7 @@ test("migrate tags a pre-0.6 weapons entry as custom and seeds armor (schema 0.6
   old.weapons = [{ name: "Old Reliable", type: "Pistol", damage: "2d6", notes: "" }];
   delete old.armor;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.30");
+  assert.equal(old.meta.schemaVersion, "0.31");
   assert.equal(old.weapons[0].custom, true, "a legacy free-typed weapon should be tagged custom, not silently reinterpreted");
   assert.equal(old.weapons[0].name, "Old Reliable", "migrate must not lose what the player already typed");
   assert.ok(Array.isArray(old.armor), "armor was not seeded");
@@ -667,7 +667,7 @@ test("migrate() returns every field newCharacter() has (B6)", () => {
   // version must still surface as an issue rather than silently matching.
   const bare = Engine.migrate({});
   assert.equal(bare.meta.gamedataVersion, undefined);
-  assert.equal(bare.meta.schemaVersion, "0.30");
+  assert.equal(bare.meta.schemaVersion, "0.31");
   assert.ok(Engine.versionCheck(bare).some(i => /game data/.test(i)));
 });
 
@@ -904,7 +904,7 @@ test("migrate folds the three old specialization fields into one array (A3)", ()
     assert.equal(c.archetypeChoices.aberrations, undefined);
     assert.equal(c.archetypeChoices.subtype, undefined);
     assert.equal(c.identity.specialization, undefined);
-    assert.equal(c.meta.schemaVersion, "0.30");
+    assert.equal(c.meta.schemaVersion, "0.31");
   }
   // Idempotent: migrating twice must not empty what the first pass moved.
   assert.deepEqual([...Engine.migrate(arc).archetypeChoices.specialization],
@@ -1178,7 +1178,7 @@ test("migrate brings a 0.7 file to 0.8: conditions, damage inputs, armor fields"
   delete old.trackers.conditions; delete old.trackers.massiveLevels; delete old.trackers.witheringDamage;
   old.armor = [{ id: "kevlar-vest", integrityLoss: 3, notes: "" }, { custom: true, name: "Coat", integrityLoss: 0 }];
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.30");
+  assert.equal(old.meta.schemaVersion, "0.31");
   assert.ok(Array.isArray(old.trackers.conditions));
   assert.equal(old.trackers.massiveLevels, 0);
   assert.equal(old.trackers.witheringDamage, 0);
@@ -1253,7 +1253,7 @@ test("schema 0.13 moves the natural-advantage marker out of notes, undo history 
     { path: ["advantages"], type: "array", op: "set", before: [{ id: "favored-skill", rank: 2, notes: "natural" }] },
     { path: ["advantages"], type: "array", op: "removeAt", index: 0, item: { id: "favored-skill", rank: 1, notes: "natural" } }] }];
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  assert.equal(m.meta.schemaVersion, "0.30");
+  assert.equal(m.meta.schemaVersion, "0.31");
   assert.equal(m.advantages[0].source, "natural");
   assert.equal(m.advantages[0].notes, "", "the marker stayed in the player's notes");
   assert.equal(m.advantages[1].source, undefined);
@@ -2199,7 +2199,7 @@ test("W30: Reload takes a mag (or a shell a round) of what fits from what you ca
   assert.equal(Engine.reloadWeapon(sg, 0).noAmmo, true);
   const beam = armed("ads-le4-falcon"); beam.weapons[0].roundsSpent = 20;
   assert.match(Engine.reloadWeapon(beam, 0).why, /Power Cell/);
-  // Nothing in the ammo table fits a launcher or a custom weapon: those reload as before.
+  // Nothing in the ammo table fits a launcher, or a written-in weapon with no type: those reload as before.
   const gl = armed("hgl4-anvil"); gl.weapons[0].roundsSpent = 2;
   assert.equal(Engine.reloadWeapon(gl, 0).ok, true);
   assert.equal(Engine.weaponLine(gl, 0).reloadFrom, undefined);
@@ -2253,12 +2253,12 @@ test("W40: specialty rounds fit what Gear says, and the Angel Mod fires Angel Ro
   assert.ok(!l.tags.includes("+4 DMG"), "the mod's own damage came back as a tag");
 });
 
-test("W40: migrate() keeps a loaded round's id and drops anything else (schema 0.14)", () => {
+test("W40: migrate() keeps a loaded round's id, on a written-in weapon too (Decision 249), and drops anything else (schema 0.14)", () => {
   const ch = armed("ads-lp9-viper", { loaded: "silver-rounds" });
   Engine.addLoadout(ch, "weapons", "ads-lp9-viper"); ch.weapons[1].loaded = 7;
   ch.weapons.push({ custom: true, name: "Zip gun", loaded: "silver-rounds" });
   const m = Engine.migrate(JSON.parse(JSON.stringify(ch)));
-  same(m.weapons.map(w => w.loaded), ["silver-rounds", undefined, undefined]);
+  same(m.weapons.map(w => w.loaded), ["silver-rounds", undefined, "silver-rounds"]);
   same(Engine.migrate(JSON.parse(JSON.stringify(m))).weapons[0].loaded, "silver-rounds", "a round trip lost it");
 });
 
@@ -2411,7 +2411,7 @@ test("P9b 8: roundsLeft survives migrate and a hostile file, in both passes", ()
   const m = Engine.migrate(JSON.parse(JSON.stringify(ch)));
   same(m.gear.map(g => g.roundsLeft), [0, 0, 2, 0, 18]);
   same(Engine.migrate(JSON.parse(JSON.stringify(m))).gear, m.gear, "a round trip changed the rows");
-  assert.equal(m.meta.schemaVersion, "0.30");
+  assert.equal(m.meta.schemaVersion, "0.31");
   // The second place: undo restores what a file's audit says, and holds it to the same numbers.
   m.audit.push({ seq: 1, date: "x", kind: "edit", label: "crafted", patch: [{ path: ["gear", 4, "roundsLeft"], type: "scalar", before: "<i>9</i>" }] });
   Engine.undoLastAction(m);
@@ -2470,7 +2470,7 @@ test("W16: migrate to 0.10 gives a catalog weapon no mods and a full magazine, k
   old.weapons = [{ id: "ads-lp9-viper", notes: "grip tape" }, { custom: true, name: "Zip gun", capacity: "4", mods: ["Scope"] },
                  { id: "ts7-bulldog", notes: "", mods: ["Laser Sight", 7], roundsSpent: "5" }];
   const m = Engine.migrate(old);
-  assert.equal(m.meta.schemaVersion, "0.30");
+  assert.equal(m.meta.schemaVersion, "0.31");
   assert.deepEqual([[...m.weapons[0].mods], m.weapons[0].roundsSpent, m.weapons[0].notes], [[], 0, "grip tape"]);
   assert.equal(m.weapons[1].mods, undefined, "a custom weapon kept a mods list");
   assert.deepEqual([[...m.weapons[2].mods], m.weapons[2].roundsSpent], [["Laser Sight"], 5]);
@@ -2556,7 +2556,7 @@ test("B18: migrate() gives an older file a TAG, keeps a real one, and replaces a
   delete old.meta.id; old.meta.schemaVersion = "0.10";
   const m = Engine.migrate(old);
   assert.ok(Engine.isIntakeId(m.meta.id), "a file from before 0.11 got no TAG");
-  assert.equal(m.meta.schemaVersion, "0.30");
+  assert.equal(m.meta.schemaVersion, "0.31");
   const kept = Engine.migrate(JSON.parse(JSON.stringify(m)));
   assert.equal(kept.meta.id, m.meta.id, "migrate() reissued a TAG a file already had");
   for (const junk of ["", "NCR-0000-0000-000O", "TAG-0000-0000-000O", "<i>x</i>", 42, null, "ncr-abcd-efgh-jkmn", "tag-abcd-efgh-jkmn"]) {
@@ -2573,7 +2573,7 @@ test("Decision 133: a 0.11 NCR- number becomes a TAG with the same twelve charac
   c.meta.id = "NCR-7K2M-Q9XD-4HNB"; c.meta.schemaVersion = "0.11";
   const m = Engine.migrate(c);
   assert.equal(m.meta.id, "TAG-7K2M-Q9XD-4HNB");
-  assert.equal(m.meta.schemaVersion, "0.30");
+  assert.equal(m.meta.schemaVersion, "0.31");
   assert.equal(Engine.migrate(JSON.parse(JSON.stringify(m))).meta.id, "TAG-7K2M-Q9XD-4HNB", "the carried-over TAG didn't hold");
 });
 
@@ -2619,7 +2619,7 @@ test("W41: migrate() makes every older file TAG'd, and only a real true makes on
   const old = subject();
   delete old.identity.tagless; old.meta.schemaVersion = "0.13";
   const m = Engine.migrate(old);
-  same([m.identity.tagless, m.meta.schemaVersion], [false, "0.30"]);
+  same([m.identity.tagless, m.meta.schemaVersion], [false, "0.31"]);
   for (const junk of ["true", 1, "yes", {}, null])
     assert.equal(Engine.migrate(Object.assign(subject(), { identity: { name: "x", tagless: junk } })).identity.tagless, false, `${JSON.stringify(junk)} made a TAGless character`);
   const t = subject(); t.identity.tagless = true;
@@ -2844,7 +2844,7 @@ test("schema 0.15: an older file keeps rolling if it rolled, and a locked one is
   const a = Engine.migrate(old(true, 15));
   assert.equal(a.creation.statMethod, "rolled");
   assert.equal(a.creation.earlierTable, true);
-  assert.equal(a.meta.schemaVersion, "0.30");
+  assert.equal(a.meta.schemaVersion, "0.31");
   const b = Engine.migrate(old(false, null));
   assert.equal(b.creation.statMethod, "flat");
   assert.equal("earlierTable" in b.creation, false, "a draft was marked as built under the earlier table");
@@ -3306,7 +3306,7 @@ test("CRANK: a schema-0.16 character with no tracker migrates to rep 0", () => {
   delete old.trackers.crank; old.meta.schemaVersion = "0.16";
   const m = Engine.migrate(old);
   assert.deepEqual(JSON.parse(JSON.stringify(m.trackers.crank)), { rep: 0, ledger: [] });
-  assert.equal(m.meta.schemaVersion, "0.30");
+  assert.equal(m.meta.schemaVersion, "0.31");
 });
 
 test("CRANK: crankState reads the tier at every boundary", () => {
@@ -5637,7 +5637,7 @@ test("schema 0.19: newCharacter has basePowers and optionPicks; migrate keeps wh
   delete old.archetypeChoices.basePowers; delete old.archetypeChoices.optionPicks;
   old.trackers.panel = { "blood-pool": { value: 3, max: 20 }, "sfr": { value: 1 } };
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  same([m.meta.schemaVersion, m.archetypeChoices.basePowers, m.archetypeChoices.optionPicks, Object.keys(m.trackers.panel)], ["0.30", {}, {}, ["sfr"]]);
+  same([m.meta.schemaVersion, m.archetypeChoices.basePowers, m.archetypeChoices.optionPicks, Object.keys(m.trackers.panel)], ["0.31", {}, {}, ["sfr"]]);
   const junk = vampire("draugur");
   junk.archetypeChoices.basePowers = { "battleborn-instinct": "2", "hels-dread": -1, "odins-aegis": 1.7, "spectral-veil": "x", "blood-of-valhalla": 1e9, "x": null };
   junk.archetypeChoices.optionPicks = { "ancient-weapon": "blade", "code": { hunt: "the guilty", bond: 7, word: "<b>kept</b>" }, "n": 5, "a": ["blade"] };
@@ -5870,14 +5870,14 @@ test("Decision 215: migrate() 0.20 normalizes powerCp, gives a Vampire's Innate 
   old.archetypeChoices.basePowers = { "bestial-blessings": 2, "shadow-play": 1 };
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
   same(m.archetypeChoices.basePowers, { "shadow-play": 1 });
-  same([m.meta.schemaVersion, Engine.archetypePowers(m).find(p => p.id === "bestial-blessings").rank, Engine.basePowerState(m).left], ["0.30", 1, 2], "Bestial Blessings 1 granted, 2 Base Powers to place");
+  same([m.meta.schemaVersion, Engine.archetypePowers(m).find(p => p.id === "bestial-blessings").rank, Engine.basePowerState(m).left], ["0.31", 1, 2], "Bestial Blessings 1 granted, 2 Base Powers to place");
   // A saved Werewolf: untouched but for the stamp, its IP in an Origin power still on file.
   const w = werewolf("trueborn"); w.meta.schemaVersion = "0.19"; delete w.archetypeChoices.powerCp;
   assert.ok(Engine.placeBasePower(w, "apex-fury", 1).ok);
   assert.ok(Engine.spendIP(w, "power", "apex-fury").ok && Engine.spendIP(w, "power", "apex-fury").ok);
   w.archetypeChoices.basePowers = {};   // a 0.19 Werewolf held the kit with nothing placed
   const wm = Engine.migrate(JSON.parse(JSON.stringify(w)));
-  same([wm.meta.schemaVersion, wm.archetypeChoices.basePowers, wm.archetypeChoices.powerCp, wm.progression.powerIpe], ["0.30", {}, {}, { "apex-fury": 2 }]);
+  same([wm.meta.schemaVersion, wm.archetypeChoices.basePowers, wm.archetypeChoices.powerCp, wm.progression.powerIpe], ["0.31", {}, {}, { "apex-fury": 2 }]);
   // Decision 216 (PQ2): the IP is held again, at the ranks it bought, and versionCheck stops naming it.
   same(Engine.archetypePowers(wm).map(p => p.id), [...WWD().powers.filter(p => !p.origin).map(p => p.id), "apex-fury"]);
   assert.equal(Engine.archetypePowers(wm).find(p => p.id === "apex-fury").rank, 2, "the IP's two ranks");
@@ -7688,7 +7688,7 @@ test("schema 0.21: a 0.20 file's written power gets boughtWithCp false, and only
   old.meta.schemaVersion = "0.20";
   old.powers = [{ id: "pw-AAAAAAAA", custom: true, name: "Fade", uses: "", effect: "", notes: "" }, { id: "pw-BBBBBBBB", name: "Paid", boughtWithCp: true }];
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  same([m.meta.schemaVersion, m.powers.map(p => p.boughtWithCp)], ["0.30", [false, true]]);
+  same([m.meta.schemaVersion, m.powers.map(p => p.boughtWithCp)], ["0.31", [false, true]]);
   for (const v of ["yes", 1, {}, [], null, "true"]) {
     const c = Engine.migrate(Object.assign(JSON.parse(JSON.stringify(old)), { powers: [{ id: "pw-CCCCCCCC", name: "X", boughtWithCp: v }] }));
     assert.equal(c.powers[0].boughtWithCp, false, JSON.stringify(v));
@@ -7876,7 +7876,7 @@ test("Decision 217: a Major can be written in; it uses a slot, Admin needs none,
     assert.equal("custom" in e, false, JSON.stringify(v));
     assert.equal("name" in e, false);
   }
-  assert.equal(m.meta.schemaVersion, "0.30");
+  assert.equal(m.meta.schemaVersion, "0.31");
 });
 
 // ── P6 review fixes (Decision 217) ──────────────────────────────────────
@@ -8197,7 +8197,7 @@ test("P8b 12: house rules survive migrate and a hostile file", () => {
   assert.equal(Engine.newCharacter().houseRules.keepDamagePastZero, false);
   const old = Engine.newCharacter(); delete old.houseRules; old.meta.schemaVersion = "0.22";
   const m = Engine.migrate(old);
-  assert.equal(m.meta.schemaVersion, "0.30");
+  assert.equal(m.meta.schemaVersion, "0.31");
   eq(m.houseRules, { keepDamagePastZero: false, training: false });
   for (const junk of ["yes", 1, [], null, "true", { keepDamagePastZero: "yes" }, { keepDamagePastZero: 1 }]) {
     const c = Engine.newCharacter(); c.houseRules = junk;
@@ -8407,13 +8407,13 @@ test("P17 8: a gained Bloodline doesn't count for a Bloodline's Majors", () => {
 
 test("P17 9: the Major's power and the gained Bloodlines survive migrate and a hostile file", () => {
   same(Engine.newCharacter().progression.specializationsGained, []);
-  assert.equal(Engine.migrate({}).meta.schemaVersion, "0.30");
+  assert.equal(Engine.migrate({}).meta.schemaVersion, "0.31");
   const ch = vMaj();
   Engine.takeMajorChoice(ch, "splice", { power: "iron-hide" });
   Engine.gainSpecialization(ch, "draugur");
   const round = Engine.migrate(clone17(ch));
   eq(round.progression, ch.progression);
-  assert.equal(round.meta.schemaVersion, "0.30");
+  assert.equal(round.meta.schemaVersion, "0.31");
   const junk = clone17(ch);
   junk.progression.milestones.major = [{ id: "splice", power: 7 }, { id: "x", power: { a: 1 } }, { id: "y", power: "" }, { id: "z", power: "<b>x</b>" }];
   junk.progression.specializationsGained = [1, {}, null, "upyr", "upyr", "strigoi", "no-such", "<img src=x>"];
@@ -8695,12 +8695,12 @@ test("P11 7: a Custom pool's max is read by the engine, and it has no Rate of Us
 
 test("P11 8: the round's count survives migrate and a hostile file", () => {
   assert.equal(Engine.newCharacter().trackers.sfr.turn, 0);
-  assert.equal(Engine.newCharacter().meta.schemaVersion, "0.30");
+  assert.equal(Engine.newCharacter().meta.schemaVersion, "0.31");
   for (const [label, sfrVal] of [["a string", "x"], ["turn text", { spent: 2, turn: "x" }], ["negative", { turn: -3 }], ["null", null], ["fraction", { turn: 2.7 }], ["infinite", { turn: 1e999 }]]) {
     const m = Engine.migrate({ identity: { archetype: "vampire" }, trackers: { sfr: sfrVal } });
     assert.equal(typeof m.trackers.sfr.turn, "number", label);
     assert.ok(Number.isInteger(m.trackers.sfr.turn) && m.trackers.sfr.turn >= 0, `${label}: turn is ${m.trackers.sfr.turn}`);
-    same(m.meta.schemaVersion, "0.30");
+    same(m.meta.schemaVersion, "0.31");
   }
   same(Engine.migrate({ trackers: { sfr: { turn: -3 } } }).trackers.sfr.turn, 0);
   const ch = rou11(); Engine.adjustPanelTracker(ch, "sfr", 3);
@@ -10360,7 +10360,7 @@ test("L2 6 (engine): migrate to 0.30 keeps a saved type as text, shows it until 
   const old = zipGun({ type: "pistol", name: "Old iron" });
   old.meta.schemaVersion = "0.28";
   const m = Engine.migrate(old);
-  assert.equal(m.meta.schemaVersion, "0.30");
+  assert.equal(m.meta.schemaVersion, "0.31");
   assert.equal(m.weapons[0].type, "pistol");
   for (const k of ["category", "damageType", "range", "acc"]) assert.ok(!Object.hasOwn(m.weapons[0], k), `migrate added ${k}`);
   assert.equal(Engine.weaponLine(m, 0).typeText, "pistol");
@@ -10616,11 +10616,196 @@ test("L3 8 (engine): migrate to 0.30 keeps inUse only where it's true on a catal
   old.gear.push({ custom: true, name: "Rig", type: "tech", notes: "" }, { id: "smart-brace", qty: 1, notes: "" });
   old.meta.schemaVersion = "0.29";
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  assert.equal(m.meta.schemaVersion, "0.30");
+  assert.equal(m.meta.schemaVersion, "0.31");
   assert.ok(m.gear.every(r => !Object.hasOwn(r, "inUse")), "migrate added inUse");
   old.gear[0].inUse = true;
   const k = Engine.migrate(JSON.parse(JSON.stringify(old)));
   assert.equal(k.gear[0].inUse, true);
   assert.deepEqual(Engine.migrate(JSON.parse(JSON.stringify(k))), k);
   assert.deepEqual(Engine.migrate(JSON.parse(JSON.stringify(m))), m);
+});
+
+// ── L2b: written-in weapons tick their fire modes and reload from carried ammo ──
+const l2bGun = (extra = {}, keepRof = true) => {
+  const ch = zipGun(Object.assign({ category: "handguns", capacity: "15", roundsSpent: 5, rof: "S/B" }, extra));
+  if (!keepRof) delete ch.weapons[0].rof;
+  return ch;
+};
+const l2bCarry = (ch, ...ids) => ids.forEach(id => ch.gear.push({ id, qty: 2, notes: "" }));
+const AMMO = () => D.equipment.filter(g => g.reload);
+
+test("L2b 1 (engine): a written-in handgun reloads from carried Handgun Rounds, as a Cheapshot does", () => {
+  const ch = l2bGun();
+  Engine.addLoadout(ch, "weapons", "cheapshot");
+  ch.weapons[1].roundsSpent = 3;
+  l2bCarry(ch, "handgun-rounds");
+  same(Engine.weaponLine(ch, 0).reloadFrom, Engine.weaponLine(ch, 1).reloadFrom, "a written-in handgun's reloadFrom isn't a Cheapshot's");
+  assert.equal(Engine.weaponLine(ch, 0).reloadFrom.carried, 2);
+  const r = Engine.reloadWeapon(ch, 0);
+  same([r.ok, r.used, r.left], [true, 1, 15]);
+  assert.equal(stack(ch, "handgun-rounds"), 1, "the mag didn't come off what's carried");
+  assert.equal(ch.weapons[0].roundsSpent, 0);
+  same(mags(ch), [["handgun-rounds", 10]], "the half-empty magazine didn't come back as a part-used one (Decision 222)");
+  // No weapon type: a free reload, nothing taken, nothing offered (LQ24).
+  const bare = l2bGun({ category: undefined }); l2bCarry(bare, "handgun-rounds");
+  assert.equal(Engine.weaponLine(bare, 0).reloadFrom, undefined);
+  assert.equal(Engine.reloadWeapon(bare, 0).ok, true);
+  assert.equal(stack(bare, "handgun-rounds"), 2, "an untyped weapon took a mag");
+  assert.equal(bare.weapons[0].roundsSpent, 0);
+});
+
+test("L2b 2 (engine): a written-in gun reloads only what fits its type, never by a catalog id or a mod", () => {
+  const idsOf = line => (line.reloadFrom ? line.reloadFrom.ammo : []).map(n => AMMO().find(g => g.name === n).id).sort();
+  for (const c of D.weaponCategories) {
+    const ch = l2bGun({ category: c.id });
+    AMMO().forEach(g => ch.gear.push({ id: g.id, qty: 1, notes: "" }));
+    const want = AMMO().filter(g => (g.reload.categories || []).includes(c.id) && !g.reload.needsMod).map(g => g.id).sort();
+    const line = Engine.weaponLine(ch, 0);
+    same(idsOf(line), want, `${c.id}: what a written-in weapon of this type reloads from`);
+    if (!want.length) {
+      assert.equal(line.reloadFrom, undefined, `${c.id}: nothing fits, but Reload was offered`);
+      const before = JSON.stringify(ch.gear);
+      assert.equal(Engine.reloadWeapon(ch, 0).ok, true);
+      assert.equal(JSON.stringify(ch.gear), before, `${c.id}: a free reload took something`);
+    }
+  }
+  // No ammunition in the data fits a catalog weapon by id alone, so build one: a written-in weapon never matches by id.
+  const probe = { id: "l2b-probe-rounds", name: "Probe Rounds", reload: { weapons: ["cheapshot"], fills: "magazine" } };
+  withData(D, "equipment", [...D.equipment, probe], () => {
+    const ch = l2bGun(); ch.gear.push({ id: probe.id, qty: 1, notes: "" });
+    assert.deepEqual(Engine.weaponLine(ch, 0).reloadFrom.ammo, ["Handgun Rounds"], "a written-in handgun fit ammo that names a catalog weapon by id");
+    assert.equal(Engine.weaponLine(ch, 0).reloadFrom.carried, 0);
+    Engine.addLoadout(ch, "weapons", "cheapshot");
+    assert.ok(Engine.weaponLine(ch, 1).reloadFrom.ammo.includes("Probe Rounds"), "the fixture isn't a catalog weapon's ammo");
+    const named = l2bGun({ name: "cheapshot" }); named.gear.push({ id: probe.id, qty: 1, notes: "" });
+    assert.deepEqual(Engine.weaponLine(named, 0).reloadFrom.ammo, ["Handgun Rounds"], "a written-in weapon named like a catalog id fit its ammo");
+  });
+  // Angel Rounds need a mod, and a written-in weapon takes none.
+  const ch = l2bGun(); l2bCarry(ch, "angel-rounds");
+  assert.equal(Engine.reloadWeapon(ch, 0).noAmmo, true, "Angel Rounds loaded a written-in weapon");
+  assert.equal(Engine.carriedGear(ch, "angel-rounds").qty, 2);
+});
+
+test("L2b 3 (engine): a written-in gun loads Silver Rounds, keeps them across a save, and gives them back when its type stops fitting", () => {
+  const ch = l2bGun(); l2bCarry(ch, "handgun-rounds", "silver-rounds");
+  const ask = Engine.reloadWeapon(ch, 0);
+  same([ask.ok, ask.choose, ask.options.map(o => o.id)], [false, true, ["handgun-rounds", "silver-rounds"]]);
+  const r = Engine.reloadWeapon(ch, 0, { ammo: "silver-rounds" });
+  same([r.ok, r.loaded], [true, "silver-rounds"]);
+  assert.equal(ch.weapons[0].loaded, "silver-rounds");
+  const l = Engine.weaponLine(ch, 0);
+  assert.equal(l.loaded.name, "Silver Rounds");
+  assert.ok(l.tags.includes("Withering (Lycanthropes)"), "the loaded rounds' tag isn't on the line");
+  const m = Engine.migrate(JSON.parse(JSON.stringify(ch)));
+  assert.equal(m.weapons[0].loaded, "silver-rounds", "a save lost the loaded rounds");
+  // Angel Rounds alone: nothing loads it.
+  const a = l2bGun(); l2bCarry(a, "angel-rounds");
+  assert.equal(Engine.reloadWeapon(a, 0).noAmmo, true);
+  // The type is cleared: the next Reload gives the Silver magazine back and forgets it.
+  ch.gear = []; ch.weapons[0].roundsSpent = 4;
+  Engine.setCustomWeapon(ch, 0, "category", "");
+  assert.equal(Engine.reloadWeapon(ch, 0).ok, true);
+  assert.equal(ch.weapons[0].loaded, undefined, "the Silver rounds stayed loaded");
+  same(mags(ch), [["silver-rounds", 11]], "the Silver magazine wasn't returned to gear");
+  assert.equal(ch.weapons[0].roundsSpent, 0);
+});
+
+test("L2b 4 (engine): a written-in weapon's fire modes are a pick, and a typed RoF from before reads until it's ticked", () => {
+  const ch = l2bGun({ rofModes: ["B", "S"] }, false);
+  const l = Engine.weaponLine(ch, 0);
+  assert.equal(l.rof, "S/B", "rofModes read in stored order, not the data's");
+  same(l.fireModes.map(f => f.id), ["S", "B"]);
+  assert.equal(Engine.fireWeapon(ch, 0, "B").spent, 3);
+  assert.equal(Engine.fireWeapon(ch, 0, "F").ok, false, "fired Full Auto, which isn't ticked");
+  // A typed RoF from before reads as it did, and a pick wins once it's there.
+  same(Engine.weaponLine(l2bGun({ rof: "S/B/F" }), 0).fireModes.map(f => f.id), ["S", "B", "F"]);
+  const semi = Engine.weaponLine(l2bGun({ rof: "Semi" }), 0);
+  same([semi.fireModes.length, semi.rof], [0, "Semi"]);
+  same(Engine.weaponLine(l2bGun({ rof: "S/B/F", rofModes: ["F"] }), 0).fireModes.map(f => f.id), ["F"], "the typed RoF was read beside a pick");
+  // The setter.
+  const s = l2bGun({}, false);
+  same(Engine.setCustomWeapon(s, 0, "rofModes", ["S", "S"]), { ok: true, field: "rofModes", value: ["S"] });
+  same(s.weapons[0].rofModes, ["S"]);
+  same(Engine.setCustomWeapon(s, 0, "rofModes", ["F", "S"]).value, ["S", "F"]);
+  const was = JSON.stringify(s.weapons);
+  for (const bad of [["X"], "S", [1], ["S", null], {}, 5, [["S"]]]) {
+    const x = Engine.setCustomWeapon(s, 0, "rofModes", bad);
+    assert.equal(x.ok, false, `${JSON.stringify(bad)} was accepted`);
+    assert.match(x.why, /Single, Burst and Full Auto/);
+    assert.equal(JSON.stringify(s.weapons), was, "a refusal wrote");
+  }
+  assert.equal(Engine.setCustomWeapon(s, 0, "rofModes", []).ok, true);
+  assert.ok(!Object.hasOwn(s.weapons[0], "rofModes"), "[] didn't clear it");
+  Engine.setCustomWeapon(s, 0, "rofModes", ["B"]);
+  assert.equal(Engine.setCustomWeapon(s, 0, "rofModes", null).ok, true);
+  assert.ok(!Object.hasOwn(s.weapons[0], "rofModes"));
+  const typedRow = l2bGun({ rof: "Semi" });
+  Engine.setCustomWeapon(typedRow, 0, "rofModes", ["S"]); Engine.setCustomWeapon(typedRow, 0, "rofModes", []);
+  assert.equal(typedRow.weapons[0].rof, "Semi", "a tick rewrote or cleared the typed RoF");
+  const fresh = Engine.newCharacter(); Engine.addCustomLoadout(fresh, "weapons");
+  assert.ok(!Object.hasOwn(fresh.weapons[0], "rof"), "a new written-in weapon carries a rof");
+});
+
+test("L2b 5 (engine): junk in rofModes or loaded reads as nothing, from a file and from a call", () => {
+  for (const v of ["S", ["Q"], [], {}, [null], ["S", 3]]) {
+    const m = Engine.migrate(l2bGun({ rofModes: v }, false));
+    assert.ok(!Object.hasOwn(m.weapons[0], "rofModes"), `rofModes ${JSON.stringify(v)} survived migrate()`);
+  }
+  same(Engine.migrate(l2bGun({ rofModes: ["F", "S", "F"] }, false)).weapons[0].rofModes, ["S", "F"]);
+  for (const v of [7, {}, null, ["silver-rounds"]]) {
+    const m = Engine.migrate(l2bGun({ loaded: v }));
+    assert.ok(!Object.hasOwn(m.weapons[0], "loaded"), `loaded ${JSON.stringify(v)} survived migrate()`);
+  }
+  const odd = Engine.migrate(l2bGun({ loaded: "nonsense" }));
+  assert.equal(odd.weapons[0].loaded, "nonsense");
+  assert.equal(Engine.weaponLine(odd, 0).loaded, undefined, "nonsense read as loaded rounds");
+  const once = Engine.migrate(l2bGun({ rofModes: ["F", "S"], loaded: "silver-rounds" }));
+  same(Engine.migrate(JSON.parse(JSON.stringify(once))), once, "a second migrate changed something");
+  // A call: junk written straight onto the row never throws.
+  for (const rofModes of ["S", ["Q"], {}, [null], 5, null, [["S"]]]) for (const loaded of [7, {}, "nonsense", null, ["x"]]) {
+    const ch = l2bGun({ rofModes, loaded }); l2bCarry(ch, "handgun-rounds", "silver-rounds");
+    assert.doesNotThrow(() => { Engine.weaponLine(ch, 0); Engine.fireWeapon(ch, 0, "S"); Engine.reloadWeapon(ch, 0); Engine.reloadWeapon(ch, 0, { anyway: true }); Engine.reloadWeapon(ch, 0, { ammo: "silver-rounds" }); });
+  }
+  for (const category of ["__proto__", 5, {}, "nope"]) {
+    const ch = l2bGun({ category, loaded: "silver-rounds" }); l2bCarry(ch, "handgun-rounds");
+    assert.doesNotThrow(() => { Engine.weaponLine(ch, 0); Engine.reloadWeapon(ch, 0); });
+  }
+  const ch = l2bGun();
+  for (let i = -2; i < 5; i++) assert.doesNotThrow(() => { Engine.setCustomWeapon(ch, i, "rofModes", ["S"]); Engine.setCustomWeapon(ch, i, "rofModes", {}); });
+});
+
+test("L2b 8 (engine): no catalog weapon's line, fire or reload moves", () => {
+  const want = JSON.parse(readFileSync(join(ROOT, "tests/l2b-catalog.json"), "utf8"));
+  const ammo = AMMO().map(g => g.id), got = {};
+  for (const w of D.weapons) {
+    const ch = subject(); Engine.addLoadout(ch, "weapons", w.id);
+    const rec = { line: Engine.weaponLine(ch, 0), reloads: {} };
+    const rounds = rec.line.rounds;
+    for (const carry of [null, ...ammo]) {
+      const c = subject(); Engine.addLoadout(c, "weapons", w.id);
+      if (rounds) c.weapons[0].roundsSpent = Math.ceil(rounds.max / 2);
+      if (carry) c.gear.push({ id: carry, qty: 2, notes: "" });
+      const line = Engine.weaponLine(c, 0);
+      const res = Engine.reloadWeapon(c, 0);
+      const anyway = res.noAmmo ? Engine.reloadWeapon(c, 0, { anyway: true }) : null;
+      rec.reloads[carry || "none"] = { line, res, anyway, spent: c.weapons[0].roundsSpent, loaded: c.weapons[0].loaded, gear: c.gear };
+    }
+    got[w.id] = rec;
+  }
+  const have = JSON.parse(JSON.stringify(got));
+  assert.deepEqual(Object.keys(have), Object.keys(want));
+  for (const id of Object.keys(want)) assert.deepEqual(have[id], want[id], `${id}: its line or its reload moved`);
+});
+
+test("L2b 9 (engine): migrate to 0.31 keeps a typed rof, adds nothing, and keeps loaded", () => {
+  for (const rof of ["S/B", "Semi"]) {
+    const old = l2bGun({ rof, loaded: "silver-rounds" });
+    old.meta.schemaVersion = "0.30";
+    const m = Engine.migrate(old);
+    assert.equal(m.meta.schemaVersion, "0.31");
+    assert.equal(m.weapons[0].rof, rof);
+    assert.ok(!Object.hasOwn(m.weapons[0], "rofModes"), "migrate added rofModes");
+    assert.equal(m.weapons[0].loaded, "silver-rounds");
+    same(Engine.migrate(JSON.parse(JSON.stringify(m))), m);
+  }
 });
