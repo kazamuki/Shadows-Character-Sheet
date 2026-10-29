@@ -1624,7 +1624,7 @@ test("L2b 6 (sheet): the open row's fire-mode ticks are one undoable action each
   assert.equal(zip().querySelector('[data-cell="weapons|1|rof"]'), null, "the typed RoF cell is still on the open row");
   assert.ok(zip().querySelector('[aria-label="Fire modes"]'));
   // The hint belongs to the row that wrote "Semi", and to no other.
-  assert.match(old().querySelector("[data-weaponrofhint]").textContent, /You wrote "Semi"\. Tick the modes it fires\./);
+  assert.match(old().querySelector("[data-weaponrofhint]").textContent, /You wrote "Semi"\. Tick its fire modes to give it fire buttons./);
   assert.equal(zip().querySelector("[data-weaponrofhint]"), null, "the hint showed on the Zip gun's row");
   // Ticking Single, then Burst: one audit entry each, the row stays open, focus stays on the tick.
   const before = audit().length;

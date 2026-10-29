@@ -2100,7 +2100,7 @@ function weaponOpenRowHtml(ch, l){
     `<div class="hitrow" role="group" aria-label="Fire modes"><span class="hitnote">Fire modes</span>${
       ((D.weaponRules||{}).rofModes||[]).map(m=>`<label class="check"><input type="checkbox" data-weaponmode="${i}|${esc(m.id)}" ${(l.fireModes||[]).some(f=>f.id===m.id)?"checked":""}> ${esc(m.name)}</label>`).join("")}</div>` +
     (l.typeText ? `<span class="hitnote" data-weapontypehint>You wrote "${esc(l.typeText)}". Pick a type to give it an attack.</span>` : "") +
-    (l.rof && !(l.fireModes||[]).length ? `<span class="hitnote" data-weaponrofhint>You wrote "${esc(l.rof)}". Tick the modes it fires.</span>` : "") +
+    (l.rof && !(l.fireModes||[]).length ? `<span class="hitnote" data-weaponrofhint>You wrote "${esc(l.rof)}". Tick its fire modes to give it fire buttons.</span>` : "") +
     `</div></td></tr></tbody>`;
 }
 function weaponRowsHtml(ch){
