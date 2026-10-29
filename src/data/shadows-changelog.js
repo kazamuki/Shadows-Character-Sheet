@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.56.0",
-    "date": null,
+    "date": "2026-10-29",
     "intro": [],
     "items": [
       "**Weapons you write in fire and reload like the catalog's.** Tick the fire modes one has, and Single, Burst and Full Auto spend its rounds. Give it a type and Reload takes a magazine that fits from what you carry, and keeps the half-empty one. Silver Rounds and Holy Points load too.",
