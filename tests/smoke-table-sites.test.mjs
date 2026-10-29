@@ -167,8 +167,13 @@ test("251: Exposure rows count per character and show the step reached", () => {
   assert.equal(focusedKey(app).startsWith("data-ename=0"), true, "Add someone focuses the blank name");
   assert.equal(app.$("[data-ename]").getAttribute("placeholder"), "Who?");
   const n0 = auditLen(app);
+  assert.equal(app.$('[data-eplus="0"]').getAttribute("aria-label"), "Add one to row 1");
   both(app, "[data-ename]", "Vex");
   assert.equal(auditLen(app) - n0, 1, "typing is one entry");
+  assert.deepEqual(["eminus", "eplus", "edel"].map(k => app.$(`[data-${k}="0"]`).getAttribute("aria-label")), ["Take one off Vex", "Add one to Vex", "Remove Vex"], "the typed name renames the row's buttons");
+  // The profile's parts are h3s beside the track's; only the track's own parts sit under it as h4s.
+  assert.deepEqual(app.$$("[data-psite-profile] h4").map(h => h.textContent), ["Marks here"]);
+  assert.ok(app.$$("[data-psite-profile] h3").map(h => h.textContent).includes("Presence"));
   assert.equal(app.$("[data-undo-toast], .undo-toast") && !app.$(".undo-toast").hidden ? "toast" : "none", "none", "no toast while typing");
   for (let i = 0; i < 4; i++) app.click('[data-eplus="0"]');
   assert.equal(app.$('[data-ecount="0"]').textContent, "4");
@@ -220,6 +225,9 @@ test("251: a place's card says its profile and its clocks", () => {
   pickSite(app, "long-stretch");
   app.click("[data-pback]");
   assert.match(app.$(".place-card .roster-meta").textContent, /Thin Places · The Long Stretch · 1 clock$/);
+  // A file's link may carry no name: the card leaves the profile out rather than an empty part.
+  app.window.eval("delete S.table.places[0].site.name; renderTable()");
+  assert.match(app.$(".place-card .roster-meta").textContent, /Thin Places · 1 clock$/);
 });
 
 test("251: deleting a place asks with its clock count, and Undo from Activity restores both", () => {

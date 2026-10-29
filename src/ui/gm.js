@@ -1138,7 +1138,7 @@ const gazName = id => { const e=Engine.gazetteerEntry(id); return e ? String(e.n
 function placeCardHtml(t, p){
   const n=Engine.placeLines(t, p.id).length;
   const bits=[[gazName(p.zone), gazName(p.territory)].filter(Boolean).join(" · "), p.district, p.neighborhood, gazName(p.environment),
-    p.site ? p.site.name : "", clockCountText(Engine.clocksOn(t, { kind:"place", id:p.id })),
+    p.site && typeof p.site.name==="string" ? p.site.name : "", clockCountText(Engine.clocksOn(t, { kind:"place", id:p.id })),
     n ? `${n} ${n===1 ? "line" : "lines"}` : ""].filter(s=>String(s).trim()).map(esc).join(" · ");
   return `<li class="roster-card cast-card place-card" data-pcard="${esc(p.id)}"><button class="cast-open" data-popen="${esc(p.id)}">${esc(Engine.placeTitle(t, p))}</button>
     ${bits ? `<div class="roster-meta cast-meta">${bits}</div>` : ""}</li>`;
@@ -1223,7 +1223,8 @@ function siteSelectHtml(p, info){
     return g.cat ? `<optgroup label="${esc(gazName(g.cat) || g.cat)}">${items}</optgroup>` : items;
   }).join("")}</select></label>`;
 }
-const siteText = (label, text) => String(text||"").trim() ? `<h4 class="site-h">${esc(label)}</h4><p class="site-text">${esc(text)}</p>` : "";
+// A part of the profile is an h3, beside the track's; a part of the track (What moves it, Marks here) is an h4 under it.
+const siteText = (label, text, h="h3") => String(text||"").trim() ? `<${h} class="site-h">${esc(label)}</${h}><p class="site-text">${esc(text)}</p>` : "";
 function siteLevelsHtml(track, info){
   const levels=Array.isArray(track.levels) ? track.levels.filter(l=>l && typeof l==="object") : [], on=info.level ? info.level.id : null;
   return `<div class="form-toggle int-kinds" role="group" aria-label="${esc(track.name || "Level")}">${levels.map(l=>
@@ -1231,14 +1232,16 @@ function siteLevelsHtml(track, info){
     <p class="site-text" data-slevel-text>${esc(info.level ? info.level.text : "")}</p>
     <p class="step-note" data-slevel-stale${info.stale ? "" : " hidden"}>${info.stale ? `Last set to “${esc(info.stale)}”, which this pack doesn't have.` : ""}</p>`;
 }
+// A row's buttons say whose they are, the typed name or the row's number; typing a name renames them.
+const exposureLabels = (name, i) => { const nm=String(name||"").trim() || `row ${i+1}`; return { eminus:`Take one off ${nm}`, eplus:`Add one to ${nm}`, edel:`Remove ${nm}` }; };
 function exposureRowHtml(r, i){
-  const nm=String(r.name||"").trim() || `row ${i+1}`;
+  const L=exposureLabels(r.name, i);
   return `<li class="int-line exposure-row" data-erow="${i}">
     <input type="text" data-ename="${i}" list="exposure-names" value="${esc(r.name)}" placeholder="Who?" aria-label="Who, row ${i+1}" autocomplete="off">
-    <span class="clock-btns"><button type="button" class="btn sm clock-step" data-eminus="${i}" aria-label="Take one off ${esc(nm)}"${r.n<=0 ? " disabled" : ""}>−</button>
+    <span class="clock-btns"><button type="button" class="btn sm clock-step" data-eminus="${i}" aria-label="${esc(L.eminus)}"${r.n<=0 ? " disabled" : ""}>−</button>
       <span class="clock-count" data-ecount="${i}" role="status">${r.n}</span>
-      <button type="button" class="btn sm clock-step" data-eplus="${i}" aria-label="Add one to ${esc(nm)}"${r.n>=99 ? " disabled" : ""}>+</button></span>
-    <button type="button" class="btn sm" data-edel="${i}" aria-label="Remove ${esc(nm)}">Remove</button>
+      <button type="button" class="btn sm clock-step" data-eplus="${i}" aria-label="${esc(L.eplus)}"${r.n>=99 ? " disabled" : ""}>+</button></span>
+    <button type="button" class="btn sm" data-edel="${i}" aria-label="${esc(L.edel)}">Remove</button>
     <span class="exposure-step" data-estep="${i}">${r.step ? esc(r.step.text) : ""}</span></li>`;
 }
 function exposureRowsHtml(info){ return info.exposure.map(exposureRowHtml).join(""); }
@@ -1246,7 +1249,7 @@ function siteTrackHtml(p, site, info){
   const track=site.track && typeof site.track==="object" ? site.track : null;
   if (!track) return String(site.trackText||"").trim() ? `<h3 class="site-h3">Track</h3><p class="site-text">${esc(site.trackText)}</p>` : "";
   const head=`<h3 class="site-h3">${esc(track.name)}</h3>`;
-  if (track.kind==="levels") return head + siteLevelsHtml(track, info) + siteText("What moves it", track.moves);
+  if (track.kind==="levels") return head + siteLevelsHtml(track, info) + siteText("What moves it", track.moves, "h4");
   if (track.kind==="table") return `<h3 class="site-h3">${esc(track.name)} · ${esc(track.die)}</h3><ul class="site-list">${(track.rows||[]).map(r=>
     `<li><strong>${esc(r.roll)}</strong> ${esc(r.text)}</li>`).join("")}</ul>`;
   const names=Engine.crewView(S.table, {}).map(g=>g.name);
@@ -1255,7 +1258,7 @@ function siteTrackHtml(p, site, info){
     + `<ul class="int-list" data-erows>${exposureRowsHtml(info)}</ul>
     <p><button type="button" class="btn sm" data-eadd>Add someone</button></p>
     <ul class="site-list">${(track.steps||[]).map(s=>`<li><strong>${esc(s.at)}</strong> ${esc(s.text)}</li>`).join("")}</ul>`
-    + siteText("Marks here", track.marks);
+    + siteText("Marks here", track.marks, "h4");
 }
 // The profile under the select, or the line that says its pack isn't slotted in.
 function siteProfileHtml(p, info){
@@ -1267,7 +1270,7 @@ function siteProfileHtml(p, info){
     <p class="roster-meta">${esc([gazName(s.category), s.canon].filter(x=>String(x||"").trim()).join(" · "))}</p>
     ${String(s.flavor||"").trim() ? `<p class="site-flavor"><em>${esc(s.flavor)}</em></p>` : ""}
     ${siteText("Presence", s.presence)}${siteText("Rules", s.rules)}
-    ${(s.waysIn||[]).length ? `<h4 class="site-h">Ways in</h4><ul class="site-list">${s.waysIn.map(w=>`<li>${esc(w)}</li>`).join("")}</ul>` : ""}
+    ${(s.waysIn||[]).length ? `<h3 class="site-h">Ways in</h3><ul class="site-list">${s.waysIn.map(w=>`<li>${esc(w)}</li>`).join("")}</ul>` : ""}
     ${siteText("Layering", s.layering)}
     ${siteTrackHtml(p, s, info)}
     ${siteText("Who's already here", s.here)}${siteText("Resolution", s.resolution)}${siteText("GM note", s.gmNote)}</div>`;
@@ -1310,7 +1313,8 @@ function bindSiteProfile(main, id, own, focus){
       const other=d>0 ? "[data-eminus]" : "[data-eplus]", same=d>0 ? "[data-eplus]" : "[data-eminus]"; if (q(same).disabled) q(other).focus(); };
     q("[data-eplus]").onclick=()=>step(1);
     q("[data-eminus]").onclick=()=>step(-1);
-    const name=q("[data-ename]"), fn=()=>{ const list=rows(); if (!list[i]) return; list[i].name=name.value; save(list); };
+    const name=q("[data-ename]"), fn=()=>{ const list=rows(); if (!list[i]) return; list[i].name=name.value; save(list);
+      for (const [k, label] of Object.entries(exposureLabels(name.value, i))) q(`[data-${k}]`).setAttribute("aria-label", label); };
     name.addEventListener("input", fn); name.addEventListener("change", fn);
     q("[data-edel]").onclick=()=>{
       const list=rows(); list.splice(i, 1); save(list); redraw();
