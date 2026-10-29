@@ -564,7 +564,7 @@ In the order they merged.
 | S7 | Factions and clocks: the Faction Tracker per faction, and clocks on it | 244–245 | #240 |
 | S12b | Site Profiles: the Codex's profiles in the pack, a crew's place takes one with its track, Exposure and clocks (Rule or shape; pack schema 0.3, table schema 0.16) | 250–251 | #261 |
 | S10f | An encounter's plan (the Encounter Design worksheet), its clocks, a Surprise or Ambush opening, and Delay (Rule or shape; table schema 0.17) | 252–253 | #266 |
-| S3b | Seats: players, their characters as copies, import, the card spread and Answers to (Rule or shape; table schema 0.18) | 254–255 | #… |
+| S3b | Seats: players, their characters as copies, import, the card spread and Answers to (Rule or shape; table schema 0.18) | 254–255 | #268 |
 
 ### Still to build
 

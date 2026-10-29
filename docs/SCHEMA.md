@@ -5274,7 +5274,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - The copy inside the seat: every re-import would put a whole character into the activity log.
      - **Replaces:** Decisions 177, 203 and 205 in part (crew, attendance and the award log stay typed, read as seats), 179 in part (*Who knows what* folds a seat's names), 212 in part (players are logged; copies aren't).
      - **Revisit if:** S3c or S3d needs more of the copy than its file, a table outgrows storage (GQ9), or the dispatch (S2) needs a seat to address.
-     - **Built:** table schema 0.18, switched off (173); PR #…; log 2026-10-29 (S3b).
+     - **Built:** table schema 0.18, switched off (173); PR #268; log 2026-10-29 (S3b).
 
 255. **A table's Players tab is its card spread: one card per active seat grouped by player, Health, Awareness and Conditions first; import takes several files onto a player, a newer copy updates its seat and an older one asks.**
      *2026-10-29 · Ken + Claude · Touches: Players tab, TABLE_SECTIONS, card spread, seat card, seat page, Import characters, answers to, status, Benched, Retired, Dead, older copy, draft, Find, FIND_KINDS, openFound, datalist, PC name, GQ13, GQ19, Decision 204, Decision 208*
@@ -5286,7 +5286,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - A select for status: a toggle group (S12b's ruling).
      - **Replaces:** Decision 208 in part (Find finds a seat).
      - **Revisit if:** S3c builds the read-only sheet (a card opens it), GQ1 reorders the tabs, or a GM wants a seat moved between players without a re-import.
-     - **Built:** table schema 0.18, switched off (173); PR #…; log 2026-10-29 (S3b).
+     - **Built:** table schema 0.18, switched off (173); PR #268; log 2026-10-29 (S3b).
 
 ## 5. Open Flags
 
