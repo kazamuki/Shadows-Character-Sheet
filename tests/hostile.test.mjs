@@ -1309,3 +1309,74 @@ test("L2: an open written-in weapon with a payload in its type and its four pick
   assert.ok(!app.window.renderPrintView(ch).includes("<i data-pwn"), "the printed sheet drew a payload as markup");
   assert.deepEqual(app.errors, []);
 });
+
+// ── A pack's Site Profiles and a place's site are untrusted too (Decisions 250–251) ──
+test("a pack's sites and a place's site, level, rows and clock owner of markup render as text on the place's page, its card and Find, and pollute nothing", () => {
+  const SPK = "PK-ABCD2345";
+  const site = (id, extra = {}) => ({ id, ref: P(id + ".ref"), name: P(id + ".name"), category: "thin-places", canon: P(id + ".canon"), flavor: P(id + ".flavor"),
+    presence: P(id + ".presence"), rules: P(id + ".rules"), waysIn: [P(id + ".way1"), P(id + ".way2")], layering: P(id + ".layering"),
+    trackText: P(id + ".trackText"), clockText: P(id + ".clockText"), here: P(id + ".here"), resolution: P(id + ".resolution"), gmNote: P(id + ".gm"), ...extra });
+  const pack = {
+    meta: { kind: "shadows-pack", id: SPK, name: "Hostile sites", packSchemaVersion: "0.3", contentVersion: "x", created: "2026-10-01T10:00:00.000Z", updated: "2026-10-02T10:00:00.000Z" },
+    sites: [
+      site("lv", { category: "genius-loci", track: { kind: "levels", name: P("lv.track"), start: "a", moves: P("lv.moves"),
+        levels: [{ id: "a", name: P("lv.a"), text: P("lv.atext") }, { id: "b", name: P("lv.b"), text: P("lv.btext") }, { id: "__proto__", name: P("lv.proto") }] },
+        clock: { name: P("lv.clock"), segments: 4, advances: P("lv.adv"), whenFull: P("lv.full") } }),
+      site("ex", { track: { kind: "exposure", name: P("ex.track"), triggers: P("ex.triggers"), marks: P("ex.marks"),
+        steps: [{ at: 3, text: P("ex.s3") }, { at: 5, text: P("ex.s5") }, { at: 0, text: P("ex.s0") }] }, clock: null }),
+      site("tb", { category: "gates", track: { kind: "table", name: P("tb.track"), die: P("tb.die"), rows: [{ roll: P("tb.r1"), text: P("tb.t1") }, 5] } }),
+      site("ar", { track: [P("ar.track")], clock: [P("ar.clock")] }),
+      site("__proto__"),
+    ],
+  };
+  const t = Engine.newTable(P("tbl.name"));
+  const now = "2026-10-05T10:00:00.000Z";
+  const place = (id, over) => ({ id, name: P(id + ".name"), from: null, territory: null, zone: null, district: "", neighborhood: "", environment: "thin-places", notes: "", created: now, updated: now, ...over });
+  t.places = [
+    place("PL-AAAAAAAA", { site: { kind: "site", pack: SPK, id: "ex", name: P("a.site") }, siteLevel: P("a.level"), exposure: [{ name: P("a.vex"), n: {} }, { name: P("a.dez"), n: "4" }, "x"] }),
+    place("PL-BBBBBBBB", { site: { kind: "site", pack: SPK, id: "lv", name: P("b.site") }, siteLevel: "b" }),
+    place("PL-CCCCCCCC", { site: { kind: "site", pack: SPK, id: "tb", name: P("c.site") } }),
+    place("PL-DDDDDDDD", { site: { kind: "site", pack: SPK, id: "ar", name: P("d.site") } }),
+    place("PL-EEEEEEEE", { site: { kind: "site", pack: "PK-ZZZZ9999", id: "gone", name: P("e.site") } }),
+  ];
+  t.clocks = [
+    { id: "CK-AAAAAAAA", name: P("k1.name"), advances: P("k1.adv"), segments: 4, filled: 1, on: { kind: "place", id: "PL-AAAAAAAA" } },
+    { id: "CK-BBBBBBBB", name: P("k2.name"), segments: 4, on: { kind: "__proto__", id: "x" } },
+    { id: "CK-CCCCCCCC", name: P("k3.name"), segments: 4, on: { kind: "Place", id: "PL-AAAAAAAA" } },
+    { id: "CK-DDDDDDDD", name: P("k4.name"), segments: 4, on: { kind: "encounter", id: "EN-AAAAAAAA" } },
+  ];
+  const key = "shadows.table.v1." + t.meta.id;
+  const app = boot({ storage: { "shadows.feature.gm": "on", ["shadows.pack.v1." + SPK]: { pack, imported: now },
+    [key]: { table: t, section: "city", changed: now, exported: null } } });
+  const found = [];
+  app.$("[data-topen]").click();
+  found.push(...injected(app, "the crew's places"));
+  assert.equal(app.$$(".place-card").length, 5);
+  assert.ok(app.$$(".place-card").some(el => el.textContent.includes(P("a.site"))), "a place's kept site name wasn't drawn as text on its card");
+  for (const card of app.$$("[data-popen]")) {
+    app.click(`[data-popen="${card.dataset.popen}"]`);
+    found.push(...injected(app, "a place's page"));
+    for (const b of app.$$("[data-slevel]")) { b.click(); found.push(...injected(app, "a level tapped")); }
+    for (const e of app.$$("[data-clkedit]")) { e.click(); found.push(...injected(app, "a clock's fields")); }
+    app.click("[data-pback]");
+  }
+  app.click('[data-popen="PL-AAAAAAAA"]');
+  assert.equal(app.$$("[data-erow]").length, 2, "a row that isn't an object was drawn");
+  assert.equal(app.$("[data-ecount=\"0\"]").textContent, "0", "n of {} is 0");
+  assert.equal(app.$("[data-ecount=\"1\"]").textContent, "4", "n of \"4\" is 4");
+  assert.equal(app.$("[data-ename=\"0\"]").value, P("a.vex"), "a row's name is a value, not markup");
+  assert.equal(app.window.eval("S.table.places[0].siteLevel"), null, "a level of markup is no level");
+  app.click("[data-pback]");
+  app.click('[data-tsec="cast"]');
+  app.click("[data-tfind]");
+  const q = app.$("[data-findq]"); q.value = "pwn"; q.dispatchEvent(new app.window.Event("input", { bubbles: true }));
+  found.push(...injected(app, "Find"));
+  assert.ok(app.$$("#modal [data-fkind=\"place\"]").length >= 1, "Find skipped a place whose site name is markup");
+  assert.deepEqual(found, [], "a site's or place's text became markup");
+  assert.equal(app.window.eval("({}).polluted"), undefined);
+  assert.equal(app.window.eval("Object.prototype.kind"), undefined);
+  assert.equal(app.window.eval("S.table.clocks.length"), 4, "a clock whose owner is unknown is kept");
+  assert.equal(app.window.eval("JSON.stringify(S.table.clocks.map(c => c.on && c.on.kind))"), JSON.stringify(["place", null, null, "encounter"]));
+  assert.equal(app.window.eval("S.table.places[0].exposure.length"), 2);
+  assert.deepEqual(app.errors, [], "the hostile sites threw while rendering");
+});

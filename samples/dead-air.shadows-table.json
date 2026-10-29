@@ -3,7 +3,7 @@
     "kind": "shadows-table",
     "id": "TBL-8E8Z-R2TG-6C8Z",
     "name": "Dead Air",
-    "tableSchemaVersion": "0.15",
+    "tableSchemaVersion": "0.16",
     "created": "2026-07-18T17:00:00.000Z",
     "updated": "2026-10-17T23:50:00.000Z"
   },
@@ -731,6 +731,9 @@
       "neighborhood": "Orchard Street",
       "environment": null,
       "notes": "Pearl's laundromat. Front room: six working machines and three that have never run. Back room: the table, the safe, the Rolodex, a hotplate. A bell over the door that rings twice for strangers and once for friends. The crew meets here every session. Burned in the Ibarra clock's worst outcome.",
+      "site": null,
+      "siteLevel": null,
+      "exposure": [],
       "created": "2026-07-18T22:00:00.000Z",
       "updated": "2026-10-17T23:00:00.000Z"
     },
@@ -748,6 +751,9 @@
       "neighborhood": "The Ramble",
       "environment": "thin-places",
       "notes": "The Park closes at sunset for a reason. S2's chase ran the Ramble to Ranger Station Nine. Fenn's maintenance tunnels run below the Boathouse; one of them comes out somewhere it shouldn't.",
+      "site": null,
+      "siteLevel": null,
+      "exposure": [],
       "created": "2026-08-01T22:00:00.000Z",
       "updated": "2026-10-17T23:00:00.000Z"
     },
@@ -761,6 +767,9 @@
       "neighborhood": "Theater Row",
       "environment": null,
       "notes": "Eclipse's front: a jazz club that sells silence by the hour. Ibarra's table is the third booth, facing the door. The house band stops playing when he stands up. S7's planned meeting is here.",
+      "site": null,
+      "siteLevel": null,
+      "exposure": [],
       "created": "2026-07-18T22:00:00.000Z",
       "updated": "2026-10-17T23:00:00.000Z"
     },
@@ -774,6 +783,9 @@
       "neighborhood": "The Annex",
       "environment": null,
       "notes": "Ground floor of a shuttered CorpTech annex. 'We Do Not Ask' on the door. Dex's recovery between moons. Three beds, a freezer, a poster of a very large dog.",
+      "site": null,
+      "siteLevel": null,
+      "exposure": [],
       "created": "2026-07-18T22:00:00.000Z",
       "updated": "2026-10-17T23:00:00.000Z"
     },
@@ -787,6 +799,9 @@
       "neighborhood": "The Waterfront",
       "environment": "combat-zones",
       "notes": "Dockside Devils' hall at the end of the pier. A tug, a corrugated hall, tables where tabs are settled. The crew's first Gateway night (S3) went bad here: shooting started in the shadows between containers.",
+      "site": null,
+      "siteLevel": null,
+      "exposure": [],
       "created": "2026-08-22T22:00:00.000Z",
       "updated": "2026-10-17T23:00:00.000Z"
     },
@@ -804,6 +819,9 @@
       "neighborhood": "Freight Row",
       "environment": null,
       "notes": "A mirrored cube where the routing AI lives. Night shift is six people and forty drones. Wren worked the fourth floor; his desk is still there with his coffee cup. The crew went in on S5 for the logs.",
+      "site": null,
+      "siteLevel": null,
+      "exposure": [],
       "created": "2026-09-26T22:00:00.000Z",
       "updated": "2026-10-17T23:00:00.000Z"
     },
@@ -821,6 +839,9 @@
       "neighborhood": "Wharves 14 to 19",
       "environment": "genius-loci",
       "notes": "Derelict wharves nobody will touch. A radio does not work here; a voice does, too well. Wren's body (S5) was against a bollard at Wharf 17. The Listener's place. S6's confrontation ran the length of Wharf 17 to a collapsed warehouse the crew has not entered.",
+      "site": null,
+      "siteLevel": null,
+      "exposure": [],
       "created": "2026-09-12T22:00:00.000Z",
       "updated": "2026-10-17T23:00:00.000Z"
     }
