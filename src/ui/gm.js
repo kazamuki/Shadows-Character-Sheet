@@ -1238,8 +1238,8 @@ function exposureRowHtml(r, i){
     <span class="clock-btns"><button type="button" class="btn sm clock-step" data-eminus="${i}" aria-label="Take one off ${esc(nm)}"${r.n<=0 ? " disabled" : ""}>−</button>
       <span class="clock-count" data-ecount="${i}" role="status">${r.n}</span>
       <button type="button" class="btn sm clock-step" data-eplus="${i}" aria-label="Add one to ${esc(nm)}"${r.n>=99 ? " disabled" : ""}>+</button></span>
-    <span class="exposure-step" data-estep="${i}">${r.step ? esc(r.step.text) : ""}</span>
-    <button type="button" class="btn sm" data-edel="${i}" aria-label="Remove ${esc(nm)}">Remove</button></li>`;
+    <button type="button" class="btn sm" data-edel="${i}" aria-label="Remove ${esc(nm)}">Remove</button>
+    <span class="exposure-step" data-estep="${i}">${r.step ? esc(r.step.text) : ""}</span></li>`;
 }
 function exposureRowsHtml(info){ return info.exposure.map(exposureRowHtml).join(""); }
 function siteTrackHtml(p, site, info){

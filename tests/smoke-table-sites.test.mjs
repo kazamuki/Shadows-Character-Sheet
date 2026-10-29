@@ -72,6 +72,14 @@ test("251: a place's Site profile lists the slotted sites, and picking one draws
   assert.equal(app.$("[data-clockname]").textContent, "Drift");
   assert.equal(app.$(".clock-count").textContent, "0 of 4");
   assert.equal(app.$$("[data-psite] option").find(o => o.selected).textContent, "The Long Stretch");
+  // The place's clock is the shared clock code's: + moves it, and so does editing it.
+  app.click("[data-clkplus]");
+  assert.equal(app.$(".clock-count").textContent, "1 of 4", "the place's clock moved");
+  assert.equal(app.window.eval("S.table.clocks[0].filled"), 1);
+  app.click("[data-clkedit]");
+  both(app, '[data-kf="name"]', "Slip");
+  assert.equal(app.$("[data-clockname]").textContent, "Slip", "and it takes an edit");
+  app.click("[data-clkdone]");
   assert.deepEqual(app.errors, []);
 });
 

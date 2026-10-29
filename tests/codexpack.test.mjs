@@ -632,7 +632,7 @@ const siteBook = () => file(join(ROOT, SITES_SRC)).replace(/\r/g, "");
 const siteByName = (p, name) => p.sites.find(s => s.name === name);
 
 test("250: the builder reads every Site Profile in the mirror, three a category", () => {
-  const p = JSON.parse(real().committed), book = siteBook();
+  const p = real().r.pack, book = siteBook();
   const heads = book.split("\n").filter(l => /^\*\*SITE\s+\S+\*\*\s*$/.test(l));
   assert.ok(heads.length > 0); assert.equal(p.sites.length, heads.length);
   const byCategory = {};
@@ -644,7 +644,7 @@ test("250: the builder reads every Site Profile in the mirror, three a category"
 });
 
 test("250: a site's track keeps the book's shape", () => {
-  const p = JSON.parse(real().committed);
+  const p = real().r.pack;
   const og = siteByName(p, "The Old Growth").track;
   assert.equal(og.kind, "levels"); assert.equal(og.name, "Disposition"); assert.equal(og.start, "tolerant");
   assert.deepEqual(og.levels.map(l => l.id), ["welcome", "tolerant", "wary", "hostile"]);
@@ -660,7 +660,7 @@ test("250: a site's track keeps the book's shape", () => {
 });
 
 test("250: a site's clock is split into its name, segments, what advances it and when it fills", () => {
-  const p = JSON.parse(real().committed);
+  const p = real().r.pack;
   const drift = siteByName(p, "The Long Stretch").clock;
   assert.equal(drift.name, "Drift"); assert.equal(drift.segments, 4); assert.match(drift.advances, /^Advance one segment/); assert.match(drift.whenFull, /^When it fills/);
   assert.ok(!/When it fills/.test(drift.advances), "the advance line stops where the fill line starts");
