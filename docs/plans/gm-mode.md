@@ -892,7 +892,9 @@ are exactly what a service would carry: a seat subscribes to a character's
 latest snapshot, a dispatch is posted instead of saved. W29's API sketch
 still fits. The questions it needs (who hosts and pays, how long data is
 kept, consent) are Ken's, and only worth asking once a table has been run
-from files and somebody wants it live (GQ2).
+from files and somebody wants it live (GQ2). **Ken asked them on
+2026-10-28:** the plan is [`accounts-and-sync.md`](accounts-and-sync.md)
+(W138, sessions N1–N6), built after this one is done.
 
 ## 9. Questions
 
