@@ -3134,8 +3134,8 @@ function encOpeningHtml(v){
   return `<div class="enc-opening" data-eopening>
     <div class="tag-choice"><span>Opening</span><div class="form-toggle" role="group" aria-label="Opening">${kinds.map(([k, name])=>
       `<button type="button" data-eopen-kind="${k}" class="${k===cur ? "on" : ""}" aria-pressed="${k===cur}">${name}</button>`).join("")}</div>
-      <span class="enc-tips"><button type="button" class="tag" data-tip="surprise" data-term="surprise" aria-label="Surprise ?">Surprise ?</button>
-      <button type="button" class="tag" data-tip="ambush" data-term="ambush" aria-label="Ambush ?">Ambush ?</button></span></div>
+      <span class="enc-tips"><button type="button" class="tag" data-tip="surprise" data-term="surprise" aria-label="What Surprise means">Surprise ?</button>
+      <button type="button" class="tag" data-tip="ambush" data-term="ambush" aria-label="What Ambush means">Ambush ?</button></span></div>
     ${v.opening ? `<div class="tag-choice"><span>By</span><div class="form-toggle" role="group" aria-label="By">${v.sides.map(s=>
       `<button type="button" data-eopen-side="${esc(s.id)}" class="${s.id===v.opening.side ? "on" : ""}" aria-pressed="${s.id===v.opening.side}">${esc(s.title)}</button>`).join("")}</div></div>` : ""}</div>`;
 }
