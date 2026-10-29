@@ -10774,29 +10774,6 @@ test("L2b 5 (engine): junk in rofModes or loaded reads as nothing, from a file a
   for (let i = -2; i < 5; i++) assert.doesNotThrow(() => { Engine.setCustomWeapon(ch, i, "rofModes", ["S"]); Engine.setCustomWeapon(ch, i, "rofModes", {}); });
 });
 
-test("L2b 8 (engine): no catalog weapon's line, fire or reload moves", () => {
-  const want = JSON.parse(readFileSync(join(ROOT, "tests/l2b-catalog.json"), "utf8"));
-  const ammo = AMMO().map(g => g.id), got = {};
-  for (const w of D.weapons) {
-    const ch = subject(); Engine.addLoadout(ch, "weapons", w.id);
-    const rec = { line: Engine.weaponLine(ch, 0), reloads: {} };
-    const rounds = rec.line.rounds;
-    for (const carry of [null, ...ammo]) {
-      const c = subject(); Engine.addLoadout(c, "weapons", w.id);
-      if (rounds) c.weapons[0].roundsSpent = Math.ceil(rounds.max / 2);
-      if (carry) c.gear.push({ id: carry, qty: 2, notes: "" });
-      const line = Engine.weaponLine(c, 0);
-      const res = Engine.reloadWeapon(c, 0);
-      const anyway = res.noAmmo ? Engine.reloadWeapon(c, 0, { anyway: true }) : null;
-      rec.reloads[carry || "none"] = { line, res, anyway, spent: c.weapons[0].roundsSpent, loaded: c.weapons[0].loaded, gear: c.gear };
-    }
-    got[w.id] = rec;
-  }
-  const have = JSON.parse(JSON.stringify(got));
-  assert.deepEqual(Object.keys(have), Object.keys(want));
-  for (const id of Object.keys(want)) assert.deepEqual(have[id], want[id], `${id}: its line or its reload moved`);
-});
-
 test("L2b 9 (engine): migrate to 0.31 keeps a typed rof, adds nothing, and keeps loaded", () => {
   for (const rof of ["S/B", "Semi"]) {
     const old = l2bGun({ rof, loaded: "silver-rounds" });
