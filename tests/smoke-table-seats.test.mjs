@@ -146,8 +146,10 @@ test("255: Benched folds a card below its player, and the disclosure keeps its m
   app.click("[data-seatback]");
   assert.equal(cards(app).length, 2, "the list shows both cards");
   const summary = app.$("[data-seatshut] summary");
+  assert.equal(app.window.document.activeElement, summary, "Back from a folded seat lands on its list's summary");
   assert.match(summary.textContent, /^Benched, retired and dead \(1\)$/);
   assert.equal(app.window.getComputedStyle(summary).display, "list-item", "the disclosure keeps its marker");
+  for (const s of [summary, app.$("[data-pymore] summary")]) assert.equal(app.window.getComputedStyle(s).minHeight, "44px", "a disclosure is a 44px target");
   assert.equal(app.$("ul.roster-list > [data-seatcard]").getAttribute("data-seatcard"), DEZ_TAG, "the active card is outside the fold");
   assert.ok(app.$(`[data-seatshut] [data-seatcard="${WREN_TAG}"]`), "the benched card is inside it");
   assert.match(app.$(`[data-seatcard="${WREN_TAG}"]`).textContent, /Benched/);

@@ -1553,6 +1553,7 @@ h2.city-name{font-size:1.15rem}
 .seat-status{margin-left:6px}
 .seat-shut{margin:6px 0}
 .seat-shut summary{cursor:pointer; color:var(--dim)}
+.seat-shut > summary, .player > .thread-more > summary{min-height:44px; padding:10px 0; box-sizing:border-box}
 .seat-names .fac-tip{display:flex; flex-wrap:wrap; gap:6px 10px; align-items:center}
 .seat-names .fac-tip input{flex:1 1 12rem; min-width:0}
 .seat-block{cursor:default}

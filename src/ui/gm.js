@@ -3625,7 +3625,9 @@ function bindSeatPage(main, v0){
     main.querySelector("[data-seatclash]").innerHTML=seatClashHtml(v); };
   main.querySelector("[data-seatback]").onclick=()=>{
     S.seatOpen=null; window.scrollTo(0,0); update();
-    const el=$("main").querySelector(attrSel("data-seat", tag)); if (el) takeFocus(el);
+    // A folded card can't take focus: its list's summary does.
+    const el=$("main").querySelector(attrSel("data-seat", tag)), shut=el && el.closest("details:not([open])");
+    if (shut) takeFocus(shut.querySelector("summary")); else if (el) takeFocus(el);
   };
   main.querySelectorAll("[data-seatst]").forEach(b=>b.onclick=()=>{
     edit({ status:b.dataset.seatst });
