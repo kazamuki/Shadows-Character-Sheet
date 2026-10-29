@@ -1522,3 +1522,27 @@ h2.city-name{font-size:1.15rem}
 
 /* A Discipline's description on Loadout & Powers (W60: no inline style). */
 .disc-desc{font-size:.78rem; color:var(--dim)}
+
+/* An encounter's plan, opening and delay (Decisions 252–253). Typed text wraps; every control is a 44px tap. */
+.enc-opening{margin:0 0 12px; min-width:0}
+.enc-opening .tag-choice{display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px}
+.enc-opening .tag-choice > span{margin:0}
+.enc-opening .form-toggle{width:auto; flex-wrap:wrap}
+.enc-opening button{min-height:44px}
+.enc-opening [data-tip]{min-width:44px}
+.enc-open-tag, .enc-wait{overflow-wrap:anywhere; max-width:100%}
+.enc-wait{margin:6px 0 0; font-family:var(--mono); font-size:.85rem}
+.enc-acts [data-edelay-open], .enc-acts [data-eacnow]{min-height:44px}
+.enc-plan{margin:18px 0 10px; min-width:0}
+.enc-plan > summary{cursor:pointer; min-height:44px; display:flex; align-items:center}
+.enc-plan > summary h2{display:inline; margin:0}
+.enc-plan textarea, .enc-plan input[type=text]{width:100%; min-width:0; overflow-wrap:anywhere}
+.enc-adv{background:var(--panel); border:1px solid var(--frame); border-radius:6px; padding:10px 14px 12px; margin:0 0 10px; min-width:0}
+.enc-adv button{min-height:44px}
+.enc-objs{flex-wrap:wrap; width:auto; margin:0 0 12px}
+.enc-objs button{min-height:44px; text-align:left; overflow-wrap:anywhere; flex:1 1 auto}
+.enc-prompts{margin:4px 0 12px; padding-left:22px; overflow-wrap:anywhere}
+.enc-plan-field{margin:0 0 8px; overflow-wrap:anywhere; white-space:pre-wrap}
+.enc-plan [data-eplan], .enc-plan [data-eadv]{max-width:100%}
+.enc-plan .btn, .enc-plan input[type=text]{min-height:44px}
+.enc-tips{display:inline-flex; gap:4px}

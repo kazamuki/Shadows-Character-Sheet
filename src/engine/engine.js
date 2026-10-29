@@ -5958,12 +5958,13 @@ const Engine = (() => {
     f.created = _isoOrNull(f.created);
     f.updated = _isoOrNull(f.updated);
   }
-  // Who owns a clock (Decisions 245, 251): a faction or a place, by its id. An owner of a kind this version doesn't
+  // Who owns a clock (Decisions 245, 251, N): a faction, a place or an encounter, by its id. An owner of a kind this version doesn't
   // know is kept as it is and shown nowhere, so a newer app's file loses none; anything else is no owner.
   function _clockOwner(on){
     if (!_isObj(on) || typeof on.kind!=="string" || typeof on.id!=="string") return null;
     if (on.kind==="faction") return FACTION_ID_RE.test(on.id) ? { kind:"faction", id:on.id } : null;
     if (on.kind==="place") return PLACE_ID_RE.test(on.id) ? { kind:"place", id:on.id } : null;
+    if (on.kind==="encounter") return ENCOUNTER_ID_RE.test(on.id) ? { kind:"encounter", id:on.id } : null;
     return /^[a-z]+$/.test(on.kind) && on.id.length<=40 ? on : null;
   }
   function _clock(c, used){
@@ -6056,7 +6057,7 @@ const Engine = (() => {
     x.updated = _isoOrNull(x.updated);
   }
   // The table file's shape. A bump needs a migrateTable() step in the same change.
-  const TABLE_SCHEMA_VERSION = "0.16";
+  const TABLE_SCHEMA_VERSION = "0.17";
   function newTable(name){
     const now = new Date().toISOString();
     return { meta:{ kind:"shadows-table", id:newTableId(), name:String(name ?? ""),
@@ -6163,6 +6164,14 @@ const Engine = (() => {
         if (!("siteLevel" in p)) p.siteLevel = null;
         if (!("exposure" in p)) p.exposure = [];
       }
+    //   Schema 0.17 (Decisions N, N+1): an encounter keeps the worksheet's plan and an opening, and a row its delay.
+    //   Nothing is converted, and no opening is guessed from a row's Stealth (203).
+    if (typeof arrived!=="string" || _versionNewer("0.17", arrived))
+      for (const e of (Array.isArray(c.encounters) ? c.encounters : [])) if (_isObj(e)){
+        if (!("design" in e)) e.design = {};
+        if (!("opening" in e)) e.opening = null;
+        for (const r of (Array.isArray(e.rows) ? e.rows : [])) if (_isObj(r) && !("delay" in r)) r.delay = null;
+      }
     if (!_versionNewer(m.tableSchemaVersion, TABLE_SCHEMA_VERSION)) m.tableSchemaVersion = TABLE_SCHEMA_VERSION;
     const usedCast = new Set();
     c.cast = (Array.isArray(c.cast) ? c.cast : []).filter(_isObj);
@@ -6262,7 +6271,7 @@ const Engine = (() => {
   // from what happened to each, the name from the record. Changes inside an
   // encounter's rows, sides or Conditions belong to the encounter.
   // The collections whose records own clocks, and the kind a clock's `on` names them by.
-  const CLOCK_OWNER_RECORDS = { factions:"faction", places:"place" };
+  const CLOCK_OWNER_RECORDS = { factions:"faction", places:"place", encounters:"encounter" };
   function _clockOwnerChanged(before, after, c){
     const coll = _isObj(c.on) ? Object.keys(CLOCK_OWNER_RECORDS).find(k=>CLOCK_OWNER_RECORDS[k]===c.on.kind) : null;
     if (!coll) return false;
@@ -7033,8 +7042,11 @@ const Engine = (() => {
   function addClock(t, f){
     f = _isObj(f) ? f : {};
     if (!_isObj(t)) return { ok:false, why:"That isn't a table." };
-    const kind = _isObj(f.on) && f.on.kind==="place" ? "place" : "faction", on = _isObj(f.on) ? f.on.id : null;
-    if (!(kind==="place" ? _placeRecords(t) : _factionRecords(t)).some(x=>x.id===on)) return { ok:false, why:kind==="place" ? "No such place." : "No such faction." };
+    const kind = _isObj(f.on) && (f.on.kind==="place" || f.on.kind==="encounter") ? f.on.kind : "faction", on = _isObj(f.on) ? f.on.id : null;
+    const owners = kind==="place" ? _placeRecords(t) : kind==="encounter" ? _encList(t) : _factionRecords(t);
+    const owner = owners.find(x=>x.id===on);
+    if (!owner) return { ok:false, why:kind==="place" ? "No such place." : kind==="encounter" ? "No such encounter." : "No such faction." };
+    if (kind==="encounter" && owner.status==="ended") return { ok:false, why:`${encounterTitle(owner)} has ended.` };
     if (!Array.isArray(t.clocks)) t.clocks = [];
     const now = new Date().toISOString(), segments = _clockSegments(f.segments);
     const c = { id:newClockId(new Set(t.clocks.map(x=>x && x.id))), name:_str(f.name), segments, filled:_clockFilled(f.filled, segments),
@@ -7043,9 +7055,16 @@ const Engine = (() => {
     _tableStamp(t);
     return { ok:true, id:c.id };
   }
+  // An ended encounter's clocks are as read-only as the rest of it (N).
+  function _clockEnded(t, c){
+    const e = _isObj(c.on) && c.on.kind==="encounter" ? _enc(t, c.on.id) : null;
+    return e && e.status==="ended" ? `${encounterTitle(e)} has ended.` : null;
+  }
   function editClock(t, id, f){
     const c = _clockRecords(t).find(x=>x.id===id);
     if (!c) return { ok:false, why:"No such clock." };
+    const ended = _clockEnded(t, c);
+    if (ended) return { ok:false, why:ended };
     if (_isObj(f)){
       for (const k of ["name", "advances", "whenFull"]) if (k in f) c[k] = _str(f[k]);
       if ("segments" in f) c.segments = _clockSegments(f.segments);
@@ -7058,6 +7077,8 @@ const Engine = (() => {
   function removeClock(t, id){
     const i = _isObj(t) && Array.isArray(t.clocks) ? t.clocks.findIndex(c=>_isObj(c) && c.id===id) : -1;
     if (i < 0) return { ok:false, why:"No such clock." };
+    const ended = _clockEnded(t, t.clocks[i]);
+    if (ended) return { ok:false, why:ended };
     t.clocks.splice(i, 1);
     _tableStamp(t);
     return { ok:true };
@@ -7274,6 +7295,11 @@ const Engine = (() => {
         f.push(["Condition", _str(c.note)]); f.push(["Condition", _str(c.source)]);
       }
     }
+    // The plan (N): each worksheet field that has something in it, by the short name the page uses.
+    const d = _designRead(e.design);
+    for (const [k, label] of DESIGN_LABELS) f.push([label, d[k]]);
+    for (const a of d.adversaries) for (const [k, label] of ADVERSARY_LABELS) f.push([label, a[k]]);
+    for (const o of ENCOUNTER_OBJECTIVES) if (d.beyond.includes(o.id)) f.push(["Objective", o.name]);
     return f;
   }
   const _byMade = list => list.map((x, i)=>({ x, i })).sort((a, b)=>-_made(a.x, b.x) || a.i - b.i).map(e=>e.x);
@@ -7304,7 +7330,8 @@ const Engine = (() => {
       for (const p of placeList(t)) test("place", p.id, placeTitle(t, p), _placeFields(t, p));
       for (const f of factionList(t)) test("faction", f.id, factionTitle(t, f), _factionFields(t, f));
       for (const c of _clockRecords(t)){
-        const owner = !_isObj(c.on) ? null : c.on.kind==="faction" ? _factionRecords(t).find(f=>f.id===c.on.id) : c.on.kind==="place" ? _placeRecords(t).find(p=>p.id===c.on.id) : null;
+        const owner = !_isObj(c.on) ? null : c.on.kind==="faction" ? _factionRecords(t).find(f=>f.id===c.on.id) : c.on.kind==="place" ? _placeRecords(t).find(p=>p.id===c.on.id)
+          : c.on.kind==="encounter" ? _encList(t).find(e=>e.id===c.on.id) : null;
         if (!owner) continue;
         test("clock", c.id, _str(c.name).trim() || "A clock", [["Clock", _str(c.name)], ["Advances", _str(c.advances)], ["When full", _str(c.whenFull)]]);
         if (hits.length && hits[hits.length-1].kind==="clock" && hits[hits.length-1].id===c.id) { hits[hits.length-1].owner = owner.id; hits[hits.length-1].ownerKind = c.on.kind; }
@@ -7904,6 +7931,43 @@ const Engine = (() => {
     if (i===0) return "The crew";
     return _str(sides[i].name).trim() || (i===1 ? "The other side" : `Side ${i + 1}`);
   }
+  // The plan (Decision N): the Encounter Design worksheet (2642) as typed text. Its printed lists are the book's words,
+  // drawn beside their notes and never stored. The names are the book's; the test reads them from the mirror.
+  const ENCOUNTER_OBJECTIVES = [
+    { id:"intercept", name:"Intercept / secure an item" },
+    { id:"force", name:"Force retreat / surrender / negotiation" },
+    { id:"stall", name:"Delay / stall enemy" },
+    { id:"intel", name:"Gather intel / leverage / resources" },
+    { id:"protect", name:"Protect person / asset" },
+    { id:"escape", name:"Create distraction / escape" } ];
+  const ENCOUNTER_PROMPTS = {
+    exits:["Alarm / disruption forces retreat", "NPC retreats or distracts", "Environmental collapse opens path", "Reinforcements shift stakes"],
+    questions:["What does each NPC / obstacle want this round?", "How does the environment react to PC choices?", "Is there tension, risk, consequence every round?"],
+    stalls:["Reinforcements arrive", "Environmental hazard escalates", "NPC shifts goal or offers deal", "Clock tightens", "Hidden clue or opportunity surfaces"] };
+  const DESIGN_LABELS = [["hook","Hook"], ["stakes","Stakes"], ["objectives","Player objectives"], ["terrain","Terrain"], ["hazards","Hazards"], ["city","NYTE City"],
+    ["beyondNotes","Objectives notes"], ["escalations","Escalations"], ["failure","Failure"], ["success","Success"], ["escapes","Escape options"],
+    ["failsafe","Fail-safe"], ["threads","Threads"], ["milestones","Milestones"], ["pivot","Quick pivot"], ["stalls","Momentum notes"]];
+  const ADVERSARY_LABELS = [["who","Adversary"], ["goals","Goals"], ["tactics","Tactics"], ["leverage","Leverage"]];
+  const DESIGN_TEXT = DESIGN_LABELS.map(x=>x[0]);
+  // A plan read: fresh, known keys only. Total.
+  function _designRead(d){
+    d = _isObj(d) ? d : {};
+    const o = {};
+    for (const k of DESIGN_TEXT) o[k] = _str(d[k]);
+    o.adversaries = (Array.isArray(d.adversaries) ? d.adversaries : []).filter(_isObj).map(a=>({ who:_str(a.who), goals:_str(a.goals), tactics:_str(a.tactics), leverage:_str(a.leverage) }));
+    o.beyond = ENCOUNTER_OBJECTIVES.map(x=>x.id).filter(id=>Array.isArray(d.beyond) && d.beyond.includes(id));
+    return o;
+  }
+  // The gate: the plan coerced in place, so an unknown key rides along at both levels. A row with all four blank is kept (it's being typed).
+  function _design(d){
+    d = _isObj(d) ? d : {};
+    const o = _designRead(d);
+    for (const k of DESIGN_TEXT) d[k] = o[k];
+    d.beyond = o.beyond;
+    d.adversaries = (Array.isArray(d.adversaries) ? d.adversaries : []).filter(_isObj);
+    for (const a of d.adversaries) for (const [k] of ADVERSARY_LABELS) a[k] = _str(a[k]);
+    return d;
+  }
   // A row's Conditions, coerced: the character's entry shape plus a source and rounds.
   // One entry per conditionKey, the first kept.
   function _rowConditions(list){
@@ -7982,6 +8046,11 @@ const Engine = (() => {
       e.by = e.by==="wave" ? "wave" : "person";
       e.sides = _coerceSides(e.sides, ()=>_firstOtherId(e));
       for (const r of e.rows) r.side = _rowSide(e, e.sides, r);
+      // Schema 0.17 (Decisions N, N+1): the plan, and an opening by one of the sides.
+      e.design = _design(e.design);
+      const op = e.opening;
+      e.opening = _isObj(op) && (op.kind==="surprise" || op.kind==="ambush") && typeof op.side==="string" && e.sides.some(s=>s.id===op.side)
+        ? { kind:op.kind, side:op.side } : null;
       // A member is in an encounter once: a second row for one becomes a PC row with its name.
       const inIt = new Set();
       for (const r of e.rows) if (r.kind==="cast" && r.cast){
@@ -8003,6 +8072,7 @@ const Engine = (() => {
       const live = e.status==="running";
       e.turn = live && typeof e.turn==="string" && e.rows.some(r=>r.id===e.turn) ? e.turn : null;
       // Who has acted this round: only while running, existing rows, each once.
+      for (const r of e.rows) r.delay = live && _isObj(r.delay) ? { until:_str(r.delay.until) } : null;
       e.acted = live ? [...new Set((Array.isArray(e.acted) ? e.acted : []).filter(id=>typeof id==="string" && e.rows.some(r=>r.id===id)))] : [];
       if (live && e.round < 1) e.round = 1;
     }
@@ -8036,6 +8106,7 @@ const Engine = (() => {
     const now = new Date().toISOString();
     const used = new Set(t.encounters.map(e=>e && e.id));
     const e = { id:newEncounterId(used), name:_str((f||{}).name).trim(), status:"planned", round:0, turn:null, acted:[], rows:[], created:now, updated:now };
+    e.design = _design({}); e.opening = null;
     e.by = "person"; e.sides = [{ id:"crew", name:"" }, { id:_firstOtherId(e), name:"" }];
     t.encounters.unshift(e);
     _tableStamp(t);
@@ -8046,7 +8117,10 @@ const Engine = (() => {
     if (l.why) return { ok:false, why:l.why };
     // A refused press writes nothing, the stamp included.
     if (_isObj(f) && "by" in f && f.by!=="person" && f.by!=="wave") return { ok:false, why:"Choose one at a time or Wave Initiative." };
+    if (_isObj(f) && "design" in f && !_isObj(f.design)) return { ok:false, why:"That isn't a plan." };
     if (_isObj(f) && "name" in f) l.e.name = _str(f.name);
+    // The plan is written whole and typed by the gate (N).
+    if (_isObj(f) && "design" in f) l.e.design = _design(Object.assign({}, f.design));
     // The turn, who has acted and the round are never touched: the turn follows who has acted (189, 210).
     if (_isObj(f) && "by" in f) l.e.by = f.by;
     _tableStamp(t, l.e);
@@ -8086,6 +8160,7 @@ const Engine = (() => {
     let moved = 0;
     for (const r of _rowList(l.e)) if (_rowSide(l.e, sides, r)===sideId){ r.side = to; moved++; }
     l.e.sides = left;
+    if (_isObj(l.e.opening) && l.e.opening.side===sideId) l.e.opening = null;
     _tableStamp(t, l.e);
     return { ok:true, moved };
   }
@@ -8097,6 +8172,8 @@ const Engine = (() => {
     const name = encounterTitle(t.encounters[i]);
     for (const x of _interactions(t)) if (_isObj(x.encounter) && x.encounter.id===id) x.encounter.name = name;
     t.encounters.splice(i, 1);
+    // Its clocks go with it (N); one undo restores both.
+    if (Array.isArray(t.clocks)) t.clocks = t.clocks.filter(c=>!(_isObj(c) && _isObj(c.on) && c.on.kind==="encounter" && c.on.id===id));
     _tableStamp(t);
     return { ok:true };
   }
@@ -8143,7 +8220,7 @@ const Engine = (() => {
     if (l.why) return { ok:false, why:l.why };
     f = _isObj(f) ? f : {};
     const used = new Set(_rowList(l.e).map(r=>r.id)), row = { id:newRowId(used), kind:"pc", name:"", cast:null, from:null, block:null, kept:null, struck:false,
-      order:null, last:false, out:false, damage:0, massive:0, armorLoss:0, scrapped:false, armorId:null, hp:null, levels:null, awareness:null, conditions:[], side:"crew" };
+      order:null, last:false, out:false, damage:0, massive:0, armorLoss:0, scrapped:false, armorId:null, hp:null, levels:null, awareness:null, conditions:[], side:"crew", delay:null };
     if (f.kind==="cast"){
       const m = (Array.isArray(t.cast) ? t.cast : []).find(n=>_isObj(n) && n.id===f.id);
       if (!m) return { ok:false, why:"No such cast member." };
@@ -8175,7 +8252,7 @@ const Engine = (() => {
     const used = new Set(_rowList(e).map(r=>r.id)), base = _str(entry.name).trim() || "Unnamed";
     return { id:newRowId(used), kind:"entry", name:_numbered(e, base), cast:null,
              from:{ kind:"entry", pack:pack.meta.id, id:entry.id, name:_str(entry.name) }, block:_block(block), kept:null, struck:false,
-             order:null, last:false, out:false, damage:0, massive:0, armorLoss:0, scrapped:false, armorId:null, hp:null, levels:null, awareness:null, conditions:[], side:_otherSide(e) };
+             order:null, last:false, out:false, damage:0, massive:0, armorLoss:0, scrapped:false, armorId:null, hp:null, levels:null, awareness:null, conditions:[], side:_otherSide(e), delay:null };
   }
   function participantFromEntry(t, encId, pack, entryId){
     const l = _live(t, encId);
@@ -8272,8 +8349,13 @@ const Engine = (() => {
   // The turn follows who has acted, not a place in the sort, so a result changed mid-round
   // can neither skip a row nor let one act twice (Decision 189).
   const _actedIds = e => Array.isArray(e.acted) ? e.acted : [];
+  // Round 1 under an Ambush (N+1): the defenders have no turn. The rule lives here, so Start, Next, a removal and
+  // Reset all follow it. A planned encounter (round 0) is the round it will start in.
+  function _ambushed(e, r){
+    return _isObj(e.opening) && e.opening.kind==="ambush" && (_int(e.round) || 0) <= 1 && _rowSide(e, _sideList(e), r)!==e.opening.side;
+  }
   function _pick(e){
-    return _encOrder(e).rows.find(r=>!r.out && !_actedIds(e).includes(r.id)) || null;
+    return _encOrder(e).rows.find(r=>!r.out && !_actedIds(e).includes(r.id) && !_ambushed(e, r)) || null;
   }
   function removeParticipant(t, encId, rowId){
     const l = _liveRow(t, encId, rowId);
@@ -8338,6 +8420,7 @@ const Engine = (() => {
     const other = runningEncounter(t);
     if (other) return { ok:false, why:`${encounterTitle(other)} is still running. End it first.` };
     const first = _pick(Object.assign({}, e, { acted:[] }));
+    if (!first && e.opening && _pick(Object.assign({}, e, { acted:[], opening:null }))) return { ok:false, why:`${sideTitle(e, e.opening.side)} has nobody who can act.` };
     if (!first) return { ok:false, why:"Add someone to the encounter first." };
     e.status = "running"; e.round = 1; e.turn = first.id; e.acted = [];
     _tableStamp(t, e);
@@ -8361,6 +8444,56 @@ const Engine = (() => {
     if (l.e.status!=="running") return { ok:false, why:`${encounterTitle(l.e)} isn't running.` };
     if (l.e.turn===null) return { ok:false, why:"Finish the round first." };
     if (l.r.out) return { ok:false, why:`${l.r.name.trim() || "They"} are out of it.` };
+    if (_ambushed(l.e, l.r)) return { ok:false, why:`${l.r.name.trim() || "They"} ${l.r.name.trim() ? "is" : "are"} ambushed this round.` };
+    l.e.turn = l.r.id;
+    _tableStamp(t, l.e);
+    return { ok:true };
+  }
+
+  // The opening (Decision N+1): none, or a Surprise or an Ambush by one of the sides. Set while planned, or in round 1
+  // before anyone has acted; fixed after. Nothing is rolled: the table rolls the Opposed Check (0530).
+  function setOpening(t, encId, f){
+    const l = _live(t, encId);
+    if (l.why) return { ok:false, why:l.why };
+    const e = l.e;
+    if (e.status==="running" && (_int(e.round) || 0) > 1 || _actedIds(e).length) return { ok:false, why:"The fight has already opened." };
+    let next = null;
+    if (f!==null && f!==undefined){
+      if (!_isObj(f) || (f.kind!=="surprise" && f.kind!=="ambush")) return { ok:false, why:"Choose Surprise or Ambush." };
+      if (typeof f.side!=="string" || !_sideList(e).some(s=>s.id===f.side)) return { ok:false, why:"No such side." };
+      next = { kind:f.kind, side:f.side };
+    }
+    const was = e.opening;
+    e.opening = next;
+    // An Ambush whose attackers can't act would leave nobody to take the turn: write nothing.
+    if (e.status==="running" && next && next.kind==="ambush" && !_pick(Object.assign({}, e, { acted:[] }))){
+      e.opening = was;
+      return { ok:false, why:`${sideTitle(e, next.side)} has nobody who can act.` };
+    }
+    // The turn was on a row the new opening passes: it moves to the next who can act.
+    const turn = e.status==="running" ? _rowList(e).find(r=>r.id===e.turn) : null;
+    if (turn && _ambushed(e, turn)){ const n = _pick(e); e.turn = n ? n.id : null; }
+    _tableStamp(t, e);
+    return { ok:true };
+  }
+  // Delay (N+1): on its own turn a row waits for a typed trigger. It has acted, so Next goes on without it;
+  // Act now gives it the turn back any time that round; Reset lists one that never came.
+  function delayTurn(t, encId, rowId, until){
+    const l = _liveRow(t, encId, rowId);
+    if (l.why) return { ok:false, why:l.why };
+    if (l.e.status!=="running") return { ok:false, why:`${encounterTitle(l.e)} isn't running.` };
+    if (l.e.turn===null) return { ok:false, why:"Finish the round first." };
+    if (l.e.turn!==l.r.id) return { ok:false, why:`It isn't ${l.r.name.trim() || "their"}${l.r.name.trim() ? "'s" : ""} turn.` };
+    l.r.delay = { until:_str(until).trim() };
+    return nextTurn(t, encId);
+  }
+  function actNow(t, encId, rowId){
+    const l = _liveRow(t, encId, rowId);
+    if (l.why) return { ok:false, why:l.why };
+    if (l.e.status!=="running") return { ok:false, why:`${encounterTitle(l.e)} isn't running.` };
+    if (l.e.turn===null) return { ok:false, why:"The round is over." };
+    if (!_isObj(l.r.delay)) return { ok:false, why:`${l.r.name.trim() || "They"} ${l.r.name.trim() ? "isn't" : "aren't"} waiting.` };
+    l.r.delay = null;
     l.e.turn = l.r.id;
     _tableStamp(t, l.e);
     return { ok:true };
@@ -8402,7 +8535,7 @@ const Engine = (() => {
       const dyingMarks = hasDying ? ticks.filter(x=>x.hp > 0).length : 0;
       const dying = hasDying ? _str(W.resetCheck) || null : null;
       const dyingText = dyingMarks ? _str(W.text) : null;
-      rows.push({ rowId:r.id, name:r.name, ticks, expiring, recovery, dying, dyingMarks, dyingText, dyingIndex,
+      rows.push({ rowId:r.id, name:r.name, missed:_isObj(r.delay) ? _str(r.delay.until) : null, ticks, expiring, recovery, dying, dyingMarks, dyingText, dyingIndex,
                   total:ticks.reduce((n, x)=>n + (x.hp||0), 0) });
     }
     if (missing) return { ok:false, why:`Enter this round's ${missing.tick.name} damage for ${missing.rowName.trim() || "them"}. Put 0 if it's out.`, rows };
@@ -8414,7 +8547,7 @@ const Engine = (() => {
     if (!res.ok) return res;
     const e = _enc(t, encId);
     if (e.turn!==null) return { ok:false, why:"The round isn't over yet." };
-    if (!_pick(Object.assign({}, e, { acted:[] }))) return { ok:false, why:"Everyone's out. Bring someone back or end the encounter." };
+    if (!_pick(Object.assign({}, e, { acted:[], round:e.round + 1 }))) return { ok:false, why:"Everyone's out. Bring someone back or end the encounter." };
     const keep = new Set((_isObj(choices) && Array.isArray(choices.keep) ? choices.keep : [])
       .filter(k=>Array.isArray(k) && typeof k[0]==="string").map(k=>`${k[0]}|${k[1]}`));
     for (const out of res.rows){
@@ -8430,6 +8563,7 @@ const Engine = (() => {
     }
     e.round += 1;
     e.acted = [];
+    for (const r of _rowList(e)) r.delay = null;
     const first = _pick(e);
     e.turn = first ? first.id : null;
     _tableStamp(t, e);
@@ -8496,6 +8630,7 @@ const Engine = (() => {
     const e = l.e;
     if (wrap===undefined || wrap===null){
       e.status = "ended"; e.turn = null;
+      for (const r of _rowList(e)) r.delay = null;
       _tableStamp(t, e);
       return { ok:true };
     }
@@ -8514,6 +8649,7 @@ const Engine = (() => {
       plan.push({ u, w, keep, status:takesStatus && hasStatus ? w.status : null });
     }
     e.status = "ended"; e.turn = null;
+    for (const r of _rowList(e)) r.delay = null;
     const out = { ok:true, kept:[], lines:[] };
     const date = _today();
     for (const p of plan){
@@ -8754,12 +8890,14 @@ const Engine = (() => {
       }
       const name = r.kind==="cast" && _isObj(r.cast) ? linkName(t, r.cast).name : r.name;
       const gone = r.kind==="cast" && _isObj(r.cast) ? linkName(t, r.cast).gone : false;
-      return { row:r, name:_str(name).trim() || "Unnamed", gone, health, awareness, ties:ord.tied(r), side:_rowSide(e, _sideList(e), r), active:e.status==="running" && e.turn===r.id,
+      const opening = _isObj(e.opening) && (_int(e.round) || 0) <= 1 && e.status==="running" ? (_rowSide(e, _sideList(e), r)===e.opening.side ? "attacker" : e.opening.kind==="ambush" ? "ambushed" : "surprised") : null;
+      return { row:r, name:_str(name).trim() || "Unnamed", gone, opening, health, awareness, ties:ord.tied(r), side:_rowSide(e, _sideList(e), r), active:e.status==="running" && e.turn===r.id,
                acted:e.status==="running" && _actedIds(e).includes(r.id),
                from:r.kind==="entry" ? entryLink(packs, r.from) : null,
                kept:r.kind==="entry" && r.kept ? linkName(t, r.kept) : null, conditions, armor, traits, canHit:r.kind==="pc" || !!stand };
     });
-    return { encounter:e, title:encounterTitle(e), by:e.by==="wave" ? "wave" : "person", sides:ord.sides, rows, atReset:e.status==="running" && e.turn===null };
+    const opening = _isObj(e.opening) && (e.opening.kind==="surprise" || e.opening.kind==="ambush") ? { kind:e.opening.kind, side:e.opening.side, title:sideTitle(e, e.opening.side) } : null;
+    return { encounter:e, design:_designRead(e.design), opening, title:encounterTitle(e), by:e.by==="wave" ? "wave" : "person", sides:ord.sides, rows, atReset:e.status==="running" && e.turn===null };
   }
 
 
@@ -8823,9 +8961,9 @@ const Engine = (() => {
     FACTION_TYPES, FACTION_TYPE_LABELS, FACTION_ATTENTION, FACTION_STANCES, FACTION_FROM_KINDS, addFaction, editFaction, removeFaction, factionTitle, factionList,
     factionsKeyFor, factionAffiliated, addClock, editClock, removeClock, clocksOn,
     // Encounters: who is in one, whose turn it is, and what is still on them
-    addEncounter, editEncounter, addSide, renameSide, removeSide, sideTitle, removeEncounter, runningEncounter, encounterFor, addToEncounter, encounterTitle, addParticipant, participantFromEntry,
+    ENCOUNTER_OBJECTIVES, ENCOUNTER_PROMPTS, addEncounter, editEncounter, addSide, renameSide, removeSide, sideTitle, removeEncounter, runningEncounter, encounterFor, addToEncounter, encounterTitle, addParticipant, participantFromEntry,
     participantsFromGroup, editParticipant, removeParticipant, participantDamage, participantAddCondition,
-    participantRemoveCondition, participantConditionMarks, startEncounter, nextTurn, setTurn, resolveEncounterReset,
+    participantRemoveCondition, participantConditionMarks, startEncounter, nextTurn, setTurn, setOpening, delayTurn, actNow, resolveEncounterReset,
     applyEncounterReset, endEncounter, encounterWrapUp, encounterView, painFor,
     // The hit: an encounter row takes damage the way a character does
     encounterArmor, resolveEncounterHit, applyEncounterHit };

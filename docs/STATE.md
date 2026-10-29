@@ -1,7 +1,7 @@
 # State of the build
 
-**Updated:** 2026-10-28
-**Versions:** app `0.56.0` · game data `0.50` · character schema `0.31` · table schema `0.16` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
+**Updated:** 2026-10-29
+**Versions:** app `0.56.0` · game data `0.50` · character schema `0.31` · table schema `0.17` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -37,7 +37,7 @@ decision; that's how this section reached 1,500 words (`log/archive.md` §4).
   (240) and play stops at 10 (194).
 - **Magic** (spells, Cascade, Aberrations, holding a spell) and **combat**
   are built end to end, and both plans are closed.
-- **GM mode** is built through S7 and S12b, **switched off** (`FEATURES.gm`, 173): a
+- **GM mode** is built through S7, S10f and S12b, **switched off** (`FEATURES.gm`, 173): a
   table file with its cast, packs and the Codex, encounters, sessions and the
   close-out, the Reference, Find and Jot, and undo. `?gm=on` turns it on in a
   browser. `plans/gm-mode.md` §6 lists what's built and what's left.
@@ -109,7 +109,7 @@ is the authority on a flag's full text.
 | **Vampire** — `0413` | ✅ built (Decisions 200–202, 215, 223, 240): Bloodlines, the Thirst, 22 Majors; Base Powers and CP as the 2026-10-22 book prints | Nobody. Whether it leaves `draft` is Ken's (the chapter dropped "Under Construction") |
 | **Werewolf** — `0414` | ✅ built (Decisions 195–197, 199, 215, 240): Origins, Form, Call of the Wild, its own Majors; Base Powers and CP as the book prints | Nobody. As the Vampire: `draft` is Ken's call |
 | **Arcanist / Magic** | 🔶 spells, Cascade, Aberrations, magic on the sheet, holding a spell (Decision 224) all built · Origins still `draft` | Deighton: **F43** (the held spell's check). Deighton + Scott + Bill + Ken: Origins and spheres/implements, after the four-way comparison; not blocking |
-| **GM mode** — `plans/gm-mode.md` | 🔶 built through S7 and S12b (Site Profiles), **switched off** (173) | Scott and Deighton: the open `GQ`s (§9) and Codex v2 (S12a, S17) |
+| **GM mode** — `plans/gm-mode.md` | 🔶 built through S7, S10f (an encounter's plan, opening, Delay and clocks) and S12b (Site Profiles), **switched off** (173) | Scott and Deighton: the open `GQ`s (§9) and Codex v2 (S12a, S17) |
 | **The book** — `plans/crb-catch-up.md` | 📋 what the CRB still needs from the sheet, by chapter | Ken. The sheet-from-book syncs are closed (`plans/archive/`); the next mirror refresh gets a new one |
 | **Print sheet — visual system** — `plans/print-sheet-scotts-look.md` | 📋 Scott's export landed 2026-09-23 (landscape) · front-page restyle proposed and mocked up · one known cosmetic defect | Ken: approve the plan. Scott: PQ1 (can Cerulean Nights be embedded), PQ2 (his artwork). Deighton: PQ3 (do the stat groups mean anything). The frame/texture print defect blocks on no one |
 

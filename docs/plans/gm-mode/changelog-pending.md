@@ -67,3 +67,6 @@ then some lines will have outgrown themselves.
   there is one.
 - **Undo at the table.** Every change to your table, from a hit to a close-out, can be
   taken back, newest first: right after, or later from **Activity** in the menu.
+- **Encounter plans.** An encounter keeps the book's Encounter Design worksheet and its own
+  clocks, and a fight can open with a Surprise or an Ambush; a character can Delay until
+  something happens.

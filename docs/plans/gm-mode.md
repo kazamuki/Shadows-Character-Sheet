@@ -434,8 +434,11 @@ The record is an **encounter of no type** (188): the book's social, environmenta
 
 The **Encounter Design worksheet** (basics, NPCs, environment and hazards,
 objectives beyond "defeat the enemy", escalation, finding an out, hooks, GM
-prompts, when momentum stalls) is the encounter's prep half. The running
-half:
+prompts, when momentum stalls) is the encounter's prep half. **As built (S10f,
+Decision 252):** it is **The plan** on the encounter's page, the worksheet and
+nothing more (244's rule): typed fields, adversaries as free rows, the six
+objectives as toggles, the book's printed lists drawn and never stored, and no
+Type (188 stands). The running half:
 
 - **Participants:** player characters, cast members, Codex entries ×n (each
   copy its own damage track), and encounter groups unpacked into their parts.
@@ -560,6 +563,7 @@ In the order they merged.
 | S6 | The gazetteer and the crew's places: the City tab, and a line's Where | 242–243 | #236 |
 | S7 | Factions and clocks: the Faction Tracker per faction, and clocks on it | 244–245 | #240 |
 | S12b | Site Profiles: the Codex's profiles in the pack, a crew's place takes one with its track, Exposure and clocks (Rule or shape; pack schema 0.3, table schema 0.16) | 250–251 | #261 |
+| S10f | An encounter's plan (the Encounter Design worksheet), its clocks, a Surprise or Ambush opening, and Delay (Rule or shape; table schema 0.17) | 252–253 | the S10f PR |
 
 ### Still to build
 
@@ -570,7 +574,6 @@ not a queue. What Scott's use of the table turns up can reorder it.
 |---|---|---|---|---|
 | S12a | Supernatural Orders: the seven Orders and their modifiers in the builder | Content | Nothing (GQ17 approved 2026-10-10). **Source:** the Orders table with its Profile and Formation columns is in Scott's `WIP_Threat_Codex_v2` only, not yet in `2610`; the pre-flight asks Scott which to build from | No order yet |
 | S13b | Printing a cast member, an encounter, a session's journal (W84) | Fix + content | Nothing | No order yet |
-| S10f | The rest of S10: the Encounter Design worksheet, Surprise, Ambush, Delay, an encounter's clocks | Rule or shape | Nothing (S7's clocks are built) | **Order approved** ([`gm-mode/S10f-encounter-plan.md`](gm-mode/S10f-encounter-plan.md)), Ken 2026-10-29, every default. **Sources:** the worksheet is `2642` (basics, adversaries, hazards, objectives beyond defeat, escalation, an out, the next scene's hooks); Surprise, Ambush and Delay are `0530` |
 | S17 | The Codex's Shared Rules and card format: a swarm takes at most 1 from a single-target attack; an NPC parries with the weapon's skill plus its Parry; social checks against Difficulty 15, and the Free, Fast and full Action, as a Reference panel; and each entry's Tag line, Role line and Hook on its Threats card | Content + shape | **Scott**: these are in `WIP_Threat_Codex_v2` only. When the entries in `2612` move to v2's format, the pack builder follows first (a Fix in `private/`, the size of Y0's), then this | Waiting on Scott |
 | S3b | Seats: players, import, the card spread, the read-only sheet | Rule or shape | Nothing | No order yet |
 | S2 | The dispatch and the inbox (a player sees one) | Rule or shape | Nothing (S1 built) | No order yet |
@@ -785,11 +788,11 @@ against a synthetic pack, and builds the real Codex pack in `private/`.
 
 ### S10 — The encounter tracker
 
-**Split (Ken, 2026-10-07).** **S10a is built** (`gm-mode/S10a-encounter.md`, Decisions 188–190): the encounter record, rows from the cast, the Codex and typed names, Order of Engagement, the round, Conditions with a source and rounds on every row, Reset's checklist, damage as HP on a row shown with Health Levels and Pain, ending an encounter, and Use's two verbs. **S10b** is next: a hit through the engine's pipeline (armor, Shock, Massive Damage) with an NPC adapter and armor numbers (GQ18), At Zero and Dying for NPCs, traits as reminders with their triggers, Keep and Promote at an encounter's end, a cast member's history line. Later: the Encounter Design worksheet, an encounter's clocks (S7), Surprise, Ambush and Delay. The list below is the whole of S10, as drafted.
+**Split (Ken, 2026-10-07).** **S10a is built** (`gm-mode/S10a-encounter.md`, Decisions 188–190): the encounter record, rows from the cast, the Codex and typed names, Order of Engagement, the round, Conditions with a source and rounds on every row, Reset's checklist, damage as HP on a row shown with Health Levels and Pain, ending an encounter, and Use's two verbs. **S10b** is next: a hit through the engine's pipeline (armor, Shock, Massive Damage) with an NPC adapter and armor numbers (GQ18), At Zero and Dying for NPCs, traits as reminders with their triggers, Keep and Promote at an encounter's end, a cast member's history line. The worksheet, an encounter's clocks, Surprise, Ambush and Delay were built in S10f (Decisions 252–253). The list below is the whole of S10, as drafted.
 
 **S10b is built** (`gm-mode/S10b-hit.md`, Decisions 191–192, table schema 0.6, switched off): a hit on a row through the sheet's own pipeline, an NPC's on a stand-in wearing the Gear catalog's piece with static PROT, a PC's after their armor, Shock, At Zero and Dying's Death Mark offered and none forced, and the active row's traits a tap away. **S10c** is the encounter's end: Keep and Promote, the history line, the end-of-encounter wear roll, and anything Scott's use of S10a and S10b turns up. **Carried over from S10b's review:** the Codex pack builder should strip flag references (the Thrall's armor line reads "— see Entry 24 flag; civilian clothing" on the GM's screen) from armor lines, the way S9c stripped the ⚠ marks.
 
-**S10c is built** (`gm-mode/S10c-encounter-end.md`, Decision 193, table schema 0.7, switched off): End on a running encounter opens a wrap-up. A cast member's fight is written as an interaction of a new kind, *fought* (*killed* when the GM sets them dead), with the crew's names; a Codex copy worth keeping is Kept into the cast; the players are told the wear die. Wounds and NPC wear don't carry (GQ26). S10 is done but for the Encounter Design worksheet, Surprise, Ambush, Delay and an encounter's clocks (S7).
+**S10c is built** (`gm-mode/S10c-encounter-end.md`, Decision 193, table schema 0.7, switched off): End on a running encounter opens a wrap-up. A cast member's fight is written as an interaction of a new kind, *fought* (*killed* when the GM sets them dead), with the crew's names; a Codex copy worth keeping is Kept into the cast; the players are told the wear die. Wounds and NPC wear don't carry (GQ26). S10 is done: the worksheet, an encounter's clocks, Surprise, Ambush and Delay followed in S10f (Decisions 252–253).
 
 - The Encounter Design worksheet; participants (PCs by typed name until
   S3b); Order of Engagement; rounds and Reset; NPC damage through the
@@ -837,6 +840,12 @@ it turns out to need code, that's a finding about S8 and S9's shape.
 Profiles as a `sites` section (a draft, not approved; the pack's `contentVersion` says so), and a crew's place takes one:
 its page draws the profile live from the pack, and the place keeps only the link, a levels track's level, and each
 character's Exposure. The profile's clock is copied onto the place, which owns clocks like a faction. S12a (the Orders) is not built.
+
+**S10f is built** (Decisions 252–253, table schema 0.17, switched off; `plans/gm-mode/S10f-encounter-plan.md`; SQ0–SQ9 on
+their defaults). An encounter carries the Encounter Design worksheet as **The plan**, owns clocks as a faction and a place do, can
+open with a Surprise or an Ambush by one of its sides (Next passes an Ambush's defenders in round 1; the +1, the +3 and Difficulty 10
+are shown on the rows, never applied), and a row on its turn can Delay until a typed trigger. A delay counts as acted; Act now gives
+the turn back; Reset lists a delay never triggered. S10 is done.
 
 ### S13 — The GM screen
 

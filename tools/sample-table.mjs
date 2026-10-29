@@ -538,17 +538,21 @@ thread("fire", { title: "Who burned the laundromat's back window?", status: "dro
 const encounters = [];
 const sideId = (enc, k) => id("SD", enc + ":" + k);
 let encCounter = 0;
+// Schema 0.17 (Decisions N, N+1; SQ9): the stamp and the empty fields only, no plan, opening or delay written in.
+const EMPTY_PLAN = () => ({ hook: "", stakes: "", objectives: "", terrain: "", hazards: "", city: "", beyondNotes: "", escalations: "", failure: "", success: "",
+  escapes: "", failsafe: "", threads: "", milestones: "", pivot: "", stalls: "", adversaries: [], beyond: [] });
 const encounter = (key, f, rows) => {
   const eid = EN(key);
   const e = {
     id: eid, name: "", status: "ended", round: 0, turn: null, acted: [], by: "person",
     sides: [{ id: "crew", name: "" }, { id: sideId(key, "other"), name: "" }],
+    design: EMPTY_PLAN(), opening: null,
     rows: [], created: ts(DAY[1], 21), updated: ts(DAY[1], 23), ...f,
   };
   e.rows = rows.map(({ key: rowKey, ...r }, i) => ({
     id: id("R", `${key}:${rowKey || r.name || i}`), kind: "pc", name: "", cast: null, from: null, block: null, side: "crew",
     order: null, last: false, out: false, damage: 0, massive: 0, armorLoss: 0, scrapped: false, kept: null, struck: false,
-    armorId: null, hp: null, levels: null, awareness: null, conditions: [], ...r,
+    armorId: null, hp: null, levels: null, awareness: null, conditions: [], delay: null, ...r,
   }));
   encounters.push(e);
   return e;
@@ -729,7 +733,7 @@ note("s4recap", "Session 4: what the crew told Oyelaran",
 // ── the table ───────────────────────────────────────────────────────
 const table = {
   meta: {
-    kind: "shadows-table", id: tableId(), name: "Dead Air", tableSchemaVersion: "0.16",
+    kind: "shadows-table", id: tableId(), name: "Dead Air", tableSchemaVersion: "0.17",
     created: ts(DAY[1], 17), updated: ts(DAY[6], 23, 50),
   },
   audit: [],
