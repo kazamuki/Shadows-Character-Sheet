@@ -1534,7 +1534,7 @@ h2.city-name{font-size:1.15rem}
 .enc-wait{margin:6px 0 0; font-family:var(--mono); font-size:.85rem}
 .enc-acts [data-edelay-open], .enc-acts [data-eacnow]{min-height:44px}
 .enc-plan{margin:18px 0 10px; min-width:0}
-.enc-plan > summary{cursor:pointer; min-height:44px; display:flex; align-items:center}
+.enc-plan > summary{cursor:pointer; min-height:44px; padding:8px 0}
 .enc-plan > summary h2{display:inline; margin:0}
 .enc-plan textarea, .enc-plan input[type=text]{width:100%; min-width:0; overflow-wrap:anywhere}
 .enc-adv{background:var(--panel); border:1px solid var(--frame); border-radius:6px; padding:10px 14px 12px; margin:0 0 10px; min-width:0}

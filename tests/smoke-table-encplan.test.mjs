@@ -253,7 +253,7 @@ test("253: Delay on the active row, then Act now, and a missed delay at Reset", 
   assert.deepEqual(app.errors, []);
 });
 
-test("252: the faction's and the place's clocks behave as before", () => {
+test("252: a faction's clocks behave as before (a place's are S12b's smoke tests)", () => {
   const app = boot({ storage: GM_ON });
   runTable(app, "Factions");
   app.click('[data-tsec="city"]');

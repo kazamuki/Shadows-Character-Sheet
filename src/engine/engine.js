@@ -5958,7 +5958,7 @@ const Engine = (() => {
     f.created = _isoOrNull(f.created);
     f.updated = _isoOrNull(f.updated);
   }
-  // Who owns a clock (Decisions 245, 251, N): a faction, a place or an encounter, by its id. An owner of a kind this version doesn't
+  // Who owns a clock (Decisions 245, 251, 252): a faction, a place or an encounter, by its id. An owner of a kind this version doesn't
   // know is kept as it is and shown nowhere, so a newer app's file loses none; anything else is no owner.
   function _clockOwner(on){
     if (!_isObj(on) || typeof on.kind!=="string" || typeof on.id!=="string") return null;
@@ -6164,7 +6164,7 @@ const Engine = (() => {
         if (!("siteLevel" in p)) p.siteLevel = null;
         if (!("exposure" in p)) p.exposure = [];
       }
-    //   Schema 0.17 (Decisions N, N+1): an encounter keeps the worksheet's plan and an opening, and a row its delay.
+    //   Schema 0.17 (Decisions 252, 253): an encounter keeps the worksheet's plan and an opening, and a row its delay.
     //   Nothing is converted, and no opening is guessed from a row's Stealth (203).
     if (typeof arrived!=="string" || _versionNewer("0.17", arrived))
       for (const e of (Array.isArray(c.encounters) ? c.encounters : [])) if (_isObj(e)){
@@ -7055,7 +7055,7 @@ const Engine = (() => {
     _tableStamp(t);
     return { ok:true, id:c.id };
   }
-  // An ended encounter's clocks are as read-only as the rest of it (N).
+  // An ended encounter's clocks are as read-only as the rest of it (252).
   function _clockEnded(t, c){
     const e = _isObj(c.on) && c.on.kind==="encounter" ? _enc(t, c.on.id) : null;
     return e && e.status==="ended" ? `${encounterTitle(e)} has ended.` : null;
@@ -7295,7 +7295,7 @@ const Engine = (() => {
         f.push(["Condition", _str(c.note)]); f.push(["Condition", _str(c.source)]);
       }
     }
-    // The plan (N): each worksheet field that has something in it, by the short name the page uses.
+    // The plan (252): each worksheet field that has something in it, by the short name the page uses.
     const d = _designRead(e.design);
     for (const [k, label] of DESIGN_LABELS) f.push([label, d[k]]);
     for (const a of d.adversaries) for (const [k, label] of ADVERSARY_LABELS) f.push([label, a[k]]);
@@ -7931,7 +7931,7 @@ const Engine = (() => {
     if (i===0) return "The crew";
     return _str(sides[i].name).trim() || (i===1 ? "The other side" : `Side ${i + 1}`);
   }
-  // The plan (Decision N): the Encounter Design worksheet (2642) as typed text. Its printed lists are the book's words,
+  // The plan (Decision 252): the Encounter Design worksheet (2642) as typed text. Its printed lists are the book's words,
   // drawn beside their notes and never stored. The names are the book's; the test reads them from the mirror.
   const ENCOUNTER_OBJECTIVES = [
     { id:"intercept", name:"Intercept / secure an item" },
@@ -8046,7 +8046,7 @@ const Engine = (() => {
       e.by = e.by==="wave" ? "wave" : "person";
       e.sides = _coerceSides(e.sides, ()=>_firstOtherId(e));
       for (const r of e.rows) r.side = _rowSide(e, e.sides, r);
-      // Schema 0.17 (Decisions N, N+1): the plan, and an opening by one of the sides.
+      // Schema 0.17 (Decisions 252, 253): the plan, and an opening by one of the sides.
       e.design = _design(e.design);
       const op = e.opening;
       e.opening = _isObj(op) && (op.kind==="surprise" || op.kind==="ambush") && typeof op.side==="string" && e.sides.some(s=>s.id===op.side)
@@ -8119,7 +8119,7 @@ const Engine = (() => {
     if (_isObj(f) && "by" in f && f.by!=="person" && f.by!=="wave") return { ok:false, why:"Choose one at a time or Wave Initiative." };
     if (_isObj(f) && "design" in f && !_isObj(f.design)) return { ok:false, why:"That isn't a plan." };
     if (_isObj(f) && "name" in f) l.e.name = _str(f.name);
-    // The plan is written whole and typed by the gate (N).
+    // The plan is written whole and typed by the gate (252).
     if (_isObj(f) && "design" in f) l.e.design = _design(Object.assign({}, f.design));
     // The turn, who has acted and the round are never touched: the turn follows who has acted (189, 210).
     if (_isObj(f) && "by" in f) l.e.by = f.by;
@@ -8172,7 +8172,7 @@ const Engine = (() => {
     const name = encounterTitle(t.encounters[i]);
     for (const x of _interactions(t)) if (_isObj(x.encounter) && x.encounter.id===id) x.encounter.name = name;
     t.encounters.splice(i, 1);
-    // Its clocks go with it (N); one undo restores both.
+    // Its clocks go with it (252); one undo restores both.
     if (Array.isArray(t.clocks)) t.clocks = t.clocks.filter(c=>!(_isObj(c) && _isObj(c.on) && c.on.kind==="encounter" && c.on.id===id));
     _tableStamp(t);
     return { ok:true };
@@ -8349,7 +8349,7 @@ const Engine = (() => {
   // The turn follows who has acted, not a place in the sort, so a result changed mid-round
   // can neither skip a row nor let one act twice (Decision 189).
   const _actedIds = e => Array.isArray(e.acted) ? e.acted : [];
-  // Round 1 under an Ambush (N+1): the defenders have no turn. The rule lives here, so Start, Next, a removal and
+  // Round 1 under an Ambush (253): the defenders have no turn. The rule lives here, so Start, Next, a removal and
   // Reset all follow it. A planned encounter (round 0) is the round it will start in.
   function _ambushed(e, r){
     return _isObj(e.opening) && e.opening.kind==="ambush" && (_int(e.round) || 0) <= 1 && _rowSide(e, _sideList(e), r)!==e.opening.side;
@@ -8450,7 +8450,7 @@ const Engine = (() => {
     return { ok:true };
   }
 
-  // The opening (Decision N+1): none, or a Surprise or an Ambush by one of the sides. Set while planned, or in round 1
+  // The opening (Decision 253): none, or a Surprise or an Ambush by one of the sides. Set while planned, or in round 1
   // before anyone has acted; fixed after. Nothing is rolled: the table rolls the Opposed Check (0530).
   function setOpening(t, encId, f){
     const l = _live(t, encId);
@@ -8476,7 +8476,7 @@ const Engine = (() => {
     _tableStamp(t, e);
     return { ok:true };
   }
-  // Delay (N+1): on its own turn a row waits for a typed trigger. It has acted, so Next goes on without it;
+  // Delay (253): on its own turn a row waits for a typed trigger. It has acted, so Next goes on without it;
   // Act now gives it the turn back any time that round; Reset lists one that never came.
   function delayTurn(t, encId, rowId, until){
     const l = _liveRow(t, encId, rowId);

@@ -1589,7 +1589,7 @@ function clockCountText(clocks){
   return clocks.length ? `${clocks.length} ${clocks.length===1 ? "clock" : "clocks"}${full ? ` · ${full} full` : ""}` : "";
 }
 // The clocks an owner has, `owner` being { kind, id }, and the press that adds one. One piece on every page that owns clocks.
-// An ended encounter's clocks (N): the stored values as text, with no buttons, so it is never bound.
+// An ended encounter's clocks (252): the stored values as text, with no buttons, so it is never bound.
 function clockReadHtml(c){
   const full=c.filled>=c.segments, nm=String(c.name||"").trim() || "A clock";
   return `<div class="clock${full ? " full" : ""}" data-clock="${esc(c.id)}">
@@ -2890,7 +2890,7 @@ function encRowHtml(v, e, sides){
     ${S.encDelay && S.encDelay.row===r.id && v.active ? `<form class="enc-dmg" data-edelayform="${id}">
         <input type="text" data-edelay-until placeholder="the door opens" aria-label="Until…" autocomplete="off">
         <button class="btn sm primary" type="submit">OK</button><button class="btn sm" type="button" data-edelaycancel>Cancel</button></form>` : ""}`;
-  // The opening's reminder (N+1): shown on the rows it applies to, never applied.
+  // The opening's reminder (253): shown on the rows it applies to, never applied.
   const openTag = !v.opening ? "" : v.opening==="attacker" ? `+${e.opening && e.opening.kind==="ambush" ? 3 : 1} to their first attack`
     : v.opening==="ambushed" ? "Ambushed: no turn, attacked at Difficulty 10" : "Surprised: Fast Actions only";
   const pcFields = pc && !ended ? `<div class="enc-pcnums">${num("data-ehp", r.hp, "HP")}${num("data-elevels", r.levels, "Health Levels")}</div>` : "";
@@ -3065,7 +3065,7 @@ function encSideHtml(s, v, e){
     <div class="enc-side-head"><h2 class="enc-side-h">${esc(s.title)}</h2>${s.best!==null ? `<span class="enc-num">Best ${esc(s.best)}</span>` : ""}${s.tied ? `<span class="tag enc-tied">Tied: reroll</span>` : ""}${more}</div>
     ${rows.length ? `<ul class="enc-rows">${rows.map(r=>encRowHtml(r, e, ended ? null : v.sides)).join("")}</ul>` : `<p class="step-note">Nobody on this side.</p>`}</section>`;
 }
-// The plan (N): the book's Encounter Design worksheet. Labels and printed lists are 2642's words.
+// The plan (252): the book's Encounter Design worksheet. Labels and printed lists are 2642's words.
 const planField = (d, key, label) => `<label class="field"><span>${esc(label)}</span><textarea data-eplan="${key}" rows="3">${esc(d[key])}</textarea></label>`;
 const planList = (items, tag) => `<${tag} class="enc-prompts">${items.map(x=>`<li>${esc(x)}</li>`).join("")}</${tag}>`;
 const advRemoveLabel = (a, i) => a.who.trim() ? `Remove ${a.who.trim()}` : `Remove adversary ${i+1}`;
@@ -3127,7 +3127,7 @@ function encPlanReadHtml(v){
     section("When Momentum Stalls", field("Notes", d.stalls)) ].join("");
   return body ? `<h2 class="cast-h">The plan</h2>${body}` : "";
 }
-// The opening (N+1): set while planned, or in round 1 before anyone has acted; text after.
+// The opening (253): set while planned, or in round 1 before anyone has acted; text after.
 function encOpeningHtml(v){
   const cur=v.opening ? v.opening.kind : "none";
   const kinds=[["none", "None"], ["surprise", "Surprise"], ["ambush", "Ambush"]];
@@ -3198,7 +3198,7 @@ function bindEncounters(main){
   const toActive = () => { const el=$("main").querySelector(".enc-row.active"); if (el && el.scrollIntoView) el.scrollIntoView({ block:"nearest" }); };
   const next = () => { const r=Engine.nextTurn(S.table, eid()); if (!r.ok){ notice(r.why); return; } S.encDelay=null; tableChange(()=>{});
     if (r.reset) focus("[data-esrc]") || focus("[data-efinish]"); else { focus("[data-enext]"); toActive(); } };
-  // The plan is written whole (N). A copy of the stored one is changed and sent, so a key this version doesn't know rides along.
+  // The plan is written whole (252). A copy of the stored one is changed and sent, so a key this version doesn't know rides along.
   const planWrite = fn => { const e=encOpenNow(); if (!e) return { ok:false, why:"No such encounter." };
     const d=Object.assign({}, e.design); d.adversaries=(Array.isArray(e.design.adversaries) ? e.design.adversaries : []).map(a=>Object.assign({}, a)); d.beyond=[...e.design.beyond];
     fn(d); return Engine.editEncounter(S.table, e.id, { design:d }); };

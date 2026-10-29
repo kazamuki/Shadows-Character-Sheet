@@ -538,7 +538,7 @@ thread("fire", { title: "Who burned the laundromat's back window?", status: "dro
 const encounters = [];
 const sideId = (enc, k) => id("SD", enc + ":" + k);
 let encCounter = 0;
-// Schema 0.17 (Decisions N, N+1; SQ9): the stamp and the empty fields only, no plan, opening or delay written in.
+// Schema 0.17 (Decisions 252, 253; SQ9): the stamp and the empty fields only, no plan, opening or delay written in.
 const EMPTY_PLAN = () => ({ hook: "", stakes: "", objectives: "", terrain: "", hazards: "", city: "", beyondNotes: "", escalations: "", failure: "", success: "",
   escapes: "", failsafe: "", threads: "", milestones: "", pivot: "", stalls: "", adversaries: [], beyond: [] });
 const encounter = (key, f, rows) => {
