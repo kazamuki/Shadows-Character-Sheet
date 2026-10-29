@@ -5156,7 +5156,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** a free reload (LQ14's default, reopened by Ken); ticks rewriting `rof` (LQ26: a typed "Semi" is lost); converting a readable `rof` on open (nothing guessed); reading the `ammo` text (LQ27: a guess); refusing Reload without a type (LQ24: old rows stop reloading).
      - **Replaces:** Decisions 145 in part (only an untyped written-in weapon reloads as before), 222 in part (a typed one keeps part-used magazines) and 120 in part (its fire modes are ticked). Extends 247 and 149.
      - **Revisit if:** W109 lets custom rows opt into a book row's behaviour; a written-in weapon takes mods; W108 sizes magazines per weapon.
-     - **Built:** app 0.56.0, game data 0.50, character schema 0.31, PR #…. Log 2026-10-28 (L2b).
+     - **Built:** app 0.56.0, game data 0.50, character schema 0.31, PR #259. Log 2026-10-28 (L2b).
 
 ## 5. Open Flags
 
