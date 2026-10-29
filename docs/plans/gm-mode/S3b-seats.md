@@ -5,7 +5,9 @@
 *S3b* and *Still to build*'s S3b row; GQ9, GQ13, GQ19.
 **Status:** **drafted 2026-10-29 by Claude (Opus)**, the S10f reviewer, after
 #266 (S10f, Decisions 252–253) merged (`WORK-ORDERS.md`, step 7). **Ken chose
-this session (2026-10-29).** Not yet approved.
+this session (2026-10-29).**
+**Approved by Ken 2026-10-29** (in the conductor session), as Rule or shape, no `private/` commit.
+**SQ0–SQ9 answered by Ken 2026-10-29: every default.** He picked SQ0 (*Split*), SQ2 (*Answers to*) and SQ3 (*Outside the log*) by name, and SQ1 and SQ4–SQ9 as one set (*Approve, defaults*).
 **Branch:** from `main` at `85de7bc` or later, PR to `main`, switched off
 (Decision 173). **No `private/` commit.**
 **Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../WORK-ORDERS.md):
@@ -337,16 +339,16 @@ If the ledger search at build time finds another, stop and ask.
 
 | # | Question | Default | Answer |
 |---|---|---|---|
-| SQ0 | **Scope.** This order builds players, seats, import and the card spread. The read-only sheet becomes its own order (**S3c**). The pre-flight found 129 `commit()` sites and the roster save to audit, so it needs its own pre-flight. A PC row taking hits on a seat's copy follows it (**S3d**). Or build all of it in one order? | **Split: S3c and S3d follow** | |
-| SQ1 | **The tab's name and place:** **Players**, after Sessions? *Crew* is taken by the Cast tab's view (179). *Table* (the plan's sketch) names the whole thing. | **Players, second** | |
-| SQ2 | **How a typed name becomes a seat:** a seat **answers to** names (its character's own, plus any the GM adds), and every reader matches typed names against them, with nothing rewritten? Or convert the typed names into seat links once? | **Answers to; nothing rewritten** | |
-| SQ3 | **The copy and the activity log:** the copy sits outside the log. Importing or replacing one isn't undoable from Activity (the player's file is the source), while seats and players are. Removing a seat keeps its copy until the table is next opened, so Undo brings both back. Or put copies in the log, at a whole character per import? | **Outside the log** | |
-| SQ4 | **Which files seat:** a **locked** character only. A draft is refused (*"Ana's Vex isn't locked yet: there's no sheet to read."*). Or seat drafts too? | **Locked only** | |
-| SQ5 | **Import's target:** files go onto **the player whose Import was pressed**, and a TAG already seated updates its own seat wherever it sits. Or one Import for the tab that asks a player per file? | **Onto that player** | |
-| SQ6 | **The card's numbers:** §9's list, Scott's three first. CRANK only when CRANK is on. Or fewer? | **As listed** | |
-| SQ7 | **How a typed name reaches a seat's history:** `crewView` (*Who knows what*), `awardTotals` (the Sessions tab's IP totals) and Find fold a seat's names into one. The card shows *Last at Session N · X IP so far*. Session pages, the close-out sheet and lines still show each name as typed. Or fold everywhere? | **Fold in those three and the card only** | |
-| SQ8 | **Removing a player** with seats: one dialog naming how many characters go with them. Or refuse until the seats are removed? | **One dialog, with the count** | |
-| SQ9 | **The sample table *Dead Air*:** the stamp and the empty fields only (S12b's and S10f's ruling)? Or seat its crew from typed names, which needs character files the sample doesn't have? | **The stamp and the empty fields only** | |
+| SQ0 | **Scope.** This order builds players, seats, import and the card spread. The read-only sheet becomes its own order (**S3c**). The pre-flight found 129 `commit()` sites and the roster save to audit, so it needs its own pre-flight. A PC row taking hits on a seat's copy follows it (**S3d**). Or build all of it in one order? | **Split: S3c and S3d follow** | Default (Ken, 2026-10-29) |
+| SQ1 | **The tab's name and place:** **Players**, after Sessions? *Crew* is taken by the Cast tab's view (179). *Table* (the plan's sketch) names the whole thing. | **Players, second** | Default (Ken, 2026-10-29) |
+| SQ2 | **How a typed name becomes a seat:** a seat **answers to** names (its character's own, plus any the GM adds), and every reader matches typed names against them, with nothing rewritten? Or convert the typed names into seat links once? | **Answers to; nothing rewritten** | Default (Ken, 2026-10-29) |
+| SQ3 | **The copy and the activity log:** the copy sits outside the log. Importing or replacing one isn't undoable from Activity (the player's file is the source), while seats and players are. Removing a seat keeps its copy until the table is next opened, so Undo brings both back. Or put copies in the log, at a whole character per import? | **Outside the log** | Default (Ken, 2026-10-29) |
+| SQ4 | **Which files seat:** a **locked** character only. A draft is refused (*"Ana's Vex isn't locked yet: there's no sheet to read."*). Or seat drafts too? | **Locked only** | Default (Ken, 2026-10-29) |
+| SQ5 | **Import's target:** files go onto **the player whose Import was pressed**, and a TAG already seated updates its own seat wherever it sits. Or one Import for the tab that asks a player per file? | **Onto that player** | Default (Ken, 2026-10-29) |
+| SQ6 | **The card's numbers:** §9's list, Scott's three first. CRANK only when CRANK is on. Or fewer? | **As listed** | Default (Ken, 2026-10-29) |
+| SQ7 | **How a typed name reaches a seat's history:** `crewView` (*Who knows what*), `awardTotals` (the Sessions tab's IP totals) and Find fold a seat's names into one. The card shows *Last at Session N · X IP so far*. Session pages, the close-out sheet and lines still show each name as typed. Or fold everywhere? | **Fold in those three and the card only** | Default (Ken, 2026-10-29) |
+| SQ8 | **Removing a player** with seats: one dialog naming how many characters go with them. Or refuse until the seats are removed? | **One dialog, with the count** | Default (Ken, 2026-10-29) |
+| SQ9 | **The sample table *Dead Air*:** the stamp and the empty fields only (S12b's and S10f's ruling)? Or seat its crew from typed names, which needs character files the sample doesn't have? | **The stamp and the empty fields only** | Default (Ken, 2026-10-29) |
 
 ## 5. The assumption sweep
 
