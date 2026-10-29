@@ -3882,7 +3882,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:**
        - Refusing outright with no ammo: every character made before ammo was in the shop carries none, so Reload would break mid-session.
        - Reading "Fits Handgun." out of `notes`: prose, the Decision 134 lesson.
-       - Loading specialty rounds now: a schema bump, left to W40.
+       - Loading specialty rounds (Silver, Holy, Angel) now: they change the weapon's tags, so the weapon has to remember what's loaded, which is a schema bump. Left to W30's follow-up, W40.
        - Heavy Rounds and the Strix: Gear says to treat the belt as unlimited, and the Power Cell runs the Strix's mechanism, not its bolts.
      - **Replaces:** Decision 120 in part: `reloadWeapon` no longer always fills from nowhere.
      - **Revisit if:** the CRB prices ammo per round, or a weapon takes a magazine another of its type can't.

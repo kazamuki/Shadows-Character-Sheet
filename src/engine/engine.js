@@ -1821,7 +1821,7 @@ const Engine = (() => {
   // A written-in weapon's four picks (Decision 247): a weapon type (its
   // Skill), a damage type, a range band and an ACC. Each is real or it reads
   // as empty, from a file and from a call. Returns the stored value, or
-  // undefined when it isn't one. Decision N adds a fifth, its fire modes: a
+  // undefined when it isn't one. Decision 249 adds a fifth, its fire modes: a
   // set of `weaponRules.rofModes` ids, kept in the data's order.
   const CUSTOM_WEAPON_PICKS = ["category", "damageType", "range", "acc", "rofModes"];
   function customWeaponPick(field, v){
@@ -1966,7 +1966,7 @@ const Engine = (() => {
   // W40: every kind carried, and whether one would swap what's loaded.
   // P9b: `carried` is whole magazines; `parts` the part-used ones, their
   // rounds apart in `partRounds`, fullest first. A kind counts if either is
-  // carried. One helper for a catalog line and a written-in one (Decision N).
+  // carried. One helper for a catalog line and a written-in one (Decision 249).
   function loadedAndReloadFrom(ch, line, e){
     const loadedDef = line.rounds && loadedOf(e) ? equipmentById(loadedOf(e)) : null;
     if (loadedDef && loadsAs(loadedDef)){
@@ -2034,7 +2034,7 @@ const Engine = (() => {
       if (r.needsMod && !mods.includes(r.needsMod)) return false;
       return !only.length || only.includes(g.id); });
   }
-  // What ammoFor reads a weapon by (Decision N): a catalog weapon's def, or for a
+  // What ammoFor reads a weapon by (Decision 249): a catalog weapon's def, or for a
   // written-in one just its type, never an id. reloadSource (what goes in) and
   // putBack (what a half-empty magazine comes back as) both go through here.
   function ammoDefOf(e){
@@ -4918,7 +4918,7 @@ const Engine = (() => {
       else w.mods = Array.isArray(w.mods) ? w.mods.filter(x=>typeof x==="string") : [];
       // Schema 0.14 (W40): `loaded` is a specialty round's id; standard
       // rounds, and every weapon from before, have none.
-      // Schema 0.31 (Decision N): a written-in weapon keeps one too.
+      // Schema 0.31 (Decision 249): a written-in weapon keeps one too.
       if (typeof w.loaded!=="string") delete w.loaded;
     });
     // Schema 0.8 (plan P5, landed now so there's one migration): `worn` marks
