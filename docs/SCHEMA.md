@@ -1078,7 +1078,7 @@ commit** — a GM's table must never change under them.
     kind: "shadows-table",           // fileKind() reads this; migrateTable() forces it
     id: "TBL-XXXX-XXXX-XXXX",        // newTable() issues it, the TAG's alphabet; never reissued
     name: "",                        // the GM's; "" reads "Untitled table"
-    tableSchemaVersion: "0.16",      // a newer stamp is kept, and tableCheck() reports it
+    tableSchemaVersion: "0.17",      // a newer stamp is kept, and tableCheck() reports it
     created: "<ISO>", updated: "<ISO>"   // null when a file's can't be read: the gate invents none (Decision 63)
   },
   audit: [ {                         // 0.12: the activity log (Decision 212), oldest first, at most 500
@@ -1133,7 +1133,7 @@ commit** — a GM's table must never change under them.
     id: "CK-XXXXXXXX",               // the TAG alphabet; unique in the table
     name: "", segments: 4, filled: 0,   // segments a whole number 2 to 12 (else 4); filled 0 to segments
     advances: "", whenFull: "",      // typed: what advances it, and what happens when it fills
-    on: { kind: "faction", id: "FA-XXXXXXXX" },   // what owns it, or null: a faction (FA- id) or, from 0.16 (Decision 251), a place (PL- id); an owner of another kind (lowercase letters, an id of at most 40) is kept as it is and shown nowhere; a link to no record on the table is kept and shown nowhere; removeFaction and removePlace remove their clocks
+    on: { kind: "faction", id: "FA-XXXXXXXX" },   // what owns it, or null: a faction (FA- id), from 0.16 (Decision 251) a place (PL- id), or from 0.17 (Decision 252) an encounter (EN- id; a bad id is null); an owner of another kind (lowercase letters, an id of at most 40) is kept as it is and shown nowhere; a link to no record on the table is kept and shown nowhere; removeFaction, removePlace and removeEncounter remove their clocks; an ended encounter's clocks are read-only
     created: "<ISO>", updated: "<ISO>"
   } ],
   interactions: [ {                  // 0.3: what passed between the crew and the cast (Decisions 177–179)
@@ -1180,6 +1180,16 @@ commit** — a GM's table must never change under them.
     status: "planned",               // planned | running | ended; any number planned, one running at most (the gate ends all but the newest)
     round: 0, turn: null,            // 1… while running; turn is a row id, null at Reset, planned and ended
     acted: [],                       // row ids that have had their turn this round; kept only while running, cleared at Start and at each Reset
+    design: {                        // 0.17: the Encounter Design worksheet (2642) as typed text (Decision 252); an unknown key rides along, at both levels
+      hook: "", stakes: "", objectives: "",              // Scene Hook / Trigger, Core Stakes, Player Objectives
+      adversaries: [ { who: "", goals: "", tactics: "", leverage: "" } ],   // free rows, objects only; a row of four blanks is kept (it is being typed)
+      terrain: "", hazards: "", city: "",                // Environment & Hazards
+      beyond: [ "protect" ], beyondNotes: "",            // Objectives Beyond "Defeat Enemy": ids from ENCOUNTER_OBJECTIVES, each once, in its order; the rest are dropped
+      escalations: "", failure: "", success: "",         // Escalation & Consequences
+      escapes: "", failsafe: "",                         // Finding an Out (its printed exits are ENCOUNTER_PROMPTS, never stored)
+      threads: "", milestones: "", pivot: "", stalls: ""  // Hooks for Next Scene; Quick pivot; When Momentum Stalls notes
+    },
+    opening: null,                   // 0.17 (Decision 253): null | { kind: "surprise" | "ambush", side } with side one of this encounter's sides (the attackers); anything else is null; set before anyone has acted in round 1, fixed after
     by: "person",                    // 0.11: "person" (one at a time) | "wave" (Wave Initiative); anything else reads "person" (Decision 210)
     sides: [ { id: "crew", name: "" },              // 0.11: the crew first, always, its name never read; then one to five others, each `SD-XXXXXXXX`, at most six in all
              { id: "SD-XXXXXXXX", name: "" } ],     // a blank name reads by its place: The other side, Side 3…
@@ -1198,6 +1208,7 @@ commit** — a GM's table must never change under them.
       struck: false,                 // 0.7: hit at all, by the armor or the body (a hit the armor stopped entirely, or one healed back to 0, still counts); set by a hit or a positive Take, never cleared by Heal. Whoever it's true for rolls for wear after the fight (Decision 193, 053). Every kind of row; read as true only when it is exactly true
       armorId: null,                 // 0.6: the catalog piece that wear belongs to (a string or null; null on a PC row). It applies only while the block's armor line names that piece; any other piece reads fresh
       hp: null, levels: null, awareness: null,   // pc rows only: the GM's copy of the sheet's numbers
+      delay: null,                   // 0.17 (Decision 253): null | { until: "" }, set on its turn and kept only while running; the row counts as acted; cleared at Reset and at End
       conditions: [ { id, location, marks, note, source: "", rounds: null } ]   // the character's entry, plus where it came from and rounds left (null: until it's dealt with)
     } ],
     created: "<ISO>", updated: "<ISO>"
@@ -1216,7 +1227,7 @@ StatBlock: {                         // Decision 175: what the Codex prints, not
 
 Step history: **0.2** adds `cast` (`migrateTable()` gives an older table an empty
 one). **0.3** adds `interactions` and each member's `affiliations`. **0.4** adds each member's `from`, null for everyone already there. **0.5** adds `encounters`, empty for everyone already there. **0.6** adds each row's `massive`, `armorLoss`, `scrapped` and `armorId`, 0, false and null for everyone already there. **0.7** adds each row's `kept` and `struck`, null and false for everyone already there, and an interaction may be of kind `fought`. **0.8** adds `sessions` and `threads`, empty for everyone already there, and each interaction's `session`, null (nothing is converted by date on load). **0.9** adds each session's `close`, null for everyone already there (nothing is converted). **0.10** adds each note's `session`, null for everyone already there (nothing is converted). **0.11** adds each encounter's `by` and `sides`, each row's `side` and each cast member's `ally`: one at a time, the crew and one other side, PCs on the crew's, nobody an ally (nothing is guessed). Health, Health Levels, HP and each stat's bonus are `Engine.npc(block)`'s,
-computed and never written into the file (constraint 7). **0.12** adds `audit`, the activity log (Decision 212), empty for everyone already there; a file older than the app comes in with its trail emptied, so an undo never crosses a schema step. **0.13** adds each interaction's `encounter`, null for everyone already there (nothing is converted; Decision 241). **0.14** adds `places`, empty, and each interaction's `place`, null for everyone already there (Decision 243). **0.15** adds `factions` and `clocks`, both empty; nothing is converted, and a member's affiliations stay as typed (Decisions 244, 245). **0.16** gives each place `site`, `siteLevel` and `exposure`, empty for everyone already there; nothing is converted and no profile is guessed from a place's ground (Decision 251).
+computed and never written into the file (constraint 7). **0.12** adds `audit`, the activity log (Decision 212), empty for everyone already there; a file older than the app comes in with its trail emptied, so an undo never crosses a schema step. **0.13** adds each interaction's `encounter`, null for everyone already there (nothing is converted; Decision 241). **0.14** adds `places`, empty, and each interaction's `place`, null for everyone already there (Decision 243). **0.15** adds `factions` and `clocks`, both empty; nothing is converted, and a member's affiliations stay as typed (Decisions 244, 245). **0.16** gives each place `site`, `siteLevel` and `exposure`, empty for everyone already there; nothing is converted and no profile is guessed from a place's ground (Decision 251). **0.17** gives each encounter `design` (the empty plan) and `opening` (null), and each row `delay` (null); nothing is converted, and no opening is guessed from a row's Stealth (Decisions 252, 253).
 
 The browser keeps each table as `shadows.table.v1.<id>` =
 `{ table, section, changed, exported }`, by the roster's rules (Decision 141).
@@ -4474,6 +4485,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing.
      - **Revisit if:** seats arrive (S3b: a PC row is claimed by a seat), the Encounter Design worksheet needs a type, or live sync makes the scratch copy unnecessary (§8).
      - **Built:** table schema 0.5; PR #126; log 2026-10-07.
+     → **Superseded in part by Decision 252** — an encounter carries its Encounter Design worksheet as its plan; the worksheet's type isn't built.
 
 189. **An encounter's round is the book's: Combat Sense highest first, ties shown and never broken, and a Reset that lists, row by row, what ticks, what runs out and what asks for a save.**
      *2026-10-07 · Ken + Claude · Touches: Order of Engagement, Combat Sense, ties, turn, acted, round, Reset, resolveReset, ongoing, recovery, whileDying, rounds, Keep, Take, Heal, Health Levels, Pain Level, GQ23, Decision 96, Decision 100, F24*
@@ -4490,6 +4502,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** the app rolls checks, S10b's pipeline makes a tick a hit, GQ23 says NPCs don't take Pain, or F24 is answered.
      - **Built:** as 188.
     → **Superseded in part by Decisions 191, 210 and 220** — every row also takes a hit (191); in waves, a side's place comes first and ties are flagged between sides (210); a Dying row's Reset asks the check beside the marks, F24 closed, and a row's heal counts from 0 HP (220).
+    → **Superseded in part by Decision 253** — round 1 passes an Ambush's defenders, and Reset lists a delay never triggered.
 
 190. **Use has two verbs: Add to cast, and Add to the encounter open on the Encounters tab, on an entry, a group and a cast member.**
      *2026-10-07 · Ken + Claude · Touches: Use, data-tuse, Add to cast, Add to encounter, entry page, group page, cast member page, castFromEntry, Decision 182*
@@ -4737,6 +4750,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
     → **Superseded in part by Decision 243** — Find searches the crew's places.
     → **Superseded in part by Decisions 244 and 245** — Find searches factions and clocks.
      → **Superseded in part by Decision 251** — Find searches a place's site and Exposure, and its clocks.
+     → **Superseded in part by Decision 252** — Find searches an encounter's plan, and finds its clocks.
 
 209. **The Reference's jump bar shows every chip, wrapped: it sticks from 640px, and on a phone it stays at the top of the page.**
      *2026-10-09 · Ken + Claude · Touches: Reference tab, jump bar, jumpBarHtml wrap, jump-wrap, jumpbar.sticky, jumpTo, scroll-row, wheelSideways, phone, Decision 165, Decision 207, SQ8*
@@ -5129,6 +5143,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** S10f, S11 or S12b needs a clock with no owner, a reset rule, or a clock that advances itself.
      - **Built:** table schema 0.15, switched off (173); log 2026-10-23.
      → **Superseded in part by Decision 251** — a place owns clocks, and an owner of an unknown kind is kept.
+     → **Superseded in part by Decision 252** — an encounter owns clocks; removing it removes them.
 
 246. **Every section on the Character tab starts its own row, its cards in one shared grid; a lone card spans two columns.**
      *2026-10-24 · Ken + Claude · Touches: Character tab, renderShCharacter, arch-top, arch-flow, arch-part, solo, trait-cols, trait-grid, Baseline Traits, Powers, Vulnerabilities, Specialization, Origin, Bloodline, Subtype, Aberration, Permanent Aberrations, Disciplines, Advantages, Disadvantages, vitals pinned, phone-check, W99*
@@ -5201,6 +5216,33 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 243 in part (a place has a site and owns clocks; its removal removes them), 245 in part (a place owns clocks; an unknown owner is kept), 208 in part (Find searches a place's site and Exposure, and its clocks).
      - **Revisit if:** seats (S3b) make the crew a roster, a site needs a reset rule or a clock that runs itself, or S10f's encounters want a site.
      - **Built:** table schema 0.16, switched off (173); PR #261; log 2026-10-28 (S12b).
+     → **Superseded in part by Decision 252** — an encounter owns clocks; removing it removes them.
+
+252. **An encounter carries the book's Encounter Design worksheet as its plan, and owns clocks.**
+     *2026-10-29 · Ken + Claude · Touches: encounters, design, hook, stakes, objectives, adversaries, terrain, hazards, city, beyond, beyondNotes, escalations, failure, success, escapes, failsafe, threads, milestones, pivot, stalls, ENCOUNTER_OBJECTIVES, ENCOUNTER_PROMPTS, editEncounter, The plan, clocks, on, encounter owner, addClock, clocksOn, removeEncounter, CLOCK_OWNER_RECORDS, tableActionLabel, tableSearch, openFound, encounter card, clockCountText, table schema 0.17, sample table, Decision 188, Decision 208, Decision 212, Decision 241, Decision 244, Decision 245, Decision 251*
+     - **Decided:** Table schema 0.17 gives an encounter `design`: the worksheet's (`2642`) fields as typed text, its adversaries as rows of four typed fields, and its objectives beyond defeat as picks from the book's six. Its printed prompts (exits, questions, when momentum stalls) are the book's text beside their notes, never stored. No type (188 stands). An encounter owns clocks as a faction and a place do; removing it removes them, and one undo restores both. The plan and its clocks are read-only once it ends.
+     - **Why:** the worksheet is what the book hands a GM to prep a fight, so the plan is the worksheet and nothing more (244's rule); *Clock tightens* is the worksheet's own lever.
+     - **Rejected:**
+       - A Type field: the book's types blend (188), and the worksheet's own Hybrid box says so.
+       - Adversaries as the encounter's rows: the plan is written before anyone is added.
+       - The printed prompts as stored ticks: they are questions to ask, not state.
+       - The plan editable after End: 188 keeps an ended encounter read-only.
+     - **Replaces:** Decision 188 in part (an encounter carries its worksheet; its Revisit if's type is answered no), 208 in part (Find searches the plan and an encounter's clocks), 245 and 251 in part (an encounter owns clocks; its removal removes them).
+     - **Revisit if:** the worksheet changes, seats (S3b) make adversaries or the crew links, or a GM wants the plan open after the fight.
+     - **Built:** table schema 0.17, switched off (173); PR #266; log 2026-10-29 (S10f).
+
+253. **A fight can open with a Surprise or an Ambush by one side, and a row can Delay until a trigger; the round runs both as the book says, and rolls nothing.**
+     *2026-10-29 · Ken + Claude · Touches: opening, Surprise, Ambush, attackers, defenders, round 1, _pick, startEncounter, nextTurn, setOpening, delay, delayTurn, actNow, Delay, Act now, setTurn, resolveEncounterReset, applyEncounterReset, Reset, acted, endEncounter, removeSide, Wave Initiative, TIPS, table schema 0.17, Decision 189, Decision 193, Decision 210*
+     - **Decided:** An encounter's `opening` is null, or a Surprise or an Ambush by one of its sides, set before anyone has acted in round 1 and fixed after: once an encounter. In round 1, Next passes an Ambush's defenders; a Surprise's defenders read *Fast Actions only*; the attackers' bonus and Difficulty 10 are shown, never applied. A row on its turn can **Delay** until a typed trigger: it has acted, and shows the trigger and **Act now** for the rest of the round. Reset lists a delay never triggered as a missed action, then clears it. Turn order resumes as before.
+     - **Why:** `0530` runs both at Engagement; the turn is the app's to keep (189), the dice and the hit the table's.
+     - **Rejected:**
+       - Rolling the Opposed Check: the table rolls (189).
+       - Surprised and Ambushed as Conditions: `0540` has neither.
+       - An Ambush as a reminder only: a skipped turn the GM must remember is what the tracker is for.
+       - A delayed row moved in the order: the book says the order resumes as before.
+     - **Replaces:** Decision 189 in part (round 1 passes an Ambush's defenders; Reset lists a missed delay).
+     - **Revisit if:** a Silent sniper's continuing Ambush needs tracking, GQ30 reorders a wave, or the app rolls checks.
+     - **Built:** table schema 0.17, switched off (173); PR #266; log 2026-10-29 (S10f).
 
 ## 5. Open Flags
 

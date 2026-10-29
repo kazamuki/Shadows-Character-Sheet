@@ -791,7 +791,7 @@ function hostileSessionsTable() {
 test("a hostile table's sessions and threads come out of the gate typed: ids unique, numbers numbers, links null, one current", () => {
   const J = x => JSON.parse(JSON.stringify(x));
   const m = Engine.migrateTable(hostileSessionsTable());
-  assert.equal(m.meta.tableSchemaVersion, "0.16");
+  assert.equal(m.meta.tableSchemaVersion, "0.17");
   const ids = m.sessions.map(s => s.id);
   assert.equal(new Set(ids).size, ids.length, "session ids repeat");
   assert.ok(ids.every(id => /^SE-[0-9A-HJKMNP-TV-Z]{8}$/.test(id)));
@@ -1048,7 +1048,7 @@ test("a table file's trail draws its labels as text, drops every crafted entry, 
     ["__proto__", "polluted"], ["meta", "id"], ["meta", "tableSchemaVersion"], ["audit", 0, "label"], ["evil"], ["constructor", "prototype", "polluted"],
   ].map((path, i) => ({ seq: 10 + i, date: null, label: `crafted ${i}`, patch: [{ path, type: "scalar", before: "PWNED" }] }));
   const t = Engine.migrateTable({
-    meta: { kind: "shadows-table", id, name: "T", tableSchemaVersion: "0.16" },
+    meta: { kind: "shadows-table", id, name: "T", tableSchemaVersion: "0.17" },
     cast: [{ id: "C-AAAAAAAA", name: "After" }],
     audit: [...crafted, good],
   });
@@ -1379,4 +1379,57 @@ test("a pack's sites and a place's site, level, rows and clock owner of markup r
   assert.equal(app.window.eval("JSON.stringify(S.table.clocks.map(c => c.on && c.on.kind))"), JSON.stringify(["place", null, null, "encounter"]));
   assert.equal(app.window.eval("S.table.places[0].exposure.length"), 2);
   assert.deepEqual(app.errors, [], "the hostile sites threw while rendering");
+});
+
+test("an encounter's plan, opening, delay and clock owner of markup render as text on its page, Reset, its card, the ended page and Find, and pollute nothing (252, 253)", () => {
+  const now = "2026-10-05T10:00:00.000Z";
+  const t = Engine.newTable(P("tbl.name"));
+  const plan = tag => ({ hook: P(tag + ".hook"), stakes: P(tag + ".stakes"), objectives: P(tag + ".obj"), terrain: P(tag + ".terrain"), hazards: P(tag + ".hazards"), city: P(tag + ".city"),
+    beyondNotes: P(tag + ".bnotes"), escalations: P(tag + ".esc"), failure: P(tag + ".fail"), success: P(tag + ".win"), escapes: P(tag + ".escapes"), failsafe: P(tag + ".failsafe"),
+    threads: P(tag + ".threads"), milestones: P(tag + ".ms"), pivot: P(tag + ".pivot"), stalls: P(tag + ".stalls"),
+    adversaries: [{ who: P(tag + ".who"), goals: P(tag + ".goals"), tactics: P(tag + ".tactics"), leverage: P(tag + ".lev") }, "x", 4],
+    beyond: ["__proto__", {}, "protect", "constructor"] });
+  const row = (id, name, extra = {}) => ({ id, kind: "pc", name, side: "crew", order: 5, ...extra });
+  t.encounters = [
+    { id: "EN-AAAAAAA1", name: P("run.name"), status: "running", round: 1, turn: "R-AAAAAAAA", acted: [], design: plan("run"),
+      opening: { kind: "ambush", side: "crew" }, rows: [row("R-AAAAAAAA", P("run.a"), { delay: { until: P("run.until") } }), row("R-BBBBBBBB", P("run.b"), { side: "SD-AAAAAAAA" })] },
+    { id: "EN-AAAAAAA2", name: P("pl.name"), status: "planned", design: plan("pl"), opening: { kind: "ambush", side: "<img>" }, rows: [row("R-CCCCCCCC", P("pl.a"), { delay: { until: P("pl.until") } })] },
+    { id: "EN-AAAAAAA3", name: P("end.name"), status: "ended", round: 2, design: plan("end"), opening: { kind: "__proto__", side: "crew" }, rows: [row("R-DDDDDDDD", P("end.a"))] },
+    { id: "EN-AAAAAAA4", name: P("odd.name"), status: "planned", design: 7, opening: "ambush", rows: [] },
+  ];
+  t.clocks = [{ id: "CK-AAAAAAAA", name: P("k.name"), segments: 4, filled: 1, whenFull: P("k.full"), on: { kind: "encounter", id: "EN-AAAAAAA3" } },
+              { id: "CK-BBBBBBBB", name: P("k2.name"), segments: 4, on: { kind: "encounter", id: "<img>" } },
+              { id: "CK-CCCCCCCC", name: P("k3.name"), segments: 4, on: { kind: "encounter", id: "EN-AAAAAAA2" } }];
+  const key = "shadows.table.v1." + t.meta.id;
+  const app = boot({ storage: { "shadows.feature.gm": "on", [key]: { table: t, section: "encounters", changed: now, exported: null } } });
+  const found = [];
+  app.$("[data-topen]").click();
+  found.push(...injected(app, "the Encounters list"));
+  const view = JSON.parse(app.window.eval("JSON.stringify(S.table.encounters.map(e => [e.id, e.status, e.opening, e.rows.map(r => r.delay)]))"));
+  assert.deepEqual(view.map(v => v[2]), [{ kind: "ambush", side: "crew" }, null, null, null], "an opening naming no side, or no kind, is none");
+  assert.equal(view[0][3][0].until, P("run.until"), "a delay on a running encounter is kept, as text");
+  assert.deepEqual(view[1][3], [null], "a delay on a planned one is dropped");
+  for (const e of app.window.eval("S.table.encounters.map(e => e.id)")) {
+    app.window.eval(`S.encOpen = ${JSON.stringify(e)}; renderTable();`);
+    for (const d of app.$$("details")) d.open = true;
+    found.push(...injected(app, "an encounter page " + e));
+    const f = app.$("[data-eadv]"); if (f) assert.equal(f.value, P(e === "EN-AAAAAAA1" ? "run.who" : e === "EN-AAAAAAA2" ? "pl.who" : "end.who"), "a field is a value, not markup");
+  }
+  // Reset lists the hostile delay as text.
+  app.window.eval(`S.encOpen = "EN-AAAAAAA1"; S.table.encounters[0].turn = null; renderTable();`);
+  found.push(...injected(app, "Reset"));
+  assert.ok(app.$(".enc-reset"), "the Reset wasn't drawn");
+  app.click('[data-tsec="cast"]');
+  app.click("[data-tfind]");
+  const q = app.$("[data-findq]"); q.value = "pwn"; q.dispatchEvent(new app.window.Event("input", { bubbles: true }));
+  found.push(...injected(app, "Find"));
+  assert.ok(app.$$("#modal [data-fkind=\"encounter\"]").length >= 1, "Find skipped a plan of markup");
+  assert.ok(!app.$("#main").innerHTML.includes("[object Object]"), "an object was drawn as text");
+  assert.deepEqual(found, [], "an encounter's plan, opening, delay or clock owner became markup");
+  assert.equal(app.window.eval("({}).polluted"), undefined);
+  assert.equal(app.window.eval("({}).kind"), undefined);
+  assert.equal(app.window.eval("Object.prototype.hook"), undefined);
+  assert.equal(app.window.eval("JSON.stringify(S.table.encounters[0].design.beyond)"), '["protect"]', "an id the list doesn't know is dropped");
+  assert.equal(app.window.eval("JSON.stringify(S.table.clocks.map(c => c.on && c.on.id))"), JSON.stringify(["EN-AAAAAAA3", null, "EN-AAAAAAA2"]));
+  assert.deepEqual(app.errors, [], "the hostile plan threw while rendering");
 });
