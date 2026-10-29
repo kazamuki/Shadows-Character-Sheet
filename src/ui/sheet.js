@@ -2095,7 +2095,12 @@ function weaponOpenRowHtml(ch, l){
     pick("damageType", "Damage type", (D.damageTypes||[]).filter(t=>!t.magical), r.damageType) +
     pick("range", "Range", bands, l.range) +
     `<label class="field"><span>ACC</span><input type="number" min="0" step="1" data-weaponpick="${i}|acc" value="${l.accPicked==null?"":l.accPicked}"></label>` +
+    // Fire modes (Decision 249): ticks over weaponRules.rofModes, showing what the line fires.
+    // A typed RoF from before reads until the first tick, which stores the whole set.
+    `<div class="hitrow" role="group" aria-label="Fire modes"><span class="hitnote">Fire modes</span>${
+      ((D.weaponRules||{}).rofModes||[]).map(m=>`<label class="check"><input type="checkbox" data-weaponmode="${i}|${esc(m.id)}" ${(l.fireModes||[]).some(f=>f.id===m.id)?"checked":""}> ${esc(m.name)}</label>`).join("")}</div>` +
     (l.typeText ? `<span class="hitnote" data-weapontypehint>You wrote "${esc(l.typeText)}". Pick a type to give it an attack.</span>` : "") +
+    (l.rof && !(l.fireModes||[]).length ? `<span class="hitnote" data-weaponrofhint>You wrote "${esc(l.rof)}". Tick the modes it fires.</span>` : "") +
     `</div></td></tr></tbody>`;
 }
 function weaponRowsHtml(ch){
@@ -2748,7 +2753,7 @@ function pWeaponRows(ch){
   return ch.weapons.map((e,i)=>Engine.weaponLine(ch,i)).filter(Boolean).map(l=>{
     if (l.custom){ const w=ch.weapons[l.index];
       return { name:[w.name,l.typeText].filter(Boolean).join(" · "), attack:l.attack==null?"":"1d10+"+l.attack+(l.acc?` (+${l.acc} ACC)`:""),
-               damage: l.damage!=null ? String(l.damage)+(l.damageFormula?` (${l.damageFormula})`:"") : (l.damageFormula||""), range:l.range||"", rof:w.rof,
+               damage: l.damage!=null ? String(l.damage)+(l.damageFormula?` (${l.damageFormula})`:"") : (l.damageFormula||""), range:l.range||"", rof:l.rof||"",
                capacity:[w.capacity, w.ammo?`(${w.ammo})`:""].filter(Boolean).join(" "), features:w.features, notes:w.notes }; }
     return { name:l.name, attack:l.attack==null?"":"1d10+"+l.attack+(l.acc?` (+${l.acc} ACC)`:""),
              damage: l.damage!=null ? String(l.damage)+(l.damageFormula?` (${l.damageFormula})`:"") : (l.damageFormula||""),
@@ -4033,6 +4038,17 @@ function bindSheet(){
     const names = { category:D.weaponCategories, damageType:D.damageTypes }, what = { category:"type", damageType:"damage type", range:"range", acc:"ACC" }[f];
     const shown = value==="" ? "—" : names[f] ? names[f].find(x=>x.id===value).name : value;
     commit("loadout", `${(e&&e.name)||"Custom weapon"}: ${what} → ${shown}`, ()=>{ Engine.setCustomWeapon(ch, idx, f, value); });
+  });
+  // A written-in weapon's fire modes (Decision 249): a tick stores the whole
+  // set the row shows, toggled, as one audited commit through the engine.
+  main.querySelectorAll("[data-weaponmode]").forEach(el=>el.onchange=()=>{
+    const [i,id]=el.dataset.weaponmode.split("|"), idx=Number(i), e=ch.weapons[idx], l=Engine.weaponLine(ch, idx);
+    const have=((l&&l.fireModes)||[]).map(f=>f.id), modes=((D.weaponRules||{}).rofModes||[]);
+    const value=modes.map(m=>m.id).filter(x=>x===id ? el.checked : have.includes(x));
+    const pre=Engine.setCustomWeapon(clone(ch), idx, "rofModes", value);
+    if (!pre.ok){ notice(pre.why); el.checked=have.includes(id); return; }
+    const shown=value.length ? modes.filter(m=>value.includes(m.id)).map(m=>m.name).join(", ") : "—";
+    commit("loadout", `${(e&&e.name)||"Custom weapon"}: fire modes → ${shown}`, ()=>{ Engine.setCustomWeapon(ch, idx, "rofModes", value); });
   });
   // W16: mods and the magazine (Decision 120), each one commit(). Firing and
   // Reload are bound on Main as well as Loadout, where a weapon line is drawn.

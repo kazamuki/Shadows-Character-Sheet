@@ -1292,13 +1292,20 @@ test("a faction and a clock of markup, a hostile id, type, link and owner render
 
 test("L2: an open written-in weapon with a payload in its type and its four picks renders as text, hint and controls included", () => {
   const ch = hostileCharacter();
-  ch.weapons = [{ custom: true, name: "", type: P("w.type"), damage: P("w.dmg"), rof: "", capacity: "", ammo: "", features: "", notes: "",
-    roundsSpent: 0, category: P("w.cat"), damageType: P("w.dtype"), range: P("w.range"), acc: P("w.acc") }];
+  // L2b adds a payload in the fire modes, the loaded rounds and the typed RoF, on an open row and a folded one.
+  const row = (name, tag) => ({ custom: true, name, type: P(tag + ".type"), damage: P(tag + ".dmg"), rof: P(tag + ".rof"), capacity: "15", ammo: P(tag + ".ammo"), features: "", notes: "",
+    roundsSpent: 0, category: P(tag + ".cat"), damageType: P(tag + ".dtype"), range: P(tag + ".range"), acc: P(tag + ".acc"), rofModes: P(tag + ".modes"), loaded: P(tag + ".loaded") });
+  ch.weapons = [row("", "w"), row("Folded", "f")];
   const app = boot({ storage: { "shadows.active.v1": { ch, section: "loadout" } } });
   app.$$("#main button").find(b => /Open sheet/.test(b.textContent)).dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
   app.click('[data-sec="loadout"]');
   assert.ok(app.$('[data-weaponrow="0"] [data-weapontypehint]'), "the nameless row's hint isn't drawn");
   assert.deepEqual(injected(app, "loadout"), []);
   assert.equal(app.$('[data-weaponpick="0|category"]').value, "", "a junk type was selected");
+  assert.ok(app.$('[data-weaponrow="0"] [data-weaponrofhint]'), "the typed RoF's hint isn't drawn");
+  assert.equal(app.$$('[data-weaponrow="0"] [data-weaponmode]').filter(t => t.checked).length, 0, "a junk RoF ticked a mode");
+  app.click('[data-sec="main"]');
+  assert.deepEqual(injected(app, "main"), []);
+  assert.ok(!app.window.renderPrintView(ch).includes("<i data-pwn"), "the printed sheet drew a payload as markup");
   assert.deepEqual(app.errors, []);
 });

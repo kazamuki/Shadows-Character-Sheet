@@ -968,7 +968,8 @@ It renders on the Character tab (Decision 158).
   // computed from the capacity, never stored.
   // (0.14, Decision 149) `loaded`: the specialty round in the magazine (an
   // equipment id whose `reload.specialty` is true); absent for standard
-  // rounds. migrate() drops anything but a string, and any on a custom weapon.
+  // rounds. migrate() drops anything but a string. (0.31, Decision 249) A
+  // written-in weapon keeps one too: it can load Silver Rounds and Holy Points.
   // (0.29, Decision 247) A custom weapon's four picks: `category` (a
   // weaponCategories id, whose `skill` is what it attacks with), `damageType`
   // (a non-magical damageTypes id), `range` (one of weaponRules.rangeBands)
@@ -976,10 +977,17 @@ It renders on the Character tab (Decision 158).
   // migrate() deletes one that isn't real. The free-text `type` of a row from
   // before 0.29 is kept as typed and shown until a type is picked; new rows
   // have none. Damage reads as a catalog weapon's (a number, BOD+3, or text).
+  // (0.31, Decision 249) A fifth pick, `rofModes`: its fire modes, an array of
+  // weaponRules.rofModes ids kept in the data's order, ticked on the open row.
+  // Absent until ticked, and migrate() deletes one that isn't real. While it
+  // is absent the typed `rof` reads as before; a tick never writes or clears
+  // `rof`, and new rows have none.
   weapons: [ { id: "combat-knife", notes: "", mods: [], roundsSpent: 0 },
              { id: "ads-lp9-viper", notes: "", mods: [], roundsSpent: 3, loaded: "silver-rounds" },
-             { custom: true, name, damage, rof, capacity, ammo, features, notes, roundsSpent: 0,
-               category, damageType, range, acc } ],   // the last four are optional picks (0.29)
+             { custom: true, name, damage, capacity, ammo, features, notes, roundsSpent: 0,
+               category, damageType, range, acc,       // optional picks (0.29)
+               rofModes: ["S", "B"], loaded: "silver-rounds",   // optional (0.31)
+               rof: "S/B" } ],                         // only a row from before 0.31; never written again
   // (0.6) Same split as weapons. `integrityLoss` is current-state input (like
   // trackers.damage), not derived — max Integrity comes from the catalog.
   // (0.30, Decision 248) `worn` also turns on what a catalog piece's `grants` carry (SMARTLink Gloves), unless it is
@@ -3482,7 +3490,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
       "10 bursts" 10. One that doesn't read (a knife, a grenade) isn't
       tracked. `fireWeapon(ch, i, mode)` refuses a mode the weapon doesn't
       have and a spend the magazine can't pay ("Burst spends 3 rounds, and 2
-      are left. Reload."). `reloadWeapon` empties `roundsSpent`. → **Superseded in part by Decisions 145 and 221**: Reload takes a unit of fitting ammo from what's carried, and asks before reloading from none. A custom
+      are left. Reload."). `reloadWeapon` empties `roundsSpent`. → **Superseded in part by Decisions 145, 221 and 249**: Reload takes a unit of fitting ammo from what's carried, and asks before reloading from none; 249 ticks a written-in weapon's fire modes, and a typed RoF counts until then. A custom
       weapon's typed capacity and RoF count the same way. The buttons (one
       per RoF, then Reload) are on Loadout **and on Main's weapon table**,
       where a fight is run, a step toward W13. Each is one `commit()`: "AR-9X
@@ -3874,12 +3882,12 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:**
        - Refusing outright with no ammo: every character made before ammo was in the shop carries none, so Reload would break mid-session.
        - Reading "Fits Handgun." out of `notes`: prose, the Decision 134 lesson.
-       - Loading specialty rounds (Silver, Holy, Angel) now: they change the weapon's tags, so the weapon has to remember what's loaded, which is a schema bump. Left to W30's follow-up, W40.
+       - Loading specialty rounds now: a schema bump, left to W40.
        - Heavy Rounds and the Strix: Gear says to treat the belt as unlimited, and the Power Cell runs the Strix's mechanism, not its bolts.
      - **Replaces:** Decision 120 in part: `reloadWeapon` no longer always fills from nowhere.
      - **Revisit if:** the CRB prices ammo per round, or a weapon takes a magazine another of its type can't.
      - **Built:** app 0.30.0, game data 0.23; `engine.test.mjs` and `smoke.test.mjs` (W30), mutation-tested. Log 2026-09-26.
-     → **Superseded in part by Decision 149**: Reload asks which kind.
+     → **Superseded in part by Decisions 149 and 249**: Reload asks which kind; a written-in weapon with a type reloads from what fits it.
 
 146. **A held Ghost TAG labels the TAG and says what it is; Black TAG is the same thing.**
      *2026-09-26 · Ken + Claude · Touches: tagReads, tagReading, Ghost TAG, ghost-tag-s, Black TAG, TAG, meta.id, intake, print header, Review, W31, TAGless*
@@ -4857,7 +4865,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
 
 222. **A magazine taken out before it's empty is kept with its count, as a part-used magazine in your gear.**
      *2026-10-15 · Ken + Deighton + Claude · Touches: reloadWeapon, roundsLeft, part-used magazine, carriedGear, addGearEntry, useGear, gearLine, reloadFrom, weaponRules.swap, Reload anyway, Drop, countUnit, character schema 0.24, F34, W104*
-     - **Decided:** When Reload, a swap or Reload anyway takes a magazine out of a catalog weapon that ammo fits, its rounds are kept: none and nothing; all, and a whole magazine of that kind goes back on its stack; some, and a gear row `{ id, qty: 1, roundsLeft, notes }`, of the kind loaded or else the weapon's standard rounds. A part-used magazine loads up to the weapon's capacity (the rest stays in its row), keeps its kind, and is one magazine: it doesn't stack, count as a whole one or take +1. One tap takes a whole magazine first, else the fullest part-used one that adds rounds, and asks when two kinds are held; the chooser lists each; Loadout's row says **Drop**. Shells taken out by a swap go back in the box.
+     - **Decided:** When Reload, a swap or Reload anyway takes a magazine out of a catalog weapon that ammo fits, its rounds are kept: none and nothing; all, and a whole magazine of that kind goes back on its stack; some, and a gear row `{ id, qty: 1, roundsLeft, notes }`, of the kind loaded or else the weapon's standard rounds. → **Superseded in part by Decision 249**: a typed written-in weapon too. A part-used magazine loads up to the weapon's capacity (the rest stays in its row), keeps its kind, and is one magazine: it doesn't stack, count as a whole one or take +1. One tap takes a whole magazine first, else the fullest part-used one that adds rounds, and asks when two kinds are held; the chooser lists each; Loadout's row says **Drop**. Shells taken out by a swap go back in the box.
      - **Why:** Deighton's ruling (2026-10-10, Q11): kept, with its count. A detached magazine stores what's left in it, where a weapon stores what's spent (Decision 120). Its own row is the charged Talisman's precedent (Decision 121).
      - **Rejected:**
        - The counts as a list on the whole-magazine row: a row at qty 0 is removed, taking the list with it.
@@ -5140,6 +5148,15 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing; extends Decisions 237 (traitRows' sources) and 120 (a line's ACC and damage).
      - **Revisit if:** Deighton rules F49; L5 or L7 needs a stat modifier or another source.
      - **Built:** app 0.56.0, game data 0.50, character schema 0.30, PR #257. Log 2026-10-28 (L3).
+
+249. **A written-in weapon ticks its fire modes, and one with a weapon type reloads from carried ammunition as a catalog weapon of that type does.**
+     *2026-10-28 · Ken + Claude · Touches: customWeaponPick, customWeaponLine, setCustomWeapon, weaponLine, fireModesOf, reloadSource, ammoFor, putBack, reloadWeapon, weapons[i].rofModes, weapons[i].rof, weapons[i].loaded, weapons[i].ammo, weaponRules.rofModes, WEAPON_COLS, reloadFrom, part-used magazine, Reload anyway, Loadout's custom weapon row, Main's Weapons, the print sheet's weapons, character schema 0.31, W109, LQ14, LQ23–LQ28*
+     - **Decided:** A written-in weapon stores its fire modes as `rofModes` (`weaponRules.rofModes` ids), ticked on its open row, one audited action each; a row from before keeps its typed `rof` until a tick. One with a weapon type reloads from carried ammunition whose `reload.categories` names that type, by the catalog's own path: magazines or shells, the chooser, part-used magazines, "Reload anyway?", specialty rounds in `loaded`. Never by a weapon's id, never rounds that need a mod. No type, or one nothing fits, reloads as before. `ammo` stays a note.
+     - **Why:** Ken (2026-10-28): a written-in gun's reload didn't spend ammo, and its fire modes couldn't be picked. Its type (247) already says what fits.
+     - **Rejected:** a free reload (LQ14's default, reopened by Ken); ticks rewriting `rof` (LQ26: a typed "Semi" is lost); converting a readable `rof` on open (nothing guessed); reading the `ammo` text (LQ27: a guess); refusing Reload without a type (LQ24: old rows stop reloading).
+     - **Replaces:** Decisions 145 in part (only an untyped written-in weapon reloads as before), 222 in part (a typed one keeps part-used magazines) and 120 in part (its fire modes are ticked). Extends 247 and 149.
+     - **Revisit if:** W109 lets custom rows opt into a book row's behaviour; a written-in weapon takes mods; W108 sizes magazines per weapon.
+     - **Built:** app 0.56.0, game data 0.50, character schema 0.31, PR #…. Log 2026-10-28 (L2b).
 
 ## 5. Open Flags
 

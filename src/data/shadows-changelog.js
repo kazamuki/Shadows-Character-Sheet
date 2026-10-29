@@ -6,6 +6,7 @@ window.SHADOWS_CHANGELOG = [
     "date": null,
     "intro": [],
     "items": [
+      "**Weapons you write in reload like the catalog's.** Give one a type and Reload takes a magazine of the ammo it fits from what you carry, keeping a half-empty one. Silver Rounds and Holy Points load too. Tick the fire modes it has, and Single, Burst and Full Auto spend its rounds.",
       "**Gear you wear or use now counts.** Wear SMARTLink Gloves and your SMART Link guns show the +2 ACC. Switch a SMART Deck to In use and your Interface checks go up by its rating.",
       "The Hacking Visor, Hacking Gloves and PrecisionGrip Gloves now say on their card that your GM picks which checks they help."
     ]
