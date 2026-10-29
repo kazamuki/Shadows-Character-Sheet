@@ -1707,3 +1707,13 @@ test("L2b 7 (sheet): Reload on a written-in handgun takes a mag from Loadout and
   assert.match(tr, />S\/B</, "the printed sheet doesn't show a ticked row's RoF");
   assert.deepEqual([...app.errors, ...dry.errors, ...bare.errors], []);
 });
+
+test("L2b 6c (sheet): unticking the last mode on a typed-RoF row names what the row fires now, not a dash", () => {
+  const app = openSheet(l2Character({ category: "handguns", capacity: "15", rof: "S/B" }), "loadout");
+  app.click('[data-loedit="weapons|1"]');
+  l2bChange(app, rowOf(app, 1).querySelector('[data-weaponmode="1|S"]'), { checked: false });
+  l2bChange(app, rowOf(app, 1).querySelector('[data-weaponmode="1|B"]'), { checked: false });
+  const labels = activeChar(app).audit.map(a => a.label);
+  assert.equal(labels.at(-1), "Zip gun: fire modes → Single, Burst", "the audit said the row fires nothing");
+  assert.deepEqual(app.errors, []);
+});

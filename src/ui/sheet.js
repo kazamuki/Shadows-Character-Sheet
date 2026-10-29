@@ -4045,9 +4045,11 @@ function bindSheet(){
     const [i,id]=el.dataset.weaponmode.split("|"), idx=Number(i), e=ch.weapons[idx], l=Engine.weaponLine(ch, idx);
     const have=((l&&l.fireModes)||[]).map(f=>f.id), modes=((D.weaponRules||{}).rofModes||[]);
     const value=modes.map(m=>m.id).filter(x=>x===id ? el.checked : have.includes(x));
-    const pre=Engine.setCustomWeapon(clone(ch), idx, "rofModes", value);
+    const after=clone(ch), pre=Engine.setCustomWeapon(after, idx, "rofModes", value);
     if (!pre.ok){ notice(pre.why); el.checked=have.includes(id); return; }
-    const shown=value.length ? modes.filter(m=>value.includes(m.id)).map(m=>m.name).join(", ") : "—";
+    // What the row fires once it's stored: a typed RoF from before reads again when the pick is cleared.
+    const fires=((Engine.weaponLine(after, idx)||{}).fireModes||[]).map(f=>f.name);
+    const shown=fires.length ? fires.join(", ") : "—";
     commit("loadout", `${(e&&e.name)||"Custom weapon"}: fire modes → ${shown}`, ()=>{ Engine.setCustomWeapon(ch, idx, "rofModes", value); });
   });
   // W16: mods and the magazine (Decision 120), each one commit(). Firing and
