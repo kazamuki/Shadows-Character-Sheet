@@ -1374,9 +1374,7 @@ const factionRecords = () => Array.isArray(S.table.factions) ? S.table.factions.
 const factionPageNow = () => S.tsection==="city" && S.factionOpen ? factionRecords().find(f=>f.id===S.factionOpen) || null : null;
 const factionClocks = f => Engine.clocksOn(S.table, { kind:"faction", id:f.id });
 function factionCardHtml(t, f){
-  const clocks=factionClocks(f), full=clocks.filter(c=>c.filled>=c.segments).length;
-  const bits=[Engine.FACTION_TYPE_LABELS[f.type], gazName(f.territory), stanceWord(f.stance),
-    clocks.length ? `${clocks.length} ${clocks.length===1 ? "clock" : "clocks"}${full ? ` · ${full} full` : ""}` : ""].filter(Boolean).map(esc).join(" · ");
+  const bits=[Engine.FACTION_TYPE_LABELS[f.type], gazName(f.territory), stanceWord(f.stance), clockCountText(factionClocks(f))].filter(Boolean).map(esc).join(" · ");
   return `<li class="roster-card cast-card place-card" data-fcard="${esc(f.id)}"><button class="cast-open" data-fcardopen="${esc(f.id)}">${esc(Engine.factionTitle(t, f))}</button>
     ${bits ? `<div class="roster-meta cast-meta">${bits}</div>` : ""}</li>`;
 }
@@ -1436,12 +1434,75 @@ function clockHtml(c){
     ${fields}</div>`;
 }
 const clockBoxesHtml = c => Array.from({ length:c.segments }, (_, i)=>`<span class="clock-box${i<c.filled ? " on" : ""}"></span>`).join("");
+// What a card says of an owner's clocks: "2 clocks · 1 full", or nothing. The faction's card and the place's are one rule.
+function clockCountText(clocks){
+  const full=clocks.filter(c=>c.filled>=c.segments).length;
+  return clocks.length ? `${clocks.length} ${clocks.length===1 ? "clock" : "clocks"}${full ? ` · ${full} full` : ""}` : "";
+}
+// The clocks an owner has, `owner` being { kind, id }, and the press that adds one. One piece on every page that owns clocks.
+function clocksHtml(owner){
+  return `<div data-fclocks>${Engine.clocksOn(S.table, owner).map(clockHtml).join("")}</div>
+    <p><button type="button" class="btn sm" data-clkadd>Add a clock</button></p>`;
+}
+function bindClocks(main, owner){
+  const focus = sel => { const el=$("main").querySelector(sel); if (el) el.focus(); };
+  const clockEdit = (cid, o) => tableChange(()=>Engine.editClock(S.table, cid, o), false);
+  const clockOf = cid => Engine.clocksOn(S.table, owner).find(c=>c.id===cid);
+  const paintClock = cid => {
+    const c=clockOf(cid), root=main.querySelector(attrSel("data-clock", cid)); if (!c || !root) return;
+    const full=c.filled>=c.segments;
+    root.querySelector(".clock-boxes").innerHTML=clockBoxesHtml(c);
+    root.querySelector(".clock-count").textContent=`${c.filled} of ${c.segments}`;
+    root.querySelector("[data-clkminus]").disabled=c.filled<=0;
+    root.querySelector("[data-clkplus]").disabled=full;
+    root.classList.toggle("full", full);
+    const msg=root.querySelector("[data-clockfull]");
+    msg.hidden=!full;
+    msg.innerHTML=`<strong>Full</strong>${c.whenFull.trim() ? ` · ${esc(c.whenFull)}` : ""}`;
+  };
+  const redrawClocks = () => { main.querySelector("[data-fclocks]").innerHTML=Engine.clocksOn(S.table, owner).map(clockHtml).join(""); bindAll(); };
+  const bindAll = () => main.querySelectorAll("[data-clock]").forEach(root=>{
+    const cid=root.dataset.clock, q = sel => root.querySelector(sel);
+    q("[data-clkplus]").onclick=()=>{ const c=clockOf(cid); if (!c) return; clockEdit(cid, { filled:c.filled+1 }); paintClock(cid); if (q("[data-clkplus]").disabled) q("[data-clkminus]").focus(); };
+    q("[data-clkminus]").onclick=()=>{ const c=clockOf(cid); if (!c) return; clockEdit(cid, { filled:c.filled-1 }); paintClock(cid); if (q("[data-clkminus]").disabled) q("[data-clkplus]").focus(); };
+    const ed=q("[data-clkedit]");
+    if (ed) ed.onclick=()=>{ S.clockEdit=cid; redrawClocks(); focus(`${attrSel("data-clock", cid)} [data-kf="name"]`); };
+    root.querySelectorAll("[data-kf]").forEach(el=>{
+      const key=el.dataset.kf, fn=ev=>{
+        if (key==="segments"){
+          // Typing "12" passes through "1": only a whole number from 2 to 12 is taken, while typing or on leaving the field.
+          const n=Number(el.value.trim());
+          if (!(el.value.trim()!=="" && Number.isInteger(n) && n>=2 && n<=12)){
+            // Writes nothing: a refused number must not reset the clock. Leaving the field puts back what is stored.
+            if (ev.type==="change"){ const c=clockOf(cid); if (c) el.value=c.segments; }
+            return;
+          }
+        }
+        clockEdit(cid, { [key]:el.value });
+        if (key==="name"){ const c=clockOf(cid); root.querySelector("[data-clockname]").textContent=c && c.name.trim() || "A clock"; }
+        if (key==="segments" || key==="whenFull") paintClock(cid);
+        if (key==="segments" && ev.type==="change"){ const c=clockOf(cid); if (c) el.value=c.segments; }
+      };
+      el.addEventListener("input", fn); el.addEventListener("change", fn);
+    });
+    const done=q("[data-clkdone]");
+    if (done) done.onclick=()=>{ S.clockEdit=null; redrawClocks(); focus(`${attrSel("data-clock", cid)} [data-clkedit]`); };
+    const del=q("[data-clkdel]");
+    if (del) del.onclick=()=>{ tableChange(()=>Engine.removeClock(S.table, cid), false); S.clockEdit=null; redrawClocks(); focus("[data-clkadd]"); };
+  });
+  bindAll();
+  main.querySelector("[data-clkadd]").onclick=()=>{
+    let cid; tableChange(()=>{ cid=Engine.addClock(S.table, { on:owner, name:"New clock", segments:4 }).id; }, false);
+    S.clockEdit=cid; redrawClocks();
+    const el=$("main").querySelector(`${attrSel("data-clock", cid)} [data-kf="name"]`); if (el){ el.focus(); el.select(); }
+  };
+}
 function factionPageHtml(f){
   const t=S.table, entry=Engine.gazetteerEntry(f.from && f.from.id), g=Engine.gazetteer({});
   const opt=(value, name, on) => `<option value="${esc(value)}"${on ? " selected" : ""}>${esc(name)}</option>`;
   const terr=g.territories.find(r=>r.entry.id===f.territory);
   const unknownT=f.territory && !terr ? opt(f.territory, f.territory, true) : "";
-  const tied=Engine.factionAffiliated(t, f.id), clocks=factionClocks(f), title=Engine.factionTitle(t, f);
+  const tied=Engine.factionAffiliated(t, f.id), title=Engine.factionTitle(t, f);
   return `<p><button class="btn sm" data-fback>Back to ${esc(factionBackTitle())}</button></p>
     <h1 class="step-title tbl-title cast-title" data-ftitle tabindex="-1">${esc(title)}</h1>
     <label class="field"><span>Name</span><input type="text" data-ff="name" value="${esc(f.name)}" placeholder="${esc(entry ? entry.name : f.from && f.from.name || "Who are they?")}" autocomplete="off"></label>
@@ -1464,8 +1525,7 @@ function factionPageHtml(f){
     ${tied.length ? `<h2 class="cast-h">Tied by affiliation</h2><ul class="int-list">${tied.map(n=>
       `<li class="int-line"><button class="cast-open int-who" data-copen="${esc(n.id)}" data-cwhere="aff|${esc(n.id)}">${esc(String(n.name||"").trim() || "Unnamed")}</button></li>`).join("")}</ul>` : ""}
     <h2 class="cast-h">Clocks</h2>
-    <div data-fclocks>${clocks.map(clockHtml).join("")}</div>
-    <p><button type="button" class="btn sm" data-clkadd>Add a clock</button></p>
+    ${clocksHtml({ kind:"faction", id:f.id })}
     <p class="cast-delete"><button class="btn danger" data-fdel>Delete</button></p>`;
 }
 // Opened from a member's page: the page as it was, so Back returns there, on the link (Decision 244).
@@ -1573,57 +1633,7 @@ function bindFactionPage(main, f){
   };
   const redrawTips = which => { main.querySelector(`[data-ftipgroup="${which}"]`).innerHTML=factionTipHtml(own(), which); bindTips(which); };
   bindTips("for"); bindTips("against");
-  // Clocks.
-  const clockEdit = (cid, o) => tableChange(()=>Engine.editClock(S.table, cid, o), false);
-  const clockOf = cid => Engine.clocksOn(S.table, { kind:"faction", id }).find(c=>c.id===cid);
-  const paintClock = cid => {
-    const c=clockOf(cid), root=main.querySelector(attrSel("data-clock", cid)); if (!c || !root) return;
-    const full=c.filled>=c.segments;
-    root.querySelector(".clock-boxes").innerHTML=clockBoxesHtml(c);
-    root.querySelector(".clock-count").textContent=`${c.filled} of ${c.segments}`;
-    root.querySelector("[data-clkminus]").disabled=c.filled<=0;
-    root.querySelector("[data-clkplus]").disabled=full;
-    root.classList.toggle("full", full);
-    const msg=root.querySelector("[data-clockfull]");
-    msg.hidden=!full;
-    msg.innerHTML=`<strong>Full</strong>${c.whenFull.trim() ? ` · ${esc(c.whenFull)}` : ""}`;
-  };
-  const redrawClocks = () => { main.querySelector("[data-fclocks]").innerHTML=factionClocks(own()).map(clockHtml).join(""); bindClocks(); };
-  const bindClocks = () => main.querySelectorAll("[data-clock]").forEach(root=>{
-    const cid=root.dataset.clock, q = sel => root.querySelector(sel);
-    q("[data-clkplus]").onclick=()=>{ const c=clockOf(cid); if (!c) return; clockEdit(cid, { filled:c.filled+1 }); paintClock(cid); if (q("[data-clkplus]").disabled) q("[data-clkminus]").focus(); };
-    q("[data-clkminus]").onclick=()=>{ const c=clockOf(cid); if (!c) return; clockEdit(cid, { filled:c.filled-1 }); paintClock(cid); if (q("[data-clkminus]").disabled) q("[data-clkplus]").focus(); };
-    const ed=q("[data-clkedit]");
-    if (ed) ed.onclick=()=>{ S.clockEdit=cid; redrawClocks(); focus(`${attrSel("data-clock", cid)} [data-kf="name"]`); };
-    root.querySelectorAll("[data-kf]").forEach(el=>{
-      const key=el.dataset.kf, fn=ev=>{
-        if (key==="segments"){
-          // Typing "12" passes through "1": only a whole number from 2 to 12 is taken, while typing or on leaving the field.
-          const n=Number(el.value.trim());
-          if (!(el.value.trim()!=="" && Number.isInteger(n) && n>=2 && n<=12)){
-            // Writes nothing: a refused number must not reset the clock. Leaving the field puts back what is stored.
-            if (ev.type==="change"){ const c=clockOf(cid); if (c) el.value=c.segments; }
-            return;
-          }
-        }
-        clockEdit(cid, { [key]:el.value });
-        if (key==="name"){ const c=clockOf(cid); root.querySelector("[data-clockname]").textContent=c && c.name.trim() || "A clock"; }
-        if (key==="segments" || key==="whenFull") paintClock(cid);
-        if (key==="segments" && ev.type==="change"){ const c=clockOf(cid); if (c) el.value=c.segments; }
-      };
-      el.addEventListener("input", fn); el.addEventListener("change", fn);
-    });
-    const done=q("[data-clkdone]");
-    if (done) done.onclick=()=>{ S.clockEdit=null; redrawClocks(); focus(`${attrSel("data-clock", cid)} [data-clkedit]`); };
-    const del=q("[data-clkdel]");
-    if (del) del.onclick=()=>{ tableChange(()=>Engine.removeClock(S.table, cid), false); S.clockEdit=null; redrawClocks(); focus("[data-clkadd]"); };
-  });
-  bindClocks();
-  main.querySelector("[data-clkadd]").onclick=()=>{
-    let cid; tableChange(()=>{ cid=Engine.addClock(S.table, { on:{ kind:"faction", id }, name:"New clock", segments:4 }).id; }, false);
-    S.clockEdit=cid; redrawClocks();
-    const el=$("main").querySelector(`${attrSel("data-clock", cid)} [data-kf="name"]`); if (el){ el.focus(); el.select(); }
-  };
+  bindClocks(main, { kind:"faction", id });
   main.querySelector("[data-fback]").onclick=factionBack;
   main.querySelector("[data-fdel]").onclick=()=>{
     const title=Engine.factionTitle(S.table, own()), n=factionClocks(own()).length;
