@@ -11274,3 +11274,15 @@ test("253: setOpening in round 1 re-picks the turn, and Act now refuses a row th
   assert.equal(Engine.actNow(u.t, u.e, u.crew[0]).why, "A are out of it.");
   eq(u.t, before, "the delay stays, writing nothing");
 });
+
+test("253: setTurn onto a delayed row takes the turn and ends its delay, so Reset doesn't call it missed", () => {
+  const { t, e } = sheetTable();
+  const [a, b] = [["A", 12], ["B", 9]].map(([n, o]) => addPc(t, e, n, { order: o }));
+  Engine.startEncounter(t, e);
+  Engine.delayTurn(t, e, a, "door");
+  assert.ok(Engine.setTurn(t, e, a).ok);
+  eq([encOf(t, e).turn, encOf(t, e).rows.find(r => r.id === a).delay], [a, null]);
+  Engine.nextTurn(t, e); Engine.nextTurn(t, e);
+  eq(Engine.resolveEncounterReset(t, e, {}).rows.map(r => r.missed), [null, null]);
+  assert.ok(b);
+});

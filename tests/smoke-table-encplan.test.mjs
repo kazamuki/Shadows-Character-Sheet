@@ -188,8 +188,8 @@ test("253: an Ambush by the crew: Start, then Next passes the other side in roun
   assert.equal(labels(app).at(-1), "Changed Warehouse");
   app.click("[data-enc-start]");
   assert.equal(activeName(app), "A");
-  assert.match(rowByName(app, "A").textContent, /\+3 to their first attack/);
-  assert.match(rowByName(app, "X").textContent, /Ambushed: no turn, attacked at Difficulty 10/);
+  assert.match(rowByName(app, "A").textContent, /\+3 on their first attack roll/);
+  assert.match(rowByName(app, "X").textContent, /Ambushed: no turn, can.t defend, hit at Difficulty 10/);
   assert.ok(app.$("[data-eopening]"), "the controls stay until someone has acted");
   app.click("[data-enext]");
   assert.equal(app.$("[data-eopening]"), null, "the controls are gone after the first Next");
@@ -215,7 +215,7 @@ test("253: a Surprise tags the rows and passes nobody; the opening's side is a t
   assert.equal(app.window.eval("S.table.encounters[0].opening.kind"), "surprise");
   app.click("[data-enc-start]");
   assert.equal(activeName(app), "A");
-  assert.match(rowByName(app, "X").textContent, /\+1 to their first attack/);
+  assert.match(rowByName(app, "X").textContent, /\+1 on their first attack roll/);
   assert.match(rowByName(app, "A").textContent, /Surprised: Fast Actions only/);
   app.click("[data-enext]");
   assert.equal(activeName(app), "X", "nobody is passed");
@@ -246,7 +246,7 @@ test("253: Delay on the active row, then Act now, and a missed delay at Reset", 
   app.click("[data-enext]"); app.click("[data-edelay-open]");
   type(app, "[data-edelay-until]", "the door opens"); submit(app, "[data-edelayform]");
   app.click("[data-enext]"); app.click("[data-enext]");
-  assert.match(app.$(".enc-reset").textContent, /Waited for “the door opens”; it didn't happen: no action this round\./);
+  assert.match(app.$(".enc-reset").textContent, /Waited for “the door opens”. It never came: no action this round./);
   assert.doesNotMatch(app.$(".enc-reset").textContent, /Nothing on:.*\bB\b/, "the row isn't called quiet");
   app.click("[data-efinish]");
   assert.deepEqual(enc(app).rows.map(r => r.delay), [null, null, null, null, null]);

@@ -2891,8 +2891,8 @@ function encRowHtml(v, e, sides){
         <input type="text" data-edelay-until placeholder="the door opens" aria-label="Until…" autocomplete="off">
         <button class="btn sm primary" type="submit">OK</button><button class="btn sm" type="button" data-edelaycancel>Cancel</button></form>` : ""}`;
   // The opening's reminder (253): shown on the rows it applies to, never applied.
-  const openTag = !v.opening ? "" : v.opening==="attacker" ? `+${e.opening && e.opening.kind==="ambush" ? 3 : 1} to their first attack`
-    : v.opening==="ambushed" ? "Ambushed: no turn, attacked at Difficulty 10" : "Surprised: Fast Actions only";
+  const openTag = !v.opening ? "" : v.opening==="attacker" ? `+${e.opening && e.opening.kind==="ambush" ? 3 : 1} on their first attack roll`
+    : v.opening==="ambushed" ? "Ambushed: no turn, can't defend, hit at Difficulty 10" : "Surprised: Fast Actions only";
   const pcFields = pc && !ended ? `<div class="enc-pcnums">${num("data-ehp", r.hp, "HP")}${num("data-elevels", r.levels, "Health Levels")}</div>` : "";
   // The member an entry row was kept as (Decision 193): a tap to their page, struck through once they're removed.
   const kept = v.kept ? `<p class="enc-kept">Kept as ${v.kept.gone ? `<s>${esc(v.kept.name)}</s><span class="vh">, removed</span>`
@@ -2934,7 +2934,7 @@ function encResetHtml(e, v){
     const dyingWords = [mk, x.dying ? (mk ? "Then " : "") + esc(x.dying) + (mk ? "." : "") : ""].filter(Boolean).join(" ");
     const dying = x.dying || x.dyingMarks ? `<li><b>Dying:</b> ${dyingWords}${dc && dc.counter ? ` <span class="enc-marks">${esc(dc.counter.label)} ${dc.marks}/${dc.counter.max}
         <button class="btn sm" data-emarks="${id}|${dc.index}|-1" aria-label="Fewer ${esc(dc.counter.label)}">−</button><button class="btn sm" data-emarks="${id}|${dc.index}|1" aria-label="More ${esc(dc.counter.label)}">+</button></span>` : ""}</li>` : "";
-    const missed = x.missed===null ? "" : `<p class="enc-wait">${x.missed.trim() ? `Waited for “${esc(x.missed)}”; it didn't happen: no action this round.` : "Waited, and nothing came: no action this round."}</p>`;
+    const missed = x.missed===null ? "" : `<p class="enc-wait">${x.missed.trim() ? `Waited for “${esc(x.missed)}”. It never came: no action this round.` : "Waited. Nothing came: no action this round."}</p>`;
     return `<section class="enc-reset-row"><h3 class="cast-h">${esc(x.name.trim() || "Unnamed")}</h3>
       ${missed}${ticks || dying ? `<ul class="enc-list">${ticks}${dying}</ul>` : ""}
       ${out ? `<p class="cast-sub">Runs out now</p><ul class="enc-list">${out}</ul>` : ""}
@@ -3134,8 +3134,8 @@ function encOpeningHtml(v){
   return `<div class="enc-opening" data-eopening>
     <div class="tag-choice"><span>Opening</span><div class="form-toggle" role="group" aria-label="Opening">${kinds.map(([k, name])=>
       `<button type="button" data-eopen-kind="${k}" class="${k===cur ? "on" : ""}" aria-pressed="${k===cur}">${name}</button>`).join("")}</div>
-      <span class="enc-tips"><button type="button" class="tag" data-tip="surprise" data-term="surprise" aria-label="What Surprise means">?</button>
-      <button type="button" class="tag" data-tip="ambush" data-term="ambush" aria-label="What Ambush means">?</button></span></div>
+      <span class="enc-tips"><button type="button" class="tag" data-tip="surprise" data-term="surprise" aria-label="Surprise ?">Surprise ?</button>
+      <button type="button" class="tag" data-tip="ambush" data-term="ambush" aria-label="Ambush ?">Ambush ?</button></span></div>
     ${v.opening ? `<div class="tag-choice"><span>By</span><div class="form-toggle" role="group" aria-label="By">${v.sides.map(s=>
       `<button type="button" data-eopen-side="${esc(s.id)}" class="${s.id===v.opening.side ? "on" : ""}" aria-pressed="${s.id===v.opening.side}">${esc(s.title)}</button>`).join("")}</div></div>` : ""}</div>`;
 }

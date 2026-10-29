@@ -8446,6 +8446,8 @@ const Engine = (() => {
     if (l.r.out) return { ok:false, why:`${l.r.name.trim() || "They"} are out of it.` };
     if (_ambushed(l.e, l.r)) return { ok:false, why:`${l.r.name.trim() || "They"} ${l.r.name.trim() ? "is" : "are"} ambushed this round.` };
     l.e.turn = l.r.id;
+    // Taking the turn is acting: a delay it carried is over, as Act now ends it.
+    l.r.delay = null;
     _tableStamp(t, l.e);
     return { ok:true };
   }
