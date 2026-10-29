@@ -1070,7 +1070,7 @@ const statusLabel = s => ((D.appCopy||{}).statusLabel||{})[s] || s;
 
 // ── Editable tables (weapons / gear / archetype panel tables) — shared by
 // the Loadout tab's renderer and the sheet's event bindings. ─────────────
-const WEAPON_COLS=["name","damage","rof","capacity","ammo","features","notes"];
+const WEAPON_COLS=["name","damage","capacity","ammo","features","notes"];
 const GEAR_COLS=["name","type","notes"];
 function editTable(rows, cols, key, addLabel){
   let h = `<table class="edit"><thead><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join("")}<th></th></tr></thead><tbody>`;

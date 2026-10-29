@@ -22,7 +22,7 @@ const Engine = (() => {
   const INTAKE_RE = new RegExp(`^TAG-${INTAKE_BODY}$`);
   const OLD_INTAKE_RE = new RegExp(`^NCR-(${INTAKE_BODY})$`);
   // The character file's shape. A bump needs a migrate() step in the same change.
-  const SCHEMA_VERSION = "0.30";
+  const SCHEMA_VERSION = "0.31";
   const isIntakeId = v => typeof v==="string" && INTAKE_RE.test(v);
   function randomChars(n){
     const c = typeof globalThis!=="undefined" && globalThis.crypto && typeof globalThis.crypto.getRandomValues==="function" ? globalThis.crypto : null;
@@ -1821,9 +1821,15 @@ const Engine = (() => {
   // A written-in weapon's four picks (Decision 247): a weapon type (its
   // Skill), a damage type, a range band and an ACC. Each is real or it reads
   // as empty, from a file and from a call. Returns the stored value, or
-  // undefined when it isn't one.
-  const CUSTOM_WEAPON_PICKS = ["category", "damageType", "range", "acc"];
+  // undefined when it isn't one. Decision 249 adds a fifth, its fire modes: a
+  // set of `weaponRules.rofModes` ids, kept in the data's order.
+  const CUSTOM_WEAPON_PICKS = ["category", "damageType", "range", "acc", "rofModes"];
   function customWeaponPick(field, v){
+    if (field==="rofModes"){
+      const modes = (D().weaponRules||{}).rofModes||[];
+      if (!Array.isArray(v) || !v.length || !v.every(x=>typeof x==="string" && modes.some(m=>m.id===x))) return undefined;
+      return modes.filter(m=>v.includes(m.id)).map(m=>m.id);
+    }
     if (field==="category") return typeof v==="string" && (D().weaponCategories||[]).some(c=>c.id===v) ? v : undefined;
     if (field==="damageType") return typeof v==="string" && (D().damageTypes||[]).some(t=>t.id===v && !t.magical) ? v : undefined;
     if (field==="range") return typeof v==="string" && ((D().weaponRules||{}).rangeBands||[]).includes(v) ? v : undefined;
@@ -1831,6 +1837,8 @@ const Engine = (() => {
     return undefined;
   }
   const customText = v => typeof v==="string" && v.trim() ? v : null;
+  // Its RoF reads from the ticked modes, else from the text typed before they existed.
+  const customRof = e => { const m = customWeaponPick("rofModes", e.rofModes); return m ? m.join("/") : customText(e.rof); };
   function customWeaponLine(ch, e){
     const category = customWeaponPick("category", e.category)||null;
     const def = category && (D().weaponCategories||[]).find(c=>c.id===category);
@@ -1843,7 +1851,7 @@ const Engine = (() => {
              attack: sk ? sk.checkBonus : null, acc: acc==null ? null : acc, accPicked: acc==null ? null : acc,   // accPicked: the stored pick, before any worn bonus
              damage: dmg.value, damageFormula: dmg.formula,
              damageType: dt ? damageTypeById(dt).name : null,
-             range: customWeaponPick("range", e.range)||null, rof: customText(e.rof), capacity: customText(e.capacity),
+             range: customWeaponPick("range", e.range)||null, rof: customRof(e), capacity: customText(e.capacity),
              typeText: category ? null : customText(e.type), tags: [], features: [] };
   }
   // One pick on a written-in weapon. "" or null clears it. A refusal writes nothing.
@@ -1852,9 +1860,11 @@ const Engine = (() => {
     if (!e || typeof e!=="object") return { ok:false, why:"That weapon isn't on the sheet." };
     if (!e.custom && e.id) return { ok:false, why:"Only a weapon you wrote in can be changed here." };
     if (!CUSTOM_WEAPON_PICKS.includes(field)) return { ok:false, why:"That can't be changed here." };
-    if (value==="" || value==null){ delete e[field]; return { ok:true, field, value:null }; }
+    if (value==="" || value==null || (field==="rofModes" && Array.isArray(value) && !value.length)){ delete e[field]; return { ok:true, field, value:null }; }
     const v = customWeaponPick(field, value);
-    if (v===undefined) return { ok:false, why: field==="acc" ? "ACC is a whole number, 0 or more."
+    const modeNames = ((D().weaponRules||{}).rofModes||[]).map(m=>m.name);
+    if (v===undefined) return { ok:false, why: field==="rofModes" ? `Pick from ${modeNames.length>1 ? modeNames.slice(0, -1).join(", ")+" and "+modeNames[modeNames.length-1] : modeNames.join("")}.`
+      : field==="acc" ? "ACC is a whole number, 0 or more."
       : field==="category" ? "Pick one of the weapon types." : field==="damageType" ? "Pick one of the damage types listed." : "Pick one of the range bands." };
     e[field] = v;
     return { ok:true, field, value:v };
@@ -1920,8 +1930,13 @@ const Engine = (() => {
     const e = listOf(ch, "weapons")[index];
     if (!e || typeof e!=="object") return null;
     const notes = typeof e.notes==="string" ? e.notes : "";
-    if (e.custom || !e.id) return applyWeaponBonuses(ch, index, Object.assign({ index, custom:true, name:String(e.name||""), notes },
-      customWeaponLine(ch, e), { rounds: roundsOf(e.capacity, e), fireModes: fireModesOf(e.rof) }), []);
+    if (e.custom || !e.id){
+      const line = Object.assign({ index, custom:true, name:String(e.name||""), notes },
+        customWeaponLine(ch, e), { rounds: roundsOf(e.capacity, e) });
+      line.fireModes = fireModesOf(line.rof);
+      loadedAndReloadFrom(ch, line, e);
+      return applyWeaponBonuses(ch, index, line, []);
+    }
     const def = weaponDefById(e.id);
     if (!def) return { index, missing:true, name:String(e.id), notes };
     const line = Object.assign({ index, notes }, weaponDefLine(ch, def));
@@ -1942,18 +1957,22 @@ const Engine = (() => {
       instead: (m.notWith||[]).filter(x=>sights.some(g=>g.id===x)) }));
     line.rounds = roundsOf(def.capacity, e);
     line.fireModes = fireModesOf(def.rof);
-    // W40: specialty rounds in the magazine name themselves, and their tags
-    // join the weapon's.
+    loadedAndReloadFrom(ch, line, e);
+    applyWeaponBonuses(ch, index, line, Array.isArray(def.features) ? def.features : []);
+    return line;
+  }
+  // W40: specialty rounds in the magazine name themselves, and their tags join
+  // the weapon's. W30: what Reload would take, and how much of it you carry.
+  // W40: every kind carried, and whether one would swap what's loaded.
+  // P9b: `carried` is whole magazines; `parts` the part-used ones, their
+  // rounds apart in `partRounds`, fullest first. A kind counts if either is
+  // carried. One helper for a catalog line and a written-in one (Decision 249).
+  function loadedAndReloadFrom(ch, line, e){
     const loadedDef = line.rounds && loadedOf(e) ? equipmentById(loadedOf(e)) : null;
     if (loadedDef && loadsAs(loadedDef)){
       line.loaded = { id:loadedDef.id, name:loadedDef.name, tags:ammoTags(loadedDef) };
       line.tags = [...new Set([...line.tags, ...line.loaded.tags])];
     }
-    applyWeaponBonuses(ch, index, line, Array.isArray(def.features) ? def.features : []);
-    // W30: what Reload would take, and how much of it you carry. W40: every
-    // kind carried, and whether one would swap what's loaded.
-    // P9b: `carried` is whole magazines; `parts` the part-used ones, their
-    // rounds apart in `partRounds`, fullest first. A kind counts if either is carried.
     const src = line.rounds && reloadSource(ch, e);
     if (src){ const have = src.have, parts = src.parts;
       const held = [...new Map([...have.map(h=>h.def), ...parts.map(p=>p.def)].map(d=>[d.id, d])).values()];
@@ -1962,7 +1981,6 @@ const Engine = (() => {
                           parts: parts.length, partRounds: parts.map(p=>p.roundsLeft), countUnit: held.length===1 ? countUnitOf(held[0]) : "round",
                           swap: have.some(h=>loadsAs(h.def)!==loadedOf(e)) || parts.some(p=>loadsAs(p.def)!==loadedOf(e)) };
     }
-    return line;
   }
   // ── Rounds and mods (W16, Decision 120) ──
   // A capacity reads as its leading number plus any chambered "+N": "15+1"
@@ -2003,7 +2021,8 @@ const Engine = (() => {
   // fits (Gear's Weapon Type column, as weapon categories or ids) and what one
   // unit fills: the whole "magazine" (a mag, a cell) or one "round" (a shell).
   // A weapon nothing fits (a launcher, the belt-fed guns Gear treats as
-  // unlimited, a custom weapon) reloads as it always did. W40: rounds that
+  // unlimited, a written-in weapon with no type or a type nothing fits)
+  // reloads as it always did. W40: rounds that
   // `needsMod` fit only a weapon with that mod, and a mod that `firesOnly`
   // certain rounds (the Angel Mod) takes nothing else.
   function ammoFor(def, mods){
@@ -2015,8 +2034,16 @@ const Engine = (() => {
       if (r.needsMod && !mods.includes(r.needsMod)) return false;
       return !only.length || only.includes(g.id); });
   }
+  // What ammoFor reads a weapon by (Decision 249): a catalog weapon's def, or for a
+  // written-in one just its type, never an id. reloadSource (what goes in) and
+  // putBack (what a half-empty magazine comes back as) both go through here.
+  function ammoDefOf(e){
+    if (!e || typeof e!=="object") return null;
+    if (e.custom || !e.id){ const category = customWeaponPick("category", e.category); return category ? { category } : null; }
+    return weaponDefById(e.id);
+  }
   function reloadSource(ch, e){
-    const kinds = ammoFor(e && !e.custom && e.id ? weaponDefById(e.id) : null, modsOf(e));
+    const kinds = ammoFor(ammoDefOf(e), modsOf(e));
     if (!kinds.length) return null;
     const have = kinds.map(k=>{ const c = carriedGear(ch, k.id); return c && Object.assign({ def:k }, c); }).filter(Boolean);
     // P9b: the part-used magazines of any kind that fits, fullest first.
@@ -2057,7 +2084,12 @@ const Engine = (() => {
     const wholes = !src ? [] : full ? src.have.filter(h=>loadsAs(h.def)!==loaded) : src.have;
     const parts = !src ? [] : full ? src.parts.filter(p=>loadsAs(p.def)!==loaded) : src.parts;
     if (full && !wholes.length && !parts.length) return { ok:false, why:"It's already full." };
-    if (!src){ e.roundsSpent = 0; return done; }
+    if (!src){
+      // A written-in weapon whose type stopped fitting gives back the specialty magazine it held.
+      if (loadedOf(e)) done.kept = putBack(ch, e, l.rounds.max, l.rounds.left, false);
+      e.roundsSpent = 0; delete e.loaded;
+      return done;
+    }
     if (!src.have.length && !src.parts.length){
       if (!(opts && opts.anyway)) return { ok:false, noAmmo:true, ammo:src.ammo, why:`You carry no ${src.ammo.join(" or ")}.` };
       const kept = putBack(ch, e, l.rounds.max, l.rounds.left, false);
@@ -2111,7 +2143,7 @@ const Engine = (() => {
   function putBack(ch, e, max, left, shells){
     if (!(left>0) || !Array.isArray(ch.gear)) return null;
     const loadedDef = loadedOf(e) ? equipmentById(loadedOf(e)) : null;
-    const def = loadedDef && loadsAs(loadedDef) ? loadedDef : ammoFor(weaponDefById(e.id), []).find(g=>!loadsAs(g));
+    const def = loadedDef && loadsAs(loadedDef) ? loadedDef : ammoFor(ammoDefOf(e), []).find(g=>!loadsAs(g));
     if (!def) return null;
     if (def.reload.fills==="round"){ if (shells) stackGear(ch, def.id, left); return null; }
     const whole = left>=max;
@@ -2366,7 +2398,7 @@ const Engine = (() => {
   function addCustomLoadout(ch, kind){
     if (kind==="armor") ch.armor.push({ custom:true, name:"", prot:"", res:0, integrity:0, coverage:"light",
                                         integrityLoss:0, notes:"", worn:false, scrapped:false, upgrades:[] });
-    else if (kind==="weapons") ch.weapons.push({ custom:true, name:"", damage:"", rof:"", capacity:"", ammo:"", features:"", notes:"", roundsSpent:0 });
+    else if (kind==="weapons") ch.weapons.push({ custom:true, name:"", damage:"", capacity:"", ammo:"", features:"", notes:"", roundsSpent:0 });
     else return { ok:false, why:"Weapons or armor only." };
     return { ok:true, index:ch[kind].length-1 };
   }
@@ -4886,7 +4918,8 @@ const Engine = (() => {
       else w.mods = Array.isArray(w.mods) ? w.mods.filter(x=>typeof x==="string") : [];
       // Schema 0.14 (W40): `loaded` is a specialty round's id; standard
       // rounds, and every weapon from before, have none.
-      if (w.custom || typeof w.loaded!=="string") delete w.loaded;
+      // Schema 0.31 (Decision 249): a written-in weapon keeps one too.
+      if (typeof w.loaded!=="string") delete w.loaded;
     });
     // Schema 0.8 (plan P5, landed now so there's one migration): `worn` marks
     // the body piece that rolls PROT, `scrapped` is the one state

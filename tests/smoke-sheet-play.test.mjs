@@ -42,7 +42,7 @@ test("Resume draft migrates the draft, like every other load path (review #3)", 
   const resumed = stored(app, { locked: false });
   assert.deepEqual([...resumed.archetypeChoices.specialization], ["arcane-fortitude"],
     "the resumed draft lost its specialization");
-  assert.equal(resumed.meta.schemaVersion, "0.30");
+  assert.equal(resumed.meta.schemaVersion, "0.31");
   // And the choice is visibly selected, not merely stored.
   assert.equal(app.$$('[data-spec].toggle').filter(b => /Chosen|Selected/.test(b.textContent)).length, 1);
 });
@@ -1603,5 +1603,117 @@ test("L3 12 (sheet): a written-in weapon's open ACC field shows the stored pick,
   assert.ok(input, "the open row has no ACC field");
   assert.equal(input.value, "1", "the field shows the pick plus the bonus");
   assert.equal(activeChar(app).weapons[1].acc, 1);
+  assert.deepEqual(app.errors, []);
+});
+
+// ── L2b: written-in weapons tick their fire modes and reload from carried ammo ──
+const l2bChange = (app, el, props = {}) => { el.focus(); Object.assign(el, props); el.dispatchEvent(new app.window.Event("change", { bubbles: true })); };
+const l2bOld = { custom: true, name: "Old iron", damage: "3", rof: "Semi", capacity: "6", ammo: "", features: "", notes: "", roundsSpent: 0 };
+
+test("L2b 6 (sheet): the open row's fire-mode ticks are one undoable action each, and the fire buttons follow them", () => {
+  const ch = l2Character({ category: "handguns", capacity: "15" });
+  delete ch.weapons[1].rof;
+  ch.weapons.push({ ...l2bOld });
+  const app = openSheet(ch, "loadout");
+  const audit = () => activeChar(app).audit;
+  app.click('[data-loedit="weapons|1"]');
+  app.click('[data-loedit="weapons|2"]');
+  const zip = () => rowOf(app, 1), old = () => rowOf(app, 2);
+  const ticks = row => [...row.querySelectorAll("[data-weaponmode]")];
+  assert.deepEqual(ticks(zip()).map(t => t.closest("label").textContent.trim()), ["Single", "Burst", "Full Auto"]);
+  assert.equal(zip().querySelector('[data-cell="weapons|1|rof"]'), null, "the typed RoF cell is still on the open row");
+  assert.ok(zip().querySelector('[aria-label="Fire modes"]'));
+  // The hint belongs to the row that wrote "Semi", and to no other.
+  assert.match(old().querySelector("[data-weaponrofhint]").textContent, /You wrote "Semi"\. Tick its fire modes to give it fire buttons./);
+  assert.equal(zip().querySelector("[data-weaponrofhint]"), null, "the hint showed on the Zip gun's row");
+  // Ticking Single, then Burst: one audit entry each, the row stays open, focus stays on the tick.
+  const before = audit().length;
+  l2bChange(app, zip().querySelector('[data-weaponmode="1|S"]'), { checked: true });
+  l2bChange(app, zip().querySelector('[data-weaponmode="1|B"]'), { checked: true });
+  assert.equal(audit().length, before + 2);
+  assert.match(audit().at(-1).label, /^Zip gun: fire modes → Single, Burst$/);
+  assert.deepEqual(activeChar(app).weapons[1].rofModes, ["S", "B"]);
+  assert.equal((app.window.document.activeElement.dataset || {}).weaponmode, "1|B", "a tick moved focus off the tick");
+  assert.ok(zip().querySelector('[data-cell="weapons|1|name"]'), "a tick folded the row");
+  assert.deepEqual(ticks(zip()).map(t => t.checked), [true, true, false]);
+  assert.equal(old().querySelector('[data-weaponmode="2|S"]').checked, false, "the tick landed on the next row");
+  // Folded: that row's buttons follow the ticks, and the next row's don't.
+  app.click('[data-lodone="weapons|1"]');
+  const fires = i => app.$$(`#main [data-fire^="${i}|"]`).map(b => b.dataset.fire);
+  assert.deepEqual(fires(1), ["1|S", "1|B"]);
+  assert.deepEqual(fires(2), ["2|"], "the Old iron's buttons moved with the Zip gun's ticks");
+  assert.deepEqual(fires(0), ["0|S"]);
+  assert.match(cellsOf(rowOf(app, 1)).join("|"), /S\/B/);
+  // Undo takes the last tick back.
+  app.click("#undotoast [data-toastundo]");
+  assert.deepEqual(activeChar(app).weapons[1].rofModes, ["S"]);
+  // Unticking the last clears the pick.
+  app.click('[data-loedit="weapons|1"]');
+  l2bChange(app, zip().querySelector('[data-weaponmode="1|S"]'), { checked: false });
+  assert.ok(!Object.hasOwn(activeChar(app).weapons[1], "rofModes"));
+  assert.match(audit().at(-1).label, /^Zip gun: fire modes → —$/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("L2b 6b (sheet): a saved row's typed RoF opens with its modes ticked, and the first tick writes the set", () => {
+  const ch = l2Character({ category: "handguns", capacity: "15", rof: "S/B" });
+  const app = openSheet(ch, "loadout");
+  app.click('[data-loedit="weapons|1"]');
+  const ticks = () => [...rowOf(app, 1).querySelectorAll("[data-weaponmode]")];
+  assert.deepEqual(ticks().map(t => t.checked), [true, true, false], "a typed S/B didn't open with two ticked");
+  assert.equal(rowOf(app, 1).querySelector("[data-weaponrofhint]"), null);
+  l2bChange(app, ticks()[2], { checked: true });
+  assert.deepEqual(activeChar(app).weapons[1].rofModes, ["S", "B", "F"], "the first tick didn't write the whole set");
+  assert.equal(activeChar(app).weapons[1].rof, "S/B", "a tick rewrote the typed RoF");
+  assert.deepEqual(app.errors, []);
+});
+
+test("L2b 7 (sheet): Reload on a written-in handgun takes a mag from Loadout and from Main, and says so", () => {
+  const mk = () => { const ch = l2Character({ category: "handguns", capacity: "15", roundsSpent: 5, rof: "S/B" }); return ch; };
+  const ch = mk();
+  ch.gear.push({ id: "handgun-rounds", qty: 2, notes: "" });
+  const app = openSheet(ch, "loadout");
+  const qty = a => (activeChar(a).gear.find(g => g.id === "handgun-rounds" && g.roundsLeft == null) || { qty: 0 }).qty;
+  assert.match(app.$('#main [data-reload="1"]').title, /Handgun Rounds: 2 mags carried/);
+  app.click('#main [data-reload="1"]');
+  assert.equal(qty(app), 1, "the mag didn't come off what's carried");
+  assert.equal(activeChar(app).weapons[1].roundsSpent, 0);
+  assert.match(activeChar(app).audit.at(-1).label, /^Reloaded Zip gun \(15\/15\), −1 mag of Handgun Rounds/);
+  assert.deepEqual(activeChar(app).gear.filter(g => g.roundsLeft != null).map(g => g.roundsLeft), [10], "no part-used magazine came back");
+  // Fire once, then Reload on Main: the second mag goes.
+  app.click('#main [data-fire="1|S"]');
+  app.click('[data-sec="main"]');
+  assert.match(app.$('.main-combat [data-reload="1"]').title, /Handgun Rounds/);
+  app.click('.main-combat [data-reload="1"]');
+  assert.equal(qty(app), 0, "Main's Reload didn't take the second mag");
+  assert.equal(activeChar(app).weapons[1].roundsSpent, 0);
+  // With none carried it asks, and the audit says so.
+  const dry = openSheet(mk(), "main");
+  dry.click('.main-combat [data-reload="1"]');
+  assert.equal(activeChar(dry).weapons[1].roundsSpent, 5, "reloaded from nothing without asking");
+  assert.match(dry.$("#modal").textContent, /You carry no Handgun Rounds\. Reload anyway\?/);
+  dry.click("#modal [data-askyes]");
+  assert.match(activeChar(dry).audit.at(-1).label, /^Reloaded Zip gun anyway, no Handgun Rounds on the sheet/);
+  // The untyped one still reloads free, with no question.
+  const bare = openSheet(l2Character({ capacity: "15", roundsSpent: 5 }), "main");
+  bare.click('.main-combat [data-reload="1"]');
+  assert.equal(activeChar(bare).weapons[1].roundsSpent, 0);
+  assert.ok(!bare.$("#modal") || !bare.$("#modal").open, "an untyped weapon asked");
+  // Print reads the line: a ticked Zip gun prints its RoF, a twin of the folded row.
+  const ticked = l2Character({ category: "handguns", capacity: "15" });
+  delete ticked.weapons[1].rof; ticked.weapons[1].rofModes = ["S", "B"];
+  const page = app.window.renderPrintView(ticked);
+  const tr = page.split("<tr>").find(r => /Zip gun/.test(r));
+  assert.match(tr, />S\/B</, "the printed sheet doesn't show a ticked row's RoF");
+  assert.deepEqual([...app.errors, ...dry.errors, ...bare.errors], []);
+});
+
+test("L2b 6c (sheet): unticking the last mode on a typed-RoF row names what the row fires now, not a dash", () => {
+  const app = openSheet(l2Character({ category: "handguns", capacity: "15", rof: "S/B" }), "loadout");
+  app.click('[data-loedit="weapons|1"]');
+  l2bChange(app, rowOf(app, 1).querySelector('[data-weaponmode="1|S"]'), { checked: false });
+  l2bChange(app, rowOf(app, 1).querySelector('[data-weaponmode="1|B"]'), { checked: false });
+  const labels = activeChar(app).audit.map(a => a.label);
+  assert.equal(labels.at(-1), "Zip gun: fire modes → Single, Burst", "the audit said the row fires nothing");
   assert.deepEqual(app.errors, []);
 });
