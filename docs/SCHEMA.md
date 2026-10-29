@@ -5187,7 +5187,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - Each site's rules as code (a level's +1 die, a step's Condition): the app tracks, the GM rules.
      - **Replaces:** Decision 186 in part (the builder reads the Site Profiles, and the ledger keys `sites`).
      - **Revisit if:** Scott revises the profiles' format, S12a's entries make *Who's already here* links, or a second pack carries sites.
-     - **Built:** pack schema 0.3, switched off (173); PR #TBD; `private/` pointer bumped; log 2026-10-28 (S12b).
+     - **Built:** pack schema 0.3, switched off (173); PR #261; `private/` pointer bumped; log 2026-10-28 (S12b).
 
 251. **A crew's place can take a Site Profile: it keeps the link, the track's level or each character's Exposure, and the profile's clock; a place owns clocks.**
      *2026-10-28 · Ken + Claude · Touches: places, site, siteLevel, exposure, setPlaceSite, placeSite, editPlace, removePlace, clocks, on, owner link, addClock, clocksOn, tableActionLabel, tableSearch, openFound, place page, Site profile, Exposure, clock UI, clocksHtml, bindClocks, clockCountText, table schema 0.16, Decision 178, Decision 182, Decision 208, Decision 212, Decision 243, Decision 245*
@@ -5200,7 +5200,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - Nulling an unknown owner (245's gate): a newer app's file would lose its owners.
      - **Replaces:** Decision 243 in part (a place has a site and owns clocks; its removal removes them), 245 in part (a place owns clocks; an unknown owner is kept), 208 in part (Find searches a place's site and Exposure, and its clocks).
      - **Revisit if:** seats (S3b) make the crew a roster, a site needs a reset rule or a clock that runs itself, or S10f's encounters want a site.
-     - **Built:** table schema 0.16, switched off (173); PR #TBD; log 2026-10-28 (S12b).
+     - **Built:** table schema 0.16, switched off (173); PR #261; log 2026-10-28 (S12b).
 
 ## 5. Open Flags
 

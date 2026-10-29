@@ -559,7 +559,7 @@ In the order they merged.
 | S16 | A line reads as a sentence, and a fight's line leads to its fight (W79, W82) | 241 | #234 |
 | S6 | The gazetteer and the crew's places: the City tab, and a line's Where | 242–243 | #236 |
 | S7 | Factions and clocks: the Faction Tracker per faction, and clocks on it | 244–245 | #240 |
-| S12b | Site Profiles: the Codex's profiles in the pack, a crew's place takes one with its track, Exposure and clocks (Rule or shape; pack schema 0.3, table schema 0.16) | 250–251 | #TBD |
+| S12b | Site Profiles: the Codex's profiles in the pack, a crew's place takes one with its track, Exposure and clocks (Rule or shape; pack schema 0.3, table schema 0.16) | 250–251 | #261 |
 
 ### Still to build
 
