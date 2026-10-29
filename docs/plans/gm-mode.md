@@ -563,7 +563,7 @@ In the order they merged.
 | S6 | The gazetteer and the crew's places: the City tab, and a line's Where | 242–243 | #236 |
 | S7 | Factions and clocks: the Faction Tracker per faction, and clocks on it | 244–245 | #240 |
 | S12b | Site Profiles: the Codex's profiles in the pack, a crew's place takes one with its track, Exposure and clocks (Rule or shape; pack schema 0.3, table schema 0.16) | 250–251 | #261 |
-| S10f | An encounter's plan (the Encounter Design worksheet), its clocks, a Surprise or Ambush opening, and Delay (Rule or shape; table schema 0.17) | 252–253 | the S10f PR |
+| S10f | An encounter's plan (the Encounter Design worksheet), its clocks, a Surprise or Ambush opening, and Delay (Rule or shape; table schema 0.17) | 252–253 | #266 |
 
 ### Still to build
 

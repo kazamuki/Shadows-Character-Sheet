@@ -5229,7 +5229,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - The plan editable after End: 188 keeps an ended encounter read-only.
      - **Replaces:** Decision 188 in part (an encounter carries its worksheet; its Revisit if's type is answered no), 208 in part (Find searches the plan and an encounter's clocks), 245 and 251 in part (an encounter owns clocks; its removal removes them).
      - **Revisit if:** the worksheet changes, seats (S3b) make adversaries or the crew links, or a GM wants the plan open after the fight.
-     - **Built:** table schema 0.17, switched off (173); log 2026-10-29 (S10f).
+     - **Built:** table schema 0.17, switched off (173); PR #266; log 2026-10-29 (S10f).
 
 253. **A fight can open with a Surprise or an Ambush by one side, and a row can Delay until a trigger; the round runs both as the book says, and rolls nothing.**
      *2026-10-29 · Ken + Claude · Touches: opening, Surprise, Ambush, attackers, defenders, round 1, _pick, startEncounter, nextTurn, setOpening, delay, delayTurn, actNow, Delay, Act now, setTurn, resolveEncounterReset, applyEncounterReset, Reset, acted, endEncounter, removeSide, Wave Initiative, TIPS, table schema 0.17, Decision 189, Decision 193, Decision 210*
@@ -5242,7 +5242,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - A delayed row moved in the order: the book says the order resumes as before.
      - **Replaces:** Decision 189 in part (round 1 passes an Ambush's defenders; Reset lists a missed delay).
      - **Revisit if:** a Silent sniper's continuing Ambush needs tracking, GQ30 reorders a wave, or the app rolls checks.
-     - **Built:** table schema 0.17, switched off (173); log 2026-10-29 (S10f).
+     - **Built:** table schema 0.17, switched off (173); PR #266; log 2026-10-29 (S10f).
 
 ## 5. Open Flags
 
