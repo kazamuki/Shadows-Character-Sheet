@@ -5,8 +5,9 @@
 244, 245, 251.
 **Status:** **drafted 2026-10-28 by Claude (Opus)**, the S12b reviewer, after
 #261 (S12b, Decisions 250–251) and Shadows-Private#3 merged
-(`WORK-ORDERS.md`, step 7). **Ken chose this session (2026-10-28).** Not yet
-approved.
+(`WORK-ORDERS.md`, step 7). **Ken chose this session (2026-10-28).**
+**Approved by Ken 2026-10-29** (in the conductor session), as Rule or shape, no `private/` commit.
+**SQ0–SQ9 answered by Ken 2026-10-29: every default.** He picked SQ0 (*Leave it out*), SQ4 and SQ5 together (*Read-only; Next passes*) and SQ9 (*Stamp + empty fields*) by name, and SQ1–SQ3 and SQ6–SQ8 as one set (*Approve, defaults*).
 **Branch:** from `main` at `a9eddad` or later, PR to `main`, switched off
 (Decision 173). **No `private/` commit**: nothing here is Codex content, and
 the pointer doesn't move.
@@ -342,16 +343,16 @@ If the ledger search at build time finds another, stop and ask.
 
 | # | Question | Default | Answer |
 |---|---|---|---|
-| SQ0 | **The worksheet's Type** (Combat / Social / Environmental / Hybrid). 188 rejected a type field and named this as its Revisit if. Build it as four boxes that change nothing? Or leave it out, since the Hybrid box admits the types blend and the hook can say it? | **Leave it out; 188 stands** | |
-| SQ1 | **Adversaries:** free rows (a typed *Who*, offered the encounter's row names; Goals, Tactics, Leverage), as the worksheet prints them? Or one set of fields on each non-crew row of the encounter? | **Free rows**, as the worksheet | |
-| SQ2 | **The worksheet's printed lists** (the four *Improvised GM Exit Options*, the three *Improv Prompts*, the five *When Momentum Stalls*): drawn as the book's text beside their notes field, never stored or ticked? | **As written** | |
-| SQ3 | **Objectives beyond "Defeat Enemy":** the book's six as toggles (stored as ids), plus Notes? | **As written** | |
-| SQ4 | **After End:** the plan and the encounter's clocks are read-only, as the rest of an ended encounter is (188)? Or stay editable (the *Hooks for Next Scene* written after the fight)? | **Read-only** | |
-| SQ5 | **An Ambush in round 1:** Next passes the defenders, who are tagged *Ambushed: no turn this round*. Or a reminder only, with the GM pressing Next past them? | **Next passes them** | |
-| SQ6 | **When the opening is set:** while the encounter is planned, or in round 1 before anyone has acted; fixed after (once per encounter). The Silent tag's continuing Ambush is the GM's, by the tip's text. | **As written** | |
-| SQ7 | **Delay:** only on the row whose turn it is. The trigger is typed (blank allowed). The row counts as having acted; **Act now** gives it the turn any time that round, and Next then carries on from where the order was. Reset lists a pending delay as missed and clears it. | **As written** | |
-| SQ8 | **The plan's place on the page:** a section *The plan*, open on a planned encounter and closed (a tap away) while it runs, hidden on an ended one with nothing written. | **As written** | |
-| SQ9 | **The sample table *Dead Air*:** the stamp and the empty fields only? Or show the feature, with *Friday at the Velvet Lung* (planned) given a plan, an opening and a clock? | **The stamp and the empty fields only** (S12b's ruling) | |
+| SQ0 | **The worksheet's Type** (Combat / Social / Environmental / Hybrid). 188 rejected a type field and named this as its Revisit if. Build it as four boxes that change nothing? Or leave it out, since the Hybrid box admits the types blend and the hook can say it? | **Leave it out; 188 stands** | Default (Ken, 2026-10-29) |
+| SQ1 | **Adversaries:** free rows (a typed *Who*, offered the encounter's row names; Goals, Tactics, Leverage), as the worksheet prints them? Or one set of fields on each non-crew row of the encounter? | **Free rows**, as the worksheet | Default (Ken, 2026-10-29) |
+| SQ2 | **The worksheet's printed lists** (the four *Improvised GM Exit Options*, the three *Improv Prompts*, the five *When Momentum Stalls*): drawn as the book's text beside their notes field, never stored or ticked? | **As written** | Default (Ken, 2026-10-29) |
+| SQ3 | **Objectives beyond "Defeat Enemy":** the book's six as toggles (stored as ids), plus Notes? | **As written** | Default (Ken, 2026-10-29) |
+| SQ4 | **After End:** the plan and the encounter's clocks are read-only, as the rest of an ended encounter is (188)? Or stay editable (the *Hooks for Next Scene* written after the fight)? | **Read-only** | Default (Ken, 2026-10-29) |
+| SQ5 | **An Ambush in round 1:** Next passes the defenders, who are tagged *Ambushed: no turn this round*. Or a reminder only, with the GM pressing Next past them? | **Next passes them** | Default (Ken, 2026-10-29) |
+| SQ6 | **When the opening is set:** while the encounter is planned, or in round 1 before anyone has acted; fixed after (once per encounter). The Silent tag's continuing Ambush is the GM's, by the tip's text. | **As written** | Default (Ken, 2026-10-29) |
+| SQ7 | **Delay:** only on the row whose turn it is. The trigger is typed (blank allowed). The row counts as having acted; **Act now** gives it the turn any time that round, and Next then carries on from where the order was. Reset lists a pending delay as missed and clears it. | **As written** | Default (Ken, 2026-10-29) |
+| SQ8 | **The plan's place on the page:** a section *The plan*, open on a planned encounter and closed (a tap away) while it runs, hidden on an ended one with nothing written. | **As written** | Default (Ken, 2026-10-29) |
+| SQ9 | **The sample table *Dead Air*:** the stamp and the empty fields only? Or show the feature, with *Friday at the Velvet Lung* (planned) given a plan, an opening and a clock? | **The stamp and the empty fields only** (S12b's ruling) | Default (Ken, 2026-10-29) |
 
 ## 5. The assumption sweep
 
