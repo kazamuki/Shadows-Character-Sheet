@@ -1078,7 +1078,7 @@ commit** — a GM's table must never change under them.
     kind: "shadows-table",           // fileKind() reads this; migrateTable() forces it
     id: "TBL-XXXX-XXXX-XXXX",        // newTable() issues it, the TAG's alphabet; never reissued
     name: "",                        // the GM's; "" reads "Untitled table"
-    tableSchemaVersion: "0.15",      // a newer stamp is kept, and tableCheck() reports it
+    tableSchemaVersion: "0.16",      // a newer stamp is kept, and tableCheck() reports it
     created: "<ISO>", updated: "<ISO>"   // null when a file's can't be read: the gate invents none (Decision 63)
   },
   audit: [ {                         // 0.12: the activity log (Decision 212), oldest first, at most 500
@@ -1109,6 +1109,9 @@ commit** — a GM's table must never change under them.
     district: "", neighborhood: "",  // always typed
     environment: null,               // one kind of ground (a gazetteer `environments` id) or none
     notes: "",
+    site: null,                      // 0.16 (Decision 251): or { kind: "site", pack: "PK-…", id, name? }, a Site Profile in a pack (250), as a cast member's `from` is; the name is stored, the profile is read from the pack every time. Anything else reads null
+    siteLevel: null,                 // 0.16: a levels track's level the GM set (a record id), or null for the profile's start; one the pack lacks is kept and shows as such
+    exposure: [ { name: "", n: 0 } ],  // 0.16: an Exposure track, a row a character: a typed name (blank while being typed) and a count, a whole number 0 to 99, else 0
     created: "<ISO>", updated: "<ISO>"
   } ],                               // its history is read from the lines that name it, never stored
   factions: [ {                      // 0.15: the Faction Tracker as a record (Decision 244); nothing derived, no standing or score
@@ -1130,7 +1133,7 @@ commit** — a GM's table must never change under them.
     id: "CK-XXXXXXXX",               // the TAG alphabet; unique in the table
     name: "", segments: 4, filled: 0,   // segments a whole number 2 to 12 (else 4); filled 0 to segments
     advances: "", whenFull: "",      // typed: what advances it, and what happens when it fills
-    on: { kind: "faction", id: "FA-XXXXXXXX" },   // what owns it, or null; a link to no faction on the table is kept and shown nowhere; removeFaction removes its clocks
+    on: { kind: "faction", id: "FA-XXXXXXXX" },   // what owns it, or null: a faction (FA- id) or, from 0.16 (Decision 251), a place (PL- id); an owner of another kind (lowercase letters, an id of at most 40) is kept as it is and shown nowhere; a link to no record on the table is kept and shown nowhere; removeFaction and removePlace remove their clocks
     created: "<ISO>", updated: "<ISO>"
   } ],
   interactions: [ {                  // 0.3: what passed between the crew and the cast (Decisions 177–179)
@@ -1213,7 +1216,7 @@ StatBlock: {                         // Decision 175: what the Codex prints, not
 
 Step history: **0.2** adds `cast` (`migrateTable()` gives an older table an empty
 one). **0.3** adds `interactions` and each member's `affiliations`. **0.4** adds each member's `from`, null for everyone already there. **0.5** adds `encounters`, empty for everyone already there. **0.6** adds each row's `massive`, `armorLoss`, `scrapped` and `armorId`, 0, false and null for everyone already there. **0.7** adds each row's `kept` and `struck`, null and false for everyone already there, and an interaction may be of kind `fought`. **0.8** adds `sessions` and `threads`, empty for everyone already there, and each interaction's `session`, null (nothing is converted by date on load). **0.9** adds each session's `close`, null for everyone already there (nothing is converted). **0.10** adds each note's `session`, null for everyone already there (nothing is converted). **0.11** adds each encounter's `by` and `sides`, each row's `side` and each cast member's `ally`: one at a time, the crew and one other side, PCs on the crew's, nobody an ally (nothing is guessed). Health, Health Levels, HP and each stat's bonus are `Engine.npc(block)`'s,
-computed and never written into the file (constraint 7). **0.12** adds `audit`, the activity log (Decision 212), empty for everyone already there; a file older than the app comes in with its trail emptied, so an undo never crosses a schema step. **0.13** adds each interaction's `encounter`, null for everyone already there (nothing is converted; Decision 241). **0.14** adds `places`, empty, and each interaction's `place`, null for everyone already there (Decision 243). **0.15** adds `factions` and `clocks`, both empty; nothing is converted, and a member's affiliations stay as typed (Decisions 244, 245).
+computed and never written into the file (constraint 7). **0.12** adds `audit`, the activity log (Decision 212), empty for everyone already there; a file older than the app comes in with its trail emptied, so an undo never crosses a schema step. **0.13** adds each interaction's `encounter`, null for everyone already there (nothing is converted; Decision 241). **0.14** adds `places`, empty, and each interaction's `place`, null for everyone already there (Decision 243). **0.15** adds `factions` and `clocks`, both empty; nothing is converted, and a member's affiliations stay as typed (Decisions 244, 245). **0.16** gives each place `site`, `siteLevel` and `exposure`, empty for everyone already there; nothing is converted and no profile is guessed from a place's ground (Decision 251).
 
 The browser keeps each table as `shadows.table.v1.<id>` =
 `{ table, section, changed, exported }`, by the roster's rules (Decision 141).
@@ -1234,7 +1237,7 @@ table file never carries its content. **A change to this shape bumps
     kind: "shadows-pack",            // fileKind() reads this; migratePack() forces it
     id: "PK-XXXXXXXX",               // the author's; a bad one reads null and the pack is refused (packCheck)
     name: "",
-    packSchemaVersion: "0.2",        // a newer stamp is kept, and packCheck() reports it
+    packSchemaVersion: "0.3",        // a newer stamp is kept, and packCheck() reports it
     contentVersion: "",              // the author's text, shown, never compared
     created: "<ISO>", updated: "<ISO>"   // updated decides which copy is newer; null when unreadable
   },
@@ -1257,10 +1260,22 @@ table file never carries its content. **A change to this shape bumps
     tier: null,                      // a whole number from 1, or null
     block: null                      // a stat block (above), or null
   } ],
-  groups: [ { id, ref, name, origin, members: [ { entry, count } ], situation, tactics } ]
+  groups: [ { id, ref, name, origin, members: [ { entry, count } ], situation, tactics } ],
+  sites: [ {                         // (0.3, Decision 250) Site Profiles, the book's words as text; the app reads them and never writes one
+    id, ref, name, canon, flavor, presence, rules, layering, here, resolution, gmNote,
+    category: null,                  // a gazetteer `environments` id (the kind of ground), else null
+    waysIn: [ "" ],
+    track: null,                     // or { kind: "levels", name, start, levels: [ { id, name, text } ], moves }
+                                     //  | { kind: "exposure", name, triggers, steps: [ { at, text } ], marks }   // at 1 to 99, sorted
+                                     //  | { kind: "table", name, die, rows: [ { roll, text } ] }; any other kind reads null; `start` names a kept level, else the first
+    trackText: "",                   // the book's sentence when there is no track ("None. …")
+    clock: null,                     // or { name, segments, advances, whenFull }; segments 2 to 12, else 4
+    clockText: ""                    // the book's sentence when there is no clock
+  } ]
   // A record with a bad id, or one repeated within its section, is dropped, never renamed.
   // A group member naming no entry is dropped; count is a whole number from 1, else 1.
   // Keys the gate doesn't know are kept, at any level, and never read.
+  // 0.3: `sites`, gated on every load like every section, so the step has nothing to convert: a 0.2 pack reads with `sites: []`.
   // 0.2: traits, modifiers and guides; stamps only. A 0.1 pack's sections go through the same gate on every load, a `traits` key included,
   // so the step has nothing to convert; a 0.1 pack reads with no traits, modifiers or guides.
 }
@@ -1268,7 +1283,7 @@ table file never carries its content. **A change to this shape bumps
 
 The Threat Codex pack is built from the mirror by
 `private/gm/build-codex-pack.mjs`; its ids are kept in
-`private/gm/ids.json` (186).
+`private/gm/ids.json` (186, and 250 for `sites`).
 
 `Engine.packFilter`, `packChoices`, `packTraits`, `castPackMatch`, `packEntry`, `packGroups`, `castFromEntry` and
 `entryLink` read a *list* of packs, so two slotted in at once cost nothing. The
@@ -4433,6 +4448,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing.
      - **Revisit if:** Scott keeps the Codex as structured data of his own, his documents are combined (a reconciliation pass over the ledger, the whole Codex at once), or GQ17 brings the supernatural sections in.
      - **Built:** pack content `Codex 2026-09 · v2 2026-10-02 · audit 2026-10-03`; PR #123; private repo `c28d5b3`; log 2026-10-06.
+     → **Superseded in part by Decision 250** — the builder also reads the Site Profiles, and the ledger keys `sites`.
 
 187. **Pack names match with case and apostrophes folded: `’`, `‘` and `ʼ` read as `'`, in every match and search.**
      *2026-10-06 · Ken + Claude · Touches: _folded, castPackMatch, packFilter, packTraits, packGroups, castFilter, crewView, castAffiliations, packChoices, traitOrigins, trait count, Decision 184, Decision 185*
@@ -4720,6 +4736,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Built:** table schema 0.10, switched off (173); log 2026-10-09 (the secretary).
     → **Superseded in part by Decision 243** — Find searches the crew's places.
     → **Superseded in part by Decisions 244 and 245** — Find searches factions and clocks.
+     → **Superseded in part by Decision 251** — Find searches a place's site and Exposure, and its clocks.
 
 209. **The Reference's jump bar shows every chip, wrapped: it sticks from 640px, and on a phone it stays at the top of the page.**
      *2026-10-09 · Ken + Claude · Touches: Reference tab, jump bar, jumpBarHtml wrap, jump-wrap, jumpbar.sticky, jumpTo, scroll-row, wheelSideways, phone, Decision 165, Decision 207, SQ8*
@@ -5085,6 +5102,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 178 in part (a third link kind), 208 in part (Find searches places), 212 in part (a seventh record), 241 in part (a line names a place).
      - **Revisit if:** S7's factions or S12b's Site Profiles want a place's own track, or an encounter wants a place.
      - **Built:** table schema 0.14, switched off (173); PR #236; log 2026-10-23.
+     → **Superseded in part by Decision 251** — a place takes a Site Profile and owns clocks; removing it removes them.
 
 244. **A table keeps the crew's factions as the book's Faction Tracker: its fields, a stance and an attention, and nothing derived.**
      *2026-10-23 · Ken + Claude · Touches: factions, FA- id, from, type, territory, base, keyNpcs, wants, reach, tippingFor, tippingAgainst, stance, attention, notes, addFaction, editFaction, removeFaction, factionTitle, factionList, factionsKeyFor, factionAffiliated, FACTION_TYPES, Factions view, City tab, CITY_VIEWS, The city, removeCastMember, tableSearch, TABLE_RECORDS, table schema 0.15, Decision 177, Decision 179, Decision 208, Decision 212, Decision 242*
@@ -5110,6 +5128,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 178 in part (a clock goes with its owner, not under its name), 208 in part (Find searches clocks), 212 in part (clocks are a record the log covers).
      - **Revisit if:** S10f, S11 or S12b needs a clock with no owner, a reset rule, or a clock that advances itself.
      - **Built:** table schema 0.15, switched off (173); log 2026-10-23.
+     → **Superseded in part by Decision 251** — a place owns clocks, and an owner of an unknown kind is kept.
 
 246. **Every section on the Character tab starts its own row, its cards in one shared grid; a lone card spans two columns.**
      *2026-10-24 · Ken + Claude · Touches: Character tab, renderShCharacter, arch-top, arch-flow, arch-part, solo, trait-cols, trait-grid, Baseline Traits, Powers, Vulnerabilities, Specialization, Origin, Bloodline, Subtype, Aberration, Permanent Aberrations, Disciplines, Advantages, Disadvantages, vitals pinned, phone-check, W99*
@@ -5157,6 +5176,31 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decisions 145 in part (only an untyped written-in weapon reloads as before), 222 in part (a typed one keeps part-used magazines) and 120 in part (its fire modes are ticked). Extends 247 and 149.
      - **Revisit if:** W109 lets custom rows opt into a book row's behaviour; a written-in weapon takes mods; W108 sizes magazines per weapon.
      - **Built:** app 0.56.0, game data 0.50, character schema 0.31, PR #259. Log 2026-10-28 (L2b).
+
+250. **The Threat Codex pack carries the Site Profiles: each a template with its presence, rules, track and clock, in the book's words; pack schema 0.3.**
+     *2026-10-28 · Ken + Claude · Touches: sites, pack schema 0.3, migratePack, build-codex-pack, ids.json, SECTIONS, contentVersion, category, canon, presence, rules, waysIn, layering, track, levels, exposure steps, What comes through, clock, here, resolution, gmNote, Engine.siteProfiles, Engine.packSite, Decision 167, Decision 180, Decision 183, Decision 186*
+     - **Decided:** A pack gains `sites`: each profile's fields as text, its category as a gazetteer kind of ground, its track as one of four shapes (none, levels with a start, Exposure steps, a table), and its clock as a name, segments, what advances it and when it fills, or none. The private builder reads `Threat_Codex_Site_Profiles.md`, keyed in `ids.json` like every other section. The app reads profiles; it never writes one. The profiles are Scott's draft, not approved (SQ0), so `contentVersion` names it.
+     - **Why:** a Site Profile is Threat Codex content, which is the GM's and private (167); the pack is how Codex content reaches a table (180), and a template the GM drops onto a place is what a pack entry already is to a cast member (182).
+     - **Rejected:**
+       - Profiles in `shadows-data.js`: the Codex would be public.
+       - Profiles typed by the GM on each place: the book wrote them as templates to reuse.
+       - Each site's rules as code (a level's +1 die, a step's Condition): the app tracks, the GM rules.
+     - **Replaces:** Decision 186 in part (the builder reads the Site Profiles, and the ledger keys `sites`).
+     - **Revisit if:** Scott revises the profiles' format, S12a's entries make *Who's already here* links, or a second pack carries sites.
+     - **Built:** pack schema 0.3, switched off (173); PR #TBD; `private/` pointer bumped; log 2026-10-28 (S12b).
+
+251. **A crew's place can take a Site Profile: it keeps the link, the track's level or each character's Exposure, and the profile's clock; a place owns clocks.**
+     *2026-10-28 · Ken + Claude · Touches: places, site, siteLevel, exposure, setPlaceSite, placeSite, editPlace, removePlace, clocks, on, owner link, addClock, clocksOn, tableActionLabel, tableSearch, openFound, place page, Site profile, Exposure, clock UI, clocksHtml, bindClocks, clockCountText, table schema 0.16, Decision 178, Decision 182, Decision 208, Decision 212, Decision 243, Decision 245*
+     - **Decided:** Table schema 0.16 gives a place `site` (a pack link, as a cast member's `from`), `siteLevel` (null is the profile's start) and `exposure` (typed names, each a count). Picking a profile sets the ground to its category and copies its clock onto the place. A clock's `on` may name a place; an owner of an unknown kind is kept. Removing a place removes its clocks; one undo restores them. The profile is read live and nothing it says is run.
+     - **Why:** a level, a count and a clock are the only state a site has (243 waited for exactly this); the rest is the book's, read where it's kept.
+     - **Rejected:**
+       - Copying the profile onto the place: a revised pack would never reach it.
+       - One crew-wide Exposure: the book counts it per character.
+       - Running a site's rules (Disoriented at 3, Widening's reset): the GM decides, and resets differ per site.
+       - Nulling an unknown owner (245's gate): a newer app's file would lose its owners.
+     - **Replaces:** Decision 243 in part (a place has a site and owns clocks; its removal removes them), 245 in part (a place owns clocks; an unknown owner is kept), 208 in part (Find searches a place's site and Exposure, and its clocks).
+     - **Revisit if:** seats (S3b) make the crew a roster, a site needs a reset rule or a clock that runs itself, or S10f's encounters want a site.
+     - **Built:** table schema 0.16, switched off (173); PR #TBD; log 2026-10-28 (S12b).
 
 ## 5. Open Flags
 

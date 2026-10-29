@@ -176,6 +176,14 @@ This chapter carries most of the creation economy, and almost none of it is writ
 - ☐ **Suncoast City › its cult's name** (the mirror's `1100_Places.md:293` and `:331`). The zone's paragraph calls it *the Shining Path*; its Factions entry is *The Transcendent Path*. Pick one. The sheet's gazetteer id stays `transcendent-path` whatever the book picks. *(S6's build, 2026-10-23.)*
 - ☐ **Neurodyne Industries › its Overview** (the mirror's `1200_Powers.md:151`). The paragraph is cut off mid-sentence ("…the LINK has never"). Finish it. The sheet's summary says only what comes before the cut. *(S6's build, 2026-10-23.)*
 
+## Threat Codex: the Expansion and the Site Profiles
+
+- ☐ **The approved Expansion still says "nothing here is approved"** (its line 11). The file was renamed from the draft, not edited. *(Found by S12b's pre-flight, 2026-10-24.)*
+- ☐ **The Expansion's field list** (`APPROVED_Threat_Codex_Expansion.md:102–120`) has no *Ways In* or *Layering*, which Scott's Site Profiles add to every profile. Say whether they are fields.
+- ☐ **The pilot's Long Stretch** (`APPROVED_Threat_Codex_Pilot_Entries.md`, slides 29–30) has neither *Ways In* nor *Layering*; the draft's TP1 does. The sheet's pack reads the draft.
+- ☐ ❓ **The profiles' two ⚑ marks are still open** (`Threat_Codex_Site_Profiles.md:289` and `:373`): the Ramble's *Overflow one x-tier higher* against Magic 3.0's Overflow tiers, and the Ley-Grid's *DeSync*. The sheet copies both as text.
+- ☐ ❓ **The fifteen profiles are a draft** (`private/crb/README.md:86`, "not approved"). The sheet builds all fifteen from it; say when they are approved.
+
 ## 2410_Factions_and_City and 2644_Faction_Tracker
 
 - ☐ ❓ **The stance and the positions never mention each other.** The Faction Tracker's *Stance toward the Crew* is a line from *Hostile* to *Allied*; `2410`'s positions are *Neutral*, *Aware* and *Active*. Say whether the second describes how closely the faction watches the crew and the first where it stands, or whether one replaces the other. The sheet keeps both, as the book prints them. *(Found by S7's pre-flight, 2026-10-23.)*
