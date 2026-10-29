@@ -3947,13 +3947,13 @@ test("migratePack: every text field a string, unknown keys kept, a pack's own or
 });
 
 test("a newer packSchemaVersion is kept, and packCheck warns; an older or unreadable one reads as the current one", () => {
-  const n = Engine.migratePack({ meta: { id: PACK_ID, packSchemaVersion: "0.3" } });
-  assert.equal(n.meta.packSchemaVersion, "0.3");
+  const n = Engine.migratePack({ meta: { id: PACK_ID, packSchemaVersion: "0.4" } });
+  assert.equal(n.meta.packSchemaVersion, "0.4");
   assert.equal(Engine.packCheck(n).warnings.length, 1);
-  assert.equal(Engine.migratePack(n).meta.packSchemaVersion, "0.3");
+  assert.equal(Engine.migratePack(n).meta.packSchemaVersion, "0.4");
   for (const v of ["0.1", "0.2", "0.0", "junk", undefined, 3]) {
     const m = Engine.migratePack({ meta: { id: PACK_ID, packSchemaVersion: v } });
-    assert.equal(m.meta.packSchemaVersion, "0.2", String(v));
+    assert.equal(m.meta.packSchemaVersion, "0.3", String(v));
     assert.equal(Engine.packCheck(m).warnings.length, 0);
   }
   assert.notEqual(Engine.packCheck(null).refuse, null);
@@ -4121,7 +4121,7 @@ test("migratePack 0.2 over junk: modifiers, traits and guides come out valid or 
 test("a 0.1 pack reads as 0.2: stamped, no traits or modifiers, the rest identical; its ad-hoc traits key is gated", () => {
   const old = syntheticPack01();
   const m = Engine.migratePack(old);
-  assert.equal(m.meta.packSchemaVersion, "0.2");
+  assert.equal(m.meta.packSchemaVersion, "0.3");
   eq(m.traits, []);
   eq(m.origins.map(o => [o.id, o.name, o.text, o.modifiers]), old.origins.map(o => [o.id, o.name, o.text, {}]));
   eq(m.tiers.map(t => [t.id, t.name, t.text, t.statGuide, t.traitGuide]), old.tiers.map(t => [t.id, t.name, t.text, "", ""]));
@@ -10785,4 +10785,63 @@ test("L2b 9 (engine): migrate to 0.31 keeps a typed rof, adds nothing, and keeps
     assert.equal(m.weapons[0].loaded, "silver-rounds");
     same(Engine.migrate(JSON.parse(JSON.stringify(m))), m);
   }
+});
+
+// ── Site Profiles (Decision 250): the pack's `sites` ─────────────────────────
+const SITE_PK = "PK-ABCD2345";
+const sitePack = sites => Engine.migratePack({ meta: { id: SITE_PK, packSchemaVersion: "0.3" }, sites });
+const longStretch = () => ({
+  id: "long-stretch", ref: "TP1", name: "The Long Stretch", category: "thin-places", canon: "The Old Pike", flavor: "Flavor.", presence: "Presence text.",
+  rules: "Rules text.", waysIn: ["One", "Two", "Three"], layering: "Layers.",
+  track: { kind: "exposure", name: "Exposure", triggers: "Stopping.", steps: [{ at: 3, text: "Disoriented." }, { at: 5, text: "Lost time." }, { at: 8, text: "Gone." }], marks: "A mark." },
+  trackText: "", clock: { name: "Drift", segments: 4, advances: "Each round stopped.", whenFull: "When it fills, it ends." }, clockText: "",
+  here: "Nobody.", resolution: "Leave.", gmNote: "Note." });
+const oldGrowth = () => ({
+  id: "old-growth", ref: "GL1", name: "The Old Growth", category: "genius-loci", waysIn: [],
+  track: { kind: "levels", name: "Disposition", start: "tolerant", moves: "What moves it.",
+           levels: ["welcome", "tolerant", "wary", "hostile"].map(id => ({ id, name: id[0].toUpperCase() + id.slice(1), text: `${id} text` })) },
+  clock: null, clockText: "None. The disposition is the clock." });
+
+test("250: migratePack gates sites: text as text, a track of a known shape, a clock of 2 to 12", () => {
+  eq(Engine.migratePack({ meta: { id: SITE_PK, packSchemaVersion: "0.2" } }).sites, [], "a 0.2 pack with no sites loads with []");
+  eq(Engine.migratePack({ meta: { id: SITE_PK }, sites: "x" }).sites, []);
+  const p = sitePack([longStretch(), { ...oldGrowth(), id: "__proto__" }, { ...oldGrowth(), id: "bad id!" }, oldGrowth(), oldGrowth(), "x", null]);
+  eq(p.sites.map(s => s.id), ["long-stretch", "old-growth"], "a __proto__ id, a bad id, a repeat and a non-object are dropped");
+  assert.equal(({}).polluted, undefined);
+  const ls = p.sites[0];
+  assert.equal(ls.category, "thin-places"); assert.equal(ls.track.kind, "exposure"); eq(ls.track.steps.map(s => s.at), [3, 5, 8]);
+  assert.equal(ls.clock.segments, 4); assert.equal(ls.waysIn.length, 3);
+  // Unknown track kind and non-object tracks are null.
+  for (const track of [{ kind: "oracle" }, [], 5, "x", null]) assert.equal(sitePack([{ id: "a", track }]).sites[0].track, null, JSON.stringify(track));
+  // A level with a bad id is dropped; a start naming a dropped level reads as the first level.
+  const lv = sitePack([{ id: "a", track: { kind: "levels", start: "ghost", levels: [{ id: "x y", name: "Bad" }, { id: "calm", name: "Calm" }, { id: "__proto__" }, { id: "calm" }, { id: "surging" }] } }]).sites[0].track;
+  eq(lv.levels.map(l => l.id), ["calm", "surging"]); assert.equal(lv.start, "calm");
+  assert.equal(sitePack([{ id: "a", track: { kind: "levels", start: "surging", levels: [{ id: "calm" }, { id: "surging" }] } }]).sites[0].track.start, "surging");
+  // A step's `at` of 0, "x" or 100 is dropped; steps sort by `at`.
+  const ex = sitePack([{ id: "a", track: { kind: "exposure", steps: [{ at: 8 }, { at: 0 }, { at: "x" }, { at: 100 }, { at: 3 }, { at: 1.5 }, "x"] } }]).sites[0].track;
+  eq(ex.steps.map(s => s.at), [3, 8]);
+  // A table's rows are a roll and a text.
+  eq(sitePack([{ id: "a", track: { kind: "table", die: "d6", rows: [{ roll: "1–2", text: "t" }, 5, { roll: 3 }] } }]).sites[0].track.rows,
+    [{ roll: "1–2", text: "t" }, { roll: "", text: "" }]);
+  // A clock's segments outside 2–12 read as 4; a non-object clock is null; a category that isn't a kind of ground is null.
+  assert.equal(sitePack([{ id: "a", clock: { name: "C", segments: 13 } }]).sites[0].clock.segments, 4);
+  assert.equal(sitePack([{ id: "a", clock: { name: "C", segments: 12 } }]).sites[0].clock.segments, 12);
+  assert.equal(sitePack([{ id: "a", clock: [] }]).sites[0].clock, null);
+  assert.equal(sitePack([{ id: "a", category: "elsewhere" }]).sites[0].category, null);
+  // Text is text, and an unknown key rides along.
+  const t = sitePack([{ id: "a", name: 5, presence: {}, waysIn: [1, "ok"], extra: { keep: 1 } }]).sites[0];
+  assert.equal(t.name, ""); assert.equal(t.presence, ""); eq(t.waysIn, ["ok"]); eq(t.extra, { keep: 1 });
+  assert.equal(JSON.stringify(Engine.migratePack(p)), JSON.stringify(p), "idempotent");
+});
+
+test("250: siteProfiles and packSite read slotted packs by kind of ground then name, and are total", () => {
+  const p = sitePack([longStretch(), oldGrowth(), { id: "aaa", name: "Aaa", category: "thin-places" }, { id: "zzz", name: "Zzz", category: null }]);
+  eq(Engine.siteProfiles([p]).map(e => e.site.id), ["old-growth", "aaa", "long-stretch", "zzz"], "genius-loci before thin-places; no ground last");
+  eq(Engine.siteProfiles([p], { category: "thin-places" }).map(e => e.site.id), ["aaa", "long-stretch"]);
+  assert.equal(Engine.packSite([p], SITE_PK, "long-stretch").site.name, "The Long Stretch");
+  assert.equal(Engine.packSite([p], SITE_PK, "nope"), null); assert.equal(Engine.packSite([], SITE_PK, "long-stretch"), null);
+  for (const bad of [null, {}, "x", 5, [null, 5, {}, { meta: {} }, { meta: {}, sites: "x" }, { meta: { id: SITE_PK }, sites: [null, 5, { id: "a", track: 5 }] }]]) {
+    assert.doesNotThrow(() => { Engine.siteProfiles(bad); Engine.siteProfiles(bad, null); Engine.packSite(bad, SITE_PK, "a"); Engine.packSite(bad, null, null); }, JSON.stringify(bad));
+  }
+  eq(Engine.siteProfiles(null), []);
 });

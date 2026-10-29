@@ -7337,7 +7337,7 @@ const Engine = (() => {
   // the browser outside every table. migratePack() is its gate. An id is the
   // author's, so a bad one is nothing (never a new one): the pack is refused,
   // the record is dropped. The app never makes a pack.
-  const PACK_SCHEMA_VERSION = "0.2";
+  const PACK_SCHEMA_VERSION = "0.3";
   const PACK_TRAIT_KINDS = ["universal","origin","signature"];
   const isPackId = v => typeof v==="string" && PACK_ID_RE.test(v);
   const _recordId = v => typeof v==="string" && RECORD_ID_RE.test(v) ? v : null;
@@ -7410,7 +7410,50 @@ const Engine = (() => {
       g.members = (Array.isArray(g.members) ? g.members : []).filter(x=>_isObj(x) && typeof x.entry==="string" && entryIds.has(x.entry));
       for (const x of g.members) x.count = _tier(x.count) || 1;
     }, _recordId);
+    // Pack schema 0.3 (Decision 250): a pack carries Site Profiles. `sites` is a list or nothing, and
+    // gated on every load like the rest, so a 0.2 pack needs no step beyond the stamp above.
+    c.sites = _packSection(c.sites, _site, _recordId);
     return c;
+  }
+  // A Site Profile (Decision 250): the book's words as text, a category that is one of the kinds of
+  // ground, a track of one of three shapes (or none), and a clock to copy (or none). Unknown keys ride along.
+  const SITE_TEXT = ["ref", "name", "category", "canon", "flavor", "presence", "rules", "layering", "trackText", "clockText", "here", "resolution", "gmNote"];
+  function _siteTrack(t){
+    if (!_isObj(t)) return null;
+    if (t.kind==="levels"){
+      const seen = new Set(), levels = [];
+      for (const l of (Array.isArray(t.levels) ? t.levels : [])){
+        const id = _isObj(l) ? _recordId(l.id) : null;
+        if (id===null || seen.has(id)) continue;
+        seen.add(id);
+        levels.push({ ...l, id, name:_str(l.name), text:_str(l.text) });
+      }
+      t.levels = levels;
+      t.start = levels.some(l=>l.id===t.start) ? t.start : levels.length ? levels[0].id : null;
+      t.moves = _str(t.moves);
+    } else if (t.kind==="exposure"){
+      const steps = [];
+      for (const s of (Array.isArray(t.steps) ? t.steps : [])){
+        const at = _isObj(s) ? _int(s.at) : null;
+        if (at!==null && at>=1 && at<=99) steps.push({ ...s, at, text:_str(s.text) });
+      }
+      t.steps = steps.sort((a, b)=>a.at - b.at);
+      t.triggers = _str(t.triggers);
+      t.marks = _str(t.marks);
+    } else if (t.kind==="table"){
+      t.die = _str(t.die);
+      t.rows = (Array.isArray(t.rows) ? t.rows : []).filter(_isObj).map(r=>({ ...r, roll:_str(r.roll), text:_str(r.text) }));
+    } else return null;
+    t.name = _str(t.name);
+    return t;
+  }
+  function _site(s){
+    for (const k of SITE_TEXT) s[k] = _str(s[k]);
+    s.category = _gazEnvironments().some(e=>e.id===s.category) ? s.category : null;
+    s.waysIn = _strList(s.waysIn);
+    s.track = _siteTrack(s.track);
+    s.clock = _isObj(s.clock) ? { ...s.clock, name:_str(s.clock.name), segments:_clockSegments(s.clock.segments),
+                                  advances:_str(s.clock.advances), whenFull:_str(s.clock.whenFull) } : null;
   }
   function packCheck(p){
     const m = _isObj(p) && _isObj(p.meta) ? p.meta : {};
@@ -7518,6 +7561,26 @@ const Engine = (() => {
     return { pack, entry, origin:_byId(pack.origins, entry.origin),
              npcRoles:(Array.isArray(entry.npcRoles) ? entry.npcRoles : []).map(r=>_byId(pack.npcRoles, r)).filter(Boolean),
              enemyRole:_byId(pack.enemyRoles, entry.enemyRole) };
+  }
+  // Every slotted pack's Site Profiles (Decision 250), by kind of ground in the data's order, then by
+  // name. `f.category` keeps one kind. A site whose ground isn't one of the kinds comes last.
+  function siteProfiles(packs, f){
+    try {
+      const cat = _isObj(f) && typeof f.category==="string" ? f.category : null;
+      const order = _gazEnvironments().map(e=>e.id);
+      const rank = s => { const i = order.indexOf(s.category); return i<0 ? order.length : i; };
+      const out = [];
+      for (const pack of _packList(packs)) for (const site of _list(pack.sites)) if (!cat || site.category===cat) out.push({ pack, site });
+      return out.map((e, i)=>({ e, i, r:rank(e.site), k:_fold(e.site.name) }))
+        .sort((a, b)=>a.r - b.r || (a.k < b.k ? -1 : a.k > b.k ? 1 : a.i - b.i)).map(x=>x.e);
+    } catch (e) { return []; }
+  }
+  function packSite(packs, packId, id){
+    try {
+      const pack = _packList(packs).find(p=>p.meta.id===packId);
+      const site = pack ? _byId(pack.sites, id) : null;
+      return pack && site ? { pack, site } : null;
+    } catch (e) { return null; }
   }
   function packGroups(packs, f){
     const q = _folded((f||{}).q), out = [];
@@ -8645,7 +8708,7 @@ const Engine = (() => {
     // The table file (GM mode): create, tell its kind, load, check, edit notes
     newTable, isTableId, fileKind, migrateTable, tableCheck, diffTable, tableActionLabel, recordTableAction, undoTableAction, clearTableActivity, addTableNote, editTableNote, removeTableNote, sessionNotes, tableSearch,
     // The pack file (GM mode): load, check, read, and copy an entry into the cast
-    isPackId, migratePack, packCheck, packFilter, packChoices, packTraits, castPackMatch, packEntry, packGroups, gmReference, castFromEntry, entryLink,
+    isPackId, migratePack, packCheck, packFilter, packChoices, packTraits, castPackMatch, packEntry, siteProfiles, packSite, packGroups, gmReference, castFromEntry, entryLink,
     // The cast: a stat block read, and a member added, edited, removed, found
     npc, addCastMember, editCastMember, setCastBlock, removeCastMember, castFilter, castAffiliations,
     // Interactions: what passed between the crew and the cast, and who knows it

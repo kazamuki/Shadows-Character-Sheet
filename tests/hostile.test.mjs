@@ -435,7 +435,7 @@ const PK = "PK-ABCD2345";
 function hostilePack() {
   const text = tag => P(tag);
   return {
-    meta: { kind: "shadows-pack", id: PK, name: text("pk.name"), packSchemaVersion: "0.2", contentVersion: text("pk.version"),
+    meta: { kind: "shadows-pack", id: PK, name: text("pk.name"), packSchemaVersion: "0.3", contentVersion: text("pk.version"),
             created: "2026-10-01T10:00:00.000Z", updated: "2026-10-02T10:00:00.000Z" },
     origins: [{ id: "o1", name: text("origin.name"), text: text("origin.text"), modifiers: { BOD: 1, [text("mod.key")]: 2, REF: text("mod.val") } }, null, 5],
     npcRoles: [{ id: "r1", name: text("role.name"), text: text("role.text") }],
