@@ -41,6 +41,8 @@ then some lines will have outgrown themselves.
 - **Factions.** Each faction the crew deals with keeps the book's Faction Tracker:
   what they want, their reach, their key people, how they stand with the crew, and
   clocks to count down what they do next.
+- **Site Profiles.** A crew's place can take one of the Threat Codex's Site Profiles:
+  its presence, rules and track, each character's Exposure, and its clock.
 - **Threats.** Slot in a pack, the Threat Codex among them, and its threats, people
   and groups are a tab away, ready to read or to copy into your cast.
 - **Encounters.** Plan them ahead and run them at the table: who goes when, one at a

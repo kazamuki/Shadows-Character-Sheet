@@ -5903,6 +5903,16 @@ const Engine = (() => {
     if (typeof v.name==="string") out.name = v.name;
     return out;
   }
+  // A place's Site Profile (Decision 251): a pack link as a cast member's is, and the name it had when picked.
+  // The profile itself is read from the pack every time. Anything but that shape is no link.
+  function _siteLink(v){
+    if (!_isObj(v) || v.kind!=="site" || !(typeof v.pack==="string" && PACK_ID_RE.test(v.pack)) || _recordId(v.id)===null) return null;
+    const out = { kind:"site", pack:v.pack, id:v.id };
+    if (typeof v.name==="string") out.name = v.name;
+    return out;
+  }
+  // One row a character: a typed name (blank while it is being typed) and a count from 0 to 99. A row that isn't one is dropped.
+  const _exposureRows = v => (Array.isArray(v) ? v : []).filter(_isObj).map(r=>{ const n = _int(r.n); return { name:_str(r.name), n:n===null ? 0 : Math.max(0, Math.min(99, n)) }; });
   function _place(p, used){
     p.name = _str(p.name);
     p.from = _gazFrom(p.from);
@@ -5912,6 +5922,9 @@ const Engine = (() => {
     p.neighborhood = _str(p.neighborhood);
     p.environment = _gazId(p.environment);
     p.notes = _str(p.notes);
+    p.site = _siteLink(p.site);
+    p.siteLevel = _recordId(p.siteLevel);
+    p.exposure = _exposureRows(p.exposure);
     if (!(typeof p.id==="string" && PLACE_ID_RE.test(p.id)) || used.has(p.id)) p.id = newPlaceId(used);
     used.add(p.id);
     p.created = _isoOrNull(p.created);
@@ -5945,11 +5958,19 @@ const Engine = (() => {
     f.created = _isoOrNull(f.created);
     f.updated = _isoOrNull(f.updated);
   }
+  // Who owns a clock (Decisions 245, 251): a faction or a place, by its id. An owner of a kind this version doesn't
+  // know is kept as it is and shown nowhere, so a newer app's file loses none; anything else is no owner.
+  function _clockOwner(on){
+    if (!_isObj(on) || typeof on.kind!=="string" || typeof on.id!=="string") return null;
+    if (on.kind==="faction") return FACTION_ID_RE.test(on.id) ? { kind:"faction", id:on.id } : null;
+    if (on.kind==="place") return PLACE_ID_RE.test(on.id) ? { kind:"place", id:on.id } : null;
+    return /^[a-z]+$/.test(on.kind) && on.id.length<=40 ? on : null;
+  }
   function _clock(c, used){
     for (const k of ["name", "advances", "whenFull"]) c[k] = _str(c[k]);
     c.segments = _clockSegments(c.segments);
     c.filled = _clockFilled(c.filled, c.segments);
-    c.on = _isObj(c.on) && c.on.kind==="faction" && typeof c.on.id==="string" && FACTION_ID_RE.test(c.on.id) ? { kind:"faction", id:c.on.id } : null;
+    c.on = _clockOwner(c.on);
     if (!(typeof c.id==="string" && CLOCK_ID_RE.test(c.id)) || used.has(c.id)) c.id = newClockId(used);
     used.add(c.id);
     c.created = _isoOrNull(c.created);
@@ -6035,7 +6056,7 @@ const Engine = (() => {
     x.updated = _isoOrNull(x.updated);
   }
   // The table file's shape. A bump needs a migrateTable() step in the same change.
-  const TABLE_SCHEMA_VERSION = "0.15";
+  const TABLE_SCHEMA_VERSION = "0.16";
   function newTable(name){
     const now = new Date().toISOString();
     return { meta:{ kind:"shadows-table", id:newTableId(), name:String(name ?? ""),
@@ -6134,6 +6155,14 @@ const Engine = (() => {
       if (!Array.isArray(c.factions)) c.factions = [];
       if (!Array.isArray(c.clocks)) c.clocks = [];
     }
+    //   Schema 0.16 (Decision 251): a place may take a Site Profile, and keeps its level and each character's Exposure.
+    //   Nothing is converted, and no profile is guessed from a place's ground (203).
+    if (typeof arrived!=="string" || _versionNewer("0.16", arrived))
+      for (const p of (Array.isArray(c.places) ? c.places : [])) if (_isObj(p)){
+        if (!("site" in p)) p.site = null;
+        if (!("siteLevel" in p)) p.siteLevel = null;
+        if (!("exposure" in p)) p.exposure = [];
+      }
     if (!_versionNewer(m.tableSchemaVersion, TABLE_SCHEMA_VERSION)) m.tableSchemaVersion = TABLE_SCHEMA_VERSION;
     const usedCast = new Set();
     c.cast = (Array.isArray(c.cast) ? c.cast : []).filter(_isObj);
@@ -6232,6 +6261,15 @@ const Engine = (() => {
   // The words for an entry, read from the records the patch touches: the verb
   // from what happened to each, the name from the record. Changes inside an
   // encounter's rows, sides or Conditions belong to the encounter.
+  // The collections whose records own clocks, and the kind a clock's `on` names them by.
+  const CLOCK_OWNER_RECORDS = { factions:"faction", places:"place" };
+  function _clockOwnerChanged(before, after, c){
+    const coll = _isObj(c.on) ? Object.keys(CLOCK_OWNER_RECORDS).find(k=>CLOCK_OWNER_RECORDS[k]===c.on.kind) : null;
+    if (!coll) return false;
+    const find = t => (_isObj(t) && Array.isArray(t[coll]) ? t[coll] : []).find(r=>_isObj(r) && r.id===c.on.id);
+    const was = find(before), now = find(after);
+    return !!was && !!now && !_eq(was, now);
+  }
   function tableActionLabel(before, after, patch){
     const fallback = "Changed the table";
     try {
@@ -6243,7 +6281,7 @@ const Engine = (() => {
       }
       // An add or a remove names only what came and went: the lines a removal renames are collateral.
       const came = [], changed = [];
-      const goneFactions = new Set();
+      const gone = new Set();
       for (const coll of TABLE_RECORDS){
         if (!touched.has(coll)) continue;
         const was = new Map(), now = new Set();
@@ -6251,13 +6289,15 @@ const Engine = (() => {
         for (const r of (_isObj(after) && Array.isArray(after[coll]) ? after[coll] : [])){
           if (!_isObj(r)) continue;
           now.add(r.id);
+          // A clock added with its owner changed in the same patch is collateral of that change (251): a profile's clock copied onto a place.
+          if (!was.has(r.id) && coll==="clocks" && _clockOwnerChanged(before, after, r)) continue;
           if (!was.has(r.id)) came.push(_recLabel("Added", coll, r));
           else if (!_eq(was.get(r.id), r)) changed.push(_recLabel("Changed", coll, was.get(r.id)));
         }
-        // A faction's removal names the faction; the clocks that went with it are collateral (245).
+        // An owner's removal names the owner; the clocks that went with it are collateral, whoever owned them (245, 251).
         for (const [id, r] of was) if (!now.has(id)){
-          if (coll==="factions") goneFactions.add(id);
-          if (coll==="clocks" && _isObj(r.on) && goneFactions.has(r.on.id)) continue;
+          if (CLOCK_OWNER_RECORDS[coll]) gone.add(`${CLOCK_OWNER_RECORDS[coll]}:${id}`);
+          if (coll==="clocks" && _isObj(r.on) && gone.has(`${r.on.kind}:${r.on.id}`)) continue;
           came.push(_recLabel("Removed", coll, r));
         }
       }
@@ -6760,7 +6800,7 @@ const Engine = (() => {
     const now = new Date().toISOString();
     const p = { id:newPlaceId(new Set(t.places.map(x=>x && x.id))), name:_str(f.name), from, territory, zone:_fitZone(territory, zone),
                 district:_str(f.district), neighborhood:_str(f.neighborhood), environment:_gazId(f.environment),
-                notes:_str(f.notes), created:now, updated:now };
+                notes:_str(f.notes), site:null, siteLevel:null, exposure:[], created:now, updated:now };
     t.places.unshift(p);
     _tableStamp(t);
     return { ok:true, id:p.id };
@@ -6773,24 +6813,85 @@ const Engine = (() => {
       if ("territory" in f) p.territory = _gazId(f.territory);
       if ("zone" in f) p.zone = _gazId(f.zone);
       if ("environment" in f) p.environment = _gazId(f.environment);
+      if ("siteLevel" in f) p.siteLevel = _recordId(f.siteLevel);
+      if ("exposure" in f) p.exposure = _exposureRows(f.exposure);
       if ("territory" in f || "zone" in f) p.zone = _fitZone(p.territory, p.zone);
     }
     _tableStamp(t, p);
     return { ok:true };
   }
   // A line keeps the place's name under its link, as a removed member's does (Decision 178).
+  // Its clocks go with it (251), as a faction's do: a clock means nothing without its owner.
   function removePlace(t, id){
     const i = _isObj(t) && Array.isArray(t.places) ? t.places.findIndex(p=>_isObj(p) && p.id===id) : -1;
     if (i < 0) return { ok:false, why:"No such place." };
     const name = placeTitle(t, t.places[i]);
     for (const x of _interactions(t)) if (_isObj(x.place) && x.place.id===id) x.place.name = name;
     t.places.splice(i, 1);
+    if (Array.isArray(t.clocks)) t.clocks = t.clocks.filter(c=>!(_isObj(c) && _isObj(c.on) && c.on.kind==="place" && c.on.id===id));
     _tableStamp(t);
     return { ok:true };
+  }
+  // A place takes a Site Profile from a slotted pack (Decision 251): it keeps the link, and the profile is read
+  // from the pack every time. Picking one sets the ground to the profile's kind, clears the old track's level and
+  // rows (they were the old profile's), and copies the profile's clock onto the place, to edit or delete. `ref` null
+  // clears the link, the level and the rows and leaves every clock. Nothing a profile says is run.
+  function setPlaceSite(t, id, packs, ref){
+    const p = _placeRecords(t).find(x=>x.id===id);
+    if (!p) return { ok:false, why:"No such place." };
+    if (ref===null || ref===undefined){
+      p.site = null; p.siteLevel = null; p.exposure = [];
+      _tableStamp(t, p);
+      return { ok:true, clock:null };
+    }
+    const found = _isObj(ref) ? packSite(packs, ref.pack, ref.id) : null;
+    if (!found) return { ok:false, why:"No such site profile." };
+    const s = found.site;
+    p.site = { kind:"site", pack:found.pack.meta.id, id:s.id, name:_str(s.name) };
+    p.siteLevel = null; p.exposure = [];
+    if (s.category) p.environment = s.category;
+    let clock = null;
+    if (_isObj(s.clock)){
+      const r = addClock(t, { on:{ kind:"place", id }, name:s.clock.name, segments:s.clock.segments, advances:s.clock.advances, whenFull:s.clock.whenFull });
+      clock = r.ok ? r.id : null;
+    }
+    _tableStamp(t, p);
+    return { ok:true, clock };
+  }
+  // What a place's page reads of its profile, every time and stored nowhere: the link, the profile (null when its pack
+  // isn't slotted in), the level on show (the stored one, else the profile's start) and each row's step reached.
+  // `stale` is a stored level the profile doesn't have. Never throws.
+  function placeSite(t, packs, p){
+    const out = { link:null, site:null, here:false, level:null, stale:null, exposure:[] };
+    try {
+      const link = _isObj(p) ? _siteLink(p.site) : null;
+      if (!link) return out;
+      out.link = link;
+      const rows = (Array.isArray(p.exposure) ? p.exposure : []).filter(_isObj).map(r=>({ name:_str(r.name), n:_int(r.n)===null ? 0 : _int(r.n), step:null }));
+      out.exposure = rows;
+      const found = packSite(packs, link.pack, link.id);
+      if (!found) return out;
+      out.site = found.site; out.here = true;
+      const track = _isObj(found.site.track) ? found.site.track : null;
+      if (track && track.kind==="levels"){
+        const levels = _list(track.levels), stored = _recordId(p.siteLevel);
+        const at = stored===null ? null : levels.find(l=>l.id===stored) || null;
+        out.level = at || levels.find(l=>l.id===track.start) || levels[0] || null;
+        if (stored!==null && !at) out.stale = stored;
+      } else if (track && track.kind==="exposure"){
+        const steps = _list(track.steps);
+        for (const r of rows){
+          const reached = steps.filter(x=>_int(x.at)!==null && _int(x.at) <= r.n).sort((a, b)=>b.at - a.at)[0];
+          r.step = reached || null;
+        }
+      }
+    } catch (e) {}
+    return out;
   }
   function _placeFields(t, p){
     return [["Name", placeTitle(t, p)], ["Territory", _gazName(p.territory)], ["Zone", _gazName(p.zone)],
             ["District", _str(p.district)], ["Neighborhood", _str(p.neighborhood)], ["Ground", _gazName(p.environment)],
+            ["Site", _siteLink(p.site) ? _str(p.site.name) : ""], ...(Array.isArray(p.exposure) ? p.exposure : []).filter(_isObj).map(r=>["Exposure", _str(r.name)]),
             ["Notes", _str(p.notes)]].filter(e=>e[1]);
   }
   // The crew's places by title, `f.q` read as Find reads its words.
@@ -6928,16 +7029,16 @@ const Engine = (() => {
         .map((n, i)=>({ n, i, k:_fold(n.name) })).sort((a, b)=>a.k < b.k ? -1 : a.k > b.k ? 1 : a.i - b.i).map(e=>e.n);
     } catch (e) { return []; }
   }
-  // A clock is owned by a faction on the table (S7); other owners come later. Segments 2 to 12, filled inside them.
+  // A clock is owned by a faction or a place on the table (S7, S12b). Segments 2 to 12, filled inside them.
   function addClock(t, f){
     f = _isObj(f) ? f : {};
     if (!_isObj(t)) return { ok:false, why:"That isn't a table." };
-    const on = _isObj(f.on) && f.on.kind==="faction" ? f.on.id : null;
-    if (!_factionRecords(t).some(x=>x.id===on)) return { ok:false, why:"No such faction." };
+    const kind = _isObj(f.on) && f.on.kind==="place" ? "place" : "faction", on = _isObj(f.on) ? f.on.id : null;
+    if (!(kind==="place" ? _placeRecords(t) : _factionRecords(t)).some(x=>x.id===on)) return { ok:false, why:kind==="place" ? "No such place." : "No such faction." };
     if (!Array.isArray(t.clocks)) t.clocks = [];
     const now = new Date().toISOString(), segments = _clockSegments(f.segments);
     const c = { id:newClockId(new Set(t.clocks.map(x=>x && x.id))), name:_str(f.name), segments, filled:_clockFilled(f.filled, segments),
-                advances:_str(f.advances), whenFull:_str(f.whenFull), on:{ kind:"faction", id:on }, created:now, updated:now };
+                advances:_str(f.advances), whenFull:_str(f.whenFull), on:{ kind, id:on }, created:now, updated:now };
     t.clocks.push(c);
     _tableStamp(t);
     return { ok:true, id:c.id };
@@ -7203,10 +7304,10 @@ const Engine = (() => {
       for (const p of placeList(t)) test("place", p.id, placeTitle(t, p), _placeFields(t, p));
       for (const f of factionList(t)) test("faction", f.id, factionTitle(t, f), _factionFields(t, f));
       for (const c of _clockRecords(t)){
-        const owner = _isObj(c.on) && c.on.kind==="faction" ? _factionRecords(t).find(f=>f.id===c.on.id) : null;
+        const owner = !_isObj(c.on) ? null : c.on.kind==="faction" ? _factionRecords(t).find(f=>f.id===c.on.id) : c.on.kind==="place" ? _placeRecords(t).find(p=>p.id===c.on.id) : null;
         if (!owner) continue;
         test("clock", c.id, _str(c.name).trim() || "A clock", [["Clock", _str(c.name)], ["Advances", _str(c.advances)], ["When full", _str(c.whenFull)]]);
-        if (hits.length && hits[hits.length-1].kind==="clock" && hits[hits.length-1].id===c.id) hits[hits.length-1].owner = owner.id;
+        if (hits.length && hits[hits.length-1].kind==="clock" && hits[hits.length-1].id===c.id) { hits[hits.length-1].owner = owner.id; hits[hits.length-1].ownerKind = c.on.kind; }
       }
       return hits;
     } catch (e) { return []; }
@@ -7337,7 +7438,7 @@ const Engine = (() => {
   // the browser outside every table. migratePack() is its gate. An id is the
   // author's, so a bad one is nothing (never a new one): the pack is refused,
   // the record is dropped. The app never makes a pack.
-  const PACK_SCHEMA_VERSION = "0.2";
+  const PACK_SCHEMA_VERSION = "0.3";
   const PACK_TRAIT_KINDS = ["universal","origin","signature"];
   const isPackId = v => typeof v==="string" && PACK_ID_RE.test(v);
   const _recordId = v => typeof v==="string" && RECORD_ID_RE.test(v) ? v : null;
@@ -7410,7 +7511,50 @@ const Engine = (() => {
       g.members = (Array.isArray(g.members) ? g.members : []).filter(x=>_isObj(x) && typeof x.entry==="string" && entryIds.has(x.entry));
       for (const x of g.members) x.count = _tier(x.count) || 1;
     }, _recordId);
+    // Pack schema 0.3 (Decision 250): a pack carries Site Profiles. `sites` is a list or nothing, and
+    // gated on every load like the rest, so a 0.2 pack needs no step beyond the stamp above.
+    c.sites = _packSection(c.sites, _site, _recordId);
     return c;
+  }
+  // A Site Profile (Decision 250): the book's words as text, a category that is one of the kinds of
+  // ground, a track of one of three shapes (or none), and a clock to copy (or none). Unknown keys ride along.
+  const SITE_TEXT = ["ref", "name", "category", "canon", "flavor", "presence", "rules", "layering", "trackText", "clockText", "here", "resolution", "gmNote"];
+  function _siteTrack(t){
+    if (!_isObj(t)) return null;
+    if (t.kind==="levels"){
+      const seen = new Set(), levels = [];
+      for (const l of (Array.isArray(t.levels) ? t.levels : [])){
+        const id = _isObj(l) ? _recordId(l.id) : null;
+        if (id===null || seen.has(id)) continue;
+        seen.add(id);
+        levels.push({ ...l, id, name:_str(l.name), text:_str(l.text) });
+      }
+      t.levels = levels;
+      t.start = levels.some(l=>l.id===t.start) ? t.start : levels.length ? levels[0].id : null;
+      t.moves = _str(t.moves);
+    } else if (t.kind==="exposure"){
+      const steps = [];
+      for (const s of (Array.isArray(t.steps) ? t.steps : [])){
+        const at = _isObj(s) ? _int(s.at) : null;
+        if (at!==null && at>=1 && at<=99) steps.push({ ...s, at, text:_str(s.text) });
+      }
+      t.steps = steps.sort((a, b)=>a.at - b.at);
+      t.triggers = _str(t.triggers);
+      t.marks = _str(t.marks);
+    } else if (t.kind==="table"){
+      t.die = _str(t.die);
+      t.rows = (Array.isArray(t.rows) ? t.rows : []).filter(_isObj).map(r=>({ ...r, roll:_str(r.roll), text:_str(r.text) }));
+    } else return null;
+    t.name = _str(t.name);
+    return t;
+  }
+  function _site(s){
+    for (const k of SITE_TEXT) s[k] = _str(s[k]);
+    s.category = _gazEnvironments().some(e=>e.id===s.category) ? s.category : null;
+    s.waysIn = _strList(s.waysIn);
+    s.track = _siteTrack(s.track);
+    s.clock = _isObj(s.clock) ? { ...s.clock, name:_str(s.clock.name), segments:_clockSegments(s.clock.segments),
+                                  advances:_str(s.clock.advances), whenFull:_str(s.clock.whenFull) } : null;
   }
   function packCheck(p){
     const m = _isObj(p) && _isObj(p.meta) ? p.meta : {};
@@ -7518,6 +7662,26 @@ const Engine = (() => {
     return { pack, entry, origin:_byId(pack.origins, entry.origin),
              npcRoles:(Array.isArray(entry.npcRoles) ? entry.npcRoles : []).map(r=>_byId(pack.npcRoles, r)).filter(Boolean),
              enemyRole:_byId(pack.enemyRoles, entry.enemyRole) };
+  }
+  // Every slotted pack's Site Profiles (Decision 250), by kind of ground in the data's order, then by
+  // name. `f.category` keeps one kind. A site whose ground isn't one of the kinds comes last.
+  function siteProfiles(packs, f){
+    try {
+      const cat = _isObj(f) && typeof f.category==="string" ? f.category : null;
+      const order = _gazEnvironments().map(e=>e.id);
+      const rank = s => { const i = order.indexOf(s.category); return i<0 ? order.length : i; };
+      const out = [];
+      for (const pack of _packList(packs)) for (const site of _list(pack.sites)) if (!cat || site.category===cat) out.push({ pack, site });
+      return out.map((e, i)=>({ e, i, r:rank(e.site), k:_fold(e.site.name) }))
+        .sort((a, b)=>a.r - b.r || (a.k < b.k ? -1 : a.k > b.k ? 1 : a.i - b.i)).map(x=>x.e);
+    } catch (e) { return []; }
+  }
+  function packSite(packs, packId, id){
+    try {
+      const pack = _packList(packs).find(p=>p.meta.id===packId);
+      const site = pack ? _byId(pack.sites, id) : null;
+      return pack && site ? { pack, site } : null;
+    } catch (e) { return null; }
   }
   function packGroups(packs, f){
     const q = _folded((f||{}).q), out = [];
@@ -8645,7 +8809,7 @@ const Engine = (() => {
     // The table file (GM mode): create, tell its kind, load, check, edit notes
     newTable, isTableId, fileKind, migrateTable, tableCheck, diffTable, tableActionLabel, recordTableAction, undoTableAction, clearTableActivity, addTableNote, editTableNote, removeTableNote, sessionNotes, tableSearch,
     // The pack file (GM mode): load, check, read, and copy an entry into the cast
-    isPackId, migratePack, packCheck, packFilter, packChoices, packTraits, castPackMatch, packEntry, packGroups, gmReference, castFromEntry, entryLink,
+    isPackId, migratePack, packCheck, packFilter, packChoices, packTraits, castPackMatch, packEntry, siteProfiles, packSite, packGroups, gmReference, castFromEntry, entryLink,
     // The cast: a stat block read, and a member added, edited, removed, found
     npc, addCastMember, editCastMember, setCastBlock, removeCastMember, castFilter, castAffiliations,
     // Interactions: what passed between the crew and the cast, and who knows it
@@ -8654,7 +8818,7 @@ const Engine = (() => {
     offScreenPay, arcDue, closeOutDraft, writeCloseOut, awardTotals,
     addInteraction, editInteraction, removeInteraction, interactionsFor, interactionSentence, crewView, linkName,
     // Places: the gazetteer the book names, and the crew's own places
-    gazetteer, gazetteerEntry, PLACE_FROM_KINDS, addPlace, editPlace, removePlace, placeTitle, placeList, placeLines, placeMet,
+    gazetteer, gazetteerEntry, PLACE_FROM_KINDS, addPlace, editPlace, removePlace, setPlaceSite, placeSite, placeTitle, placeList, placeLines, placeMet,
     // Factions and clocks: the Faction Tracker as a record, and the counters a faction owns
     FACTION_TYPES, FACTION_TYPE_LABELS, FACTION_ATTENTION, FACTION_STANCES, FACTION_FROM_KINDS, addFaction, editFaction, removeFaction, factionTitle, factionList,
     factionsKeyFor, factionAffiliated, addClock, editClock, removeClock, clocksOn,

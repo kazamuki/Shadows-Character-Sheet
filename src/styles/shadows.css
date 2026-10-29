@@ -1503,5 +1503,22 @@ h2.city-name{font-size:1.15rem}
 .clock-fields input, .clock .field textarea{min-width:0; width:100%}
 .form-toggle button[data-fstance]{min-width:44px}
 
+/* A place's Site Profile (Decisions 250–251). The profile's text is the book's: wrapped, never cut. */
+.place-site{display:flex; flex-wrap:wrap; align-items:flex-end; gap:8px}
+.place-site .field{flex:1 1 240px; min-width:0}
+.place-site select{max-width:100%}
+.site-profile{margin:4px 0 10px; min-width:0}
+.site-name, .site-h3, .site-h{overflow-wrap:anywhere}
+.site-h3{margin:14px 0 6px; font-size:1rem}
+.site-h{margin:12px 0 2px; font-size:.78rem; letter-spacing:.06em; text-transform:uppercase; color:var(--dim)}
+.site-text{margin:0 0 6px; white-space:pre-line; overflow-wrap:anywhere}
+.site-flavor{margin:0 0 8px; overflow-wrap:anywhere}
+.site-list{margin:0 0 6px; padding-left:20px; overflow-wrap:anywhere}
+.site-list li{margin-bottom:4px}
+.exposure-row{display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px}
+.exposure-row input{flex:1 1 140px; min-width:0; width:100%; min-height:44px}
+.exposure-step{flex:1 1 100%; overflow-wrap:anywhere; min-width:0}
+.exposure-step:empty{display:none}
+
 /* A Discipline's description on Loadout & Powers (W60: no inline style). */
 .disc-desc{font-size:.78rem; color:var(--dim)}

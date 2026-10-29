@@ -857,7 +857,7 @@ test("Decisions 203–204: export and import keep sessions and threads, and a 0.
   const before = JSON.parse(JSON.stringify(app.window.eval("({ s: S.table.sessions, t: S.table.threads })")));
   app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
   const file = await tableFile(downloads[0]);
-  assert.equal(file.meta.tableSchemaVersion, "0.15");
+  assert.equal(file.meta.tableSchemaVersion, "0.16");
   assert.deepEqual(file.sessions, before.s); assert.deepEqual(file.threads, before.t);
   const fresh = boot({ storage: GM_ON });
   withDownloads(fresh);
@@ -870,7 +870,7 @@ test("Decisions 203–204: export and import keep sessions and threads, and a 0.
   const older = boot({ storage: GM_ON });
   withDownloads(older);
   await importFile(older, old);
-  assert.equal(older.window.eval("S.table.meta.tableSchemaVersion"), "0.15");
+  assert.equal(older.window.eval("S.table.meta.tableSchemaVersion"), "0.16");
   assert.equal(older.window.eval("S.table.sessions.length + S.table.threads.length"), 0);
   assert.equal(older.window.eval("S.table.interactions[0].session"), null);
   assert.deepEqual([...app.errors, ...fresh.errors, ...older.errors], []);

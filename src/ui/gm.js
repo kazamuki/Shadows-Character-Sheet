@@ -460,10 +460,11 @@ function openFound(kind, id){
   else if (kind==="place"){ S.tsection="city"; S.placeOpen=id; S.factionOpen=null; S.cityView="places"; update(); land("[data-ptitle]"); }
   else if (kind==="faction"){ S.tsection="city"; S.factionOpen=id; S.placeOpen=null; S.cityView="factions"; update(); land("[data-ftitle]"); }
   else if (kind==="clock"){
-    const c=(t.clocks||[]).find(x=>x && x.id===id), owner=c && c.on && c.on.kind==="faction" ? c.on.id : null;
+    const c=(t.clocks||[]).find(x=>x && x.id===id), on=c && c.on, owner=on && (on.kind==="faction" || on.kind==="place") ? on.id : null;
     if (!owner) return;
-    S.tsection="city"; S.factionOpen=owner; S.placeOpen=null; S.cityView="factions"; update();
-    land(attrSel("data-clock", id) + " [data-clockname]") || land("[data-ftitle]");
+    S.tsection="city"; S.cityView=on.kind==="place" ? "places" : "factions";
+    S.factionOpen=on.kind==="faction" ? owner : null; S.placeOpen=on.kind==="place" ? owner : null; update();
+    land(attrSel("data-clock", id) + " [data-clockname]") || land(on.kind==="place" ? "[data-ptitle]" : "[data-ftitle]");
   }
   else if (kind==="encounter"){
     S.tsection="encounters"; S.encOpen=id; S.encWrap=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; S.encPick=false; S.encQ=""; S.encCodex=false; S.encCodexQ="";
@@ -1137,6 +1138,7 @@ const gazName = id => { const e=Engine.gazetteerEntry(id); return e ? String(e.n
 function placeCardHtml(t, p){
   const n=Engine.placeLines(t, p.id).length;
   const bits=[[gazName(p.zone), gazName(p.territory)].filter(Boolean).join(" · "), p.district, p.neighborhood, gazName(p.environment),
+    p.site && typeof p.site.name==="string" ? p.site.name : "", clockCountText(Engine.clocksOn(t, { kind:"place", id:p.id })),
     n ? `${n} ${n===1 ? "line" : "lines"}` : ""].filter(s=>String(s).trim()).map(esc).join(" · ");
   return `<li class="roster-card cast-card place-card" data-pcard="${esc(p.id)}"><button class="cast-open" data-popen="${esc(p.id)}">${esc(Engine.placeTitle(t, p))}</button>
     ${bits ? `<div class="roster-meta cast-meta">${bits}</div>` : ""}</li>`;
@@ -1197,13 +1199,148 @@ function placeBackTitle(){
   const r=S.placeRoute;
   return !r ? "the crew's places" : r.kind==="city" ? "The city" : routeTitle(r) || "the crew's places";
 }
+// ── A place's Site Profile (Decisions 250–251) ──────────────────────────
+// The profile is the pack's: it is read here every time and a place keeps only the link, the level a levels
+// track was set to, and each character's Exposure. Its text is the book's and is drawn as text, never run.
+const siteOwner = p => ({ kind:"place", id:p.id });
+const siteValue = e => `${e.pack.meta.id}|${e.site.id}`;
+// The select of every slotted pack's profiles, the place's own kind of ground first.
+function siteSelectHtml(p, info){
+  const list=Engine.siteProfiles(packsMemo);
+  if (!list.length && !info.link) return `<p class="step-note" data-psite-none>Slot in a pack with site profiles to use one here.</p>`;
+  const groups=[];
+  for (const e of list){
+    let g=groups.find(x=>x.cat===e.site.category);
+    if (!g){ g={ cat:e.site.category, items:[] }; groups.push(g); }
+    g.items.push(e);
+  }
+  groups.sort((a, b)=>(b.cat && b.cat===p.environment ? 1 : 0) - (a.cat && a.cat===p.environment ? 1 : 0));
+  const picked=info.link ? `${info.link.pack}|${info.link.id}` : "";
+  const opt=(v, name) => `<option value="${esc(v)}"${v===picked ? " selected" : ""}>${esc(name)}</option>`;
+  const lost=info.link && !info.here ? opt(picked, String(info.link.name||"").trim() || "A site profile") : "";
+  return `<div class="place-site"><label class="field"><span>Site profile</span><select data-psite><option value=""${picked ? "" : " selected"}>None</option>${lost}${groups.map(g=>{
+    const items=g.items.map(e=>opt(siteValue(e), e.site.name)).join("");
+    return g.cat ? `<optgroup label="${esc(gazName(g.cat) || g.cat)}">${items}</optgroup>` : items;
+  }).join("")}</select></label>
+    <button type="button" class="btn" data-psite-use disabled>Use</button></div>`;
+}
+// A part of the profile is an h3, beside the track's; a part of the track (What moves it, Marks here) is an h4 under it.
+const siteText = (label, text, h="h3") => String(text||"").trim() ? `<${h} class="site-h">${esc(label)}</${h}><p class="site-text">${esc(text)}</p>` : "";
+function siteLevelsHtml(track, info){
+  const levels=Array.isArray(track.levels) ? track.levels.filter(l=>l && typeof l==="object") : [], on=info.level ? info.level.id : null;
+  return `<div class="form-toggle int-kinds" role="group" aria-label="${esc(track.name || "Level")}">${levels.map(l=>
+    `<button type="button" data-slevel="${esc(l.id)}" class="${l.id===on ? "on" : ""}" aria-pressed="${l.id===on}">${esc(l.name)}</button>`).join("")}</div>
+    <p class="site-text" data-slevel-text>${esc(info.level ? info.level.text : "")}</p>
+    <p class="step-note" data-slevel-stale${info.stale ? "" : " hidden"}>${info.stale ? `Last set to “${esc(info.stale)}”, which this pack doesn't have.` : ""}</p>`;
+}
+// A row's buttons say whose they are, the typed name or the row's number; typing a name renames them.
+const exposureLabels = (name, i) => { const nm=String(name||"").trim() || `row ${i+1}`; return { eminus:`Take one off ${nm}`, eplus:`Add one to ${nm}`, edel:`Remove ${nm}` }; };
+function exposureRowHtml(r, i){
+  const L=exposureLabels(r.name, i);
+  return `<li class="int-line exposure-row" data-erow="${i}">
+    <input type="text" data-ename="${i}" list="exposure-names" value="${esc(r.name)}" placeholder="Who?" aria-label="Who, row ${i+1}" autocomplete="off">
+    <span class="clock-btns"><button type="button" class="btn sm clock-step" data-eminus="${i}" aria-label="${esc(L.eminus)}"${r.n<=0 ? " disabled" : ""}>−</button>
+      <span class="clock-count" data-ecount="${i}" role="status">${r.n}</span>
+      <button type="button" class="btn sm clock-step" data-eplus="${i}" aria-label="${esc(L.eplus)}"${r.n>=99 ? " disabled" : ""}>+</button></span>
+    <button type="button" class="btn sm" data-edel="${i}" aria-label="${esc(L.edel)}">Remove</button>
+    <span class="exposure-step" data-estep="${i}">${r.step ? esc(r.step.text) : ""}</span></li>`;
+}
+function exposureRowsHtml(info){ return info.exposure.map(exposureRowHtml).join(""); }
+function siteTrackHtml(p, site, info){
+  const track=site.track && typeof site.track==="object" ? site.track : null;
+  if (!track) return String(site.trackText||"").trim() ? `<h3 class="site-h3">Track</h3><p class="site-text">${esc(site.trackText)}</p>` : "";
+  const head=`<h3 class="site-h3">${esc(track.name)}</h3>`;
+  if (track.kind==="levels") return head + siteLevelsHtml(track, info) + siteText("What moves it", track.moves, "h4");
+  if (track.kind==="table") return `<h3 class="site-h3">${esc(track.name)} · ${esc(track.die)}</h3><ul class="site-list">${(track.rows||[]).map(r=>
+    `<li><strong>${esc(r.roll)}</strong> ${esc(r.text)}</li>`).join("")}</ul>`;
+  const names=Engine.crewView(S.table, {}).map(g=>g.name);
+  return head + (String(track.triggers||"").trim() ? `<p class="site-text">${esc(track.triggers)}</p>` : "")
+    + datalistHtml("exposure-names", names)
+    + `<ul class="int-list" data-erows>${exposureRowsHtml(info)}</ul>
+    <p><button type="button" class="btn sm" data-eadd>Add someone</button></p>
+    <ul class="site-list">${(track.steps||[]).map(s=>`<li><strong>${esc(s.at)}</strong> ${esc(s.text)}</li>`).join("")}</ul>`
+    + siteText("Marks here", track.marks, "h4");
+}
+// The profile under the select, or the line that says its pack isn't slotted in.
+function siteProfileHtml(p, info){
+  if (!info.link) return "";
+  const s=info.site;
+  if (!s) return `<p class="step-note" data-psite-gone>${esc(String(info.link.name||"").trim() || "This site profile")} isn't in any pack slotted in.</p>`;
+  return `<div class="site-profile" data-psite-profile>
+    <h2 class="cast-h site-name">${esc(s.name)}</h2>
+    <p class="roster-meta">${esc([gazName(s.category), s.canon].filter(x=>String(x||"").trim()).join(" · "))}</p>
+    ${String(s.flavor||"").trim() ? `<p class="site-flavor"><em>${esc(s.flavor)}</em></p>` : ""}
+    ${siteText("Presence", s.presence)}${siteText("Rules", s.rules)}
+    ${(s.waysIn||[]).length ? `<h3 class="site-h">Ways in</h3><ul class="site-list">${s.waysIn.map(w=>`<li>${esc(w)}</li>`).join("")}</ul>` : ""}
+    ${siteText("Layering", s.layering)}
+    ${siteTrackHtml(p, s, info)}
+    ${siteText("Who's already here", s.here)}${siteText("Resolution", s.resolution)}${siteText("GM note", s.gmNote)}</div>`;
+}
+function bindSiteProfile(main, id, own, focus){
+  const packs=()=>packsMemo, info=()=>Engine.placeSite(S.table, packs(), own());
+  const sel=main.querySelector("[data-psite]");
+  // The select only chooses (an arrow key fires a change per option); Use commits, once, as a cast member takes a pack entry (182).
+  const same=()=>{ const cur=info().link; return cur ? `${cur.pack}|${cur.id}` : ""; };
+  const use=main.querySelector("[data-psite-use]");
+  if (sel && use){
+    sel.onchange=()=>{ use.disabled=sel.value===same(); };
+    use.onclick=()=>{
+      if (sel.value===same()) return;
+      const ref=sel.value ? { pack:sel.value.split("|")[0], id:sel.value.split("|")[1] } : null;
+      tableChange(()=>{ const r=Engine.setPlaceSite(S.table, id, packs(), ref); if (!r.ok) notice(r.why); });
+      focus("[data-psite]");
+    };
+  }
+  // A levels track: one level is always pressed; a tap sets it, and only that group and its text repaint.
+  main.querySelectorAll("[data-slevel]").forEach(b=>b.onclick=()=>{
+    const now=info();
+    if (!now.level || b.dataset.slevel===now.level.id) return;
+    tableChange(()=>Engine.editPlace(S.table, id, { siteLevel:b.dataset.slevel }), false);
+    const cur=info();
+    main.querySelectorAll("[data-slevel]").forEach(x=>{ const pressed=cur.level && x.dataset.slevel===cur.level.id; x.classList.toggle("on", !!pressed); x.setAttribute("aria-pressed", String(!!pressed)); });
+    const txt=main.querySelector("[data-slevel-text]"); if (txt) txt.textContent=cur.level ? cur.level.text : "";
+    const stale=main.querySelector("[data-slevel-stale]"); if (stale){ stale.hidden=true; stale.textContent=""; }
+  });
+  const box=main.querySelector("[data-erows]");
+  if (!box) return;
+  const rows=()=>own().exposure.map(r=>({ name:r.name, n:r.n }));
+  const save=list=>tableChange(()=>Engine.editPlace(S.table, id, { exposure:list }), false);
+  const paintRow=i=>{
+    const r=info().exposure[i], li=box.querySelector(`[data-erow="${i}"]`); if (!r || !li) return;
+    li.querySelector("[data-ecount]").textContent=r.n;
+    li.querySelector("[data-estep]").textContent=r.step ? r.step.text : "";
+    li.querySelector("[data-eminus]").disabled=r.n<=0;
+    li.querySelector("[data-eplus]").disabled=r.n>=99;
+  };
+  const redraw=()=>{ box.innerHTML=exposureRowsHtml(info()); bindRows(); };
+  const bindRows=()=>box.querySelectorAll("[data-erow]").forEach(li=>{
+    const i=Number(li.dataset.erow), q=sel=>li.querySelector(sel);
+    const step=d=>{ const list=rows(); if (!list[i]) return; list[i].n=Math.max(0, Math.min(99, list[i].n+d)); save(list); paintRow(i);
+      const other=d>0 ? "[data-eminus]" : "[data-eplus]", same=d>0 ? "[data-eplus]" : "[data-eminus]"; if (q(same).disabled) q(other).focus(); };
+    q("[data-eplus]").onclick=()=>step(1);
+    q("[data-eminus]").onclick=()=>step(-1);
+    const name=q("[data-ename]"), fn=()=>{ const list=rows(); if (!list[i]) return; list[i].name=name.value; save(list);
+      for (const [k, label] of Object.entries(exposureLabels(name.value, i))) q(`[data-${k}]`).setAttribute("aria-label", label); };
+    name.addEventListener("input", fn); name.addEventListener("change", fn);
+    q("[data-edel]").onclick=()=>{
+      const list=rows(); list.splice(i, 1); save(list); redraw();
+      const next=box.querySelector(`[data-erow="${Math.min(i, list.length-1)}"] [data-ename]`);
+      if (list.length && next) next.focus(); else focus("[data-eadd]");
+    };
+  });
+  bindRows();
+  main.querySelector("[data-eadd]").onclick=()=>{
+    const list=[...rows(), { name:"", n:0 }]; save(list); redraw();
+    const el=box.querySelector(`[data-erow="${list.length-1}"] [data-ename]`); if (el) el.focus();
+  };
+}
 function placePageHtml(p){
   const t=S.table, id=esc(p.id), entry=Engine.gazetteerEntry(p.from && p.from.id), g=Engine.gazetteer({});
   const terr=g.territories.find(r=>r.entry.id===p.territory), zones=terr ? terr.zones : [];
   const opt=(value, name, on) => `<option value="${esc(value)}"${on ? " selected" : ""}>${esc(name)}</option>`;
   const unknownT=p.territory && !terr ? opt(p.territory, p.territory, true) : "";
   const unknownZ=p.zone && !zones.some(z=>z.id===p.zone) ? opt(p.zone, p.zone, true) : "";
-  const lines=Engine.placeLines(t, p.id), met=Engine.placeMet(t, p.id);
+  const lines=Engine.placeLines(t, p.id), met=Engine.placeMet(t, p.id), info=Engine.placeSite(t, packsMemo, p);
   return `<p><button class="btn sm" data-pback>Back to ${esc(placeBackTitle())}</button></p>
     <h1 class="step-title tbl-title cast-title" data-ptitle tabindex="-1">${esc(Engine.placeTitle(t, p))}</h1>
     <label class="field"><span>Name</span><input type="text" data-pf="name" value="${esc(p.name)}" placeholder="${esc(entry ? entry.name : p.from && p.from.name || "Where is it?")}" autocomplete="off"></label>
@@ -1216,6 +1353,11 @@ function placePageHtml(p){
     ${datalistHtml("place-districts", uniqueTyped("district"))}${datalistHtml("place-neighborhoods", uniqueTyped("neighborhood"))}
     <div class="tag-choice place-ground"><span>Kind of ground</span><div class="form-toggle int-kinds" role="group" aria-label="Kind of ground">${g.environments.map(e=>
       `<button type="button" data-pground="${esc(e.id)}" class="${e.id===p.environment ? "on" : ""}" aria-pressed="${e.id===p.environment}">${esc(e.name)}</button>`).join("")}</div></div>
+    ${siteSelectHtml(p, info)}
+    ${siteProfileHtml(p, info)}
+    <h2 class="cast-h">Clocks</h2>
+    ${info.here && !info.site.clock && String(info.site.clockText||"").trim() ? `<p class="site-text">${esc(info.site.clockText)}</p>` : ""}
+    ${clocksHtml(siteOwner(p))}
     <label class="field"><span>Notes</span><textarea data-pf="notes" placeholder="What the crew should remember about it.">${esc(p.notes)}</textarea></label>
     ${entry && entry.summary ? `<h2 class="cast-h">From the book</h2><p class="city-sum">${esc(entry.summary)}</p>` : ""}
     <h2 class="cast-h">What happened here</h2>
@@ -1242,7 +1384,7 @@ function bindPlaceLinks(main){
 }
 function placeBack(){
   const r=S.placeRoute, id=S.placeOpen, focus=sel=>{ const el=$("main").querySelector(sel); if (el) el.focus(); return !!el; };
-  S.placeOpen=null; S.placeRoute=null;
+  S.placeOpen=null; S.placeRoute=null; S.clockEdit=null;
   if (r && r.kind==="line"){
     Object.assign(S, { tsection:r.tsection, castOpen:r.castOpen, castView:r.castView, castFrom:r.castFrom, backEnc:r.backEnc, backSess:r.backSess, backClose:r.backClose,
       backCity:r.backCity||null, placeOpen:r.placeOpen||null, placeRoute:r.placeRoute||null, sessOpen:r.sessOpen, castQ:r.castQ });
@@ -1267,7 +1409,7 @@ function bindCity(main){
   if (S.cityView==="city") bindCityView(main); else if (S.cityView==="factions") bindFactionList(main); else bindPlaceList(main);
 }
 function openPlacePage(id, route){
-  S.placeOpen=id; S.factionOpen=null; S.placeRoute=route||null; window.scrollTo(0,0); update();
+  S.placeOpen=id; S.factionOpen=null; S.placeRoute=route||null; S.clockEdit=null; window.scrollTo(0,0); update();
   const h=$("main").querySelector("[data-ptitle]"); if (h) takeFocus(h, true);
 }
 function bindPlaceList(main){
@@ -1343,6 +1485,8 @@ function bindPlacePage(main, p){
     edit({ environment:on });
     main.querySelectorAll("[data-pground]").forEach(x=>{ const pressed=x.dataset.pground===on; x.classList.toggle("on", pressed); x.setAttribute("aria-pressed", String(pressed)); });
   });
+  bindSiteProfile(main, id, own, focus);
+  bindClocks(main, siteOwner(p));
   bindFightLinks(main);
   main.querySelectorAll("[data-copen]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation();
     S.tsection="cast"; S.castOpen=b.dataset.copen; S.backEnc=null; S.backSess=false; S.backClose=false; S.backCity={ kind:"place", id };
@@ -1350,10 +1494,10 @@ function bindPlacePage(main, p){
     window.scrollTo(0,0); update(); focus("[data-cback]"); });
   main.querySelector("[data-pback]").onclick=placeBack;
   main.querySelector("[data-pdel]").onclick=()=>{
-    const title=Engine.placeTitle(S.table, own());
-    askFirst({ title:`Delete ${title}?`, text:"Its page goes with it. Lines that named it keep its name, struck through.", yes:"Delete",
+    const title=Engine.placeTitle(S.table, own()), n=Engine.clocksOn(S.table, siteOwner(p)).length;
+    askFirst({ title:`Delete ${title}?`, text:`Its page goes with it${n ? `, and its ${n} ${n===1 ? "clock" : "clocks"}` : ""}. Lines that named it keep its name, struck through.`, yes:"Delete",
       then(){
-        S.placeOpen=null; S.placeRoute=null; S.cityView="places";
+        S.placeOpen=null; S.placeRoute=null; S.clockEdit=null; S.cityView="places";
         tableChange(()=>Engine.removePlace(S.table, id));
         const el=$("main").querySelector("[data-padd-name]") || $("main").querySelector("[data-cityview][aria-pressed=true]"); if (el) el.focus();
       } });
@@ -1374,9 +1518,7 @@ const factionRecords = () => Array.isArray(S.table.factions) ? S.table.factions.
 const factionPageNow = () => S.tsection==="city" && S.factionOpen ? factionRecords().find(f=>f.id===S.factionOpen) || null : null;
 const factionClocks = f => Engine.clocksOn(S.table, { kind:"faction", id:f.id });
 function factionCardHtml(t, f){
-  const clocks=factionClocks(f), full=clocks.filter(c=>c.filled>=c.segments).length;
-  const bits=[Engine.FACTION_TYPE_LABELS[f.type], gazName(f.territory), stanceWord(f.stance),
-    clocks.length ? `${clocks.length} ${clocks.length===1 ? "clock" : "clocks"}${full ? ` · ${full} full` : ""}` : ""].filter(Boolean).map(esc).join(" · ");
+  const bits=[Engine.FACTION_TYPE_LABELS[f.type], gazName(f.territory), stanceWord(f.stance), clockCountText(factionClocks(f))].filter(Boolean).map(esc).join(" · ");
   return `<li class="roster-card cast-card place-card" data-fcard="${esc(f.id)}"><button class="cast-open" data-fcardopen="${esc(f.id)}">${esc(Engine.factionTitle(t, f))}</button>
     ${bits ? `<div class="roster-meta cast-meta">${bits}</div>` : ""}</li>`;
 }
@@ -1436,12 +1578,75 @@ function clockHtml(c){
     ${fields}</div>`;
 }
 const clockBoxesHtml = c => Array.from({ length:c.segments }, (_, i)=>`<span class="clock-box${i<c.filled ? " on" : ""}"></span>`).join("");
+// What a card says of an owner's clocks: "2 clocks · 1 full", or nothing. The faction's card and the place's are one rule.
+function clockCountText(clocks){
+  const full=clocks.filter(c=>c.filled>=c.segments).length;
+  return clocks.length ? `${clocks.length} ${clocks.length===1 ? "clock" : "clocks"}${full ? ` · ${full} full` : ""}` : "";
+}
+// The clocks an owner has, `owner` being { kind, id }, and the press that adds one. One piece on every page that owns clocks.
+function clocksHtml(owner){
+  return `<div data-fclocks>${Engine.clocksOn(S.table, owner).map(clockHtml).join("")}</div>
+    <p><button type="button" class="btn sm" data-clkadd>Add a clock</button></p>`;
+}
+function bindClocks(main, owner){
+  const focus = sel => { const el=$("main").querySelector(sel); if (el) el.focus(); };
+  const clockEdit = (cid, o) => tableChange(()=>Engine.editClock(S.table, cid, o), false);
+  const clockOf = cid => Engine.clocksOn(S.table, owner).find(c=>c.id===cid);
+  const paintClock = cid => {
+    const c=clockOf(cid), root=main.querySelector(attrSel("data-clock", cid)); if (!c || !root) return;
+    const full=c.filled>=c.segments;
+    root.querySelector(".clock-boxes").innerHTML=clockBoxesHtml(c);
+    root.querySelector(".clock-count").textContent=`${c.filled} of ${c.segments}`;
+    root.querySelector("[data-clkminus]").disabled=c.filled<=0;
+    root.querySelector("[data-clkplus]").disabled=full;
+    root.classList.toggle("full", full);
+    const msg=root.querySelector("[data-clockfull]");
+    msg.hidden=!full;
+    msg.innerHTML=`<strong>Full</strong>${c.whenFull.trim() ? ` · ${esc(c.whenFull)}` : ""}`;
+  };
+  const redrawClocks = () => { main.querySelector("[data-fclocks]").innerHTML=Engine.clocksOn(S.table, owner).map(clockHtml).join(""); bindAll(); };
+  const bindAll = () => main.querySelectorAll("[data-clock]").forEach(root=>{
+    const cid=root.dataset.clock, q = sel => root.querySelector(sel);
+    q("[data-clkplus]").onclick=()=>{ const c=clockOf(cid); if (!c) return; clockEdit(cid, { filled:c.filled+1 }); paintClock(cid); if (q("[data-clkplus]").disabled) q("[data-clkminus]").focus(); };
+    q("[data-clkminus]").onclick=()=>{ const c=clockOf(cid); if (!c) return; clockEdit(cid, { filled:c.filled-1 }); paintClock(cid); if (q("[data-clkminus]").disabled) q("[data-clkplus]").focus(); };
+    const ed=q("[data-clkedit]");
+    if (ed) ed.onclick=()=>{ S.clockEdit=cid; redrawClocks(); focus(`${attrSel("data-clock", cid)} [data-kf="name"]`); };
+    root.querySelectorAll("[data-kf]").forEach(el=>{
+      const key=el.dataset.kf, fn=ev=>{
+        if (key==="segments"){
+          // Typing "12" passes through "1": only a whole number from 2 to 12 is taken, while typing or on leaving the field.
+          const n=Number(el.value.trim());
+          if (!(el.value.trim()!=="" && Number.isInteger(n) && n>=2 && n<=12)){
+            // Writes nothing: a refused number must not reset the clock. Leaving the field puts back what is stored.
+            if (ev.type==="change"){ const c=clockOf(cid); if (c) el.value=c.segments; }
+            return;
+          }
+        }
+        clockEdit(cid, { [key]:el.value });
+        if (key==="name"){ const c=clockOf(cid); root.querySelector("[data-clockname]").textContent=c && c.name.trim() || "A clock"; }
+        if (key==="segments" || key==="whenFull") paintClock(cid);
+        if (key==="segments" && ev.type==="change"){ const c=clockOf(cid); if (c) el.value=c.segments; }
+      };
+      el.addEventListener("input", fn); el.addEventListener("change", fn);
+    });
+    const done=q("[data-clkdone]");
+    if (done) done.onclick=()=>{ S.clockEdit=null; redrawClocks(); focus(`${attrSel("data-clock", cid)} [data-clkedit]`); };
+    const del=q("[data-clkdel]");
+    if (del) del.onclick=()=>{ tableChange(()=>Engine.removeClock(S.table, cid), false); S.clockEdit=null; redrawClocks(); focus("[data-clkadd]"); };
+  });
+  bindAll();
+  main.querySelector("[data-clkadd]").onclick=()=>{
+    let cid; tableChange(()=>{ cid=Engine.addClock(S.table, { on:owner, name:"New clock", segments:4 }).id; }, false);
+    S.clockEdit=cid; redrawClocks();
+    const el=$("main").querySelector(`${attrSel("data-clock", cid)} [data-kf="name"]`); if (el){ el.focus(); el.select(); }
+  };
+}
 function factionPageHtml(f){
   const t=S.table, entry=Engine.gazetteerEntry(f.from && f.from.id), g=Engine.gazetteer({});
   const opt=(value, name, on) => `<option value="${esc(value)}"${on ? " selected" : ""}>${esc(name)}</option>`;
   const terr=g.territories.find(r=>r.entry.id===f.territory);
   const unknownT=f.territory && !terr ? opt(f.territory, f.territory, true) : "";
-  const tied=Engine.factionAffiliated(t, f.id), clocks=factionClocks(f), title=Engine.factionTitle(t, f);
+  const tied=Engine.factionAffiliated(t, f.id), title=Engine.factionTitle(t, f);
   return `<p><button class="btn sm" data-fback>Back to ${esc(factionBackTitle())}</button></p>
     <h1 class="step-title tbl-title cast-title" data-ftitle tabindex="-1">${esc(title)}</h1>
     <label class="field"><span>Name</span><input type="text" data-ff="name" value="${esc(f.name)}" placeholder="${esc(entry ? entry.name : f.from && f.from.name || "Who are they?")}" autocomplete="off"></label>
@@ -1464,8 +1669,7 @@ function factionPageHtml(f){
     ${tied.length ? `<h2 class="cast-h">Tied by affiliation</h2><ul class="int-list">${tied.map(n=>
       `<li class="int-line"><button class="cast-open int-who" data-copen="${esc(n.id)}" data-cwhere="aff|${esc(n.id)}">${esc(String(n.name||"").trim() || "Unnamed")}</button></li>`).join("")}</ul>` : ""}
     <h2 class="cast-h">Clocks</h2>
-    <div data-fclocks>${clocks.map(clockHtml).join("")}</div>
-    <p><button type="button" class="btn sm" data-clkadd>Add a clock</button></p>
+    ${clocksHtml({ kind:"faction", id:f.id })}
     <p class="cast-delete"><button class="btn danger" data-fdel>Delete</button></p>`;
 }
 // Opened from a member's page: the page as it was, so Back returns there, on the link (Decision 244).
@@ -1573,57 +1777,7 @@ function bindFactionPage(main, f){
   };
   const redrawTips = which => { main.querySelector(`[data-ftipgroup="${which}"]`).innerHTML=factionTipHtml(own(), which); bindTips(which); };
   bindTips("for"); bindTips("against");
-  // Clocks.
-  const clockEdit = (cid, o) => tableChange(()=>Engine.editClock(S.table, cid, o), false);
-  const clockOf = cid => Engine.clocksOn(S.table, { kind:"faction", id }).find(c=>c.id===cid);
-  const paintClock = cid => {
-    const c=clockOf(cid), root=main.querySelector(attrSel("data-clock", cid)); if (!c || !root) return;
-    const full=c.filled>=c.segments;
-    root.querySelector(".clock-boxes").innerHTML=clockBoxesHtml(c);
-    root.querySelector(".clock-count").textContent=`${c.filled} of ${c.segments}`;
-    root.querySelector("[data-clkminus]").disabled=c.filled<=0;
-    root.querySelector("[data-clkplus]").disabled=full;
-    root.classList.toggle("full", full);
-    const msg=root.querySelector("[data-clockfull]");
-    msg.hidden=!full;
-    msg.innerHTML=`<strong>Full</strong>${c.whenFull.trim() ? ` · ${esc(c.whenFull)}` : ""}`;
-  };
-  const redrawClocks = () => { main.querySelector("[data-fclocks]").innerHTML=factionClocks(own()).map(clockHtml).join(""); bindClocks(); };
-  const bindClocks = () => main.querySelectorAll("[data-clock]").forEach(root=>{
-    const cid=root.dataset.clock, q = sel => root.querySelector(sel);
-    q("[data-clkplus]").onclick=()=>{ const c=clockOf(cid); if (!c) return; clockEdit(cid, { filled:c.filled+1 }); paintClock(cid); if (q("[data-clkplus]").disabled) q("[data-clkminus]").focus(); };
-    q("[data-clkminus]").onclick=()=>{ const c=clockOf(cid); if (!c) return; clockEdit(cid, { filled:c.filled-1 }); paintClock(cid); if (q("[data-clkminus]").disabled) q("[data-clkplus]").focus(); };
-    const ed=q("[data-clkedit]");
-    if (ed) ed.onclick=()=>{ S.clockEdit=cid; redrawClocks(); focus(`${attrSel("data-clock", cid)} [data-kf="name"]`); };
-    root.querySelectorAll("[data-kf]").forEach(el=>{
-      const key=el.dataset.kf, fn=ev=>{
-        if (key==="segments"){
-          // Typing "12" passes through "1": only a whole number from 2 to 12 is taken, while typing or on leaving the field.
-          const n=Number(el.value.trim());
-          if (!(el.value.trim()!=="" && Number.isInteger(n) && n>=2 && n<=12)){
-            // Writes nothing: a refused number must not reset the clock. Leaving the field puts back what is stored.
-            if (ev.type==="change"){ const c=clockOf(cid); if (c) el.value=c.segments; }
-            return;
-          }
-        }
-        clockEdit(cid, { [key]:el.value });
-        if (key==="name"){ const c=clockOf(cid); root.querySelector("[data-clockname]").textContent=c && c.name.trim() || "A clock"; }
-        if (key==="segments" || key==="whenFull") paintClock(cid);
-        if (key==="segments" && ev.type==="change"){ const c=clockOf(cid); if (c) el.value=c.segments; }
-      };
-      el.addEventListener("input", fn); el.addEventListener("change", fn);
-    });
-    const done=q("[data-clkdone]");
-    if (done) done.onclick=()=>{ S.clockEdit=null; redrawClocks(); focus(`${attrSel("data-clock", cid)} [data-clkedit]`); };
-    const del=q("[data-clkdel]");
-    if (del) del.onclick=()=>{ tableChange(()=>Engine.removeClock(S.table, cid), false); S.clockEdit=null; redrawClocks(); focus("[data-clkadd]"); };
-  });
-  bindClocks();
-  main.querySelector("[data-clkadd]").onclick=()=>{
-    let cid; tableChange(()=>{ cid=Engine.addClock(S.table, { on:{ kind:"faction", id }, name:"New clock", segments:4 }).id; }, false);
-    S.clockEdit=cid; redrawClocks();
-    const el=$("main").querySelector(`${attrSel("data-clock", cid)} [data-kf="name"]`); if (el){ el.focus(); el.select(); }
-  };
+  bindClocks(main, { kind:"faction", id });
   main.querySelector("[data-fback]").onclick=factionBack;
   main.querySelector("[data-fdel]").onclick=()=>{
     const title=Engine.factionTitle(S.table, own()), n=factionClocks(own()).length;

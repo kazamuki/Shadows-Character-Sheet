@@ -17,7 +17,7 @@ export function syntheticPack01() {
 
 export function syntheticPack(over = {}) {
   const p = {
-    meta: { kind: "shadows-pack", id: PACK_ID, name: "Test Pack", packSchemaVersion: "0.2",
+    meta: { kind: "shadows-pack", id: PACK_ID, name: "Test Pack", packSchemaVersion: "0.3",
             contentVersion: "v2 (test)", created: "2026-10-01T10:00:00.000Z", updated: "2026-10-02T10:00:00.000Z" },
     origins: [{ id: "dock", name: "Dock", text: "Works the water.", modifiers: { BOD: 1, REF: -1 } },
               { id: "spire", name: "Spire", text: "Lives high.", modifiers: { MOB: 1 } }],

@@ -3361,7 +3361,7 @@ test("newTable stamps kind, a TBL- id, the name, schema 0.11, no notes, cast or 
   assert.equal(t.meta.kind, "shadows-table");
   assert.ok(Engine.isTableId(t.meta.id), t.meta.id);
   assert.equal(t.meta.name, "Tuesday");
-  assert.equal(t.meta.tableSchemaVersion, "0.15");
+  assert.equal(t.meta.tableSchemaVersion, "0.16");
   assert.equal(t.notes.length, 0);
   assert.equal(JSON.stringify(t.cast), "[]");
   assert.equal(JSON.stringify(t.interactions), "[]");
@@ -3436,7 +3436,7 @@ test("a newer table schema stamp is kept and reported; an older or unreadable on
   assert.equal(Engine.migrateTable(n).meta.tableSchemaVersion, "9.0");
   for (const v of ["0.7", "0.6", "0.5", "0.4", "0.2", "0.1", "0.0", "junk", undefined]) {
     const m = Engine.migrateTable({ meta: { tableSchemaVersion: v } });
-    assert.equal(m.meta.tableSchemaVersion, "0.15", String(v));
+    assert.equal(m.meta.tableSchemaVersion, "0.16", String(v));
     assert.equal(Engine.tableCheck(m).length, 0);
   }
 });
@@ -3488,7 +3488,7 @@ test("a 0.1 table migrates to 0.4 with an empty cast and its notes untouched", (
   Engine.addTableNote(old, { title: "B", text: "two" });
   old.meta.tableSchemaVersion = "0.1"; delete old.cast;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.15");
+  assert.equal(m.meta.tableSchemaVersion, "0.16");
   eq(m.cast, []); eq(m.interactions, []);
   assert.equal(JSON.stringify(m.notes), JSON.stringify(old.notes));
   assert.equal(Engine.tableCheck(m).length, 0);
@@ -3711,7 +3711,7 @@ test("a 0.2 table migrates to 0.3 with no interactions and no affiliations, and 
   delete old.interactions; old.meta.tableSchemaVersion = "0.2";
   for (const n of old.cast) delete n.affiliations;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.15");
+  assert.equal(m.meta.tableSchemaVersion, "0.16");
   eq(m.interactions, []);
   for (const n of m.cast) eq(n.affiliations, []);
   const strip = t => { const c = plain(t); delete c.interactions; delete c.meta.tableSchemaVersion; for (const n of c.cast) { delete n.affiliations; delete n.from; } return JSON.stringify(c); };
@@ -3947,13 +3947,13 @@ test("migratePack: every text field a string, unknown keys kept, a pack's own or
 });
 
 test("a newer packSchemaVersion is kept, and packCheck warns; an older or unreadable one reads as the current one", () => {
-  const n = Engine.migratePack({ meta: { id: PACK_ID, packSchemaVersion: "0.3" } });
-  assert.equal(n.meta.packSchemaVersion, "0.3");
+  const n = Engine.migratePack({ meta: { id: PACK_ID, packSchemaVersion: "0.4" } });
+  assert.equal(n.meta.packSchemaVersion, "0.4");
   assert.equal(Engine.packCheck(n).warnings.length, 1);
-  assert.equal(Engine.migratePack(n).meta.packSchemaVersion, "0.3");
+  assert.equal(Engine.migratePack(n).meta.packSchemaVersion, "0.4");
   for (const v of ["0.1", "0.2", "0.0", "junk", undefined, 3]) {
     const m = Engine.migratePack({ meta: { id: PACK_ID, packSchemaVersion: v } });
-    assert.equal(m.meta.packSchemaVersion, "0.2", String(v));
+    assert.equal(m.meta.packSchemaVersion, "0.3", String(v));
     assert.equal(Engine.packCheck(m).warnings.length, 0);
   }
   assert.notEqual(Engine.packCheck(null).refuse, null);
@@ -4073,7 +4073,7 @@ test("a 0.3 table migrates to 0.4 with from: null, and the rest is byte-identica
   for (const n of old.cast) delete n.from;
   old.meta.tableSchemaVersion = "0.3";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.15");
+  assert.equal(m.meta.tableSchemaVersion, "0.16");
   for (const n of m.cast) assert.equal(n.from, null);
   const strip = t => { const c = plain(t); delete c.meta.tableSchemaVersion; for (const n of c.cast) delete n.from; return JSON.stringify(c); };
   assert.equal(strip(m), strip(old));
@@ -4121,7 +4121,7 @@ test("migratePack 0.2 over junk: modifiers, traits and guides come out valid or 
 test("a 0.1 pack reads as 0.2: stamped, no traits or modifiers, the rest identical; its ad-hoc traits key is gated", () => {
   const old = syntheticPack01();
   const m = Engine.migratePack(old);
-  assert.equal(m.meta.packSchemaVersion, "0.2");
+  assert.equal(m.meta.packSchemaVersion, "0.3");
   eq(m.traits, []);
   eq(m.origins.map(o => [o.id, o.name, o.text, o.modifiers]), old.origins.map(o => [o.id, o.name, o.text, {}]));
   eq(m.tiers.map(t => [t.id, t.name, t.text, t.statGuide, t.traitGuide]), old.tiers.map(t => [t.id, t.name, t.text, "", ""]));
@@ -4282,7 +4282,7 @@ test("188: newTable has encounters, and a 0.4 table migrates to 0.5 with none an
   delete old.encounters;
   old.meta.tableSchemaVersion = "0.4";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.15");
+  assert.equal(m.meta.tableSchemaVersion, "0.16");
   eq(m.encounters, []);
   eq(m.cast, old.cast); eq(m.notes, old.notes); eq(m.interactions, old.interactions);
 });
@@ -4798,7 +4798,7 @@ test("191: the hit's rows keep Massive levels and armor wear, and a 0.5 table op
   old.meta.tableSchemaVersion = "0.5";
   for (const r of old.encounters[0].rows) { delete r.massive; delete r.armorLoss; delete r.scrapped; }
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.15");
+  assert.equal(m.meta.tableSchemaVersion, "0.16");
   eq(m, Engine.migrateTable(t), "a 0.5 table is a 0.6 table with nothing worn or gone");
 });
 
@@ -5272,7 +5272,7 @@ test("193: the kinds are eight, and a 0.6 table opens as 0.7 with no row kept an
   old.meta.tableSchemaVersion = "0.6";
   for (const en of old.encounters) for (const r of en.rows) delete r.kept;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.15");
+  assert.equal(m.meta.tableSchemaVersion, "0.16");
   assert.ok(m.encounters[0].rows.every(r => r.kept === null));
   eq(m, Engine.migrateTable(t));
   // The gate: kept is a link on an entry row, else null.
@@ -5902,7 +5902,7 @@ test("203: a new table has no sessions or threads, and a 0.7 table opens as 0.8 
   delete old.sessions; delete old.threads;
   for (const x of old.interactions) delete x.session;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.15");
+  assert.equal(m.meta.tableSchemaVersion, "0.16");
   eq([m.sessions, m.threads], [[], []]);
   assert.ok(m.interactions.every(x => x.session === null));
   eq(m, Engine.migrateTable(t));
@@ -6190,7 +6190,7 @@ test("205: a new session has close null, and a 0.8 table opens as 0.9 with every
   // A 0.8 file that already carries a close (a hand edit) is not converted either.
   old.sessions[0].close = { at: null, lines: [here("Wren", 5)] };
   assert.equal(Engine.migrateTable(old).sessions[0].close, null);
-  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.15");
+  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.16");
 });
 
 test("206: offScreenPay is the tier's minimum to its midpoint, Legendary's to offScreenMax, and an unknown tier is null", () => {
@@ -6555,7 +6555,7 @@ function secretaryTable() {
 const found = (t, q) => Engine.tableSearch(t, q).map(h => [h.kind, h.id, h.field]);
 
 test("208: table schema 0.10; a note's session is null for an old table, kept when real, nulled when not", () => {
-  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.15");
+  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.16");
   const base = v => ({ meta: { tableSchemaVersion: v }, sessions: [{ id: "SE-AAAAAAA1", number: 1 }],
     notes: [{ id: "N-AAAAAAA1", session: "SE-AAAAAAA1" }, { id: "N-AAAAAAA2", session: "S-NOPE0000" }] });
   for (const n of Engine.migrateTable(base("0.9")).notes) assert.equal(n.session, null, "an old table guesses nothing");
@@ -6698,7 +6698,7 @@ const names = (t, e) => Engine.encounterView(t, e, []).rows.map(r => r.name);
 const wave = (t, e) => assert.ok(Engine.editEncounter(t, e, { by: "wave" }).ok);
 
 test("210: table schema 0.11; a 0.10 table opens one at a time with two sides, PCs on the crew's, nobody an ally", () => {
-  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.15");
+  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.16");
   const t = Engine.newTable("Old");
   const e = Engine.addEncounter(t, { name: "E" }).id;
   const m1 = Engine.addCastMember(t, { name: "Marta" }).id;
@@ -6709,7 +6709,7 @@ test("210: table schema 0.11; a 0.10 table opens one at a time with two sides, P
   for (const r of old.encounters[0].rows) delete r.side;
   old.cast[0].ally = true;   // a 0.10 file has none: nothing is guessed
   const m = Engine.migrateTable(old), en = m.encounters[0];
-  assert.equal(m.meta.tableSchemaVersion, "0.15");
+  assert.equal(m.meta.tableSchemaVersion, "0.16");
   eq([en.by, en.sides.length, en.sides[0]], ["person", 2, { id: "crew", name: "" }]);
   eq(en.rows.map(r => r.side), ["crew", en.sides[1].id]);
   eq(m.cast.map(n => n.ally), [false]);
@@ -7366,10 +7366,10 @@ test("212: a table saved before 0.12 loads with an empty trail, and a new table 
   eq(Engine.migrateTable(old).audit, []);
   delete old.audit; delete old.meta.tableSchemaVersion;
   eq(Engine.migrateTable(old).audit, []);
-  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.15");
+  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.16");
   // A file from a newer app keeps its trail gated, not emptied.
   const newer = plain(t);
-  newer.meta.tableSchemaVersion = "0.15";
+  newer.meta.tableSchemaVersion = "0.16";
   newer.audit = [{ seq: 1, date: null, label: "x", patch: [{ path: ["cast", 0, "name"], type: "scalar", before: "x" }] }];
   assert.equal(Engine.migrateTable(newer).audit.length, 1);
   assert.ok(Engine.clearTableActivity(t).ok); eq(t.audit, []);
@@ -9554,7 +9554,7 @@ test("241: the gate keeps a good encounter link, drops a bad one, and converts n
   old.meta.tableSchemaVersion = "0.12";
   old.interactions = [{ ...mk({ kind: "encounter", id: "EN-AAAAAAAA" }), id: "I-AAAAAAAA" }];
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.15");
+  assert.equal(m.meta.tableSchemaVersion, "0.16");
   assert.equal(m.interactions[0].encounter, null);
   assert.equal(m.interactions[0].text, "Fought them in Dock.");
   // constraint 8: new, add, migrate round-trips
@@ -9944,7 +9944,7 @@ test("243: the gate types places and a line's place, keeps an unknown gazetteer 
   old.interactions = [{ ...mk(undefined), id: "I-AAAAAAAA", text: "Unchanged." }];
   old.places = "x";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.15");
+  assert.equal(m.meta.tableSchemaVersion, "0.16");
   eq(m.places, []);
   assert.equal(m.interactions[0].place, null);
   assert.equal(m.interactions[0].text, "Unchanged.");
@@ -10123,7 +10123,7 @@ test("244: the gate types factions and converts nothing", () => {
   old.meta.tableSchemaVersion = "0.14";
   old.factions = "x"; old.clocks = 5;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.15");
+  assert.equal(m.meta.tableSchemaVersion, "0.16");
   eq([m.factions, m.clocks], [[], []]);
   eq(m.cast[0].affiliations, ["Eclipse"]);
   // constraint 8: new, add, migrate round-trips
@@ -10785,4 +10785,222 @@ test("L2b 9 (engine): migrate to 0.31 keeps a typed rof, adds nothing, and keeps
     assert.equal(m.weapons[0].loaded, "silver-rounds");
     same(Engine.migrate(JSON.parse(JSON.stringify(m))), m);
   }
+});
+
+// ── Site Profiles (Decision 250): the pack's `sites` ─────────────────────────
+const SITE_PK = "PK-ABCD2345";
+const sitePack = sites => Engine.migratePack({ meta: { id: SITE_PK, packSchemaVersion: "0.3" }, sites });
+const longStretch = () => ({
+  id: "long-stretch", ref: "TP1", name: "The Long Stretch", category: "thin-places", canon: "The Old Pike", flavor: "Flavor.", presence: "Presence text.",
+  rules: "Rules text.", waysIn: ["One", "Two", "Three"], layering: "Layers.",
+  track: { kind: "exposure", name: "Exposure", triggers: "Stopping.", steps: [{ at: 3, text: "Disoriented." }, { at: 5, text: "Lost time." }, { at: 8, text: "Gone." }], marks: "A mark." },
+  trackText: "", clock: { name: "Drift", segments: 4, advances: "Each round stopped.", whenFull: "When it fills, it ends." }, clockText: "",
+  here: "Nobody.", resolution: "Leave.", gmNote: "Note." });
+const oldGrowth = () => ({
+  id: "old-growth", ref: "GL1", name: "The Old Growth", category: "genius-loci", waysIn: [],
+  track: { kind: "levels", name: "Disposition", start: "tolerant", moves: "What moves it.",
+           levels: ["welcome", "tolerant", "wary", "hostile"].map(id => ({ id, name: id[0].toUpperCase() + id.slice(1), text: `${id} text` })) },
+  clock: null, clockText: "None. The disposition is the clock." });
+
+test("250: migratePack gates sites: text as text, a track of a known shape, a clock of 2 to 12", () => {
+  eq(Engine.migratePack({ meta: { id: SITE_PK, packSchemaVersion: "0.2" } }).sites, [], "a 0.2 pack with no sites loads with []");
+  eq(Engine.migratePack({ meta: { id: SITE_PK }, sites: "x" }).sites, []);
+  const p = sitePack([longStretch(), { ...oldGrowth(), id: "__proto__" }, { ...oldGrowth(), id: "bad id!" }, oldGrowth(), oldGrowth(), "x", null]);
+  eq(p.sites.map(s => s.id), ["long-stretch", "old-growth"], "a __proto__ id, a bad id, a repeat and a non-object are dropped");
+  assert.equal(({}).polluted, undefined);
+  const ls = p.sites[0];
+  assert.equal(ls.category, "thin-places"); assert.equal(ls.track.kind, "exposure"); eq(ls.track.steps.map(s => s.at), [3, 5, 8]);
+  assert.equal(ls.clock.segments, 4); assert.equal(ls.waysIn.length, 3);
+  // Unknown track kind and non-object tracks are null.
+  for (const track of [{ kind: "oracle" }, [], 5, "x", null]) assert.equal(sitePack([{ id: "a", track }]).sites[0].track, null, JSON.stringify(track));
+  // A level with a bad id is dropped; a start naming a dropped level reads as the first level.
+  const lv = sitePack([{ id: "a", track: { kind: "levels", start: "ghost", levels: [{ id: "x y", name: "Bad" }, { id: "calm", name: "Calm" }, { id: "__proto__" }, { id: "calm" }, { id: "surging" }] } }]).sites[0].track;
+  eq(lv.levels.map(l => l.id), ["calm", "surging"]); assert.equal(lv.start, "calm");
+  assert.equal(sitePack([{ id: "a", track: { kind: "levels", start: "surging", levels: [{ id: "calm" }, { id: "surging" }] } }]).sites[0].track.start, "surging");
+  // A step's `at` of 0, "x" or 100 is dropped; steps sort by `at`.
+  const ex = sitePack([{ id: "a", track: { kind: "exposure", steps: [{ at: 8 }, { at: 0 }, { at: "x" }, { at: 100 }, { at: 3 }, { at: 1.5 }, "x"] } }]).sites[0].track;
+  eq(ex.steps.map(s => s.at), [3, 8]);
+  // A table's rows are a roll and a text.
+  eq(sitePack([{ id: "a", track: { kind: "table", die: "d6", rows: [{ roll: "1–2", text: "t" }, 5, { roll: 3 }] } }]).sites[0].track.rows,
+    [{ roll: "1–2", text: "t" }, { roll: "", text: "" }]);
+  // A clock's segments outside 2–12 read as 4; a non-object clock is null; a category that isn't a kind of ground is null.
+  assert.equal(sitePack([{ id: "a", clock: { name: "C", segments: 13 } }]).sites[0].clock.segments, 4);
+  assert.equal(sitePack([{ id: "a", clock: { name: "C", segments: 12 } }]).sites[0].clock.segments, 12);
+  assert.equal(sitePack([{ id: "a", clock: [] }]).sites[0].clock, null);
+  assert.equal(sitePack([{ id: "a", category: "elsewhere" }]).sites[0].category, null);
+  // Text is text, and an unknown key rides along.
+  const t = sitePack([{ id: "a", name: 5, presence: {}, waysIn: [1, "ok"], extra: { keep: 1 } }]).sites[0];
+  assert.equal(t.name, ""); assert.equal(t.presence, ""); eq(t.waysIn, ["ok"]); eq(t.extra, { keep: 1 });
+  assert.equal(JSON.stringify(Engine.migratePack(p)), JSON.stringify(p), "idempotent");
+});
+
+test("250: siteProfiles and packSite read slotted packs by kind of ground then name, and are total", () => {
+  const p = sitePack([longStretch(), oldGrowth(), { id: "aaa", name: "Aaa", category: "thin-places" }, { id: "zzz", name: "Zzz", category: null }]);
+  eq(Engine.siteProfiles([p]).map(e => e.site.id), ["old-growth", "aaa", "long-stretch", "zzz"], "genius-loci before thin-places; no ground last");
+  eq(Engine.siteProfiles([p], { category: "thin-places" }).map(e => e.site.id), ["aaa", "long-stretch"]);
+  assert.equal(Engine.packSite([p], SITE_PK, "long-stretch").site.name, "The Long Stretch");
+  assert.equal(Engine.packSite([p], SITE_PK, "nope"), null); assert.equal(Engine.packSite([], SITE_PK, "long-stretch"), null);
+  for (const bad of [null, {}, "x", 5, [null, 5, {}, { meta: {} }, { meta: {}, sites: "x" }, { meta: { id: SITE_PK }, sites: [null, 5, { id: "a", track: 5 }] }]]) {
+    assert.doesNotThrow(() => { Engine.siteProfiles(bad); Engine.siteProfiles(bad, null); Engine.packSite(bad, SITE_PK, "a"); Engine.packSite(bad, null, null); }, JSON.stringify(bad));
+  }
+  eq(Engine.siteProfiles(null), []);
+});
+
+// ── A place's site (Decision 251) ────────────────────────────────────────────
+const siteTable = () => {
+  const t = Engine.newTable("Sites");
+  const id = Engine.addPlace(t, { from: "old-pike" }).id;
+  const packs = [sitePack([longStretch(), oldGrowth(), { id: "dead-block", name: "The Dead Block", category: "combat-zones", track: null, trackText: "None. x.",
+    clock: { name: "Attention", segments: 4, advances: "a", whenFull: "b" } },
+    { id: "deep-door", name: "The Deep Door", category: "gates", track: { kind: "table", name: "What comes through", die: "d6", rows: [{ roll: "1", text: "x" }] } }])];
+  return { t, id, packs };
+};
+const pickSite = (t, id, packs, sid) => Engine.setPlaceSite(t, id, packs, { pack: SITE_PK, id: sid });
+
+test("251: picking a profile sets the ground, copies its clock and clears the old track", () => {
+  const { t, id, packs } = siteTable();
+  assert.equal(t.places[0].environment, null, "a gazetteer site never picks its profile or its ground (203)");
+  assert.ok(pickSite(t, id, packs, "long-stretch").ok);
+  assert.equal(t.places[0].environment, "thin-places");
+  eq(t.places[0].site, { kind: "site", pack: SITE_PK, id: "long-stretch", name: "The Long Stretch" });
+  eq(t.clocks.map(c => [c.name, c.segments, c.filled, c.on.kind, c.on.id]), [["Drift", 4, 0, "place", id]]);
+  assert.match(t.clocks[0].advances, /^Each round stopped/); assert.match(t.clocks[0].whenFull, /^When it fills/);
+  Engine.editPlace(t, id, { exposure: [{ name: "Vex", n: 4 }] });
+  assert.ok(pickSite(t, id, packs, "old-growth").ok);
+  assert.equal(t.places[0].siteLevel, null); eq(t.places[0].exposure, []); assert.equal(t.clocks.length, 1, "Old Growth has no clock; Drift stays");
+  assert.equal(t.places[0].environment, "genius-loci");
+  assert.ok(pickSite(t, id, packs, "dead-block").ok);
+  eq(t.clocks.map(c => c.name), ["Drift", "Attention"]);
+  Engine.editPlace(t, id, { siteLevel: "wary", exposure: [{ name: "Vex", n: 1 }] });
+  assert.ok(Engine.setPlaceSite(t, id, packs, null).ok);
+  assert.equal(t.places[0].site, null); assert.equal(t.places[0].siteLevel, null); eq(t.places[0].exposure, []);
+  assert.equal(t.clocks.length, 2, "None clears the link and leaves the clocks");
+  assert.equal(t.places[0].environment, "combat-zones", "and leaves the ground");
+  // A profile with no category leaves the ground alone; a site no slotted pack has is refused.
+  const ground = t.places[0].environment;
+  assert.ok(Engine.setPlaceSite(t, id, [sitePack([{ id: "x", name: "X" }])], { pack: SITE_PK, id: "x" }).ok);
+  assert.equal(t.places[0].environment, ground);
+  const before = plain(t);
+  eq(Engine.setPlaceSite(t, id, packs, { pack: SITE_PK, id: "nope" }), { ok: false, why: "No such site profile." });
+  eq(Engine.setPlaceSite(t, id, [], { pack: SITE_PK, id: "long-stretch" }), { ok: false, why: "No such site profile." });
+  eq(Engine.setPlaceSite(t, "PL-AAAAAAAA", packs, null), { ok: false, why: "No such place." });
+  for (const bad of ["x", 5, [], { pack: 5 }]) assert.equal(Engine.setPlaceSite(t, id, packs, bad).ok, false, JSON.stringify(bad));
+  eq(plain(t), before, "a refusal changes nothing");
+});
+
+test("251: placeSite reads the level and each row's step live", () => {
+  const { t, id, packs } = siteTable();
+  pickSite(t, id, packs, "old-growth");
+  assert.equal(Engine.placeSite(t, packs, t.places[0]).level.name, "Tolerant");
+  Engine.editPlace(t, id, { siteLevel: "wary" });
+  const r = Engine.placeSite(t, packs, t.places[0]);
+  assert.equal(r.level.name, "Wary"); assert.equal(r.here, true); assert.equal(r.stale, null);
+  Engine.editPlace(t, id, { siteLevel: "frenzied" });
+  const s = Engine.placeSite(t, packs, t.places[0]);
+  assert.equal(s.level.name, "Tolerant", "a level the pack lacks reads as the start"); assert.equal(s.stale, "frenzied");
+  pickSite(t, id, packs, "long-stretch");
+  Engine.editPlace(t, id, { exposure: [0, 2, 4, 5, 9].map(n => ({ name: "r" + n, n })) });
+  eq(Engine.placeSite(t, packs, t.places[0]).exposure.map(x => x.step && x.step.at), [null, null, 3, 5, 8]);
+  const stored = plain(t.places[0]);
+  Engine.placeSite(t, packs, t.places[0]);
+  eq(plain(t.places[0]), stored, "reading stores nothing");
+  const none = Engine.placeSite(t, packs, { id: "PL-AAAAAAAA", site: null });
+  assert.equal(none.link, null); assert.equal(none.site, null); eq(none.exposure, []);
+});
+
+test("251: a place's link outlives its pack", () => {
+  const { t, id, packs } = siteTable();
+  pickSite(t, id, packs, "long-stretch");
+  Engine.editPlace(t, id, { exposure: [{ name: "Vex", n: 4 }] });
+  const before = plain(t);
+  const r = Engine.placeSite(t, [], t.places[0]);
+  assert.equal(r.here, false); assert.equal(r.site, null); assert.equal(r.link.name, "The Long Stretch");
+  eq(r.exposure.map(x => [x.name, x.n, x.step]), [["Vex", 4, null]]);
+  eq(plain(t), before, "the level, rows and clocks are untouched");
+  assert.equal(Engine.clocksOn(t, { kind: "place", id }).length, 1);
+  for (const bad of [null, {}, "x", 5, [{ meta: {} }]]) assert.doesNotThrow(() => Engine.placeSite(t, bad, t.places[0]));
+  for (const p of [null, {}, "x", 5, { site: 5, exposure: "x", siteLevel: {} }, { site: { kind: "site" } }]) assert.doesNotThrow(() => Engine.placeSite(t, packs, p), JSON.stringify(p));
+});
+
+test("251: a place owns clocks; removing it removes them, and one undo restores all", () => {
+  const { t, id, packs } = siteTable();
+  pickSite(t, id, packs, "long-stretch"); Engine.addClock(t, { on: { kind: "place", id }, name: "Second" });
+  const other = Engine.addPlace(t, { name: "Elsewhere" }).id;
+  Engine.addClock(t, { on: { kind: "place", id: other }, name: "Theirs" });
+  eq(Engine.clocksOn(t, { kind: "place", id }).map(c => c.name), ["Drift", "Second"]);
+  const base = plain(t);
+  const r = recorded(t, () => assert.ok(Engine.removePlace(t, id).ok));
+  assert.equal(r.entry.label, "Removed The Old Pike");
+  eq(t.clocks.map(c => c.name), ["Theirs"]); assert.equal(t.audit.length, 1, "one entry covers its clocks");
+  assert.ok(Engine.undoTableAction(t).ok);
+  eq(undoBase(t), (() => { const o = plain(base); delete o.audit; o.meta.updated = null; return o; })());
+  eq(Engine.clocksOn(t, { kind: "place", id }).map(c => c.name), ["Drift", "Second"]);
+  // A faction's removal in the same patch still reads "and 1 more" (S7's probe).
+  const fid = Engine.addFaction(t, { name: "Crew" }).id; Engine.addClock(t, { on: { kind: "faction", id: fid }, name: "F" });
+  const both = plain(t);
+  Engine.removePlace(t, id); Engine.removeFaction(t, fid);
+  assert.equal(Engine.tableActionLabel(both, t, Engine.diffTable(both, t)), "Removed The Old Pike and 1 more");
+});
+
+test("251: the clock gate keeps a place owner and an owner it doesn't know", () => {
+  const { t, id } = siteTable();
+  const gate = on => Engine.migrateTable({ ...plain(t), clocks: [{ id: "CK-AAAAAAAA", name: "c", on }] }).clocks[0].on;
+  eq(gate({ kind: "place", id }), { kind: "place", id });
+  eq(gate({ kind: "encounter", id: "EN-AAAAAAAA" }), { kind: "encounter", id: "EN-AAAAAAAA" });
+  for (const bad of [{ kind: "Place", id }, [], { kind: "place", id: "PL-short" }, { kind: "faction", id }, { kind: "encounter", id: "x".repeat(41) },
+                     { kind: "__proto__", id: "x" }, { kind: "place" }, { kind: 5, id: "x" }, null, "x"]) assert.equal(gate(bad), null, JSON.stringify(bad));
+  assert.equal(({}).kind, undefined);
+  const m = Engine.migrateTable({ ...plain(t), clocks: [{ id: "CK-AAAAAAAA", name: "c", on: { kind: "encounter", id: "EN-AAAAAAAA" } }] });
+  eq(Engine.clocksOn(m, { kind: "place", id }), []);
+  eq(Engine.tableSearch(m, "c "), [], "an owner of an unknown kind is shown nowhere");
+  assert.ok(Engine.addClock(t, { on: { kind: "place", id } }).ok);
+  for (const on of [{ kind: "place", id: "PL-AAAAAAAA" }, { kind: "encounter", id: "EN-AAAAAAAA" }, { kind: "place" }]) assert.equal(Engine.addClock(t, { on }).ok, false, JSON.stringify(on));
+});
+
+test("251: Find finds a place by its site and an Exposure name, and a place's clock by its words", () => {
+  const { t, id, packs } = siteTable();
+  pickSite(t, id, packs, "long-stretch");
+  Engine.editPlace(t, id, { exposure: [{ name: "Vex", n: 1 }, { name: "", n: 0 }] });
+  const fieldsOf = q => Engine.tableSearch(t, q).filter(x => x.kind === "place").map(x => [x.id, x.field]);
+  eq(fieldsOf("stretch"), [[id, "Site"]]); eq(fieldsOf("vex"), [[id, "Exposure"]]);
+  const clock = Engine.tableSearch(t, "drift").filter(x => x.kind === "clock");
+  eq(clock.map(x => [x.title, x.owner, x.ownerKind]), [["Drift", id, "place"]]);
+  eq(Engine.tableSearch(t, "round stopped").filter(x => x.kind === "clock").map(x => x.field), ["Advances"]);
+  const fid = Engine.addFaction(t, { name: "Crew" }).id; Engine.addClock(t, { on: { kind: "faction", id: fid }, name: "Heat" });
+  eq(Engine.tableSearch(t, "heat").filter(x => x.kind === "clock").map(x => x.ownerKind), ["faction"]);
+});
+
+test("251: the gate types a place's site, level and rows, and converts nothing", () => {
+  const { t } = siteTable();
+  const old = plain(t); old.meta.tableSchemaVersion = "0.15";
+  old.places[0].environment = "thin-places"; delete old.places[0].site; delete old.places[0].siteLevel; delete old.places[0].exposure;
+  const m = Engine.migrateTable(old).places[0];
+  assert.equal(m.site, null); assert.equal(m.siteLevel, null); eq(m.exposure, []); assert.equal(m.environment, "thin-places", "its ground is unchanged and no profile is guessed");
+  const gate = over => Engine.migrateTable({ ...plain(t), places: [{ ...plain(t.places[0]), ...over }] }).places[0];
+  assert.equal(gate({ site: { kind: "entry", pack: SITE_PK, id: "x" } }).site, null);
+  assert.equal(gate({ site: { kind: "site", pack: "nope", id: "x" } }).site, null);
+  assert.equal(gate({ site: { kind: "site", pack: SITE_PK, id: "bad id" } }).site, null);
+  eq(gate({ site: { kind: "site", pack: SITE_PK, id: "x", name: 5, extra: 1 } }).site, { kind: "site", pack: SITE_PK, id: "x" });
+  eq(gate({ site: { kind: "site", pack: SITE_PK, id: "x", name: "N" } }).site, { kind: "site", pack: SITE_PK, id: "x", name: "N" });
+  assert.equal(gate({ siteLevel: "wary" }).siteLevel, "wary"); assert.equal(gate({ siteLevel: "<img>" }).siteLevel, null); assert.equal(gate({ siteLevel: 5 }).siteLevel, null);
+  eq(gate({ exposure: [{ name: "a", n: -3 }, { name: "b", n: 120 }, { name: "c", n: "4" }, "x", { name: 5, n: {} }, null, { name: "", n: 2.5 }] }).exposure,
+    [{ name: "a", n: 0 }, { name: "b", n: 99 }, { name: "c", n: 4 }, { name: "", n: 0 }, { name: "", n: 0 }]);
+  eq(gate({ exposure: "x" }).exposure, []);
+  // The round trip (constraint 8).
+  const fresh = Engine.newTable("R"), pid = Engine.addPlace(fresh, { from: "old-pike" }).id;
+  Engine.setPlaceSite(fresh, pid, siteTable().packs, { pack: SITE_PK, id: "long-stretch" }); Engine.editPlace(fresh, pid, { exposure: [{ name: "Vex", n: 4 }] });
+  eq(Engine.migrateTable(plain(fresh)), plain(fresh));
+  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.16");
+});
+
+test("251: picking a profile reads as a change to the place; its copied clock is collateral, and an added clock alone still reads as added", () => {
+  const { t, id, packs } = siteTable();
+  assert.equal(recorded(t, () => pickSite(t, id, packs, "long-stretch")).entry.label, "Changed The Old Pike", "a clock copied with the profile");
+  Engine.editPlace(t, id, { exposure: [{ name: "Vex", n: 4 }] });
+  const r = recorded(t, () => pickSite(t, id, packs, "old-growth"), null, { fold: false });
+  assert.equal(r.entry.label, "Changed The Old Pike", "an Exposure row wiped, no clock copied");
+  assert.equal(recorded(t, () => pickSite(t, id, packs, "dead-block")).entry.label, "Changed The Old Pike", "over another profile, a clock copied");
+  assert.equal(recorded(t, () => Engine.addClock(t, { on: { kind: "place", id }, name: "Alone" })).entry.label, "Added Alone", "Add a clock on a page is still an add");
+  const fid = Engine.addFaction(t, { name: "Crew" }).id;
+  assert.equal(recorded(t, () => Engine.addClock(t, { on: { kind: "faction", id: fid }, name: "Heat" })).entry.label, "Added Heat");
 });

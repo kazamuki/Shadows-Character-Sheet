@@ -490,7 +490,7 @@ test("the Codex pack: the engine's gate changes nothing, and packCheck has nothi
   assert.deepEqual(plain(Engine.migratePack(plain(pack))), pack, "nothing dropped, nothing coerced");
   const c = plain(Engine.packCheck(pack));
   assert.equal(c.refuse, null); assert.deepEqual(c.warnings, []);
-  assert.equal(pack.meta.packSchemaVersion, "0.2"); assert.ok(Engine.isPackId(pack.meta.id));
+  assert.equal(pack.meta.packSchemaVersion, "0.3"); assert.ok(Engine.isPackId(pack.meta.id));
 });
 
 test("the Codex pack's counts", () => {
@@ -623,4 +623,78 @@ test("the Codex pack's gear is one line per item: none is over a long list, and 
   assert.ok(lines.every(l => l.trim() === l && l.length > 0 && !l.startsWith(", ")));
   assert.ok(lines.every(l => (l.match(/\(/g) || []).length === (l.match(/\)/g) || []).length), "no line cuts a parenthesis in two");
   assert.ok(lines.every(l => !/[;]/.test(l.replace(/\([^)]*\)/g, ""))), "no ; left outside parentheses");
+});
+
+// ── Site Profiles (Decision 250) ────────────────────────────────────────────
+// Every count below is read from the mirror, never from the work order.
+const SITES_SRC = "private/crb/Threat_Codex_Site_Profiles.md";
+const siteBook = () => file(join(ROOT, SITES_SRC)).replace(/\r/g, "");
+const siteByName = (p, name) => p.sites.find(s => s.name === name);
+
+test("250: the builder reads every Site Profile in the mirror, three a category", () => {
+  const p = real().r.pack, book = siteBook();
+  const heads = book.split("\n").filter(l => /^\*\*SITE\s+\S+\*\*\s*$/.test(l));
+  assert.ok(heads.length > 0); assert.equal(p.sites.length, heads.length);
+  const byCategory = {};
+  for (const l of book.split("\n")) { const m = /^\*\*Category:\*\*\s*(.*?)\s*\*\*Canon example/.exec(l); if (m) byCategory[m[1]] = (byCategory[m[1]] || 0) + 1; }
+  assert.equal(Object.values(byCategory).reduce((a, b) => a + b, 0), heads.length);
+  const ground = c => D.gazetteer.environments.find(e => e.name === c || e.name === c + "s").id;
+  for (const [label, n] of Object.entries(byCategory)) assert.equal(p.sites.filter(s => s.category === ground(label)).length, n, label);
+  assert.deepEqual(p.sites.map(s => s.ref), heads.map(l => l.replace(/\*/g, "").replace(/^SITE\s+/, "").trim()), "in the book's order");
+});
+
+test("250: a site's track keeps the book's shape", () => {
+  const p = real().r.pack;
+  const og = siteByName(p, "The Old Growth").track;
+  assert.equal(og.kind, "levels"); assert.equal(og.name, "Disposition"); assert.equal(og.start, "tolerant");
+  assert.deepEqual(og.levels.map(l => l.id), ["welcome", "tolerant", "wary", "hostile"]);
+  assert.match(og.levels[1].text, /starts here/); assert.match(og.moves, /^Lower it:/);
+  const rb = siteByName(p, "The Ramble").track;
+  assert.equal(rb.name, "Amplification"); assert.equal(rb.start, "calm"); assert.deepEqual(rb.levels.map(l => l.id), ["calm", "charged", "surging", "overflowing"]);
+  const ls = siteByName(p, "The Long Stretch").track;
+  assert.equal(ls.kind, "exposure"); assert.deepEqual(ls.steps.map(s => s.at), [3, 5, 8]); assert.match(ls.triggers, /^\+1 for each scene spent stopped/); assert.match(ls.marks, /^Time-bending/);
+  const dd = siteByName(p, "The Deep Door").track;
+  assert.equal(dd.kind, "table"); assert.equal(dd.die, "d6"); assert.equal(dd.name, "What comes through"); assert.equal(dd.rows.length, 6);
+  const db = siteByName(p, "The Dead Block");
+  assert.equal(db.track, null); assert.equal(db.trackText, "None. The residents are the pressure.");
+});
+
+test("250: a site's clock is split into its name, segments, what advances it and when it fills", () => {
+  const p = real().r.pack;
+  const drift = siteByName(p, "The Long Stretch").clock;
+  assert.equal(drift.name, "Drift"); assert.equal(drift.segments, 4); assert.match(drift.advances, /^Advance one segment/); assert.match(drift.whenFull, /^When it fills/);
+  assert.ok(!/When it fills/.test(drift.advances), "the advance line stops where the fill line starts");
+  assert.match(siteByName(p, "The Line").clock.advances, /counting down the truce/);
+  assert.match(siteByName(p, "The Old Growth").clock.advances, /only while Hostile/);
+  const none = siteByName(p, "The Building That Remembers");
+  assert.equal(none.clock, null); assert.equal(none.clockText, "None. The disposition is the clock.");
+  const book = siteBook().split("\n");
+  const real11 = book.filter(l => /^\*\*Clock:\*\*/.test(l) && !/^\*\*Clock:\*\*\s*None\b/.test(l)).length;
+  assert.equal(p.sites.filter(s => s.clock).length, real11);
+  assert.equal(p.sites.filter(s => !s.clock).length, book.filter(l => /^\*\*Clock:\*\*\s*None\b/.test(l)).length);
+});
+
+test("250: site ids come from the ledger and survive a rebuild", () => {
+  const { sources, ledger, r } = real();
+  for (const s of r.pack.sites) assert.equal(s.id, ledger.sections.sites[s.name], s.name);
+  // Renumbered in the book: the same names keep every id, only ref moves.
+  const moved = B.buildPack({ ...sources, sites: sources.sites.replace("**SITE TP1**", "**SITE TP9**"), ledger, Engine, D });
+  assert.deepEqual(moved.problems, []);
+  const was = r.pack.sites.find(s => s.name === "The Long Stretch"), now = moved.pack.sites.find(s => s.name === "The Long Stretch");
+  assert.equal(now.id, was.id); assert.equal(now.ref, "TP9");
+  // A site the ledger doesn't know stops the build and is named.
+  const renamed = B.buildPack({ ...sources, sites: sources.sites.replace("**The Long Stretch**", "**The Short Stretch**"), ledger, Engine, D });
+  assert.equal(renamed.pack, null); assert.ok(renamed.problems.some(x => /The Short Stretch/.test(x)));
+  // contentVersion names the source and the date.
+  assert.match(r.pack.meta.contentVersion, /Site Profiles draft 2026-10-03$/);
+});
+
+test("250: the builder guesses nothing: a levels track with no starting level, or a clock with no fill line, stops the build", () => {
+  const { sources, ledger } = real();
+  const noStart = sources.sites.replace(/ The site starts here( unless something has stirred it)?\./g, "");
+  const a = B.buildPack({ ...sources, sites: noStart, ledger, Engine, D });
+  assert.equal(a.pack, null); assert.ok(a.problems.some(x => /starting levels/.test(x)));
+  const noFill = sources.sites.replace("When it fills, the crew leaves wrong", "Then the crew leaves wrong");
+  const b = B.buildPack({ ...sources, sites: noFill, ledger, Engine, D });
+  assert.equal(b.pack, null); assert.ok(b.problems.some(x => /When it fills/.test(x)));
 });

@@ -132,7 +132,7 @@ stay (S6), as a setting to read and search, not a log to keep.
 | Pre-built threats | 42 entries, 29 encounter groups, two drones, ~100 named traits in three kinds (Universal, Origin, Signature) | Codex Parts B–C |
 | Named NPCs | Eleven roster NPCs (Bob and NPC-01 to 10), **moved into the Codex** in v2, in *Motivation · Resources · Their Line · stats · skills · If Pushed* form, each with a **Push Profile**: the Codex entry or encounter group they become when pushed, or none | Codex v2 *NPC Roster* (was `2000` Part VI) |
 | Supernatural threats | **In the Codex, approved** (GQ17, 2026-10-10): seven Orders (Undead, Vampiric, Therianthropic, Fae, Spirit, Elemental, Beast) beside Origin; **Bound** (Origin modifiers, one Order trait instead of Order's), **Changed** (both), **Other** (Order only); a +1 both give becomes +1 and an Order trait; −1s cap at −1, a −2 is reviewed by hand; a bodiless Changed takes only Origin's mental and social modifiers | Codex v2 *Origins and Orders* |
-| Environmental threats | **Approved** (the Expansion, mirrored 2026-10-22): three new fields, named lieutenants, Site Profiles with tracks and clocks | Expansion proposal |
+| Environmental threats | **Approved** (the Expansion, mirrored 2026-10-22): three new fields, named lieutenants, Site Profiles with tracks and clocks. **The fifteen profiles are Scott's draft, not approved** (S12b builds them anyway, SQ0; the pack's `contentVersion` names the draft) | Expansion proposal; `Threat_Codex_Site_Profiles.md` |
 | Places | Territory → Zone → District → Neighborhood; six Territories with Zones, Supernatural Sites, Business Interests and Factions; eleven places beyond the city | `1000`, `1100` |
 | Powers | Five corporations, the Unseen Court and its houses, the Chrome Berets, the Goblin Market | `1200` |
 | GM notes | Four worksheets: **Session 0 Shared Overlap**, **Encounter Design**, **Campaign Journal** (six parts a session), **Faction Tracker** (tipping points, a Hostile↔Allied stance) | `220`, `224`, `227`, `2000` *Tracking* |
@@ -380,7 +380,7 @@ line, and notes. A gazetteer faction (Eclipse, the Volkov Group) seeds one.
 **Clocks** are one primitive (segments, filled, a label, what fills it), used
 by a faction's escalation, a Site Profile's Drift (once approved), a job's
 deadline and the Encounter Design worksheet's escalation.
-**As built (S7, Decision 245):** `clocks` is one record with an `on` owner link (a faction, so far), a name, 2 to 12 segments (4 by default), `filled`, what advances it and what happens when it fills. The app never advances one.
+**As built (S7, Decision 245; on places, S12b, Decision 251):** `clocks` is one record with an `on` owner link (a faction, or a place from S12b), a name, 2 to 12 segments (4 by default), `filled`, what advances it and what happens when it fills. The app never advances one.
 
 ### 4g. Sessions
 
@@ -559,6 +559,7 @@ In the order they merged.
 | S16 | A line reads as a sentence, and a fight's line leads to its fight (W79, W82) | 241 | #234 |
 | S6 | The gazetteer and the crew's places: the City tab, and a line's Where | 242–243 | #236 |
 | S7 | Factions and clocks: the Faction Tracker per faction, and clocks on it | 244–245 | #240 |
+| S12b | Site Profiles: the Codex's profiles in the pack, a crew's place takes one with its track, Exposure and clocks (Rule or shape; pack schema 0.3, table schema 0.16) | 250–251 | #261 |
 
 ### Still to build
 
@@ -569,7 +570,6 @@ not a queue. What Scott's use of the table turns up can reorder it.
 |---|---|---|---|---|
 | S12a | Supernatural Orders: the seven Orders and their modifiers in the builder | Content | Nothing (GQ17 approved 2026-10-10). **Source:** the Orders table with its Profile and Formation columns is in Scott's `WIP_Threat_Codex_v2` only, not yet in `2610`; the pre-flight asks Scott which to build from | No order yet |
 | S13b | Printing a cast member, an encounter, a session's journal (W84) | Fix + content | Nothing | No order yet |
-| S12b | Site Profiles: places with their tracks and clocks (the Expansion is approved) | Rule or shape (the order's pre-flight: a pack section, a place's fields, a place-owned clock) | Nothing (S7's clocks are built); SQ0: the fifteen profiles are a draft | **Order approved** ([`gm-mode/S12b-site-profiles.md`](gm-mode/S12b-site-profiles.md)), Ken 2026-10-24, every default |
 | S10f | The rest of S10: the Encounter Design worksheet, Surprise, Ambush, Delay, an encounter's clocks | Rule or shape | Nothing (S7's clocks are built) | No order yet. **Sources:** the worksheet is `2642` (basics, adversaries, hazards, objectives beyond defeat, escalation, an out, the next scene's hooks); Surprise, Ambush and Delay are `0530` |
 | S17 | The Codex's Shared Rules and card format: a swarm takes at most 1 from a single-target attack; an NPC parries with the weapon's skill plus its Parry; social checks against Difficulty 15, and the Free, Fast and full Action, as a Reference panel; and each entry's Tag line, Role line and Hook on its Threats card | Content + shape | **Scott**: these are in `WIP_Threat_Codex_v2` only. When the entries in `2612` move to v2's format, the pack builder follows first (a Fix in `private/`, the size of Y0's), then this | Waiting on Scott |
 | S3b | Seats: players, import, the card spread, the read-only sheet | Rule or shape | Nothing | No order yet |
@@ -831,6 +831,12 @@ Bound/Changed/Other rule in the builder (its overlap and cap rules are
 arithmetic the builder can do, and a −2 it flags for the GM, as v2 says), the ~28 entries, the lieutenants as
 roster examples, the Site Profiles on places with their tracks and clocks. If
 it turns out to need code, that's a finding about S8 and S9's shape.
+
+**S12b is built** (Decisions 250–251, pack schema 0.3, table schema 0.16, switched off;
+`plans/gm-mode/S12b-site-profiles.md`; SQ0–SQ9 on their defaults). The Threat Codex pack carries Scott's fifteen Site
+Profiles as a `sites` section (a draft, not approved; the pack's `contentVersion` says so), and a crew's place takes one:
+its page draws the profile live from the pack, and the place keeps only the link, a levels track's level, and each
+character's Exposure. The profile's clock is copied onto the place, which owns clocks like a faction. S12a (the Orders) is not built.
 
 ### S13 — The GM screen
 

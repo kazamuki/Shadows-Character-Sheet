@@ -257,7 +257,7 @@ member("listener", 4, {
 // ── places ──────────────────────────────────────────────────────────
 const places = [];
 const place = (key, first, f) => places.push({
-  id: PL(key), name: "", from: null, territory: null, zone: null, district: "", neighborhood: "", environment: null, notes: "",
+  id: PL(key), name: "", from: null, territory: null, zone: null, district: "", neighborhood: "", environment: null, notes: "", site: null, siteLevel: null, exposure: [],
   created: ts(DAY[first], 22), updated: ts(DAY[6], 23), ...f,
 });
 place("suds", 1, {
@@ -729,7 +729,7 @@ note("s4recap", "Session 4: what the crew told Oyelaran",
 // ── the table ───────────────────────────────────────────────────────
 const table = {
   meta: {
-    kind: "shadows-table", id: tableId(), name: "Dead Air", tableSchemaVersion: "0.15",
+    kind: "shadows-table", id: tableId(), name: "Dead Air", tableSchemaVersion: "0.16",
     created: ts(DAY[1], 17), updated: ts(DAY[6], 23, 50),
   },
   audit: [],
