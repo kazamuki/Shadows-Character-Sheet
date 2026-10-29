@@ -2872,7 +2872,7 @@ function encRowHtml(v, e, sides){
   const aware = pc ? num("data-eaware", v.awareness, "Awareness") : v.awareness!==null ? `<span class="enc-num">Awareness ${esc(v.awareness)}</span>` : "";
   const waiting = running && r.delay ? r.delay : null;
   const acts = ended ? "" : `<div class="enc-acts">
-      ${running && v.active ? `<button class="btn sm" data-edelay-open="${id}">Delay</button>` : ""}${waiting ? `<button class="btn sm" data-eacnow="${id}">Act now</button>` : ""}
+      ${running && v.active ? `<button class="btn sm" data-edelay-open="${id}">Delay</button>` : ""}${waiting && !r.out ? `<button class="btn sm" data-eacnow="${id}">Act now</button>` : ""}
       <button class="btn sm" data-edmg="${id}|1">Take</button>${v.canHit ? `<button class="btn sm" data-ehit="${id}">Hit</button>` : ""}<button class="btn sm" data-edmg="${id}|-1">Heal</button>
       <button class="btn sm" data-econdopen="${id}">Add a Condition</button>
       <details class="enc-more" data-emore="${id}"${S.encMore && S.encMore[r.id] ? " open" : ""}><summary>More</summary>

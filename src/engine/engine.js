@@ -8470,9 +8470,9 @@ const Engine = (() => {
       e.opening = was;
       return { ok:false, why:`${sideTitle(e, next.side)} has nobody who can act.` };
     }
-    // The turn was on a row the new opening passes: it moves to the next who can act.
+    // Nobody has acted, so the turn is the first who can act under the new opening.
     const turn = e.status==="running" ? _rowList(e).find(r=>r.id===e.turn) : null;
-    if (turn && _ambushed(e, turn)){ const n = _pick(e); e.turn = n ? n.id : null; }
+    if (turn){ const n = _pick(e); if (n) e.turn = n.id; }
     _tableStamp(t, e);
     return { ok:true };
   }
@@ -8493,6 +8493,7 @@ const Engine = (() => {
     if (l.e.status!=="running") return { ok:false, why:`${encounterTitle(l.e)} isn't running.` };
     if (l.e.turn===null) return { ok:false, why:"The round is over." };
     if (!_isObj(l.r.delay)) return { ok:false, why:`${l.r.name.trim() || "They"} ${l.r.name.trim() ? "isn't" : "aren't"} waiting.` };
+    if (l.r.out) return { ok:false, why:`${l.r.name.trim() || "They"} are out of it.` };
     l.r.delay = null;
     l.e.turn = l.r.id;
     _tableStamp(t, l.e);

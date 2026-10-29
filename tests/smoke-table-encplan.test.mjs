@@ -270,3 +270,16 @@ test("252: a faction's clocks behave as before (a place's are S12b's smoke tests
   assert.equal(app.window.eval("S.table.clocks[0].on.kind"), "faction");
   assert.deepEqual(app.errors, []);
 });
+
+test("253: a delayed row that goes Out has no Act now", () => {
+  const app = fightApp();
+  app.click("[data-enc-start]");
+  app.click("[data-edelay-open]");
+  type(app, "[data-edelay-until]", "door"); submit(app, "[data-edelayform]");
+  const id = rid(app, "A");
+  assert.ok(app.$(`[data-eacnow="${id}"]`));
+  app.window.eval(`Engine.editParticipant(S.table, S.table.encounters[0].id, "${id}", { out: true }); renderTable()`);
+  assert.equal(app.$(`[data-eacnow="${id}"]`), null);
+  assert.match(rowByName(app, "A").textContent, /Waiting: door/);
+  assert.deepEqual(app.errors, []);
+});

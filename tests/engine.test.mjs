@@ -11255,3 +11255,22 @@ test("253: Reset after an Ambush asks about round 2, so attackers who are all Ou
   assert.ok(r.ok, r.why);
   assert.equal(encOf(t, e).turn, foe[0], "round 2 opens on the defenders");
 });
+
+test("253: setOpening in round 1 re-picks the turn, and Act now refuses a row that is Out", () => {
+  const { t, e, other, crew, foe } = ambushTable(null);
+  assert.ok(Engine.setOpening(t, e, { kind: "ambush", side: other }).ok);
+  assert.ok(Engine.startEncounter(t, e).ok);
+  assert.equal(encOf(t, e).turn, foe[0]);
+  assert.ok(Engine.setOpening(t, e, { kind: "surprise", side: other }).ok);
+  assert.equal(encOf(t, e).turn, crew[0], "Surprise passes nobody: the first by Combat Sense");
+  assert.ok(Engine.setOpening(t, e, { kind: "ambush", side: other }).ok);
+  assert.ok(Engine.setOpening(t, e, null).ok);
+  assert.equal(encOf(t, e).turn, crew[0], "clearing the Ambush does the same");
+  const u = ambushTable(null);
+  Engine.startEncounter(u.t, u.e);
+  Engine.delayTurn(u.t, u.e, u.crew[0], "door");
+  Engine.editParticipant(u.t, u.e, u.crew[0], { out: true });
+  const before = plain(u.t);
+  assert.equal(Engine.actNow(u.t, u.e, u.crew[0]).why, "A are out of it.");
+  eq(u.t, before, "the delay stays, writing nothing");
+});
