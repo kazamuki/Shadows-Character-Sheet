@@ -675,6 +675,18 @@ just a trimmed sheet; what the Home screen says before a pack is slotted
 in; whether a pack can be removed, and what that does to characters that
 use it.
 
+**W138 — Shadows accounts: sign in with Discord, open your sheets anywhere, join a table.** *Ken · 🔎 · Rule or shape · raised 2026-10-28*\
+**Plan:** [accounts-and-sync](plans/accounts-and-sync.md), after GM mode's plan is done
+
+A player's characters live in one browser. Moving to another computer means
+exporting a file and carrying it over, and handing a sheet to the GM is the
+same file passed around. The wish: sign in with Discord (storing only an id
+and a name), keep characters and tables online so any browser can open them,
+and join a GM's table with the account, so a seat takes the sheet directly.
+It carries W29's stages 2–3. *It must respect:* constraint 1 (the folder copy
+never needs it, and can't sign in), the player owning the character, and
+`migrate()` as the gate on every copy that comes down.
+
 ### GM mode
 
 W29 is the whole of GM mode. The rest are Ken's notes from playing with the
@@ -682,7 +694,7 @@ build (switched off) and from its work orders. Each sits alongside W29's plan,
 not inside it, until a work order picks it up.
 
 **W29 — A GM mode: link to the table's characters, read them, leave notes.** *Ken · 🔎 · raised 2026-09-24*\
-**Plan:** [gm-mode](plans/gm-mode.md): the file-based stage and the GM toolkit; live sync (stages 2–3) stays here
+**Plan:** [gm-mode](plans/gm-mode.md): the file-based stage and the GM toolkit; live sync (stages 2–3) is [accounts-and-sync](plans/accounts-and-sync.md)'s N4–N5
 
 Raised 2026-09-24, at the end of the whole-app audit. Today a GM who wants a
 player's HP, Conditions or loadout asks for it, or collects exported files by
@@ -1039,7 +1051,7 @@ with no DOM, so both halves have to load that way.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W138.** Everything above is open. What was built is in
+- **Next free number: W139.** Everything above is open. What was built is in
   [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)
