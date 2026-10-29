@@ -137,7 +137,7 @@ rev 9's `C1`–`C3` are still forward notes.
 
 ## 5. Where to start
 
-**The live site is v0.55.0** (data 0.49, schema 0.29), released 2026-10-25; it carries custom weapons that work like the catalog's.
+**The live site is v0.56.0** (data 0.50, schema 0.31), released 2026-10-29; it carries custom weapons that fire and reload like the catalog's.
 
 **Next is Ken's pick**, each built through a work order (`WORK-ORDERS.md`):
 - **Another of `plans/gm-mode.md`'s *Still to build*** (S7, factions and clocks, is built).
