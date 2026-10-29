@@ -541,7 +541,7 @@ A custom archetype has no Major Milestones of its own; the general Majors are
 open to it. The Adjustments ledger covers a GM's custom reward meanwhile.
 
 **W109 — A custom row can opt into what a book row does.** *Ken · 🔎 · Rule or shape · raised 2026-10-15 with P10's PQ7*\
-**Plan:** set aside by [loadout-and-gear §4](plans/loadout-and-gear.md): wider than gear; L2 gives a custom weapon the catalog's fields, and L3's LQ6 decides custom modifiers · **Goes with:** W48
+**Plan:** a written-in weapon's part in [loadout-and-gear](plans/loadout-and-gear.md) L2b ([order](plans/loadout-and-gear/L2b-custom-weapon-fire-and-reload.md)): its fire modes and its reload from carried ammo. The rest is set aside by the plan's §4: wider than gear; L2 gave a custom weapon the catalog's fields, and L3's LQ6 kept custom modifiers out · **Goes with:** W48
 
 A written-in spell, piece of gear, weapon or power is text to the engine: the sheet can't
 hold a custom Concentration spell (P10's PQ7), and no other custom row can switch on
