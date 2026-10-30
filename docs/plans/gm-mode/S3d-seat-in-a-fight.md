@@ -4,7 +4,9 @@
 §6 *S3b*'s last bullet, and GQ19.
 **Status:** **drafted 2026-10-30 by Claude (Opus)**, the S3c reviewer, after
 #270 (S3c, Decision 256) merged (`WORK-ORDERS.md`, step 7). **Ken picked this
-session (2026-10-30).** Not yet approved.
+session (2026-10-30).**
+**Approved by Ken 2026-10-30** (in the conductor session), as Rule or shape, one decision, no version moves, no `private/` commit.
+**SQ1–SQ6 answered by Ken 2026-10-30: every default.** He picked SQ1 (*The copy as filed*), SQ2 (*Player's roll*) and SQ3 (*Passed/Failed*) by name, and SQ4–SQ6 as one set (*Approve, defaults*).
 **Branch:** from `main` at `6e1a799` or later, PR to `main`, switched off
 (Decision 173). **No `private/` commit.**
 **Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../WORK-ORDERS.md).
@@ -246,12 +248,12 @@ stop and ask.
 
 | # | Question | Default | Answer |
 |---|---|---|---|
-| SQ1 | **Where a claimed row starts.** Added under a seat's name (or renamed to one before anything happens to it), the row takes the copy's damage, Massive levels, Conditions and armor wear as its starting point. After that the fight is the row's, and a re-import doesn't move it. Or start fresh at full Health with nothing on, so the row only ever holds this fight? | **The copy as filed** | |
-| SQ2 | **PROT on a claimed row.** The player rolls their armor's PROT die and calls it, and the GM enters it, as on their own Take a hit. Or use the die's average rounded up, as an enemy's static armor (053)? That's faster at the table, but it's not the players' rule. | **The player's roll** | |
-| SQ3 | **Shock and At Zero on a claimed row.** The player rolls on their sheet and calls Passed or Failed, and the GM taps it. The pipeline then adds what a failure brings, as for an NPC. Or keep today's reminders, with the Conditions offered as ticks only (192)? | **Passed or Failed** | |
-| SQ4 | **The GM's own HP, Health Levels and Awareness fields on a claimed row.** Hidden while it's claimed, and the numbers read from the copy. They come back, still holding what was typed, if the claim is lost. Or keep them visible as an override? | **Hidden while claimed** | |
-| SQ5 | **The row and the read-only sheet.** The row's name opens the seat's read-only sheet (the copy as filed), and its Back returns to the row. The sheet doesn't show the fight. Or also put the fight's damage and Conditions on the read-only sheet, as a line above it (256's *Revisit if*)? | **Opens the sheet; the fight stays on the row** | |
-| SQ6 | **A row that loses its claim mid-fight** (the seat is removed, the copy goes, or a second seat answers to the name). It keeps its damage, Conditions and wear, goes back to the GM's numbers, and takes hits as the player calls them, with a line saying why it isn't a seat now. Or freeze it, so it takes no hit until it's claimed again? | **Back to a typed PC, with a line** | |
+| SQ1 | **Where a claimed row starts.** Added under a seat's name (or renamed to one before anything happens to it), the row takes the copy's damage, Massive levels, Conditions and armor wear as its starting point. After that the fight is the row's, and a re-import doesn't move it. Or start fresh at full Health with nothing on, so the row only ever holds this fight? | **The copy as filed** | Default (Ken, 2026-10-30) |
+| SQ2 | **PROT on a claimed row.** The player rolls their armor's PROT die and calls it, and the GM enters it, as on their own Take a hit. Or use the die's average rounded up, as an enemy's static armor (053)? That's faster at the table, but it's not the players' rule. | **The player's roll** | Default (Ken, 2026-10-30) |
+| SQ3 | **Shock and At Zero on a claimed row.** The player rolls on their sheet and calls Passed or Failed, and the GM taps it. The pipeline then adds what a failure brings, as for an NPC. Or keep today's reminders, with the Conditions offered as ticks only (192)? | **Passed or Failed** | Default (Ken, 2026-10-30) |
+| SQ4 | **The GM's own HP, Health Levels and Awareness fields on a claimed row.** Hidden while it's claimed, and the numbers read from the copy. They come back, still holding what was typed, if the claim is lost. Or keep them visible as an override? | **Hidden while claimed** | Default (Ken, 2026-10-30) |
+| SQ5 | **The row and the read-only sheet.** The row's name opens the seat's read-only sheet (the copy as filed), and its Back returns to the row. The sheet doesn't show the fight. Or also put the fight's damage and Conditions on the read-only sheet, as a line above it (256's *Revisit if*)? | **Opens the sheet; the fight stays on the row** | Default (Ken, 2026-10-30) |
+| SQ6 | **A row that loses its claim mid-fight** (the seat is removed, the copy goes, or a second seat answers to the name). It keeps its damage, Conditions and wear, goes back to the GM's numbers, and takes hits as the player calls them, with a line saying why it isn't a seat now. Or freeze it, so it takes no hit until it's claimed again? | **Back to a typed PC, with a line** | Default (Ken, 2026-10-30) |
 
 ## 5. The assumption sweep
 
