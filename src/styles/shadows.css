@@ -1357,9 +1357,14 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .enc-armor-extra{font-size:.75rem; font-style:italic}
 .enc-traits{margin:4px 0; display:flex; flex-wrap:wrap; gap:6px; align-items:center; font-size:.85rem; color:var(--dim)}
 .enc-hit{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:0 14px; align-items:end; margin-top:10px; min-width:0}
-.enc-hit select, .enc-hit input[type="text"], .enc-hit input[type="number"]{min-width:0; max-width:100%}
+.enc-hit select, .enc-hit input[type="text"], .enc-hit input[type="number"]{min-width:0; max-width:min(100%, 26rem)}
 .enc-hit .form-toggle{width:max-content; max-width:100%; flex-wrap:wrap}
 .enc-hit [data-ehit-live]{grid-column:1 / -1; min-width:0}
+.enc-seat{margin:2px 0 4px; overflow-wrap:anywhere; font-size:.85rem; color:var(--dim)}
+.enc-seat-asks{grid-column:1 / -1; display:flex; flex-wrap:wrap; align-items:end; gap:4px 16px; min-width:0}
+.enc-seat-asks .field{margin-bottom:6px; min-width:min(100%, 6rem)}
+.enc-seat-asks .enc-armor{flex:1 1 100%; margin:0}
+.enc-seat-asks .enc-check{display:inline-flex; align-items:center; gap:6px; min-height:36px; overflow-wrap:anywhere}
 .enc-preview{margin:4px 0 6px; font-family:var(--mono); font-size:.9rem; overflow-wrap:anywhere}
 .enc-refusal{color:var(--dim)}
 .enc-prompt{margin:0 0 10px; min-width:0}

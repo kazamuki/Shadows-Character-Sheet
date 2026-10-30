@@ -273,7 +273,7 @@ function renderTableChrome(){
   ctx.textContent = tableName(t);
   nav.innerHTML = tableTabButtonsHtml();
   // The tab you're on also takes you back from a member's page to the list.
-  nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>{ S.tsection=b.dataset.tsec; S.backFromLine=null; S.placeRoute=null; S.factionRoute=null; S.clockEdit=null; S.backCity=null; if (S.tsection==="city"){ S.placeOpen=null; S.factionOpen=null; } if (S.tsection==="sessions") S.sessOpen=null; if (S.tsection==="players"){ S.seatOpen=null; S.seatSheet=null; } if (S.tsection==="cast"){ S.castOpen=null; S.backEnc=null; S.backSess=false; S.backClose=false; S.backCity=null; } if (S.tsection==="threats"){ S.threatOpen=null; S.threatGroup=null; S.threatMember=null; S.threatEnc=null; } window.scrollTo(0,0); update(); });
+  nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>{ S.tsection=b.dataset.tsec; S.backFromLine=null; S.backEnc=null; S.placeRoute=null; S.factionRoute=null; S.clockEdit=null; S.backCity=null; if (S.tsection==="city"){ S.placeOpen=null; S.factionOpen=null; } if (S.tsection==="sessions") S.sessOpen=null; if (S.tsection==="players"){ S.seatOpen=null; S.seatSheet=null; } if (S.tsection==="cast"){ S.castOpen=null; S.backEnc=null; S.backSess=false; S.backClose=false; S.backCity=null; } if (S.tsection==="threats"){ S.threatOpen=null; S.threatGroup=null; S.threatMember=null; S.threatEnc=null; } window.scrollTo(0,0); update(); });
   showActiveTab(nav);
   if (!act) return;
   act.innerHTML = `<button type="button" class="hdr-act" data-tfind>Find</button><button type="button" class="hdr-act" data-tjot>Jot</button>
@@ -2774,11 +2774,14 @@ function encCondHtml(v, c, ended){
     ${c.note ? `<small class="enc-src">${esc(c.note)}</small>` : ""}${marks}
     ${ended ? "" : `<button class="btn sm" data-econdrm="${id}|${c.index}" aria-label="Remove ${esc(label)}">Remove</button>`}</li>`;
 }
+// A claimed row's worn piece as the sheet reads it (Decision 257): the row's line and its Hit panel's.
+const seatArmorText = (name, die, w) => `${esc(name)} · PROT ${esc(die || "—")} · RES +${w.res} · INT ${w.integrity}/${w.integrityMax}${w.scrapped ? " · Scrap" : w.compromised ? " · Compromised: RES is gone" : ""}`;
 // The armor on one line (Decision 191): the Gear piece, what it stops, its Integrity; or the printed line, marked.
 function encArmorHtml(v){
   const a=v.armor; if (!a || a.line===null) return "";
   let main;
-  if (!a.piece) main = `${esc(a.line)} · not in the Gear tables`;
+  if (a.seat) main = seatArmorText(a.piece.name, a.die, a);
+  else if (!a.piece) main = `${esc(a.line)} · not in the Gear tables`;
   else if (a.scrapped) main = `${esc(a.piece.name)} · Scrap`;
   else main = `${esc(a.piece.name)} · stops ${a.stops.prot + (a.compromised ? 0 : a.stops.res)} · INT ${a.integrity}/${a.integrityMax}${a.compromised ? " · Compromised: RES is gone" : ""}`;
   return `<p class="enc-armor">${main}</p>${a.extra ? `<p class="enc-armor enc-armor-extra">${esc(a.extra)}</p>` : ""}`;
@@ -2792,8 +2795,11 @@ function encTraitsHtml(v, running){
 // ── Hit: the panel, its preview and the prompts the hit raises ──
 const hlWords = n => `${n} Health Level${n===1 ? "" : "s"}`;
 const condNames = ids => (ids||[]).map(id=>{ const c=Engine.conditionById(id); return c ? c.name : id; }).join(", ");
-const encHitNew = row => ({ row, damage:"", type:D.damageTypes[0].id, cat:"regular", ap:false, loc:D.armorRules.defaultHitLocation, from:"", shock:"", atZero:"", conds:{}, err:"" });
-const encHitInput = d => ({ damage:d.damage, gone:d.damage, damageType:d.type, category:d.cat, ap:d.ap, location:d.loc, from:d.from });
+const encHitNew = row => ({ row, damage:"", type:D.damageTypes[0].id, cat:"regular", ap:false, spell:false, melee:false, prot:"", nat:{}, loc:D.armorRules.defaultHitLocation, from:"", shock:"", atZero:"", conds:{}, err:"" });
+// A claimed row's hit is the sheet's own input (Decision 257): the player's PROT roll, Natural Armor ticks, spell and melee.
+const encHitInput = (d, seat) => Object.assign({ damage:d.damage, gone:d.damage, damageType:d.type, category:d.cat, ap:d.ap, location:d.loc, from:d.from },
+  seat ? { spell:d.spell, melee:d.melee, protRoll:d.prot, natural:Object.keys(d.nat).filter(k=>d.nat[k]) } : {});
+const encSeatOn = r => { const e=encOpenNow(); return !!(r && r.kind==="pc" && e && Engine.rowCharacter(S.table, e.id, r.id)); };
 function encHitRow(){ const e=encOpenNow(), d=S.encHit; return e && d ? e.rows.find(r=>r.id===d.row) || null : null; }
 function encHitTicked(d, res){ return res.prompts.conditions.filter(id=>id in d.conds ? d.conds[id] : res.prompts.always.includes(id)); }
 function encHitPreview(res, pc){
@@ -2816,11 +2822,32 @@ function encHitPreview(res, pc){
   if (res.after.down) bits.push("Down");
   return bits.join(" · ");
 }
-function encPromptHtml(d, res, pc){
+// A claimed row's preview, in the sheet's own terms (Decision 257).
+function encSeatPreview(res){
+  const bits=[], a=res.armor;
+  if (res.bypassesArmor){
+    bits.push(`Massive: ${hlWords(res.levelsLost)} gone`);
+    if (res.scrap) bits.push(`${a.name} scrapped`);
+    else if (res.integrityLost > 0) bits.push(`${a.name} INT −${res.integrityLost}`);
+  } else {
+    if (res.doubled) bits.push(`${copy("hitDoubled")} (${res.doubled.from} → ${res.doubled.to})`);
+    if (a && res.covered){
+      bits.push(`${a.name} stops ${res.absorbed} (PROT ${res.prot}${res.res ? ` + RES ${res.res}` : ""})`);
+      if (res.resSkipped) bits.push(`RES doesn't apply: ${res.resSkipped==="ap" ? "AP" : res.resSkipped==="compromised" ? "Compromised" : `not against ${res.type.name}`}`);
+    } else if (a) bits.push(`Not covered: ${(Engine.locationById(res.location)||{}).name || res.location}`);
+    if (res.natural.absorbed) bits.push(`Natural Armor stops ${res.natural.absorbed}`);
+    bits.push(`${res.through} through`, hlWords(res.lostThisHit));
+    if (res.integrityLost > 0) bits.push(`INT −${res.integrityLost}`);
+  }
+  if (res.after.down) bits.push("Down");
+  return bits.join(" · ");
+}
+function encPromptHtml(d, res, pc, seat){
   const out=[], names=condNames;
-  const ask = (key, label) => pc ? "" : `<span class="form-toggle" role="group" aria-label="${esc(label)}">
+  const ask = (key, label) => pc && !seat ? "" : `<span class="form-toggle" role="group" aria-label="${esc(label)}">
       <button type="button" data-ehit-ans="${key}|pass" class="${d[key]==="pass" ? "on" : ""}" aria-pressed="${d[key]==="pass"}">Passed</button>
       <button type="button" data-ehit-ans="${key}|fail" class="${d[key]==="fail" ? "on" : ""}" aria-pressed="${d[key]==="fail"}">Failed</button></span>`;
+  pc = pc || seat;
   const p=res.prompts, who = pc ? "they make a" : "";
   if (p.shock) out.push(`<div class="enc-prompt"><p>Shock: ${who ? `${who} ` : ""}${esc(p.shock.check)}${pc ? " on their sheet" : ""}. Failed: ${esc(names(p.shock.onFail))}.</p>${ask("shock", "Shock check")}</div>`);
   if (p.atZero) out.push(`<div class="enc-prompt"><p>At zero: ${who ? `${who} ` : ""}${esc(p.atZero.check)}${pc ? " on their sheet" : ""}. Passed: ${esc(names(p.atZero.onPass))}. Failed: ${esc(names(p.atZero.onFail))}.</p>${ask("atZero", "At Zero check")}</div>`);
@@ -2835,27 +2862,46 @@ function encPromptHtml(d, res, pc){
   return out.join("");
 }
 function encHitLiveHtml(d, r){
-  const pc=r.kind==="pc", res=Engine.resolveEncounterHit(S.table, S.encOpen, r.id, encHitInput(d));
+  const seat=encSeatOn(r), pc=r.kind==="pc" && !seat, res=Engine.resolveEncounterHit(S.table, S.encOpen, r.id, encHitInput(d, seat));
   const body = res.ok
-    ? `<p class="enc-preview" data-ehit-preview>${esc(encHitPreview(res, pc))}</p>
-       ${!pc && res.armor && res.armor.piece ? `<p class="enc-armor enc-armor-extra">${esc(D.armorRules.enemyText)}</p>` : ""}
-       ${(res.notes||[]).map(n=>`<p class="enc-armor enc-armor-extra">${esc(n)}</p>`).join("")}${encPromptHtml(d, res, pc)}`
+    ? `<p class="enc-preview" data-ehit-preview>${esc(seat ? encSeatPreview(res) : encHitPreview(res, pc))}</p>
+       ${!pc && !seat && res.armor && res.armor.piece ? `<p class="enc-armor enc-armor-extra">${esc(D.armorRules.enemyText)}</p>` : ""}
+       ${(res.notes||[]).map(n=>`<p class="enc-armor enc-armor-extra">${esc(n)}</p>`).join("")}${encPromptHtml(d, res, pc, seat)}`
     : `<p class="enc-preview enc-refusal" data-ehit-preview>${esc(res.why)}</p>`;
   return `<div data-ehit-live>${body}${d.err ? `<p class="enc-err" role="alert">${esc(d.err)}</p>` : ""}
     <div class="enc-condbtns"><button class="btn sm primary" data-ehit-apply${res.ok ? "" : " disabled"}>Apply</button><button class="btn sm" data-ehit-cancel>Cancel</button></div></div>`;
 }
 function encHitHtml(v){
-  const d=S.encHit, r=v.row, pc=r.kind==="pc", massive=d.cat==="massive";
+  const d=S.encHit, r=v.row, seat=encSeatOn(r), pc=r.kind==="pc" && !seat, massive=d.cat==="massive";
+  const ch = seat ? Engine.rowCharacter(S.table, S.encOpen, r.id) : null;
   const toggle = (attr, label, items) => `<span class="form-toggle" role="group" aria-label="${esc(label)}">${items.map(([val, label, on])=>
     `<button type="button" ${attr}="${esc(val)}" class="${on ? "on" : ""}" aria-pressed="${on}">${esc(label)}</button>`).join("")}</span>`;
   return `<div class="enc-hit" data-ehitpanel="${esc(r.id)}">
     <label class="field"><span>${pc ? (massive ? "Health Levels gone" : "Got through") : "Damage"}</span><input type="number" min="0" step="1" inputmode="numeric" data-ehit-damage value="${esc(d.damage)}"></label>
     <label class="field"><span>Type</span><select data-ehit-type>${D.damageTypes.map(t=>`<option value="${esc(t.id)}"${t.id===d.type ? " selected" : ""}>${esc(t.name)}</option>`).join("")}</select></label>
     <div class="field"><span>Kind</span>${toggle("data-ehit-cat", "Kind", D.damageCategories.map(c=>[c.id, c.name, c.id===d.cat]))}</div>
-    ${pc ? "" : `<div class="field"><span>Armor-piercing</span>${toggle("data-ehit-ap", "Armor-piercing", [["1", "AP", d.ap]])}</div>`}
+    ${pc || (seat && massive) ? "" : `<div class="field"><span>Armor-piercing</span>${toggle("data-ehit-ap", "Armor-piercing", [["1", "AP", d.ap]])}</div>`}
     <label class="field"><span>Where</span><select data-ehit-loc>${D.bodyLocations.map(l=>`<option value="${esc(l.id)}"${l.id===d.loc ? " selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
+    ${seat ? encSeatAsksHtml(d, ch, r) : ""}
     <label class="field"><span>From</span><input type="text" data-ehit-from value="${esc(d.from)}" placeholder="Rook's SMG" autocomplete="off"></label>
     ${encHitLiveHtml(d, r)}</div>`;
+}
+// What the player's own Take a hit also asks (Decision 257): PROT roll, From a spell, melee, Natural Armor ticks.
+function encSeatAsksHtml(d, ch, r){
+  const bypass=d.cat==="massive", as=Engine.armorState(ch), worn=as.worn, nat=Engine.naturalArmor(ch, Object.keys(d.nat).filter(k=>d.nat[k]));
+  const probe=Engine.resolveEncounterHit(S.table, S.encOpen, r.id, encHitInput(d, true));
+  const check = (attr, on, label) => `<label class="check enc-check"><input type="checkbox" ${attr}${on ? " checked" : ""}> ${esc(label)}</label>`;
+  const bits=[];
+  if (!bypass && d.ap && (nat.base>0 || nat.conditional.length)) bits.push(check("data-ehit-spell", d.spell, "From a spell"));
+  if (!bypass && Engine.hitAsks(ch).melee) bits.push(check("data-ehit-melee", d.melee, copy("hitMelee")));
+  // The sheet's own armor problems ("2 body pieces are marked worn…") say which piece counts.
+  const armor = (worn ? `<p class="enc-armor enc-seat-armor">${seatArmorText(worn.name, worn.prot, worn)}</p>`
+    : `<p class="enc-armor enc-seat-armor">No body armor worn</p>`) + as.problems.map(p=>`<p class="enc-armor enc-armor-extra">${esc(p)}</p>`).join("");
+  const prot = worn && !bypass && (!probe.ok || probe.covered)
+    ? `<label class="field"><span>PROT roll</span><input type="text" inputmode="numeric" pattern="[0-9]*" data-ehit-prot value="${esc(d.prot)}"></label>` : "";
+  const natLine = nat.base>0 || nat.conditional.length
+    ? `<p class="enc-armor enc-seat-armor">Natural Armor ${nat.total}</p>${nat.conditional.map(c=>check(`data-ehit-nat="${esc(c.id)}"`, c.active, `${c.name} (${c.amount ? `+${c.amount}` : `answers ${c.resAgainst.join(", ")}`}, ${c.while})`)).join("")}` : "";
+  return `<div class="enc-seat-asks">${bits.join("")}${armor}${prot}${natLine}</div>`;
 }
 function encCondFormHtml(v){
   const d=S.encCond, def=Engine.conditionById(d.id);
@@ -2870,16 +2916,17 @@ function encCondFormHtml(v){
     ${d.err ? `<p class="enc-err" role="alert">${esc(d.err)}</p>` : ""}</div>`;
 }
 function encRowHtml(v, e, sides){
-  const r=v.row, id=esc(r.id), ended=e.status==="ended", running=e.status==="running", pc=r.kind==="pc";
+  const r=v.row, id=esc(r.id), ended=e.status==="ended", running=e.status==="running", seat=!!v.seat, pc=r.kind==="pc" && !seat;
   const ref = r.kind==="entry" && v.from && v.from.packId ? (()=>{
     const f=Engine.packEntry(packsMemo, v.from.packId, v.from.id), label=(f && f.entry.ref.trim()) || v.from.name.trim() || "Codex";
     return v.from.here ? `<button type="button" class="tag" data-eopenentry="${esc(entryKey(v.from.packId, v.from.id))}">${esc(label)}</button>` : `<span class="tag plain">${esc(label)}</span>`; })() : "";
   const name = r.kind==="cast" && r.cast && !v.gone ? `<button type="button" class="cast-open enc-name" data-eopencast="${esc(r.cast.id)}">${esc(v.name)}</button>`
-    : v.gone ? `<s class="enc-name">${esc(v.name)}</s><span class="vh">, removed</span>` : `<b class="enc-name">${esc(v.name)}</b>`;
-  const mark = pc ? `<span class="tag plain">PC</span>` : r.kind==="cast" ? `<span class="tag plain">Cast</span>` : ref;
+    : v.gone ? `<s class="enc-name">${esc(v.name)}</s><span class="vh">, removed</span>`
+    : seat ? `<button type="button" class="cast-open enc-name" data-eopenseat="${esc(v.seat.tag)}">${esc(v.name)}</button>` : `<b class="enc-name">${esc(v.name)}</b>`;
+  const mark = r.kind==="pc" ? `<span class="tag plain">PC</span>` : r.kind==="cast" ? `<span class="tag plain">Cast</span>` : ref;
   const num = (attr, val, label) => ended ? `${esc(label)} ${val===null ? "—" : esc(val)}`
     : `<label class="enc-num"><span>${esc(label)}</span><input type="number" step="1" inputmode="numeric" ${attr}="${id}" value="${numAttr(val)}"></label>`;
-  const aware = pc ? num("data-eaware", v.awareness, "Awareness") : v.awareness!==null ? `<span class="enc-num">Awareness ${esc(v.awareness)}</span>` : "";
+  const aware = pc && !seat ? num("data-eaware", v.awareness, "Awareness") : v.awareness!==null ? `<span class="enc-num">Awareness ${esc(v.awareness)}</span>` : "";
   const waiting = running && r.delay ? r.delay : null;
   const acts = ended ? "" : `<div class="enc-acts">
       ${running && v.active ? `<button class="btn sm" data-edelay-open="${id}">Delay</button>` : ""}${waiting && !r.out ? `<button class="btn sm" data-eacnow="${id}">Act now</button>` : ""}
@@ -2903,6 +2950,11 @@ function encRowHtml(v, e, sides){
   // The opening's reminder (253): shown on the rows it applies to, never applied.
   const openTag = !v.opening ? "" : v.opening==="attacker" ? `+${e.opening && e.opening.kind==="ambush" ? 3 : 1} on their first attack roll`
     : v.opening==="ambushed" ? "Ambushed: no turn, can't defend, hit at Difficulty 10" : "Surprised: Fast Actions only";
+  // A claimed row reads the character, and an unclaimed one that once answered to a seat says why it doesn't (Decision 257).
+  const joinNames = ns => ns.length<2 ? ns.join("") : `${ns.slice(0, -1).join(", ")} and ${ns[ns.length-1]}`;
+  const seatLine = seat ? `<p class="enc-seat">From ${esc(v.seat.name)}'s sheet${stampText(v.seat.updated) ? ` · file from ${esc(stampText(v.seat.updated))}` : ""}</p>`
+    : v.unclaimed==="clash" ? `<p class="enc-seat">${esc(joinNames(v.clashNames))} ${v.clashNames.length>2 ? "all answer to this name, so it counts as none of them" : "both answer to this name, so it counts as neither"}.</p>`
+    : v.unclaimed==="nocopy" ? `<p class="enc-seat">${esc(v.seatName)} has no copy at this table yet. Import their file to read it here.</p>` : "";
   const pcFields = pc && !ended ? `<div class="enc-pcnums">${num("data-ehp", r.hp, "HP")}${num("data-elevels", r.levels, "Health Levels")}</div>` : "";
   // The member an entry row was kept as (Decision 193): a tap to their page, struck through once they're removed.
   const kept = v.kept ? `<p class="enc-kept">Kept as ${v.kept.gone ? `<s>${esc(v.kept.name)}</s><span class="vh">, removed</span>`
@@ -2910,7 +2962,7 @@ function encRowHtml(v, e, sides){
   return `<li class="enc-row${v.active?" active":""}${r.out?" out":""}" data-erow="${id}" tabindex="-1"${v.active ? ` aria-current="step"` : ""}>
     <div class="enc-head"${running && !r.out ? ` data-eturn="${id}"` : ""}>${name} ${mark}${r.out ? ` <span class="tag plain">Out</span>` : ""}${v.acted && !waiting ? ` <span class="tag plain">Done</span>` : ""}${openTag ? ` <span class="tag plain enc-open-tag">${esc(openTag)}</span>` : ""}${r.last ? ` <span class="tag plain">Goes last</span>` : ""}
       ${num("data-eorder", r.order, "Combat Sense")}${v.ties ? `<span class="tag enc-tied">Tied: reroll</span>` : ""}${aware ? ` ${aware}` : ""}</div>
-    ${waiting ? `<p class="enc-wait">Waiting${waiting.until.trim() ? `: ${esc(waiting.until)}` : ""}</p>` : ""}${kept}${encHealthHtml(v)}${encArmorHtml(v)}${pcFields}${encTraitsHtml(v, running)}
+    ${waiting ? `<p class="enc-wait">Waiting${waiting.until.trim() ? `: ${esc(waiting.until)}` : ""}</p>` : ""}${kept}${seatLine}${encHealthHtml(v)}${encArmorHtml(v)}${pcFields}${encTraitsHtml(v, running)}
     ${v.conditions.length ? `<ul class="enc-conds">${v.conditions.map(c=>encCondHtml(v, c, ended)).join("")}</ul>` : ""}
     ${acts}</li>`;
 }
@@ -3294,6 +3346,8 @@ function bindEncounters(main){
     "data-enc-addpc": () => addPc(),
     "data-eopencast": b => { const id=b.dataset.eopencast; if (!S.table.cast.some(n=>n.id===id)) return;
       S.tsection="cast"; S.castOpen=id; S.castFrom=null; S.intAdd=null; S.backSess=false; S.backClose=false; S.backEnc=eid(); S.castView="cast"; window.scrollTo(0,0); update(); focus("[data-cback]"); },
+    "data-eopenseat": b => { const tag=b.dataset.eopenseat; if (!Engine.seatView(S.table, tag)) return;
+      S.backEnc=eid(); S.tsection="players"; openSeat(tag); },
     "data-eopenentry": b => openThreat(b.dataset.eopenentry, null, null, eid()),
     "data-edmg": b => { const [row, sign]=b.dataset.edmg.split("|"); S.encDmg={ row, sign:+sign }; S.encHit=null; S.encCond=null; redraw(); focus("[data-edmgn]"); },
     "data-ehit": b => { S.encHit=encHitNew(b.dataset.ehit); S.encDmg=null; S.encCond=null; redraw(); focus("[data-ehit-damage]"); },
@@ -3302,10 +3356,10 @@ function bindEncounters(main){
     "data-ehit-ap": () => { const d=S.encHit; d.ap=!d.ap; d.err=""; redraw(); focus("[data-ehit-ap]"); },
     "data-ehit-ans": b => { const d=S.encHit, [k, a]=b.dataset.ehitAns.split("|"); d[k]= d[k]===a ? "" : a; d.err=""; hitLive(); focus(attrSel("data-ehit-ans", b.dataset.ehitAns)); },
     "data-ehit-apply": () => { const d=S.encHit, row=d.row, r=encHitRow(); if (!r) return;
-      const res=Engine.resolveEncounterHit(S.table, eid(), row, encHitInput(d));
+      const seat=encSeatOn(r), res=Engine.resolveEncounterHit(S.table, eid(), row, encHitInput(d, seat));
       const choices={ shock:d.shock, atZero:d.atZero, conditions: res.ok ? encHitTicked(d, res) : [] };
       const hitRow=Engine.encounterView(S.table, eid(), packsMemo).rows.find(x=>x.row.id===row), who=hitRow && String(hitRow.name||"").trim() || "a row";
-      const a=Engine.applyEncounterHit(S.table, eid(), row, encHitInput(d), choices);
+      const a=Engine.applyEncounterHit(S.table, eid(), row, encHitInput(d, seat), choices);
       if (!a.ok){ d.err=a.why; hitLive(); focus("[data-ehit-apply]"); return; }
       S.encHit=null; tableChange(()=>{}, true, `Hit ${who}`); focus(attrSel("data-ehit", row)); },
     "data-edmgcancel": () => { const row=S.encDmg && S.encDmg.row, sign=S.encDmg ? S.encDmg.sign : 1; S.encDmg=null; redraw(); focus(attrSel("data-edmg", `${row}|${sign}`)); },
@@ -3371,7 +3425,10 @@ function bindEncounters(main){
     else if ("econdId" in d){ S.encCond.id=el.value; S.encCond.loc=""; S.encCond.err=""; redraw(); focus("[data-econd-id]"); }
     else if ("econdLoc" in d) S.encCond.loc=el.value;
     else if ("ehitType" in d){ S.encHit.type=el.value; S.encHit.conds={}; S.encHit.err=""; hitLive(); }
-    else if ("ehitLoc" in d){ S.encHit.loc=el.value; S.encHit.err=""; hitLive(); }
+    else if ("ehitLoc" in d){ S.encHit.loc=el.value; S.encHit.err=""; if (encSeatOn(encHitRow())){ redraw(); focus("[data-ehit-loc]"); } else hitLive(); }
+    else if ("ehitSpell" in d){ S.encHit.spell=el.checked; S.encHit.err=""; hitLive(); }
+    else if ("ehitMelee" in d){ S.encHit.melee=el.checked; S.encHit.err=""; hitLive(); }
+    else if ("ehitNat" in d){ S.encHit.nat[d.ehitNat]=el.checked; S.encHit.err=""; redraw(); focus(attrSel("data-ehit-nat", d.ehitNat)); }
     else if ("ehitCond" in d){ S.encHit.conds[d.ehitCond]=el.checked; }
     else if ("ewKeep" in d){ encWrapDraft(d.ewKeep).keep=el.checked; redraw(); focus(attrSel("data-ew-keep", d.ewKeep)); }
     else if ("ewLine" in d){ encWrapDraft(d.ewLine).line=el.checked; redraw(); focus(attrSel("data-ew-line", d.ewLine)); }
@@ -3388,6 +3445,7 @@ function bindEncounters(main){
     else if ("econdRounds" in d) S.encCond.rounds=el.value;
     else if ("ehitDamage" in d){ S.encHit.damage=el.value; S.encHit.err=""; hitLive(); }
     else if ("ehitFrom" in d){ S.encHit.from=el.value; hitLive(); }
+    else if ("ehitProt" in d){ S.encHit.prot=el.value; S.encHit.err=""; hitLive(); }
     else if ("encCodexq" in d){ S.encCodexQ=el.value; const box=main.querySelector("[data-enccodexlist]"); if (box) box.outerHTML=encCodexHtml(); }
     else if ("encQ" in d){ S.encQ=el.value; const box=main.querySelector("[data-encpicklist]"); if (box) box.outerHTML=encPickHtml(encOpenNow()); }
     else if ("esrc" in d){
@@ -3514,7 +3572,7 @@ const seatClashHtml = v => v.clashes.map(c=>`<p class="step-note">${esc(c.others
 function seatBlockHtml(v){ return `${seatTopHtml(v)}${seatRestHtml(v)}`; }
 function seatPageHtml(v){
   const name=playerTitle({ name:v.name });
-  return `<p><button type="button" class="btn sm" data-seatback>Back to players</button></p>
+  return `<p><button type="button" class="btn sm" data-seatback>${esc(seatBackLabel())}</button></p>
     <h1 class="step-title tbl-title cast-title" tabindex="-1" data-seath>${esc(v.name)}</h1>
     <p class="step-note">${esc(playerTitle(v.player))}</p>
     <div class="roster-card seat-block" data-seatblock>${seatBlockHtml(v)}</div>
@@ -3572,7 +3630,7 @@ function readOnlySheetHtml(v){
   const ch=Engine.seatCharacter(S.table, v.tag);
   const tagged = v.status!=="active" ? ` <span class="chip seat-status">${esc(SEAT_STATUS_LABELS[v.status] || v.status)}</span>` : "";
   const when = seatWhen(v.copy).map(esc).join(" · ");
-  return `<p><button type="button" class="btn sm" data-seatback>Back to players</button></p>
+  return `<p><button type="button" class="btn sm" data-seatback>${esc(seatBackLabel())}</button></p>
     <h1 class="step-title tbl-title cast-title" tabindex="-1" data-seath data-rosheeth>${esc(v.name)}</h1>${tagged}
     <p class="step-note"><strong>Read only</strong>${when ? ` · ${when}` : ""}</p>
     <p class="step-note">${esc(playerTitle(v.player))}</p>
@@ -3694,7 +3752,17 @@ function bindPlayers(main){
   });
 }
 // Back to the Players tab, onto the seat's card.
+const seatBackLabel = () => encBackTitle() ? `Back to ${encBackTitle()}` : "Back to players";
 function seatBack(tag){
+  // From a claimed row (Decision 257) it goes back to the encounter, onto that row's name.
+  const enc = S.backEnc && encList().find(x=>x.id===S.backEnc);
+  if (enc){
+    S.backEnc=null; S.seatOpen=null; S.seatSheet=null; S.encOpen=enc.id; S.tsection="encounters"; window.scrollTo(0,0); update();
+    const view=Engine.encounterView(S.table, enc.id, packsMemo), hit=view && view.rows.find(x=>x.seat && x.seat.tag===tag);
+    const name=hit && $("main").querySelector(`${attrSel("data-erow", hit.row.id)} [data-eopenseat]`);
+    if (name) takeFocus(name); else { const list=$("main").querySelector("[data-erow]"); if (list) takeFocus(list); }
+    return;
+  }
   S.seatOpen=null; S.seatSheet=null; window.scrollTo(0,0); update();
   // A folded card can't take focus: its list's summary does.
   const el=$("main").querySelector(attrSel("data-seat", tag)), shut=el && el.closest("details:not([open])");

@@ -643,7 +643,7 @@ test("hostile encounters render as text on the list, the page, the Reset and Pas
 });
 
 // ── The hit's numbers are untrusted too (Decision 191, 124) ────────────
-test("a hostile row's Massive levels and armor wear come out numbers, a PC keeps only its Massive, and an armor line of markup matches nothing", () => {
+test("a hostile row's Massive levels and armor wear come out numbers, a PC row's wear is checked as an NPC's, and an armor line of markup matches nothing", () => {
   const t = Engine.newTable(P("tbl.name"));
   const row = (kind, o) => ({ kind, name: P("row." + kind), hp: 30, levels: 6, ...o });
   const bad = [["x", "x", "yes"], [-3, -3, 1], ["1e400", "1e400", {}], [{ x: 1 }, { x: 1 }, []], [1e400, 1e400, "true"], ["4", "2", true]];
@@ -659,7 +659,7 @@ test("a hostile row's Massive levels and armor wear come out numbers, a PC keeps
     assert.equal(typeof r.scrapped, "boolean");
   }
   const pcs = rows.filter(r => r.kind === "pc"), npcs = rows.filter(r => r.kind === "entry");
-  assert.equal(JSON.stringify(pcs.map(r => [r.armorLoss, r.scrapped])), JSON.stringify(pcs.map(() => [0, false])), "a PC row has no armor to wear");
+  assert.equal(JSON.stringify(pcs.map(r => [r.armorLoss, r.scrapped])), JSON.stringify([[0, false], [0, false], [0, false], [0, false], [0, false], [2, true]]), "a PC row's wear is checked as an NPC's (Decision 257)");
   assert.equal(JSON.stringify(pcs.map(r => r.massive)), "[0,0,0,0,0,4]", "a PC row keeps its Massive levels");
   assert.equal(JSON.stringify(npcs.slice(0, 6).map(r => r.massive)), "[0,0,0,0,0,4]");
   assert.equal(JSON.stringify(npcs.slice(0, 6).map(r => r.armorLoss)), "[0,0,0,0,0,2]");
@@ -675,7 +675,7 @@ test("a hostile row's Massive levels and armor wear come out numbers, a PC keeps
   assert.deepEqual(JSON.parse(JSON.stringify(Engine.migrateTable(m))), JSON.parse(JSON.stringify(m)));
 });
 
-test("a hostile row's armorId is an id string or null, and always null on a PC row", () => {
+test("a hostile row's armorId is an id string or null, on a PC row as on an NPC's", () => {
   const t = Engine.newTable("T");
   const ids = [{ x: 1 }, 5, ["leather-jacket"], P("armor.id"), "<img src=x onerror=1>", "a b", "", null, true, "x".repeat(80), "leather-jacket"];
   t.encounters = [{ id: "EN-ABCDEFGH", name: "e", status: "planned", rows: [
@@ -685,7 +685,7 @@ test("a hostile row's armorId is an id string or null, and always null on a PC r
   const rows = Engine.migrateTable(t).encounters[0].rows;
   const npcs = rows.filter(r => r.kind === "entry"), pcs = rows.filter(r => r.kind === "pc");
   assert.equal(JSON.stringify(npcs.map(r => r.armorId)), JSON.stringify([null, null, null, null, null, null, null, null, null, null, "leather-jacket"]));
-  assert.ok(pcs.every(r => r.armorId === null), "a PC row has no armor to belong to");
+  assert.equal(JSON.stringify(pcs.map(r => r.armorId)), JSON.stringify(npcs.map(r => r.armorId)), "a PC row's armorId is checked as an NPC's (Decision 257)");
 });
 
 // ── What an entry row was kept as is untrusted too (Decision 193, 124) ──
