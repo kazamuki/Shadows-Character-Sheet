@@ -2775,7 +2775,7 @@ function encCondHtml(v, c, ended){
     ${ended ? "" : `<button class="btn sm" data-econdrm="${id}|${c.index}" aria-label="Remove ${esc(label)}">Remove</button>`}</li>`;
 }
 // A claimed row's worn piece as the sheet reads it (Decision 257): the row's line and its Hit panel's.
-const seatArmorText = (name, die, w) => `${esc(name)} · PROT ${esc(die || "—")} · RES +${w.res} · INT ${w.integrity}/${w.integrityMax}${w.scrapped ? " · Scrap" : w.compromised ? " · Compromised" : ""}`;
+const seatArmorText = (name, die, w) => `${esc(name)} · PROT ${esc(die || "—")} · RES +${w.res} · INT ${w.integrity}/${w.integrityMax}${w.scrapped ? " · Scrap" : w.compromised ? " · Compromised: RES is gone" : ""}`;
 // The armor on one line (Decision 191): the Gear piece, what it stops, its Integrity; or the printed line, marked.
 function encArmorHtml(v){
   const a=v.armor; if (!a || a.line===null) return "";

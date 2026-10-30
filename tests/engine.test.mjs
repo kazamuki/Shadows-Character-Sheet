@@ -11829,3 +11829,24 @@ test("257: the wrap-up lists a claimed row only once it was hit, and an unclaime
   eq(Engine.encounterWrapUp(t, e).hit.map(h => h.id).sort(), [id, rook].sort());
 });
 
+
+test("257: a row renamed off a seat takes back that seat's start unless something happened since", () => {
+  const { t, e, pid } = seatFightTable();
+  const wf = seatFightFile("Wren");
+  wf.trackers.damage = 9; wf.trackers.conditions = []; wf.armor[0].integrityLoss = 3;
+  assert.ok(Engine.importSeat(t, pid, wf).ok);
+  const a = addPc(t, e, "Dez");
+  assert.ok(Engine.editParticipant(t, e, a, { name: "Wren" }).ok);
+  const r = rowOf(t, e, a);
+  eq([r.damage, r.armorLoss, r.conditions.map(c => c.id)], [9, 3, []], "Wren's start, not Dez's");
+  assert.ok(Engine.editParticipant(t, e, a, { name: "Rook" }).ok);
+  eq([rowOf(t, e, a).damage, rowOf(t, e, a).armorId, rowOf(t, e, a).conditions], [0, null, []], "renamed to a typed name: the seat's start goes");
+  const b = addPc(t, e, "Dez");
+  assert.ok(Engine.participantDamage(t, e, b, 2).ok);
+  assert.ok(Engine.editParticipant(t, e, b, { name: "Rook 2" }).ok);
+  assert.equal(rowOf(t, e, b).damage, 6, "a row that took something keeps its numbers");
+  const c = addPc(t, e, "Dez");
+  assert.ok(Engine.applyEncounterHit(t, e, c, FIGHT_HIT, {}).ok);
+  assert.ok(Engine.editParticipant(t, e, c, { name: "Rook 3" }).ok);
+  assert.equal(rowOf(t, e, c).damage, 7, "a struck row keeps its numbers");
+});

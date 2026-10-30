@@ -8620,7 +8620,7 @@ const Engine = (() => {
     if (_isObj(f) && "side" in f && !_sideList(l.e).some(s=>s.id===f.side)) return { ok:false, why:"No such side." };
     if (_isObj(f)){
       if ("side" in f) r.side = f.side;
-      if ("name" in f){ r.name = _str(f.name); _claimStart(t, r); }
+      if ("name" in f){ const was = _rowSeat(t, r); r.name = _str(f.name); _claimStart(t, r, was); }
       if ("order" in f) r.order = _int(f.order);
       if ("last" in f) r.last = f.last===true;
       if ("out" in f) r.out = f.out===true;
@@ -9032,15 +9032,26 @@ const Engine = (() => {
     } catch (e) { return null; }
   }
   // The start of a claimed row (Decision 257): the copy as filed, once, on a row nothing has happened to.
-  function _claimStart(t, r){
-    if (r.kind!=="pc" || r.struck || r.damage>0 || r.massive>0 || r.conditions.length || r.armorId!==null || r.armorLoss>0 || r.scrapped) return;
-    const rs = _rowSeat(t, r), ch = rs.tag ? seatCharacter(t, rs.tag) : null;   // the copy as filed, not the row laid over it
-    if (!ch) return;
-    r.damage = nonNegInt(ch.trackers.damage);
-    r.massive = nonNegInt(ch.trackers.massiveLevels);
-    r.conditions = _rowConditions(ch.trackers.conditions.map(c=>Object.assign({}, c, { source:"", rounds:null })));
+  // What a seat's copy files as a row's start: the copy as filed, not the row laid over it.
+  function _fileStart(t, tag){
+    const ch = tag ? seatCharacter(t, tag) : null;
+    if (!ch) return null;
     const w = armorState(ch).worn;
-    if (w){ r.armorId = w.custom ? WRITTEN_IN : w.id; r.armorLoss = w.integrityLoss; r.scrapped = w.scrapped===true; }
+    return { damage:nonNegInt(ch.trackers.damage), massive:nonNegInt(ch.trackers.massiveLevels),
+             conditions:_rowConditions(ch.trackers.conditions.map(c=>Object.assign({}, c, { source:"", rounds:null }))),
+             armorId:w ? (w.custom ? WRITTEN_IN : w.id) : null, armorLoss:w ? w.integrityLoss : 0, scrapped:!!w && w.scrapped===true };
+  }
+  const _startKeys = ["damage", "massive", "conditions", "armorId", "armorLoss", "scrapped"];
+  function _claimStart(t, r, was){
+    if (r.kind!=="pc") return;
+    // A rename off a seat takes back the start that seat gave, if nothing has happened since.
+    const old = was && was.tag ? _fileStart(t, was.tag) : null;
+    if (old && !r.struck && JSON.stringify(_startKeys.map(k=>r[k]))===JSON.stringify(_startKeys.map(k=>old[k]))){
+      Object.assign(r, { damage:0, massive:0, conditions:[], armorId:null, armorLoss:0, scrapped:false });
+    }
+    if (r.struck || r.damage>0 || r.massive>0 || r.conditions.length || r.armorId!==null || r.armorLoss>0 || r.scrapped) return;
+    const start = _fileStart(t, _rowSeat(t, r).tag);
+    if (start) Object.assign(r, start);
   }
   // The row's character, for the Hit panel's questions: a fresh object every call, null unless the
   // row is a claimed PC row of an encounter that hasn't ended.
