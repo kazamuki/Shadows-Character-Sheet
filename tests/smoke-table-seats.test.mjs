@@ -39,6 +39,8 @@ async function pickFiles(app, sel, files) {
   input.dispatchEvent(new app.window.Event("change", { bubbles: true }));
   await tick(80);
 }
+// A card with a copy opens the read-only sheet (Decision 256); Seat goes on to the seat's page.
+const seatPage = (app, tag) => { app.click(`[data-seat="${tag}"]`); app.click("[data-roseat]"); };
 const cards = app => app.$$("[data-seatcard]");
 const cardLines = c => [...c.querySelectorAll(".seat-line")].map(x => x.textContent);
 const stored = (app, expr) => app.window.eval(expr);
@@ -136,7 +138,7 @@ test("255: Benched folds a card below its player, and the disclosure keeps its m
   addPlayer(app, "Brogan");
   await pickFiles(app, importBtn(app, "Brogan"), [dez(), wren()]);
   assert.equal(app.$("[data-seatshut]"), null, "no disclosure at none");
-  app.click(`[data-seat="${WREN_TAG}"]`);
+  seatPage(app, WREN_TAG);
   assert.equal(app.$("h1[data-seath]").textContent, "Wren");
   assert.equal(app.$$("[data-seatst]").filter(b => b.getAttribute("aria-pressed") === "true").length, 1);
   app.click('[data-seatst="benched"]');
@@ -176,7 +178,7 @@ test("254: Answers to: a name typed counts the old sessions, and Remove's label 
   const app = boot({ storage: playedTable() });
   openSaved(app);
   assert.doesNotMatch(app.$("[data-seatcard]").textContent, /Last at/, "nothing counts until the name answers to Dez");
-  app.click(`[data-seat="${DEZ_TAG}"]`);
+  seatPage(app, DEZ_TAG);
   assert.match(app.$("[data-seatnames]").textContent, /Dez\s*always/);
   app.click("[data-seatnameadd]");
   assert.equal(app.doc.activeElement, app.$('[data-seatname="0"]'), "focus lands on the new row");
@@ -196,13 +198,13 @@ test("254: a name two seats answer to counts as neither, and each page says so",
   const app = boot({ storage: playedTable() });
   openSaved(app);
   await pickFiles(app, `[data-pyfile="${stored(app, "S.table.players[0].id")}"]`, [wren()]);
-  app.click(`[data-seat="${DEZ_TAG}"]`);
+  seatPage(app, DEZ_TAG);
   app.click("[data-seatnameadd]"); both(app, '[data-seatname="0"]', "Dez Okafor");
   assert.match(app.$("[data-seatblock]").textContent, /Last at Session 5/);
-  app.click("[data-seatback]"); app.click(`[data-seat="${WREN_TAG}"]`);
+  app.click("[data-seatback]"); seatPage(app, WREN_TAG);
   app.click("[data-seatnameadd]"); both(app, '[data-seatname="0"]', "DEZ OKAFOR");
   assert.match(app.$("[data-seatclash]").textContent, /Dez answers to DEZ OKAFOR too, so it counts as neither\./);
-  app.click("[data-seatback]"); app.click(`[data-seat="${DEZ_TAG}"]`);
+  app.click("[data-seatback]"); seatPage(app, DEZ_TAG);
   assert.match(app.$("[data-seatclash]").textContent, /Wren answers to Dez Okafor too, so it counts as neither\./);
   assert.doesNotMatch(app.$("[data-seatblock]").textContent, /Last at/);
   assert.deepEqual(app.errors, []);
@@ -212,7 +214,7 @@ test("254: Remove from the table asks, and Undo from Activity brings the seat an
   const app = fresh();
   addPlayer(app, "Brogan");
   await pickFiles(app, importBtn(app, "Brogan"), [dez()]);
-  app.click(`[data-seat="${DEZ_TAG}"]`);
+  seatPage(app, DEZ_TAG);
   app.click("[data-seatdel]");
   assert.equal(app.$("#modal-title").textContent, "Remove Dez?");
   assert.match(app.$("#modal .modal-body").textContent, /Dez's copy goes with the seat\. Undo brings both back until the table is next opened; after that, import the file again\./);
@@ -249,7 +251,7 @@ test("255: Replace from a file takes a newer copy on the seat's own player, and 
   const app = fresh();
   addPlayer(app, "Brogan"); addPlayer(app, "Ana");
   await pickFiles(app, importBtn(app, "Brogan"), [dez()]);
-  app.click(`[data-seat="${DEZ_TAG}"]`);
+  seatPage(app, DEZ_TAG);
   await pickFiles(app, "[data-seatfile]", [dez("2026-10-20T10:00:00.000Z")]);
   assert.equal(app.doc.activeElement, app.$("[data-seath]"));
   assert.match(app.$("#undotoast").textContent, /Updated Dez/);
@@ -263,7 +265,7 @@ test("255: Replace from a file takes a newer copy on the seat's own player, and 
 test("255: Find finds a seat and opens its page on the heading", async () => {
   const app = boot({ storage: playedTable() });
   openSaved(app);
-  app.click(`[data-seat="${DEZ_TAG}"]`);
+  seatPage(app, DEZ_TAG);
   app.click("[data-seatnameadd]"); both(app, '[data-seatname="0"]', "Okafor");
   app.click("[data-seatback]");
   for (const q of ["okafor", "brogan", DEZ_TAG.slice(4, 13)]) {
@@ -272,6 +274,7 @@ test("255: Find finds a seat and opens its page on the heading", async () => {
     assert.ok(app.$('[data-fkind="seat"]'), q);
     assert.ok(app.$$("#modal .find-h").some(h => /^Players 1$/.test(h.textContent)), q);
     app.click('[data-fkind="seat"]');
+    app.click("[data-roseat]");   // Find opens the seat as its card does: the sheet, then Seat
     assert.equal(app.$("h1[data-seath]").textContent, "Dez", q);
     assert.equal(app.doc.activeElement, app.$("[data-seath]"), q);
     app.click("[data-seatback]");
@@ -282,7 +285,7 @@ test("255: Find finds a seat and opens its page on the heading", async () => {
 test("255: the encounter's PC name field offers the seats' names", () => {
   const app = boot({ storage: playedTable() });
   openSaved(app);
-  app.click(`[data-seat="${DEZ_TAG}"]`);
+  seatPage(app, DEZ_TAG);
   app.click("[data-seatnameadd]"); both(app, '[data-seatname="0"]', "Okafor");
   app.click('[data-tsec="encounters"]');
   type(app, "[data-enc-name]", "Docks"); app.click("[data-enc-new]");
@@ -298,7 +301,7 @@ test("254: Who knows what groups a name that answers to a seat under the charact
   openSaved(app);
   app.click('[data-tsec="cast"]'); app.click('[data-cview="crew"]');
   assert.deepEqual(app.$$(".crew-name").map(h => h.textContent), ["dez okafor"], "a group of its own until the name answers to the seat");
-  app.click('[data-tsec="players"]'); app.click(`[data-seat="${DEZ_TAG}"]`);
+  app.click('[data-tsec="players"]'); seatPage(app, DEZ_TAG);
   app.click("[data-seatnameadd]"); both(app, '[data-seatname="0"]', "Dez Okafor");
   app.click('[data-tsec="cast"]'); app.click('[data-cview="crew"]');
   assert.deepEqual(app.$$(".crew-name").map(h => h.textContent), ["Dez"], "one group, headed by the character");
@@ -325,7 +328,7 @@ test("254: Remove, another change, then two undos from Activity bring the seat b
   const app = fresh();
   addPlayer(app, "Brogan");
   await pickFiles(app, importBtn(app, "Brogan"), [dez()]);
-  app.click(`[data-seat="${DEZ_TAG}"]`);
+  seatPage(app, DEZ_TAG);
   app.click("[data-seatdel]"); app.click("#modal [data-askyes]");
   addPlayer(app, "Ana");
   app.click("[data-menu-toggle]"); app.click("[data-tactivity]");
