@@ -8309,10 +8309,11 @@ const Engine = (() => {
     // Schema 0.6 (Decision 191). The readers cap these (hlState, armorPiece), so no cap here.
     const wholeOrZero = v => { const n = _int(v); return n!==null && n > 0 ? n : 0; };
     r.massive = wholeOrZero(r.massive);
-    r.armorLoss = pc ? 0 : wholeOrZero(r.armorLoss);
-    r.scrapped = !pc && r.scrapped===true;
-    // The piece the wear belongs to, so a block edited to another piece doesn't inherit it.
-    r.armorId = !pc && typeof r.armorId==="string" && /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(r.armorId) ? r.armorId : null;
+    // A PC row's wear is its own when its name answers to a seat (Decision 257), so every kind is checked the same.
+    r.armorLoss = wholeOrZero(r.armorLoss);
+    r.scrapped = r.scrapped===true;
+    // The piece the wear belongs to, so a block edited to another piece doesn't inherit it. `written-in` is a custom piece.
+    r.armorId = typeof r.armorId==="string" && /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(r.armorId) ? r.armorId : null;
   }
   // The gate for t.encounters: called by migrateTable on every load.
   function _encounters(c){
@@ -8518,6 +8519,7 @@ const Engine = (() => {
       const name = _str(f.name).trim();
       if (!name) return { ok:false, why:"Name them first." };
       row.name = name;
+      _claimStart(t, row);
     }
     l.e.rows.push(row);
     _tableStamp(t, l.e);
@@ -8618,7 +8620,7 @@ const Engine = (() => {
     if (_isObj(f) && "side" in f && !_sideList(l.e).some(s=>s.id===f.side)) return { ok:false, why:"No such side." };
     if (_isObj(f)){
       if ("side" in f) r.side = f.side;
-      if ("name" in f) r.name = _str(f.name);
+      if ("name" in f){ r.name = _str(f.name); _claimStart(t, r); }
       if ("order" in f) r.order = _int(f.order);
       if ("last" in f) r.last = f.last===true;
       if ("out" in f) r.out = f.out===true;
@@ -8990,10 +8992,69 @@ const Engine = (() => {
     }
     return { line:lines.length ? lines[0] : null, piece:null, extra:"", stops:null };
   }
+  // What a claimed row's armorId reads for a written-in piece, which has no id of its own.
+  const WRITTEN_IN = "written-in";
+  // The seat a PC row's name answers to, with a copy to read; `why` when its name answered to a seat once
+  // and no longer reads as one. Computed from the name every time, never stored (Decision 257).
+  // `memo` carries the seat index across the rows of one draw.
+  function _rowSeat(t, r, memo){
+    const none = { tag:null, why:null };
+    try {
+      if (!_isTable(t) || !_isObj(r) || r.kind!=="pc") return none;
+      const k = _fold(_str(r.name));
+      const idx = _isObj(memo) ? (memo.idx || (memo.idx = _seatIndex(t))) : _seatIndex(t);
+      if (!k || !idx.sets.has(k)) return none;
+      const tag = idx.by.get(k);
+      if (!tag) return { tag:null, why:"clash" };
+      const copy = _copyOf(t, tag), name = idx.head.get(tag);
+      if (!copy || !_isObj(copy.character)) return { tag:null, why:"nocopy", name };
+      return { tag, name };
+    } catch (e) { return none; }
+  }
+  // A claimed row's character for the pipeline: seatCharacter, a clone (Decision 256), with the
+  // fight laid over it. The row's numbers replace the copy's; they are never added to them.
+  function _seatStandIn(t, r, memo){
+    try {
+      const rs = _rowSeat(t, r, memo);
+      if (!rs.tag) return null;
+      const ch = seatCharacter(t, rs.tag);
+      if (!ch) return null;
+      ch.trackers.damage = nonNegInt(r.damage);
+      ch.trackers.massiveLevels = nonNegInt(r.massive);
+      ch.trackers.conditions = JSON.parse(JSON.stringify(r.conditions));
+      const w = armorState(ch).worn;
+      if (w && r.armorId!==null && (r.armorId===w.id || (r.armorId===WRITTEN_IN && w.custom))){
+        ch.armor[w.index].integrityLoss = nonNegInt(r.armorLoss);
+        ch.armor[w.index].scrapped = r.scrapped===true;
+      }
+      return ch;
+    } catch (e) { return null; }
+  }
+  // The start of a claimed row (Decision 257): the copy as filed, once, on a row nothing has happened to.
+  function _claimStart(t, r){
+    if (r.kind!=="pc" || r.struck || r.damage>0 || r.massive>0 || r.conditions.length || r.armorId!==null || r.armorLoss>0 || r.scrapped) return;
+    const rs = _rowSeat(t, r), ch = rs.tag ? seatCharacter(t, rs.tag) : null;   // the copy as filed, not the row laid over it
+    if (!ch) return;
+    r.damage = nonNegInt(ch.trackers.damage);
+    r.massive = nonNegInt(ch.trackers.massiveLevels);
+    r.conditions = _rowConditions(ch.trackers.conditions.map(c=>Object.assign({}, c, { source:"", rounds:null })));
+    const w = armorState(ch).worn;
+    if (w){ r.armorId = w.custom ? WRITTEN_IN : w.id; r.armorLoss = w.integrityLoss; r.scrapped = w.scrapped===true; }
+  }
+  // The row's character, for the Hit panel's questions: a fresh object every call, null unless the
+  // row is a claimed PC row of an encounter that hasn't ended.
+  function rowCharacter(t, encId, rowId){
+    try {
+      if (!_isTable(t)) return null;
+      const l = _liveRow(t, encId, rowId);
+      return l.why ? null : _seatStandIn(t, l.r);
+    } catch (e) { return null; }
+  }
   // A character for the sheet's pipeline to hit. A deep copy of what the row stores,
   // so the stand-in never shares an object with it.
   function _standIn(t, r){
-    if (!r || r.kind==="pc") return null;
+    if (r && r.kind==="pc") return _seatStandIn(t, r);
+    if (!r) return null;
     const block = _rowBlock(t, r), b = npc(block);
     if (!b.health) return null;
     const ch = newCharacter(), arm = encounterArmor(block);
@@ -9023,6 +9084,8 @@ const Engine = (() => {
   // The most damage a row holds before it is past zero, or null when it has no Health to count.
   function _rowCapacity(t, r){
     if (r.kind==="pc"){
+      const s = _seatStandIn(t, r);
+      if (s) return hlState(s).capacity;
       const hp = r.hp, lv = r.levels;
       if (hp===null) return null;
       return lv!==null && hp % lv===0 ? Math.max(0, hp - Math.min(lv, nonNegInt(r.massive)) * (hp / lv)) : hp;
@@ -9064,7 +9127,13 @@ const Engine = (() => {
     const l = _liveRow(t, encId, rowId);
     if (l.why) return { ok:false, why:l.why };
     const r = l.r;
-    if (r.kind==="pc") return _resolvePcHit(r, hit);
+    if (r.kind==="pc"){
+      // A claimed row takes the whole hit, as the player's sheet would, with their PROT roll (Decision 257).
+      const mine = _seatStandIn(t, r);
+      if (!mine) return _resolvePcHit(r, hit);
+      const res = resolveHit(mine, hit);
+      return res.ok ? Object.assign(res, { seat:true, from:_str(_isObj(hit) ? hit.from : "").trim() }) : res;
+    }
     const s = _standIn(t, r);
     if (!s) return { ok:false, why:NO_BOD };
     const arm = encounterArmor(_rowBlock(t, r));
@@ -9081,6 +9150,24 @@ const Engine = (() => {
     const { e, r } = _liveRow(t, encId, rowId);
     choices = _isObj(choices) ? choices : {};
     const source = res.from;
+    if (res.seat){
+      // The same pipeline on a fresh clone; the row keeps the fight and the clone is dropped, Withering,
+      // held-spell prompts and Natural Armor ticks with it. Nothing reaches the copy (Decision 257).
+      const s = _seatStandIn(t, r), old = r.conditions.length;
+      const ap = applyHit(s, hit, choices);
+      if (!ap.ok) return ap;
+      r.struck = true;
+      r.damage = nonNegInt(s.trackers.damage);
+      r.massive = nonNegInt(s.trackers.massiveLevels);
+      const worn = res.patch.armor ? s.armor[res.patch.armor.index] : null;
+      if (worn){ r.armorId = worn.custom ? WRITTEN_IN : worn.id; r.armorLoss = nonNegInt(worn.integrityLoss); r.scrapped = worn.scrapped===true; }
+      s.trackers.conditions.forEach((c, i)=>{
+        if (i < old){ if (c.marks!==undefined) r.conditions[i].marks = c.marks; }
+        else r.conditions.push(Object.assign({}, c, { source, rounds:null }));
+      });
+      _tableStamp(t, e);
+      return { ok:true, result:res, added:ap.added, skipped:ap.skipped };
+    }
     if (res.pc){
       r.struck = true;
       // The player rolls Shock and At Zero on their sheet; the GM adds what they call out (Decision 192).
@@ -9139,6 +9226,7 @@ const Engine = (() => {
     const e = _enc(t, encId);
     if (!e) return null;
     const ord = _encOrder(e);
+    const memo = {};
     const rows = ord.rows.map(r=>{
       const conditions = r.conditions.map((c, index)=>{
         const def = conditionById(c.id), loc = c.location ? locationById(c.location) : null;
@@ -9148,7 +9236,8 @@ const Engine = (() => {
       const condPain = conditions.reduce((n, c)=>n + (c.def && typeof c.def.painLevels==="number" ? c.def.painLevels : 0), 0);
       // An NPC with a BOD is read off its stand-in, by the sheet's own hlState and painState (Decision 191);
       // a PC's are the GM's own numbers; an NPC with no BOD has no totals.
-      const taken = r.damage, stand = _standIn(t, r), block = _rowBlock(t, r);
+      const taken = r.damage, block = _rowBlock(t, r);
+      const rs = r.kind==="pc" ? _rowSeat(t, r, memo) : null, stand = r.kind==="pc" ? (rs.tag ? _seatStandIn(t, r, memo) : null) : _standIn(t, r);
       let health;
       if (stand){
         const hs = hlState(stand), ps = painState(stand);
@@ -9165,14 +9254,17 @@ const Engine = (() => {
                    gone:ph.levels!==null ? ph.massive : r.massive, pain };
       }
       const wear = r.kind==="pc" ? null : encounterArmor(block);
-      const armor = wear && Object.assign({}, wear, wear.piece ? (()=>{
+      // A claimed row's armor is the copy's worn piece, as the sheet draws it (Decision 257).
+      const worn = r.kind==="pc" && stand ? armorState(stand).worn : null;
+      const armor = worn ? { line:worn.name, seat:true, piece:{ name:worn.name }, die:worn.prot, res:worn.res, integrity:worn.integrity, integrityMax:worn.integrityMax,
+                             compromised:worn.compromised, scrapped:worn.scrapped, extra:"" } : wear && Object.assign({}, wear, wear.piece ? (()=>{
         const mine = r.armorId===wear.piece.id, p = armorPiece({ id:wear.piece.id, integrityLoss:mine ? r.armorLoss : 0, scrapped:mine && r.scrapped }, 0);
         return { integrity:p.integrity, integrityMax:p.integrityMax, compromised:p.compromised, scrapped:p.scrapped };
       })() : {});
       const traits = (_isObj(block) && Array.isArray(block.traits) ? block.traits : []).map((k, index)=>({ index, name:_str(k && k.name), text:_str(k && k.text) }))
         .filter(k=>k.name.trim() || k.text.trim());
       let awareness = null;
-      if (r.kind==="pc") awareness = r.awareness;
+      if (r.kind==="pc") awareness = stand ? skillLine(stand, "awareness").checkBonus : r.awareness;
       else {
         const b = _rowBlock(t, r), k = _isObj(b) && Array.isArray(b.skills) ? b.skills.find(x=>_isObj(x) && x.skill==="awareness") : null;
         awareness = k ? _int(k.total) : null;
@@ -9180,7 +9272,9 @@ const Engine = (() => {
       const name = r.kind==="cast" && _isObj(r.cast) ? linkName(t, r.cast).name : r.name;
       const gone = r.kind==="cast" && _isObj(r.cast) ? linkName(t, r.cast).gone : false;
       const opening = _isObj(e.opening) && (_int(e.round) || 0) <= 1 && e.status==="running" ? (_rowSide(e, _sideList(e), r)===e.opening.side ? "attacker" : e.opening.kind==="ambush" ? "ambushed" : "surprised") : null;
-      return { row:r, name:_str(name).trim() || "Unnamed", gone, opening, health, awareness, ties:ord.tied(r), side:_rowSide(e, _sideList(e), r), active:e.status==="running" && e.turn===r.id,
+      const seat = rs && stand && rs.tag ? { tag:rs.tag, name:rs.name, updated:_part(() => _isoOrNull(stand.meta.updated)) } : null;
+      const unclaimed = rs && !seat ? (rs.why || (rs.tag ? "nocopy" : null)) : null;
+      return { row:r, name:_str(name).trim() || "Unnamed", gone, opening, health, awareness, seat, unclaimed, seatName:rs ? rs.name || null : null, ties:ord.tied(r), side:_rowSide(e, _sideList(e), r), active:e.status==="running" && e.turn===r.id,
                acted:e.status==="running" && _actedIds(e).includes(r.id),
                from:r.kind==="entry" ? entryLink(packs, r.from) : null,
                kept:r.kind==="entry" && r.kept ? linkName(t, r.kept) : null, conditions, armor, traits, canHit:r.kind==="pc" || !!stand };
@@ -9254,7 +9348,7 @@ const Engine = (() => {
     // Encounters: who is in one, whose turn it is, and what is still on them
     ENCOUNTER_OBJECTIVES, ENCOUNTER_PROMPTS, addEncounter, editEncounter, addSide, renameSide, removeSide, sideTitle, removeEncounter, runningEncounter, encounterFor, addToEncounter, encounterTitle, addParticipant, participantFromEntry,
     participantsFromGroup, editParticipant, removeParticipant, participantDamage, participantAddCondition,
-    participantRemoveCondition, participantConditionMarks, startEncounter, nextTurn, setTurn, setOpening, delayTurn, actNow, resolveEncounterReset,
+    participantRemoveCondition, participantConditionMarks, rowCharacter, startEncounter, nextTurn, setTurn, setOpening, delayTurn, actNow, resolveEncounterReset,
     applyEncounterReset, endEncounter, encounterWrapUp, encounterView, painFor,
     // The hit: an encounter row takes damage the way a character does
     encounterArmor, resolveEncounterHit, applyEncounterHit };

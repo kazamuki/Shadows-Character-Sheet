@@ -11615,3 +11615,183 @@ test("256: gm.js assigns S.ch only inside drawReadOnly, and the read-only binder
   const body = fnBody(gm, "bindReadOnlySheet");
   for (const w of [/\bcommit\(/, /\bsaveChar\(/, /\blocalStorage\b/, /\bS\.ch\s*=[^=]/, /\bbindSheet\(/, /\bbindMain\(/]) assert.doesNotMatch(body, w, `bindReadOnlySheet matches ${w}`);
 });
+
+// ── A seat in a fight (Decision 257): a PC row named for a seat takes the whole hit on a copy ──
+/** Dez (every stat 6, 30 HP), filed at 4 damage with Bleeding and a Reinforced Denim Vest at 1 lost, seated on Brogan. */
+function seatFightFile(name = "Dez") {
+  const ch = subject({ bod: 6, base: 6 });
+  ch.identity.name = name;
+  ch.meta.updated = "2026-10-01T10:00:00.000Z";
+  ch.armor = [{ id: "reinforced-denim-vest", worn: true, integrityLoss: 1 }];
+  ch.trackers.damage = 4;
+  assert.ok(Engine.addCondition(ch, { id: "bleeding" }).ok);
+  return ch;
+}
+function seatFightTable() {
+  const t = Engine.newTable("Fight");
+  const pid = Engine.addPlayer(t, { name: "Brogan" }).id;
+  const r = Engine.importSeat(t, pid, seatFightFile());
+  assert.ok(r.ok, r.why);
+  const e = Engine.addEncounter(t, { name: "Docks" }).id;
+  return { t, pid, tag: r.tag, e };
+}
+const FIGHT_HIT = { damage: 10, damageType: "ballistic", category: "regular", location: "torso", protRoll: 3 };
+
+test("257: a PC row named for a seat reads its Health and Awareness from the copy", () => {
+  const { t, e, tag } = seatFightTable();
+  const id = addPc(t, e, "dez"), v = viewRow(t, e, id);
+  assert.equal(v.seat.tag, tag);
+  eq([v.health.total, v.health.left, v.health.taken, v.awareness], [30, 26, 4, 6]);
+  eq(v.unclaimed, null);
+  const plainRow = viewRow(t, e, addPc(t, e, "Rook"));
+  eq([plainRow.seat, plainRow.unclaimed, plainRow.health.total, plainRow.awareness], [null, null, null, null]);
+});
+
+test("257: a claimed row starts from the copy as filed, and a touched row keeps its own", () => {
+  const { t, e } = seatFightTable();
+  const r = rowOf(t, e, addPc(t, e, "Dez"));
+  eq([r.damage, r.conditions.map(c => c.id), r.armorId, r.armorLoss, r.scrapped], [4, ["bleeding"], "reinforced-denim-vest", 1, false]);
+  eq([r.conditions[0].source, r.conditions[0].rounds], ["", null]);
+  const rook = addPc(t, e, "Rook");
+  assert.ok(Engine.participantDamage(t, e, rook, 5).ok);
+  assert.ok(Engine.editParticipant(t, e, rook, { name: "Dez" }).ok);
+  eq([rowOf(t, e, rook).damage, rowOf(t, e, rook).conditions], [5, []], "a touched row renamed keeps its numbers");
+  const fresh = addPc(t, e, "Rook 2");
+  assert.ok(Engine.editParticipant(t, e, fresh, { name: "Dez" }).ok);
+  eq([rowOf(t, e, fresh).damage, rowOf(t, e, fresh).armorLoss], [4, 1], "an untouched row renamed takes the start");
+});
+
+test("257: a hit on a claimed row runs the pipeline on a copy", () => {
+  const { t, e } = seatFightTable();
+  const id = addPc(t, e, "Dez");
+  const bad = Engine.resolveEncounterHit(t, e, id, { ...FIGHT_HIT, protRoll: undefined });
+  eq([bad.ok, bad.why], [false, "Enter the PROT die you rolled."]);
+  const res = Engine.resolveEncounterHit(t, e, id, FIGHT_HIT);
+  eq([res.ok, res.absorbed, res.through, res.seat], [true, 7, 3, true]);
+  assert.ok(res.prompts.conditions.includes("bleeding"));
+  const ap = Engine.applyEncounterHit(t, e, id, FIGHT_HIT, { conditions: [] });
+  assert.ok(ap.ok, ap.why);
+  const v = viewRow(t, e, id);
+  eq([v.row.damage, v.health.left, v.health.total, v.health.levelsLeft], [7, 23, 30, v.health.levels - 1]);
+  assert.equal(v.row.struck, true);
+  eq(rowOf(t, e, id).conditions.map(c => c.id), ["bleeding"], "the copy's Bleeding is not stacked on the row's");
+});
+
+test("257: the card and the read-only sheet stay as filed while the row moves", () => {
+  const { t, e, tag } = seatFightTable();
+  const id = addPc(t, e, "Dez");
+  assert.ok(Engine.applyEncounterHit(t, e, id, FIGHT_HIT, {}).ok);
+  assert.equal(Engine.seatView(t, tag).copy.health.hpLeft, 26);
+  assert.equal(Engine.seatCharacter(t, tag).trackers.damage, 4);
+});
+
+test("257: a claimed row's armor wear is the row's, across hits", () => {
+  const { t, e } = seatFightTable();
+  const id = addPc(t, e, "Dez");
+  const soak = { damage: 5, damageType: "ballistic", category: "regular", location: "torso", protRoll: 1 };
+  assert.ok(Engine.applyEncounterHit(t, e, id, soak, {}).ok);
+  eq([rowOf(t, e, id).armorLoss, rowOf(t, e, id).damage], [2, 4]);
+  assert.ok(Engine.applyEncounterHit(t, e, id, soak, {}).ok);
+  assert.equal(rowOf(t, e, id).armorLoss, 3);
+  assert.equal(viewRow(t, e, id).armor.integrity, 7);
+  assert.equal(Engine.rowCharacter(t, e, id).armor[0].integrityLoss, 3);
+});
+
+test("257: the gate keeps a PC row's armor wear, and still cleans it", () => {
+  const { t, e } = seatFightTable();
+  const id = addPc(t, e, "Dez");
+  rowOf(t, e, id).armorLoss = 3;
+  eq([rowOf(t, e, id).armorId, Engine.migrateTable(plain(t)).encounters[0].rows[0].armorLoss], ["reinforced-denim-vest", 3]);
+  const c = plain(t);
+  Object.assign(c.encounters[0].rows[0], { armorId: "written-in", scrapped: true });
+  const m = Engine.migrateTable(c).encounters[0].rows[0];
+  eq([m.armorId, m.armorLoss, m.scrapped], ["written-in", 3, true]);
+  for (const bad of [-1, "x", "<b>", null, {}]) {
+    const h = plain(t);
+    Object.assign(h.encounters[0].rows[0], { armorLoss: bad, scrapped: bad, armorId: bad === "x" ? "a b" : bad });
+    const r = Engine.migrateTable(h).encounters[0].rows[0];
+    eq([r.armorLoss, r.scrapped, r.armorId], [0, false, null], String(bad));
+  }
+});
+
+test("257: no encounter writer touches a seat's copy", () => {
+  const { t, e } = seatFightTable();
+  const id = addPc(t, e, "Dez");
+  Engine.startEncounter(t, e);
+  const copies = () => JSON.stringify(t.copies), was = copies(), seats = JSON.stringify(t.players);
+  const step = (label, fn) => {
+    const base = plain(t);
+    const r = fn();
+    assert.ok(r.ok !== false, `${label}: ${r.why}`);
+    assert.equal(copies(), was, label);
+    Engine.recordTableAction(t, base, label, undefined, { fold: false });
+    assert.equal(copies(), was, label + " (recorded)");
+  };
+  step("regular", () => Engine.applyEncounterHit(t, e, id, FIGHT_HIT, { conditions: ["bleeding"], shock: "fail" }));
+  step("withering", () => Engine.applyEncounterHit(t, e, id, { ...FIGHT_HIT, category: "withering" }, {}));
+  step("massive", () => Engine.applyEncounterHit(t, e, id, { damage: 12, damageType: "ballistic", category: "massive", location: "torso" }, {}));
+  step("take", () => Engine.participantDamage(t, e, id, 3));
+  step("heal", () => Engine.participantDamage(t, e, id, -2));
+  step("condition", () => Engine.participantAddCondition(t, e, id, { id: "stunned" }));
+  step("unmark", () => Engine.participantRemoveCondition(t, e, id, rowOf(t, e, id).conditions.length - 1));
+  step("dying", () => Engine.participantAddCondition(t, e, id, { id: "dying" }));
+  step("mark", () => Engine.participantConditionMarks(t, e, id, rowOf(t, e, id).conditions.findIndex(c => c.id === "dying"), 1));
+  step("rename", () => Engine.editParticipant(t, e, id, { name: "Dez Okafor" }));
+  step("rename back", () => Engine.editParticipant(t, e, id, { name: "Dez" }));
+  while (encOf(t, e).turn) Engine.nextTurn(t, e);
+  step("reset", () => Engine.applyEncounterReset(t, e, {}, {}));
+  step("end", () => Engine.endEncounter(t, e, Engine.encounterWrapUp(t, e)));
+  for (let i = 0; i < 20 && Engine.undoTableAction(t).ok; i++) assert.equal(copies(), was, "undo");
+  assert.equal(JSON.stringify(t.players), seats);
+});
+
+test("257: a name two seats answer to is a typed PC row, and says so", () => {
+  const { t, e, pid } = seatFightTable();
+  const wren = Engine.importSeat(t, pid, seatFightFile("Wren"));
+  assert.ok(wren.ok);
+  assert.ok(Engine.setSeat(t, wren.tag, { names: ["Dez"] }).ok);
+  const id = addPc(t, e, "Dez"), v = viewRow(t, e, id);
+  eq([v.seat, v.unclaimed, rowOf(t, e, id).damage], [null, "clash", 0]);
+  const res = Engine.resolveEncounterHit(t, e, id, { damage: 10, damageType: "ballistic" });
+  eq([res.ok, res.pc, res.through], [true, true, 10]);
+});
+
+test("257: a row whose seat or copy goes keeps its damage and reads typed", () => {
+  const { t, e, tag } = seatFightTable();
+  const id = addPc(t, e, "Dez");
+  assert.ok(Engine.applyEncounterHit(t, e, id, FIGHT_HIT, { conditions: ["bleeding"] }).ok);
+  const bleeding = rowOf(t, e, id).conditions.length;
+  assert.ok(Engine.removeSeat(t, tag).ok);
+  const v = viewRow(t, e, id);
+  eq([rowOf(t, e, id).damage, rowOf(t, e, id).conditions.length, v.seat, v.canHit, v.health.total], [7, bleeding, null, true, null]);
+  const t2 = seatFightTable();
+  const id2 = addPc(t2.t, t2.e, "Dez");
+  assert.ok(Engine.setSeat(t2.t, t2.tag, { names: ["Dez"] }).ok);
+  t2.t.copies = [];
+  eq([viewRow(t2.t, t2.e, id2).seat, viewRow(t2.t, t2.e, id2).unclaimed], [null, "nocopy"]);
+});
+
+test("257: rowCharacter is total, and fresh every call", () => {
+  const { t, e } = seatFightTable();
+  const id = addPc(t, e, "Dez"), plainId = addPc(t, e, "Rook");
+  const a = Engine.rowCharacter(t, e, id), b = Engine.rowCharacter(t, e, id);
+  assert.ok(a && b && a !== b);
+  eq([a.trackers.damage, a.trackers.conditions.map(c => c.id)], [4, ["bleeding"]]);
+  const was = JSON.stringify(t);
+  a.trackers.damage = 99; a.armor.length = 0;
+  assert.equal(JSON.stringify(t), was);
+  eq(Engine.rowCharacter(t, e, plainId), null);
+  for (const [tt, ee, rr] of [[null, e, id], [{}, e, id], ["x", e, id], [t, "nope", id], [t, e, "nope"], [t, null, null], [t, 5, {}]]) {
+    assert.doesNotThrow(() => Engine.rowCharacter(tt, ee, rr));
+    eq(Engine.rowCharacter(tt, ee, rr), null);
+  }
+  const strCopies = plain(t); strCopies.copies = "x";
+  assert.doesNotThrow(() => Engine.encounterView(strCopies, e, []));
+  eq(Engine.rowCharacter(strCopies, e, id), null);
+  const bad = seatFightTable(), badId = addPc(bad.t, bad.e, "Dez");
+  Object.defineProperty(bad.t.copies[0].character, "identity", { get() { throw new Error("boom"); }, enumerable: true });
+  assert.doesNotThrow(() => Engine.encounterView(bad.t, bad.e, []));
+  eq(Engine.rowCharacter(bad.t, bad.e, badId), null);
+  Engine.endEncounter(t, e);
+  eq(Engine.rowCharacter(t, e, id), null, "an ended encounter takes no hit");
+});
