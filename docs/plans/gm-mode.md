@@ -576,7 +576,7 @@ not a queue. What Scott's use of the table turns up can reorder it.
 | S12a | Supernatural Orders: the seven Orders and their modifiers in the builder | Content | Nothing (GQ17 approved 2026-10-10). **Source:** the Orders table with its Profile and Formation columns is in Scott's `WIP_Threat_Codex_v2` only, not yet in `2610`; the pre-flight asks Scott which to build from | No order yet |
 | S13b | Printing a cast member, an encounter, a session's journal (W84) | Fix + content | Nothing | No order yet |
 | S17 | The Codex's Shared Rules and card format: a swarm takes at most 1 from a single-target attack; an NPC parries with the weapon's skill plus its Parry; social checks against Difficulty 15, and the Free, Fast and full Action, as a Reference panel; and each entry's Tag line, Role line and Hook on its Threats card | Content + shape | **Scott**: these are in `WIP_Threat_Codex_v2` only. When the entries in `2612` move to v2's format, the pack builder follows first (a Fix in `private/`, the size of Y0's), then this | Waiting on Scott |
-| S3c | The read-only sheet: a seat's copy drawn by the real renderer with every control inert, no `commit()` or `update()` path reachable (GQ13) | Rule or shape | S3b built | **Order drafted 2026-10-30** ([`gm-mode/S3c-read-only-sheet.md`](gm-mode/S3c-read-only-sheet.md)), not yet approved |
+| S3c | The read-only sheet: a seat's copy drawn by the real renderer with every control inert, no `commit()` or `update()` path reachable (GQ13) | Rule or shape | S3b built | **Built 2026-10-30** (Decision 256, switched off; [`gm-mode/S3c-read-only-sheet.md`](gm-mode/S3c-read-only-sheet.md)) |
 | S3d | A PC row claimed by a seat takes the whole hit on a copy of the character, never written back (Decisions 188, 191) | Rule or shape | S3c | No order yet |
 | S2 | The dispatch and the inbox (a player sees one) | Rule or shape | Nothing (S1 built) | No order yet |
 | S4 | GM writes: the dispatch composer and reconciliation | Rule or shape | S2, S3b | No order yet |
@@ -657,10 +657,10 @@ waits on it.
   archetype, TAG, Pain, SAN, Luck, Çredits, IP
   unspent, CRANK tier, and **how old the copy is** ("as of Tuesday's
   export"). Benched, retired and dead seats fold below.
-- **The read-only sheet:** the real renderer with a `readOnly` flag: every
-  control rendered inert, no `commit()` path reachable. This is the main
-  engineering cost of the plan, and S3 measures it before committing to it
-  (GQ13).
+- **The read-only sheet:** the real renderers, with no flag (S3c, Decision
+  256): the page draws a fresh clone of the copy, no sheet binder runs on it,
+  and every control but a reader is disabled or read-only. This was the main
+  engineering cost of the plan, and it measured cheap (GQ13).
 - **Measure storage:** build a realistic table (six characters, long audits)
   and record its size in the log.
 - **Decisions:** seats outside the roster. **Tests:** a character imported
@@ -934,7 +934,7 @@ Deighton.
 | GQ10 | Does the GM's content (the Codex, the gazetteer) ship in the one file every player gets, or in a separate GM build? | Ken | **Answered 2026-10-02 (Ken): one app, and the Codex is a pack the GM slots in.** The GM mode's code ships to everyone, empty; the Codex, the roster and CRANK's tables are a `.shadows-pack.json` built from `private/` and handed to a GM, imported once, checked like any untrusted file (124). Core player content stays free in the sheet, Vampire and Werewolf included. The repo stays public, as a matter of trust. How expansions hook in, and what stays private when they do, waits for the first expansion. Replaces the two-build proposal: two builds meant two version histories and a GM file to re-hand on every release. Needs a numbered decision when S9 builds it |
 | GQ11 | CRANK rep on the printed sheet, when the front page is full (Decision 96)? | Ken | **Ken, 2026-10-02: the front page.** Its third field row has two of four places free |
 | GQ12 | **This repo is public.** Where do the CRB mirror and the Codex live? | Ken | **Answered 2026-10-02:** a private repo, mounted at `private/` (Decision 167). Whether the Codex ships is GQ10 |
-| GQ13 | If the read-only sheet turns out expensive, is a summary card plus the printed sheet enough for a GM to read a character? | Ken | Build the real read-only sheet |
+| GQ13 | If the read-only sheet turns out expensive, is a summary card plus the printed sheet enough for a GM to read a character? | Ken | Build the real read-only sheet — **built (S3c, Decision 256)** |
 | GQ14 | Ship S1 (CRANK rep) to main on its own, or keep it on the branch? | Ken | **Built 2026-10-05:** shipped on its own (PR #111) |
 | GQ15 | Bob has his own stat block and also says to use Entry 05's when he's pushed. When a roster NPC turns hostile, do they fight with their own block or their Push Profile's entry? | Scott | The Push Profile's entry; their own block is for social scenes. The cast record keeps both |
 | GQ16 | v2's Enemy Roles table gives each role a tier (Brute is T2), and an entry prints both. Can an entry's tier differ from its role's, a T3 Brute? | Scott | Yes: tier is stored, and the builder notes when it differs from the role's usual |

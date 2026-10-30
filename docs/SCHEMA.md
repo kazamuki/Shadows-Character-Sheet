@@ -5287,6 +5287,20 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 208 in part (Find finds a seat).
      - **Revisit if:** S3c builds the read-only sheet (a card opens it), GQ1 reorders the tabs, or a GM wants a seat moved between players without a re-import.
      - **Built:** table schema 0.18, switched off (173); PR #268; log 2026-10-29 (S3b).
+     → **Superseded in part by Decision 256** — a card with a copy opens the read-only sheet; the seat's page is a press away.
+
+256. **A seat's copy reads on the real sheet: the sheet's own renderers draw a fresh copy from the engine, no sheet binder runs on it, and every control but a reader is inert.**
+     *2026-10-30 · Ken + Claude · Touches: read-only sheet, seatCharacter, seat page, openSeat, openFound, Find, Print, bindSheet, bindMain, bindSheetReaders, commit, update, saveChar, S.ch, TIPS, tipChar, panelRows, GQ13, Decision 139, Decision 141, Decision 254, Decision 255*
+     - **Decided:** A card whose seat has a copy opens the read-only sheet: every tab but Admin, drawn by the sheet's own renderers from `Engine.seatCharacter`, a migrated clone that is never the stored copy. `S.ch` holds it only for the draw. No sheet binder runs; a shared one binds the readers (tabs, jumps, descriptions), tips work as on the sheet, and every other control is disabled or read-only. The page says whose sheet it is and how old the copy is, prints it, and leads to the seat's page. Find opens a seat the same way.
+     - **Why:** the GM reads the sheet its player sees, so its numbers can't drift from a summary (S3b's Pain and HP). A clone and an empty `S.ch` make a write impossible rather than merely unbound: a renderer writes into what it draws (`panelRows`), and `saveChar` saves whatever `S.ch` holds.
+     - **Rejected:**
+       - A `readOnly` flag threaded through the sheet's 129 `commit()` sites and 16 `update()`s: every new control is one more place to forget.
+       - Opening the copy on the sheet's screen with `S.ch` set: the next table press saves it into the GM's roster.
+       - Hiding the write controls: the condition chips and steppers are how the sheet shows state.
+       - A summary card and the printed sheet only (GQ13's fallback): the real sheet measured cheap.
+     - **Replaces:** Decision 255 in part (a card with a copy opens the sheet; the seat's page is a press away).
+     - **Revisit if:** S3d shows the GM's scratch hits on the sheet, a player wants a view-only sheet, or a renderer needs bound state to draw.
+     - **Built:** switched off (173); PR #…; log 2026-10-30 (S3c).
 
 ## 5. Open Flags
 

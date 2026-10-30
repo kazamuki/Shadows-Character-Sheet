@@ -1,6 +1,6 @@
 # State of the build
 
-**Updated:** 2026-10-29
+**Updated:** 2026-10-30
 **Versions:** app `0.56.0` · game data `0.50` · character schema `0.31` · table schema `0.18` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
@@ -37,7 +37,7 @@ decision; that's how this section reached 1,500 words (`log/archive.md` §4).
   (240) and play stops at 10 (194).
 - **Magic** (spells, Cascade, Aberrations, holding a spell) and **combat**
   are built end to end, and both plans are closed.
-- **GM mode** is built through S3b, S7, S10f and S12b, **switched off** (`FEATURES.gm`, 173): a
+- **GM mode** is built through S3c, S7, S10f and S12b, **switched off** (`FEATURES.gm`, 173): a
   table file with its cast, players and their characters as copies, packs and the Codex, encounters, sessions and the
   close-out, the Reference, Find and Jot, and undo. `?gm=on` turns it on in a
   browser. `plans/gm-mode.md` §6 lists what's built and what's left.
@@ -109,7 +109,7 @@ is the authority on a flag's full text.
 | **Vampire** — `0413` | ✅ built (Decisions 200–202, 215, 223, 240): Bloodlines, the Thirst, 22 Majors; Base Powers and CP as the 2026-10-22 book prints | Nobody. Whether it leaves `draft` is Ken's (the chapter dropped "Under Construction") |
 | **Werewolf** — `0414` | ✅ built (Decisions 195–197, 199, 215, 240): Origins, Form, Call of the Wild, its own Majors; Base Powers and CP as the book prints | Nobody. As the Vampire: `draft` is Ken's call |
 | **Arcanist / Magic** | 🔶 spells, Cascade, Aberrations, magic on the sheet, holding a spell (Decision 224) all built · Origins still `draft` | Deighton: **F43** (the held spell's check). Deighton + Scott + Bill + Ken: Origins and spheres/implements, after the four-way comparison; not blocking |
-| **GM mode** — `plans/gm-mode.md` | 🔶 built through S3b (players, seats and the card spread), S7, S10f and S12b, **switched off** (173) | Scott and Deighton: the open `GQ`s (§9) and Codex v2 (S12a, S17). Next in the plan: S3c, the read-only sheet, then S3d, a PC row on a seat's copy |
+| **GM mode** — `plans/gm-mode.md` | 🔶 built through S3c (players, seats, the card spread and the read-only sheet), S7, S10f and S12b, **switched off** (173) | Scott and Deighton: the open `GQ`s (§9) and Codex v2 (S12a, S17). Next in the plan: S3d, a PC row on a seat's copy |
 | **The book** — `plans/crb-catch-up.md` | 📋 what the CRB still needs from the sheet, by chapter | Ken. The sheet-from-book syncs are closed (`plans/archive/`); the next mirror refresh gets a new one |
 | **Print sheet — visual system** — `plans/print-sheet-scotts-look.md` | 📋 Scott's export landed 2026-09-23 (landscape) · front-page restyle proposed and mocked up · one known cosmetic defect | Ken: approve the plan. Scott: PQ1 (can Cerulean Nights be embedded), PQ2 (his artwork). Deighton: PQ3 (do the stat groups mean anything). The frame/texture print defect blocks on no one |
 
@@ -140,7 +140,7 @@ rev 9's `C1`–`C3` are still forward notes.
 **The live site is v0.56.0** (data 0.50, schema 0.31), released 2026-10-29; it carries custom weapons that fire and reload like the catalog's.
 
 **Next is Ken's pick**, each built through a work order (`WORK-ORDERS.md`):
-- **Another of `plans/gm-mode.md`'s *Still to build*** (S3b, seats, S7, S10f and S12b are built; S3c, the read-only sheet, is the one S3b leaves open).
+- **Another of `plans/gm-mode.md`'s *Still to build*** (S3b, seats, S3c, the read-only sheet, S7, S10f and S12b are built; S3d, a PC row on a seat's copy, is next).
 - **The vehicles-and-gear plan** (`plans/loadout-and-gear.md`) is approved (Ken, 2026-10-24, LQ1–LQ10 on their defaults); L1 (weapon damage types), L2 (written-in weapons read like the catalog's), L2b (they tick their fire modes and reload from carried ammo) and L3 (worn armor and gear in use carry modifiers) are built; L4 is next.
   L4 and L5 (natural attacks and the
   unarmed strike, a Major on one row) are buildable now; L6 (vehicles, was P14) and L7
