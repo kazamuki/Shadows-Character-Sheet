@@ -11542,3 +11542,47 @@ test("255: seatView carries the sheet's own HP past zero and Pain's down, for th
   const v = Engine.seatView(t, tag).copy;
   eq([v.health.hpLeft, v.health.pastZero, v.health.down, v.pain.down], [0, 7, true, Engine.painState(ch).down]);
 });
+
+test("256: seatCharacter returns a fresh migrated copy, never the stored one", () => {
+  const { t, tag } = seated();
+  const before = JSON.stringify(t);
+  const a = Engine.seatCharacter(t, tag), b = Engine.seatCharacter(t, tag);
+  assert.ok(a && b);
+  assert.notEqual(a, t.copies[0].character, "not the stored character");
+  assert.notEqual(a, b, "a new object every call");
+  assert.equal(a.meta.id, tag);
+  a.trackers.damage = 99;
+  a.panelData = { junk: [1] };
+  a.identity.name = "Changed";
+  assert.equal(JSON.stringify(t), before, "a change to the result leaves the table as it was");
+  // migrate() changes its argument in place; the stored copy must come through untouched.
+  const old = seated();
+  delete old.t.copies[0].character.meta.schemaVersion;
+  const raw = JSON.stringify(old.t);
+  assert.ok(Engine.seatCharacter(old.t, old.tag));
+  assert.equal(JSON.stringify(old.t), raw, "migrating the draw doesn't migrate the stored copy");
+  const unseated = Engine.newTable("x");
+  eq(Engine.seatCharacter(t, "TAG-ZZZZ-ZZZZ-ZZZZ"), null, "a TAG that isn't seated");
+  eq(Engine.seatCharacter(unseated, tag), null);
+  const bare = Engine.newTable("Bare");
+  const pid = Engine.addPlayer(bare, { name: "Brogan" }).id;
+  Engine.importSeat(bare, pid, seatFile("Dez", "2026-10-01T10:00:00.000Z"));
+  bare.copies = [];
+  eq(Engine.seatCharacter(bare, bare.players[0].seats[0].tag), null, "a seat with no copy");
+});
+
+test("256: seatCharacter is total on a table that isn't one, and on bad copies", () => {
+  const { tag } = seated();
+  const bads = [null, undefined, {}, 5, "x", [], { meta: {} }, { meta: {}, players: "x", copies: [] },
+    { meta: {}, players: [{ id: "PY-AAAAAAAA", seats: [{ tag }] }], copies: "x" },
+    { meta: {}, players: [{ id: "PY-AAAAAAAA", seats: [{ tag }] }], copies: [{ tag, character: [] }] }];
+  for (const b of bads) {
+    assert.doesNotThrow(() => Engine.seatCharacter(b, tag));
+    eq(Engine.seatCharacter(b, tag), null);
+  }
+  for (const bad of [null, undefined, 5, {}, []]) eq(Engine.seatCharacter(seated().t, bad), null);
+  // A copy whose migrate() throws gives null, not a throw.
+  const s = seated();
+  Object.defineProperty(s.t.copies[0].character, "identity", { get() { throw new Error("boom"); }, enumerable: true });
+  eq(Engine.seatCharacter(s.t, s.tag), null);
+});

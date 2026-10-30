@@ -7726,6 +7726,16 @@ const Engine = (() => {
                history:_seatHistory(t, tag, idx) };
     } catch (e) { return null; }
   }
+  // A seat's character to draw: a migrated clone of its copy, never the stored object (Decision 256).
+  function seatCharacter(t, tag){
+    try {
+      if (!_isTable(t) || !_findSeat(t, tag)) return null;
+      const copy = _copyOf(t, tag);
+      if (!copy || !_isObj(copy.character)) return null;
+      const ch = migrate(JSON.parse(JSON.stringify(copy.character)));
+      return _isObj(ch) ? ch : null;
+    } catch (e) { return null; }
+  }
   function playerList(t){
     try {
       if (!_isTable(t)) return [];
@@ -9226,7 +9236,7 @@ const Engine = (() => {
     // The table file (GM mode): create, tell its kind, load, check, edit notes
     newTable, isTableId, fileKind, migrateTable, tableCheck, diffTable, tableActionLabel, recordTableAction, undoTableAction, clearTableActivity, addTableNote, editTableNote, removeTableNote, sessionNotes, tableSearch,
     // Players and seats: a table's characters, kept as copies (Decisions 254, 255)
-    addPlayer, editPlayer, removePlayer, importSeat, setSeat, removeSeat, seatFor, seatView, playerList,
+    addPlayer, editPlayer, removePlayer, importSeat, setSeat, removeSeat, seatFor, seatView, seatCharacter, playerList,
     // The pack file (GM mode): load, check, read, and copy an entry into the cast
     isPackId, migratePack, packCheck, packFilter, packChoices, packTraits, castPackMatch, packEntry, siteProfiles, packSite, packGroups, gmReference, castFromEntry, entryLink,
     // The cast: a stat block read, and a member added, edited, removed, found
