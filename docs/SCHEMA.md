@@ -1218,10 +1218,10 @@ commit** — a GM's table must never change under them.
       order: null, last: false, out: false,   // Combat Sense result; Goes last; out of it (skipped by Next)
       damage: 0,                     // HP taken
       massive: 0,                    // 0.6: Health Levels gone to Massive damage (Decision 191); every kind of row
-      armorLoss: 0, scrapped: false, // 0.6: Integrity its armor has lost and whether Massive scrapped it; NPC rows (0 and false on a PC row)
+      armorLoss: 0, scrapped: false, // 0.6: Integrity its armor has lost and whether Massive scrapped it; every kind of row (a PC row's since Decision 257, when its name answers to a seat)
       kept: null,                    // 0.7: entry rows only: { kind: "cast", id, name }, the member it was kept as when its encounter ended (Decision 193; 178's link, the name kept when the member is deleted); null on a PC or cast row
       struck: false,                 // 0.7: hit at all, by the armor or the body (a hit the armor stopped entirely, or one healed back to 0, still counts); set by a hit or a positive Take, never cleared by Heal. Whoever it's true for rolls for wear after the fight (Decision 193, 053). Every kind of row; read as true only when it is exactly true
-      armorId: null,                 // 0.6: the catalog piece that wear belongs to (a string or null; null on a PC row). It applies only while the block's armor line names that piece; any other piece reads fresh
+      armorId: null,                 // 0.6: the catalog piece that wear belongs to (a string or null; `written-in` for a seat's custom piece, Decision 257). It applies only while the block's armor line names that piece; any other piece reads fresh
       hp: null, levels: null, awareness: null,   // pc rows only: the GM's copy of the sheet's numbers
       delay: null,                   // 0.17 (Decision 253): null | { until: "" }, set on its turn and kept only while running; the row counts as acted; cleared at Reset and at End
       conditions: [ { id, location, marks, note, source: "", rounds: null } ]   // the character's entry, plus where it came from and rounds left (null: until it's dealt with)
@@ -5306,7 +5306,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Built:** switched off (173); PR #270; log 2026-10-30 (S3c).
 
 257. **A PC row whose name answers to a seat with a copy is that character in the fight: hits run the sheet's pipeline on a fresh copy, and the row keeps the fight, never written back.**
-     *2026-10-30 · Ken + Claude · Touches: PC row, seatFor, seatCharacter, rowCharacter, resolveEncounterHit, applyEncounterHit, encounterView, addParticipant, editParticipant, Hit panel, PROT roll, Natural Armor, armorLoss, armorId, read-only sheet, backEnc, GQ19, Decision 188, Decision 191, Decision 192, Decision 254, Decision 256*
+     *2026-10-30 · Ken + Claude · Touches: PC row, seatFor, seatCharacter, rowCharacter, resolveEncounterHit, applyEncounterHit, encounterView, addParticipant, editParticipant, Hit panel, PROT roll, Natural Armor, armorLoss, armorId, gate, read-only sheet, backEnc, GQ19, Decision 188, Decision 191, Decision 192, Decision 193, Decision 254, Decision 256*
      - **Decided:** A PC row is claimed while its name answers to one seat with a copy (read live, never stored). Added under that name, or renamed to it untouched, it starts from the copy as filed: damage, Massive, Conditions, armor wear. After that the fight is the row's; a rename off the seat takes its start back if nothing happened since. A hit runs `resolveHit` and `applyHit` on `seatCharacter` with the row's numbers over it, with the player's PROT roll and Passed or Failed. Health, Pain and Awareness read off the same copy. The gate keeps a PC row's wear. The row's name opens the read-only sheet and returns. A clash or a missing copy gets a line saying why; a removed seat's row just reads typed.
      - **Why:** the GM typed numbers the card had, and 191 refused to guess armor the copy now carries. A clone keeps every write off the copy and the roster.
      - **Rejected:**
