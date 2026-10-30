@@ -9005,7 +9005,7 @@ const Engine = (() => {
       const idx = _isObj(memo) ? (memo.idx || (memo.idx = _seatIndex(t))) : _seatIndex(t);
       if (!k || !idx.sets.has(k)) return none;
       const tag = idx.by.get(k);
-      if (!tag) return { tag:null, why:"clash" };
+      if (!tag) return { tag:null, why:"clash", names:[...idx.sets.get(k)].map(x=>idx.head.get(x)) };
       const copy = _copyOf(t, tag), name = idx.head.get(tag);
       if (!copy || !_isObj(copy.character)) return { tag:null, why:"nocopy", name };
       return { tag, name };
@@ -9274,7 +9274,7 @@ const Engine = (() => {
       const opening = _isObj(e.opening) && (_int(e.round) || 0) <= 1 && e.status==="running" ? (_rowSide(e, _sideList(e), r)===e.opening.side ? "attacker" : e.opening.kind==="ambush" ? "ambushed" : "surprised") : null;
       const seat = rs && stand && rs.tag ? { tag:rs.tag, name:rs.name, updated:_part(() => _isoOrNull(stand.meta.updated)) } : null;
       const unclaimed = rs && !seat ? (rs.why || (rs.tag ? "nocopy" : null)) : null;
-      return { row:r, name:_str(name).trim() || "Unnamed", gone, opening, health, awareness, seat, unclaimed, seatName:rs ? rs.name || null : null, ties:ord.tied(r), side:_rowSide(e, _sideList(e), r), active:e.status==="running" && e.turn===r.id,
+      return { row:r, name:_str(name).trim() || "Unnamed", gone, opening, health, awareness, seat, unclaimed, seatName:rs ? rs.name || null : null, clashNames:rs && rs.names ? rs.names : [], ties:ord.tied(r), side:_rowSide(e, _sideList(e), r), active:e.status==="running" && e.turn===r.id,
                acted:e.status==="running" && _actedIds(e).includes(r.id),
                from:r.kind==="entry" ? entryLink(packs, r.from) : null,
                kept:r.kind==="entry" && r.kept ? linkName(t, r.kept) : null, conditions, armor, traits, canHit:r.kind==="pc" || !!stand };
