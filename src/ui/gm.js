@@ -2828,6 +2828,7 @@ function encSeatPreview(res){
   if (res.bypassesArmor){
     bits.push(`Massive: ${hlWords(res.levelsLost)} gone`);
     if (res.scrap) bits.push(`${a.name} scrapped`);
+    else if (res.integrityLost > 0) bits.push(`${a.name} INT −${res.integrityLost}`);
   } else {
     if (res.doubled) bits.push(`${copy("hitDoubled")} (${res.doubled.from} → ${res.doubled.to})`);
     if (a && res.covered){
@@ -2836,6 +2837,7 @@ function encSeatPreview(res){
     } else if (a) bits.push(`Not covered: ${(Engine.locationById(res.location)||{}).name || res.location}`);
     if (res.natural.absorbed) bits.push(`Natural Armor stops ${res.natural.absorbed}`);
     bits.push(`${res.through} through`, hlWords(res.lostThisHit));
+    if (res.integrityLost > 0) bits.push(`INT −${res.integrityLost}`);
   }
   if (res.after.down) bits.push("Down");
   return bits.join(" · ");
@@ -2951,7 +2953,7 @@ function encRowHtml(v, e, sides){
   // A claimed row reads the character, and an unclaimed one that once answered to a seat says why it doesn't (Decision 257).
   const joinNames = ns => ns.length<2 ? ns.join("") : `${ns.slice(0, -1).join(", ")} and ${ns[ns.length-1]}`;
   const seatLine = seat ? `<p class="enc-seat">From ${esc(v.seat.name)}'s sheet${stampText(v.seat.updated) ? ` · file from ${esc(stampText(v.seat.updated))}` : ""}</p>`
-    : v.unclaimed==="clash" ? `<p class="enc-seat">${esc(joinNames(v.clashNames))} both answer to this name, so it counts as neither.</p>`
+    : v.unclaimed==="clash" ? `<p class="enc-seat">${esc(joinNames(v.clashNames))} ${v.clashNames.length>2 ? "all answer to this name, so it counts as none of them" : "both answer to this name, so it counts as neither"}.</p>`
     : v.unclaimed==="nocopy" ? `<p class="enc-seat">${esc(v.seatName)} has no copy at this table yet. Import their file to read it here.</p>` : "";
   const pcFields = pc && !ended ? `<div class="enc-pcnums">${num("data-ehp", r.hp, "HP")}${num("data-elevels", r.levels, "Health Levels")}</div>` : "";
   // The member an entry row was kept as (Decision 193): a tap to their page, struck through once they're removed.

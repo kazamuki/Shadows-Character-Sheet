@@ -8884,7 +8884,8 @@ const Engine = (() => {
       if (r.kind==="pc"){
         const nm = _str(r.name).trim();
         if (nm) out.crew.push(nm);
-        if (r.struck || r.damage > 0 || r.massive > 0) out.hit.push({ id:r.id, name:v.name });
+        // A claimed row starts with the copy's filed damage, so only a hit counts for it (Decision 257).
+        if (r.struck || (!v.seat && (r.damage > 0 || r.massive > 0))) out.hit.push({ id:r.id, name:v.name });
         continue;
       }
       const h = v.health;

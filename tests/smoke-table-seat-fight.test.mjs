@@ -116,3 +116,18 @@ test("257: a claimed row's Hit panel says which of two worn body pieces counts, 
   assert.match(app.$("[data-ehitpanel] .enc-seat-asks").textContent, /2 body pieces are marked worn\. Armor doesn't layer, so only Reinforced Denim Vest counts\./);
   assert.deepEqual(app.errors, []);
 });
+
+test("257: the preview says what the armor lost, and a clash among three seats says all", () => {
+  const app = open();
+  const id = withDez(app);
+  hitDez(app, id, "3", "4");
+  assert.match(app.$("[data-ehit-preview]").textContent, /0 through · 0 Health Levels · INT −1$/);
+  app.click("[data-ehit-cancel]");
+  for (const n of ["Wren", "Vex"]) {
+    const f = dez(); f.identity.name = n; f.meta.id = n === "Wren" ? "TAG-FFFF-FFFF-FFFF" : "TAG-GGGG-GGGG-GGGG";
+    assert.equal(ev(app, `(() => { const r = Engine.importSeat(S.table, S.table.players[0].id, ${JSON.stringify(f)}); Engine.setSeat(S.table, ${JSON.stringify(f.meta.id)}, { names: ["Dez"] }); return r.ok; })()`), true);
+  }
+  app.click('[data-tsec="players"]'); app.click('[data-tsec="encounters"]');
+  assert.match(app.$("[data-erow]").textContent, /Dez, Wren and Vex all answer to this name, so it counts as none of them\./);
+  assert.deepEqual(app.errors, []);
+});

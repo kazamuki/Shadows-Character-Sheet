@@ -11817,3 +11817,15 @@ test("257: Shock on a claimed row is answered Passed or Failed, and a failure ad
   const pid = addPc(passed.t, passed.e, "Dez");
   eq(Engine.applyEncounterHit(passed.t, passed.e, pid, big, { shock: "pass" }).added, []);
 });
+
+test("257: the wrap-up lists a claimed row only once it was hit, and an unclaimed PC row as before", () => {
+  const { t, e } = seatFightTable();
+  const id = addPc(t, e, "Dez"), rook = addPc(t, e, "Rook");
+  Engine.startEncounter(t, e);
+  eq(Engine.encounterWrapUp(t, e).hit, [], "filed damage is not a hit");
+  assert.ok(Engine.participantDamage(t, e, rook, 3).ok);
+  eq(Engine.encounterWrapUp(t, e).hit.map(h => h.id), [rook]);
+  assert.ok(Engine.applyEncounterHit(t, e, id, FIGHT_HIT, {}).ok);
+  eq(Engine.encounterWrapUp(t, e).hit.map(h => h.id).sort(), [id, rook].sort());
+});
+
