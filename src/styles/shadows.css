@@ -1564,7 +1564,7 @@ h2.city-name{font-size:1.15rem}
 .ro-tabs{display:flex; white-space:nowrap; gap:0 2px; border-bottom:1px solid var(--line, rgba(128,128,128,.25)); margin:10px 0 14px}
 .ro-tabs .tab{flex:none}
 .ro-sheet{min-width:0}
-.ro-sheet button:disabled, .ro-sheet select:disabled, .ro-sheet input:disabled{cursor:default}
-.ro-sheet button:disabled:hover{background:inherit}
+/* No hover at all: the sheet's hover rules don't skip :disabled, and overriding them one by one loses the fill. */
+.ro-sheet button:disabled, .ro-sheet select:disabled, .ro-sheet input:disabled{cursor:default; pointer-events:none}
 /* A read-only field keeps its edge (still --frame, so the same contrast) and takes a different fill and a dashed line: it reads as shown, not as typed. */
 .ro-sheet input[readonly], .ro-sheet textarea[readonly]{background:var(--panel-2); border-style:dashed; cursor:default}
