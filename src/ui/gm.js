@@ -3563,10 +3563,10 @@ function inertSheet(root){
 // The seat to draw as a sheet, or null: the sheet is open, the seat is there and it has a copy.
 function seatSheetNow(v){ return v && v.copy && S.seatSheet && RO_SECTIONS.some(s=>s.id===S.seatSheet) ? v : null; }
 function readOnlyTabsHtml(){
-  return `<nav class="ro-tabs" aria-label="Sheet tabs">${RO_SECTIONS.map(sec=>{
+  return `<div data-rotabs><nav class="ro-tabs scroll-row" data-row="rotabs" aria-label="Sheet tabs">${RO_SECTIONS.map(sec=>{
     const on=sec.id===S.seatSheet, ico=sec.ui ? `<span class="tico">${uiIcon(sec.ui)}</span>` : "";
     return `<button type="button" class="tab${on ? " active" : ""}" data-rotab="${sec.id}"${on ? ` aria-current="page"` : ""}>${ico}${esc(sec.label)}</button>`;
-  }).join("")}</nav>`;
+  }).join("")}</nav></div>`;
 }
 function readOnlySheetHtml(v){
   const ch=Engine.seatCharacter(S.table, v.tag);
@@ -3588,6 +3588,7 @@ function bindReadOnlySheet(main, v){
   };
   inertSheet(main.querySelector("[data-rosheet]"));
   bindSheetReaders(main.querySelector("[data-rosheet]"), goTab);
+  bindScrollRows(main.querySelector("[data-rotabs]"));   // the nav is a scroll-row itself, so its wrapper is what we hand over
   main.querySelectorAll("[data-rotab]").forEach(b=>b.onclick=()=>goTab(b.dataset.rotab));
   main.querySelector("[data-seatback]").onclick=()=>seatBack(tag);
   main.querySelector("[data-roseat]").onclick=()=>{ S.seatSheet=null; window.scrollTo(0,0); update(); focus("[data-seath]"); };
