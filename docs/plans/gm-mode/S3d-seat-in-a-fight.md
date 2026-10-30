@@ -321,6 +321,11 @@ what text points at it.
 - **NPC rows**, the stand-in for a block, and the Codex.
 - **A player's sheet starting or ending an encounter** (W-wish at
   `WISHLIST.md:193`): not taken up, so its *Plan* line doesn't change.
+- **The table's frame.** GM mode still sits in the wizard's three-column
+  grid (`.app`, `shadows.css:65`), with `main` capped at 920px (`:127`);
+  only the player's sheet escapes it (`.sheet-mode`, `app.js:179`). The fix
+  is the **Layout pass**, its own order after this one (the plan's *Still to
+  build*). Don't touch `.app`, `main`'s cap or `sheet-mode` here.
 - **Anything in `private/`.**
 
 ## 8. The shapes
@@ -439,6 +444,11 @@ renders, and the reviewer drafts rewrites in its first review):
   roll*, *Armor-piercing*, *From a spell*, the refusals), *Passed* and
   *Failed*, *Back to players*, the date words.
 
+**Width.** Nothing new may depend on `main`'s 920px cap, which the Layout
+pass removes. The row's new lines, the armor line and the Hit panel wrap
+and fill whatever width they get, with no fixed or max widths tied to
+920px. They must read at 390px and stay sensible at full width (step 7).
+
 **Keyboard.** The row's name is a button in the tab order. The panel's
 fields are in the sheet's order. Esc closes the panel as today.
 
@@ -555,6 +565,9 @@ step, and **commit at the end of each step**.
      overflow (`scrollWidth === clientWidth`, no element in `main` past the
      right edge);
    - the panel's fields wrap, with none narrower than 4rem;
+   - with `main`'s `max-width` lifted in DevTools (as the Layout pass will),
+     at 1980px the row and the open panel still lay out with no field
+     stretched past a readable line (report the widest field's px);
    - every new line's text is at least 4.5:1 in both themes;
    - the name button's focus ring is at least 3:1.
 
