@@ -74,7 +74,7 @@ test("255: Add a player, then Import characters takes two files onto them as two
   await pickFiles(app, importBtn(app, "Brogan"), [dez(), wren()]);
   assert.equal(cards(app).length, 2);
   const lines = cardLines(cards(app)[0]);
-  assert.match(lines[0], /^HP \d+ of \d+/);
+  assert.match(lines[0], /^HP \d+\/\d+/);
   assert.match(lines[1], /^Awareness [+−]?\d+$/);
   assert.match(lines[2], /^(No Conditions|Conditions: .+)$/);
   assert.equal(lines.length, 3, "Health, Awareness and Conditions come first");
@@ -82,7 +82,7 @@ test("255: Add a player, then Import characters takes two files onto them as two
   assert.equal(app.doc.activeElement, cards(app)[0].querySelector("[data-seat]"), "focus lands on the first new card");
   assert.deepEqual(labels(app), ["Added Brogan", "Seated Dez", "Seated Wren"]);
   assert.match(app.$("#undotoast").textContent, /Seated Dez[\s\S]*Seated Wren/);
-  assert.match(cards(app)[0].textContent, /Changed .+Imported /);
+  assert.match(cards(app)[0].textContent, /File from .+Imported /);
   assert.deepEqual(rosterKeys(app), [], "a copy never reaches the roster");
   assert.deepEqual(app.errors, []);
 });
@@ -105,7 +105,7 @@ test("255: a draft, a table, a pack and text that isn't JSON are refused by file
   assert.match(said, /Updated Dez/);
   assert.equal(cards(app).length, 1);
   assert.deepEqual(labels(app), ["Added Brogan", "Seated Dez"], "an update records nothing");
-  assert.match(cards(app)[0].textContent, new RegExp("Changed " + new Date("2026-10-09T10:00:00.000Z").toLocaleDateString().replace(/\//g, "\\/")));
+  assert.match(cards(app)[0].textContent, new RegExp("File from " + new Date("2026-10-09T10:00:00.000Z").toLocaleDateString().replace(/\//g, "\\/")));
   assert.deepEqual(rosterKeys(app), []);
 });
 
@@ -117,7 +117,7 @@ test("255: an older copy asks; Cancel writes nothing; Use takes it", async () =>
   await pickFiles(app, importBtn(app, "Brogan"), [dez("2026-10-01T10:00:00.000Z")]);
   assert.ok(app.$("#modal[open]"), "an older copy asks");
   assert.match(app.$("#modal-title").textContent, /Use an older copy of Dez\?/);
-  assert.match(app.$("#modal .modal-body").textContent, /This file was changed .+; the table's copy was changed /);
+  assert.match(app.$("#modal .modal-body").textContent, /This file was saved .+; the table's copy is from /);
   const before = stored(app, "JSON.stringify(S.table.copies)");
   app.click("#modal [data-modalclose]");
   await tick(30);
@@ -183,10 +183,10 @@ test("254: Answers to: a name typed counts the old sessions, and Remove's label 
   assert.equal(app.$('[data-seatnamedel="0"]').getAttribute("aria-label"), "Remove name 1");
   both(app, '[data-seatname="0"]', "Dez Okafor");
   assert.equal(app.$('[data-seatnamedel="0"]').getAttribute("aria-label"), "Remove Dez Okafor");
-  assert.match(app.$("[data-seatblock]").textContent, /Last at Session 5 · 40 IP so far/);
+  assert.match(app.$("[data-seatblock]").textContent, /Last at Session 5 · 40 IP awarded here/);
   assert.equal(stored(app, "S.table.sessions.every(s => s.present[0] === 'dez okafor')"), true, "nothing typed is rewritten");
   app.click("[data-seatback]");
-  assert.match(app.$("[data-seatcard]").textContent, /Last at Session 5 · 40 IP so far/);
+  assert.match(app.$("[data-seatcard]").textContent, /Last at Session 5 · 40 IP awarded here/);
   app.click('[data-tsec="sessions"]');
   assert.match(app.$(".co-totals").textContent, /IP so far: Dez 40/);
   assert.deepEqual(app.errors, []);
@@ -201,9 +201,9 @@ test("254: a name two seats answer to counts as neither, and each page says so",
   assert.match(app.$("[data-seatblock]").textContent, /Last at Session 5/);
   app.click("[data-seatback]"); app.click(`[data-seat="${WREN_TAG}"]`);
   app.click("[data-seatnameadd]"); both(app, '[data-seatname="0"]', "DEZ OKAFOR");
-  assert.match(app.$("[data-seatclash]").textContent, /DEZ OKAFOR also answers to Dez, so it counts as neither\./);
+  assert.match(app.$("[data-seatclash]").textContent, /Dez answers to DEZ OKAFOR too, so it counts as neither\./);
   app.click("[data-seatback]"); app.click(`[data-seat="${DEZ_TAG}"]`);
-  assert.match(app.$("[data-seatclash]").textContent, /Dez Okafor also answers to Wren, so it counts as neither\./);
+  assert.match(app.$("[data-seatclash]").textContent, /Wren answers to Dez Okafor too, so it counts as neither\./);
   assert.doesNotMatch(app.$("[data-seatblock]").textContent, /Last at/);
   assert.deepEqual(app.errors, []);
 });
@@ -228,7 +228,7 @@ test("254: Remove from the table asks, and Undo from Activity brings the seat an
   app.click("#modal [data-act-undo]");
   assert.equal(cards(app).length, 1);
   assert.equal(stored(app, "S.table.copies.length"), 1, "the copy came back with the seat");
-  assert.match(cards(app)[0].textContent, /HP \d+ of \d+/);
+  assert.match(cards(app)[0].textContent, /HP \d+\/\d+/);
   assert.deepEqual(app.errors, []);
 });
 
@@ -316,8 +316,8 @@ test("255: a batch that seats two shows its notice without an Undo, the card rea
   assert.equal(cards(app).length, 2);
   assert.match(app.$("#undotoast").textContent, /Seated Dez[\s\S]*Seated Wren[\s\S]*file2\.json: Vex has no TAG yet\. Open the file on Home, then export it again\./);
   assert.equal(app.$("[data-toastundo]"), null, "a batch of two has no Undo that takes back one");
-  assert.match(cardLines(cards(app)[0])[0], /^HP −\d+ of \d+/, "past zero reads as the sheet's −N");
-  assert.doesNotMatch(cards(app)[1].textContent, /Pain Level/, "an unhurt character has no Pain line");
+  assert.match(cardLines(cards(app)[0])[0], /^HP −\d+\/\d+/, "past zero reads as the sheet's −N");
+  assert.doesNotMatch(cards(app)[1].textContent, /Pain Lv/, "an unhurt character has no Pain line");
   assert.deepEqual(app.errors, []);
 });
 
@@ -332,6 +332,15 @@ test("254: Remove, another change, then two undos from Activity bring the seat b
   app.click("#modal [data-act-undo]"); app.click("#modal [data-act-undo]");
   app.click("#modal [data-modalclose]");
   assert.equal(cards(app).length, 1);
-  assert.match(cards(app)[0].textContent, /HP \d+ of \d+/, "the copy came back, not 'No copy yet'");
+  assert.match(cards(app)[0].textContent, /HP \d+\/\d+/, "the copy came back, not 'No copy yet'");
+  assert.deepEqual(app.errors, []);
+});
+
+test("255: a hurt character's card reads Pain the way the sheet's chip does", async () => {
+  const app = fresh();
+  addPlayer(app, "Brogan");
+  const hurt = dez(); hurt.trackers.damage = 10;
+  await pickFiles(app, importBtn(app, "Brogan"), [hurt]);
+  assert.match(cards(app)[0].textContent, /Pain Lv \d+ \(−\d+ skill\)/);
   assert.deepEqual(app.errors, []);
 });

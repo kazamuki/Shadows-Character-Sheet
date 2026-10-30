@@ -3453,7 +3453,7 @@ const crewNameChoices = t => namesSeatsFirst(t, Engine.crewView(t, {}).map(g=>g.
 function seatTopHtml(v){
   const c=v.copy;
   if (!c) return "";
-  const hp=c.health, hpText = hp ? [`HP ${hp.pastZero ? "−"+hp.pastZero : hp.hpLeft} of ${hp.total}`, hp.lost ? `${hp.lost} Health Level${hp.lost===1 ? "" : "s"} lost` : "", hp.down ? "Down" : ""].filter(Boolean).join(" · ") : "";
+  const hp=c.health, hpText = hp ? [`HP ${hp.pastZero ? "−"+hp.pastZero : hp.hpLeft}/${hp.total}`, hp.lost ? `${hp.lost} Health Level${hp.lost===1 ? "" : "s"} lost` : "", hp.down ? "Down" : ""].filter(Boolean).join(" · ") : "";
   const aware = typeof c.awareness==="number" ? `Awareness ${castSigned(c.awareness)}` : "";
   const cond = Array.isArray(c.conditions) ? (c.conditions.length ? `Conditions: ${c.conditions.join(", ")}` : "No Conditions") : "";
   return [hpText, aware, cond].filter(Boolean).map(x=>`<div class="cast-line seat-line">${esc(x)}</div>`).join("");
@@ -3463,11 +3463,11 @@ function seatRestHtml(v){
   const c=v.copy;
   if (!c) return `<div class="roster-meta cast-meta">No copy yet. Import their file.</div>`;
   const row = bits => { const s=bits.filter(Boolean).map(esc).join(" · "); return s ? `<div class="roster-meta cast-meta">${s}</div>` : ""; };
-  const stats=[ c.pain && c.pain.level>0 && !c.pain.down ? c.pain.label : "", c.san ? `SAN ${c.san.current}/${c.san.max}%` : "", c.luck ? `Luck ${c.luck.current}/${c.luck.max}` : "",
+  const stats=[ c.pain && c.pain.level>0 && !c.pain.down ? `Pain Lv ${c.pain.level} (${signed(c.pain.skillPenalty||0)} skill)` : "", c.san ? `SAN ${c.san.current}/${c.san.max}%` : "", c.luck ? `Luck ${c.luck.current}/${c.luck.max}` : "",
     typeof c.credits==="number" ? `Çredits ${numText(c.credits)}` : "", typeof c.ip==="number" ? `IP to spend ${c.ip}` : "",
     crankOn() && c.crank && c.crank.tier ? `CRANK ${c.crank.tier}` : "" ];
-  const when=[ stampText(c.updated) ? `Changed ${stampText(c.updated)}` : "", stampText(c.importedAt) ? `Imported ${stampText(c.importedAt)}` : "" ];
-  const h=v.history, hist = h && h.sessions>0 && h.last ? [`Last at ${h.last.title}`, `${h.ip} IP so far`] : [];
+  const when=[ stampText(c.updated) ? `File from ${stampText(c.updated)}` : "", stampText(c.importedAt) ? `Imported ${stampText(c.importedAt)}` : "" ];
+  const h=v.history, hist = h && h.sessions>0 && h.last ? [`Last at ${h.last.title}`, `${h.ip} IP awarded here`] : [];
   return row([c.archetype, c.tagNumber]) + row(stats) + row(when) + row(hist);
 }
 function seatCardHtml(v, tagged){
@@ -3492,7 +3492,7 @@ function playerHtml(g){
 function playersTabHtml(t){
   const list=Engine.playerList(t);
   return `<div class="cast-add">
-      <label class="field"><span>Name</span><input type="text" data-pyadd-name placeholder="Who is at the table?" autocomplete="off"></label>
+      <label class="field"><span>Name</span><input type="text" data-pyadd-name placeholder="Player's name" autocomplete="off"></label>
       <button type="button" class="btn primary" data-pyadd>Add a player</button></div>
     ${list.length ? list.map(playerHtml).join("") : `<p class="step-note">Nobody seated yet. Add a player, then import their characters.</p>`}`;
 }
@@ -3505,7 +3505,7 @@ function seatNameRowsHtml(v){
   return `<ul class="int-list seat-names">${own ? `<li class="int-line">${esc(own)} <span class="step-note">always</span></li>` : ""}${rows}</ul>
     <p><button type="button" class="btn sm" data-seatnameadd>Add a name</button></p>`;
 }
-const seatClashHtml = v => v.clashes.map(c=>`<p class="step-note">${esc(c.name)} also answers to ${esc(c.others.join(", "))}, so it counts as neither.</p>`).join("");
+const seatClashHtml = v => v.clashes.map(c=>`<p class="step-note">${esc(c.others.join(", "))} answers to ${esc(c.name)} too, so it counts as neither.</p>`).join("");
 function seatBlockHtml(v){ return `${seatTopHtml(v)}${seatRestHtml(v)}`; }
 function seatPageHtml(v){
   const name=playerTitle({ name:v.name });
@@ -3530,7 +3530,7 @@ function askOlderCopy(r, fileName){
   return new Promise(res=>{
     const said={ v:false };
     openModal({ title:`Use an older copy of ${r.name}?`,
-      html:`<p>${esc(`This file was changed ${stampText(r.fileUpdated) || "at a date it doesn't say"}; the table's copy was changed ${stampText(r.haveUpdated) || "at a date it doesn't say"}.`)}</p>`,
+      html:`<p>${esc(`This file was saved ${stampText(r.fileUpdated) || "an unknown date"}; the table's copy is from ${stampText(r.haveUpdated) || "an unknown date"}.`)}</p>`,
       foot:`<button class="btn" data-modalclose>Cancel</button><button class="btn danger" data-askyes>Use the older copy</button>`,
       onClose:()=>res(said.v),
       bind:(body, foot)=>{

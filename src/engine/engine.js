@@ -7675,7 +7675,7 @@ const Engine = (() => {
       health:_part(() => { const h = hlState(ch); return { hpLeft:h.hpLeft, pastZero:h.pastZero, total:h.total, lost:h.lost, levels:h.levels, down:h.down }; }),
       awareness:_part(() => skillLine(ch, "awareness").checkBonus),
       conditions:_part(() => conditionState(ch).active.map(a=>a.label)),
-      pain:_part(() => { const p = painState(ch); return { level:p.level, label:p.label, down:!!p.down }; }),
+      pain:_part(() => { const p = painState(ch); return { level:p.level, label:p.label, skillPenalty:p.skillPenalty, down:!!p.down }; }),
       san:_part(() => { const s = sanState(ch); return { current:s.current, max:s.max }; }),
       luck:_part(() => { const l = luckState(ch); return { current:l.current, max:l.max }; }),
       credits:_part(() => { const v = ch.trackers.credits.current; return Number.isFinite(v) ? v : null; }),
