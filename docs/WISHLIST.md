@@ -829,7 +829,7 @@ cast still has to scroll well on a tablet, so the shape (every card, a fold,
 or a toggle like *Who knows what*) needs a look.
 
 **W80 — The left column: the page's actions, or gone.** *Ken · 🔎 · Fix (UI) · raised 2026-10-08*\
-**Plan:** none yet · **Goes with:** W77
+**Plan:** [gm-mode's Layout pass](plans/gm-mode.md) (no order yet; after S3d, before launch, Ken 2026-10-30) · **Goes with:** W77
 
 Outside the wizard the left column is empty on **every** screen: Home, every
 GM table tab, and the pages under them (Ken's screenshot, 2026-10-08: a
@@ -879,7 +879,7 @@ markup in `index.html` (constraint 3); and the award log prints in the
 player's words, as the page reads it (205).
 
 **W86 — A session copied out as Markdown.** *Ken, from Deighton · 🔎 · Fix (UI) · raised 2026-10-09 in S14's order*\
-**Plan:** none yet · **Goes with:** W73, W84
+**Plan:** none yet · **Goes with:** W73, W84, W140
 
 Deighton keeps his notes in Obsidian, as an outline of bulleted lists. A
 session's journal, its interaction lines and its jotted notes (Decision 208)
@@ -889,6 +889,36 @@ without retyping.
 *To respect:* it reads the table and writes nothing back (constraint 7); the
 file is the player's words as the page reads them; it is the session's page's
 action, not a new tab. Out of S14's scope (§6).
+
+**W139 — Keyboard shortcuts on a table: Find and Jot a key away.** *Ken · 🔎 · Rule or shape · raised 2026-10-30*\
+**Plan:** [gm-mode's Shortcuts](plans/gm-mode.md) (no order yet) · **Goes with:** W140
+
+Find and Jot sit in the header on every table screen (Decision 208), but a
+GM at a laptop mid-session still has to reach for the mouse. The wish: a key
+opens Find with its field focused, and another opens Jot. Then whatever else
+earns a key once those two prove the pattern (Next in a fight, a tab).
+*To respect:* a key never fires while the GM is typing in a field; the
+browser's own keys aren't taken (Ctrl/⌘+F is the browser's find); focus
+returns where it was when the box closes (Decision 164); a phone or tablet
+with no keyboard loses nothing; and the keys are discoverable (a hint on the
+buttons, or a list on Reference), in tool voice.
+
+**W140 — Notes that organise themselves: tags, categories, and the session they came from.** *Ken · 🔎 · Rule or shape · raised 2026-10-30*\
+**Plan:** [gm-mode's Notes](plans/gm-mode.md) (no order yet) · **Goes with:** W86, W139
+
+A GM takes notes for many reasons: a name to remember, a rule to look up, a
+hook for later, what a player promised. Today a table note is a dated line
+with an optional session (Jot gives it the session dated today, Decision
+208), listed on the Notes tab and on its session's page. The wish, after how
+note-taking apps do it: tag a note, group notes under a category, and see
+every note from session X beside session Y's, since the session is already a
+soft tag.
+*To respect:* store inputs (constraint 7), so a tag is typed text or an id,
+and the groupings are computed; Find already reads notes and should read
+their tags; the activity log and undo cover every change (212); a table
+schema bump with a `migrateTable()` step if the note's shape moves (170).
+Look first at how much of this the cast's and threads' links already give
+before inventing a new kind of link.
 
 ### For the designers
 
@@ -1057,7 +1087,7 @@ with no DOM, so both halves have to load that way.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W139.** Everything above is open. What was built is in
+- **Next free number: W141.** Everything above is open. What was built is in
   [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)
