@@ -5300,7 +5300,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - A summary card and the printed sheet only (GQ13's fallback): the real sheet measured cheap.
      - **Replaces:** Decision 255 in part (a card with a copy opens the sheet; the seat's page is a press away).
      - **Revisit if:** S3d shows the GM's scratch hits on the sheet, a player wants a view-only sheet, or a renderer needs bound state to draw.
-     - **Built:** switched off (173); PR #…; log 2026-10-30 (S3c).
+     - **Built:** switched off (173); PR #270; log 2026-10-30 (S3c).
 
 ## 5. Open Flags
 
