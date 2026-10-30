@@ -21,10 +21,10 @@ function dez() {
   Engine.addCondition(ch, { id: "bleeding" });
   return ch;
 }
-function open() {
+function open(ch = dez()) {
   const t = Engine.newTable("Dead Air");
   const pid = Engine.addPlayer(t, { name: "Brogan" }).id;
-  assert.ok(Engine.importSeat(t, pid, dez()).ok);
+  assert.ok(Engine.importSeat(t, pid, ch).ok);
   t.audit = [];
   const app = boot({ storage: { ["shadows.table.v1." + t.meta.id]: { table: t, section: "encounters", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app, "Dead Air").querySelector("[data-topen]").click();
@@ -101,6 +101,18 @@ test("257: no press in a fight writes a seat's copy", () => {
   app.click(`[data-econdopen="${id}"]`); changeTo(app, "[data-econd-id]", "stunned"); app.click("[data-econd-add]"); same("a Condition");
   app.click("[data-enc-start]"); app.click("[data-enext]");
   app.click("[data-efinish]"); same("a Reset");
+  assert.match(JSON.parse(ev(app, "JSON.stringify(S.table.audit.map(e => e.label))")).at(-1), /^Reset /, "the Reset ran");
   app.click("[data-enc-end]"); app.click("[data-ew-end]"); same("End");
+  assert.equal(ev(app, "S.table.encounters[0].status"), "ended", "End ran");
+  assert.deepEqual(app.errors, []);
+});
+
+test("257: a claimed row's Hit panel says which of two worn body pieces counts, as the sheet does", () => {
+  const ch = dez();
+  ch.armor.push({ id: "kevlar-vest", worn: true, integrityLoss: 0 });
+  const app = open(ch);
+  const id = withDez(app);
+  app.click(`[data-ehit="${id}"]`);
+  assert.match(app.$("[data-ehitpanel] .enc-seat-asks").textContent, /2 body pieces are marked worn\. Armor doesn't layer, so only Reinforced Denim Vest counts\./);
   assert.deepEqual(app.errors, []);
 });

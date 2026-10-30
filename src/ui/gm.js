@@ -2774,11 +2774,13 @@ function encCondHtml(v, c, ended){
     ${c.note ? `<small class="enc-src">${esc(c.note)}</small>` : ""}${marks}
     ${ended ? "" : `<button class="btn sm" data-econdrm="${id}|${c.index}" aria-label="Remove ${esc(label)}">Remove</button>`}</li>`;
 }
+// A claimed row's worn piece as the sheet reads it (Decision 257): the row's line and its Hit panel's.
+const seatArmorText = (name, die, w) => `${esc(name)} · PROT ${esc(die || "—")} · RES +${w.res} · INT ${w.integrity}/${w.integrityMax}${w.scrapped ? " · Scrap" : w.compromised ? " · Compromised" : ""}`;
 // The armor on one line (Decision 191): the Gear piece, what it stops, its Integrity; or the printed line, marked.
 function encArmorHtml(v){
   const a=v.armor; if (!a || a.line===null) return "";
   let main;
-  if (a.seat) main = `${esc(a.piece.name)} · PROT ${esc(a.die || "—")} · RES +${a.res} · INT ${a.integrity}/${a.integrityMax}${a.scrapped ? " · Scrap" : a.compromised ? " · Compromised" : ""}`;
+  if (a.seat) main = seatArmorText(a.piece.name, a.die, a);
   else if (!a.piece) main = `${esc(a.line)} · not in the Gear tables`;
   else if (a.scrapped) main = `${esc(a.piece.name)} · Scrap`;
   else main = `${esc(a.piece.name)} · stops ${a.stops.prot + (a.compromised ? 0 : a.stops.res)} · INT ${a.integrity}/${a.integrityMax}${a.compromised ? " · Compromised: RES is gone" : ""}`;
@@ -2884,14 +2886,15 @@ function encHitHtml(v){
 }
 // What the player's own Take a hit also asks (Decision 257): PROT roll, From a spell, melee, Natural Armor ticks.
 function encSeatAsksHtml(d, ch, r){
-  const bypass=d.cat==="massive", worn=Engine.armorState(ch).worn, nat=Engine.naturalArmor(ch, Object.keys(d.nat).filter(k=>d.nat[k]));
+  const bypass=d.cat==="massive", as=Engine.armorState(ch), worn=as.worn, nat=Engine.naturalArmor(ch, Object.keys(d.nat).filter(k=>d.nat[k]));
   const probe=Engine.resolveEncounterHit(S.table, S.encOpen, r.id, encHitInput(d, true));
   const check = (attr, on, label) => `<label class="check enc-check"><input type="checkbox" ${attr}${on ? " checked" : ""}> ${esc(label)}</label>`;
   const bits=[];
   if (!bypass && d.ap && (nat.base>0 || nat.conditional.length)) bits.push(check("data-ehit-spell", d.spell, "From a spell"));
   if (!bypass && Engine.hitAsks(ch).melee) bits.push(check("data-ehit-melee", d.melee, copy("hitMelee")));
-  const armor = worn ? `<p class="enc-armor enc-seat-armor">${esc(worn.name)} · PROT ${esc(worn.prot || "—")} · RES +${worn.res} · INT ${worn.integrity}/${worn.integrityMax}${worn.scrapped ? " · Scrap" : worn.compromised ? " · Compromised" : ""}</p>`
-    : `<p class="enc-armor enc-seat-armor">No body armor worn</p>`;
+  // The sheet's own armor problems ("2 body pieces are marked worn…") say which piece counts.
+  const armor = (worn ? `<p class="enc-armor enc-seat-armor">${seatArmorText(worn.name, worn.prot, worn)}</p>`
+    : `<p class="enc-armor enc-seat-armor">No body armor worn</p>`) + as.problems.map(p=>`<p class="enc-armor enc-armor-extra">${esc(p)}</p>`).join("");
   const prot = worn && !bypass && (!probe.ok || probe.covered)
     ? `<label class="field"><span>PROT roll</span><input type="text" inputmode="numeric" pattern="[0-9]*" data-ehit-prot value="${esc(d.prot)}"></label>` : "";
   const natLine = nat.base>0 || nat.conditional.length
