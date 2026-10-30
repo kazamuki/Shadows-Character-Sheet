@@ -776,7 +776,7 @@ the same sentence), 179 (*Who knows what*). The Reputation advantage (`0430`,
 Rank 2: "people occasionally recognize you") and CRANK rep (169) are player
 rules about being recognised; a level the GM sets must not quietly contradict
 them, so ask Deighton and Scott how they meet before choosing levels. Crew are
-typed names until S3b's seats claim them.
+typed names, read as the seat that answers to them (Decision 254).
 
 **W73 — A session can have a name.** *Ken · ⏭ · Rule or shape · raised 2026-10-08 in S5a's review*\
 **Plan:** none yet · **Goes with:** W84, W86

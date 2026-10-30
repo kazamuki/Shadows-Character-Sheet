@@ -37,7 +37,7 @@ test("Decision 188: switched off there is no Encounters tab; switched on it sits
   assert.equal(off.$("#btn-run-table"), null);
   const app = boot({ storage: GM_ON });
   runTable(app, "T");
-  assert.deepEqual(app.$$("[data-tsec]").map(b => b.dataset.tsec), ["sessions", "cast", "city", "threats", "encounters", "reference", "notes"]);
+  assert.deepEqual(app.$$("[data-tsec]").map(b => b.dataset.tsec), ["sessions", "players", "cast", "city", "threats", "encounters", "reference", "notes"]);
   encTab(app);
   assert.match(app.$("#main").textContent, /Nothing on the books\./);
   assert.deepEqual(app.errors, []);
@@ -588,8 +588,8 @@ test("Decision 204: a new table opens on Sessions, in this tab order, and a tabl
   const app = boot({ storage: GM_ON });
   runTable(app, "Landing", { stay: true });
   assert.equal(app.window.eval("S.tsection"), "sessions");
-  assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Sessions", "Cast", "City", "Threats", "Encounters", "Reference", "Notes"]);
-  assert.deepEqual(app.$$("[data-tsec]").map(b => b.dataset.tsec), ["sessions", "cast", "city", "threats", "encounters", "reference", "notes"]);
+  assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Sessions", "Players", "Cast", "City", "Threats", "Encounters", "Reference", "Notes"]);
+  assert.deepEqual(app.$$("[data-tsec]").map(b => b.dataset.tsec), ["sessions", "players", "cast", "city", "threats", "encounters", "reference", "notes"]);
   assert.ok(app.$('[data-tsec="sessions"]').classList.contains("active"));
   tableReopen(app, "Landing");
   assert.equal(app.window.eval("S.tsection"), "sessions", "an untouched table reopens where it was");
@@ -857,7 +857,7 @@ test("Decisions 203–204: export and import keep sessions and threads, and a 0.
   const before = JSON.parse(JSON.stringify(app.window.eval("({ s: S.table.sessions, t: S.table.threads })")));
   app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
   const file = await tableFile(downloads[0]);
-  assert.equal(file.meta.tableSchemaVersion, "0.17");
+  assert.equal(file.meta.tableSchemaVersion, "0.18");
   assert.deepEqual(file.sessions, before.s); assert.deepEqual(file.threads, before.t);
   const fresh = boot({ storage: GM_ON });
   withDownloads(fresh);
@@ -870,7 +870,7 @@ test("Decisions 203–204: export and import keep sessions and threads, and a 0.
   const older = boot({ storage: GM_ON });
   withDownloads(older);
   await importFile(older, old);
-  assert.equal(older.window.eval("S.table.meta.tableSchemaVersion"), "0.17");
+  assert.equal(older.window.eval("S.table.meta.tableSchemaVersion"), "0.18");
   assert.equal(older.window.eval("S.table.sessions.length + S.table.threads.length"), 0);
   assert.equal(older.window.eval("S.table.interactions[0].session"), null);
   assert.deepEqual([...app.errors, ...fresh.errors, ...older.errors], []);
@@ -1322,7 +1322,7 @@ test("Decision 208: Find and Jot sit in the header on every tab and page of a ta
   const off = boot();
   assert.equal(off.$("[data-tfind]"), null); assert.equal(off.$("[data-tjot]"), null);
   const app = secretaryApp();
-  for (const sec of ["sessions", "cast", "city", "threats", "encounters", "reference", "notes"]) {
+  for (const sec of ["sessions", "players", "cast", "city", "threats", "encounters", "reference", "notes"]) {
     app.click(`[data-tsec="${sec}"]`);
     assert.ok(app.$("#hdractions [data-tfind]") && app.$("#hdractions [data-tjot]"), sec);
     assert.equal(app.$("#hdractions [data-tfind]").textContent, "Find");

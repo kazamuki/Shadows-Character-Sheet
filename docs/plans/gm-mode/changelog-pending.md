@@ -70,3 +70,6 @@ then some lines will have outgrown themselves.
 - **Encounter plans.** An encounter keeps the book's Encounter Design worksheet and its own
   clocks, and a fight can open with a Surprise or an Ambush; a character can Delay until
   something happens.
+- **Players.** A table seats each player's characters from their exported files, and shows
+  them as cards: Health, Awareness and Conditions first. A name used in old sessions can
+  count as the character.

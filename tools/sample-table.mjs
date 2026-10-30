@@ -733,11 +733,11 @@ note("s4recap", "Session 4: what the crew told Oyelaran",
 // ── the table ───────────────────────────────────────────────────────
 const table = {
   meta: {
-    kind: "shadows-table", id: tableId(), name: "Dead Air", tableSchemaVersion: "0.17",
+    kind: "shadows-table", id: tableId(), name: "Dead Air", tableSchemaVersion: "0.18",
     created: ts(DAY[1], 17), updated: ts(DAY[6], 23, 50),
   },
   audit: [],
-  notes, cast, places, factions, clocks, interactions, sessions, threads, encounters,
+  notes, cast, places, factions, clocks, interactions, sessions, threads, encounters, players: [], copies: [],
 };
 
 const json = JSON.stringify(table, null, 2) + "\n";

@@ -229,7 +229,7 @@ caution, louder), and S3 measures a realistic table before going on (GQ9).
 | **Work** | CRANK jobs and the generator | S11 |
 | **Notes** | The Session 0 worksheet, freeform notes | S5 |
 
-**As built (S5a, Decision 204; S13a, Decision 207; S14, Decision 208 adds Find and Jot to the header):** the table's tabs are Sessions, Cast, City (S6, Decisions 242–243), Threats, Encounters, Reference, Notes; Sessions is first, and a new table opens on it.
+**As built (S3b, Decision 255): a Players tab second, after Sessions (a Crew tab would collide with the Cast tab's Crew view, 179).** **(S5a, Decision 204; S13a, Decision 207; S14, Decision 208 adds Find and Jot to the header):** the table's tabs are Sessions, Cast, City (S6, Decisions 242–243), Threats, Encounters, Reference, Notes; Sessions is first, and a new table opens on it.
 
 The tab list is a design sketch for S3; the order and grouping are Scott's
 and Deighton's call (GQ1).
@@ -246,7 +246,7 @@ adding to `CLAUDE.md`'s versions table.
 table: {
   meta:      { id, name, tableSchemaVersion, created, updated },
   settings:  { statPointMethod, powerLevel, tone, lines, veils, … },   // Session 0
-  players:   [ { id, name, seats: [ { tag, status, character, importedAt } ] } ],
+  players:   [ { id, name, seats: [ { tag, status, names } ] } ],   // built (Decision 254); copies: [ { tag, importedAt, character } ] beside it
   cast:      [ CastMember ],            // §4e
   places:    [ PlaceRecord ],           // §4f, the crew's history, not the gazetteer
   factions:  [ FactionRecord ],         // §4f
@@ -564,6 +564,7 @@ In the order they merged.
 | S7 | Factions and clocks: the Faction Tracker per faction, and clocks on it | 244–245 | #240 |
 | S12b | Site Profiles: the Codex's profiles in the pack, a crew's place takes one with its track, Exposure and clocks (Rule or shape; pack schema 0.3, table schema 0.16) | 250–251 | #261 |
 | S10f | An encounter's plan (the Encounter Design worksheet), its clocks, a Surprise or Ambush opening, and Delay (Rule or shape; table schema 0.17) | 252–253 | #266 |
+| S3b | Seats: players, their characters as copies, import, the card spread and Answers to (Rule or shape; table schema 0.18) | 254–255 | #268 |
 
 ### Still to build
 
@@ -575,7 +576,8 @@ not a queue. What Scott's use of the table turns up can reorder it.
 | S12a | Supernatural Orders: the seven Orders and their modifiers in the builder | Content | Nothing (GQ17 approved 2026-10-10). **Source:** the Orders table with its Profile and Formation columns is in Scott's `WIP_Threat_Codex_v2` only, not yet in `2610`; the pre-flight asks Scott which to build from | No order yet |
 | S13b | Printing a cast member, an encounter, a session's journal (W84) | Fix + content | Nothing | No order yet |
 | S17 | The Codex's Shared Rules and card format: a swarm takes at most 1 from a single-target attack; an NPC parries with the weapon's skill plus its Parry; social checks against Difficulty 15, and the Free, Fast and full Action, as a Reference panel; and each entry's Tag line, Role line and Hook on its Threats card | Content + shape | **Scott**: these are in `WIP_Threat_Codex_v2` only. When the entries in `2612` move to v2's format, the pack builder follows first (a Fix in `private/`, the size of Y0's), then this | Waiting on Scott |
-| S3b | Seats: players, import, the card spread, the read-only sheet | Rule or shape | Nothing | **Order drafted** ([`gm-mode/S3b-seats.md`](gm-mode/S3b-seats.md)), not yet approved. It builds players, seats, import and the card spread, and proposes the read-only sheet (S3c) and a PC row on a seat's copy (S3d) as their own orders (SQ0) |
+| S3c | The read-only sheet: a seat's copy drawn by the real renderer with every control inert, no `commit()` or `update()` path reachable (GQ13) | Rule or shape | S3b built | No order yet. S3b's pre-flight measured it: 129 `commit()` sites in `sheet.js`, 16 `update()`, the roster save in `update()`, and the sheet's chrome reads `S.screen==="sheet"` |
+| S3d | A PC row claimed by a seat takes the whole hit on a copy of the character, never written back (Decisions 188, 191) | Rule or shape | S3c | No order yet |
 | S2 | The dispatch and the inbox (a player sees one) | Rule or shape | Nothing (S1 built) | No order yet |
 | S4 | GM writes: the dispatch composer and reconciliation | Rule or shape | S2, S3b | No order yet |
 | S11 | CRANK work: the generator and the jobs board (`2625` revised) | Content + shape | S5 built; S2 for dispatched pay | No order yet |
@@ -641,6 +643,8 @@ Settles storage and the file, which everything after it needs.
   table files.
 
 ### S3b — Seats and the card spread
+
+**Built (Decisions 254–255, table schema 0.18, switched off); the read-only sheet is S3c and a PC row on a seat's copy is S3d (SQ0).** What follows is the plan as drafted.
 
 The character-facing half, and the plan's main engineering cost (the
 read-only sheet). Moved late on 2026-10-02 because nothing Scott asked for

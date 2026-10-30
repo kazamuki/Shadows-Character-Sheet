@@ -6057,12 +6057,12 @@ const Engine = (() => {
     x.updated = _isoOrNull(x.updated);
   }
   // The table file's shape. A bump needs a migrateTable() step in the same change.
-  const TABLE_SCHEMA_VERSION = "0.17";
+  const TABLE_SCHEMA_VERSION = "0.18";
   function newTable(name){
     const now = new Date().toISOString();
     return { meta:{ kind:"shadows-table", id:newTableId(), name:String(name ?? ""),
                     tableSchemaVersion:TABLE_SCHEMA_VERSION, created:now, updated:now },
-             notes:[], cast:[], places:[], factions:[], clocks:[], interactions:[], encounters:[], sessions:[], threads:[], audit:[] };
+             notes:[], cast:[], places:[], factions:[], clocks:[], interactions:[], encounters:[], sessions:[], threads:[], players:[], copies:[], audit:[] };
   }
   // Which kind of file is this? A file with no kind is a character: every file
   // ever exported is. Only a table says so.
@@ -6072,7 +6072,8 @@ const Engine = (() => {
     if (!_isObj(m) || !("kind" in m)) return "character";
     return m.kind==="shadows-table" ? "table" : m.kind==="shadows-pack" ? "pack" : "unknown";
   }
-  function migrateTable(t){
+  // `opts.keepCopies` is an undo's: a removed seat's copy outlives the undos that follow the removal, until the table is next opened (Decision 254).
+  function migrateTable(t, opts){
     // Work on a copy, so nothing aliases the caller's object. Unknown keys
     // ride along untouched and are never read; known ones are set by name.
     let c;
@@ -6172,6 +6173,12 @@ const Engine = (() => {
         if (!("opening" in e)) e.opening = null;
         for (const r of (Array.isArray(e.rows) ? e.rows : [])) if (_isObj(r) && !("delay" in r)) r.delay = null;
       }
+    //   Schema 0.18 (Decisions 254, 255): a table keeps players, their seats and the copies of their characters.
+    //   Nothing is converted, and no seat is guessed from a typed name (203).
+    if (typeof arrived!=="string" || _versionNewer("0.18", arrived)){
+      if (!Array.isArray(c.players)) c.players = [];
+      if (!Array.isArray(c.copies)) c.copies = [];
+    }
     if (!_versionNewer(m.tableSchemaVersion, TABLE_SCHEMA_VERSION)) m.tableSchemaVersion = TABLE_SCHEMA_VERSION;
     const usedCast = new Set();
     c.cast = (Array.isArray(c.cast) ? c.cast : []).filter(_isObj);
@@ -6210,6 +6217,9 @@ const Engine = (() => {
     c.interactions = (Array.isArray(c.interactions) ? c.interactions : []).filter(_isObj);
     for (const x of c.interactions) _interaction(x, usedInteraction, usedSession);
     _encounters(c);
+    // Players first, then the copies, which read the seats (Decision 254).
+    _players(c);
+    _copies(c, !!(opts && opts.keepCopies));
     // Undo never crosses a schema step (Decision 48's Revisit): a file saved by an older
     // app comes in with an empty trail. Otherwise every entry is gated.
     c.audit = typeof arrived!=="string" || _versionNewer(TABLE_SCHEMA_VERSION, arrived) ? [] : _tableAuditGate(c.audit);
@@ -6231,7 +6241,8 @@ const Engine = (() => {
   const TABLE_AUDIT_MAX = 500;            // entries kept; the oldest go first
   const TABLE_FOLD_MS = 5*60*1000;        // typing in one field folds while the last keystroke is this recent
   // The records a table holds, in the order a label names them.
-  const TABLE_RECORDS = ["encounters", "sessions", "cast", "places", "factions", "clocks", "interactions", "threads", "notes"];
+  // `players` is one (Decision 254); `copies` is not: a copy is a whole character per import, and the player's file is its source.
+  const TABLE_RECORDS = ["encounters", "sessions", "cast", "places", "factions", "clocks", "interactions", "threads", "notes", "players"];
   const _tableCore = t => { const o = { meta:{ name:_isObj(t) && _isObj(t.meta) ? t.meta.name : undefined } };
     for (const k of TABLE_RECORDS) o[k] = _isObj(t) ? t[k] : undefined; return o; };
   // The ops between two tables. Only the records and the table's name: the
@@ -6250,6 +6261,7 @@ const Engine = (() => {
     : coll==="clocks" ? (_str(r.name).trim() || "a clock")
     : coll==="threads" ? (_str(r.title).trim() || "Untitled")
     : coll==="notes" ? (_str(r.title).trim() || "a note")
+    : coll==="players" ? (_str(r.name).trim() || "Unnamed player")
     : "a line";
   function _recLabel(verb, coll, r){
     const n = _recName(coll, r);
@@ -6374,7 +6386,7 @@ const Engine = (() => {
     for (let i=patch.length-1;i>=0;i--) _applyOp(t, patch[i]);
     log.pop();
     t.audit = log;
-    const gated = migrateTable(t);
+    const gated = migrateTable(t, { keepCopies:true });
     for (const k of Object.keys(t)) delete t[k];
     Object.assign(t, gated);
     return { ok:true, undone:entry };
@@ -6710,19 +6722,22 @@ const Engine = (() => {
       || (Array.isArray(x.cast) ? x.cast : []).some(l=>_fold(linkName(t, l).name).includes(q))
       || (_isObj(x.encounter) && _fold(linkName(t, x.encounter).name).includes(q))
       || (_isObj(x.place) && _fold(linkName(t, x.place).name).includes(q));
+    // A name that answers to a seat groups under that seat, headed by its character's name (Decision 254).
+    const seats = _seatIndex(t), bySeat = new Map();
     for (const x of _interactions(t).reverse()){   // oldest first, so the heading is the spelling first written
       const names = (Array.isArray(x.crew) ? x.crew : []).map(r=>_str(r).trim()).filter(Boolean);
       if (!names.length){ if (hit(x, "")) nameless.push(x); continue; }
       for (const name of names){
-        const key = name.toLowerCase();
-        if (!hit(x, key)) continue;
-        if (!groups.has(key)) groups.set(key, { name, interactions:[] });
-        const g = groups.get(key);
+        const key = name.toLowerCase(), tag = seats.by.get(_fold(name)) || null;
+        if (!(hit(x, key) || (tag && q && _fold(seats.head.get(tag)).includes(q)))) continue;
+        const book = tag ? bySeat : groups, id = tag || key;
+        if (!book.has(id)) book.set(id, { name:tag ? seats.head.get(tag) : name, tag, interactions:[] });
+        const g = book.get(id);
         if (!g.interactions.includes(x)) g.interactions.push(x);
       }
     }
-    const out = [...groups.entries()].sort((a, b)=>a[0].localeCompare(b[0])).map(e=>e[1]);
-    if (nameless.length) out.push({ name:"", interactions:nameless });
+    const out = [...groups.values(), ...bySeat.values()].sort((a, b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+    if (nameless.length) out.push({ name:"", tag:null, interactions:nameless });
     for (const g of out) g.interactions.sort(_newest);
     return out;
   }
@@ -7336,6 +7351,11 @@ const Engine = (() => {
         test("clock", c.id, _str(c.name).trim() || "A clock", [["Clock", _str(c.name)], ["Advances", _str(c.advances)], ["When full", _str(c.whenFull)]]);
         if (hits.length && hits[hits.length-1].kind==="clock" && hits[hits.length-1].id===c.id) { hits[hits.length-1].owner = owner.id; hits[hits.length-1].ownerKind = c.on.kind; }
       }
+      // A seat (Decision 255): by its character's name, the names it answers to, its player and its TAG.
+      for (const p of _playerRecords(t)) for (const s of _seatRecords(p)){
+        const v = seatView(t, s.tag);
+        if (v) test("seat", s.tag, v.name, [["Character", _copyName(_copyOf(t, s.tag))], ...v.names.map(n=>["Answers to", n]), ["Player", v.player.name], ["TAG", s.tag]]);
+      }
       return hits;
     } catch (e) { return []; }
   }
@@ -7447,10 +7467,11 @@ const Engine = (() => {
   function awardTotals(t){
     const logged = sessionList(t).filter(s=>s.close).reverse()
       .sort((a, b)=>(a.close.at ?? "") < (b.close.at ?? "") ? -1 : (a.close.at ?? "") > (b.close.at ?? "") ? 1 : 0);
-    const by = new Map();
+    const by = new Map(), seats = _seatIndex(t);
     for (const s of logged) for (const l of s.close.lines){
-      const k = _fold(l.name);
-      if (!by.has(k)) by.set(k, { name:l.name, ip:0, milestones:0, credits:0, sessions:0 });
+      // A name that answers to a seat is that seat's row (Decision 254); the keys can't meet.
+      const tag = seats.by.get(_fold(l.name)) || null, k = tag ? `s:${tag}` : `n:${_fold(l.name)}`;
+      if (!by.has(k)) by.set(k, { name:tag ? seats.head.get(tag) : l.name, tag, ip:0, milestones:0, credits:0, sessions:0 });
       const a = by.get(k);
       a.ip += l.ip ?? 0;
       a.credits += l.credits ?? 0;
@@ -7458,6 +7479,261 @@ const Engine = (() => {
       if (l.present) a.sessions++;
     }
     return [...by.values()];
+  }
+
+  // ── Seats: players and their characters (Decisions 254, 255) ───────────────
+  // A player is a record with seats; a seat is a character by its TAG, a status and the typed
+  // names it answers to. The character itself is a copy, the last file imported, kept in
+  // `copies` outside the activity log (it is not in TABLE_RECORDS) and run through migrate()
+  // every time the table is gated. Nothing typed is rewritten: a typed name is read as the seat
+  // that answers to it, and a name two seats answer to is neither (254).
+  const SEAT_STATUSES = ["active", "benched", "retired", "dead"];
+  const PLAYER_ID_RE = /^PY-[0-9A-HJKMNP-TV-Z]{8}$/;
+  function newPlayerId(used){
+    let id;
+    do id = `PY-${randomChars(8)}`; while (used.has(id));
+    return id;
+  }
+  const _playerRecords = t => Array.isArray(t && t.players) ? t.players.filter(_isObj) : [];
+  const _seatRecords = p => Array.isArray(p && p.seats) ? p.seats.filter(s=>_isObj(s) && typeof s.tag==="string") : [];
+  const _copyRecords = t => Array.isArray(t && t.copies) ? t.copies.filter(x=>_isObj(x) && typeof x.tag==="string") : [];
+  const _isTable = t => _isObj(t) && _isObj(t.meta);
+  const _copyMs = ch => { const n = _isObj(ch) && _isObj(ch.meta) ? Date.parse(ch.meta.updated) : NaN; return Number.isFinite(n) ? n : -Infinity; };
+  // The gate for players and seats. A TAG is a seat once across the whole table, the first kept.
+  function _players(c){
+    const usedId = new Set(), usedTag = new Set();
+    c.players = (Array.isArray(c.players) ? c.players : []).filter(_isObj);
+    for (const p of c.players){
+      p.name = _str(p.name);
+      if (!(typeof p.id==="string" && PLAYER_ID_RE.test(p.id)) || usedId.has(p.id)) p.id = newPlayerId(usedId);
+      usedId.add(p.id);
+      const seats = [];
+      for (const s of (Array.isArray(p.seats) ? p.seats : [])){
+        if (!_isObj(s) || !isIntakeId(s.tag) || usedTag.has(s.tag)) continue;
+        usedTag.add(s.tag);
+        s.status = SEAT_STATUSES.includes(s.status) ? s.status : "active";
+        s.names = (Array.isArray(s.names) ? s.names : []).filter(x=>typeof x==="string").map(x=>x.trim());
+        seats.push(s);
+      }
+      p.seats = seats;
+      p.created = _isoOrNull(p.created);
+      p.updated = _isoOrNull(p.updated);
+    }
+  }
+  // The gate for copies, after the seats: one per seated TAG (the later meta.updated, else the first),
+  // each through migrate(), and none whose character isn't the TAG it is kept under.
+  function _copies(c, keep){
+    const seated = new Set();
+    for (const p of c.players) for (const s of p.seats) seated.add(s.tag);
+    const kept = new Map();
+    for (const x of (Array.isArray(c.copies) ? c.copies : [])){
+      if (!_isObj(x) || typeof x.tag!=="string" || (!keep && !seated.has(x.tag)) || !_isObj(x.character)) continue;
+      let ch;
+      try { ch = migrate(x.character); } catch (e) { continue; }
+      if (!_isObj(ch) || !_isObj(ch.meta) || ch.meta.id!==x.tag) continue;
+      const have = kept.get(x.tag);
+      if (have && !(_copyMs(ch) > _copyMs(have.character))) continue;
+      x.importedAt = _isoOrNull(x.importedAt);
+      x.character = ch;
+      kept.set(x.tag, x);
+    }
+    c.copies = [...kept.values()];
+  }
+  function _findSeat(t, tag){
+    for (const player of _playerRecords(t)) for (const seat of _seatRecords(player)) if (seat.tag===tag) return { player, seat };
+    return null;
+  }
+  const _copyOf = (t, tag) => _copyRecords(t).find(x=>x.tag===tag) || null;
+  const _copyName = copy => { const ch = copy && copy.character; return _isObj(ch) && _isObj(ch.identity) ? _str(ch.identity.name).trim() : ""; };
+  // Every typed name that means a seat, and the heading each seat goes by. A name two seats answer to maps to null.
+  function _seatIndex(t){
+    const sets = new Map(), head = new Map(), copies = new Map();
+    for (const x of _copyRecords(t)) if (!copies.has(x.tag)) copies.set(x.tag, x);
+    for (const p of _playerRecords(t)) for (const s of _seatRecords(p)){
+      const own = _copyName(copies.get(s.tag));
+      const typed = (Array.isArray(s.names) ? s.names : []).filter(x=>typeof x==="string");
+      head.set(s.tag, own || typed.map(x=>x.trim()).find(Boolean) || s.tag);
+      for (const n of [own, ...typed]){
+        const k = _fold(n);
+        if (!k) continue;
+        if (!sets.has(k)) sets.set(k, new Set());
+        sets.get(k).add(s.tag);
+      }
+    }
+    const by = new Map();
+    for (const [k, set] of sets) by.set(k, set.size===1 ? [...set][0] : null);
+    return { by, head, sets };
+  }
+  // The TAG of the one seat a typed name answers to (its character's own name or one the GM added,
+  // ignoring case and spacing), else null: no seat, or more than one. Every status counts (254).
+  function seatFor(t, name){
+    try {
+      if (!_isTable(t) || typeof name!=="string") return null;
+      return _seatIndex(t).by.get(_fold(name)) || null;
+    } catch (e) { return null; }
+  }
+  function addPlayer(t, f){
+    if (!_isTable(t)) return { ok:false, why:"That isn't a table." };
+    if (!Array.isArray(t.players)) t.players = [];
+    const now = new Date().toISOString();
+    const used = new Set(_playerRecords(t).map(p=>p.id));
+    const p = { id:newPlayerId(used), name:_str(_isObj(f) ? f.name : "").trim(), seats:[], created:now, updated:now };
+    t.players.push(p);
+    _tableStamp(t);
+    return { ok:true, id:p.id };
+  }
+  function editPlayer(t, id, f){
+    if (!_isTable(t)) return { ok:false, why:"That isn't a table." };
+    const p = _playerRecords(t).find(x=>x.id===id);
+    if (!p) return { ok:false, why:"No such player." };
+    if (_isObj(f) && "name" in f) p.name = _str(f.name);
+    _tableStamp(t, p);
+    return { ok:true };
+  }
+  function removePlayer(t, id){
+    if (!_isTable(t)) return { ok:false, why:"That isn't a table." };
+    const i = Array.isArray(t.players) ? t.players.findIndex(x=>_isObj(x) && x.id===id) : -1;
+    if (i < 0) return { ok:false, why:"No such player." };
+    t.players.splice(i, 1);   // their copies drop at the next gate
+    _tableStamp(t);
+    return { ok:true };
+  }
+  // A parsed character file onto a player (Decision 255). A new TAG is seated there; a seated TAG's copy
+  // is replaced when the file is newer, wherever the seat is, and an older one needs opts.older.
+  // Nothing is written on a refusal.
+  function importSeat(t, playerId, raw, opts){
+    try {
+      if (!_isTable(t)) return { ok:false, why:"That isn't a table." };
+      if (fileKind(raw)!=="character" || !_isObj(raw.identity)) return { ok:false, why:"That isn't a character." };
+      let ch;
+      try { ch = migrate(JSON.parse(JSON.stringify(raw))); } catch (e) { return { ok:false, why:"That isn't a character." }; }
+      const name = _isObj(ch.identity) ? _str(ch.identity.name).trim() : "";
+      if (!(_isObj(ch.creation) && ch.creation.locked===true))
+        return { ok:false, why:`${name || "This character"} isn't locked yet: there's no sheet to read.` };
+      // A file with no TAG would be given a new one on every import, and seat twice.
+      const had = _isObj(raw.meta) ? raw.meta.id : null;
+      if (!isIntakeId(had) && !(typeof had==="string" && OLD_INTAKE_RE.test(had))) return { ok:false, why:`${name || "This character"} has no TAG yet. Open the file on Home, then export it again.` };
+      const tag = _isObj(ch.meta) ? ch.meta.id : null;
+      if (!isIntakeId(tag)) return { ok:false, why:"That isn't a character." };
+      const player = _playerRecords(t).find(p=>p.id===playerId);
+      if (!player) return { ok:false, why:"No such player." };
+      const shown = name || tag;
+      const have = _findSeat(t, tag), copy = _copyOf(t, tag);
+      let did = "seated";
+      if (have){
+        const now = _copyMs(ch), was = copy ? _copyMs(copy.character) : -Infinity;
+        if (copy && now===was) return { ok:true, did:"same", tag, name:shown };
+        if (copy && now < was && !(_isObj(opts) && opts.older===true))
+          return { ok:false, older:true, tag, name:shown, why:`This is an older copy of ${shown} than the table's.`,
+                   fileUpdated:_str(ch.meta.updated) || null, haveUpdated:_str(copy.character.meta.updated) || null };
+        did = "updated";
+      }
+      const entry = { tag, importedAt:new Date().toISOString(), character:ch };
+      if (!Array.isArray(t.copies)) t.copies = [];
+      const at = t.copies.findIndex(x=>_isObj(x) && x.tag===tag);
+      t.copies = t.copies.filter(x=>!(_isObj(x) && x.tag===tag));
+      t.copies.splice(at >= 0 ? at : t.copies.length, 0, entry);
+      if (!have){
+        if (!Array.isArray(player.seats)) player.seats = [];
+        player.seats.push({ tag, status:"active", names:[] });
+      }
+      _tableStamp(t, have ? null : player);   // a re-import changes the copy only: the player record, and so the log, is untouched
+      return { ok:true, did, tag, name:shown };
+    } catch (e) { return { ok:false, why:"That isn't a character." }; }
+  }
+  function setSeat(t, tag, f){
+    if (!_isTable(t)) return { ok:false, why:"That isn't a table." };
+    const found = _findSeat(t, tag);
+    if (!found) return { ok:false, why:"No such character at this table." };
+    f = _isObj(f) ? f : {};
+    if ("status" in f && !SEAT_STATUSES.includes(f.status)) return { ok:false, why:"Choose Active, Benched, Retired or Dead." };
+    if ("names" in f && !Array.isArray(f.names)) return { ok:false, why:"That isn't a list of names." };
+    if ("status" in f) found.seat.status = f.status;
+    if ("names" in f) found.seat.names = f.names.map(_str);
+    _tableStamp(t, found.player);
+    return { ok:true };
+  }
+  function removeSeat(t, tag){
+    if (!_isTable(t)) return { ok:false, why:"That isn't a table." };
+    const found = _findSeat(t, tag);
+    if (!found) return { ok:false, why:"No such character at this table." };
+    found.player.seats.splice(found.player.seats.indexOf(found.seat), 1);   // the copy drops at the next gate
+    _tableStamp(t, found.player);
+    return { ok:true };
+  }
+  // A seat as the card reads it. Every reader runs on its own: one that throws leaves its part null (Decision 254).
+  const _part = fn => { try { const v = fn(); return v===undefined ? null : v; } catch (e) { return null; } };
+  function _copyView(copy){
+    const ch = copy.character;
+    const def = _part(() => archetype(ch));
+    return {
+      importedAt:_isoOrNull(copy.importedAt),
+      updated:_part(() => _isoOrNull(ch.meta.updated)),
+      name:_part(() => _str(ch.identity.name)),
+      archetype:_part(() => def && typeof def.name==="string" ? def.name : null),
+      tagNumber:_part(() => tagNumber(ch)),
+      health:_part(() => { const h = hlState(ch); return { hpLeft:h.hpLeft, pastZero:h.pastZero, total:h.total, lost:h.lost, levels:h.levels, down:h.down }; }),
+      awareness:_part(() => skillLine(ch, "awareness").checkBonus),
+      conditions:_part(() => conditionState(ch).active.map(a=>a.label)),
+      pain:_part(() => { const p = painState(ch); return { level:p.level, label:p.label, skillPenalty:p.skillPenalty, down:!!p.down }; }),
+      san:_part(() => { const s = sanState(ch); return { current:s.current, max:s.max }; }),
+      luck:_part(() => { const l = luckState(ch); return { current:l.current, max:l.max }; }),
+      credits:_part(() => { const v = ch.trackers.credits.current; return Number.isFinite(v) ? v : null; }),
+      ip:_part(() => ipState(ch).available),
+      crank:_part(() => { const k = crankState(ch); return { tier:k.tier && typeof k.tier.name==="string" ? k.tier.name : null }; })
+    };
+  }
+  // What the closed logs say about a seat: the lines whose name answers to it, read fresh each time.
+  function _seatHistory(t, tag, idx){
+    let sessions = 0, ip = 0, last = null;
+    try {
+      for (const s of sessionList(t)){
+        if (!_isObj(s.close) || !Array.isArray(s.close.lines)) continue;
+        let here = false;
+        for (const l of s.close.lines){
+          if (!_isObj(l) || idx.by.get(_fold(l.name))!==tag) continue;
+          if (Number.isFinite(l.ip)) ip += l.ip;
+          if (l.present) here = true;
+        }
+        if (here){ sessions++; if (!last) last = { id:s.id, title:sessionTitle(s) }; }
+      }
+    } catch (e) { return { sessions:0, last:null, ip:0 }; }
+    return { sessions, last, ip };
+  }
+  // The names of this seat that another seat answers to as well, with who else: each counts as neither.
+  function _seatClashes(seat, copy, idx){
+    const out = [], seen = new Set();
+    for (const n of [_copyName(copy), ...(Array.isArray(seat.names) ? seat.names : [])]){
+      const k = _fold(n), who = idx.sets.get(k);
+      if (!k || seen.has(k) || !who || who.size < 2) continue;
+      seen.add(k);
+      out.push({ name:_str(n).trim(), others:[...who].filter(x=>x!==seat.tag).map(x=>idx.head.get(x)) });
+    }
+    return out;
+  }
+  function seatView(t, tag){
+    try {
+      if (!_isTable(t)) return null;
+      const found = _findSeat(t, tag);
+      if (!found) return null;
+      const idx = _seatIndex(t), copy = _copyOf(t, tag);
+      return { tag, player:{ id:found.player.id, name:_str(found.player.name) },
+               status:SEAT_STATUSES.includes(found.seat.status) ? found.seat.status : "active",
+               names:(Array.isArray(found.seat.names) ? found.seat.names : []).filter(x=>typeof x==="string"),
+               name:idx.head.get(tag),
+               clashes:_seatClashes(found.seat, copy, idx),
+               copy:copy && _isObj(copy.character) ? _copyView(copy) : null,
+               history:_seatHistory(t, tag, idx) };
+    } catch (e) { return null; }
+  }
+  function playerList(t){
+    try {
+      if (!_isTable(t)) return [];
+      return _playerRecords(t).map(p=>{
+        const views = _seatRecords(p).map(s=>seatView(t, s.tag)).filter(Boolean);
+        return { player:{ id:p.id, name:_str(p.name) }, active:views.filter(v=>v.status==="active"), folded:views.filter(v=>v.status!=="active") };
+      });
+    } catch (e) { return []; }
   }
 
   // ── Packs (Decisions 180–182) ───────────────────────────────────────────
@@ -8949,6 +9225,8 @@ const Engine = (() => {
     diffChar, recordAction, undoLastAction,
     // The table file (GM mode): create, tell its kind, load, check, edit notes
     newTable, isTableId, fileKind, migrateTable, tableCheck, diffTable, tableActionLabel, recordTableAction, undoTableAction, clearTableActivity, addTableNote, editTableNote, removeTableNote, sessionNotes, tableSearch,
+    // Players and seats: a table's characters, kept as copies (Decisions 254, 255)
+    addPlayer, editPlayer, removePlayer, importSeat, setSeat, removeSeat, seatFor, seatView, playerList,
     // The pack file (GM mode): load, check, read, and copy an entry into the cast
     isPackId, migratePack, packCheck, packFilter, packChoices, packTraits, castPackMatch, packEntry, siteProfiles, packSite, packGroups, gmReference, castFromEntry, entryLink,
     // The cast: a stat block read, and a member added, edited, removed, found

@@ -82,7 +82,8 @@ const tableUnexported = e => !e.exported || e.exported!==e.changed;
 // not against a copy taken here: most Encounters presses call their Engine writer first and
 // tableChange(()=>{}) after, so a copy taken now would miss the change.
 let tableBase = null;   // { table, copy }
-const tableCopy = t => clone(Object.assign({}, t, { audit:undefined }));
+// A copy of a seat's character isn't a record the log holds (Decision 254), so the baseline leaves the copies out.
+const tableCopy = t => clone(Object.assign({}, t, { audit:undefined, copies:undefined }));
 function rebaseTable(){ tableBase = S.table ? { table:S.table, copy:tableCopy(S.table) } : null; }
 // Typing is an `input` event on a field; a press that happens while a field still has focus isn't.
 function typingNow(){
@@ -255,7 +256,7 @@ function bindGmHome(tables){
 
 // ── The table screen ───────────────────────────────────────────────────
 // Sessions is first: a table opens on it (Decision 204), and reopens where it was left (171).
-const TABLE_SECTIONS = [{ id:"sessions", label:"Sessions", ui:"tab_sessions" }, { id:"cast", label:"Cast", ui:"tab_archetype" }, { id:"city", label:"City", ui:"tab_traits" }, { id:"threats", label:"Threats", ui:"tab_loadout" }, { id:"encounters", label:"Encounters", ui:"tab_trackers" }, { id:"reference", label:"Reference", ui:"tab_skills" }, { id:"notes", label:"Notes", ui:"tab_notes" }];
+const TABLE_SECTIONS = [{ id:"sessions", label:"Sessions", ui:"tab_sessions" }, { id:"players", label:"Players", ui:"tab_main" }, { id:"cast", label:"Cast", ui:"tab_archetype" }, { id:"city", label:"City", ui:"tab_traits" }, { id:"threats", label:"Threats", ui:"tab_loadout" }, { id:"encounters", label:"Encounters", ui:"tab_trackers" }, { id:"reference", label:"Reference", ui:"tab_skills" }, { id:"notes", label:"Notes", ui:"tab_notes" }];
 // A twin of the sheet's tabButtonsHtml, with its own attribute, so the
 // sheet's [data-sec] binder never sees these.
 function tableTabButtonsHtml(){
@@ -272,7 +273,7 @@ function renderTableChrome(){
   ctx.textContent = tableName(t);
   nav.innerHTML = tableTabButtonsHtml();
   // The tab you're on also takes you back from a member's page to the list.
-  nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>{ S.tsection=b.dataset.tsec; S.backFromLine=null; S.placeRoute=null; S.factionRoute=null; S.clockEdit=null; S.backCity=null; if (S.tsection==="city"){ S.placeOpen=null; S.factionOpen=null; } if (S.tsection==="sessions") S.sessOpen=null; if (S.tsection==="cast"){ S.castOpen=null; S.backEnc=null; S.backSess=false; S.backClose=false; S.backCity=null; } if (S.tsection==="threats"){ S.threatOpen=null; S.threatGroup=null; S.threatMember=null; S.threatEnc=null; } window.scrollTo(0,0); update(); });
+  nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>{ S.tsection=b.dataset.tsec; S.backFromLine=null; S.placeRoute=null; S.factionRoute=null; S.clockEdit=null; S.backCity=null; if (S.tsection==="city"){ S.placeOpen=null; S.factionOpen=null; } if (S.tsection==="sessions") S.sessOpen=null; if (S.tsection==="players") S.seatOpen=null; if (S.tsection==="cast"){ S.castOpen=null; S.backEnc=null; S.backSess=false; S.backClose=false; S.backCity=null; } if (S.tsection==="threats"){ S.threatOpen=null; S.threatGroup=null; S.threatMember=null; S.threatEnc=null; } window.scrollTo(0,0); update(); });
   showActiveTab(nav);
   if (!act) return;
   act.innerHTML = `<button type="button" class="hdr-act" data-tfind>Find</button><button type="button" class="hdr-act" data-tjot>Jot</button>
@@ -319,23 +320,26 @@ function renderTable(){
   const threatPage = S.tsection==="threats" && threatPageNow();
   const encPage = S.tsection==="encounters" && encOpenNow();
   const sessPage = S.tsection==="sessions" && sessOpenNow();
+  const seatPage = seatPageNow();
   const placePage = cityPageNow(), factionPage = placePage ? null : factionPageNow();
-  const onPage = (S.tsection==="cast" && castOpenMember()) || threatPage || encPage || sessPage || placePage || factionPage;
+  const onPage = (S.tsection==="cast" && castOpenMember()) || threatPage || encPage || sessPage || placePage || factionPage || seatPage;
   const head = onPage ? "" :
     `<h1 class="step-title tbl-title">${esc(tableName(t))}</h1>
     <p class="step-note">Table${Number.isFinite(made)?` · created ${esc(new Date(made).toLocaleDateString())}`:""}</p>`;
   const body = S.tsection==="sessions" ? (sessPage ? (closeSheetNow(sessPage) ? closeSheetHtml(sessPage) : sessionPageHtml(sessPage)) : sessionsTabHtml(t))
+    : S.tsection==="players" ? (seatPage ? seatPageHtml(seatPage) : playersTabHtml(t))
     : S.tsection==="cast" ? (onPage ? castPageHtml(onPage) : castTabHtml(t))
     : S.tsection==="city" ? (placePage ? placePageHtml(placePage) : factionPage ? factionPageHtml(factionPage) : cityTabHtml(t))
     : S.tsection==="threats" ? (threatPage ? threatPage.html : threatsTabHtml(t)) : S.tsection==="encounters" ? encountersTabHtml(t) : S.tsection==="reference" ? referenceTabHtml() : notesTabHtml(t);
   // A redraw a press causes keeps the keyboard's place (Decision 164).
-  keepPlace(main, ()=>{ main.innerHTML = failed + head + body; bindTable(); }, ["[data-cadd-name]", "[data-padd-name]", "[data-fadd-name]", "[data-tnew]", "[data-tsearch]", "[data-pslot]", "[data-enc-new]", "[data-thadd]", "[data-snew]", "[data-jumpfilter]"]);
+  keepPlace(main, ()=>{ main.innerHTML = failed + head + body; bindTable(); }, ["[data-cadd-name]", "[data-pyadd-name]", "[data-padd-name]", "[data-fadd-name]", "[data-tnew]", "[data-tsearch]", "[data-pslot]", "[data-enc-new]", "[data-thadd]", "[data-snew]", "[data-jumpfilter]"]);
 }
 function bindTable(){
   const main=$("main");
   main.onclick=main.onchange=main.oninput=main.onsubmit=main.onkeydown=null;   // the Encounters tab delegates; no other tab does
   if (main.querySelector("[data-tnew]")) bindNotes(main);
   else if (S.tsection==="sessions") bindSessions(main);
+  else if (S.tsection==="players") bindPlayers(main);
   else if (S.tsection==="cast") bindCast(main);
   else if (S.tsection==="city") bindCity(main);
   else if (S.tsection==="threats") bindThreats(main);
@@ -410,7 +414,7 @@ function openActivity(){
 // included. Find is Engine.tableSearch, computed on every keystroke and stored nowhere;
 // S.findQ is the search as typed, S.jotDraft an unsaved jot, and both go with the table.
 // The field is never redrawn while typing: the results below it are.
-const FIND_KINDS = [["cast", "Cast"], ["session", "Sessions"], ["interaction", "Lines"], ["thread", "Threads"], ["note", "Notes"], ["encounter", "Encounters"], ["place", "Places"], ["faction", "Factions"], ["clock", "Clocks"]];
+const FIND_KINDS = [["cast", "Cast"], ["session", "Sessions"], ["interaction", "Lines"], ["thread", "Threads"], ["note", "Notes"], ["encounter", "Encounters"], ["place", "Places"], ["faction", "Factions"], ["clock", "Clocks"], ["seat", "Players"]];
 const findFieldLabel = f => f.indexOf("journal.")===0 ? (JOURNAL.find(j=>"journal."+j[0]===f) || [0, f])[1] : f;
 const findSnipHtml = s => `${esc(s.before)}<mark>${esc(s.hit)}</mark>${esc(s.after)}`;
 function findResultsHtml(q){
@@ -448,6 +452,7 @@ function openFound(kind, id){
   window.scrollTo(0,0);
   if (kind==="cast"){ toMember(id); update(); land("[data-ctitle]"); }
   else if (kind==="session"){ toSession(id); update(); land("h1"); }
+  else if (kind==="seat"){ S.tsection="players"; S.seatOpen=id; update(); land("[data-seath]") || land("h1"); }
   else if (kind==="interaction"){
     const x=(t.interactions||[]).find(i=>i.id===id); if (!x) return;
     const live=(x.cast||[]).find(l=>l && (t.cast||[]).some(n=>n.id===l.id));
@@ -726,7 +731,7 @@ function interactionRowHtml(x, n){
 }
 function castInteractionsHtml(n){
   const a=intAdd(), rows=Engine.interactionsFor(S.table, n.id);
-  const names=Engine.crewView(S.table, {}).map(g=>g.name);
+  const names=crewNameChoices(S.table);
   return `<h2 class="cast-h">Between them and the crew</h2>
     <datalist id="crew-names">${names.map(x=>`<option value="${esc(x)}">`).join("")}</datalist>
     <div class="int-add">
@@ -1258,7 +1263,7 @@ function siteTrackHtml(p, site, info){
   if (track.kind==="levels") return head + siteLevelsHtml(track, info) + siteText("What moves it", track.moves, "h4");
   if (track.kind==="table") return `<h3 class="site-h3">${esc(track.name)} · ${esc(track.die)}</h3><ul class="site-list">${(track.rows||[]).map(r=>
     `<li><strong>${esc(r.roll)}</strong> ${esc(r.text)}</li>`).join("")}</ul>`;
-  const names=Engine.crewView(S.table, {}).map(g=>g.name);
+  const names=crewNameChoices(S.table);
   return head + (String(track.triggers||"").trim() ? `<p class="site-text">${esc(track.triggers)}</p>` : "")
     + datalistHtml("exposure-names", names)
     + `<ul class="int-list" data-erows>${exposureRowsHtml(info)}</ul>
@@ -1833,7 +1838,9 @@ function sessionCrewNames(t){
   Engine.crewView(t, {}).forEach(g=>add(g.name));
   (t.sessions||[]).forEach(s=>(s.present||[]).forEach(add));
   (t.encounters||[]).forEach(e=>(e.rows||[]).forEach(r=>{ if (r && r.kind==="pc") add(r.name); }));
-  return [...seen.values()].sort((a, b)=>a.toLowerCase().localeCompare(b.toLowerCase()));
+  // The seats' names lead (Decision 254); the rest follow, as before.
+  const byName=(a, b)=>a.toLowerCase().localeCompare(b.toLowerCase()), lead=namesSeatsFirst(t, []), led=new Set(lead.map(n=>n.toLowerCase()));
+  return [...lead.sort(byName), ...[...seen.values()].filter(n=>!led.has(n.toLowerCase())).sort(byName)];
 }
 function nextSessionHtml(t){
   const n=Engine.nextSession(t);
@@ -3047,8 +3054,8 @@ function encAddHtml(e){
   return `<section class="enc-add"><h2 class="cast-h">Add</h2>
     <p><button class="btn" data-enc-pick aria-expanded="${!!S.encPick}">From the cast</button></p>
     ${S.encPick ? `<label class="field"><span>Search the cast</span><input type="search" data-enc-q value="${esc(S.encQ||"")}" autocomplete="off"></label>${encPickHtml(e)}` : ""}
-    <div class="cast-add"><label class="field"><span>PC name</span><input type="text" data-enc-pcname placeholder="Who's at the table?" autocomplete="off"></label>
-      <button class="btn" data-enc-addpc>Add a PC</button></div>
+    <div class="cast-add"><label class="field"><span>PC name</span><input type="text" data-enc-pcname list="sess-crew" placeholder="Who's at the table?" autocomplete="off"></label>
+      <button class="btn" data-enc-addpc>Add a PC</button></div>${datalistHtml("sess-crew", sessionCrewNames(S.table))}
     ${packsMemo.length ? `<p><button class="btn" data-enc-codex aria-expanded="${!!S.encCodex}">From the Codex</button></p>
     ${S.encCodex ? `<label class="field"><span>Search the Codex</span><input type="search" data-enc-codexq value="${esc(S.encCodexQ||"")}" autocomplete="off"></label>${encCodexHtml()}` : ""}`
       : `<p class="step-note">From the Codex: slot a pack in on Threats.</p>`}</section>`;
@@ -3417,4 +3424,251 @@ function bindEncounters(main){
   if (planBox) planBox.ontoggle=()=>{ S.encPlan=Object.assign(S.encPlan||{}, { [planBox.dataset.eplanD]:planBox.open }); };
   // A More that was opened stays open through a redraw.
   main.querySelectorAll("[data-emore]").forEach(d=>d.ontoggle=()=>{ S.encMore=Object.assign(S.encMore||{}, { [d.dataset.emore]:d.open }); });
+}
+
+// ── The Players tab: seats and the card spread (Decisions 254, 255) ───────
+// State is on S: S.seatOpen (a seat's TAG: its page, or null for the tab), S.seatShut (which
+// players have their folded list open) and S.playerMore (which More is open). A card is read
+// from Engine.seatView every time it is drawn and cached nowhere. A copy never reaches S.ch or
+// the roster: nothing here opens the sheet, and update() saves S.ch, which is never a copy.
+const SEAT_STATUS_LABELS = { active:"Active", benched:"Benched", retired:"Retired", dead:"Dead" };
+const playerTitle = p => String(p && p.name || "").trim() || "Unnamed player";
+function seatPageNow(){ return S.tsection==="players" && S.seatOpen ? Engine.seatView(S.table, S.seatOpen) : null; }
+// A stamp as the GM's local date, else "".
+function stampText(iso){ const d=new Date(iso); return typeof iso==="string" && !isNaN(d) ? d.toLocaleDateString() : ""; }
+// The seats' names for a typed-name field: each active seat's character and the names it answers to.
+function seatNames(t){
+  const out=[];
+  for (const g of Engine.playerList(t)) for (const v of g.active){ if (v.name!==v.tag) out.push(v.name); out.push(...v.names); }
+  return out;
+}
+// Seats first, then the rest, each name once as first spelled (case aside).
+function namesSeatsFirst(t, rest){
+  const seen=new Set(), out=[], add=n=>{ const k=String(n||"").trim(); if (k && !seen.has(k.toLowerCase())){ seen.add(k.toLowerCase()); out.push(k); } };
+  seatNames(t).forEach(add); rest.forEach(add);
+  return out;
+}
+const crewNameChoices = t => namesSeatsFirst(t, Engine.crewView(t, {}).map(g=>g.name));
+// The first three lines of a card, and of the page's first block: Health, Awareness, Conditions.
+function seatTopHtml(v){
+  const c=v.copy;
+  if (!c) return "";
+  const hp=c.health, hpText = hp ? [`HP ${hp.pastZero ? "−"+hp.pastZero : hp.hpLeft}/${hp.total}`, hp.lost ? `${hp.lost} Health Level${hp.lost===1 ? "" : "s"} lost` : "", hp.down ? "Down" : ""].filter(Boolean).join(" · ") : "";
+  const aware = typeof c.awareness==="number" ? `Awareness ${castSigned(c.awareness)}` : "";
+  const cond = Array.isArray(c.conditions) ? (c.conditions.length ? `Conditions: ${c.conditions.join(", ")}` : "No Conditions") : "";
+  return [hpText, aware, cond].filter(Boolean).map(x=>`<div class="cast-line seat-line">${esc(x)}</div>`).join("");
+}
+// What follows the name: archetype and TAG, the sheet's vitals, how old the copy is, and the history.
+function seatRestHtml(v){
+  const c=v.copy;
+  if (!c) return `<div class="roster-meta cast-meta">No copy yet. Import their file.</div>`;
+  const row = bits => { const s=bits.filter(Boolean).map(esc).join(" · "); return s ? `<div class="roster-meta cast-meta">${s}</div>` : ""; };
+  const stats=[ c.pain && c.pain.level>0 && !c.pain.down ? `Pain Lv ${c.pain.level} (${signed(c.pain.skillPenalty||0)} skill)` : "", c.san ? `SAN ${c.san.current}/${c.san.max}%` : "", c.luck ? `Luck ${c.luck.current}/${c.luck.max}` : "",
+    typeof c.credits==="number" ? `Çredits ${numText(c.credits)}` : "", typeof c.ip==="number" ? `IP to spend ${c.ip}` : "",
+    crankOn() && c.crank && c.crank.tier ? `CRANK ${c.crank.tier}` : "" ];
+  const when=[ stampText(c.updated) ? `File from ${stampText(c.updated)}` : "", stampText(c.importedAt) ? `Imported ${stampText(c.importedAt)}` : "" ];
+  const h=v.history, hist = h && h.sessions>0 && h.last ? [`Last at ${h.last.title}`, `${h.ip} IP awarded here`] : [];
+  return row([c.archetype, c.tagNumber]) + row(stats) + row(when) + row(hist);
+}
+function seatCardHtml(v, tagged){
+  const tag=esc(v.tag);
+  return `<li class="roster-card cast-card seat-card" data-seatcard="${tag}" data-status="${esc(v.status)}">
+    ${seatTopHtml(v)}
+    <button type="button" class="cast-open" data-seat="${tag}">${esc(v.name)}</button>${tagged ? ` <span class="chip seat-status">${esc(SEAT_STATUS_LABELS[v.status] || v.status)}</span>` : ""}
+    ${seatRestHtml(v)}</li>`;
+}
+function playerHtml(g){
+  const p=g.player, id=esc(p.id), more=!!(S.playerMore && S.playerMore[p.id]), shut=!!(S.seatShut && S.seatShut[p.id]);
+  return `<section class="player" data-player="${id}">
+    <h2 class="cast-h" tabindex="-1" data-pyh="${id}">${esc(playerTitle(p))}</h2>
+    <p><button type="button" class="btn" data-pyimport="${id}">Import characters</button>
+      <input type="file" class="seat-file" accept=".json,application/json" multiple hidden data-pyfile="${id}" aria-label="Characters to import for ${esc(playerTitle(p))}"></p>
+    ${g.active.length ? `<ul class="roster-list">${g.active.map(v=>seatCardHtml(v, false)).join("")}</ul>` : g.folded.length ? "" : `<p class="step-note">No characters yet.</p>`}
+    ${g.folded.length ? `<details class="seat-shut" data-seatshut="${id}"${shut ? " open" : ""}><summary>Benched, retired and dead (${g.folded.length})</summary><ul class="roster-list">${g.folded.map(v=>seatCardHtml(v, true)).join("")}</ul></details>` : ""}
+    <details class="thread-more" data-pymore="${id}"${more ? " open" : ""}><summary>More</summary>
+      <label class="field"><span>Name</span><input type="text" data-pyname="${id}" value="${esc(p.name)}" placeholder="Unnamed player" autocomplete="off"></label>
+      <button type="button" class="btn sm danger" data-pydel="${id}" aria-label="Remove ${esc(playerTitle(p))}">Remove</button></details></section>`;
+}
+function playersTabHtml(t){
+  const list=Engine.playerList(t);
+  return `<div class="cast-add">
+      <label class="field"><span>Name</span><input type="text" data-pyadd-name placeholder="Player's name" autocomplete="off"></label>
+      <button type="button" class="btn primary" data-pyadd>Add a player</button></div>
+    ${list.length ? list.map(playerHtml).join("") : `<p class="step-note">Nobody seated yet. Add a player, then import their characters.</p>`}`;
+}
+// The names a seat answers to: its character's own, then the typed rows.
+function seatNameRowsHtml(v){
+  const own=v.copy && v.copy.name && v.copy.name.trim();
+  const rows=v.names.map((n, i)=>{ const label = n.trim() ? `Remove ${n.trim()}` : `Remove name ${i+1}`;
+    return `<li class="int-line fac-tip"><input type="text" data-seatname="${i}" value="${esc(n)}" aria-label="${esc(n.trim() ? `Name: ${n.trim()}` : `Name ${i+1}`)}" autocomplete="off">
+      <button type="button" class="btn sm" data-seatnamedel="${i}" aria-label="${esc(label)}">Remove</button></li>`; }).join("");
+  return `<ul class="int-list seat-names">${own ? `<li class="int-line">${esc(own)} <span class="step-note">always</span></li>` : ""}${rows}</ul>
+    <p><button type="button" class="btn sm" data-seatnameadd>Add a name</button></p>`;
+}
+const seatClashHtml = v => v.clashes.map(c=>`<p class="step-note">${esc(c.others.join(", "))} answers to ${esc(c.name)} too, so it counts as neither.</p>`).join("");
+function seatBlockHtml(v){ return `${seatTopHtml(v)}${seatRestHtml(v)}`; }
+function seatPageHtml(v){
+  const name=playerTitle({ name:v.name });
+  return `<p><button type="button" class="btn sm" data-seatback>Back to players</button></p>
+    <h1 class="step-title tbl-title cast-title" tabindex="-1" data-seath>${esc(v.name)}</h1>
+    <p class="step-note">${esc(playerTitle(v.player))}</p>
+    <div class="roster-card seat-block" data-seatblock>${seatBlockHtml(v)}</div>
+    <div class="field"><span>Status</span><div class="form-toggle int-kinds" role="group" aria-label="Status" data-seatstatus>${Object.keys(SEAT_STATUS_LABELS).map(k=>
+      `<button type="button" data-seatst="${k}" class="${k===v.status ? "on" : ""}" aria-pressed="${k===v.status}">${esc(SEAT_STATUS_LABELS[k])}</button>`).join("")}</div></div>
+    <h2 class="cast-h">Answers to</h2>
+    <div data-seatnames>${seatNameRowsHtml(v)}</div>
+    <p class="step-note">Sessions, the award log and lines that use any of these names count as ${esc(name)}.</p>
+    <div data-seatclash>${seatClashHtml(v)}</div>
+    <p><button type="button" class="btn" data-seatreplace>Replace from a file</button>
+      <input type="file" class="seat-file" accept=".json,application/json" hidden data-seatfile aria-label="A character file to replace ${esc(name)}'s copy"></p>
+    <p class="cast-delete"><button type="button" class="btn danger" data-seatdel>Remove from the table</button></p>`;
+}
+
+// ── Import ──
+const readFileText = f => new Promise(res=>{ const rd=new FileReader(); rd.onload=()=>res(String(rd.result)); rd.onerror=()=>res(null); rd.readAsText(f); });
+function askOlderCopy(r, fileName){
+  return new Promise(res=>{
+    const said={ v:false };
+    openModal({ title:`Use an older copy of ${r.name}?`,
+      html:`<p>${esc(`This file was saved ${stampText(r.fileUpdated) || "an unknown date"}; the table's copy is from ${stampText(r.haveUpdated) || "an unknown date"}.`)}</p>`,
+      foot:`<button class="btn" data-modalclose>Cancel</button><button class="btn danger" data-askyes>Use the older copy</button>`,
+      onClose:()=>res(said.v),
+      bind:(body, foot)=>{
+        foot.querySelector("[data-askyes]").onclick=()=>{ said.v=true; closeModal(); };
+        foot.querySelector("[data-modalclose]").focus();
+      } });
+  });
+}
+// Files onto a player, one at a time, one notice line each. A new TAG is a seat and is logged as one;
+// a newer or the same copy changes the copy only, which the log doesn't hold (Decision 254).
+async function seatImport(pid, files, land){
+  const table=S.table, lines=[]; let firstNew=null, seated=0;
+  for (const f of files){
+    const text=await readFileText(f);
+    if (S.table!==table) return;
+    let raw; try{ raw=JSON.parse(text); }catch(e){ raw=undefined; }
+    let r=Engine.importSeat(table, pid, raw);
+    if (r.older){
+      const yes=await askOlderCopy(r, f.name);
+      if (S.table!==table) return;
+      if (!yes) continue;
+      r=Engine.importSeat(table, pid, raw, { older:true });
+    }
+    if (!r.ok){ lines.push(`${f.name}: ${r.why}`); continue; }
+    if (r.did==="seated"){ tableChange(()=>{}, false, `Seated ${r.name}`); lines.push(`Seated ${r.name}`); seated++; if (!firstNew) firstNew=r.tag; }
+    else if (r.did==="updated"){ tableChange(()=>{}, false); lines.push(`Updated ${r.name}`); }
+    else lines.push(`${r.name} is already up to date.`);
+  }
+  if (S.tsection==="players") renderTable();
+  const main=$("main");
+  if (land==="page") { const h=main.querySelector("[data-seath]"); if (h) takeFocus(h, true); }
+  else {
+    const card=firstNew && main.querySelector(`[data-seatcard="${firstNew}"] [data-seat]`);
+    const el=card || main.querySelector(attrSel("data-pyimport", pid));
+    if (el) takeFocus(el);
+  }
+  // One entry's Undo would take back the last file only: a batch of seatings shows its notice without one (Activity has each).
+  if (lines.length){ if (seated>1) hideUndoToast(); notice(lines.join("\n")); }
+}
+
+// ── Binding ──
+function openSeat(tag){
+  S.seatOpen=tag; window.scrollTo(0,0); update();
+  const h=$("main").querySelector("[data-seath]"); if (h) takeFocus(h, true);
+}
+function bindPlayers(main){
+  const v=seatPageNow();
+  if (v){ bindSeatPage(main, v); return; }
+  const nameEl=main.querySelector("[data-pyadd-name]");
+  const add=()=>{
+    const name=nameEl.value; if (!name.trim()) return;
+    let id; tableChange(()=>{ id=Engine.addPlayer(S.table, { name }).id; });
+    const el=$("main").querySelector(attrSel("data-pyimport", id)); if (el) el.focus();
+  };
+  main.querySelector("[data-pyadd]").onclick=add;
+  nameEl.addEventListener("keydown", ev=>{ if (ev.key==="Enter"){ ev.preventDefault(); add(); } });
+  main.querySelectorAll("[data-pyimport]").forEach(b=>b.onclick=()=>main.querySelector(attrSel("data-pyfile", b.dataset.pyimport)).click());
+  main.querySelectorAll("[data-pyfile]").forEach(input=>input.onchange=()=>{
+    const files=[...input.files]; input.value="";
+    if (files.length) seatImport(input.dataset.pyfile, files);
+  });
+  main.querySelectorAll("[data-seat]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation(); openSeat(b.dataset.seat); });
+  main.querySelectorAll("[data-seatcard]").forEach(li=>li.onclick=ev=>{ if (!ev.target.closest("button")) openSeat(li.dataset.seatcard); });
+  main.querySelectorAll("[data-seatshut]").forEach(d=>d.ontoggle=()=>{ S.seatShut=Object.assign(S.seatShut||{}, { [d.dataset.seatshut]:d.open }); });
+  main.querySelectorAll("[data-pymore]").forEach(d=>d.ontoggle=()=>{ S.playerMore=Object.assign(S.playerMore||{}, { [d.dataset.pymore]:d.open }); });
+  main.querySelectorAll("[data-pyname]").forEach(el=>{
+    const id=el.dataset.pyname, fn=()=>{
+      tableChange(()=>Engine.editPlayer(S.table, id, { name:el.value }), false);
+      const g=Engine.playerList(S.table).find(x=>x.player.id===id), h=main.querySelector(attrSel("data-pyh", id));
+      if (g && h) h.textContent=playerTitle(g.player);
+    };
+    el.addEventListener("input", fn); el.addEventListener("change", fn);
+  });
+  main.querySelectorAll("[data-pydel]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.pydel, g=Engine.playerList(S.table).find(x=>x.player.id===id); if (!g) return;
+    const title=playerTitle(g.player), n=g.active.length + g.folded.length;
+    askFirst({ title:`Remove ${title}?`,
+      text: n ? `${title} and their ${n} ${n===1 ? "character" : "characters"} go. Undo brings them back until the table is next opened.` : `${title} goes. Undo brings them back.`,
+      yes:"Remove",
+      then(){
+        tableChange(()=>Engine.removePlayer(S.table, id));
+        const el=$("main").querySelector("[data-pyadd-name]"); if (el) el.focus();
+      } });
+  });
+}
+function bindSeatPage(main, v0){
+  const tag=v0.tag, own=()=>Engine.seatView(S.table, tag) || v0;
+  const focus = sel => { const el=$("main").querySelector(sel); if (el) el.focus(); return !!el; };
+  const edit = o => tableChange(()=>Engine.setSeat(S.table, tag, o), false);
+  // The first block and the warnings follow what is typed, with no redraw of the fields.
+  const refresh = () => { const v=own();
+    main.querySelector("[data-seatblock]").innerHTML=seatBlockHtml(v);
+    main.querySelector("[data-seatclash]").innerHTML=seatClashHtml(v); };
+  main.querySelector("[data-seatback]").onclick=()=>{
+    S.seatOpen=null; window.scrollTo(0,0); update();
+    // A folded card can't take focus: its list's summary does.
+    const el=$("main").querySelector(attrSel("data-seat", tag)), shut=el && el.closest("details:not([open])");
+    if (shut) takeFocus(shut.querySelector("summary")); else if (el) takeFocus(el);
+  };
+  main.querySelectorAll("[data-seatst]").forEach(b=>b.onclick=()=>{
+    edit({ status:b.dataset.seatst });
+    main.querySelectorAll("[data-seatst]").forEach(x=>{ const on=x.dataset.seatst===own().status; x.classList.toggle("on", on); x.setAttribute("aria-pressed", String(on)); });
+  });
+  const bindNames = () => {
+    const box=main.querySelector("[data-seatnames]");
+    box.querySelectorAll("[data-seatname]").forEach(el=>{
+      const i=+el.dataset.seatname, fn=()=>{
+        const names=[...own().names]; names[i]=el.value; edit({ names });
+        const typed=el.value.trim(), del=box.querySelector(`[data-seatnamedel="${i}"]`);
+        el.setAttribute("aria-label", typed ? `Name: ${typed}` : `Name ${i+1}`);
+        if (del) del.setAttribute("aria-label", typed ? `Remove ${typed}` : `Remove name ${i+1}`);
+        refresh();
+      };
+      el.addEventListener("input", fn); el.addEventListener("change", fn);
+    });
+    box.querySelectorAll("[data-seatnamedel]").forEach(b=>b.onclick=()=>{
+      const i=+b.dataset.seatnamedel, names=[...own().names]; names.splice(i, 1);
+      edit({ names }); redrawNames(); refresh();
+      focus(`[data-seatname="${Math.min(i, names.length-1)}"]`) || focus("[data-seatnameadd]");
+    });
+    box.querySelector("[data-seatnameadd]").onclick=()=>{
+      const names=[...own().names, ""]; edit({ names }); redrawNames(); refresh(); focus(`[data-seatname="${names.length-1}"]`);
+    };
+  };
+  const redrawNames = () => { main.querySelector("[data-seatnames]").innerHTML=seatNameRowsHtml(own()); bindNames(); };
+  bindNames();
+  const file=main.querySelector("[data-seatfile]");
+  main.querySelector("[data-seatreplace]").onclick=()=>file.click();
+  file.onchange=()=>{ const files=[...file.files]; file.value=""; if (files.length) seatImport(own().player.id, files, "page"); };
+  main.querySelector("[data-seatdel]").onclick=()=>{
+    const v=own(), pid=v.player.id, label=v.name;
+    askFirst({ title:`Remove ${label}?`,
+      text: v.copy ? `${label}'s copy goes with the seat. Undo brings both back until the table is next opened; after that, import the file again.` : `${label} leaves the table. Undo brings the seat back.`,
+      yes:"Remove",
+      then(){
+        S.seatOpen=null;
+        tableChange(()=>Engine.removeSeat(S.table, tag), true, `Removed ${label}`);
+        const el=$("main").querySelector(attrSel("data-pyimport", pid)); if (el) el.focus();
+      } });
+  };
 }

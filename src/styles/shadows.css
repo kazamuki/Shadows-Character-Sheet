@@ -1017,7 +1017,7 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
   box-shadow:0 6px 24px rgba(5,10,22,.45); font-size:.86rem; animation:toastIn .18s ease-out}
 .toast[hidden]{display:none}
 .toast .toast-msg{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-.toast .toast-msg.wrap{white-space:normal}
+.toast .toast-msg.wrap{white-space:pre-line}
 .toast .toast-x{background:none; border:0; color:var(--dim); font-size:1.1rem; line-height:1; padding:2px 4px}
 .toast .toast-x:hover{color:var(--text)}
 @keyframes toastIn{from{opacity:0; transform:translate(-50%, 8px)} to{opacity:1; transform:translate(-50%, 0)}}
@@ -1546,3 +1546,14 @@ h2.city-name{font-size:1.15rem}
 .enc-plan [data-eplan], .enc-plan [data-eadv]{max-width:100%}
 .enc-plan .btn, .enc-plan input[type=text]{min-height:44px}
 .enc-tips{display:inline-flex; gap:4px}
+
+/* The Players tab (Decisions 254, 255): a card is a cast card with its numbers; a folded list keeps its marker. */
+.player{margin:18px 0}
+.seat-card .seat-line, .seat-block .seat-line, .seat-names .int-line{overflow-wrap:anywhere; min-width:0}
+.seat-status{margin-left:6px}
+.seat-shut{margin:6px 0}
+.seat-shut summary{cursor:pointer; color:var(--dim)}
+.seat-shut > summary, .player > .thread-more > summary{min-height:44px; padding:10px 0; box-sizing:border-box}
+.seat-names .fac-tip{display:flex; flex-wrap:wrap; gap:6px 10px; align-items:center}
+.seat-names .fac-tip input{flex:1 1 12rem; min-width:0}
+.seat-block{cursor:default}
