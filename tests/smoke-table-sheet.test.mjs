@@ -161,6 +161,10 @@ test("256: a stat's tip reads the copy on the read-only sheet", () => {
   assert.notEqual(ev(app, "tipChar()"), null);
   app.click("[data-seatback]");
   assert.equal(ev(app, "tipChar()"), null, "once the page is left, nothing is left to read");
+  openSheet(app);
+  app.click("[data-menu-toggle]"); app.click("[data-thome]");
+  assert.equal(ev(app, "S.screen"), "home");
+  assert.equal(ev(app, "tipChar()"), null, "nor once the table is closed from the sheet");
 });
 
 test("256: a seat with no copy opens its page, with no Read the sheet", () => {

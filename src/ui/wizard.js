@@ -813,6 +813,7 @@ function renderHome(){
   const app=$("app"); if (app) app.classList.remove("sheet-mode");
   renderTopChrome(); closeVitals(); renderDrawer();   // a pinned panel goes with the sheet
   releaseMain();
+  readOnlyChar=null;   // a seat's copy the GM read goes with the table (Decision 256)
   const roster = rosterEntries(), tables = gmTableEntries();
   $("main").innerHTML = `<div class="home-hero">
     <h1>Character Intake</h1>
