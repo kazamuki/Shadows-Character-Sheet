@@ -273,7 +273,7 @@ function renderTableChrome(){
   ctx.textContent = tableName(t);
   nav.innerHTML = tableTabButtonsHtml();
   // The tab you're on also takes you back from a member's page to the list.
-  nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>{ S.tsection=b.dataset.tsec; S.backFromLine=null; S.placeRoute=null; S.factionRoute=null; S.clockEdit=null; S.backCity=null; if (S.tsection==="city"){ S.placeOpen=null; S.factionOpen=null; } if (S.tsection==="sessions") S.sessOpen=null; if (S.tsection==="players") S.seatOpen=null; if (S.tsection==="cast"){ S.castOpen=null; S.backEnc=null; S.backSess=false; S.backClose=false; S.backCity=null; } if (S.tsection==="threats"){ S.threatOpen=null; S.threatGroup=null; S.threatMember=null; S.threatEnc=null; } window.scrollTo(0,0); update(); });
+  nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>{ S.tsection=b.dataset.tsec; S.backFromLine=null; S.placeRoute=null; S.factionRoute=null; S.clockEdit=null; S.backCity=null; if (S.tsection==="city"){ S.placeOpen=null; S.factionOpen=null; } if (S.tsection==="sessions") S.sessOpen=null; if (S.tsection==="players"){ S.seatOpen=null; S.seatSheet=null; } if (S.tsection==="cast"){ S.castOpen=null; S.backEnc=null; S.backSess=false; S.backClose=false; S.backCity=null; } if (S.tsection==="threats"){ S.threatOpen=null; S.threatGroup=null; S.threatMember=null; S.threatEnc=null; } window.scrollTo(0,0); update(); });
   showActiveTab(nav);
   if (!act) return;
   act.innerHTML = `<button type="button" class="hdr-act" data-tfind>Find</button><button type="button" class="hdr-act" data-tjot>Jot</button>
@@ -312,6 +312,7 @@ function renderTable(){
   // Only reachable with the switch on: with it off, Home draws instead.
   if (!featureOn("gm") || !S.table){ S=homeState(); return renderHome(); }
   closeVitals(); renderDrawer(); closePopover(false);
+  readOnlyChar=null;   // the tips' character: set again if this draw is the read-only sheet
   if (!TABLE_SECTIONS.some(s=>s.id===S.tsection)) S.tsection=TABLE_SECTIONS[0].id;
   const t=S.table, main=$("main");
   const made=Date.parse(t.meta.created);
@@ -321,13 +322,15 @@ function renderTable(){
   const encPage = S.tsection==="encounters" && encOpenNow();
   const sessPage = S.tsection==="sessions" && sessOpenNow();
   const seatPage = seatPageNow();
+  const seatSheet = seatSheetNow(seatPage);
+  if (!seatSheet) S.seatSheet=null;
   const placePage = cityPageNow(), factionPage = placePage ? null : factionPageNow();
   const onPage = (S.tsection==="cast" && castOpenMember()) || threatPage || encPage || sessPage || placePage || factionPage || seatPage;
   const head = onPage ? "" :
     `<h1 class="step-title tbl-title">${esc(tableName(t))}</h1>
     <p class="step-note">Table${Number.isFinite(made)?` · created ${esc(new Date(made).toLocaleDateString())}`:""}</p>`;
   const body = S.tsection==="sessions" ? (sessPage ? (closeSheetNow(sessPage) ? closeSheetHtml(sessPage) : sessionPageHtml(sessPage)) : sessionsTabHtml(t))
-    : S.tsection==="players" ? (seatPage ? seatPageHtml(seatPage) : playersTabHtml(t))
+    : S.tsection==="players" ? (seatSheet ? readOnlySheetHtml(seatSheet) : seatPage ? seatPageHtml(seatPage) : playersTabHtml(t))
     : S.tsection==="cast" ? (onPage ? castPageHtml(onPage) : castTabHtml(t))
     : S.tsection==="city" ? (placePage ? placePageHtml(placePage) : factionPage ? factionPageHtml(factionPage) : cityTabHtml(t))
     : S.tsection==="threats" ? (threatPage ? threatPage.html : threatsTabHtml(t)) : S.tsection==="encounters" ? encountersTabHtml(t) : S.tsection==="reference" ? referenceTabHtml() : notesTabHtml(t);
@@ -452,7 +455,7 @@ function openFound(kind, id){
   window.scrollTo(0,0);
   if (kind==="cast"){ toMember(id); update(); land("[data-ctitle]"); }
   else if (kind==="session"){ toSession(id); update(); land("h1"); }
-  else if (kind==="seat"){ S.tsection="players"; S.seatOpen=id; update(); land("[data-seath]") || land("h1"); }
+  else if (kind==="seat"){ S.tsection="players"; openSeat(id); land("[data-seath]") || land("h1"); }
   else if (kind==="interaction"){
     const x=(t.interactions||[]).find(i=>i.id===id); if (!x) return;
     const live=(x.cast||[]).find(l=>l && (t.cast||[]).some(n=>n.id===l.id));
@@ -3429,8 +3432,8 @@ function bindEncounters(main){
 // ── The Players tab: seats and the card spread (Decisions 254, 255) ───────
 // State is on S: S.seatOpen (a seat's TAG: its page, or null for the tab), S.seatShut (which
 // players have their folded list open) and S.playerMore (which More is open). A card is read
-// from Engine.seatView every time it is drawn and cached nowhere. A copy never reaches S.ch or
-// the roster: nothing here opens the sheet, and update() saves S.ch, which is never a copy.
+// from Engine.seatView every time it is drawn and cached nowhere. A copy never reaches the roster:
+// update() saves S.ch, which only drawReadOnly sets, and only while it draws (Decision 256). S.seatSheet is the read-only sheet's tab.
 const SEAT_STATUS_LABELS = { active:"Active", benched:"Benched", retired:"Retired", dead:"Dead" };
 const playerTitle = p => String(p && p.name || "").trim() || "Unnamed player";
 function seatPageNow(){ return S.tsection==="players" && S.seatOpen ? Engine.seatView(S.table, S.seatOpen) : null; }
@@ -3458,6 +3461,8 @@ function seatTopHtml(v){
   const cond = Array.isArray(c.conditions) ? (c.conditions.length ? `Conditions: ${c.conditions.join(", ")}` : "No Conditions") : "";
   return [hpText, aware, cond].filter(Boolean).map(x=>`<div class="cast-line seat-line">${esc(x)}</div>`).join("");
 }
+// How old a copy is, in the card's words: the file's own date, then when it was imported.
+const seatWhen = c => [ stampText(c.updated) ? `File from ${stampText(c.updated)}` : "", stampText(c.importedAt) ? `Imported ${stampText(c.importedAt)}` : "" ].filter(Boolean);
 // What follows the name: archetype and TAG, the sheet's vitals, how old the copy is, and the history.
 function seatRestHtml(v){
   const c=v.copy;
@@ -3466,7 +3471,7 @@ function seatRestHtml(v){
   const stats=[ c.pain && c.pain.level>0 && !c.pain.down ? `Pain Lv ${c.pain.level} (${signed(c.pain.skillPenalty||0)} skill)` : "", c.san ? `SAN ${c.san.current}/${c.san.max}%` : "", c.luck ? `Luck ${c.luck.current}/${c.luck.max}` : "",
     typeof c.credits==="number" ? `Çredits ${numText(c.credits)}` : "", typeof c.ip==="number" ? `IP to spend ${c.ip}` : "",
     crankOn() && c.crank && c.crank.tier ? `CRANK ${c.crank.tier}` : "" ];
-  const when=[ stampText(c.updated) ? `File from ${stampText(c.updated)}` : "", stampText(c.importedAt) ? `Imported ${stampText(c.importedAt)}` : "" ];
+  const when=seatWhen(c);
   const h=v.history, hist = h && h.sessions>0 && h.last ? [`Last at ${h.last.title}`, `${h.ip} IP awarded here`] : [];
   return row([c.archetype, c.tagNumber]) + row(stats) + row(when) + row(hist);
 }
@@ -3519,9 +3524,78 @@ function seatPageHtml(v){
     <div data-seatnames>${seatNameRowsHtml(v)}</div>
     <p class="step-note">Sessions, the award log and lines that use any of these names count as ${esc(name)}.</p>
     <div data-seatclash>${seatClashHtml(v)}</div>
-    <p><button type="button" class="btn" data-seatreplace>Replace from a file</button>
+    <p>${v.copy ? `<button type="button" class="btn" data-seatread>Read the sheet</button> ` : ""}<button type="button" class="btn" data-seatreplace>Replace from a file</button>
       <input type="file" class="seat-file" accept=".json,application/json" hidden data-seatfile aria-label="A character file to replace ${esc(name)}'s copy"></p>
     <p class="cast-delete"><button type="button" class="btn danger" data-seatdel>Remove from the table</button></p>`;
+}
+
+// ── The read-only sheet: a seat's copy on the sheet's own renderers (Decision 256) ──
+// The page draws a fresh clone (Engine.seatCharacter) with the sheet's renderers, then inertSheet disables
+// whatever would write. No sheet binder runs: bindReadOnlySheet binds the readers (bindSheetReaders) and
+// its own chrome. S.ch holds the clone only inside drawReadOnly, because update() saves whatever S.ch holds.
+const RO_SECTIONS = SHEET_SECTIONS.filter(s=>s.id!=="admin");
+// What stays live on the page: tips, jumps, another tab, a description. The page's own chrome is bound by bindReadOnlySheet.
+const RO_READERS = "[data-tip], [data-jump], [data-gotab], [data-skilldesc], [data-derivdesc], [data-rotab], [data-roseat], [data-roprint], [data-seatback]";
+function drawReadOnly(ch, section){
+  const keep = { ch:S.ch, section:S.section, admin:S.admin, issues:S.importIssues, failed:saveFailed };
+  try {
+    S.ch=ch; S.section=section; S.admin=false; S.importIssues=[]; saveFailed=false;
+    const html = (section==="main" ? "" : sheetVitalsBar(ch)) + SHEET_RENDER[section]();
+    readOnlyChar=ch;
+    return html;
+  } catch (e) {
+    readOnlyChar=null;
+    return `<p class="step-note" role="status">This tab couldn't be drawn from this copy.</p>`;
+  } finally {
+    S.ch=keep.ch; S.section=keep.section; S.admin=keep.admin; S.importIssues=keep.issues; saveFailed=keep.failed;
+  }
+}
+// Disable every control in `root` that isn't a reader: buttons, selects and checkboxes off; fields read-only.
+function inertSheet(root){
+  root.querySelectorAll("button, select, textarea, input, summary").forEach(el=>{
+    if (el.matches(RO_READERS) || el.tagName==="SUMMARY") return;
+    const type=(el.getAttribute("type")||"").toLowerCase();
+    if (el.tagName==="TEXTAREA" || (el.tagName==="INPUT" && !["checkbox","radio","button","submit","reset","file","range","color","image"].includes(type))){
+      el.readOnly=true; el.setAttribute("aria-readonly","true");
+    } else el.disabled=true;
+  });
+}
+// The seat to draw as a sheet, or null: the sheet is open, the seat is there and it has a copy.
+function seatSheetNow(v){ return v && v.copy && S.seatSheet && RO_SECTIONS.some(s=>s.id===S.seatSheet) ? v : null; }
+function readOnlyTabsHtml(){
+  return `<nav class="ro-tabs" aria-label="Sheet tabs">${RO_SECTIONS.map(sec=>{
+    const on=sec.id===S.seatSheet, ico=sec.ui ? `<span class="tico">${uiIcon(sec.ui)}</span>` : "";
+    return `<button type="button" class="tab${on ? " active" : ""}" data-rotab="${sec.id}"${on ? ` aria-current="page"` : ""}>${ico}${esc(sec.label)}</button>`;
+  }).join("")}</nav>`;
+}
+function readOnlySheetHtml(v){
+  const ch=Engine.seatCharacter(S.table, v.tag);
+  const tagged = v.status!=="active" ? ` <span class="chip seat-status">${esc(SEAT_STATUS_LABELS[v.status] || v.status)}</span>` : "";
+  const when = seatWhen(v.copy).map(esc).join(" · ");
+  return `<p><button type="button" class="btn sm" data-seatback>Back to players</button></p>
+    <h1 class="step-title tbl-title cast-title" tabindex="-1" data-seath data-rosheeth>${esc(v.name)}</h1>${tagged}
+    <p class="step-note"><strong>Read only</strong>${when ? ` · ${when}` : ""}</p>
+    <p class="step-note">${esc(playerTitle(v.player))}</p>
+    <p><button type="button" class="btn sm" data-roseat>Seat</button> <button type="button" class="btn sm" data-roprint>Print</button></p>
+    ${readOnlyTabsHtml()}
+    <div class="ro-sheet" data-rosheet>${ch ? drawReadOnly(ch, S.seatSheet) : `<p class="step-note" role="status">This tab couldn't be drawn from this copy.</p>`}</div>`;
+}
+function bindReadOnlySheet(main, v){
+  const tag=v.tag, focus = sel => { const el=$("main").querySelector(sel); if (el) takeFocus(el, true); };
+  const goTab = id => {
+    if (!RO_SECTIONS.some(s=>s.id===id)) id="main";
+    S.seatSheet=id; window.scrollTo(0,0); update(); focus(`[data-rotab="${id}"]`);
+  };
+  inertSheet(main.querySelector("[data-rosheet]"));
+  bindSheetReaders(main.querySelector("[data-rosheet]"), goTab);
+  main.querySelectorAll("[data-rotab]").forEach(b=>b.onclick=()=>goTab(b.dataset.rotab));
+  main.querySelector("[data-seatback]").onclick=()=>seatBack(tag);
+  main.querySelector("[data-roseat]").onclick=()=>{ S.seatSheet=null; window.scrollTo(0,0); update(); focus("[data-seath]"); };
+  main.querySelector("[data-roprint]").onclick=()=>{
+    const ch=Engine.seatCharacter(S.table, tag);
+    if (ch) printSheet(ch);
+    focus("[data-roprint]");
+  };
 }
 
 // ── Import ──
@@ -3573,11 +3647,13 @@ async function seatImport(pid, files, land){
 
 // ── Binding ──
 function openSeat(tag){
-  S.seatOpen=tag; window.scrollTo(0,0); update();
+  const v=Engine.seatView(S.table, tag);
+  S.seatOpen=tag; S.seatSheet = v && v.copy ? "main" : null; window.scrollTo(0,0); update();
   const h=$("main").querySelector("[data-seath]"); if (h) takeFocus(h, true);
 }
 function bindPlayers(main){
   const v=seatPageNow();
+  if (v && seatSheetNow(v)){ bindReadOnlySheet(main, v); return; }
   if (v){ bindSeatPage(main, v); return; }
   const nameEl=main.querySelector("[data-pyadd-name]");
   const add=()=>{
@@ -3616,6 +3692,13 @@ function bindPlayers(main){
       } });
   });
 }
+// Back to the Players tab, onto the seat's card.
+function seatBack(tag){
+  S.seatOpen=null; S.seatSheet=null; window.scrollTo(0,0); update();
+  // A folded card can't take focus: its list's summary does.
+  const el=$("main").querySelector(attrSel("data-seat", tag)), shut=el && el.closest("details:not([open])");
+  if (shut) takeFocus(shut.querySelector("summary")); else if (el) takeFocus(el);
+}
 function bindSeatPage(main, v0){
   const tag=v0.tag, own=()=>Engine.seatView(S.table, tag) || v0;
   const focus = sel => { const el=$("main").querySelector(sel); if (el) el.focus(); return !!el; };
@@ -3624,12 +3707,9 @@ function bindSeatPage(main, v0){
   const refresh = () => { const v=own();
     main.querySelector("[data-seatblock]").innerHTML=seatBlockHtml(v);
     main.querySelector("[data-seatclash]").innerHTML=seatClashHtml(v); };
-  main.querySelector("[data-seatback]").onclick=()=>{
-    S.seatOpen=null; window.scrollTo(0,0); update();
-    // A folded card can't take focus: its list's summary does.
-    const el=$("main").querySelector(attrSel("data-seat", tag)), shut=el && el.closest("details:not([open])");
-    if (shut) takeFocus(shut.querySelector("summary")); else if (el) takeFocus(el);
-  };
+  main.querySelector("[data-seatback]").onclick=()=>seatBack(tag);
+  const read=main.querySelector("[data-seatread]");
+  if (read) read.onclick=()=>{ S.seatSheet="main"; window.scrollTo(0,0); update(); const h=$("main").querySelector("[data-seath]"); if (h) takeFocus(h, true); };
   main.querySelectorAll("[data-seatst]").forEach(b=>b.onclick=()=>{
     edit({ status:b.dataset.seatst });
     main.querySelectorAll("[data-seatst]").forEach(x=>{ const on=x.dataset.seatst===own().status; x.classList.toggle("on", on); x.setAttribute("aria-pressed", String(on)); });
@@ -3666,7 +3746,7 @@ function bindSeatPage(main, v0){
       text: v.copy ? `${label}'s copy goes with the seat. Undo brings both back until the table is next opened; after that, import the file again.` : `${label} leaves the table. Undo brings the seat back.`,
       yes:"Remove",
       then(){
-        S.seatOpen=null;
+        S.seatOpen=null; S.seatSheet=null;
         tableChange(()=>Engine.removeSeat(S.table, tag), true, `Removed ${label}`);
         const el=$("main").querySelector(attrSel("data-pyimport", pid)); if (el) el.focus();
       } });
