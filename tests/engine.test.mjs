@@ -11495,3 +11495,50 @@ test("254: the seat functions are total on a table that isn't one, and on one wi
   eq(s.t.players[0].seats[0].status, "active", "nothing written on a refusal");
   eq(Engine.removePlayer(s.t, "PY-NOPE0000"), { ok: false, why: "No such player." });
 });
+
+test("254: a removed seat's copy outlives other undos, so the dialog's promise holds, and goes at the next gate", () => {
+  const t = Engine.newTable("Undo");
+  let base = plain(t);
+  const pid = Engine.addPlayer(t, { name: "Brogan" }).id;
+  Engine.recordTableAction(t, base, "Added Brogan");
+  base = plain(t);
+  const tag = Engine.importSeat(t, pid, seatFile("Dez", "2026-10-01T10:00:00.000Z")).tag;
+  Engine.recordTableAction(t, base, "Seated Dez");
+  base = plain(t);
+  Engine.removeSeat(t, tag);
+  Engine.recordTableAction(t, base, "Removed Dez", undefined, { fold: false });
+  base = plain(t);
+  Engine.addPlayer(t, { name: "Ana" });
+  Engine.recordTableAction(t, base, "Added Ana", undefined, { fold: false });
+  assert.ok(Engine.undoTableAction(t).ok);
+  assert.equal(t.copies.length, 1, "one undo after the removal keeps the orphaned copy");
+  assert.ok(Engine.undoTableAction(t).ok);
+  assert.equal(t.players[0].seats.length, 1);
+  assert.equal(t.copies.length, 1, "the second undo brings the seat back with its copy");
+  assert.equal(Engine.seatView(t, tag).copy.name, "Dez");
+  Engine.removeSeat(t, tag);
+  eq(Engine.migrateTable(t).copies, [], "opening the table drops it");
+});
+
+test("255: a file with no TAG is refused, writing nothing, and a non-character object isn't called a draft", () => {
+  const { t, pid } = seated();
+  const before = plain(t);
+  const noTag = seatFile("Vex", "2026-10-01T10:00:00.000Z"); delete noTag.meta.id;
+  const r = Engine.importSeat(t, pid, noTag);
+  eq([r.ok, r.why], [false, "Vex has no TAG yet. Open the file on Home, then export it again."]);
+  assert.equal(Engine.importSeat(t, pid, noTag).ok, false, "the same file twice seats nothing");
+  assert.equal(Engine.importSeat(t, pid, { hello: 1 }).why, "That isn't a character.");
+  assert.equal(Engine.importSeat(t, pid, { meta: { id: "TAG-AAAA-AAAA-AAAA" } }).why, "That isn't a character.");
+  eq(t, before, "nothing is written");
+  const old = seatFile("Old", "2026-10-01T10:00:00.000Z"); old.meta.id = "NCR-AAAA-BBBB-CCCC";
+  assert.ok(Engine.importSeat(t, pid, old).ok, "an NCR- id is a TAG migrate() converts");
+});
+
+test("255: seatView carries the sheet's own HP past zero and Pain's down, for the card to read", () => {
+  const { t, tag } = seated();
+  const ch = t.copies[0].character;
+  const hp = Engine.hlState(ch);
+  ch.trackers.damage = hp.total + 7;
+  const v = Engine.seatView(t, tag).copy;
+  eq([v.health.hpLeft, v.health.pastZero, v.health.down, v.pain.down], [0, 7, true, Engine.painState(ch).down]);
+});

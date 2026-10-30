@@ -6072,7 +6072,8 @@ const Engine = (() => {
     if (!_isObj(m) || !("kind" in m)) return "character";
     return m.kind==="shadows-table" ? "table" : m.kind==="shadows-pack" ? "pack" : "unknown";
   }
-  function migrateTable(t){
+  // `opts.keepCopies` is an undo's: a removed seat's copy outlives the undos that follow the removal, until the table is next opened (Decision 254).
+  function migrateTable(t, opts){
     // Work on a copy, so nothing aliases the caller's object. Unknown keys
     // ride along untouched and are never read; known ones are set by name.
     let c;
@@ -6218,7 +6219,7 @@ const Engine = (() => {
     _encounters(c);
     // Players first, then the copies, which read the seats (Decision 254).
     _players(c);
-    _copies(c);
+    _copies(c, !!(opts && opts.keepCopies));
     // Undo never crosses a schema step (Decision 48's Revisit): a file saved by an older
     // app comes in with an empty trail. Otherwise every entry is gated.
     c.audit = typeof arrived!=="string" || _versionNewer(TABLE_SCHEMA_VERSION, arrived) ? [] : _tableAuditGate(c.audit);
@@ -6385,7 +6386,7 @@ const Engine = (() => {
     for (let i=patch.length-1;i>=0;i--) _applyOp(t, patch[i]);
     log.pop();
     t.audit = log;
-    const gated = migrateTable(t);
+    const gated = migrateTable(t, { keepCopies:true });
     for (const k of Object.keys(t)) delete t[k];
     Object.assign(t, gated);
     return { ok:true, undone:entry };
@@ -7521,12 +7522,12 @@ const Engine = (() => {
   }
   // The gate for copies, after the seats: one per seated TAG (the later meta.updated, else the first),
   // each through migrate(), and none whose character isn't the TAG it is kept under.
-  function _copies(c){
+  function _copies(c, keep){
     const seated = new Set();
     for (const p of c.players) for (const s of p.seats) seated.add(s.tag);
     const kept = new Map();
     for (const x of (Array.isArray(c.copies) ? c.copies : [])){
-      if (!_isObj(x) || typeof x.tag!=="string" || !seated.has(x.tag) || !_isObj(x.character)) continue;
+      if (!_isObj(x) || typeof x.tag!=="string" || (!keep && !seated.has(x.tag)) || !_isObj(x.character)) continue;
       let ch;
       try { ch = migrate(x.character); } catch (e) { continue; }
       if (!_isObj(ch) || !_isObj(ch.meta) || ch.meta.id!==x.tag) continue;
@@ -7603,12 +7604,15 @@ const Engine = (() => {
   function importSeat(t, playerId, raw, opts){
     try {
       if (!_isTable(t)) return { ok:false, why:"That isn't a table." };
-      if (fileKind(raw)!=="character") return { ok:false, why:"That isn't a character." };
+      if (fileKind(raw)!=="character" || !_isObj(raw.identity)) return { ok:false, why:"That isn't a character." };
       let ch;
       try { ch = migrate(JSON.parse(JSON.stringify(raw))); } catch (e) { return { ok:false, why:"That isn't a character." }; }
       const name = _isObj(ch.identity) ? _str(ch.identity.name).trim() : "";
       if (!(_isObj(ch.creation) && ch.creation.locked===true))
         return { ok:false, why:`${name || "This character"} isn't locked yet: there's no sheet to read.` };
+      // A file with no TAG would be given a new one on every import, and seat twice.
+      const had = _isObj(raw.meta) ? raw.meta.id : null;
+      if (!isIntakeId(had) && !(typeof had==="string" && OLD_INTAKE_RE.test(had))) return { ok:false, why:`${name || "This character"} has no TAG yet. Open the file on Home, then export it again.` };
       const tag = _isObj(ch.meta) ? ch.meta.id : null;
       if (!isIntakeId(tag)) return { ok:false, why:"That isn't a character." };
       const player = _playerRecords(t).find(p=>p.id===playerId);
@@ -7668,10 +7672,10 @@ const Engine = (() => {
       name:_part(() => _str(ch.identity.name)),
       archetype:_part(() => def && typeof def.name==="string" ? def.name : null),
       tagNumber:_part(() => tagNumber(ch)),
-      health:_part(() => { const h = hlState(ch); return { hpLeft:h.hpLeft, total:h.total, lost:h.lost, levels:h.levels, down:h.down }; }),
+      health:_part(() => { const h = hlState(ch); return { hpLeft:h.hpLeft, pastZero:h.pastZero, total:h.total, lost:h.lost, levels:h.levels, down:h.down }; }),
       awareness:_part(() => skillLine(ch, "awareness").checkBonus),
       conditions:_part(() => conditionState(ch).active.map(a=>a.label)),
-      pain:_part(() => { const p = painState(ch); return { level:p.level, label:p.label }; }),
+      pain:_part(() => { const p = painState(ch); return { level:p.level, label:p.label, down:!!p.down }; }),
       san:_part(() => { const s = sanState(ch); return { current:s.current, max:s.max }; }),
       luck:_part(() => { const l = luckState(ch); return { current:l.current, max:l.max }; }),
       credits:_part(() => { const v = ch.trackers.credits.current; return Number.isFinite(v) ? v : null; }),

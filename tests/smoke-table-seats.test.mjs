@@ -306,3 +306,32 @@ test("254: Who knows what groups a name that answers to a seat under the charact
   assert.equal([...app.$$("#sess-crew option")][0].value, "Dez", "the seat's name leads Who was there");
   assert.deepEqual(app.errors, []);
 });
+
+test("255: a batch that seats two shows its notice without an Undo, the card reads the sheet's HP and leaves out Pain at level 0, and a file with no TAG is refused by name", async () => {
+  const app = fresh();
+  addPlayer(app, "Brogan");
+  const hurt = dez(); hurt.trackers.damage = 40;
+  const noTag = charFile("Vex", "2026-10-02T10:00:00.000Z"); delete noTag.meta.id;
+  await pickFiles(app, importBtn(app, "Brogan"), [hurt, wren(), noTag]);
+  assert.equal(cards(app).length, 2);
+  assert.match(app.$("#undotoast").textContent, /Seated Dez[\s\S]*Seated Wren[\s\S]*file2\.json: Vex has no TAG yet\. Open the file on Home, then export it again\./);
+  assert.equal(app.$("[data-toastundo]"), null, "a batch of two has no Undo that takes back one");
+  assert.match(cardLines(cards(app)[0])[0], /^HP −\d+ of \d+/, "past zero reads as the sheet's −N");
+  assert.doesNotMatch(cards(app)[1].textContent, /Pain Level/, "an unhurt character has no Pain line");
+  assert.deepEqual(app.errors, []);
+});
+
+test("254: Remove, another change, then two undos from Activity bring the seat back with its copy", async () => {
+  const app = fresh();
+  addPlayer(app, "Brogan");
+  await pickFiles(app, importBtn(app, "Brogan"), [dez()]);
+  app.click(`[data-seat="${DEZ_TAG}"]`);
+  app.click("[data-seatdel]"); app.click("#modal [data-askyes]");
+  addPlayer(app, "Ana");
+  app.click("[data-menu-toggle]"); app.click("[data-tactivity]");
+  app.click("#modal [data-act-undo]"); app.click("#modal [data-act-undo]");
+  app.click("#modal [data-modalclose]");
+  assert.equal(cards(app).length, 1);
+  assert.match(cards(app)[0].textContent, /HP \d+ of \d+/, "the copy came back, not 'No copy yet'");
+  assert.deepEqual(app.errors, []);
+});

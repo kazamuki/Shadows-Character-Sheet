@@ -3453,7 +3453,7 @@ const crewNameChoices = t => namesSeatsFirst(t, Engine.crewView(t, {}).map(g=>g.
 function seatTopHtml(v){
   const c=v.copy;
   if (!c) return "";
-  const hp=c.health, hpText = hp ? [`HP ${hp.hpLeft} of ${hp.total}`, hp.lost ? `${hp.lost} Health Level${hp.lost===1 ? "" : "s"} lost` : "", hp.down ? "Down" : ""].filter(Boolean).join(" · ") : "";
+  const hp=c.health, hpText = hp ? [`HP ${hp.pastZero ? "−"+hp.pastZero : hp.hpLeft} of ${hp.total}`, hp.lost ? `${hp.lost} Health Level${hp.lost===1 ? "" : "s"} lost` : "", hp.down ? "Down" : ""].filter(Boolean).join(" · ") : "";
   const aware = typeof c.awareness==="number" ? `Awareness ${castSigned(c.awareness)}` : "";
   const cond = Array.isArray(c.conditions) ? (c.conditions.length ? `Conditions: ${c.conditions.join(", ")}` : "No Conditions") : "";
   return [hpText, aware, cond].filter(Boolean).map(x=>`<div class="cast-line seat-line">${esc(x)}</div>`).join("");
@@ -3463,7 +3463,7 @@ function seatRestHtml(v){
   const c=v.copy;
   if (!c) return `<div class="roster-meta cast-meta">No copy yet. Import their file.</div>`;
   const row = bits => { const s=bits.filter(Boolean).map(esc).join(" · "); return s ? `<div class="roster-meta cast-meta">${s}</div>` : ""; };
-  const stats=[ c.pain ? c.pain.label : "", c.san ? `SAN ${c.san.current}/${c.san.max}%` : "", c.luck ? `Luck ${c.luck.current}/${c.luck.max}` : "",
+  const stats=[ c.pain && c.pain.level>0 && !c.pain.down ? c.pain.label : "", c.san ? `SAN ${c.san.current}/${c.san.max}%` : "", c.luck ? `Luck ${c.luck.current}/${c.luck.max}` : "",
     typeof c.credits==="number" ? `Çredits ${numText(c.credits)}` : "", typeof c.ip==="number" ? `IP to spend ${c.ip}` : "",
     crankOn() && c.crank && c.crank.tier ? `CRANK ${c.crank.tier}` : "" ];
   const when=[ stampText(c.updated) ? `Changed ${stampText(c.updated)}` : "", stampText(c.importedAt) ? `Imported ${stampText(c.importedAt)}` : "" ];
@@ -3542,7 +3542,7 @@ function askOlderCopy(r, fileName){
 // Files onto a player, one at a time, one notice line each. A new TAG is a seat and is logged as one;
 // a newer or the same copy changes the copy only, which the log doesn't hold (Decision 254).
 async function seatImport(pid, files, land){
-  const table=S.table, lines=[]; let firstNew=null;
+  const table=S.table, lines=[]; let firstNew=null, seated=0;
   for (const f of files){
     const text=await readFileText(f);
     if (S.table!==table) return;
@@ -3555,7 +3555,7 @@ async function seatImport(pid, files, land){
       r=Engine.importSeat(table, pid, raw, { older:true });
     }
     if (!r.ok){ lines.push(`${f.name}: ${r.why}`); continue; }
-    if (r.did==="seated"){ tableChange(()=>{}, false, `Seated ${r.name}`); lines.push(`Seated ${r.name}`); if (!firstNew) firstNew=r.tag; }
+    if (r.did==="seated"){ tableChange(()=>{}, false, `Seated ${r.name}`); lines.push(`Seated ${r.name}`); seated++; if (!firstNew) firstNew=r.tag; }
     else if (r.did==="updated"){ tableChange(()=>{}, false); lines.push(`Updated ${r.name}`); }
     else lines.push(`${r.name} is already up to date.`);
   }
@@ -3567,7 +3567,8 @@ async function seatImport(pid, files, land){
     const el=card || main.querySelector(attrSel("data-pyimport", pid));
     if (el) takeFocus(el);
   }
-  if (lines.length) notice(lines.join("\n"));
+  // One entry's Undo would take back the last file only: a batch of seatings shows its notice without one (Activity has each).
+  if (lines.length){ if (seated>1) hideUndoToast(); notice(lines.join("\n")); }
 }
 
 // ── Binding ──
