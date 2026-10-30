@@ -72,4 +72,4 @@ then some lines will have outgrown themselves.
   something happens.
 - **Players.** A table seats each player's characters from their exported files, and shows
   them as cards: Health, Awareness and Conditions first. A name used in old sessions can
-  count as the character.
+  count as the character. A seat's card opens that character's full sheet, as the player sees it: every tab to read, and Print. Nothing on it changes from the table.

@@ -3588,26 +3588,15 @@ function openVitalPopover(key, scope="#main"){
 }
 
 // ── Sheet event wiring ─────────────────────────────────────────────
-function bindSheet(){
-  const main=$("main"), ch=S.ch;
-  // Vitals flyout (the bar's "Vitals" toggle on non-Main tabs)
-  main.querySelectorAll("[data-vitals-toggle]").forEach(b=>b.onclick=()=>{ if (S.vitalsOpen) closeVitals(); else openVitals(); });
-  main.querySelectorAll("[data-vitals-pin-main]").forEach(b=>b.onclick=()=>{
-    setVitalsPinned(true); takeFocus($("vdrawer").querySelector("[data-vitals-pin]")); });
+// The binders that only read (Decision 256): another tab, a jump, a skill's or a derivation's
+// description, the sideways rows. bindSheet binds them with the sheet's own tab change; the
+// read-only sheet binds them with its own, and binds no writer.
+function bindSheetReaders(main, goTab){
   bindScrollRows(main);
-  main.querySelectorAll("[data-vpop]").forEach(b=>b.onclick=()=>openVitalPopover(b.dataset.vpop));
   // A button that goes to another tab, the way the header's tabs do.
-  main.querySelectorAll("[data-gotab]").forEach(b=>b.onclick=()=>{ S.section=normSection(b.dataset.gotab); window.scrollTo(0,0); update(); });
-  // Character: Expand all / Collapse all opens or closes every Advantage and
-  // Disadvantage card in place, and remembers the choice in this browser.
-  main.querySelectorAll("[data-traits-all]").forEach(b=>b.onclick=()=>{
-    const open = b.getAttribute("aria-pressed")!=="true";
-    main.querySelectorAll("details.pick.trait").forEach(d=>{ d.open=open; });
-    b.setAttribute("aria-pressed", String(open)); b.textContent = open ? "Collapse all" : "Expand all";
-    try{ localStorage.setItem(TRAITS_OPEN_KEY, open?"open":"closed"); }catch(e){}
-  });
+  main.querySelectorAll("[data-gotab]").forEach(b=>b.onclick=()=>goTab(b.dataset.gotab));
+  main.querySelectorAll("[data-jump]").forEach(b=>b.onclick=()=>jumpTo(b.dataset.jump));
   // Skill description toggles (no full re-render — flip the hidden detail row)
-  main.querySelectorAll("[data-addstyle]").forEach(b=>b.onclick=()=>openAddInPlay(b.dataset.addstyle, b.dataset.addin));
   main.querySelectorAll("[data-skilldesc]").forEach(b=>b.onclick=()=>{
     const id=b.dataset.skilldesc; S.openSkills=S.openSkills||new Set();
     const open=!S.openSkills.has(id);
@@ -3616,9 +3605,6 @@ function bindSheet(){
     if (row) row.hidden=!open;
     b.setAttribute("aria-expanded", open?"true":"false");
   });
-  const num = el => el && el.value!=="" ? Number(el.value) : null;
-  const lite = () => { update(false); };   // save + rails, keep focus in inputs
-
   // Derived (TOL/WILL) derivation toggles — flip the hidden line, no re-render
   main.querySelectorAll("[data-derivdesc]").forEach(b=>b.onclick=()=>{
     const id=b.dataset.derivdesc; S.openDerived=S.openDerived||new Set();
@@ -3628,6 +3614,26 @@ function bindSheet(){
     if (row) row.hidden=!open;
     b.setAttribute("aria-expanded", open?"true":"false");
   });
+}
+function bindSheet(){
+  const main=$("main"), ch=S.ch;
+  // Vitals flyout (the bar's "Vitals" toggle on non-Main tabs)
+  main.querySelectorAll("[data-vitals-toggle]").forEach(b=>b.onclick=()=>{ if (S.vitalsOpen) closeVitals(); else openVitals(); });
+  main.querySelectorAll("[data-vitals-pin-main]").forEach(b=>b.onclick=()=>{
+    setVitalsPinned(true); takeFocus($("vdrawer").querySelector("[data-vitals-pin]")); });
+  bindSheetReaders(main, id=>{ S.section=normSection(id); window.scrollTo(0,0); update(); });
+  main.querySelectorAll("[data-vpop]").forEach(b=>b.onclick=()=>openVitalPopover(b.dataset.vpop));
+  // Character: Expand all / Collapse all opens or closes every Advantage and
+  // Disadvantage card in place, and remembers the choice in this browser.
+  main.querySelectorAll("[data-traits-all]").forEach(b=>b.onclick=()=>{
+    const open = b.getAttribute("aria-pressed")!=="true";
+    main.querySelectorAll("details.pick.trait").forEach(d=>{ d.open=open; });
+    b.setAttribute("aria-pressed", String(open)); b.textContent = open ? "Collapse all" : "Expand all";
+    try{ localStorage.setItem(TRAITS_OPEN_KEY, open?"open":"closed"); }catch(e){}
+  });
+  main.querySelectorAll("[data-addstyle]").forEach(b=>b.onclick=()=>openAddInPlay(b.dataset.addstyle, b.dataset.addin));
+  const num = el => el && el.value!=="" ? Number(el.value) : null;
+  const lite = () => { update(false); };   // save + rails, keep focus in inputs
 
   // ── Activity Log: last-in-first-out undo (NOT itself logged) ──────────
   main.querySelectorAll("[data-undolast]").forEach(b=>b.onclick=()=>{

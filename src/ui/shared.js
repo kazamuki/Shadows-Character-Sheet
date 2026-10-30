@@ -556,17 +556,21 @@ function closePopover(returnFocus){
 // cover it otherwise. Lighter than openPopover: it holds text, never
 // controls, and it never takes focus.
 const statRangeText = r => r.min==null ? `${r.max} or lower` : r.max==null ? `${r.min}+` : r.min===r.max ? `${r.min}` : `${r.min}–${r.max}`;
+// The character a tip reads when it opens: the open one, else the one the GM's read-only sheet last drew
+// (Decision 256), which the table sets after a draw and clears on every other.
+let readOnlyChar = null;
+const tipChar = () => S.ch || readOnlyChar;
 const TIPS = {
   tag: term => { const g=Engine.glossary(term); return g && { title:g.term, text:g.text, note:g.note }; },
   spelltag: term => { const g=Engine.glossary(term, "spell"); return g && { title:g.term, text:g.text, note:g.note }; },
   stat: id => {
-    const r = S.ch && Engine.statReading(S.ch, id); if (!r) return null;
+    const r = tipChar() && Engine.statReading(tipChar(), id); if (!r) return null;
     return { title:`${r.name} ${r.value}`, text:r.description,
       more:[r.range && `${statRangeText(r.range)}: ${r.range.meaning}`, r.rule, r.beyond, r.health].filter(Boolean) };
   },
   // Decision 169: what CRANK is and what each tier pays. The playerNote shows
   // only while rep is below zero (F37).
-  crank: () => { const R=D.resources.crank, st=S.ch && Engine.crankState(S.ch); if (!R) return null;
+  crank: () => { const R=D.resources.crank, st=tipChar() && Engine.crankState(tipChar()); if (!R) return null;
     return { title:R.name, text:R.description,
       more:R.tiers.map(t=>`${t.name} · ${t.rep} rep · ${Engine.crankPayText(t)}`),
       note: st && st.unsettled ? `${copy("unsettledLabel")}: ${R.playerNote}` : "" }; },
