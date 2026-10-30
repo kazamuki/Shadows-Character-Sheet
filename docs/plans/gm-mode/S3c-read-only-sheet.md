@@ -4,7 +4,9 @@
 and *Still to build*'s S3c row; GQ13.
 **Status:** **drafted 2026-10-30 by Claude (Opus)**, the S3b reviewer, after
 #268 (S3b, Decisions 254–255) merged (`WORK-ORDERS.md`, step 7). **Ken chose
-this session (2026-10-30).** Not yet approved.
+this session (2026-10-30).**
+**Approved by Ken 2026-10-30** (in the conductor session), as Rule or shape, one decision, no schema bump, no `private/` commit.
+**SQ1–SQ6 answered by Ken 2026-10-30: every default.** He picked SQ1 (*The sheet*), SQ2 (*Disabled in place*) and SQ4 (*Shown, not opened*) by name, and SQ3, SQ5 and SQ6 as one set (*Approve, defaults*).
 **Branch:** from `main` at `1c5f6fa` or later, PR to `main`, switched off
 (Decision 173). **No `private/` commit.**
 **Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../WORK-ORDERS.md):
@@ -223,12 +225,12 @@ If the ledger search at build time finds another, stop and ask.
 
 | # | Question | Default | Answer |
 |---|---|---|---|
-| SQ1 | **What a card opens.** A card whose seat has a copy opens the **read-only sheet**; the seat's page (status, names, Replace, Remove) is a press away from it. A seat with no copy still opens its page. 255's *Revisit if* expected this. Or keep the card on the seat's page, and put **Read the sheet** there? | **The sheet** | |
-| SQ2 | **The write controls.** Keep them where they are, **disabled** (buttons, selects, checkboxes) or **read-only** (fields), so the page has the sheet's own layout and its chips still show state? Or hide them? Hiding moves the layout and loses what a pressed chip shows. | **Disabled in place** | |
-| SQ3 | **The tabs.** Every tab but Admin: Main, Skills, Character, Trackers, Progression, Sessions, Loadout & Powers, Notes. Or fewer? | **All but Admin** | |
-| SQ4 | **The vitals pills.** The pills show their numbers but don't open, since their popovers hold Hurt, Heal and Spend. Or build read-only popovers too? That's more renderer work for numbers the pill already shows. | **Pills shown, not opened** | |
-| SQ5 | **Print.** The page has **Print**, which prints the copy as a player's Print does. Or no Print? | **Print** | |
-| SQ6 | **Find.** A seat found by Find opens the way its card does. Or always its page? | **The way its card does** | |
+| SQ1 | **What a card opens.** A card whose seat has a copy opens the **read-only sheet**; the seat's page (status, names, Replace, Remove) is a press away from it. A seat with no copy still opens its page. 255's *Revisit if* expected this. Or keep the card on the seat's page, and put **Read the sheet** there? | **The sheet** | Default (Ken, 2026-10-30) |
+| SQ2 | **The write controls.** Keep them where they are, **disabled** (buttons, selects, checkboxes) or **read-only** (fields), so the page has the sheet's own layout and its chips still show state? Or hide them? Hiding moves the layout and loses what a pressed chip shows. | **Disabled in place** | Default (Ken, 2026-10-30) |
+| SQ3 | **The tabs.** Every tab but Admin: Main, Skills, Character, Trackers, Progression, Sessions, Loadout & Powers, Notes. Or fewer? | **All but Admin** | Default (Ken, 2026-10-30) |
+| SQ4 | **The vitals pills.** The pills show their numbers but don't open, since their popovers hold Hurt, Heal and Spend. Or build read-only popovers too? That's more renderer work for numbers the pill already shows. | **Pills shown, not opened** | Default (Ken, 2026-10-30) |
+| SQ5 | **Print.** The page has **Print**, which prints the copy as a player's Print does. Or no Print? | **Print** | Default (Ken, 2026-10-30) |
+| SQ6 | **Find.** A seat found by Find opens the way its card does. Or always its page? | **The way its card does** | Default (Ken, 2026-10-30) |
 
 ## 5. The assumption sweep
 
