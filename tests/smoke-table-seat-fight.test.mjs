@@ -131,3 +131,15 @@ test("257: the preview says what the armor lost, and a clash among three seats s
   assert.match(app.$("[data-erow]").textContent, /Dez, Wren and Vex all answer to this name, so it counts as none of them\./);
   assert.deepEqual(app.errors, []);
 });
+
+test("257: a Compromised vest reads 'Compromised: RES is gone' on the row and in the Hit panel, and scrap reads Scrap", () => {
+  const app = open();
+  const id = withDez(app);
+  ev(app, `tableChange(() => { const r = S.table.encounters[0].rows[0]; r.armorLoss = 10; })`);
+  assert.match(app.$("[data-erow] .enc-armor").textContent, /INT 0\/10 · Compromised: RES is gone$/);
+  app.click(`[data-ehit="${id}"]`);
+  assert.match(app.$(".enc-seat-armor").textContent, /INT 0\/10 · Compromised: RES is gone$/);
+  ev(app, `tableChange(() => { S.table.encounters[0].rows[0].scrapped = true; })`);
+  assert.match(app.$("[data-erow] .enc-armor").textContent, /· Scrap$/);
+  assert.deepEqual(app.errors, []);
+});
