@@ -11586,3 +11586,32 @@ test("256: seatCharacter is total on a table that isn't one, and on bad copies",
   Object.defineProperty(s.t.copies[0].character, "identity", { get() { throw new Error("boom"); }, enumerable: true });
   eq(Engine.seatCharacter(s.t, s.tag), null);
 });
+
+// ── The read-only sheet (Decision 256): no writer runs on a seat's copy ──
+// The body of `function name`, by brace-matching from its line.
+function fnBody(src, name) {
+  const at = src.search(new RegExp(String.raw`^function ${name}\(`, "m"));
+  assert.ok(at >= 0, `no function ${name}`);
+  const open = src.indexOf("{", src.indexOf(")", at));
+  let depth = 0, i = open;
+  for (; i < src.length; i++) { if (src[i] === "{") depth++; else if (src[i] === "}" && --depth === 0) break; }
+  return src.slice(open, i + 1);
+}
+const callers = (src, name) => [...src.matchAll(new RegExp(String.raw`(?<!function )\b${name}\(`, "g"))]
+  .map(m => [...src.slice(0, m.index).matchAll(/^function (\w+)\(/gm)].pop()[1]);
+
+test("256: bindSheet and bindMain are each called from renderMain alone", () => {
+  const ui = ["app", "gm", "sheet", "shared", "wizard"].map(f => code(`src/ui/${f}.js`)).join("\n");
+  for (const name of ["bindSheet", "bindMain"]) {
+    const from = [...new Set(callers(ui, name))];
+    assert.deepEqual(from, ["renderMain"], `${name} is called from ${from}`);
+  }
+});
+
+test("256: gm.js assigns S.ch only inside drawReadOnly, and the read-only binder calls no writer", () => {
+  const gm = code("src/ui/gm.js");
+  const sets = [...gm.matchAll(/\bS\.ch\s*=[^=]/g)].map(m => [...gm.slice(0, m.index).matchAll(/^function (\w+)\(/gm)].pop()[1]);
+  assert.deepEqual(sets, ["drawReadOnly", "drawReadOnly"], "the set and the restore, nowhere else");
+  const body = fnBody(gm, "bindReadOnlySheet");
+  for (const w of [/\bcommit\(/, /\bsaveChar\(/, /\blocalStorage\b/, /\bS\.ch\s*=[^=]/, /\bbindSheet\(/, /\bbindMain\(/]) assert.doesNotMatch(body, w, `bindReadOnlySheet matches ${w}`);
+});
