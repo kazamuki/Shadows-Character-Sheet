@@ -3545,7 +3545,7 @@ function drawReadOnly(ch, section){
     return html;
   } catch (e) {
     readOnlyChar=null;
-    return `<p class="step-note" role="status">This tab couldn't be drawn from this copy.</p>`;
+    return `<p class="step-note" role="status">This copy can't show this tab. Ask the player for a fresh file.</p>`;
   } finally {
     S.ch=keep.ch; S.section=keep.section; S.admin=keep.admin; S.importIssues=keep.issues; saveFailed=keep.failed;
   }
@@ -3576,9 +3576,9 @@ function readOnlySheetHtml(v){
     <h1 class="step-title tbl-title cast-title" tabindex="-1" data-seath data-rosheeth>${esc(v.name)}</h1>${tagged}
     <p class="step-note"><strong>Read only</strong>${when ? ` · ${when}` : ""}</p>
     <p class="step-note">${esc(playerTitle(v.player))}</p>
-    <p><button type="button" class="btn sm" data-roseat>Seat</button> <button type="button" class="btn sm" data-roprint>Print</button></p>
+    <p><button type="button" class="btn sm" data-roseat>Seat details</button> <button type="button" class="btn sm" data-roprint>Print</button></p>
     ${readOnlyTabsHtml()}
-    <div class="ro-sheet" data-rosheet>${ch ? drawReadOnly(ch, S.seatSheet) : `<p class="step-note" role="status">This tab couldn't be drawn from this copy.</p>`}</div>`;
+    <div class="ro-sheet" data-rosheet>${ch ? drawReadOnly(ch, S.seatSheet) : `<p class="step-note" role="status">This copy can't show this tab. Ask the player for a fresh file.</p>`}</div>`;
 }
 function bindReadOnlySheet(main, v){
   const tag=v.tag, focus = sel => { const el=$("main").querySelector(sel); if (el) takeFocus(el, true); };

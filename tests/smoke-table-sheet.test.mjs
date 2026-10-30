@@ -77,7 +77,7 @@ test("256: every tab but Admin draws on the read-only sheet, from the copy", () 
   for (const id of SECTIONS) {
     goTab(app, id);
     assert.ok(app.$("[data-rosheet]").children.length > 0, id);
-    assert.doesNotMatch(app.$("[data-rosheet]").textContent, /couldn't be drawn/, id);
+    assert.doesNotMatch(app.$("[data-rosheet]").textContent, /can't show this tab/, id);
     assert.equal(app.$(`[data-rotab="${id}"]`).getAttribute("aria-current"), "page");
   }
   assert.equal(app.$('[data-rotab="admin"]'), null);
