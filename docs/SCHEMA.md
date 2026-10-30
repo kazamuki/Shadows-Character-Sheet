@@ -5306,16 +5306,16 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Built:** switched off (173); PR #270; log 2026-10-30 (S3c).
 
 257. **A PC row whose name answers to a seat with a copy is that character in the fight: hits run the sheet's pipeline on a fresh copy, and the row keeps the fight, never written back.**
-     *2026-10-30 · Ken + Claude · Touches: PC row, claimed row, seatFor, seatCharacter, rowCharacter, stand-in, resolveEncounterHit, applyEncounterHit, encounterView, addParticipant, editParticipant, Hit panel, PROT roll, Natural Armor, armorLoss, armorId, gate, read-only sheet, backEnc, GQ19, Decision 188, Decision 191, Decision 192, Decision 193, Decision 254, Decision 256*
-     - **Decided:** A PC row is claimed while its name answers to one seat with a copy (254, read live, never stored). Added under that name, or renamed to it untouched, it starts from the copy as filed: damage, Massive, Conditions, armor wear. After that the fight is the row's. A hit runs `resolveHit` and `applyHit` on `seatCharacter` with the row's numbers over it, taking the player's PROT roll and Passed or Failed. Health, Pain and Awareness read off the same copy. The gate keeps a PC row's wear (`written-in` names a custom piece). The row's name opens the read-only sheet and returns to the row.
+     *2026-10-30 · Ken + Claude · Touches: PC row, seatFor, seatCharacter, rowCharacter, resolveEncounterHit, applyEncounterHit, encounterView, addParticipant, editParticipant, Hit panel, PROT roll, Natural Armor, armorLoss, armorId, read-only sheet, backEnc, GQ19, Decision 188, Decision 191, Decision 192, Decision 254, Decision 256*
+     - **Decided:** A PC row is claimed while its name answers to one seat with a copy (read live, never stored). Added under that name, or renamed to it untouched, it starts from the copy as filed: damage, Massive, Conditions, armor wear. After that the fight is the row's; a rename off the seat takes its start back if nothing happened since. A hit runs `resolveHit` and `applyHit` on `seatCharacter` with the row's numbers over it, with the player's PROT roll and Passed or Failed. Health, Pain and Awareness read off the same copy. The gate keeps a PC row's wear. The row's name opens the read-only sheet and returns. A clash or a missing copy gets a line saying why; a removed seat's row just reads typed.
      - **Why:** the GM typed numbers the card had, and 191 refused to guess armor the copy now carries. A clone keeps every write off the copy and the roster.
      - **Rejected:**
        - The copy's trackers read live under the row's: a re-import counts the fight twice.
-       - A stored seat link: 254 reads typed names; a link goes stale.
-       - Writing the fight to the copy: the player's sheet is the truth (GQ19).
-       - Static PROT: a player's armor rolls (053 is for enemies).
+       - A stored seat link: it goes stale.
+       - Writing the fight to the copy: the player's sheet is the truth.
+       - Static PROT: a player's armor rolls.
      - **Replaces:** Decision 188 in part (a claimed row isn't the GM's numbers), 191 in part (it takes the whole hit; the gate keeps PC wear), 192 in part (its Shock and At Zero are answered).
-     - **Revisit if:** live sync arrives (§8), S2's dispatch sends the fight to a player, or a fight needs the copy's Withering or held spells.
+     - **Revisit if:** live sync arrives (§8), S2's dispatch reaches players, or a fight needs the copy's Withering or held spells.
      - **Built:** switched off (173); PR #274; log 2026-10-30 (S3d).
 
 ## 5. Open Flags
