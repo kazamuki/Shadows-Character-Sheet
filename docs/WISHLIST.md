@@ -480,6 +480,12 @@ anything ships. **Sequence after loadout-and-gear's L6** (vehicles, the first ne
 `cyborg` is W61's question and closes F6; the install cost closes F19. Vampires, Werewolves and Arcanists
 can't take chrome. A rules question stays a flag, never a guess in code.
 
+*When `cyborg` retires:* `panelRows` (`src/ui/shared.js`) assigns `ch.panelData[key] = []` while it
+draws, so looking at a Cyborg's Loadout saves an empty `augments` (no audit entry, a new changed stamp;
+found in S3c's review, PR #270). `augments` is the only `table` panel in the data, so the retirement ends
+it, but the write stays for the next one. Make the draw read `ch.panelData[key] || []`, and let the add
+handler create the key. Ken chose this over a separate Fix (2026-10-30).
+
 **W127 — Cyber-Prophetical, once cybernetics are gear.** *Ken, from P18's sign-off · 💡 · Rule or shape · raised 2026-10-16*\
 **Plan:** set aside by [loadout-and-gear §4](plans/loadout-and-gear.md): waits on cybernetics as gear, with W90 · **Goes with:** W90
 
