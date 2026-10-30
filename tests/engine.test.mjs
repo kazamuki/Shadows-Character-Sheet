@@ -11799,3 +11799,21 @@ test("257: rowCharacter is total, and fresh every call", () => {
   Engine.endEncounter(t, e);
   eq(Engine.rowCharacter(t, e, id), null, "an ended encounter takes no hit");
 });
+
+test("257: Shock on a claimed row is answered Passed or Failed, and a failure adds what the sheet's would", () => {
+  const { t, e } = seatFightTable();
+  const id = addPc(t, e, "Dez");
+  const big = { damage: 30, damageType: "ballistic", category: "massive", location: "torso" };
+  const res = Engine.resolveEncounterHit(t, e, id, big);
+  assert.ok(res.prompts.shock, "three Health Levels lost in one hit asks Shock");
+  const sheet = Engine.seatCharacter(t, rowOf(t, e, id).armorId ? Engine.seatFor(t, "Dez") : null);
+  const asPlayer = Engine.applyHit(sheet, big, { shock: "fail" });
+  const ap = Engine.applyEncounterHit(t, e, id, big, { shock: "fail" });
+  assert.ok(ap.ok, ap.why);
+  eq(ap.added, asPlayer.added, "the row adds what the player's own sheet adds");
+  assert.ok(ap.added.length > 0);
+  eq(rowOf(t, e, id).conditions.map(c => c.id).sort(), sheet.trackers.conditions.map(c => c.id).sort());
+  const passed = seatFightTable();
+  const pid = addPc(passed.t, passed.e, "Dez");
+  eq(Engine.applyEncounterHit(passed.t, passed.e, pid, big, { shock: "pass" }).added, []);
+});
