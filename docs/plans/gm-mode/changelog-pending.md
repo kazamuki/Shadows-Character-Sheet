@@ -55,7 +55,9 @@ then some lines will have outgrown themselves.
   searches the Codex itself.
 - **The hit.** An NPC takes a hit the way your sheet does: armor, Shock, Massive
   damage, At Zero and Dying, by the book's rules for enemies, with their traits on
-  screen when it's their turn.
+  screen when it's their turn. A player character whose name matches a seat takes
+  the hit the way their sheet does, armor and all, from their last exported file.
+  The fight stays on the GM's table.
 - **The end of a fight.** A wrap-up keeps the survivors worth keeping, writes the
   fight onto each NPC's record, where a tap opens it again, and tells the players
   which die to roll for armor wear.

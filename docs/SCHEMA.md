@@ -4503,6 +4503,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** seats arrive (S3b: a PC row is claimed by a seat), the Encounter Design worksheet needs a type, or live sync makes the scratch copy unnecessary (§8).
      - **Built:** table schema 0.5; PR #126; log 2026-10-07.
      → **Superseded in part by Decision 252** — an encounter carries its Encounter Design worksheet as its plan; the worksheet's type isn't built.
+     → **Superseded in part by Decision 257** — a PC row whose name answers to a seat with a copy reads that character, not the GM's numbers.
 
 189. **An encounter's round is the book's: Combat Sense highest first, ties shown and never broken, and a Reset that lists, row by row, what ticks, what runs out and what asks for a save.**
      *2026-10-07 · Ken + Claude · Touches: Order of Engagement, Combat Sense, ties, turn, acted, round, Reset, resolveReset, ongoing, recovery, whileDying, rounds, Keep, Take, Heal, Health Levels, Pain Level, GQ23, Decision 96, Decision 100, F24*
@@ -4547,6 +4548,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 189 in part: "Damage is HP straight onto a row (no armor, no Shock)" now holds for Take and Heal only.
      - **Revisit if:** seats arrive (S3b: a claimed PC row takes the whole hit on a copy of the character, never written back), GQ18 is answered otherwise, or NPC natural armor arrives.
      - **Built:** table schema 0.6; PR #128; log 2026-10-07.
+     → **Superseded in part by Decision 257** — a claimed PC row takes the whole hit through the pipeline on a fresh copy; the gate keeps a PC row's armor wear.
 
 192. **A hit asks an NPC what it asks a player: Shock, At Zero and a Death Mark while Dying, each offered and none forced, and the active row shows its traits as reminders.**
      *2026-10-07 · Ken + Claude · Touches: Shock, At Zero, Dying, Death Mark, onFail, onPass, inflicts, Conditions from a hit, source, traits, reminders, active row, GQ23, GQ24, GQ25, F24, F36, Decision 99, Decision 151, Decision 189*
@@ -4560,6 +4562,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing.
      - **Revisit if:** GQ24 says NPCs drop at zero, GQ25 gives traits a trigger field, F24 or F36 is answered.
      - **Built:** as 191.
+     → **Superseded in part by Decision 257** — on a claimed row the GM answers Shock and At Zero as the player calls them.
 
 193. **An encounter ends with a wrap-up: a cast member gets the fight as an interaction of a new kind, *fought*; a Codex copy worth keeping is kept into the cast; the players are told the wear die. Wounds and NPC wear don't carry.**
      *2026-10-07 · Ken + Claude · Touches: End, endEncounter, wrap-up, Keep, Promote, kept, interaction, fought, killed, cast status, crew, history, armor wear, table schema 0.7, GQ26, Decision 100, Decision 177, Decision 182, Decision 188*
@@ -5301,6 +5304,19 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 255 in part (a card with a copy opens the sheet; the seat's page is a press away).
      - **Revisit if:** S3d shows the GM's scratch hits on the sheet, a player wants a view-only sheet, or a renderer needs bound state to draw.
      - **Built:** switched off (173); PR #270; log 2026-10-30 (S3c).
+
+257. **A PC row whose name answers to a seat with a copy is that character in the fight: hits run the sheet's pipeline on a fresh copy, and the row keeps the fight, never written back.**
+     *2026-10-30 · Ken + Claude · Touches: PC row, claimed row, seatFor, seatCharacter, rowCharacter, stand-in, resolveEncounterHit, applyEncounterHit, encounterView, addParticipant, editParticipant, Hit panel, PROT roll, Natural Armor, armorLoss, armorId, gate, read-only sheet, backEnc, GQ19, Decision 188, Decision 191, Decision 192, Decision 193, Decision 254, Decision 256*
+     - **Decided:** A PC row is claimed while its name answers to one seat with a copy (254, read live, never stored). Added under that name, or renamed to it untouched, it starts from the copy as filed: damage, Massive, Conditions, armor wear. After that the fight is the row's. A hit runs `resolveHit` and `applyHit` on `seatCharacter` with the row's numbers over it, taking the player's PROT roll and Passed or Failed. Health, Pain and Awareness read off the same copy. The gate keeps a PC row's wear (`written-in` names a custom piece). The row's name opens the read-only sheet and returns to the row.
+     - **Why:** the GM typed numbers the card had, and 191 refused to guess armor the copy now carries. A clone keeps every write off the copy and the roster.
+     - **Rejected:**
+       - The copy's trackers read live under the row's: a re-import counts the fight twice.
+       - A stored seat link: 254 reads typed names; a link goes stale.
+       - Writing the fight to the copy: the player's sheet is the truth (GQ19).
+       - Static PROT: a player's armor rolls (053 is for enemies).
+     - **Replaces:** Decision 188 in part (a claimed row isn't the GM's numbers), 191 in part (it takes the whole hit; the gate keeps PC wear), 192 in part (its Shock and At Zero are answered).
+     - **Revisit if:** live sync arrives (§8), S2's dispatch sends the fight to a player, or a fight needs the copy's Withering or held spells.
+     - **Built:** switched off (173); PR #…; log 2026-10-30 (S3d).
 
 ## 5. Open Flags
 
