@@ -11677,7 +11677,8 @@ test("257: a hit on a claimed row runs the pipeline on a copy", () => {
   eq(rowOf(t, e, id).conditions.map(c => c.id), ["bleeding"], "the copy's Bleeding is not stacked on the row's");
   // The row's Conditions replace the copy's: with Bleeding dealt with on the row, the next hit offers it again.
   assert.ok(Engine.participantRemoveCondition(t, e, id, 0).ok);
-  assert.ok(Engine.resolveEncounterHit(t, e, id, FIGHT_HIT).prompts.conditions.includes("bleeding"), "the copy's Bleeding isn't read under the row's");
+  const again = Engine.applyEncounterHit(t, e, id, FIGHT_HIT, { conditions: ["bleeding"] });
+  eq([again.added, again.skipped], [["bleeding"], []], "the copy's Bleeding isn't read under the row's");
 });
 
 test("257: the card and the read-only sheet stay as filed while the row moves", () => {
