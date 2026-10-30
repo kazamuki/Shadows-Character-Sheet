@@ -5316,7 +5316,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - Static PROT: a player's armor rolls (053 is for enemies).
      - **Replaces:** Decision 188 in part (a claimed row isn't the GM's numbers), 191 in part (it takes the whole hit; the gate keeps PC wear), 192 in part (its Shock and At Zero are answered).
      - **Revisit if:** live sync arrives (§8), S2's dispatch sends the fight to a player, or a fight needs the copy's Withering or held spells.
-     - **Built:** switched off (173); PR #…; log 2026-10-30 (S3d).
+     - **Built:** switched off (173); PR #274; log 2026-10-30 (S3d).
 
 ## 5. Open Flags
 
