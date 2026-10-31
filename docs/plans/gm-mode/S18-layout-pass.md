@@ -5,7 +5,9 @@
 W80 and W77.
 **Status:** **drafted 2026-10-30 by Claude (Opus)**, the S3d reviewer, after #274
 (S3d, Decision 257) merged. Ken picked it as the next order (2026-10-30, through the
-conductor). **Waiting on Ken: approval and SQ1–SQ6.**
+conductor).
+**Approved by Ken 2026-10-30** (in the conductor session), as Rule or shape, one decision, no version moves, no `private/` commit.
+**SQ1–SQ6 answered by Ken 2026-10-30: every default.** He picked SQ1 (*Gone, one bar*), SQ2 (*Pages only*) and SQ3 (*Measures, no cap*) by name, and SQ4–SQ6 as one set (*Approve, defaults*).
 **Branch:** from `main` at `85588e3` or later, PR to `main`, switched off
 (Decision 173). **No `private/` commit.**
 **Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../WORK-ORDERS.md).
@@ -217,12 +219,12 @@ line below the existing marks):
 
 | # | Question | Default | Answer |
 |---|---|---|---|
-| SQ1 | **The rail on a table.** Gone, with Back (and Add to) held in one bar under the header **at every width**? Or W80's **action rail** from 1060px, with the same buttons in a bar below 1060? Or gone with **no bar** (the frame only, and Back stays at the top of the page)? A tablet (§1a) is below 1060px in portrait and usually in landscape, so a rail would mostly show on a desktop, and it gives back 218px of the width this order is reclaiming. | **Gone, one bar at every width** | |
-| SQ2 | **What the bar holds.** Default: on a **page**, its Back, plus a member's (and an entry's or group's) **Add to <encounter>**. On an **encounter**, Back joins the existing status bar beside Start / Next / End. On a **tab** (Sessions, Cast…) there's **no bar**: each tab's action (quick-add, New encounter, Add a player) sits with the field it needs. Or also put each tab's one primary action in a bar (W80's "on a tab, its one primary action")? That means splitting buttons from their fields. | **Pages only; tabs keep their actions with their fields** | |
-| SQ3 | **The page's measure.** `main` fills the screen, and the page sets measures: fields ≤ 36rem, prose ≤ 75ch, cards in columns of 20–36rem, an encounter's rows one column ≤ 64rem, and the read-only sheet at the sheet's own width. Or a single wider cap (e.g. 1400px) and nothing else? The cap is simpler, but it still stretches fields to ~1340px, and it keeps the read-only sheet narrower than the player's. | **Measures, no cap** | |
-| SQ4 | **W77 on a cast member's page.** Status (alive, dead, missing, gone) under the name. From 1280px, the stat block a panel on the right that stays put while the page scrolls (160's width rule), and below that where it is now. Or status only? Or neither (W77 stays a wish)? | **Both** | |
-| SQ5 | **Home.** Home's left rail is empty too (W80), but Home is the player's door. Default: Home stays as it is, so nothing a player sees moves and no app bump is needed. W80 keeps a line for Home's layout. Or fix Home in this order too (a player-visible change: an app patch and a `CHANGELOG.md` line)? | **Home stays** | |
-| SQ6 | **The bar on a short screen.** Below 540px tall, the bar scrolls away with the header (140). While a field in `main` has focus, it stops sticking, so an on-screen keyboard doesn't squeeze the field (161's rule). Or always stick? | **140's and 161's rules** | |
+| SQ1 | **The rail on a table.** Gone, with Back (and Add to) held in one bar under the header **at every width**? Or W80's **action rail** from 1060px, with the same buttons in a bar below 1060? Or gone with **no bar** (the frame only, and Back stays at the top of the page)? A tablet (§1a) is below 1060px in portrait and usually in landscape, so a rail would mostly show on a desktop, and it gives back 218px of the width this order is reclaiming. | **Gone, one bar at every width** | Default (Ken, 2026-10-30) |
+| SQ2 | **What the bar holds.** Default: on a **page**, its Back, plus a member's (and an entry's or group's) **Add to <encounter>**. On an **encounter**, Back joins the existing status bar beside Start / Next / End. On a **tab** (Sessions, Cast…) there's **no bar**: each tab's action (quick-add, New encounter, Add a player) sits with the field it needs. Or also put each tab's one primary action in a bar (W80's "on a tab, its one primary action")? That means splitting buttons from their fields. | **Pages only; tabs keep their actions with their fields** | Default (Ken, 2026-10-30) |
+| SQ3 | **The page's measure.** `main` fills the screen, and the page sets measures: fields ≤ 36rem, prose ≤ 75ch, cards in columns of 20–36rem, an encounter's rows one column ≤ 64rem, and the read-only sheet at the sheet's own width. Or a single wider cap (e.g. 1400px) and nothing else? The cap is simpler, but it still stretches fields to ~1340px, and it keeps the read-only sheet narrower than the player's. | **Measures, no cap** | Default (Ken, 2026-10-30) |
+| SQ4 | **W77 on a cast member's page.** Status (alive, dead, missing, gone) under the name. From 1280px, the stat block a panel on the right that stays put while the page scrolls (160's width rule), and below that where it is now. Or status only? Or neither (W77 stays a wish)? | **Both** | Default (Ken, 2026-10-30) |
+| SQ5 | **Home.** Home's left rail is empty too (W80), but Home is the player's door. Default: Home stays as it is, so nothing a player sees moves and no app bump is needed. W80 keeps a line for Home's layout. Or fix Home in this order too (a player-visible change: an app patch and a `CHANGELOG.md` line)? | **Home stays** | Default (Ken, 2026-10-30) |
+| SQ6 | **The bar on a short screen.** Below 540px tall, the bar scrolls away with the header (140). While a field in `main` has focus, it stops sticking, so an on-screen keyboard doesn't squeeze the field (161's rule). Or always stick? | **140's and 161's rules** | Default (Ken, 2026-10-30) |
 
 ## 5. The assumption sweep
 
