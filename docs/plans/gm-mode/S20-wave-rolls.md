@@ -4,7 +4,9 @@
 answered by Deighton (`reference/rulings-2026-10-10.md`, Q34) with Ken's follow-up.
 **Status:** **Drafted 2026-10-31** by Claude (Opus), the S19 reviewer, after #278 (S19,
 Decision 259) and #279 (the launch, Decision 260) merged. Ken picked it as the next order
-(2026-10-31, through the conductor). **Not approved yet:** SQ1–SQ5 wait on Ken.
+(2026-10-31, through the conductor).
+**Approved by Ken 2026-10-31** (in the conductor session), as Rule or shape, one decision, table schema 0.19, app 0.58.0, no `private/` commit.
+**SQ1–SQ5 answered by Ken 2026-10-31: every default.** He picked SQ1 (*Before acting, or at Reset*), SQ2 (*Order added, no row field*) and SQ4 (*Seed from the old best*) by name, and SQ3 and SQ5 as one pair (*Both defaults*).
 **Branch:** from `main` at `9db5593` or later, PR to `main`. **GM mode is launched (260):
 nothing is switched off.** This ships visible, with a `CHANGELOG.md` line and an app bump.
 **No `private/` commit.**
@@ -172,11 +174,11 @@ N. **In Wave Initiative each side rolls Combat Sense once and the higher roll's 
 
 | # | Question | Default | Answer |
 |---|---|---|---|
-| SQ1 | **When a side's roll can change.** Deighton: a roll made during a wave "will lead the next wave when the turn resets". Default: **while planned, at the Reset, and in a round before anyone has acted**; mid-round the field shows the number as text, and the engine refuses. A typo found mid-round waits for the Reset. Or **any time, applied at once**, as a row's result is today (210): with three sides it can put an untouched side ahead of one halfway through its wave (probe P6 shows the jump). Or **any time, held until the Reset**: a second stored number, and a field that doesn't do what it shows. | **Before anyone acts, or at the Reset** | |
-| SQ2 | **The order within a side.** Deighton: the side's players act "in whatever order" they work out. Default: **in the order added**, Goes last at the end of its side; the GM taps whoever goes (as 210), and Next walks the rest. Rows have no Combat Sense field in waves. Or **by each row's own result** where it has one, as today, keeping the row's field in waves? That shows a box per row the ruling says nobody rolls. | **Order added; no row field in waves** | |
-| SQ3 | **Who rolled.** Default: **the number alone**. Or a **Rolled by** select on each side naming the row closest to the danger, shown but never read? | **The number alone** | |
-| SQ4 | **A fight saved before this.** Default: **a wave encounter that hasn't ended takes each side's old best as its roll**, worked out as 210 did, so a fight saved mid-round opens in the order it had. An ended one, and every one-at-a-time encounter, gets none. Or **convert nothing** (every migration since 0.8 has said so, 203): every side starts with no roll, so a wave fight saved mid-round reorders to the crew first on load. | **Seed open wave fights from the old best** | |
-| SQ5 | **The bump.** Default: **minor, 0.58.0**: a GM rolls once a side, which is new. Or **patch, 0.57.1**, as a fix to how waves already work? | **Minor** | |
+| SQ1 | **When a side's roll can change.** Deighton: a roll made during a wave "will lead the next wave when the turn resets". Default: **while planned, at the Reset, and in a round before anyone has acted**; mid-round the field shows the number as text, and the engine refuses. A typo found mid-round waits for the Reset. Or **any time, applied at once**, as a row's result is today (210): with three sides it can put an untouched side ahead of one halfway through its wave (probe P6 shows the jump). Or **any time, held until the Reset**: a second stored number, and a field that doesn't do what it shows. | **Before anyone acts, or at the Reset** | Default (Ken, 2026-10-31) |
+| SQ2 | **The order within a side.** Deighton: the side's players act "in whatever order" they work out. Default: **in the order added**, Goes last at the end of its side; the GM taps whoever goes (as 210), and Next walks the rest. Rows have no Combat Sense field in waves. Or **by each row's own result** where it has one, as today, keeping the row's field in waves? That shows a box per row the ruling says nobody rolls. | **Order added; no row field in waves** | Default (Ken, 2026-10-31) |
+| SQ3 | **Who rolled.** Default: **the number alone**. Or a **Rolled by** select on each side naming the row closest to the danger, shown but never read? | **The number alone** | Default (Ken, 2026-10-31) |
+| SQ4 | **A fight saved before this.** Default: **a wave encounter that hasn't ended takes each side's old best as its roll**, worked out as 210 did, so a fight saved mid-round opens in the order it had. An ended one, and every one-at-a-time encounter, gets none. Or **convert nothing** (every migration since 0.8 has said so, 203): every side starts with no roll, so a wave fight saved mid-round reorders to the crew first on load. | **Seed open wave fights from the old best** | Default (Ken, 2026-10-31) |
+| SQ5 | **The bump.** Default: **minor, 0.58.0**: a GM rolls once a side, which is new. Or **patch, 0.57.1**, as a fix to how waves already work? | **Minor** | Default (Ken, 2026-10-31) |
 
 ## 5. The assumption sweep
 

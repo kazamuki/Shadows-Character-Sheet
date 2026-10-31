@@ -931,6 +931,13 @@ from files and somebody wants it live (GQ2). **Ken asked them on
 
 ## 9. Questions
 
+**Scott's open items (2026-10-31).** Everything waiting on Scott since the launch, these `GQ`s among them, is on one
+page for him to answer and tick off: https://claude.ai/artifact/1sj7mJkrphnur7LKh48cdr. To do: the Orders into the
+mirrored Codex (S12a), the entries into v2's format (S17), the Site Profiles' approval, the revised `2625` (S11), a session
+run on 0.57.0. Questions: GQ6 (WILL), the live defaults GQ1, 15, 16, 22–26 and 29, CRANK's F37, GQ28 and GQ7, the print
+plan's PQ1, PQ2 and PQ4, the Cantrips' TN, and GQ20 (whether the dispatch gets built). Each shows the app's default. His
+answers save to the page's store and are recorded here, in his words, once he's done.
+
 Each has the default the build takes if nobody answers. **They** = Scott and
 Deighton.
 
