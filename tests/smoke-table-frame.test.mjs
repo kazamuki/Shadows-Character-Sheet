@@ -138,3 +138,17 @@ test("258: a member's status is under their name, and the stat block is the last
   assert.ok(panel.compareDocumentPosition(app.$("#main .cast-col")) & 2, "and it follows the content column in the DOM");
   assert.deepEqual(app.errors, []);
 });
+
+test("258: a bar's scroll place belongs to its page, not to the next one opened", () => {
+  const app = open();
+  tab(app, "cast");
+  const ids = app.$$("[data-copen]").slice(0, 2).map(b => b.dataset.copen);
+  app.click(`[data-copen="${ids[0]}"]`);
+  const bar = app.$("#main .tbl-bar");
+  bar.scrollLeft = 39;
+  bar.dispatchEvent(new app.window.Event("scroll"));
+  app.click("[data-cback]");
+  app.click(`[data-copen="${ids[1]}"]`);
+  assert.equal(app.$("#main .tbl-bar").scrollLeft, 0, "the second member's bar opens at the start");
+  assert.notEqual(app.$("#main .tbl-bar").dataset.row, bar.dataset.row, "each page keys its own row");
+});
