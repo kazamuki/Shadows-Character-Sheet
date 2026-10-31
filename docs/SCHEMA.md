@@ -5320,15 +5320,15 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Built:** switched off (173); PR #274; log 2026-10-30 (S3d).
 
 258. **A table has its own frame: no rail and no vitals column, each page at a readable measure, and Back held in a bar under the header.**
-     *2026-10-30 · Ken + Claude · Touches: .app, table-mode, sheet-mode, main, 920px, nav.ledger, aside.vitals, roster-list, enc-rows, enc-bar, Back, Add to encounter, read-only sheet, cast member page, stat block, frame fixture, W80, W77, Decision 35, Decision 140, Decision 188, Decision 189, Decision 211, Decision 256*
-     - **Decided:** While a table is open `#app` is `table-mode`: one column, no rail, no vitals column, `main` uncapped. Fields stop at 36rem (a textarea 48rem), prose at 75ch, cards fill 20–36rem columns, an encounter's rows stay one 64rem column, and the read-only sheet lays out as the player's own. Each page's Back, and a member's, an entry's or a group's Add to <encounter>, sit in a bar that sticks under the header; on an encounter, Back leads its status bar. A member's status sits under the name; from 1280px the stat block is a panel on the right that stays put. Home, the wizard and a player's sheet don't move.
-     - **Why:** At 1300 the empty rail and vitals took 36% of the screen; at 1980 the read-only sheet used 920px. The cap lifted alone stretched fields to 1905px. Back scrolled away on pages 2,000–6,500px tall, and a tablet is mostly below 1060px, where a rail can't show.
+     *2026-10-30 · Ken + Claude · Touches: .app, table-mode, sheet-mode, main, 920px, nav.ledger, aside.vitals, roster-list, enc-rows, enc-bar, Back, Add to encounter, read-only sheet, cast member page, stat block, W80, W77, Decision 35, Decision 140, Decision 188, Decision 189, Decision 211, Decision 256*
+     - **Decided:** While a table is open `#app` is `table-mode`: one column, no rail, no vitals column, `main` uncapped. Fields stop at 36rem (textareas 48rem), prose at 75ch, cards fill 20–36rem columns, an encounter's rows stay one 64rem column, and the read-only sheet matches the player's. Each page's Back, with Add to <encounter> on a member, entry or group, sits in a bar that sticks under the header and lets go on a short screen or a focused field; an encounter's status bar comes first, Back leads it, and it never lets go. A member's status sits under the name; from 1280px the stat block is a right-hand panel that stays put. Home, the wizard and a player's sheet don't move.
+     - **Why:** At 1300 the empty rail and vitals took 36% of the screen; at 1980 the read-only sheet used 920px. The cap lifted alone stretched fields to 1905px. Back scrolled away on pages up to 6,500px tall, and a tablet is mostly below 1060px, where a rail can't show.
      - **Rejected:**
-       - W80's action rail from 1060px: two homes for one button, and a tablet sees only the bar.
-       - A wider cap: it still stretches fields and keeps the read-only sheet narrower than the player's.
+       - W80's action rail from 1060px: two homes for one button; a tablet sees only the bar.
+       - A wider cap: it still stretches fields and keeps the read-only sheet narrower.
        - The bar on every tab: a tab's action sits with its fields.
-     - **Replaces:** Decision 211 in part (on a page Add to sits in the bar). Extends 35 (a table escapes the frame), 140 (a bar under the header), 188–189 (Back joins the encounter's bar).
-     - **Revisit if:** Home gets a layout of its own (W80's rest), or a GM tab needs a column the measures don't give.
+     - **Replaces:** Decision 211 in part (on a page Add to sits in the bar). Extends 35 (a table escapes the frame), 140, 188–189.
+     - **Revisit if:** Home gets its own layout (W80's rest), or a tab needs a column the measures lack.
      - **Built:** switched off (173); PR #276; log 2026-10-30 (S18).
 
 ## 5. Open Flags
