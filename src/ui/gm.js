@@ -296,7 +296,8 @@ function renderTableChrome(){
     openNameModal({ title:"Rename table", value:t.meta.name, yes:"Save", then:name=>{ tableChange(()=>{ t.meta.name=name; }); const k=document.querySelector("[data-menu-toggle]"); if (k) k.focus(); } }); };
   act.querySelector("[data-texport-open]").onclick=()=>{ menu.hidden=true; exportTable(S.table); };
   act.querySelector("[data-tactivity]").onclick=()=>{ menu.hidden=true; kb.setAttribute("aria-expanded","false"); openActivity(); };
-  act.querySelector("[data-tkeys]").onclick=()=>{ menu.hidden=true; kb.setAttribute("aria-expanded","false"); openKeys(); };
+  // Focus ⋮ first: the item that was clicked is about to be hidden, and a box returns focus to what opened it.
+  act.querySelector("[data-tkeys]").onclick=()=>{ menu.hidden=true; kb.setAttribute("aria-expanded","false"); kb.focus(); openKeys(); };
   act.querySelector("[data-thome]").onclick=()=>{ lastTableSaved=null; goHome(); };
 }
 // ── Keys (Decision 259) ────────────────────────────────────────────────

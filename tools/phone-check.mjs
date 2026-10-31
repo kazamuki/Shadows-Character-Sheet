@@ -469,6 +469,15 @@ async function tableKeys(browser, file, rows) {
     keyNumbers.push({ check: "B2 1300x900", before, after: after.y, focus: after.on ? "[data-copen]" : "elsewhere" });
     await c.close();
   }
+  // B4: ⋮ → Keys, then Esc: the clicked menu item is hidden by then, so focus must come back to ⋮.
+  {
+    const [c, p] = await open({ width: 1300, height: 900 }), bad = [];
+    await p.click("[data-menu-toggle]"); await p.click("[data-tkeys]"); await p.keyboard.press("Escape");
+    const on = await p.evaluate(() => !!document.activeElement.hasAttribute && document.activeElement.hasAttribute("data-menu-toggle"));
+    if (!on) bad.push("focus isn't on ⋮ after closing Keys");
+    row("B4: Esc after ⋮ → Keys lands on ⋮", bad, "focus on ⋮");
+    await c.close();
+  }
   // B3
   {
     const [c, p] = await open({ width: 1300, height: 900 }), bad = [];
