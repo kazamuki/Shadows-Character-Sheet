@@ -107,6 +107,10 @@ test("258: a member's, an entry's and a group's Add to sit in the bar beside Bac
   tab(app, "encounters");
   type(app, "[data-enc-name]", "Docks"); app.click("[data-enc-new]");
   app.click("[data-enc-back]");
+  // Add to goes to the encounter open, else the running one, else the newest planned (211). Dead Air has a fight
+  // running, so that's where it goes; with none running it would be Docks.
+  const running = app.window.eval('(S.table.encounters.find(e => e.status === "running") || { name: "Docks" }).name');
+  const to = "Add to " + running;
   for (const [go, attr] of [
     [() => { tab(app, "cast"); app.click("[data-copen]"); }, "data-cenc"],
     [() => { tab(app, "threats"); app.click("[data-tentry]"); }, "data-tenc"],
@@ -117,9 +121,9 @@ test("258: a member's, an entry's and a group's Add to sit in the bar beside Bac
     assert.equal(add.length, 1, `${attr}: one Add to`);
     assert.ok(firstEl(app).contains(add[0]), `${attr}: it is in the bar`);
     assert.ok(firstEl(app).querySelector("[data-cback], [data-tback]"), "beside Back");
-    assert.match(add[0].textContent, /^Add to Docks$/);
+    assert.equal(add[0].textContent, to);
     add[0].click();
-    assert.match(app.$(`#main [${attr}]`).textContent, /^Add to Docks$/, "the press adds and the button still names where the next goes");
+    assert.equal(app.$(`#main [${attr}]`).textContent, to, "the press adds and the button still names where the next goes");
   }
   assert.deepEqual(app.errors, []);
 });
