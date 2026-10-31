@@ -5343,7 +5343,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - More keys now (Next, the tabs): F and J prove the pattern first.
      - **Replaces:** nothing. Extends 208 (Find and Jot open by key) and 164 (a key's box gives focus back without scrolling).
      - **Revisit if:** a GM asks for another key, a browser takes F or J, or players get a sheet-wide search.
-     - **Built:** switched off (173); no version or schema move; PR #278; log 2026-10-31 (S19).
+     - **Built:** app 0.56.1; switched off (173); no schema move; PR #278; log 2026-10-31 (S19).
 
 ## 5. Open Flags
 
