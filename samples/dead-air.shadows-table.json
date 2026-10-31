@@ -5,9 +5,58 @@
     "name": "Dead Air",
     "tableSchemaVersion": "0.18",
     "created": "2026-07-18T17:00:00.000Z",
-    "updated": "2026-10-17T23:50:00.000Z"
+    "updated": "2026-10-31T21:10:00.000Z"
   },
-  "audit": [],
+  "audit": [
+    {
+      "seq": 1,
+      "date": "2026-10-31T19:10:00.000Z",
+      "label": "Seated the crew for Session 7",
+      "patch": [
+        {
+          "path": [
+            "sessions",
+            6,
+            "present"
+          ],
+          "type": "scalar",
+          "before": []
+        }
+      ]
+    },
+    {
+      "seq": 2,
+      "date": "2026-10-31T20:50:00.000Z",
+      "label": "Moved Dex before the full moon to 7 of 8",
+      "patch": [
+        {
+          "path": [
+            "clocks",
+            7,
+            "filled"
+          ],
+          "type": "scalar",
+          "before": 6
+        }
+      ]
+    },
+    {
+      "seq": 3,
+      "date": "2026-10-31T21:05:00.000Z",
+      "label": "Marked Dolores \"Dolly\" Quint as out of the picture",
+      "patch": [
+        {
+          "path": [
+            "cast",
+            7,
+            "status"
+          ],
+          "type": "scalar",
+          "before": "alive"
+        }
+      ]
+    }
+  ],
   "notes": [
     {
       "id": "N-X61R9SCS",
@@ -64,6 +113,14 @@
       "session": "SE-FC4H16S3",
       "created": "2026-07-18T18:00:00.000Z",
       "updated": "2026-09-12T23:10:00.000Z"
+    },
+    {
+      "id": "N-MMWWHN67",
+      "title": "The pilot (before S1)",
+      "text": "A one-shot the week before S1, to try the system. Sam's Hollis Reyes died in it, on purpose, to see how dying works. Priya's Ruth Adair retired at the end of it: Priya wanted someone who talks to machines. Marcus keeps Kit Moreau benched, ready for the night Dex has to sit one out.",
+      "session": null,
+      "created": "2026-07-11T23:00:00.000Z",
+      "updated": "2026-07-18T18:00:00.000Z"
     }
   ],
   "cast": [
@@ -504,12 +561,12 @@
       "line": "Does not sell people. Sells information about people, which she insists is different.",
       "ifPushed": "Opens the ledger and shows you what you owe.",
       "gmNote": "She is the answer to 'who sent the shard to Pearl': her number was on the delivery note. She did not know what was on it either. She will trade that fact for Cord's life, which she thinks the crew can arrange.",
-      "status": "alive",
+      "status": "gone",
       "block": null,
       "ally": false,
       "from": null,
       "created": "2026-08-22T22:00:00.000Z",
-      "updated": "2026-10-17T23:00:00.000Z"
+      "updated": "2026-10-31T21:05:00.000Z"
     },
     {
       "id": "C-T8ERMYV7",
@@ -841,7 +898,20 @@
       "notes": "Derelict wharves nobody will touch. A radio does not work here; a voice does, too well. Wren's body (S5) was against a bollard at Wharf 17. The Listener's place. S6's confrontation ran the length of Wharf 17 to a collapsed warehouse the crew has not entered.",
       "site": null,
       "siteLevel": null,
-      "exposure": [],
+      "exposure": [
+        {
+          "name": "Juno",
+          "n": 5
+        },
+        {
+          "name": "Mara",
+          "n": 3
+        },
+        {
+          "name": "Dex",
+          "n": 2
+        }
+      ],
       "created": "2026-09-12T22:00:00.000Z",
       "updated": "2026-10-17T23:00:00.000Z"
     }
@@ -1168,11 +1238,39 @@
       "id": "CK-T9E5BJ91",
       "name": "Dex before the full moon",
       "segments": 8,
-      "filled": 6,
+      "filled": 7,
       "advances": "Each day since the last full moon; a fight; an injury; being near silver.",
       "whenFull": "Dex turns. Achterberg's clinic is the plan; the plan has a hole in it.",
       "on": null,
       "created": "2026-07-18T22:00:00.000Z",
+      "updated": "2026-10-31T20:50:00.000Z"
+    },
+    {
+      "id": "CK-XC12FN1X",
+      "name": "The tide at Wharf 17",
+      "segments": 6,
+      "filled": 2,
+      "advances": "Each hour the crew spends on the wharves. Each time a recording is played within earshot of the water.",
+      "whenFull": "The tide comes in on the wrong day. The ghost-line moves one wharf inland and stays there.",
+      "on": {
+        "kind": "place",
+        "id": "PL-S7YSSZ92"
+      },
+      "created": "2026-09-26T22:00:00.000Z",
+      "updated": "2026-10-17T23:00:00.000Z"
+    },
+    {
+      "id": "CK-KCZ6FMW4",
+      "name": "The kitchen fire",
+      "segments": 4,
+      "filled": 0,
+      "advances": "A shot fired in the dining room. A soldier sent through the kitchen doors. Ibarra's signal to the chef.",
+      "whenFull": "The Velvet Lung burns. Ibarra leaves by the alley door with whoever he can carry, and blames the crew for that too.",
+      "on": {
+        "kind": "encounter",
+        "id": "EN-7069Z3C4"
+      },
+      "created": "2026-10-17T22:00:00.000Z",
       "updated": "2026-10-17T23:00:00.000Z"
     }
   ],
@@ -2160,7 +2258,11 @@
       "id": "SE-HR5CH1JX",
       "number": 7,
       "date": "2026-10-31",
-      "present": [],
+      "present": [
+        "Mara Okonkwo",
+        "Dex Villanueva",
+        "Juno Park"
+      ],
       "hours": null,
       "journal": {
         "happened": "",
@@ -2172,7 +2274,7 @@
       },
       "close": null,
       "created": "2026-10-17T23:45:00.000Z",
-      "updated": "2026-10-17T23:45:00.000Z"
+      "updated": "2026-10-31T19:10:00.000Z"
     }
   ],
   "threads": [
@@ -2256,6 +2358,353 @@
   ],
   "encounters": [
     {
+      "id": "EN-T0R5ADN7",
+      "name": "Achterberg's clinic, moonrise",
+      "status": "running",
+      "round": 2,
+      "turn": "R-TBJ6RZSK",
+      "acted": [
+        "R-H3M5T7NE",
+        "R-BHFH7S7X",
+        "R-8Y4XJCKR"
+      ],
+      "by": "person",
+      "sides": [
+        {
+          "id": "crew",
+          "name": ""
+        },
+        {
+          "id": "SD-HX9R6CCK",
+          "name": "Reclaim Solutions"
+        }
+      ],
+      "design": {
+        "hook": "Reclaim Solutions knows where Dex goes on the night of the moon.",
+        "stakes": "Dex, Achterberg's clinic, and who learns what Dex is.",
+        "objectives": "",
+        "terrain": "",
+        "hazards": "",
+        "city": "",
+        "beyondNotes": "",
+        "escalations": "",
+        "failure": "",
+        "success": "",
+        "escapes": "",
+        "failsafe": "",
+        "threads": "",
+        "milestones": "",
+        "pivot": "",
+        "stalls": "",
+        "adversaries": [],
+        "beyond": []
+      },
+      "opening": null,
+      "rows": [
+        {
+          "id": "R-8Y4XJCKR",
+          "kind": "pc",
+          "name": "Mara Okonkwo",
+          "cast": null,
+          "from": null,
+          "block": null,
+          "side": "crew",
+          "order": 14,
+          "last": false,
+          "out": false,
+          "damage": 2,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": true,
+          "armorId": null,
+          "hp": 20,
+          "levels": 6,
+          "awareness": 9,
+          "conditions": [],
+          "delay": null
+        },
+        {
+          "id": "R-H3M5T7NE",
+          "kind": "pc",
+          "name": "Dex Villanueva",
+          "cast": null,
+          "from": null,
+          "block": null,
+          "side": "crew",
+          "order": 16,
+          "last": false,
+          "out": false,
+          "damage": 11,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": 50,
+          "levels": 6,
+          "awareness": 8,
+          "conditions": [],
+          "delay": {
+            "until": "Achterberg finishes the sedative"
+          }
+        },
+        {
+          "id": "R-9A4YB59B",
+          "kind": "pc",
+          "name": "Juno Park",
+          "cast": null,
+          "from": null,
+          "block": null,
+          "side": "crew",
+          "order": 9,
+          "last": false,
+          "out": false,
+          "damage": 0,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": 20,
+          "levels": 6,
+          "awareness": 7,
+          "conditions": [
+            {
+              "id": "frightened",
+              "source": "The Listener's voice on the cleaners' radio",
+              "rounds": 2
+            }
+          ],
+          "delay": null
+        },
+        {
+          "id": "R-9BY25KAA",
+          "kind": "cast",
+          "name": "",
+          "cast": {
+            "kind": "cast",
+            "id": "C-1DYS6JFW"
+          },
+          "from": null,
+          "block": null,
+          "side": "crew",
+          "order": 7,
+          "last": true,
+          "out": false,
+          "damage": 0,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": [],
+          "delay": null
+        },
+        {
+          "id": "R-BHFH7S7X",
+          "kind": "entry",
+          "name": "Reclaim cleaner",
+          "cast": null,
+          "from": null,
+          "block": {
+            "stats": {
+              "BOD": 5,
+              "REF": 6,
+              "MOB": 5,
+              "INT": 4,
+              "TECH": 3,
+              "COOL": 6,
+              "MAG": 0,
+              "EMP": 2
+            },
+            "authored": {
+              "TOL": 3,
+              "WILL": 3
+            },
+            "skills": [
+              {
+                "skill": "smgs",
+                "name": "SMGs",
+                "total": 10
+              },
+              {
+                "skill": "tactics",
+                "name": "Tactics",
+                "total": 8
+              },
+              {
+                "skill": "stealth",
+                "name": "Stealth",
+                "total": 8
+              }
+            ],
+            "armor": [
+              "Volkov plate carrier (PROT 4)"
+            ],
+            "gear": [
+              "Suppressed SMG",
+              "Flashbangs"
+            ],
+            "traits": []
+          },
+          "side": "SD-HX9R6CCK",
+          "order": 15,
+          "last": false,
+          "out": false,
+          "damage": 6,
+          "massive": 0,
+          "armorLoss": 1,
+          "scrapped": false,
+          "kept": null,
+          "struck": true,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": [],
+          "delay": null
+        },
+        {
+          "id": "R-HHQ1KMTD",
+          "kind": "entry",
+          "name": "Reclaim cleaner",
+          "cast": null,
+          "from": null,
+          "block": {
+            "stats": {
+              "BOD": 5,
+              "REF": 6,
+              "MOB": 5,
+              "INT": 4,
+              "TECH": 3,
+              "COOL": 6,
+              "MAG": 0,
+              "EMP": 2
+            },
+            "authored": {
+              "TOL": 3,
+              "WILL": 3
+            },
+            "skills": [
+              {
+                "skill": "smgs",
+                "name": "SMGs",
+                "total": 10
+              },
+              {
+                "skill": "tactics",
+                "name": "Tactics",
+                "total": 8
+              },
+              {
+                "skill": "stealth",
+                "name": "Stealth",
+                "total": 8
+              }
+            ],
+            "armor": [
+              "Volkov plate carrier (PROT 4)"
+            ],
+            "gear": [
+              "Suppressed SMG",
+              "Flashbangs"
+            ],
+            "traits": []
+          },
+          "side": "SD-HX9R6CCK",
+          "order": 11,
+          "last": false,
+          "out": false,
+          "damage": 0,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": false,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": [],
+          "delay": null
+        },
+        {
+          "id": "R-TBJ6RZSK",
+          "kind": "entry",
+          "name": "Reclaim drone",
+          "cast": null,
+          "from": null,
+          "block": {
+            "stats": {
+              "BOD": 3,
+              "REF": 7,
+              "MOB": 8,
+              "INT": 2,
+              "TECH": 6,
+              "COOL": 0,
+              "MAG": 0,
+              "EMP": 0
+            },
+            "authored": {
+              "TOL": 1,
+              "WILL": 1
+            },
+            "skills": [
+              {
+                "skill": "beam-weapons",
+                "name": "Beam Weapons",
+                "total": 10
+              },
+              {
+                "skill": "awareness",
+                "name": "Awareness",
+                "total": 9
+              }
+            ],
+            "armor": [
+              "Composite shell (PROT 3)"
+            ],
+            "gear": [
+              "Dazzler array",
+              "Taser lance"
+            ],
+            "traits": [
+              {
+                "name": "Machine",
+                "text": "Does not bleed, sleep, or negotiate. Reboots in four rounds if its core is not smashed."
+              }
+            ]
+          },
+          "side": "SD-HX9R6CCK",
+          "order": 13,
+          "last": false,
+          "out": false,
+          "damage": 3,
+          "massive": 0,
+          "armorLoss": 0,
+          "scrapped": false,
+          "kept": null,
+          "struck": true,
+          "armorId": null,
+          "hp": null,
+          "levels": null,
+          "awareness": null,
+          "conditions": [],
+          "delay": null
+        }
+      ],
+      "created": "2026-10-31T20:40:00.000Z",
+      "updated": "2026-10-31T21:10:00.000Z"
+    },
+    {
       "id": "EN-7069Z3C4",
       "name": "Friday at the Velvet Lung",
       "status": "planned",
@@ -2274,24 +2723,41 @@
         }
       ],
       "design": {
-        "hook": "",
-        "stakes": "",
-        "objectives": "",
-        "terrain": "",
-        "hazards": "",
-        "city": "",
-        "beyondNotes": "",
-        "escalations": "",
-        "failure": "",
-        "success": "",
-        "escapes": "",
-        "failsafe": "",
-        "threads": "",
-        "milestones": "",
-        "pivot": "",
-        "stalls": "",
-        "adversaries": [],
-        "beyond": []
+        "hook": "Ibarra's invitation, in his own hand: the third booth, Friday, nine o'clock. Come hungry.",
+        "stakes": "Whether Eclipse blames the crew for Nine, and whether Pearl's laundromat is still standing on Monday.",
+        "objectives": "Leave with Ibarra's word that Nine is settled, without handing over the shard. Find out who told him the crew did it.",
+        "adversaries": [
+          {
+            "who": "Lt. Caz Ibarra",
+            "goals": "The shard, or a story he can sell upstairs before the quarter closes.",
+            "tactics": "Talks first. Orders for the table. Lets the silence do the threatening.",
+            "leverage": "Pearl's shop, and the crew's belief that he can burn it."
+          },
+          {
+            "who": "Four Eclipse soldiers",
+            "goals": "Get paid. Get home.",
+            "tactics": "Two at the bar, two by the kitchen doors. They move only on Ibarra's napkin.",
+            "leverage": ""
+          }
+        ],
+        "terrain": "A long dining room, booths along both walls, one way in from the street and one through the kitchen to the alley.",
+        "hazards": "Open flame on every table. A chef who has been told what the napkin means.",
+        "city": "Metro Core on a Friday night: the street outside is full, and NCPD drive past every twenty minutes.",
+        "beyond": [
+          "force",
+          "intel",
+          "protect"
+        ],
+        "beyondNotes": "Talking Ibarra down is a win. So is learning that Bracken told him about Nine. Pearl is the asset to protect.",
+        "escalations": "If anyone draws, the soldiers move and the kitchen clock starts. If the shard is mentioned, Ibarra asks to hear it.",
+        "failure": "Ibarra leaves angry. Suds & Duds burns overnight (his patience clock fills).",
+        "success": "Ibarra calls Nine settled and names who told him. The patience clock clears by two.",
+        "escapes": "The kitchen and the alley. The street door, if they can walk out slowly enough.",
+        "failsafe": "NCPD's patrol car is outside at a quarter past. Ibarra will not start anything with it there.",
+        "threads": "Who told Ibarra? Fenn's tape. Pearl packing.",
+        "milestones": "A deal struck with Ibarra without the shard changing hands is a Milestone for whoever makes it.",
+        "pivot": "If the crew plays the shard at the table, the Listener answers through Ibarra. He is very quiet after that.",
+        "stalls": "The chef brings a dish nobody ordered, with a note under it from Rook."
       },
       "opening": null,
       "rows": [
@@ -2313,7 +2779,7 @@
           "kept": null,
           "struck": false,
           "armorId": null,
-          "hp": 24,
+          "hp": 20,
           "levels": 6,
           "awareness": 9,
           "conditions": [],
@@ -2337,7 +2803,7 @@
           "kept": null,
           "struck": false,
           "armorId": null,
-          "hp": 34,
+          "hp": 50,
           "levels": 6,
           "awareness": 8,
           "conditions": [],
@@ -2361,7 +2827,7 @@
           "kept": null,
           "struck": false,
           "armorId": null,
-          "hp": 22,
+          "hp": 20,
           "levels": 6,
           "awareness": 7,
           "conditions": [],
@@ -2652,7 +3118,7 @@
         }
       ],
       "created": "2026-10-17T23:40:00.000Z",
-      "updated": "2026-10-17T23:50:00.000Z"
+      "updated": "2026-10-31T18:30:00.000Z"
     },
     {
       "id": "EN-YFSVWBYZ",
@@ -2673,13 +3139,13 @@
         }
       ],
       "design": {
-        "hook": "",
-        "stakes": "",
+        "hook": "Rook finally takes the shot he can't decline.",
+        "stakes": "Mara's life, and whether Rook walks away from Volkov.",
         "objectives": "",
         "terrain": "",
         "hazards": "",
         "city": "",
-        "beyondNotes": "",
+        "beyondNotes": "Getting Mara out is the win. Rook will let them go if his exit is safe.",
         "escalations": "",
         "failure": "",
         "success": "",
@@ -2690,9 +3156,14 @@
         "pivot": "",
         "stalls": "",
         "adversaries": [],
-        "beyond": []
+        "beyond": [
+          "escape"
+        ]
       },
-      "opening": null,
+      "opening": {
+        "kind": "ambush",
+        "side": "SD-379X80WK"
+      },
       "rows": [
         {
           "id": "R-SMXCZZEP",
@@ -2712,7 +3183,7 @@
           "kept": null,
           "struck": false,
           "armorId": null,
-          "hp": 24,
+          "hp": 20,
           "levels": 6,
           "awareness": 9,
           "conditions": [],
@@ -2736,7 +3207,7 @@
           "kept": null,
           "struck": false,
           "armorId": null,
-          "hp": 34,
+          "hp": 50,
           "levels": 6,
           "awareness": 8,
           "conditions": [],
@@ -2760,7 +3231,7 @@
           "kept": null,
           "struck": false,
           "armorId": null,
-          "hp": 22,
+          "hp": 20,
           "levels": 6,
           "awareness": 7,
           "conditions": [],
@@ -2983,7 +3454,7 @@
           "kept": null,
           "struck": false,
           "armorId": null,
-          "hp": 24,
+          "hp": 20,
           "levels": 6,
           "awareness": 9,
           "conditions": [
@@ -3013,7 +3484,7 @@
           "kept": null,
           "struck": true,
           "armorId": null,
-          "hp": 34,
+          "hp": 50,
           "levels": 6,
           "awareness": 8,
           "conditions": [
@@ -3043,7 +3514,7 @@
           "kept": null,
           "struck": false,
           "armorId": null,
-          "hp": 22,
+          "hp": 20,
           "levels": 6,
           "awareness": 7,
           "conditions": [
@@ -3177,7 +3648,7 @@
           "kept": null,
           "struck": false,
           "armorId": null,
-          "hp": 24,
+          "hp": 20,
           "levels": 6,
           "awareness": 9,
           "conditions": [],
@@ -3201,7 +3672,7 @@
           "kept": null,
           "struck": true,
           "armorId": null,
-          "hp": 34,
+          "hp": 50,
           "levels": 6,
           "awareness": 8,
           "conditions": [
@@ -3231,7 +3702,7 @@
           "kept": null,
           "struck": false,
           "armorId": null,
-          "hp": 22,
+          "hp": 20,
           "levels": 6,
           "awareness": 7,
           "conditions": [],
@@ -3565,7 +4036,7 @@
           "kept": null,
           "struck": false,
           "armorId": null,
-          "hp": 24,
+          "hp": 20,
           "levels": 6,
           "awareness": 9,
           "conditions": [],
@@ -3589,7 +4060,7 @@
           "kept": null,
           "struck": true,
           "armorId": null,
-          "hp": 34,
+          "hp": 50,
           "levels": 6,
           "awareness": 8,
           "conditions": [
@@ -3620,7 +4091,7 @@
           "kept": null,
           "struck": false,
           "armorId": null,
-          "hp": 22,
+          "hp": 20,
           "levels": 6,
           "awareness": 7,
           "conditions": [],
@@ -4131,7 +4602,7 @@
           "kept": null,
           "struck": false,
           "armorId": null,
-          "hp": 24,
+          "hp": 20,
           "levels": 6,
           "awareness": 9,
           "conditions": [],
@@ -4155,7 +4626,7 @@
           "kept": null,
           "struck": false,
           "armorId": null,
-          "hp": 34,
+          "hp": 50,
           "levels": 6,
           "awareness": 8,
           "conditions": [],
@@ -4179,7 +4650,7 @@
           "kept": null,
           "struck": false,
           "armorId": null,
-          "hp": 22,
+          "hp": 20,
           "levels": 6,
           "awareness": 7,
           "conditions": [],
@@ -4493,7 +4964,7 @@
           "kept": null,
           "struck": false,
           "armorId": null,
-          "hp": 24,
+          "hp": 20,
           "levels": 6,
           "awareness": 9,
           "conditions": [],
@@ -4517,7 +4988,7 @@
           "kept": null,
           "struck": true,
           "armorId": null,
-          "hp": 34,
+          "hp": 50,
           "levels": 6,
           "awareness": 8,
           "conditions": [],
@@ -4541,7 +5012,7 @@
           "kept": null,
           "struck": false,
           "armorId": null,
-          "hp": 22,
+          "hp": 20,
           "levels": 6,
           "awareness": 7,
           "conditions": [],
@@ -4744,6 +5215,1435 @@
       "updated": "2026-07-18T22:20:00.000Z"
     }
   ],
-  "players": [],
-  "copies": []
+  "players": [
+    {
+      "id": "PY-G3KDM2M4",
+      "name": "Priya Raman",
+      "seats": [
+        {
+          "tag": "TAG-6909-DCC1-2V6T",
+          "status": "active",
+          "names": [
+            "Mara"
+          ]
+        },
+        {
+          "tag": "TAG-S7GW-10QH-HW76",
+          "status": "retired",
+          "names": []
+        }
+      ],
+      "created": "2026-07-11T17:30:00.000Z",
+      "updated": "2026-10-17T23:58:00.000Z"
+    },
+    {
+      "id": "PY-7X9KW5JF",
+      "name": "Marcus Hale",
+      "seats": [
+        {
+          "tag": "TAG-N4NA-A7JD-99HS",
+          "status": "active",
+          "names": [
+            "Dex"
+          ]
+        },
+        {
+          "tag": "TAG-BQEH-V2QQ-EP8P",
+          "status": "benched",
+          "names": [
+            "Kit"
+          ]
+        }
+      ],
+      "created": "2026-07-11T17:30:00.000Z",
+      "updated": "2026-10-17T23:58:00.000Z"
+    },
+    {
+      "id": "PY-7SP2HQAG",
+      "name": "Sam Okafor",
+      "seats": [
+        {
+          "tag": "TAG-TJPT-T8MA-HWNW",
+          "status": "active",
+          "names": [
+            "Juno"
+          ]
+        },
+        {
+          "tag": "TAG-W7BN-RVS2-XDT0",
+          "status": "dead",
+          "names": []
+        }
+      ],
+      "created": "2026-07-11T17:30:00.000Z",
+      "updated": "2026-10-17T23:58:00.000Z"
+    },
+    {
+      "id": "PY-Q3FVNSC1",
+      "name": "Alex Brandt",
+      "seats": [],
+      "created": "2026-10-31T17:30:00.000Z",
+      "updated": "2026-10-17T23:58:00.000Z"
+    }
+  ],
+  "copies": [
+    {
+      "tag": "TAG-6909-DCC1-2V6T",
+      "importedAt": "2026-10-17T23:58:00.000Z",
+      "character": {
+        "meta": {
+          "schemaVersion": "0.31",
+          "id": "TAG-6909-DCC1-2V6T",
+          "gamedataVersion": "0.50",
+          "created": "2026-07-18T16:00:00.000Z",
+          "updated": "2026-10-17T23:55:00.000Z"
+        },
+        "identity": {
+          "name": "Mara Okonkwo",
+          "age": 31,
+          "build": "Slight",
+          "hair": "Shaved",
+          "eyes": "Brown",
+          "skin": "Dark",
+          "archetype": "professional",
+          "history": "Ran network security for a Techtopia insurer until she found what it was insuring against. Lives in a one-room flat over a noodle bar and sleeps with her deck under the pillow.",
+          "tagless": false
+        },
+        "creation": {
+          "powerLevel": "street",
+          "statMethod": "flat",
+          "rolls": {
+            "statPoints": null,
+            "credits": 9
+          },
+          "boosts": [],
+          "locked": true
+        },
+        "archetypeChoices": {
+          "rolls": {},
+          "focusAllocation": {},
+          "statBonusAllocation": {},
+          "specialization": [
+            "jack-of-all-trades"
+          ],
+          "focusedSkillPicks": [],
+          "naturalAdvantages": [
+            {
+              "id": "educated",
+              "rank": 1
+            },
+            {
+              "id": "danger-sense",
+              "rank": 1
+            }
+          ],
+          "disciplines": {},
+          "basePowers": {},
+          "optionPicks": {},
+          "powerCp": {},
+          "writeIn": {
+            "name": "",
+            "description": null,
+            "classification": null,
+            "classificationText": "",
+            "mechanics": [],
+            "traits": [],
+            "vulnerabilities": []
+          }
+        },
+        "houseRules": {
+          "keepDamagePastZero": false,
+          "training": false
+        },
+        "stats": {
+          "BOD": {
+            "base": 4,
+            "ipe": 0
+          },
+          "REF": {
+            "base": 6,
+            "ipe": 0
+          },
+          "MOB": {
+            "base": 5,
+            "ipe": 0
+          },
+          "INT": {
+            "base": 10,
+            "ipe": 0
+          },
+          "TECH": {
+            "base": 8,
+            "ipe": 0
+          },
+          "COOL": {
+            "base": 7,
+            "ipe": 0
+          },
+          "MAG": {
+            "base": 1,
+            "ipe": 0
+          },
+          "EMP": {
+            "base": 5,
+            "ipe": 0
+          }
+        },
+        "skills": {
+          "interface": {
+            "rank": 4,
+            "ipe": 1
+          },
+          "programming": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "security": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "handguns": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "investigation": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "awareness": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "deception": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "basic-tech": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "dodge": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "streetwise": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "stealth": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "persuasion": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "engineering": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "pilot": {
+            "rank": 4,
+            "ipe": 0
+          }
+        },
+        "advantages": [
+          {
+            "id": "contacts-minor",
+            "rank": 1,
+            "notes": "Joss, at the Night Shift"
+          }
+        ],
+        "disadvantages": [
+          {
+            "id": "enemies",
+            "rank": 1,
+            "notes": "NeuroNet's cleanup, since S4"
+          }
+        ],
+        "trackers": {
+          "damage": 2,
+          "luck": {
+            "bonus": 0,
+            "spent": 0
+          },
+          "san": {
+            "loss": 0
+          },
+          "sfr": {
+            "spent": 0,
+            "turn": 0
+          },
+          "conditions": [],
+          "massiveLevels": 0,
+          "witheringDamage": 0,
+          "aberrations": [],
+          "credits": {
+            "current": 6300,
+            "ledger": [
+              {
+                "date": "2026-07-18T23:40:00.000Z",
+                "amount": 1200,
+                "note": "Session 1"
+              },
+              {
+                "date": "2026-08-01T23:41:00.000Z",
+                "amount": 800,
+                "note": "Session 2"
+              },
+              {
+                "date": "2026-08-22T23:42:00.000Z",
+                "amount": 600,
+                "note": "Session 3"
+              },
+              {
+                "date": "2026-09-12T23:43:00.000Z",
+                "amount": 900,
+                "note": "Session 4"
+              },
+              {
+                "date": "2026-09-26T23:44:00.000Z",
+                "amount": 1500,
+                "note": "Session 5"
+              },
+              {
+                "date": "2026-10-17T23:45:00.000Z",
+                "amount": 400,
+                "note": "Session 6"
+              }
+            ]
+          },
+          "crank": {
+            "rep": 3,
+            "ledger": [
+              {
+                "date": "2026-08-22T23:45:00.000Z",
+                "amount": 1,
+                "note": "The Pier 9 job"
+              },
+              {
+                "date": "2026-09-26T23:45:00.000Z",
+                "amount": 2,
+                "note": "The Hub, clean exit"
+              }
+            ]
+          },
+          "heldSpells": [],
+          "adjustments": [],
+          "panel": {}
+        },
+        "panelData": {},
+        "powers": [],
+        "gear": [
+          {
+            "id": "smart-deck-i",
+            "qty": 1,
+            "notes": ""
+          },
+          {
+            "id": "commlink",
+            "qty": 1,
+            "notes": ""
+          }
+        ],
+        "weapons": [
+          {
+            "id": "cheapshot",
+            "roundsSpent": 0,
+            "mods": []
+          }
+        ],
+        "armor": [
+          {
+            "id": "kevlar-vest",
+            "worn": true,
+            "scrapped": false,
+            "upgrades": [],
+            "integrityLoss": 0
+          }
+        ],
+        "progression": {
+          "milestonePoints": 0,
+          "ip": {
+            "earned": 0,
+            "log": [
+              {
+                "date": "2026-09-26T23:50:00.000Z",
+                "kind": "spend",
+                "amount": 20,
+                "targetType": "skill",
+                "targetId": "interface",
+                "from": 4,
+                "to": 5,
+                "note": ""
+              }
+            ]
+          },
+          "milestones": {
+            "minor": [],
+            "major": []
+          },
+          "powerIpe": {},
+          "specializationsGained": [],
+          "training": null
+        },
+        "sessions": [
+          {
+            "date": "2026-07-18",
+            "title": "Session 1",
+            "ipEarned": 4,
+            "milestonePoint": false,
+            "notes": "Read the shard's header; kept it."
+          },
+          {
+            "date": "2026-08-01",
+            "title": "Session 2",
+            "ipEarned": 4,
+            "milestonePoint": false,
+            "notes": ""
+          },
+          {
+            "date": "2026-08-22",
+            "title": "Session 3",
+            "ipEarned": 3,
+            "milestonePoint": false,
+            "notes": ""
+          },
+          {
+            "date": "2026-09-12",
+            "title": "Session 4",
+            "ipEarned": 5,
+            "milestonePoint": false,
+            "notes": "Found the log."
+          },
+          {
+            "date": "2026-09-26",
+            "title": "Session 5",
+            "ipEarned": 5,
+            "milestonePoint": false,
+            "notes": ""
+          },
+          {
+            "date": "2026-10-17",
+            "title": "Session 6",
+            "ipEarned": 4,
+            "milestonePoint": false,
+            "notes": "Chose to keep the shard."
+          }
+        ],
+        "notes": "",
+        "audit": []
+      }
+    },
+    {
+      "tag": "TAG-N4NA-A7JD-99HS",
+      "importedAt": "2026-10-17T23:58:00.000Z",
+      "character": {
+        "meta": {
+          "schemaVersion": "0.31",
+          "id": "TAG-N4NA-A7JD-99HS",
+          "gamedataVersion": "0.50",
+          "created": "2026-07-18T16:00:00.000Z",
+          "updated": "2026-10-17T23:55:00.000Z"
+        },
+        "identity": {
+          "name": "Dex Villanueva",
+          "age": 27,
+          "build": "Heavy",
+          "hair": "Black, cropped",
+          "eyes": "Amber",
+          "skin": "Brown",
+          "archetype": "werewolf",
+          "history": "Grew up on a Daedalus Belt fishing boat and found out what he was at sixteen, in a storm. Works the door at a club in Metro Core. Achterberg is the only doctor who has seen him change.",
+          "tagless": false
+        },
+        "creation": {
+          "powerLevel": "street",
+          "statMethod": "flat",
+          "rolls": {
+            "statPoints": null,
+            "credits": 7
+          },
+          "boosts": [],
+          "locked": true
+        },
+        "archetypeChoices": {
+          "rolls": {
+            "focusStatBonus": 2
+          },
+          "focusAllocation": {
+            "BOD": 1,
+            "MOB": 1
+          },
+          "statBonusAllocation": {},
+          "specialization": [
+            "wildblood"
+          ],
+          "focusedSkillPicks": [],
+          "naturalAdvantages": [],
+          "disciplines": {},
+          "basePowers": {
+            "let-it-loose": 1
+          },
+          "optionPicks": {},
+          "powerCp": {},
+          "writeIn": {
+            "name": "",
+            "description": null,
+            "classification": null,
+            "classificationText": "",
+            "mechanics": [],
+            "traits": [],
+            "vulnerabilities": []
+          }
+        },
+        "houseRules": {
+          "keepDamagePastZero": false,
+          "training": false
+        },
+        "stats": {
+          "BOD": {
+            "base": 9,
+            "ipe": 0
+          },
+          "REF": {
+            "base": 8,
+            "ipe": 0
+          },
+          "MOB": {
+            "base": 7,
+            "ipe": 0
+          },
+          "INT": {
+            "base": 5,
+            "ipe": 0
+          },
+          "TECH": {
+            "base": 4,
+            "ipe": 0
+          },
+          "COOL": {
+            "base": 6,
+            "ipe": 0
+          },
+          "MAG": {
+            "base": 2,
+            "ipe": 0
+          },
+          "EMP": {
+            "base": 6,
+            "ipe": 0
+          }
+        },
+        "skills": {
+          "melee": {
+            "rank": 4,
+            "ipe": 1
+          },
+          "martial-arts": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "athletics": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "intimidation": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "tracking": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "awareness": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "streetwise": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "survival": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "dodge": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "stealth": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "handguns": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "pilot": {
+            "rank": 4,
+            "ipe": 0
+          }
+        },
+        "advantages": [
+          {
+            "id": "contacts-minor",
+            "rank": 1,
+            "notes": "Achterberg"
+          }
+        ],
+        "disadvantages": [
+          {
+            "id": "blood-lust",
+            "rank": 1,
+            "notes": ""
+          }
+        ],
+        "trackers": {
+          "damage": 11,
+          "luck": {
+            "bonus": 0,
+            "spent": 0
+          },
+          "san": {
+            "loss": 0
+          },
+          "sfr": {
+            "spent": 0,
+            "turn": 0
+          },
+          "conditions": [],
+          "massiveLevels": 0,
+          "witheringDamage": 0,
+          "aberrations": [],
+          "credits": {
+            "current": 6100,
+            "ledger": [
+              {
+                "date": "2026-07-18T23:40:00.000Z",
+                "amount": 1200,
+                "note": "Session 1"
+              },
+              {
+                "date": "2026-08-01T23:41:00.000Z",
+                "amount": 800,
+                "note": "Session 2"
+              },
+              {
+                "date": "2026-08-22T23:42:00.000Z",
+                "amount": 600,
+                "note": "Session 3"
+              },
+              {
+                "date": "2026-09-12T23:43:00.000Z",
+                "amount": 900,
+                "note": "Session 4"
+              },
+              {
+                "date": "2026-09-26T23:44:00.000Z",
+                "amount": 1500,
+                "note": "Session 5"
+              },
+              {
+                "date": "2026-10-17T23:45:00.000Z",
+                "amount": 400,
+                "note": "Session 6"
+              }
+            ]
+          },
+          "crank": {
+            "rep": 0,
+            "ledger": []
+          },
+          "heldSpells": [],
+          "adjustments": [],
+          "panel": {}
+        },
+        "panelData": {},
+        "powers": [],
+        "gear": [],
+        "weapons": [
+          {
+            "id": "shock-knucks",
+            "roundsSpent": 0,
+            "mods": []
+          }
+        ],
+        "armor": [
+          {
+            "id": "heavy-denim-vest",
+            "worn": true,
+            "scrapped": false,
+            "upgrades": [],
+            "integrityLoss": 0
+          }
+        ],
+        "progression": {
+          "milestonePoints": 0,
+          "ip": {
+            "earned": 0,
+            "log": [
+              {
+                "date": "2026-08-22T23:50:00.000Z",
+                "kind": "spend",
+                "amount": 20,
+                "targetType": "skill",
+                "targetId": "melee",
+                "from": 4,
+                "to": 5,
+                "note": ""
+              }
+            ]
+          },
+          "milestones": {
+            "minor": [],
+            "major": []
+          },
+          "powerIpe": {},
+          "specializationsGained": [],
+          "training": null
+        },
+        "sessions": [
+          {
+            "date": "2026-07-18",
+            "title": "Session 1",
+            "ipEarned": 4,
+            "milestonePoint": false,
+            "notes": ""
+          },
+          {
+            "date": "2026-08-01",
+            "title": "Session 2",
+            "ipEarned": 4,
+            "milestonePoint": false,
+            "notes": ""
+          },
+          {
+            "date": "2026-08-22",
+            "title": "Session 3",
+            "ipEarned": 3,
+            "milestonePoint": true,
+            "notes": "Held back and a friend of Ibarra's died anyway."
+          },
+          {
+            "date": "2026-09-12",
+            "title": "Session 4",
+            "ipEarned": 5,
+            "milestonePoint": false,
+            "notes": ""
+          },
+          {
+            "date": "2026-09-26",
+            "title": "Session 5",
+            "ipEarned": 5,
+            "milestonePoint": false,
+            "notes": ""
+          },
+          {
+            "date": "2026-10-17",
+            "title": "Session 6",
+            "ipEarned": 4,
+            "milestonePoint": false,
+            "notes": ""
+          }
+        ],
+        "notes": "",
+        "audit": []
+      }
+    },
+    {
+      "tag": "TAG-TJPT-T8MA-HWNW",
+      "importedAt": "2026-09-26T23:58:00.000Z",
+      "character": {
+        "meta": {
+          "schemaVersion": "0.31",
+          "id": "TAG-TJPT-T8MA-HWNW",
+          "gamedataVersion": "0.50",
+          "created": "2026-07-18T16:00:00.000Z",
+          "updated": "2026-09-26T23:55:00.000Z"
+        },
+        "identity": {
+          "name": "Juno Park",
+          "age": 24,
+          "build": "Average",
+          "hair": "Dyed silver",
+          "eyes": "Black",
+          "skin": "Light",
+          "archetype": "arcanist",
+          "history": "A grad student in folklore who started hearing the Park answer back. Learned her first spell from a library book nobody else could see. Her family in Seoul think she is studying.",
+          "tagless": false
+        },
+        "creation": {
+          "powerLevel": "street",
+          "statMethod": "flat",
+          "rolls": {
+            "statPoints": null,
+            "credits": 8
+          },
+          "boosts": [],
+          "locked": true
+        },
+        "archetypeChoices": {
+          "rolls": {
+            "focusStatBonus": 2,
+            "startingSpells": 3
+          },
+          "focusAllocation": {
+            "MAG": 1,
+            "INT": 1
+          },
+          "statBonusAllocation": {},
+          "specialization": [
+            "resonant-whispers"
+          ],
+          "focusedSkillPicks": [],
+          "naturalAdvantages": [],
+          "disciplines": {},
+          "basePowers": {},
+          "optionPicks": {},
+          "powerCp": {},
+          "writeIn": {
+            "name": "",
+            "description": null,
+            "classification": null,
+            "classificationText": "",
+            "mechanics": [],
+            "traits": [],
+            "vulnerabilities": []
+          }
+        },
+        "houseRules": {
+          "keepDamagePastZero": false,
+          "training": false
+        },
+        "stats": {
+          "BOD": {
+            "base": 4,
+            "ipe": 0
+          },
+          "REF": {
+            "base": 6,
+            "ipe": 0
+          },
+          "MOB": {
+            "base": 5,
+            "ipe": 0
+          },
+          "INT": {
+            "base": 8,
+            "ipe": 0
+          },
+          "TECH": {
+            "base": 4,
+            "ipe": 0
+          },
+          "COOL": {
+            "base": 6,
+            "ipe": 0
+          },
+          "MAG": {
+            "base": 9,
+            "ipe": 0
+          },
+          "EMP": {
+            "base": 6,
+            "ipe": 0
+          }
+        },
+        "skills": {
+          "occult-lore": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "persuasion": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "intuition": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "investigation": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "awareness": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "stealth": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "deception": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "dodge": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "medical": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "streetwise": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "athletics": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "seduction": {
+            "rank": 4,
+            "ipe": 0
+          }
+        },
+        "advantages": [
+          {
+            "id": "medium",
+            "rank": 1,
+            "notes": ""
+          }
+        ],
+        "disadvantages": [
+          {
+            "id": "hallucinations",
+            "rank": 1,
+            "notes": "Voices a half-beat late, since the Ports"
+          }
+        ],
+        "trackers": {
+          "damage": 0,
+          "luck": {
+            "bonus": 0,
+            "spent": 0
+          },
+          "san": {
+            "loss": 6
+          },
+          "sfr": {
+            "spent": 0,
+            "turn": 0
+          },
+          "conditions": [],
+          "massiveLevels": 0,
+          "witheringDamage": 0,
+          "aberrations": [],
+          "credits": {
+            "current": 4900,
+            "ledger": [
+              {
+                "date": "2026-07-18T23:40:00.000Z",
+                "amount": 1200,
+                "note": "Session 1"
+              },
+              {
+                "date": "2026-08-01T23:41:00.000Z",
+                "amount": 800,
+                "note": "Session 2"
+              },
+              {
+                "date": "2026-08-22T23:42:00.000Z",
+                "amount": 600,
+                "note": "Session 3"
+              },
+              {
+                "date": "2026-09-26T23:44:00.000Z",
+                "amount": 1500,
+                "note": "Session 5"
+              }
+            ]
+          },
+          "crank": {
+            "rep": 0,
+            "ledger": []
+          },
+          "heldSpells": [],
+          "adjustments": [],
+          "panel": {}
+        },
+        "panelData": {
+          "grimoire": [
+            {
+              "notes": "",
+              "spellId": "dart",
+              "stage": "known"
+            },
+            {
+              "notes": "",
+              "spellId": "gust",
+              "stage": "known"
+            },
+            {
+              "notes": "",
+              "spellId": "kindle",
+              "stage": "known"
+            },
+            {
+              "notes": "",
+              "spellId": "sparks",
+              "stage": "known"
+            },
+            {
+              "notes": "",
+              "spellId": "tremor",
+              "stage": "known"
+            },
+            {
+              "notes": "",
+              "spellId": "zap",
+              "stage": "known"
+            }
+          ]
+        },
+        "powers": [],
+        "gear": [],
+        "weapons": [],
+        "armor": [],
+        "progression": {
+          "milestonePoints": 0,
+          "ip": {
+            "earned": 0,
+            "log": [
+              {
+                "date": "2026-09-12T23:43:00.000Z",
+                "kind": "grant",
+                "amount": 2,
+                "note": "Session 4, an off-screen job"
+              }
+            ]
+          },
+          "milestones": {
+            "minor": [],
+            "major": []
+          },
+          "powerIpe": {},
+          "specializationsGained": [],
+          "training": null
+        },
+        "sessions": [
+          {
+            "date": "2026-07-18",
+            "title": "Session 1",
+            "ipEarned": 4,
+            "milestonePoint": false,
+            "notes": ""
+          },
+          {
+            "date": "2026-08-01",
+            "title": "Session 2",
+            "ipEarned": 5,
+            "milestonePoint": true,
+            "notes": "Cast in the Park after dusk."
+          },
+          {
+            "date": "2026-08-22",
+            "title": "Session 3",
+            "ipEarned": 3,
+            "milestonePoint": false,
+            "notes": ""
+          },
+          {
+            "date": "2026-09-26",
+            "title": "Session 5",
+            "ipEarned": 5,
+            "milestonePoint": true,
+            "notes": "Answered the Listener."
+          }
+        ],
+        "notes": "",
+        "audit": []
+      }
+    },
+    {
+      "tag": "TAG-BQEH-V2QQ-EP8P",
+      "importedAt": "2026-08-22T23:50:00.000Z",
+      "character": {
+        "meta": {
+          "schemaVersion": "0.31",
+          "id": "TAG-BQEH-V2QQ-EP8P",
+          "gamedataVersion": "0.50",
+          "created": "2026-07-11T16:00:00.000Z",
+          "updated": "2026-08-22T23:55:00.000Z"
+        },
+        "identity": {
+          "name": "Kit Moreau",
+          "age": 35,
+          "build": "Wiry",
+          "hair": "Red",
+          "eyes": "Green",
+          "skin": "Freckled",
+          "archetype": "professional",
+          "history": "A getaway driver who drove away from one job too many. Marcus's spare, for the night Dex can't come.",
+          "tagless": false
+        },
+        "creation": {
+          "powerLevel": "street",
+          "statMethod": "flat",
+          "rolls": {
+            "statPoints": null,
+            "credits": 6
+          },
+          "boosts": [],
+          "locked": true
+        },
+        "archetypeChoices": {
+          "rolls": {},
+          "focusAllocation": {},
+          "statBonusAllocation": {},
+          "specialization": [
+            "wheelman"
+          ],
+          "focusedSkillPicks": [],
+          "naturalAdvantages": [
+            {
+              "id": "danger-sense",
+              "rank": 2
+            }
+          ],
+          "disciplines": {},
+          "basePowers": {},
+          "optionPicks": {},
+          "powerCp": {},
+          "writeIn": {
+            "name": "",
+            "description": null,
+            "classification": null,
+            "classificationText": "",
+            "mechanics": [],
+            "traits": [],
+            "vulnerabilities": []
+          }
+        },
+        "houseRules": {
+          "keepDamagePastZero": false,
+          "training": false
+        },
+        "stats": {
+          "BOD": {
+            "base": 7,
+            "ipe": 0
+          },
+          "REF": {
+            "base": 10,
+            "ipe": 0
+          },
+          "MOB": {
+            "base": 7,
+            "ipe": 0
+          },
+          "INT": {
+            "base": 6,
+            "ipe": 0
+          },
+          "TECH": {
+            "base": 6,
+            "ipe": 0
+          },
+          "COOL": {
+            "base": 6,
+            "ipe": 0
+          },
+          "MAG": {
+            "base": 1,
+            "ipe": 0
+          },
+          "EMP": {
+            "base": 4,
+            "ipe": 0
+          }
+        },
+        "skills": {
+          "pilot": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "handguns": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "dodge": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "awareness": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "basic-tech": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "streetwise": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "athletics": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "stealth": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "smgs": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "engineering": {
+            "rank": 4,
+            "ipe": 0
+          }
+        },
+        "advantages": [],
+        "disadvantages": [],
+        "trackers": {
+          "damage": 0,
+          "luck": {
+            "bonus": 0,
+            "spent": 0
+          },
+          "san": {
+            "loss": 0
+          },
+          "sfr": {
+            "spent": 0,
+            "turn": 0
+          },
+          "conditions": [],
+          "massiveLevels": 0,
+          "witheringDamage": 0,
+          "aberrations": [],
+          "credits": {
+            "current": 600,
+            "ledger": []
+          },
+          "crank": {
+            "rep": 0,
+            "ledger": []
+          },
+          "heldSpells": [],
+          "adjustments": [],
+          "panel": {}
+        },
+        "panelData": {},
+        "powers": [],
+        "gear": [],
+        "weapons": [],
+        "armor": [],
+        "progression": {
+          "milestonePoints": 0,
+          "ip": {
+            "earned": 0,
+            "log": []
+          },
+          "milestones": {
+            "minor": [],
+            "major": []
+          },
+          "powerIpe": {},
+          "specializationsGained": [],
+          "training": null
+        },
+        "sessions": [],
+        "notes": "",
+        "audit": []
+      }
+    },
+    {
+      "tag": "TAG-W7BN-RVS2-XDT0",
+      "importedAt": "2026-07-11T23:30:00.000Z",
+      "character": {
+        "meta": {
+          "schemaVersion": "0.31",
+          "id": "TAG-W7BN-RVS2-XDT0",
+          "gamedataVersion": "0.50",
+          "created": "2026-07-11T16:00:00.000Z",
+          "updated": "2026-07-11T23:55:00.000Z"
+        },
+        "identity": {
+          "name": "Hollis Reyes",
+          "age": 44,
+          "build": "Broad",
+          "hair": "Gray",
+          "eyes": "Blue",
+          "skin": "Tanned",
+          "archetype": "professional",
+          "history": "An ex-NCPD sergeant who died in the pilot on purpose, so Sam could see how dying works.",
+          "tagless": false
+        },
+        "creation": {
+          "powerLevel": "street",
+          "statMethod": "flat",
+          "rolls": {
+            "statPoints": null,
+            "credits": 5
+          },
+          "boosts": [],
+          "locked": true
+        },
+        "archetypeChoices": {
+          "rolls": {},
+          "focusAllocation": {},
+          "statBonusAllocation": {},
+          "specialization": [
+            "enforcer"
+          ],
+          "focusedSkillPicks": [
+            "handguns"
+          ],
+          "naturalAdvantages": [
+            {
+              "id": "danger-sense",
+              "rank": 2
+            }
+          ],
+          "disciplines": {},
+          "basePowers": {},
+          "optionPicks": {},
+          "powerCp": {},
+          "writeIn": {
+            "name": "",
+            "description": null,
+            "classification": null,
+            "classificationText": "",
+            "mechanics": [],
+            "traits": [],
+            "vulnerabilities": []
+          }
+        },
+        "houseRules": {
+          "keepDamagePastZero": false,
+          "training": false
+        },
+        "stats": {
+          "BOD": {
+            "base": 9,
+            "ipe": 0
+          },
+          "REF": {
+            "base": 8,
+            "ipe": 0
+          },
+          "MOB": {
+            "base": 6,
+            "ipe": 0
+          },
+          "INT": {
+            "base": 6,
+            "ipe": 0
+          },
+          "TECH": {
+            "base": 4,
+            "ipe": 0
+          },
+          "COOL": {
+            "base": 8,
+            "ipe": 0
+          },
+          "MAG": {
+            "base": 1,
+            "ipe": 0
+          },
+          "EMP": {
+            "base": 4,
+            "ipe": 0
+          }
+        },
+        "skills": {
+          "handguns": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "intimidation": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "streetwise": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "investigation": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "awareness": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "dodge": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "melee": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "athletics": {
+            "rank": 4,
+            "ipe": 0
+          },
+          "persuasion": {
+            "rank": 4,
+            "ipe": 0
+          }
+        },
+        "advantages": [],
+        "disadvantages": [],
+        "trackers": {
+          "damage": 40,
+          "luck": {
+            "bonus": 0,
+            "spent": 0
+          },
+          "san": {
+            "loss": 0
+          },
+          "sfr": {
+            "spent": 0,
+            "turn": 0
+          },
+          "conditions": [],
+          "massiveLevels": 0,
+          "witheringDamage": 0,
+          "aberrations": [],
+          "credits": {
+            "current": 500,
+            "ledger": []
+          },
+          "crank": {
+            "rep": 0,
+            "ledger": []
+          },
+          "heldSpells": [],
+          "adjustments": [],
+          "panel": {}
+        },
+        "panelData": {},
+        "powers": [],
+        "gear": [],
+        "weapons": [],
+        "armor": [],
+        "progression": {
+          "milestonePoints": 0,
+          "ip": {
+            "earned": 0,
+            "log": []
+          },
+          "milestones": {
+            "minor": [],
+            "major": []
+          },
+          "powerIpe": {},
+          "specializationsGained": [],
+          "training": null
+        },
+        "sessions": [],
+        "notes": "",
+        "audit": []
+      }
+    }
+  ]
 }

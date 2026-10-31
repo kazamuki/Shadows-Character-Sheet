@@ -142,7 +142,8 @@ tools/                  build.mjs (inlines everything into dist/), changelog.mjs
                         release.mjs (bump, prep, check), fonts.mjs, outputs.mjs,
                         phone-check.mjs, devserver.mjs, session-start.mjs,
                         sample-table.mjs (builds samples/).
-samples/                A lived-in GM table, "Dead Air" (six sessions in), built by
+samples/                A lived-in GM table, "Dead Air" (mid-session, every part of a table
+                        filled, players and their characters included), built by
                         tools/sample-table.mjs and checked by tests/sample-table.test.mjs.
                         To see it: with the dev server up, open the app with ?gm=on, seed
                         shadows.table.v1.<meta.id> = { table, section, changed, exported }
