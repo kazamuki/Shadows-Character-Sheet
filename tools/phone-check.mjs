@@ -403,6 +403,82 @@ async function tableExtras(browser, file, rows, numbers) {
   }
 }
 
+// S19 (Decision 259): the keys, in a real browser. jsdom inserts no text on a keydown and has no scroll position, so these
+// three are here and not in npm test. B1: F and J open their boxes empty (no typed letter), and still type in a field.
+// B2: closing a box a key opened doesn't move the page, at 844x390 where the header un-sticks and at 1300x900. B3: Ctrl+F
+// opens nothing of ours. Every number goes in keyNumbers, for the PR.
+const keyNumbers = [];
+async function tableKeys(browser, file, rows) {
+  const seed = tableSeed();
+  const init = ([s, pk, pack]) => { try { localStorage.setItem("shadows.feature.gm", "on");
+    localStorage.setItem("shadows.table.v1." + s.table.meta.id, JSON.stringify(s)); localStorage.setItem(pk, JSON.stringify(pack)); } catch (e) {} };
+  const open = async (z, tab = "cast") => {
+    const c = await browser.newContext({ viewport: { width: z.width, height: z.height } });
+    await c.addInitScript(init, [seed.table, seed.packKey, seed.pack]);
+    const p = await c.newPage(); const errors = []; p.on("pageerror", e => errors.push(e.message));
+    await p.goto(pathToFileURL(file).href); await p.click("[data-topen]"); await p.click(`[data-tsec="${tab}"]`);
+    return [c, p, errors];
+  };
+  const blur = p => p.evaluate(() => { if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur(); window.scrollTo(0, 0); });
+  const modal = p => p.evaluate(() => !!document.querySelector("dialog.modal[open]"));
+  const row = (screen, bad, said) => rows.push({ width: "table keys", screen, layout: bad.length ? bad.join("; ") : said, ok: !bad.length });
+  // B1
+  {
+    const [c, p, errors] = await open({ width: 1300, height: 900 }), bad = [];
+    await blur(p); await p.keyboard.press("f");
+    const f = await p.evaluate(() => ({ open: !!document.querySelector("dialog.modal[open]"), q: document.querySelector("[data-findq]")?.value, onq: document.activeElement === document.querySelector("[data-findq]") }));
+    if (!f.open || f.q !== "" || !f.onq) bad.push(`F: open ${f.open}, field value ${JSON.stringify(f.q)}, focused ${f.onq}`);
+    await p.keyboard.press("Escape"); await blur(p);
+    await p.keyboard.press("j"); await p.keyboard.type("draft"); await p.keyboard.press("Escape"); await blur(p);
+    await p.keyboard.press("j");
+    const j = await p.evaluate(() => ({ open: !!document.querySelector("dialog.modal[open]"), v: document.querySelector("[data-jottext]")?.value, on: document.activeElement === document.querySelector("[data-jottext]") }));
+    if (!j.open || j.v !== "draft" || !j.on) bad.push(`J: open ${j.open}, box value ${JSON.stringify(j.v)}, focused ${j.on}`);
+    await p.keyboard.press("Escape");
+    await p.focus("[data-cadd-name]"); await p.keyboard.press("f");
+    const t = await p.evaluate(() => ({ open: !!document.querySelector("dialog.modal[open]"), v: document.querySelector("[data-cadd-name]").value }));
+    if (t.open || t.v !== "f") bad.push(`typing: open ${t.open}, field value ${JSON.stringify(t.v)}`);
+    if (errors.length) bad.push(errors.join("; "));
+    row("B1: F, J, and typing a letter in a field", bad, `F field ${JSON.stringify(f.q)}; J box ${JSON.stringify(j.v)}; Name field after f ${JSON.stringify(t.v)}, no box`);
+    await c.close();
+  }
+  // B2, at the short screen: the header un-sticks, so the Find button is at the top of the page.
+  {
+    const [c, p] = await open({ width: 844, height: 390 }), bad = [];
+    await p.click("[data-copen]");
+    await p.evaluate(() => { const pad = document.createElement("div"); pad.id = "keys-pad"; pad.style.height = "3000px"; document.querySelector("main").appendChild(pad); });
+    await p.evaluate(() => window.scrollTo(0, 1500));
+    await blur(p); await p.evaluate(() => window.scrollTo(0, 1500));
+    const before = await p.evaluate(() => Math.round(window.scrollY));
+    await p.keyboard.press("f"); await p.keyboard.press("Escape");
+    const after = await p.evaluate(() => ({ y: Math.round(window.scrollY), on: document.activeElement === document.querySelector("[data-tfind]") }));
+    if (Math.abs(after.y - before) > 1 || !after.on) bad.push(`844x390: scrollY ${before} -> ${after.y}, focus on Find ${after.on}`);
+    row("B2: Esc after F, at 844x390", bad, `scrollY ${before} -> ${after.y}, focus on Find`);
+    keyNumbers.push({ check: "B2 844x390", before, after: after.y, focus: after.on ? "[data-tfind]" : "elsewhere" });
+    await c.close();
+  }
+  // B2 at 1300x900: a card button in view.
+  {
+    const [c, p] = await open({ width: 1300, height: 900 }), bad = [];
+    await p.evaluate(() => { const pad = document.createElement("div"); pad.style.height = "3000px"; document.querySelector("main").appendChild(pad); });
+    await p.evaluate(() => { const b = document.querySelector("[data-copen]"); b.focus({ preventScroll: true }); window.scrollTo(0, 120); });
+    const before = await p.evaluate(() => Math.round(window.scrollY));
+    await p.keyboard.press("f"); await p.keyboard.press("Escape");
+    const after = await p.evaluate(() => ({ y: Math.round(window.scrollY), on: document.activeElement === document.querySelector("[data-copen]") }));
+    if (Math.abs(after.y - before) > 1 || !after.on) bad.push(`1300x900: scrollY ${before} -> ${after.y}, focus back on the card ${after.on}`);
+    row("B2: Esc after F from a card, at 1300x900", bad, `scrollY ${before} -> ${after.y}, focus on the card`);
+    keyNumbers.push({ check: "B2 1300x900", before, after: after.y, focus: after.on ? "[data-copen]" : "elsewhere" });
+    await c.close();
+  }
+  // B3
+  {
+    const [c, p] = await open({ width: 1300, height: 900 }), bad = [];
+    await blur(p);
+    for (const k of ["Control+f", "Control+j", "Alt+f"]) { await p.keyboard.press(k); if (await modal(p)) bad.push(k + " opened a box"); }
+    row("B3: Ctrl+F, Ctrl+J and Alt+F open nothing of ours", bad, "no box");
+    await c.close();
+  }
+}
+
 const dir = mkdtempSync(join(tmpdir(), "shadows-phone-"));
 const file = join(dir, "shadows-character-sheet.html");
 writeFileSync(file, builtFile ? readFileSync(builtFile, "utf8") : buildHtml());
@@ -615,7 +691,7 @@ try {
     }
   }
   // S18: a table's screens, at four widths.
-  if (!RECORD) { await tableScreens(browser, file, rows, tableNumbers); await tableExtras(browser, file, rows, tableNumbers); }
+  if (!RECORD) { await tableScreens(browser, file, rows, tableNumbers); await tableExtras(browser, file, rows, tableNumbers); await tableKeys(browser, file, rows); }
   // S18 (L9): the frame fixture, recorded or diffed.
   const frames = await recordFrames(browser, file, seed);
   if (RECORD) {
@@ -644,6 +720,8 @@ if (tableNumbers.length) {
   console.log("\nA table's screens (main as x+width; fields and textareas the widest px; prose the widest px against 75ch; cards a row and their widths):");
   console.table(tableNumbers);
 }
+if (keyNumbers.length) { console.log("
+The keys (Decision 259), scrollY before and after Esc:"); console.table(keyNumbers); }
 const bad = rows.filter(r => !r.ok);
 for (const r of bad.filter(r => String(r.width).startsWith("table "))) console.log(`${r.width} | ${r.screen} | ${r.layout}`);
 const byWidth = [...new Set(bad.map(r => r.width))];
