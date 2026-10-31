@@ -14,8 +14,8 @@ the release workflow. The version itself was bumped when the work was done
 First, check the switches: every `FEATURES` entry in `src/ui/shared.js` is
 `false` unless **this release is that feature's launch** (Decision 173), in
 which case its pending changelog lines are already in the `[Unreleased]`
-section (GM mode's live in `docs/plans/gm-mode/changelog-pending.md`; the
-build test enforces it).
+section (the build test enforces it). GM mode launched in 0.57.0 (Decision
+260) and CRANK relaunched in 0.53.0 (239): both are `true` now, and stay so.
 
 ```bash
 npm run release:prep            # "## [Unreleased] — app X" → "## vX — <today>", regenerates What's new
