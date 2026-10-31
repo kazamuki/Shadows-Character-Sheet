@@ -9,7 +9,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { boot } from "./harness.mjs";
-import { GM_ON, runTable, castAdd, type, notesTab } from "./smokekit.mjs";
+import { GM_ON, runTable, castAdd, type, notesTab, openSheet, lockedCharacter } from "./smokekit.mjs";
 
 const KEYS = "shadows.ui.keys";
 const tableApp = (storage = GM_ON) => {
@@ -94,6 +94,14 @@ test("Decision 259: F and J do nothing in a field, with a modifier, on repeat, o
   assert.ok(app.$("[data-jottext]") && !app.$("[data-findq]"), "F over Jot replaced the box");
   assert.equal(app.window.eval("S.jotDraft"), "keep me");
   pressEsc(app);
+  // ⋮ open: F and J are the page's behind a layer. Focus on a menu item, as Tab leaves it.
+  app.click("[data-menu-toggle]");
+  assert.equal(app.$("#hdrmenu").hidden, false);
+  nothing(app.$("[data-trename]"), "f", {}, "⋮ open, on a menu item");
+  nothing(app.doc.body, "j", {}, "⋮ open, on the page");
+  app.click("[data-menu-toggle]");
+  assert.equal(app.$("#hdrmenu").hidden, true);
+  press(app, app.doc.body, "f"); assert.ok(modalOpen(app), "F stayed off after ⋮ closed"); pressEsc(app);
   // The two guards Home's empty `S.table` would otherwise hide: the switch pulled while a table is open, and a screen
   // that isn't a table's with a table still held (not a state the app reaches; the guard is what keeps it so).
   const feat = app.window.localStorage.getItem("shadows.feature.gm");
@@ -104,11 +112,26 @@ test("Decision 259: F and J do nothing in a field, with a modifier, on repeat, o
   nothing(app.doc.body, "j", {}, "a screen that isn't a table's");
   app.window.eval('S.screen = "table"');
   press(app, app.doc.body, "f"); assert.ok(modalOpen(app), "the guards didn't let go again"); pressEsc(app);
-  // Off a table: Home, with a character's sheet, and Home with GM mode off.
+  // Off a table: Home, the wizard, a locked character's sheet (real navigation, GM mode on), and Home with GM mode off.
   app.click("[data-menu-toggle]"); app.click("[data-thome]");
   assert.equal(app.window.eval("S.screen"), "home");
   nothing(app.$("#btn-run-table"), "f", {}, "Home");
   nothing(app.doc.body, "j", {}, "Home, body");
+  const quiet = (a, target, key, why) => {
+    const r = press(a, target, key);
+    assert.equal(!!a.$("dialog.modal[open]"), false, why + ": a box opened");
+    assert.equal(r.prevented, false, why + ": the key was cancelled");
+    if (target !== a.doc.body) assert.equal(a.doc.activeElement, target, why + ": focus moved");
+  };
+  const wiz = boot({ storage: GM_ON });
+  wiz.click("#btn-new");
+  assert.notEqual(wiz.window.eval("S.screen"), "home", "New character didn't leave Home");
+  assert.notEqual(wiz.window.eval("S.screen"), "table");
+  quiet(wiz, wiz.doc.body, "f", "the wizard"); quiet(wiz, wiz.doc.body, "j", "the wizard");
+  const sheet = openSheet(lockedCharacter(), "main", { storage: GM_ON });
+  assert.equal(sheet.window.eval("S.screen"), "sheet");
+  quiet(sheet, sheet.doc.body, "f", "a locked sheet"); quiet(sheet, sheet.doc.body, "j", "a locked sheet");
+  assert.deepEqual([wiz.errors, sheet.errors], [[], []]);
   const off = boot();
   assert.equal(off.$("dialog.modal[open]"), null);
   const r2 = press(off, off.doc.body, "f"); assert.equal(r2.prevented, false);

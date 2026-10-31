@@ -344,6 +344,8 @@ document.addEventListener("keydown", e=>{
   if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey || e.repeat || e.isComposing) return;
   if (inField(e.target) || inField(document.activeElement)) return;
   if (document.querySelector("dialog.modal[open]")) return;
+  // The ⋮ menu is a layer: a box opened over it would hand focus back to a menu item the same Esc hides.
+  const menu=$("hdrmenu"); if (menu && !menu.hidden) return;
   // Held back before the box opens: focus moves during this keydown, and the letter would be typed into it.
   e.preventDefault();
   if (e.key.toLowerCase()==="f") openFind({ viaKey:true }); else openJot({ viaKey:true });
