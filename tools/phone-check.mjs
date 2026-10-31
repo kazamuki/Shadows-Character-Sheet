@@ -47,6 +47,7 @@ import { chromium } from "playwright-core";
 import { buildHtml } from "./build.mjs";
 import { loadEngine } from "../tests/harness.mjs";
 import { characterFixtures } from "../tests/character-fixtures.mjs";
+import { syntheticPack } from "../tests/packfixture.mjs";
 
 // The share of the screen's height the pinned header may take, once scrolled.
 const HEADER_MAX_SHARE = 0.2;
@@ -95,6 +96,7 @@ function lockedCharacter(archetype = "arcanist", milestonePoints = 0, held = [],
     ch.trackers.aberrations.push({ id: "night-eyes", permanence: "permanent" }, { id: "nocturnal", permanence: "permanent" });
   }
   ch.creation.locked = true;
+  ch.meta.id = "TAG-AAAA-BBBB-CCCC";   // drawn at random otherwise, and it wraps differently from one run to the next
   return JSON.parse(JSON.stringify(ch));   // out of the engine's vm realm
 }
 
@@ -110,16 +112,307 @@ async function launch() {
   throw new Error(`no Chromium to drive. Set PHONE_CHECK_BROWSER to one, or run \`npx playwright-core install chromium\`.\n  ${failures.join("\n  ")}`);
 }
 
+// S18 (L9): the frame fixture. The boxes of the header, the rail, `main`, the vitals column and `main`'s direct
+// children on Home, every wizard step and every sheet tab, recorded before the table got its own frame. A table's
+// rules are scoped to `.table-mode`, so any difference here is a rule that reached a screen it shouldn't.
+// `npm run phone-check -- --record-fixture` rewrites it; do that only when a screen is meant to move.
+const FIXTURE_FILE = new URL("./frame-fixture.json", import.meta.url);
+const FIXTURE_SIZES = [
+  { width: 390, height: 844 }, { width: 768, height: 1024 }, { width: 1300, height: 900 }, { width: 1980, height: 1080 },
+];
+const args = process.argv.slice(2);
+const RECORD = args.includes("--record-fixture");
+const builtFile = args.find(a => !a.startsWith("--"));
+
+const frameBoxes = () => {
+  const r = el => { if (!el) return null; const b = el.getBoundingClientRect(); return [b.x, b.y, b.width, b.height].map(n => Math.round(n * 10) / 10); };
+  window.scrollTo(0, 0);
+  const out = { header: r(document.querySelector("header.top")), rail: r(document.querySelector("nav.ledger")),
+    main: r(document.querySelector("main")), vitals: r(document.querySelector("aside.vitals")), children: [] };
+  // Every box under `main`, folded to a hash: a card, a field or a line of prose that moves changes it, which the
+  // direct children alone would not show (a list's cards sit inside one section whose box stays the same).
+  let h = 2166136261, n = 0;
+  for (const el of document.querySelectorAll("main *")) {
+    const b = el.getBoundingClientRect();
+    if (!b.width && !b.height) continue;
+    const t = `${el.tagName}.${el.getAttribute("class") || ""}|${Math.round(b.x * 10)}|${Math.round(b.y * 10)}|${Math.round(b.width * 10)}|${Math.round(b.height * 10)}`;
+    for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+    n++;
+  }
+  out.deep = `${n} boxes, ${h.toString(16)}`;
+  [...document.querySelector("main").children].forEach((el, i) => out.children.push(`${i} ${el.tagName.toLowerCase()}${el.classList.length ? "." + [...el.classList].join(".") : ""} ${r(el).join(",")}`));
+  return out;
+};
+
+// A transition caught half-way (Main's Health bar) would move a box between two runs of the same code.
+const STILL = () => document.addEventListener("DOMContentLoaded", () => {
+  const st = document.createElement("style"); st.textContent = "*,*::before,*::after{transition:none!important;animation:none!important}"; document.head.appendChild(st);
+});
+
+// Let a press settle (fonts, a redraw's second frame) before the boxes are read, so two runs of the same code agree.
+const snap = async page => { await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))); await page.waitForTimeout(120); return page.evaluate(frameBoxes); };
+
+async function recordFrames(browser, file, seed) {
+  const frames = {};
+  for (const z of FIXTURE_SIZES) {
+    for (const pinned of [false, true]) {
+      if (pinned && z.width < 1300) continue;
+      const c = await browser.newContext({ viewport: { width: z.width, height: z.height } });
+      await c.addInitScript(STILL);
+      await c.addInitScript(([s, pin]) => { try {
+        if (!localStorage.getItem("shadows.active.v1")) localStorage.setItem("shadows.active.v1", s);
+        if (pin) localStorage.setItem("shadows.ui.vitalsPinned", "pinned");
+      } catch (e) {} }, [seed, pinned]);
+      const page = await c.newPage();
+      const at = name => `${name} @${z.width}${pinned ? " pinned" : ""}`;
+      await page.goto(pathToFileURL(file).href);
+      if (!pinned) frames[at("home")] = await snap(page);
+      await page.click("[data-open]");
+      await page.waitForSelector("#topnav [data-sec]");
+      const tabs = await page.$$eval("#topnav [data-sec]", bs => bs.map(b => b.dataset.sec));
+      for (const sec of tabs) {
+        await page.click(`#topnav [data-sec="${sec}"]`);
+        frames[at(`sheet: ${sec}`)] = await snap(page);
+      }
+      await c.close();
+    }
+    // The wizard: a new character driven as a player would, then every step, then Expert's four.
+    const c = await browser.newContext({ viewport: { width: z.width, height: z.height } });
+      await c.addInitScript(STILL);
+    const page = await c.newPage();
+    await page.goto(pathToFileURL(file).href);
+    await page.click("#btn-new");
+    await page.click("[data-pl]");
+    await page.click('button:has-text("Continue")');
+    await page.fill('[data-id="name"]', "Mara Voss");
+    await page.click('button:has-text("Continue")');
+    await page.waitForSelector("[data-stat-floor]");
+    // The tag is drawn at random and wraps differently at a phone's width, so every run pins the same one.
+    await page.evaluate(() => { S.maxReached = STEPS.length - 1; S.ch.meta.id = "TAG-AAAA-BBBB-CCCC"; });
+    const ids = await page.evaluate(() => STEPS.map(s => s.id));
+    const goStep = id => page.evaluate(i => { S.step = STEPS.findIndex(s => s.id === i); update(); }, id);
+    const expertSteps = await page.evaluate(() => EXPERT_STEPS);
+    for (const id of ids) {
+      await goStep(id);
+      if (id === "archetype") { await page.click('[data-arch="professional"]'); await page.click('[data-spec="cleaner"]'); }
+      frames[`wizard: ${id} @${z.width}`] = await snap(page);
+    }
+    await goStep("stats");
+    await page.click("header [data-expert]");
+    for (const id of expertSteps) { await goStep(id); frames[`wizard: ${id}, Expert @${z.width}`] = await snap(page); }
+    await c.close();
+  }
+  return frames;
+}
+
+// S18: a GM table's screens. A table is switched off for players (Decision 173), so `shadows.feature.gm` is the feature's own
+// switch. The table is the sample, Dead Air, with a player and a seat (Dez) added and a pack in the Threats tab; the
+// encounter is made in the page, with Dez in it and the Hit panel open on his row, as S3d left it. Each screen is measured
+// at four widths: `main`'s box, anything past the right edge outside a sideways scroller, the widest field, textarea,
+// prose block and card, the cards a row, the encounter's rows, and the header and the bar together.
+const TABLE_WIDTHS = [{ width: 390, height: 844 }, { width: 768, height: 1024 }, { width: 1300, height: 900 }, { width: 1980, height: 1080 }, { width: 390, height: 844, touch: true }];
+const FIELD_MAX = 36 * 16, AREA_MAX = 48 * 16, CARD_MIN = 20 * 16, CARD_MAX = 36 * 16, ENC_MAX = 64 * 16, BAR_MAX = 48;
+const CARDS_A_ROW = { 390: 1, 768: 2, 1300: 3, 1980: 4 };
+const DEZ_TAG = "TAG-EEEE-EEEE-EEEE";
+
+function tableSeed() {
+  const { Engine } = loadEngine();
+  const t = Engine.migrateTable(JSON.parse(readFileSync(new URL("../samples/dead-air.shadows-table.json", import.meta.url), "utf8")));
+  const ch = lockedCharacter("professional");
+  for (const id of Object.keys(ch.stats)) ch.stats[id].base = 6;
+  ch.identity.name = "Dez"; ch.meta.id = DEZ_TAG; ch.meta.updated = "2026-10-02T10:00:00.000Z";
+  const pid = Engine.addPlayer(t, { name: "Brogan" }).id;
+  if (!Engine.importSeat(t, pid, ch).ok) throw new Error("the seed seat didn't import");
+  t.audit = [];
+  const pack = syntheticPack();
+  return JSON.parse(JSON.stringify({ char: ch, table: { table: t, section: "sessions", changed: "2026-10-05T10:00:00.000Z", exported: null },
+    packKey: "shadows.pack.v1." + pack.meta.id, pack: { pack: Engine.migratePack(pack), imported: "2026-10-05T10:00:00.000Z" } }));
+}
+
+const tableMeasure = () => {
+  const de = document.documentElement, main = document.querySelector("main"), mb = main.getBoundingClientRect();
+  // 75ch is the width of 75 zeros in the block's own font, so it is measured inside each block.
+  const chOf = el => { const pr = document.createElement("span"); pr.style.cssText = "display:block;width:75ch;height:0;position:absolute;visibility:hidden"; el.appendChild(pr);
+    const w = pr.getBoundingClientRect().width; pr.remove(); return w; };
+  const inScroller = el => { for (let e = el.parentElement; e && e !== main; e = e.parentElement) { const o = getComputedStyle(e).overflowX; if (o === "auto" || o === "scroll") return true; } return false; };
+  const box = el => el.getBoundingClientRect();
+  const shown = el => { const r = box(el); return r.width > 0 && r.height > 0; };
+  let over = 0;
+  for (const el of main.querySelectorAll("*")) if (shown(el) && box(el).right > de.clientWidth + 0.5 && !inScroller(el)) over++;
+  const widest = els => Math.round(Math.max(0, ...[...els].filter(shown).map(e => box(e).width)));
+  const fields = main.querySelectorAll("input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=hidden]):not([type=number]), select");
+  const prose = [...main.querySelectorAll("p, dd, .step-note")].filter(e => !e.closest(".ro-sheet, .enc-row, .tbl-bar, .enc-bar"));
+  const lis = [...main.querySelectorAll(".roster-list > li")].filter(shown);
+  // Cards a row: the most on one row of any one list (Encounters draws two lists, a short one first).
+  const perRow = Math.max(0, ...[...main.querySelectorAll(".roster-list")].map(ul => { const k = [...ul.children].filter(shown); return k.length ? k.filter(l => Math.round(box(l).top) === Math.round(box(k[0]).top)).length : 0; }));
+  const rows = [...main.querySelectorAll(".enc-rows > li")].filter(shown);
+  const bar = main.querySelector(".tbl-bar, .enc-bar");
+  const hdr = document.querySelector("header.top");
+  const on = sel => { const e = document.querySelector(sel); return !!e && getComputedStyle(e).display !== "none"; };
+  const worst = prose.filter(shown).map(e => ({ w: box(e).width, ch: chOf(e) })).sort((a, b) => b.w / b.ch - a.w / a.ch)[0] || { w: 0, ch: 0 };
+  return { x: Math.round(mb.x), w: Math.round(mb.width), over, ch75: Math.round(worst.ch),
+    field: widest(fields), area: widest(main.querySelectorAll("textarea")), prose: Math.round(worst.w),
+    cards: lis.length, perRow,
+    cardMin: lis.length ? Math.round(Math.min(...lis.map(l => box(l).width))) : 0, cardMax: widest(lis),
+    enc: widest(rows), encCols: new Set(rows.map(r => Math.round(box(r).left))).size,
+    barCut: !!bar && bar.scrollWidth > bar.clientWidth + 1 && !bar.classList.contains("more-r"),
+    bar: bar ? Math.round(box(bar).height) : 0, barKind: bar ? bar.className.split(" ")[0] : "",
+    header: Math.round(hdr.getBoundingClientRect().height), scrollW: de.scrollWidth - de.clientWidth,
+    rail: on("nav.ledger"), vitals: on("aside.vitals") };
+};
+
+async function tableScreens(browser, file, rows, numbers) {
+  const seed = tableSeed();
+  for (const z of TABLE_WIDTHS) {
+    const c = await browser.newContext({ viewport: { width: z.width, height: z.height }, hasTouch: !!z.touch, isMobile: !!z.touch });
+    await c.addInitScript(([s, pk, pack]) => { try {
+      localStorage.setItem("shadows.feature.gm", "on");
+      if (!localStorage.getItem("shadows.table.v1." + s.table.meta.id)) {
+        localStorage.setItem("shadows.table.v1." + s.table.meta.id, JSON.stringify(s));
+        localStorage.setItem(pk, JSON.stringify(pack));
+      }
+    } catch (e) {} }, [seed.table, seed.packKey, seed.pack]);
+    const page = await c.newPage();
+    const errors = [];
+    page.on("pageerror", e => errors.push(e.message));
+    await page.goto(pathToFileURL(file).href);
+    await page.click("[data-topen]");
+    const screens = [];
+    const walk = async (name, act, opts = {}) => {
+      try {
+        await act();
+        screens.push({ name, m: await page.evaluate(tableMeasure), ...opts });
+      } catch (e) { rows.push({ width: `table ${z.width}${z.touch ? " touch" : ""}`, screen: name, layout: `could not reach it: ${e.message.split("\n")[0]}`, ok: false }); }
+    };
+    const tab = id => () => page.click(`[data-tsec="${id}"]`);
+    const click = sel => () => page.click(sel);
+    const then = (...fs) => async () => { for (const f of fs) await f(); };
+    await walk("sessions", tab("sessions"), { list: true });
+    await walk("a session", click("[data-sopen]"), { bar: true });
+    // The first sessions are closed already; the close-out's page is a session that isn't.
+    await walk("the close-out", async () => {
+      await page.click('[data-tsec="sessions"]');
+      const n = await page.locator("[data-sopen]").count();
+      for (let i = 0; i < n; i++) {
+        await page.locator("[data-sopen]").nth(i).click();
+        if (await page.locator("[data-co-open]").count()) break;
+        await page.click("[data-sback]");
+      }
+      await page.click("[data-co-open]");
+    }, { bar: true });
+    await walk("players", tab("players"));
+    await walk("the read-only sheet", click("[data-seat]"), { bar: true });
+    await walk("a seat's page", click("[data-roseat]"), { bar: true });
+    await walk("cast", tab("cast"), { list: true });
+    await walk("a member", click("[data-copen]"), { bar: true });
+    await walk("city", tab("city"), { list: true });
+    await walk("a place", click("[data-popen]"), { bar: true });
+    await walk("a faction", then(tab("city"), click('[data-cityview="factions"]'), click("[data-fcardopen]")), { bar: true });
+    await walk("threats", tab("threats"), { list: true });
+    await walk("a threat", click("[data-tentry]"), { bar: true });
+    await walk("a threat group", then(tab("threats"), click('[data-tview="group"]'), click("[data-tgroup]")), { bar: true });
+    await walk("encounters", tab("encounters"), { list: true });
+    await walk("an encounter with the Hit panel open", then(
+      () => page.fill("[data-enc-name]", "Docks"), click("[data-enc-new]"),
+      () => page.fill("[data-enc-pcname]", "Dez"), click("[data-enc-addpc]"), click("[data-ehit]")), { bar: true, enc: true });
+    await walk("reference", tab("reference"));
+    await walk("notes", tab("notes"));
+    for (const s of screens) {
+      const m = s.m, bad = [];
+      if (m.rail || m.vitals) bad.push("a rail or vitals column is drawn");
+      if (m.over) bad.push(`${m.over} elements past the right edge`);
+      if (m.scrollW > 0) bad.push(`the page scrolls sideways by ${m.scrollW}px`);
+      if (m.field > FIELD_MAX + 0.5) bad.push(`a field ${m.field}px`);
+      if (m.area > AREA_MAX + 0.5) bad.push(`a textarea ${m.area}px`);
+      if (m.prose > m.ch75 + 1) bad.push(`prose ${m.prose}px, 75ch is ${m.ch75}px`);
+      if (s.list && m.cards >= CARDS_A_ROW[z.width] && m.perRow < CARDS_A_ROW[z.width]) bad.push(`${m.perRow} cards a row, ${CARDS_A_ROW[z.width]} wanted`);
+      if (m.cards && z.width > 390 && (m.cardMin < CARD_MIN - 1 || m.cardMax > CARD_MAX + 1)) bad.push(`cards ${m.cardMin}-${m.cardMax}px`);
+      if (s.enc && (m.enc > ENC_MAX + 1 || m.encCols !== 1)) bad.push(`rows ${m.enc}px in ${m.encCols} columns`);
+      if (s.bar && !m.bar) bad.push("no bar");
+      if (m.barCut) bad.push("the bar scrolls sideways with no fade (no more-r)");
+      if (m.barKind === "tbl-bar" && m.bar > (z.touch ? 56 : BAR_MAX)) bad.push(`the bar is ${m.bar}px`);
+      if (m.bar && z.width <= 390 && (m.header + m.bar) / z.height > HEADER_MAX_SHARE) bad.push(`header + bar ${Math.round((m.header + m.bar) / z.height * 100)}%`);
+      numbers.push({ w: z.width + (z.touch ? " touch" : ""), screen: s.name, main: `${m.x}+${m.w}`, over: m.over, field: m.field, area: m.area, prose: `${m.prose}/${m.ch75}`,
+        cards: m.cards ? `${m.perRow}/row ${m.cardMin}-${m.cardMax}` : "", enc: m.enc ? `${m.enc}px` : "", bar: m.bar ? `${m.barKind} ${m.bar}px` : "", header: m.header });
+      rows.push({ width: `table ${z.width}${z.touch ? " touch" : ""}`, screen: s.name, layout: bad.length ? bad.join("; ") : "ok", ok: !bad.length });
+    }
+    if (errors.length) rows.push({ width: `table ${z.width}`, screen: "(page errors)", layout: errors.join("; "), ok: false });
+    await c.close();
+  }
+}
+
+// L2: the read-only sheet lays out as the player's own sheet of the same file. L8: from 1280px a member's stat block is a
+// panel on the right that stays put under the bar; below that it is the last block of the page.
+async function tableExtras(browser, file, rows, numbers) {
+  const seed = tableSeed();
+  const cols = () => (document.querySelector(".main-grid") ? getComputedStyle(document.querySelector(".main-grid")).gridTemplateColumns.split(" ").map(parseFloat) : []);
+  // The widest field, textarea and prose block: a measure written into the read-only sheet would cap one of them.
+  // The read-only sheet sits in .ro-sheet under the table's own bar and title; the player's sheet is all of main.
+  const widest = root => {
+    const w = sel => Math.round(Math.max(0, ...[...document.querySelectorAll(sel.split(",").map(x => root + " " + x.trim()).join(","))].filter(e => e.getBoundingClientRect().height > 0).map(e => e.getBoundingClientRect().width)));
+    return [w("input:not([type=hidden]):not([type=checkbox]):not([type=radio]), select"), w("textarea"), w("p, dd")];
+  };
+  const TABS = ["main", "skills", "character", "trackers", "progression", "sessions", "loadout", "notes"];
+  const ctx = async (z, init) => { const c = await browser.newContext({ viewport: { width: z.width, height: z.height } }); await c.addInitScript(init.fn, init.arg); return c; };
+  for (const z of TABLE_WIDTHS.filter(z => z.width >= 1300)) {
+    const tableInit = { fn: ([s, pk, pack]) => { try { localStorage.setItem("shadows.feature.gm", "on");
+      localStorage.setItem("shadows.table.v1." + s.table.meta.id, JSON.stringify(s)); localStorage.setItem(pk, JSON.stringify(pack)); } catch (e) {} }, arg: [seed.table, seed.packKey, seed.pack] };
+    const t = await ctx(z, tableInit), tp = await t.newPage();
+    await tp.goto(pathToFileURL(file).href); await tp.click("[data-topen]"); await tp.click('[data-tsec="players"]'); await tp.click("[data-seat]");
+    await tp.waitForSelector(".main-grid");
+    const ro = await tp.evaluate(cols);
+    const roWide = {};
+    for (const id of TABS) { await tp.click(`[data-rotab="${id}"]`); roWide[id] = await tp.evaluate(widest, ".ro-sheet"); }
+    const seedChar = JSON.stringify({ ch: seed.char, section: "main" });
+    await t.close();
+    // The player's own sheet of the same file: the copy the seat holds, opened from Home.
+    const own = await ctx(z, { fn: s => { try { localStorage.setItem("shadows.active.v1", s); } catch (e) {} }, arg: seedChar });
+    const op = await own.newPage();
+    await op.goto(pathToFileURL(file).href); await op.click("[data-open]"); await op.waitForSelector(".main-grid");
+    const mine = await op.evaluate(cols);
+    const ownWide = {};
+    for (const id of TABS) { await op.click(`#topnav [data-sec="${id}"]`); ownWide[id] = await op.evaluate(widest, "main"); }
+    const wideDiff = TABS.filter(id => roWide[id].some((x, i) => Math.abs(x - ownWide[id][i]) > 1));
+    await own.close();
+    const same = ro.length > 0 && ro.length === mine.length && ro.every((w, i) => Math.abs(w - mine[i]) <= 1) && !wideDiff.length;
+    rows.push({ width: `table ${z.width}`, screen: "the read-only sheet's Main against the player's own", layout: same ? "ok" : `read-only ${ro.join("+")}, own ${mine.join("+")}${wideDiff.map(id => `; ${id}: widest field, textarea, prose ${roWide[id].join("/")} against ${ownWide[id].join("/")}`).join("")}`, ok: same });
+    numbers.push({ w: z.width, screen: "L2 .main-grid columns", main: `read-only ${ro.map(Math.round).join("+")}`, over: "", field: "", area: "", prose: "", cards: `own ${mine.map(Math.round).join("+")}`, enc: "", bar: "", header: "" });
+  }
+  for (const z of [{ width: 1279, height: 900 }, { width: 1300, height: 900 }, { width: 1980, height: 1080 }]) {
+    const c = await browser.newContext({ viewport: { width: z.width, height: z.height } });
+    await c.addInitScript(([s, pk, pack]) => { try { localStorage.setItem("shadows.feature.gm", "on");
+      localStorage.setItem("shadows.table.v1." + s.table.meta.id, JSON.stringify(s)); localStorage.setItem(pk, JSON.stringify(pack)); } catch (e) {} }, [seed.table, seed.packKey, seed.pack]);
+    const page = await c.newPage();
+    await page.goto(pathToFileURL(file).href); await page.click("[data-topen]"); await page.click('[data-tsec="cast"]'); await page.click("[data-copen]");
+    const at = () => page.evaluate(() => { const pn = document.querySelector(".cast-panel"), bar = document.querySelector(".tbl-bar"), r = pn.getBoundingClientRect(), b = bar.getBoundingClientRect(), t = document.querySelector("[data-ctitle]").getBoundingClientRect();
+      return { x: Math.round(r.x), w: Math.round(r.width), top: Math.round(r.top), barBottom: Math.round(b.bottom), titleTop: Math.round(t.top), statusUnderName: document.querySelector("[data-ctitle]").nextElementSibling.matches(".cast-status") }; });
+    const before = await at();
+    await page.evaluate(() => window.scrollTo(0, 1000));
+    const after = await at();
+    const docked = z.width >= 1280;
+    const bad = [];
+    if (!before.statusUnderName) bad.push("the status isn't under the name");
+    if (docked) {
+      if (before.w < 352 || before.w > 448) bad.push(`the panel is ${before.w}px`);
+      if (before.x < z.width / 2) bad.push(`the panel is at x ${before.x}, not on the right`);
+      if (after.top < after.barBottom - 1 || after.top > after.barBottom + 60) bad.push(`after 1000px it is at y ${after.top}, the bar ends at ${after.barBottom}`);
+    } else if (before.x > 40 || after.top >= 0 && after.top < after.barBottom) bad.push(`below 1280px it should sit at the bottom of the page, not beside it (x ${before.x})`);
+    rows.push({ width: `table ${z.width}`, screen: "a member's stat block panel (L8)", layout: bad.length ? bad.join("; ") : "ok", ok: !bad.length });
+    numbers.push({ w: z.width, screen: "L8 stat block", main: `x ${before.x}, ${before.w}px wide`, over: "", field: "", area: "", prose: "", cards: `top ${before.top} -> ${after.top} after 1000px, bar ends ${after.barBottom}`, enc: "", bar: "", header: "" });
+    await c.close();
+  }
+}
+
 const dir = mkdtempSync(join(tmpdir(), "shadows-phone-"));
 const file = join(dir, "shadows-character-sheet.html");
-writeFileSync(file, process.argv[2] ? readFileSync(process.argv[2], "utf8") : buildHtml());
+writeFileSync(file, builtFile ? readFileSync(builtFile, "utf8") : buildHtml());
 const seed = JSON.stringify({ ch: lockedCharacter("arcanist", 0, ["long-lived"], true), section: "main" });
 // A Major unlocks at 10 Milestone Points; the Professional's list has the longest prerequisites.
 const majorSeed = JSON.stringify({ ch: lockedCharacter("professional", 10), section: "main" });
 const MAJOR = "progression: a Major";
 
 const browser = await launch();
-const rows = [];
+const rows = [], tableNumbers = [];
 try {
   for (const w of WIDTHS) {
     const errors = [];
@@ -321,6 +614,23 @@ try {
       await c.close();
     }
   }
+  // S18: a table's screens, at four widths.
+  if (!RECORD) { await tableScreens(browser, file, rows, tableNumbers); await tableExtras(browser, file, rows, tableNumbers); }
+  // S18 (L9): the frame fixture, recorded or diffed.
+  const frames = await recordFrames(browser, file, seed);
+  if (RECORD) {
+    writeFileSync(FIXTURE_FILE, JSON.stringify(frames, null, 1) + "\n");
+    console.log(`Recorded ${Object.keys(frames).length} frames to tools/frame-fixture.json.`);
+  } else {
+    const was = JSON.parse(readFileSync(FIXTURE_FILE, "utf8"));
+    const diffs = [];
+    for (const k of new Set([...Object.keys(was), ...Object.keys(frames)])) {
+      const a = JSON.stringify(was[k] ?? null), b = JSON.stringify(frames[k] ?? null);
+      if (a !== b) diffs.push(k);
+    }
+    rows.push({ width: "all", screen: `frame fixture (${Object.keys(was).length} frames)`,
+      layout: diffs.length ? `${diffs.length} differ: ${diffs.slice(0, 8).join("; ")}` : "no difference", ok: !diffs.length });
+  }
 } finally {
   await browser.close();
   rmSync(dir, { recursive: true, force: true });
@@ -330,7 +640,12 @@ console.log(`Header budget: ${HEADER_MAX_SHARE * 100}% of the screen's height, p
 console.log(`Controls: 24px or more, 44px on the touch phone. Text: 11px or more.`);
 console.log(`Fold: on a phone, Main's Health card within ${HP_MAX_SHARE * 100}% of the screen's height; the vitals bar and a sheet's jump bar one row.\n`);
 console.table(rows.map(r => ({ ...r, ok: r.ok ? "ok" : "OVER" })));
+if (tableNumbers.length) {
+  console.log("\nA table's screens (main as x+width; fields and textareas the widest px; prose the widest px against 75ch; cards a row and their widths):");
+  console.table(tableNumbers);
+}
 const bad = rows.filter(r => !r.ok);
+for (const r of bad.filter(r => String(r.width).startsWith("table "))) console.log(`${r.width} | ${r.screen} | ${r.layout}`);
 const byWidth = [...new Set(bad.map(r => r.width))];
 console.log(bad.length ? `\nOver budget at: ${byWidth.join(", ")}.` : "\nEvery width fits.");
 process.exit(bad.length ? 1 : 0);

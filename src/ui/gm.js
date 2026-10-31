@@ -338,6 +338,12 @@ function renderTable(){
   keepPlace(main, ()=>{ main.innerHTML = failed + head + body; bindTable(); }, ["[data-cadd-name]", "[data-pyadd-name]", "[data-padd-name]", "[data-fadd-name]", "[data-tnew]", "[data-tsearch]", "[data-pslot]", "[data-enc-new]", "[data-thadd]", "[data-snew]", "[data-jumpfilter]"]);
 }
 function bindTable(){
+  // The page's bar is a sideways row like the sheet's tabs: fades, a kept place and the wheel (Decision 165).
+  const bar=$("main").querySelector(":scope > .tbl-bar, :scope > .enc-bar"); if (bar){
+    // A row's place is kept by its key, and S.section is "main" on a table, so each page names its own: the next page's bar opens at the start.
+    bar.dataset.row += ":" + [S.tsection, S.castOpen, S.placeOpen, S.factionOpen, S.sessOpen, S.closeOut && S.closeOut.id, S.seatOpen, S.seatSheet, S.threatOpen, S.threatGroup, S.encOpen].filter(x=>typeof x==="string" && x).join(":");
+    bindScrollRows(bar);
+  }
   const main=$("main");
   main.onclick=main.onchange=main.oninput=main.onsubmit=main.onkeydown=null;   // the Encounters tab delegates; no other tab does
   if (main.querySelector("[data-tnew]")) bindNotes(main);
@@ -757,8 +763,10 @@ function castRolesHtml(n){
 const datalistHtml = (id, names) => names.length ? `<datalist id="${id}">${names.map(x=>`<option value="${esc(x)}"></option>`).join("")}</datalist>` : "";
 function castPageHtml(n){
   const c=Engine.packChoices(packsMemo), packs=packsMemo.length, back=encBackTitle() || (S.backClose && S.closeOut ? "the close-out" : S.backSess ? (sessOpenNow() ? Engine.sessionTitle(sessOpenNow()) : "sessions") : cityBackTitle());
-  return `<p><button class="btn sm" data-cback>${back ? `Back to ${esc(back)}` : "Back to the cast"}</button>${encAddBtnHtml("data-cenc", "")}</p>
+  return `<div class="tbl-bar scroll-row" data-row="tblbar"><button class="btn sm" data-cback>${back ? `Back to ${esc(back)}` : "Back to the cast"}</button>${encAddBtnHtml("data-cenc", "")}</div>
+    <div class="cast-layout"><div class="cast-col">
     <h1 class="step-title tbl-title cast-title" data-ctitle>${esc(n.name.trim() || "Unnamed")}</h1>
+    <label class="field cast-status"><span>Status</span><select data-cf="status">${["alive","dead","missing","gone"].map(s=>`<option value="${s}"${s===n.status?" selected":""}>${esc(castStatusLabel(s))}</option>`).join("")}</select></label>
     ${castFromHtml(n)}
     ${castText(n,"name","Name","Who did they meet?")}
     ${castText(n,"flavor","Who they are","One line: who they are")}
@@ -769,7 +777,6 @@ function castPageHtml(n){
       ${castText(n,"enemyRole","Enemy role","",false,c.enemyRoles.length ? "cast-enemies" : "")}${datalistHtml("cast-enemies", c.enemyRoles)}
       <div><label class="field"><span>Tier</span><input type="number" step="1" min="1" inputmode="numeric" data-cf="tier" value="${numAttr(n.tier)}"></label>${packs ? `<p class="cast-guide" data-ctier hidden></p>` : ""}</div>
       <div class="field cast-ally"><span>In a fight</span><div class="form-toggle" role="group" aria-label="In a fight"><button type="button" data-cally class="${n.ally?"on":""}" aria-pressed="${n.ally}">Fights with the crew</button></div></div>
-      <label class="field"><span>Status</span><select data-cf="status">${["alive","dead","missing","gone"].map(s=>`<option value="${s}"${s===n.status?" selected":""}>${esc(castStatusLabel(s))}</option>`).join("")}</select></label>
     </div>
     ${castText(n,"motivation","What they want","",true)}
     ${castText(n,"resources","What they've got","",true)}
@@ -779,7 +786,7 @@ function castPageHtml(n){
     <label class="field"><span>Affiliations</span><input type="text" data-cf="affiliations" value="${esc(n.affiliations.join(" / "))}" placeholder="Who they answer to" autocomplete="off"></label>
     ${castKeyToHtml(n)}
     ${castInteractionsHtml(n)}
-    ${castStatBlockHtml(n)}
+    </div><div class="cast-panel">${castStatBlockHtml(n)}</div></div>
     <p class="cast-delete"><button class="btn danger" data-cdel>Delete</button></p>`;
 }
 
@@ -1354,7 +1361,7 @@ function placePageHtml(p){
   const unknownT=p.territory && !terr ? opt(p.territory, p.territory, true) : "";
   const unknownZ=p.zone && !zones.some(z=>z.id===p.zone) ? opt(p.zone, p.zone, true) : "";
   const lines=Engine.placeLines(t, p.id), met=Engine.placeMet(t, p.id), info=Engine.placeSite(t, packsMemo, p);
-  return `<p><button class="btn sm" data-pback>Back to ${esc(placeBackTitle())}</button></p>
+  return `<div class="tbl-bar scroll-row" data-row="tblbar"><button class="btn sm" data-pback>Back to ${esc(placeBackTitle())}</button></div>
     <h1 class="step-title tbl-title cast-title" data-ptitle tabindex="-1">${esc(Engine.placeTitle(t, p))}</h1>
     <label class="field"><span>Name</span><input type="text" data-pf="name" value="${esc(p.name)}" placeholder="${esc(entry ? entry.name : p.from && p.from.name || "Where is it?")}" autocomplete="off"></label>
     <div class="cast-codex">
@@ -1672,7 +1679,7 @@ function factionPageHtml(f){
   const terr=g.territories.find(r=>r.entry.id===f.territory);
   const unknownT=f.territory && !terr ? opt(f.territory, f.territory, true) : "";
   const tied=Engine.factionAffiliated(t, f.id), title=Engine.factionTitle(t, f);
-  return `<p><button class="btn sm" data-fback>Back to ${esc(factionBackTitle())}</button></p>
+  return `<div class="tbl-bar scroll-row" data-row="tblbar"><button class="btn sm" data-fback>Back to ${esc(factionBackTitle())}</button></div>
     <h1 class="step-title tbl-title cast-title" data-ftitle tabindex="-1">${esc(title)}</h1>
     <label class="field"><span>Name</span><input type="text" data-ff="name" value="${esc(f.name)}" placeholder="${esc(entry ? entry.name : f.from && f.from.name || "Who are they?")}" autocomplete="off"></label>
     <div class="tag-choice"><span>Type</span><div data-ftypes>${factionToggleHtml("data-ftype", "Type", Engine.FACTION_TYPES.map(k=>[k, Engine.FACTION_TYPE_LABELS[k], ""]), f.type)}</div></div>
@@ -1916,7 +1923,7 @@ function sessionPageHtml(s){
       <div class="cast-add"><label class="field"><span>Open a thread</span><input type="text" data-sthadd placeholder="What did this session leave open?" autocomplete="off"></label>
         <button type="button" class="btn" data-sthadd-btn>Open a thread</button></div>
       ${closed.length ? `<ul class="int-list">${closed.map(h=>`<li><span class="int-kind">${h.status==="dropped" ? "Dropped" : "Resolved"}</span> ${esc(threadTitle(h))}</li>`).join("")}</ul>` : ""}</div>`;
-  return `<p><button type="button" class="btn sm" data-sback>Back to sessions</button></p>
+  return `<div class="tbl-bar scroll-row" data-row="tblbar"><button type="button" class="btn sm" data-sback>Back to sessions</button></div>
     <h1 class="step-title tbl-title">${esc(Engine.sessionTitle(s))}</h1>
     <div class="sess-head">
       <label class="field"><span>Number</span><input type="number" step="1" min="0" inputmode="numeric" data-sf="number" value="${numAttr(s.number)}"></label>
@@ -2213,7 +2220,7 @@ function coListsHtml(s){
 }
 function closeSheetHtml(s){
   const hasNumber=Number.isFinite(s.number), title=Engine.sessionTitle(s);
-  return `<p><button type="button" class="btn sm" data-co-back>Back to ${hasNumber ? esc(title) : "the session"}</button></p>
+  return `<div class="tbl-bar scroll-row" data-row="tblbar"><button type="button" class="btn sm" data-co-back>Back to ${hasNumber ? esc(title) : "the session"}</button></div>
     <h1 class="step-title tbl-title">Close out ${hasNumber ? esc(title) : "this session"}</h1>
     <div class="sess-head">
       <label class="field"><span>Who was there</span><input type="text" data-cosf="present" list="sess-crew" value="${esc((s.present||[]).join(", "))}" placeholder="Names, separated by commas" autocomplete="off"></label>
@@ -2549,11 +2556,11 @@ function entryPageHtml(found){
   const member=S.threatMember && S.table.cast.find(n=>n.id===S.threatMember);
   const enc = S.threatEnc && encList().find(x=>x.id===S.threatEnc);
   const backText = enc ? `Back to ${esc(Engine.encounterTitle(enc))}` : member ? `Back to ${esc(member.name.trim() || "Unnamed")}` : S.threatGroup ? "Back to the group" : "Back to threats";
-  return `<p><button class="btn sm" data-tback="entry">${backText}</button></p>
+  return `<div class="tbl-bar scroll-row" data-row="tblbar"><button class="btn sm" data-tback="entry">${backText}</button>${encAddBtnHtml("data-tenc", "")}</div>
     <h1 class="step-title tbl-title cast-title" data-ttitle tabindex="-1">${esc(e.name.trim() || "Unnamed")}</h1>
     ${meta ? `<p class="roster-meta cast-meta">${meta}</p>` : ""}
     ${e.flavor.trim() ? `<p class="cast-line">${esc(e.flavor)}</p>` : ""}
-    <p><button class="btn primary" data-tuse>Add to cast</button>${encAddBtnHtml("data-tenc", "")}</p>
+    <p><button class="btn primary" data-tuse>Add to cast</button></p>
     ${threatText("Description", e.description)}${threatText("What they want", e.motivation)}${threatText("What they've got", e.resources)}
     ${threatText("Their line", e.line)}${threatText("If pushed", e.ifPushed)}
     ${readBlockHtml(e.block)}
@@ -2562,7 +2569,7 @@ function entryPageHtml(found){
 function groupPageHtml({ pack, group:g, members }){
   const o=g.origin && pack.origins.find(x=>x.id===g.origin);
   const meta=[ g.ref.trim() && esc(g.ref), o && packChipHtml(pack, "origins", o), packsMemo.length>1 && esc(packName(pack)) ].filter(Boolean).join(" · ");
-  return `<p><button class="btn sm" data-tback="group">Back to threats</button>${encAddBtnHtml("data-tgrpenc", "")}</p>
+  return `<div class="tbl-bar scroll-row" data-row="tblbar"><button class="btn sm" data-tback="group">Back to threats</button>${encAddBtnHtml("data-tgrpenc", "")}</div>
     <h1 class="step-title tbl-title cast-title" data-ttitle tabindex="-1">${esc(g.name.trim() || "Unnamed")}</h1>
     ${meta ? `<p class="roster-meta cast-meta">${meta}</p>` : ""}
     ${members.length ? `<h2 class="cast-h">Who's in it</h2><ul class="threat-list threat-members">${members.map(m=>
@@ -3206,25 +3213,26 @@ function encPageHtml(e){
   const canOpen = !ended && !wrapping && (e.status==="planned" || (running && e.round===1 && !(e.acted||[]).length));
   const openingText = v.opening && !canOpen && (ended || (running && e.round===1)) ? ` · ${v.opening.kind==="ambush" ? "Ambush" : "Surprise"} by ${v.opening.title}` : "";
   const status = (running ? `Round ${e.round}` : ended ? (e.round ? `Ended · ${encRounds(e.round)}` : "Ended · not run") : "Planned") + openingText;
-  const bar = `<div class="enc-bar"><b class="enc-status">${esc(status)}</b>
+  const from=backFromLineTitle();
+  // Back is the bar's first button, and the bar is the page's first thing (Decision 258).
+  const bar = `<div class="enc-bar scroll-row" data-row="encbar"><button class="btn sm" data-enc-back>${from ? `Back to ${esc(from)}` : "Back to encounters"}</button><b class="enc-status">${esc(status)}</b>
     ${e.status==="planned" ? `<button class="btn primary" data-enc-start>Start</button><button class="btn" data-enc-end>End</button>` : ""}
-    ${running && !wrapping ? `${v.atReset ? "" : `<button class="btn primary" data-enext>Next</button>`}<button class="btn" data-enc-end>End the encounter</button>` : ""}</div>
-    ${!ended && !wrapping ? `<div class="enc-turns"><div class="form-toggle" role="group" aria-label="Turns">
+    ${running && !wrapping ? `${v.atReset ? "" : `<button class="btn primary" data-enext>Next</button>`}<button class="btn" data-enc-end>End the encounter</button>` : ""}</div>`;
+  const turns = `${!ended && !wrapping ? `<div class="enc-turns"><div class="form-toggle" role="group" aria-label="Turns">
         <button type="button" data-eby="person" class="${v.by==="person"?"on":""}" aria-pressed="${v.by==="person"}">One at a time</button>
         <button type="button" data-eby="wave" class="${v.by==="wave"?"on":""}" aria-pressed="${v.by==="wave"}">Wave Initiative</button></div>
       <button type="button" class="tag" data-tip="wave" data-term="wave" aria-label="What Wave Initiative means">?</button></div>`
       : ended && v.by==="wave" ? `<p class="enc-turns"><span class="enc-mode">Wave Initiative</span></p>` : ""}`;
   const rows = v.by==="wave" ? v.sides.map(s=>encSideHtml(s, v, e)).join("") + (!ended && v.sides.length < 6 ? `<p><button class="btn" data-eaddside>Add a side</button></p>` : "")
     : v.rows.length ? `<ul class="enc-rows">${v.rows.map(r=>encRowHtml(r, e, null)).join("")}</ul>` : `<p class="step-note">Nobody in it yet.</p>`;
-  const from=backFromLineTitle();
   const clockOwner={ kind:"encounter", id:e.id };
   const clocks = ended ? (Engine.clocksOn(S.table, clockOwner).length ? `<h2 class="cast-h">Clocks</h2>${clocksHtml(clockOwner, { readOnly:true })}` : "")
     : wrapping ? "" : `<h2 class="cast-h">Clocks</h2>${clocksHtml(clockOwner)}`;
   const plan = ended ? encPlanReadHtml(v) : encPlanEditHtml(e, v);
-  return `<p><button class="btn sm" data-enc-back>${from ? `Back to ${esc(from)}` : "Back to encounters"}</button></p>
+  return `${bar}
     ${ended ? `<h1 class="step-title tbl-title cast-title" data-enc-h tabindex="-1">${esc(title)}</h1>`
       : `<label class="field"><span>Name</span><input type="text" data-enc-title value="${esc(e.name)}" placeholder="${esc(title)}" autocomplete="off"></label>`}
-    ${bar}
+    ${turns}
     ${canOpen ? encOpeningHtml(v) : ""}
     ${wrapping ? encWrapHtml(e, title) : v.atReset ? encResetHtml(e, v) : rows}
     ${ended || v.atReset || wrapping ? "" : encAddHtml(e)}
@@ -3572,7 +3580,7 @@ const seatClashHtml = v => v.clashes.map(c=>`<p class="step-note">${esc(c.others
 function seatBlockHtml(v){ return `${seatTopHtml(v)}${seatRestHtml(v)}`; }
 function seatPageHtml(v){
   const name=playerTitle({ name:v.name });
-  return `<p><button type="button" class="btn sm" data-seatback>${esc(seatBackLabel())}</button></p>
+  return `<div class="tbl-bar scroll-row" data-row="tblbar"><button type="button" class="btn sm" data-seatback>${esc(seatBackLabel())}</button></div>
     <h1 class="step-title tbl-title cast-title" tabindex="-1" data-seath>${esc(v.name)}</h1>
     <p class="step-note">${esc(playerTitle(v.player))}</p>
     <div class="roster-card seat-block" data-seatblock>${seatBlockHtml(v)}</div>
@@ -3630,7 +3638,7 @@ function readOnlySheetHtml(v){
   const ch=Engine.seatCharacter(S.table, v.tag);
   const tagged = v.status!=="active" ? ` <span class="chip seat-status">${esc(SEAT_STATUS_LABELS[v.status] || v.status)}</span>` : "";
   const when = seatWhen(v.copy).map(esc).join(" · ");
-  return `<p><button type="button" class="btn sm" data-seatback>${esc(seatBackLabel())}</button></p>
+  return `<div class="tbl-bar scroll-row" data-row="tblbar"><button type="button" class="btn sm" data-seatback>${esc(seatBackLabel())}</button></div>
     <h1 class="step-title tbl-title cast-title" tabindex="-1" data-seath data-rosheeth>${esc(v.name)}</h1>${tagged}
     <p class="step-note"><strong>Read only</strong>${when ? ` · ${when}` : ""}</p>
     <p class="step-note">${esc(playerTitle(v.player))}</p>
