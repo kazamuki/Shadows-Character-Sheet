@@ -4,7 +4,8 @@
 Ken: before launch if it's ready, 2026-10-30), and [`WISHLIST.md`](../../WISHLIST.md)'s W139.
 **Status:** **Drafted 2026-10-30** by Claude (Opus), the S18 reviewer, after #276 (S18,
 Decision 258) merged. Ken picked it as the next order (2026-10-30, through the conductor).
-Waiting on Ken: approval and SQ1–SQ6.
+**Approved by Ken 2026-10-30** (in the conductor session), as Rule or shape, one decision, no version moves, no `private/` commit.
+**SQ1–SQ6 answered by Ken 2026-10-30: every default.** He picked SQ1 (*Plain F and J*) and SQ2 (*On, with Off switch*) by name, SQ3 and SQ4 as one pair (*Both defaults*), and SQ5 and SQ6 as one pair (*Both defaults*).
 **Branch:** from `main` at `cfe6ae2` or later, PR to `main`, switched off (Decision 173).
 **No `private/` commit.**
 **Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../WORK-ORDERS.md).
@@ -183,12 +184,12 @@ No supersession marks: 164 and 208 are extended, not replaced. Cite them in N on
 
 | # | Question | Default | Answer |
 |---|---|---|---|
-| SQ1 | **Which keys.** Plain **F** for Find and **J** for Jot (letters no browser reserves on a page, ignored while typing in a field)? Or **`/`** for Find, the web's common search key, which is also Firefox's quick find, so the app would take it from the browser? Or a modifier combination (**Ctrl/⌘+K**, **Alt+F**)? Those collide: Ctrl+K is Chrome's and Firefox's search bar, and Alt+F opens Chrome's menu on Windows. | **F and J** | |
-| SQ2 | **On by default, with an off switch?** A single-letter shortcut can fire from speech input or a stray key, which is why WCAG 2.1.4 asks for a way to turn it off. Default: **on**, with **Off** in ⋮ → Keys, remembered by this browser. Or off until the GM turns them on (Gmail's way)? That's safer, but nobody finds them. | **On, with an off switch** | |
-| SQ3 | **Where the keys are listed.** Default: a **Keys** item in the table's ⋮ menu, opening a small box that lists the keys and holds the switch. It's a setting, and ⋮ is on every tab and page. Or a **Keys** section on the Reference tab (W139's suggestion), which is a tab for the rules? Or both? | **⋮ → Keys** | |
-| SQ4 | **A hint on the buttons.** Default: `aria-keyshortcuts` on Find and Jot (a screen reader says "F"), with **nothing visible**: the header is tight at 390px, and 208's *Revisit if* is "the header can't fit them". Or a visible key chip (**Find F**) from 1060px up, where there's room? | **`aria-keyshortcuts` only** | |
-| SQ5 | **How many keys now.** Default: **F and J only**, so the pattern proves itself. Next in a fight, the tabs and `?` for the list stay on W139. Or also **N** for Next on a running encounter (the most-pressed button at the table)? | **F and J only** | |
-| SQ6 | **Where they work.** Default: **a table only**. The player's sheet has no Find or Jot, so a sheet key would be a new feature, plus an app bump and a `CHANGELOG.md` line. Or the sheet too (which key, for what)? | **A table only** | |
+| SQ1 | **Which keys.** Plain **F** for Find and **J** for Jot (letters no browser reserves on a page, ignored while typing in a field)? Or **`/`** for Find, the web's common search key, which is also Firefox's quick find, so the app would take it from the browser? Or a modifier combination (**Ctrl/⌘+K**, **Alt+F**)? Those collide: Ctrl+K is Chrome's and Firefox's search bar, and Alt+F opens Chrome's menu on Windows. | **F and J** | Default (Ken, 2026-10-30) |
+| SQ2 | **On by default, with an off switch?** A single-letter shortcut can fire from speech input or a stray key, which is why WCAG 2.1.4 asks for a way to turn it off. Default: **on**, with **Off** in ⋮ → Keys, remembered by this browser. Or off until the GM turns them on (Gmail's way)? That's safer, but nobody finds them. | **On, with an off switch** | Default (Ken, 2026-10-30) |
+| SQ3 | **Where the keys are listed.** Default: a **Keys** item in the table's ⋮ menu, opening a small box that lists the keys and holds the switch. It's a setting, and ⋮ is on every tab and page. Or a **Keys** section on the Reference tab (W139's suggestion), which is a tab for the rules? Or both? | **⋮ → Keys** | Default (Ken, 2026-10-30) |
+| SQ4 | **A hint on the buttons.** Default: `aria-keyshortcuts` on Find and Jot (a screen reader says "F"), with **nothing visible**: the header is tight at 390px, and 208's *Revisit if* is "the header can't fit them". Or a visible key chip (**Find F**) from 1060px up, where there's room? | **`aria-keyshortcuts` only** | Default (Ken, 2026-10-30) |
+| SQ5 | **How many keys now.** Default: **F and J only**, so the pattern proves itself. Next in a fight, the tabs and `?` for the list stay on W139. Or also **N** for Next on a running encounter (the most-pressed button at the table)? | **F and J only** | Default (Ken, 2026-10-30) |
+| SQ6 | **Where they work.** Default: **a table only**. The player's sheet has no Find or Jot, so a sheet key would be a new feature, plus an app bump and a `CHANGELOG.md` line. Or the sheet too (which key, for what)? | **A table only** | Default (Ken, 2026-10-30) |
 
 ## 5. The assumption sweep
 
