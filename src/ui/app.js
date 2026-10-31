@@ -176,7 +176,7 @@ function releaseMain(){
 }
 function renderMain(){
   const app=$("app");
-  if (app) app.classList.toggle("sheet-mode", S.screen==="sheet");
+  if (app){ app.classList.toggle("sheet-mode", S.screen==="sheet"); app.classList.toggle("table-mode", S.screen==="table"); }
   keepPlace(document.querySelector("header.top"), renderTopChrome, ["[data-menu-toggle]"]);
   const same=sameView(), main=$("main");
   if (S.screen!=="table") releaseMain();

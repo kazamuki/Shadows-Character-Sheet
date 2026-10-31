@@ -810,7 +810,7 @@ function askRemove(e){
     } });
 }
 function renderHome(){
-  const app=$("app"); if (app) app.classList.remove("sheet-mode");
+  const app=$("app"); if (app) app.classList.remove("sheet-mode", "table-mode");
   renderTopChrome(); closeVitals(); renderDrawer();   // a pinned panel goes with the sheet
   releaseMain();
   readOnlyChar=null;   // a seat's copy the GM read goes with the table (Decision 256)

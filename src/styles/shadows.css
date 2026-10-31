@@ -1119,6 +1119,14 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
   .app:not(.sheet-mode){--strip-off:0px}
   aside.vitals{position:static}
 }
+/* A GM table's frame (Decision 258). A table has no rail and no vitals column, so the grid is one column and
+   `main` isn't capped; each page sets measures instead (below). Every rule here is scoped to `.table-mode`, since
+   `main` and `.roster-list` are Home's and the wizard's too, and sits after the wizard's narrow rules above, which
+   it ties on specificity and so beats by coming later. */
+.app.table-mode{grid-template-columns:1fr}
+.app.table-mode nav.ledger,
+.app.table-mode aside.vitals{display:none}
+.app.table-mode main{max-width:none}
 .jump{background:none; border:1px solid var(--frame); border-radius:14px; color:var(--text); font:inherit;
   font-size:.74rem; padding:4px 11px; cursor:pointer}
 .jump:hover, .jump:focus-visible{border-color:var(--violet-hi)}
