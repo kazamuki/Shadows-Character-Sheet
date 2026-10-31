@@ -254,3 +254,16 @@ test("Decision 259: ⋮ → Activity and ⋮ → What's new close back to ⋮, n
     assert.deepEqual(app.errors, []);
   }
 });
+
+test("Closing What's new from the sheet's ⋮ menu puts focus back on ⋮", () => {
+  const app = openSheet(lockedCharacter(), "main");
+  const kb = app.$("[data-menu-toggle]");
+  kb.focus(); app.click("[data-menu-toggle]");
+  app.$("#hdrmenu [data-whatsnew]").focus();
+  app.click("#hdrmenu [data-whatsnew]");
+  assert.ok(modalOpen(app));
+  assert.equal(app.window.eval("modalState.opener") === kb, true, "the box would return focus to the hidden menu item");
+  pressEsc(app);
+  assert.equal(app.doc.activeElement, kb);
+  assert.deepEqual(app.errors, []);
+});
