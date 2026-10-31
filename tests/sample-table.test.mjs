@@ -42,7 +42,7 @@ test("the sample is lived in: every kind of record is there, filled", () => {
   assert.ok(n("cast") >= 10 && n("places") >= 5 && n("factions") >= 4 && n("clocks") >= 5, "a cast, places, factions, clocks");
   assert.ok(sample.encounters.some(e => e.status === "ended") && sample.encounters.some(e => e.status === "planned"), "ended and planned encounters");
   assert.ok(sample.encounters.some(e => e.by === "wave") && sample.encounters.some(e => e.sides.length > 2), "wave and many-sided encounters");
-  for (const s of ["alive", "dead", "missing"]) assert.ok(sample.cast.some(c => c.status === s), `a ${s} member`);
+  for (const s of ["alive", "dead", "missing", "gone"]) assert.ok(sample.cast.some(c => c.status === s), `a ${s} member`);
   assert.ok(sample.cast.some(c => c.block) && sample.cast.some(c => c.ally), "a stat block and an ally");
   for (const k of ["open", "resolved", "dropped"]) assert.ok(sample.threads.some(t => t.status === k), `a ${k} thread`);
   assert.equal(sample.threads.filter(t => t.current).length, 1, "one current thread");
@@ -68,7 +68,8 @@ test("every link in the sample lands on something", () => {
   const bad = [];
   const castOk = (l, where) => { if (!cast.has(l.id)) bad.push(`${where}: no cast ${l.id}`); };
   for (const f of sample.factions) for (const l of f.keyNpcs) castOk(l, `faction ${f.name}`);
-  for (const c of sample.clocks) if (c.on && !factions.has(c.on.id)) bad.push(`clock ${c.name}: no faction`);
+  const owners = { faction: factions, place: places, encounter: encs };
+  for (const c of sample.clocks) if (c.on && !(owners[c.on.kind] && owners[c.on.kind].has(c.on.id))) bad.push(`clock ${c.name}: no ${c.on.kind}`);
   for (const i of sample.interactions) {
     for (const l of i.cast) castOk(l, `line ${i.id}`);
     if (i.session && !sessions.has(i.session)) bad.push(`line ${i.id}: no session`);
@@ -114,4 +115,64 @@ test("the sample's gazetteer ids exist in this version's data", () => {
     if (f.from && !entries.has(f.from.id)) bad.push(`faction ${f.name}.from`);
   }
   assert.deepEqual(bad, []);
+});
+
+// ── what the sample added for seats, a running fight and Activity ───────────
+
+test("the crew is seated: players, every seat status, and the characters' last exports", () => {
+  const seats = sample.players.flatMap(p => p.seats);
+  for (const st of ["active", "benched", "retired", "dead"]) assert.ok(seats.some(s => s.status === st), `a ${st} seat`);
+  assert.ok(sample.players.some(p => !p.seats.length), "a player with no character yet");
+  assert.ok(seats.some(s => !sample.copies.some(c => c.tag === s.tag)), "a seat with no copy");
+  const steps = D.creationFlow.steps.map(s => s.id);
+  for (const c of sample.copies) {
+    assert.ok(seats.some(s => s.tag === c.tag), `copy ${c.tag} has no seat`);
+    assert.equal(c.character.meta.id, c.tag);
+    assert.ok(c.character.creation.locked, `${c.character.identity.name} isn't locked`);
+    const errs = steps.flatMap(s => [...Engine.validate(s, c.character)].filter(i => i.level === "error").map(i => `${s}: ${i.msg}`));
+    assert.equal(errs.length, 0, `${c.character.identity.name} fails the wizard's checks: ${errs.join(" | ")}`);
+  }
+  for (const s of seats.filter(x => x.status === "active")) assert.ok(sample.copies.some(c => c.tag === s.tag), `active seat ${s.tag} has no copy`);
+});
+
+test("every name the crew is typed under reads as their seat", () => {
+  const crew = sample.players.flatMap(p => p.seats).filter(s => s.status === "active").map(s => s.tag);
+  const typed = new Set();
+  for (const s of sample.sessions) { s.present.forEach(n => typed.add(n)); (s.close ? s.close.lines : []).forEach(l => typed.add(l.name)); }
+  for (const i of sample.interactions) i.crew.forEach(n => typed.add(n));
+  for (const e of sample.encounters) for (const r of e.rows) if (r.kind === "pc") typed.add(r.name);
+  for (const p of sample.places) p.exposure.forEach(x => typed.add(x.name));
+  const bad = [...typed].filter(n => !crew.includes(Engine.seatFor(gated, n)));   // seatFor gives the seat's TAG, or null
+  assert.deepEqual(bad, []);
+});
+
+test("tonight's session is under way: a running fight, and the planned ones' worksheet and opening", () => {
+  const running = sample.encounters.filter(e => e.status === "running");
+  assert.equal(running.length, 1, "one running encounter");
+  const r = running[0], rows = new Set(r.rows.map(x => x.id));
+  assert.ok(r.round >= 1 && rows.has(r.turn), "its round and whose turn");
+  assert.ok(r.acted.length && r.acted.every(id => rows.has(id)) && !r.acted.includes(r.turn), "who has acted");
+  assert.ok(r.rows.some(x => x.delay && x.delay.until) && r.rows.some(x => x.last), "a delay and a row that goes last");
+  assert.ok(sample.sessions.some(s => !s.close && s.present.length), "the session it's in has the crew at the table");
+  const filled = sample.encounters.find(e => Object.entries(e.design).every(([, v]) => (Array.isArray(v) ? v.length : v)));
+  assert.ok(filled, "a planned encounter with every part of its worksheet filled");
+  assert.ok(sample.encounters.some(e => e.status === "planned" && e.opening && e.sides.some(s => s.id === e.opening.side)), "a planned opening");
+  for (const k of ["faction", "place", "encounter"]) assert.ok(sample.clocks.some(c => c.on && c.on.kind === k), `a clock on a ${k}`);
+  assert.ok(sample.places.some(p => p.exposure.length), "a place with an Exposure track");
+});
+
+test("the Activity trail undoes, newest first, back to where tonight started", () => {
+  assert.ok(sample.audit.length >= 3, "an Activity trail");
+  assert.equal(gated.audit.length, sample.audit.length, "the gate dropped an entry: a path lands on no record");
+  // Each entry is a real change: the value it would put back isn't the one there now.
+  for (const entry of sample.audit) for (const op of entry.patch)
+    assert.notEqual(canon(op.path.reduce((x, k) => (x == null ? x : x[k]), sample)), canon(op.before), `${entry.label} changes nothing`);
+  const t = JSON.parse(JSON.stringify(gated));
+  for (const entry of [...sample.audit].reverse()) {
+    const r = Engine.undoTableAction(t);
+    assert.ok(r.ok, `undo ${entry.label}: ${r.why}`);
+    for (const op of entry.patch) assert.equal(canon(op.path.reduce((x, k) => x[k], t)), canon(op.before), `${entry.label} didn't restore ${op.path.join(".")}`);
+  }
+  assert.equal(t.audit.length, 0);
+  assert.equal(Engine.tableCheck(t).length, 0);
 });

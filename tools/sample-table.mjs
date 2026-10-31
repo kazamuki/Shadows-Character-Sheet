@@ -2,9 +2,13 @@
 /**
  * The sample campaign: "Dead Air", a table that has been lived in.
  *
- * Six sessions played over three months (2026-07-18 to 2026-10-17), a seventh
- * planned, a crew of three, a cast, factions and clocks, places, encounters
- * (ended and planned), lines, threads and GM notes, every field filled in.
+ * Six sessions played over three months (2026-07-18 to 2026-10-17) and a
+ * seventh under way, a crew of three seated with their players and their
+ * characters' last exports, a cast, factions, places and clocks, encounters
+ * (ended, planned with a worksheet and an opening, and one running), lines,
+ * threads, GM notes and an Activity trail: every part of a table filled in.
+ * The one part it leaves out is what needs a pack (a cast member copied from
+ * an entry, a place's Site Profile): the Codex is private (Decision 167).
  * It exists to see GM mode with a few months on it and to give UX passes a
  * table to look at. It is invented; nothing in it is canon.
  *
@@ -22,6 +26,8 @@ import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+// The crew's characters are made by the engine, so each is a file the app would export.
+import { loadEngine } from "../tests/harness.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = join(ROOT, "samples", "dead-air.shadows-table.json");
@@ -37,7 +43,8 @@ const chars = (key, n) => {
 const id = (prefix, key) => `${prefix}-${chars(prefix + ":" + key, 8)}`;
 const tableId = () => { const s = chars("table:dead-air", 12); return `TBL-${s.slice(0, 4)}-${s.slice(4, 8)}-${s.slice(8, 12)}`; };
 
-const C = k => id("C", k), PL = k => id("PL", k), FA = k => id("FA", k), CK = k => id("CK", k);
+const tag = key => { const s = chars("tag:" + key, 12); return `TAG-${s.slice(0, 4)}-${s.slice(4, 8)}-${s.slice(8, 12)}`; };
+const C = k => id("C", k), PL = k => id("PL", k), FA = k => id("FA", k), CK = k => id("CK", k), PY = k => id("PY", k);
 const SE = k => id("SE", k), TH = k => id("TH", k), EN = k => id("EN", k), N = k => id("N", k);
 const castLink = (k, name) => (name ? { kind: "cast", id: C(k), name } : { kind: "cast", id: C(k) });
 
@@ -187,6 +194,8 @@ member("dolly", 3, {
   ifPushed: "Opens the ledger and shows you what you owe.",
   gmNote: "She is the answer to 'who sent the shard to Pearl': her number was on the delivery note. She did not know what was on it either. She will trade that fact for Cord's life, which she thinks the crew can arrange.",
   affiliations: ["The Dockside Devils"],
+  // Out of the picture (Decision 174's "gone"): alive, and out of the story until the crew goes looking.
+  status: "gone", updated: ts(DAY[7], 21, 5),
 });
 member("teo", 3, {
   name: "\"Big Teo\" Marchetti", flavor: "Runs Pier 9 on a handshake and a boat hook.",
@@ -290,6 +299,8 @@ place("ports", 4, {
   name: "The Phantom Ports", from: { kind: "gazetteer", id: "phantom-ports", name: "The Phantom Ports" },
   territory: "daedalus-belt", zone: "gateway", district: "Gateway", neighborhood: "Wharves 14 to 19", environment: "genius-loci",
   notes: "Derelict wharves nobody will touch. A radio does not work here; a voice does, too well. Wren's body (S5) was against a bollard at Wharf 17. The Listener's place. S6's confrontation ran the length of Wharf 17 to a collapsed warehouse the crew has not entered.",
+  // The Listener's Exposure: who has spoken in the Ports, and how often (Decision 251; a track without a profile, kept as typed).
+  exposure: [{ name: "Juno", n: 5 }, { name: "Mara", n: 3 }, { name: "Dex", n: 2 }],
 });
 
 // ── factions ────────────────────────────────────────────────────────
@@ -407,9 +418,19 @@ clock("ports", 4, {
   whenFull: "The Listener learns to speak first. Gateway's radios, phones, and routing AI answer it. Every voice at Gateway is a little behind.",
 });
 clock("moon", 1, {
-  name: "Dex before the full moon", segments: 8, filled: 6,
+  name: "Dex before the full moon", segments: 8, filled: 7, updated: ts(DAY[7], 20, 50),
   advances: "Each day since the last full moon; a fight; an injury; being near silver.",
   whenFull: "Dex turns. Achterberg's clinic is the plan; the plan has a hole in it.",
+});
+clock("tide", 5, {
+  name: "The tide at Wharf 17", segments: 6, filled: 2, on: { kind: "place", id: PL("ports") },
+  advances: "Each hour the crew spends on the wharves. Each time a recording is played within earshot of the water.",
+  whenFull: "The tide comes in on the wrong day. The ghost-line moves one wharf inland and stays there.",
+});
+clock("kitchen", 6, {
+  name: "The kitchen fire", segments: 4, filled: 0, on: { kind: "encounter", id: EN("velvet-lung") },
+  advances: "A shot fired in the dining room. A soldier sent through the kitchen doors. Ibarra's signal to the chef.",
+  whenFull: "The Velvet Lung burns. Ibarra leaves by the alley door with whoever he can carry, and blames the crew for that too.",
 });
 
 // ── sessions ────────────────────────────────────────────────────────
@@ -507,10 +528,11 @@ session(6, {
     { name: JUNO, ip: 4, milestone: true, credits: 400, note: "Spoke in the Listener's voice and walked out." },
   ], 4),
 });
+// Tonight, under way: the crew is at the table, nothing is written up, and a fight is running (the clinic, below).
 session(7, {
-  present: [], hours: null,
+  hours: null,
   journal: { happened: "", fallout: "", threads: "", impact: "", reflection: "", seed: "Opens at the Velvet Lung, Friday. Ibarra's invitation, in his hand. Fenn's tape arrives by courier in the morning." },
-  created: ts(DAY[6], 23, 45), updated: ts(DAY[6], 23, 45),
+  created: ts(DAY[6], 23, 45), updated: ts(DAY[7], 19, 10),
 });
 
 // ── threads ─────────────────────────────────────────────────────────
@@ -538,7 +560,8 @@ thread("fire", { title: "Who burned the laundromat's back window?", status: "dro
 const encounters = [];
 const sideId = (enc, k) => id("SD", enc + ":" + k);
 let encCounter = 0;
-// Schema 0.17 (Decisions 252, 253; SQ9): the stamp and the empty fields only, no plan, opening or delay written in.
+// Schema 0.17 (Decisions 252, 253). S10f's SQ9 kept these empty; since 2026-10-31 (Ken: "exercise every part of the table")
+// the Velvet Lung carries a full worksheet, Rook's contract an ambush, and tonight's fight a delay.
 const EMPTY_PLAN = () => ({ hook: "", stakes: "", objectives: "", terrain: "", hazards: "", city: "", beyondNotes: "", escalations: "", failure: "", success: "",
   escapes: "", failsafe: "", threads: "", milestones: "", pivot: "", stalls: "", adversaries: [], beyond: [] });
 const encounter = (key, f, rows) => {
@@ -557,17 +580,64 @@ const encounter = (key, f, rows) => {
   encounters.push(e);
   return e;
 };
-const pc = (name, f = {}) => ({ kind: "pc", name, hp: { [MARA]: 24, [DEX]: 34, [JUNO]: 22 }[name], levels: 6, awareness: { [MARA]: 9, [DEX]: 8, [JUNO]: 7 }[name], side: "crew", ...f });
+// A PC row's scratch Health is its character's, from the copies below (a row named for a seat reads the copy anyway, Decision 257).
+const pc = (name, f = {}) => ({ kind: "pc", name, hp: { [MARA]: 20, [DEX]: 50, [JUNO]: 20 }[name], levels: 6, awareness: { [MARA]: 9, [DEX]: 8, [JUNO]: 7 }[name], side: "crew", ...f });
 const castRow = (key, name, f = {}) => ({ kind: "cast", key, name: "", cast: castLink(key, name), ...f });
 const entryRow = (key, name, blk, f = {}) => ({ kind: "entry", key, name, block: blk, from: null, ...f });
 
-// Newest first: the planned two, then the ended ones.
+// Newest first: tonight's running fight, the planned two, then the ended ones.
+{
+  // Session 7, under way: Reclaim Solutions comes for Dex at Achterberg's clinic on the night of the moon.
+  const key = "clinic";
+  const O = sideId(key, "reclaim");
+  const e = encounter(key, {
+    name: "Achterberg's clinic, moonrise", status: "running", round: 2, created: ts(DAY[7], 20, 40), updated: ts(DAY[7], 21, 10),
+    sides: [{ id: "crew", name: "" }, { id: O, name: "Reclaim Solutions" }],
+    design: { ...EMPTY_PLAN(), hook: "Reclaim Solutions knows where Dex goes on the night of the moon.", stakes: "Dex, Achterberg's clinic, and who learns what Dex is." },
+  }, [
+    pc(MARA, { order: 14, damage: 2, struck: true }),
+    pc(DEX, { order: 16, damage: 11, delay: { until: "Achterberg finishes the sedative" } }),   // his copy as filed: 11 taken at the Ports
+    pc(JUNO, { order: 9, conditions: [{ id: "frightened", source: "The Listener's voice on the cleaners' radio", rounds: 2 }] }),
+    castRow("achterberg", undefined, { side: "crew", order: 7, last: true }),
+    entryRow("cleaner-a", "Reclaim cleaner", BLOCKS.contractor, { side: O, order: 15, damage: 6, struck: true, armorLoss: 1 }),
+    entryRow("cleaner-b", "Reclaim cleaner", BLOCKS.contractor, { side: O, order: 11 }),
+    entryRow("cleaner-drone", "Reclaim drone", BLOCKS.drone, { side: O, order: 13, damage: 3, struck: true }),
+  ]);
+  // Round 2: Dex has delayed, the first cleaner and Mara have gone; it is the drone's turn.
+  const row = name => e.rows.find(r => r.name === name).id;
+  e.acted = [row(DEX), row("Reclaim cleaner"), row(MARA)];
+  e.turn = row("Reclaim drone");
+}
 {
   const key = "velvet-lung";
   const O = sideId(key, "other");
   encounter(key, {
-    name: "Friday at the Velvet Lung", status: "planned", created: ts(DAY[6], 23, 40), updated: ts(DAY[6], 23, 50),
+    name: "Friday at the Velvet Lung", status: "planned", created: ts(DAY[6], 23, 40), updated: ts(DAY[7], 18, 30),
     sides: [{ id: "crew", name: "" }, { id: O, name: "Eclipse" }],
+    // The Encounter Design worksheet (2642, Decision 252), every part filled.
+    design: {
+      hook: "Ibarra's invitation, in his own hand: the third booth, Friday, nine o'clock. Come hungry.",
+      stakes: "Whether Eclipse blames the crew for Nine, and whether Pearl's laundromat is still standing on Monday.",
+      objectives: "Leave with Ibarra's word that Nine is settled, without handing over the shard. Find out who told him the crew did it.",
+      adversaries: [
+        { who: "Lt. Caz Ibarra", goals: "The shard, or a story he can sell upstairs before the quarter closes.", tactics: "Talks first. Orders for the table. Lets the silence do the threatening.", leverage: "Pearl's shop, and the crew's belief that he can burn it." },
+        { who: "Four Eclipse soldiers", goals: "Get paid. Get home.", tactics: "Two at the bar, two by the kitchen doors. They move only on Ibarra's napkin.", leverage: "" },
+      ],
+      terrain: "A long dining room, booths along both walls, one way in from the street and one through the kitchen to the alley.",
+      hazards: "Open flame on every table. A chef who has been told what the napkin means.",
+      city: "Metro Core on a Friday night: the street outside is full, and NCPD drive past every twenty minutes.",
+      beyond: ["force", "intel", "protect"],
+      beyondNotes: "Talking Ibarra down is a win. So is learning that Bracken told him about Nine. Pearl is the asset to protect.",
+      escalations: "If anyone draws, the soldiers move and the kitchen clock starts. If the shard is mentioned, Ibarra asks to hear it.",
+      failure: "Ibarra leaves angry. Suds & Duds burns overnight (his patience clock fills).",
+      success: "Ibarra calls Nine settled and names who told him. The patience clock clears by two.",
+      escapes: "The kitchen and the alley. The street door, if they can walk out slowly enough.",
+      failsafe: "NCPD's patrol car is outside at a quarter past. Ibarra will not start anything with it there.",
+      threads: "Who told Ibarra? Fenn's tape. Pearl packing.",
+      milestones: "A deal struck with Ibarra without the shard changing hands is a Milestone for whoever makes it.",
+      pivot: "If the crew plays the shard at the table, the Listener answers through Ibarra. He is very quiet after that.",
+      stalls: "The chef brings a dish nobody ordered, with a note under it from Rook.",
+    },
   }, [
     pc(MARA), pc(DEX), pc(JUNO),
     castRow("ibarra", undefined, { side: O, order: null }),
@@ -583,6 +653,9 @@ const entryRow = (key, name, blk, f = {}) => ({ kind: "entry", key, name, block:
   encounter(key, {
     name: "Rook's last contract (if it comes to that)", status: "planned", created: ts(DAY[6], 23, 42), updated: ts(DAY[6], 23, 48),
     sides: [{ id: "crew", name: "" }, { id: O, name: "Volkov" }],
+    opening: { kind: "ambush", side: O },   // Decision 253: Rook picks the ground; the crew is ambushed
+    design: { ...EMPTY_PLAN(), hook: "Rook finally takes the shot he can't decline.", stakes: "Mara's life, and whether Rook walks away from Volkov.",
+      beyond: ["escape"], beyondNotes: "Getting Mara out is the win. Rook will let them go if his exit is safe." },
   }, [
     pc(MARA), pc(DEX), pc(JUNO),
     castRow("rook", undefined, { side: O }),
@@ -730,14 +803,166 @@ note("rumors", "Rumors table (d6, Metro Core)",
 note("s4recap", "Session 4: what the crew told Oyelaran",
   "They told him they found Wren's file in a cleaning cart. Oyelaran did not write that down. He knows the story is false and the cart is real; he said he could live with it.", { session: SE("s4"), updated: ts(DAY[4], 23, 10) });
 
+note("pilot", "The pilot (before S1)",
+  "A one-shot the week before S1, to try the system. Sam's Hollis Reyes died in it, on purpose, to see how dying works. Priya's Ruth Adair retired at the end of it: Priya wanted someone who talks to machines. Marcus keeps Kit Moreau benched, ready for the night Dex has to sit one out.",
+  { created: ts("2026-07-11", 23), updated: ts(DAY[1], 18) });
+
+// ── players and their characters ────────────────────────────────────
+// Each seat's character is built by the engine as the wizard would, locked, then given its sessions,
+// IP and Çredits from the close-outs above, and stored as the gate stores it (migrate()'s output).
+// Every date is fixed and every TAG made from a key, so the file is the same on every run.
+const { Engine, D } = loadEngine();
+const plain = v => JSON.parse(JSON.stringify(v));   // out of the engine's realm
+
+// Spend a creation pool the way a player would: round-robin over a priority list, inside the budget.
+function spendStats(ch, order){
+  for (let guard = 0; guard < 200; guard++){
+    const left = Engine.statPool(ch).total - Engine.statSpent(ch);
+    const k = order.find(s => { const c = Engine.nextStatCost(ch, s); return c != null && c <= left && !Engine.statAtCap(ch, s); });
+    if (!k) return;
+    ch.stats[k].base++;
+    order.push(order.splice(order.indexOf(k), 1)[0]);
+  }
+}
+function spendSkills(ch, order){
+  const cap = D.powerLevels.find(p => p.id === ch.creation.powerLevel).maxSkillRank;
+  for (let guard = 0; guard < 400; guard++){
+    const k = order.find(s => {
+      const cur = (ch.skills[s] || { rank: 0 }).rank;
+      if (cur >= cap) return false;
+      ch.skills[s] = { rank: cur + 1, ipe: 0 };
+      const fits = Engine.skillPool(ch).total - Engine.skillSpent(ch) >= 0;
+      if (cur) ch.skills[s].rank = cur; else delete ch.skills[s];
+      return fits;
+    });
+    if (!k) return;
+    ch.skills[k] = { rank: ((ch.skills[k] || { rank: 0 }).rank) + 1, ipe: 0 };
+    order.push(order.splice(order.indexOf(k), 1)[0]);
+  }
+}
+
+const CHARS = {};
+function character(key, f){
+  const ch = Engine.newCharacter();
+  ch.meta.id = tag(key);
+  ch.meta.created = ch.meta.updated = ts(f.made || DAY[1], 16);
+  Object.assign(ch.identity, { name: f.name, archetype: f.archetype }, f.identity);
+  ch.creation.powerLevel = "street";
+  ch.creation.rolls = { statPoints: null, credits: f.credits };
+  for (const [k, v] of Object.entries(f.stats)) ch.stats[k].base = v;
+  ch.archetypeChoices.specialization = f.spec;
+  if (f.focus) { ch.archetypeChoices.rolls.focusStatBonus = f.focus[0]; ch.archetypeChoices.focusAllocation = f.focus[1]; }
+  if (f.natural) ch.archetypeChoices.naturalAdvantages = f.natural.map(([id, rank]) => ({ id, rank }));
+  ch.advantages = (f.advs || []).map(([id, rank = 1, notes = ""]) => ({ id, rank, notes }));
+  ch.disadvantages = (f.disads || []).map(([id, rank = 1, notes = ""]) => ({ id, rank, notes }));
+  if (f.creating) f.creating(ch);
+  spendStats(ch, Object.keys(f.stats).sort((a, b) => f.stats[b] - f.stats[a]));
+  spendSkills(ch, [...f.skills]);
+  for (const [kind, ids] of [["weapons", f.weapons || []], ["armor", f.armor || []], ["gear", f.gear || []]])
+    ch[kind] = ids.map(x => (kind === "gear" ? { id: x, qty: 1 } : kind === "armor" ? { id: x, worn: true } : { id: x }));
+  ch.trackers.credits.current = f.credits * 100;
+  ch.creation.locked = true;
+  // Play, from the close-outs: each session the character was at, and any off-screen job.
+  let at = 0;
+  for (const s of sessions.filter(x => x.close && x.number <= (f.through || 6))){
+    const l = s.close.lines.find(x => x.name === f.name);
+    if (!l) continue;
+    const date = ts(s.date, 23, 40 + at++ % 10);
+    // A session logged carries its own IP; only an off-screen job is a grant (ipState counts both).
+    if (l.ip && !l.present) ch.progression.ip.log.push({ date, kind: "grant", amount: l.ip, note: `Session ${s.number}, an off-screen job` });
+    if (l.present) ch.sessions.push({ date: s.date, title: `Session ${s.number}`, ipEarned: l.ip || 0, milestonePoint: !!l.milestone, notes: l.note || "" });
+    if (l.credits){ ch.trackers.credits.current += l.credits; ch.trackers.credits.ledger.push({ date, amount: l.credits, note: `Session ${s.number}` }); }
+  }
+  if (f.playing) f.playing(ch);
+  ch.meta.updated = ts(f.exported, 23, 55);
+  const gated = Engine.migrate(ch);
+  CHARS[key] = plain(gated);
+  return CHARS[key];
+}
+const firstOf = (list, ok, what) => { const x = list.find(ok); if (!x) throw new Error(`no ${what} in the catalog`); return x.id; };
+const gun = skill => firstOf(D.weapons, w => (w.type || w.skill) === skill, `${skill} weapon`);
+// A spend through the engine, with its date fixed: what the IP bought, as the sheet records it.
+const spend = (ch, skill, date) => {
+  const r = Engine.spendIP(ch, "skill", skill, "");
+  if (!r || !r.ok) throw new Error(`${ch.identity.name}: can't raise ${skill}: ${r && r.why}`);
+  ch.progression.ip.log[ch.progression.ip.log.length - 1].date = date;
+};
+
+character("mara", {
+  name: MARA, archetype: "professional", credits: 9, exported: DAY[6],
+  identity: { age: 31, build: "Slight", hair: "Shaved", eyes: "Brown", skin: "Dark", history: "Ran network security for a Techtopia insurer until she found what it was insuring against. Lives in a one-room flat over a noodle bar and sleeps with her deck under the pillow." },
+  stats: { BOD: 4, REF: 6, MOB: 5, INT: 9, TECH: 7, COOL: 7, MAG: 1, EMP: 5 }, spec: ["jack-of-all-trades"],
+  natural: [["educated", 1], ["danger-sense", 1]], advs: [["contacts-minor", 1, "Joss, at the Night Shift"]], disads: [["enemies", 1, "NeuroNet's cleanup, since S4"]],
+  skills: ["interface", "programming", "security", "handguns", "investigation", "awareness", "deception", "basic-tech", "dodge", "streetwise", "stealth", "persuasion", "engineering", "pilot"],
+  weapons: [gun("handguns")], armor: ["kevlar-vest"], gear: ["smart-deck-i", "commlink"],
+  playing: ch => { spend(ch, "interface", ts(DAY[5], 23, 50)); ch.trackers.crank.rep = 3; ch.trackers.crank.ledger.push({ date: ts(DAY[3], 23, 45), amount: 1, note: "The Pier 9 job" }, { date: ts(DAY[5], 23, 45), amount: 2, note: "The Hub, clean exit" }); ch.trackers.damage = 2; },
+});
+character("dex", {
+  name: DEX, archetype: "werewolf", credits: 7, exported: DAY[6],
+  identity: { age: 27, build: "Heavy", hair: "Black, cropped", eyes: "Amber", skin: "Brown", history: "Grew up on a Daedalus Belt fishing boat and found out what he was at sixteen, in a storm. Works the door at a club in Metro Core. Achterberg is the only doctor who has seen him change." },
+  stats: { BOD: 7, REF: 6, MOB: 6, INT: 4, TECH: 3, COOL: 5, MAG: 1, EMP: 5 }, spec: ["wildblood"], focus: [2, { BOD: 1, MOB: 1 }],
+  advs: [["contacts-minor", 1, "Achterberg"]], disads: [["blood-lust", 1]], weapons: ["shock-knucks"], armor: ["heavy-denim-vest"],
+  skills: ["melee", "martial-arts", "athletics", "intimidation", "tracking", "awareness", "streetwise", "survival", "dodge", "stealth", "handguns", "pilot"],
+  creating: ch => { const st = Engine.basePowerState(ch); if (st && st.rows.length) Engine.placeBasePower(ch, st.rows[st.rows.length - 1].id, 1); },
+  playing: ch => { spend(ch, "melee", ts(DAY[3], 23, 50)); ch.trackers.damage = 11; },
+});
+character("juno", {
+  name: JUNO, archetype: "arcanist", credits: 8, exported: DAY[5], through: 5,
+  identity: { age: 24, build: "Average", hair: "Dyed silver", eyes: "Black", skin: "Light", history: "A grad student in folklore who started hearing the Park answer back. Learned her first spell from a library book nobody else could see. Her family in Seoul think she is studying." },
+  stats: { BOD: 4, REF: 5, MOB: 5, INT: 7, TECH: 4, COOL: 6, MAG: 8, EMP: 6 }, spec: ["resonant-whispers"], focus: [2, { MAG: 1, INT: 1 }],
+  advs: [["medium", 1]], disads: [["hallucinations", 1, "Voices a half-beat late, since the Ports"]],
+  skills: ["occult-lore", "persuasion", "intuition", "investigation", "awareness", "stealth", "deception", "dodge", "medical", "streetwise", "athletics", "seduction"],
+  creating: ch => { ch.archetypeChoices.rolls.startingSpells = 3; for (const sp of D.spells.filter(x => x.th === 1)) if (Engine.canAddStartingSpell(ch, sp.id)) Engine.addStartingSpell(ch, sp.id); },
+  playing: ch => { ch.trackers.san.loss = 6; },   // 19 IP and saving it: a Skill rank is 20
+});
+// The pilot's characters (a note says so): one benched, one dead. Ruth Adair, retired, was never exported.
+character("kit", {
+  name: "Kit Moreau", archetype: "professional", credits: 6, exported: DAY[3], made: "2026-07-11",
+  identity: { age: 35, build: "Wiry", hair: "Red", eyes: "Green", skin: "Freckled", history: "A getaway driver who drove away from one job too many. Marcus's spare, for the night Dex can't come." },
+  stats: { BOD: 6, REF: 9, MOB: 6, INT: 5, TECH: 6, COOL: 6, MAG: 1, EMP: 4 }, spec: ["wheelman"], natural: [["danger-sense", 2]],
+  skills: ["pilot", "handguns", "dodge", "awareness", "basic-tech", "streetwise", "athletics", "stealth", "smgs", "engineering"],
+});
+character("hollis", {
+  name: "Hollis Reyes", archetype: "professional", credits: 5, exported: "2026-07-11", made: "2026-07-11",
+  identity: { age: 44, build: "Broad", hair: "Gray", eyes: "Blue", skin: "Tanned", history: "An ex-NCPD sergeant who died in the pilot on purpose, so Sam could see how dying works." },
+  stats: { BOD: 8, REF: 7, MOB: 5, INT: 5, TECH: 4, COOL: 7, MAG: 1, EMP: 4 }, spec: ["enforcer"], natural: [["danger-sense", 2]],
+  creating: ch => Engine.toggleFocusedPick(ch, "handguns"),
+  skills: ["handguns", "intimidation", "streetwise", "investigation", "awareness", "dodge", "melee", "athletics", "persuasion"],
+  playing: ch => { ch.trackers.damage = 40; },
+});
+
+const players = [], copies = [];
+const player = (key, name, seats, made = DAY[1]) => players.push({
+  id: PY(key), name, seats: seats.map(([k, status, names = []]) => ({ tag: tag(k), status, names })), created: ts(made, 17, 30), updated: ts(DAY[6], 23, 58),
+});
+player("priya", "Priya Raman", [["mara", "active", ["Mara"]], ["ruth", "retired"]], "2026-07-11");
+player("marcus", "Marcus Hale", [["dex", "active", ["Dex"]], ["kit", "benched", ["Kit"]]], "2026-07-11");
+player("sam", "Sam Okafor", [["juno", "active", ["Juno"]], ["hollis", "dead"]], "2026-07-11");
+player("alex", "Alex Brandt", [], DAY[7]);   // sitting in tonight; no character yet
+// The last file each player handed over. Juno's is a session old: Sam forgot to export after S6.
+const copy = (key, at) => copies.push({ tag: tag(key), importedAt: at, character: CHARS[key] });
+copy("mara", ts(DAY[6], 23, 58)); copy("dex", ts(DAY[6], 23, 58)); copy("juno", ts(DAY[5], 23, 58));
+copy("kit", ts(DAY[3], 23, 50)); copy("hollis", ts("2026-07-11", 23, 30));
+
+// ── the Activity trail: tonight's changes, newest last, each one undoable ──
+const at = (list, key, prefix) => { const i = list.findIndex(r => r.id === prefix(key)); if (i < 0) throw new Error(`no ${key}`); return i; };
+const audit = [
+  { seq: 1, date: ts(DAY[7], 19, 10), label: "Seated the crew for Session 7",
+    patch: [{ path: ["sessions", at(sessions, "s7", SE), "present"], type: "scalar", before: [] }] },
+  { seq: 2, date: ts(DAY[7], 20, 50), label: "Moved Dex before the full moon to 7 of 8",
+    patch: [{ path: ["clocks", at(clocks, "moon", CK), "filled"], type: "scalar", before: 6 }] },
+  { seq: 3, date: ts(DAY[7], 21, 5), label: "Marked Dolores \"Dolly\" Quint as out of the picture",
+    patch: [{ path: ["cast", at(cast, "dolly", C), "status"], type: "scalar", before: "alive" }] },
+];
+
 // ── the table ───────────────────────────────────────────────────────
 const table = {
   meta: {
     kind: "shadows-table", id: tableId(), name: "Dead Air", tableSchemaVersion: "0.18",
-    created: ts(DAY[1], 17), updated: ts(DAY[6], 23, 50),
+    created: ts(DAY[1], 17), updated: ts(DAY[7], 21, 10),
   },
-  audit: [],
-  notes, cast, places, factions, clocks, interactions, sessions, threads, encounters, players: [], copies: [],
+  audit,
+  notes, cast, places, factions, clocks, interactions, sessions, threads, encounters, players, copies,
 };
 
 const json = JSON.stringify(table, null, 2) + "\n";
@@ -745,5 +970,5 @@ if (process.argv.includes("--stdout")) process.stdout.write(json);
 else {
   mkdirSync(dirname(OUT), { recursive: true });
   writeFileSync(OUT, json);
-  console.log(`wrote ${OUT}: ${cast.length} cast, ${places.length} places, ${factions.length} factions, ${clocks.length} clocks, ${sessions.length} sessions, ${threads.length} threads, ${encounters.length} encounters, ${interactions.length} lines, ${notes.length} notes`);
+  console.log(`wrote ${OUT}: ${players.length} players, ${copies.length} characters, ${cast.length} cast, ${places.length} places, ${factions.length} factions, ${clocks.length} clocks, ${sessions.length} sessions, ${threads.length} threads, ${encounters.length} encounters, ${interactions.length} lines, ${notes.length} notes`);
 }
