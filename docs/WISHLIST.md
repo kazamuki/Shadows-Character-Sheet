@@ -797,7 +797,7 @@ session already there); the number stays the identity and the sort (Ken,
 S5a's review: "last session" is by number), and the title is text only.
 
 **W77 — A cast member's page, laid out for the table.** *Ken · 🔎 · Fix (UI) · raised 2026-10-08*\
-**Plan:** none yet · **Goes with:** W78, W80, W81
+**Plan:** [gm-mode's Layout pass](plans/gm-mode.md), order [S18](plans/gm-mode/S18-layout-pass.md) (drafted 2026-10-30; status under the name and the pinned stat block are its SQ4) · **Goes with:** W78, W80, W81
 
 Three things about the page a GM opens mid-scene:
 - **Back and Add to <encounter> always in reach.** They sit at the top today
@@ -829,7 +829,7 @@ cast still has to scroll well on a tablet, so the shape (every card, a fold,
 or a toggle like *Who knows what*) needs a look.
 
 **W80 — The left column: the page's actions, or gone.** *Ken · 🔎 · Fix (UI) · raised 2026-10-08*\
-**Plan:** [gm-mode's Layout pass](plans/gm-mode.md) (no order yet; after S3d, before launch, Ken 2026-10-30) · **Goes with:** W77
+**Plan:** [gm-mode's Layout pass](plans/gm-mode.md), order [S18](plans/gm-mode/S18-layout-pass.md) (drafted 2026-10-30; a table's screens. Home's empty rail is its SQ5, left open by default) · **Goes with:** W77
 
 Outside the wizard the left column is empty on **every** screen: Home, every
 GM table tab, and the pages under them (Ken's screenshot, 2026-10-08: a
