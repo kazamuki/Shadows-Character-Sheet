@@ -104,10 +104,13 @@ test("Decision 259: F and J do nothing in a field, with a modifier, on repeat, o
   press(app, app.doc.body, "f"); assert.ok(modalOpen(app), "F stayed off after ⋮ closed"); pressEsc(app);
   // The two guards Home's empty `S.table` would otherwise hide: the switch pulled while a table is open, and a screen
   // that isn't a table's with a table still held (not a state the app reaches; the guard is what keeps it so).
+  // FEATURES and the browser's key are read at each press, so clearing both is the switch pulled, launched or not (Decision 260).
   const feat = app.window.localStorage.getItem("shadows.feature.gm");
   app.window.localStorage.removeItem("shadows.feature.gm");
+  app.window.eval("FEATURES.gm = false");
   nothing(app.doc.body, "f", {}, "the gm switch off under an open table");
-  app.window.localStorage.setItem("shadows.feature.gm", feat);
+  app.window.eval("FEATURES.gm = true");
+  if (feat !== null) app.window.localStorage.setItem("shadows.feature.gm", feat);
   app.window.eval('S.screen = "sheet"');
   nothing(app.doc.body, "j", {}, "a screen that isn't a table's");
   app.window.eval('S.screen = "table"');

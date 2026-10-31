@@ -4295,6 +4295,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** a second unfinished feature needs hiding at the same time, or a player finding `?gm=on` turns out to matter.
      - **Built:** as 170.
      → **Superseded in part by Decision 214**: `FEATURES` holds `crank` too, a released feature withdrawn.
+     → **Superseded in part by Decision 260**: GM mode is launched, `FEATURES.gm` is true, and `?gm=off` no longer hides it.
 
 174. **A table keeps a cast: one record per NPC, from a name to a stat block, whose Codex vocabulary is the GM's text until a pack names it.**
      *2026-10-05 · Ken + Claude · Touches: cast, cast member, table.cast, C- id, quick-add, origin, npcRoles, enemyRole, tier, motivation, resources, line, ifPushed, gmNote, status, table schema 0.2, migrateTable, W29, GQ6, GQ10*
@@ -5344,6 +5345,18 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. Extends 208 (Find and Jot open by key) and 164 (a key's box gives focus back without scrolling).
      - **Revisit if:** a GM asks for another key, a browser takes F or J, or players get a sheet-wide search.
      - **Built:** app 0.56.1; switched off (173); no schema move; PR #278; log 2026-10-31 (S19).
+
+260. **GM mode is launched: `FEATURES.gm` is true, so every player sees Run a table, and the switch stays, on.**
+     *2026-10-31 · Ken + Claude · Touches: GM mode, FEATURES, featureOn, applyFeatureQuery, ?gm=on, ?gm=off, shadows.feature.gm, Home, Run a table, Import a file, launch line, changelog-pending, CHANGELOG, boot features option, GM_OFF, Decision 173, Decision 239*
+     - **Decided:** `FEATURES.gm` is `true`: Home has **Run a table**, Import reads a table or a pack, and every table screen shows for everyone. The switch stays in `FEATURES`, on, so `?gm=off` no longer hides it. `changelog-pending.md`'s lines went into `CHANGELOG.md`, trimmed to eleven, under the launch line **Run a table.**, with a minor bump. The switched-off path stays tested: the test harness's `boot({ features: { gm:false } })` (`GM_OFF`) builds the app as it shipped before.
+     - **Why:** Decision 173 named this release as GM mode's launch. Ken called it ready once the Layout pass and the Shortcuts were built (2026-10-31), and Scott had signed off.
+     - **Rejected:**
+       - Removing the switch and every `featureOn("gm")` check: a cleanup with no visible change, and it takes away the way back 214 used for CRANK.
+       - Rewriting the switched-off tests to test the launched app only, as 239 did for CRANK: it leaves the switched-off path in the code, untested.
+       - Shipping the pending lines as written: twenty-one bullets, several outgrown, in a window players read.
+     - **Replaces:** Decision 173 in part: GM mode is on, and `?gm=off` no longer hides it; the switch, its key and `?gm=on` stand.
+     - **Revisit if:** GM mode has to be withdrawn (set the switch false again, as 214 did), or a later decision removes the switch.
+     - **Built:** app 0.57.0; no schema move; PR #…; log 2026-10-31 (GM mode's launch).
 
 ## 5. Open Flags
 

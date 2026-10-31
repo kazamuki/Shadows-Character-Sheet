@@ -14,7 +14,13 @@ before then cites this README's *The cadence* or *How exact to be*: those sectio
 
 ## Shipping while unfinished
 
-GM sessions merge to `main` like any batch, **switched off**: `FEATURES.gm`
+**Launched in app 0.57.0** (Decision 260, 2026-10-31): `FEATURES.gm` is `true`, so every
+player sees GM mode, and from here a GM session is an ordinary batch: a visible change takes a
+`CHANGELOG.md` line and an app bump like any other (`CLAUDE.md`, *Change tiers*). The switch
+stays, on, in case GM mode ever has to be withdrawn; the tests keep its switched-off path
+through the harness's `GM_OFF`. What follows is how it worked until the launch.
+
+GM sessions merged to `main` like any batch, **switched off**: `FEATURES.gm`
 is `false`, so a player's app is unchanged and releases go on as usual. Ken
 and Scott turn it on in their own browser by opening the app with `?gm=on`
 (and off with `?gm=off`); it stays on across reloads. The release that sets

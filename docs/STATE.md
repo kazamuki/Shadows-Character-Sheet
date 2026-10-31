@@ -1,7 +1,7 @@
 # State of the build
 
 **Updated:** 2026-10-31
-**Versions:** app `0.56.1` · game data `0.50` · character schema `0.31` · table schema `0.18` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.57.0` · game data `0.50` · character schema `0.31` · table schema `0.18` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -37,10 +37,10 @@ decision; that's how this section reached 1,500 words (`log/archive.md` §4).
   (240) and play stops at 10 (194).
 - **Magic** (spells, Cascade, Aberrations, holding a spell) and **combat**
   are built end to end, and both plans are closed.
-- **GM mode** is built through S3d, S7, S10f, S12b, the Layout pass (S18) and the Shortcuts (S19: F and J), **switched off** (`FEATURES.gm`, 173): a
+- **GM mode** is **launched** in app 0.57.0 (260), on for everyone: a
   table file with its cast, players and their characters as copies, packs and the Codex, encounters, sessions and the
-  close-out, the Reference, Find and Jot, and undo. `?gm=on` turns it on in a
-  browser. `plans/gm-mode.md` §6 lists what's built and what's left.
+  close-out, the Reference, Find and Jot with F and J, and undo. The switch stays, on; tests reach its
+  switched-off path through the harness's `GM_OFF`. `plans/gm-mode.md` §6 lists what's built and what's left.
 - **CRANK** reputation is on for everyone (239).
 - The engine reproduces the CRB's worked examples (`tests/rules.test.mjs`),
   and a hostile file renders safely everywhere (`tests/hostile.test.mjs`).
@@ -109,7 +109,7 @@ is the authority on a flag's full text.
 | **Vampire** — `0413` | ✅ built (Decisions 200–202, 215, 223, 240): Bloodlines, the Thirst, 22 Majors; Base Powers and CP as the 2026-10-22 book prints | Nobody. Whether it leaves `draft` is Ken's (the chapter dropped "Under Construction") |
 | **Werewolf** — `0414` | ✅ built (Decisions 195–197, 199, 215, 240): Origins, Form, Call of the Wild, its own Majors; Base Powers and CP as the book prints | Nobody. As the Vampire: `draft` is Ken's call |
 | **Arcanist / Magic** | 🔶 spells, Cascade, Aberrations, magic on the sheet, holding a spell (Decision 224) all built · Origins still `draft` | Deighton: **F43** (the held spell's check). Deighton + Scott + Bill + Ken: Origins and spheres/implements, after the four-way comparison; not blocking |
-| **GM mode** — `plans/gm-mode.md` | 🔶 built through S3d (players, seats, the card spread, the read-only sheet and a PC row that takes the whole hit on its seat's copy), S7, S10f, S12b, S18 (a table's own frame: no rail, a measure for every page, Back in a bar) and S19 (F opens Find and J opens Jot, never while typing; ⋮ → Keys turns them off), **switched off** (173) | Scott and Deighton: the open `GQ`s (§9) and Codex v2 (S12a, S17). Next in the plan: S2 |
+| **GM mode** — `plans/gm-mode.md` | 🔶 **launched in 0.57.0** (260): built through S3d (players, seats, the card spread, the read-only sheet and a PC row that takes the whole hit on its seat's copy), S7, S10f, S12b, S18 (a table's own frame) and S19 (F and J). From here a GM session ships visible, with changelog lines and an app bump | Scott and Deighton: the open `GQ`s (§9) and Codex v2 (S12a, S17). Next in the plan: S2 |
 | **The book** — `plans/crb-catch-up.md` | 📋 what the CRB still needs from the sheet, by chapter | Ken. The sheet-from-book syncs are closed (`plans/archive/`); the next mirror refresh gets a new one |
 | **Print sheet — visual system** — `plans/print-sheet-scotts-look.md` | 📋 Scott's export landed 2026-09-23 (landscape) · front-page restyle proposed and mocked up · one known cosmetic defect | Ken: approve the plan. Scott: PQ1 (can Cerulean Nights be embedded), PQ2 (his artwork). Deighton: PQ3 (do the stat groups mean anything). The frame/texture print defect blocks on no one |
 
@@ -140,7 +140,7 @@ rev 9's `C1`–`C3` are still forward notes.
 **The live site is v0.56.0** (data 0.50, schema 0.31), released 2026-10-29; it carries custom weapons that fire and reload like the catalog's.
 
 **Next is Ken's pick**, each built through a work order (`WORK-ORDERS.md`):
-- **Another of `plans/gm-mode.md`'s *Still to build*** (S3b, seats, S3c, the read-only sheet, S3d, a PC row on a seat's copy, S7, S10f, S12b, S18, the Layout pass, and S19, the Shortcuts, are built; more keys are on W139; Home's own layout is W80's rest).
+- **Another of `plans/gm-mode.md`'s *Still to build*** (GM mode is launched, so each now ships visible; more keys are on W139; Home's own layout is W80's rest).
 - **The vehicles-and-gear plan** (`plans/loadout-and-gear.md`) is approved (Ken, 2026-10-24, LQ1–LQ10 on their defaults); L1 (weapon damage types), L2 (written-in weapons read like the catalog's), L2b (they tick their fire modes and reload from carried ammo) and L3 (worn armor and gear in use carry modifiers) are built; L4 is next.
   L4 and L5 (natural attacks and the
   unarmed strike, a Major on one row) are buildable now; L6 (vehicles, was P14) and L7
@@ -152,7 +152,7 @@ rev 9's `C1`–`C3` are still forward notes.
 **Ken alone:** F12 and F32, W38's plan (`plans/two-tabs-one-character.md`,
 TQ1–TQ3), and the print plan (`plans/print-sheet-scotts-look.md`). GM mode's
 GQ6 block session (TOL and WILL, 175 reopened) waits on Scott's answer for WILL.
-GM sessions merge switched off (173), and releases go on as usual.
+GM mode is launched (260): a GM session is an ordinary batch now, with its changelog lines and an app bump.
 
 **Waiting on others:**
 - **Deighton** answered every open rules question on 2026-10-10 (`reference/rulings-2026-10-10.md`). Still his: what a rank of Educated bought in play gives (F44: the IP buy refuses it until then), the TN and TH of the WILL check that keeps a held spell (F43), and whether a Supernatural's Skills and Powers share its stats' headroom past 10 (Ken asked). **One ruling on kickers may clear F46 and F47 together:** do dice stack, and which one is "your Kicker Die"; F45 is Concierge's appraising Skill. **F48** is which damage type the book's ten untyped weapons deal (bows, damaging grenades, the HRL-1 and HXC-1). **CRANK** is kept and back on for everyone (239, 2026-10-23); GQ7, F37 and GQ28 are still open.

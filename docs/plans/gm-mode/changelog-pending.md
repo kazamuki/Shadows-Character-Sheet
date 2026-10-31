@@ -1,5 +1,12 @@
 # GM mode's changelog lines, waiting for its launch
 
+**GM mode launched in app 0.57.0** (Decision 260, 2026-10-31). Its lines are in `CHANGELOG.md`'s
+0.57.0 section, trimmed from the twenty-one below to eleven, and a GM session now writes its
+lines there like any other change. This file is kept as the record of what was collected; nothing
+reads it and nothing more goes in.
+
+---
+
 The lines below become `CHANGELOG.md`'s `[Unreleased]` section, with a minor app
 bump, in the release that sets `FEATURES.gm` to `true` (Decision 173). Until then
 GM mode is switched off and a player can see none of it, so none of this goes in

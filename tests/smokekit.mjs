@@ -168,7 +168,10 @@ export function writtenInCharacter() {
 
 export const focused = app => app.window.document.activeElement;
 
+// Decision 260 launched GM mode, so GM_ON is a no-op kept for the tests that pass it. GM_OFF is a
+// `boot()` option, not storage: it builds the app as it shipped before the launch, switch off.
 export const GM_ON = { "shadows.feature.gm": "on" };
+export const GM_OFF = { features: { gm: false } };
 
 export const tableKeys = app => {
   const ls = app.window.localStorage, out = [];

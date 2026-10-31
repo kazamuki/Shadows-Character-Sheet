@@ -21,7 +21,23 @@ import { buildHtml, ROOT } from "../tools/build.mjs";
 // screen that wide (jsdom has none), and `resize(w)` crosses to another
 // width, firing the queries whose answer changed. Anything else matches
 // nothing, as before.
-export function boot({ storage = null, width = null } = {}) {
+// `features` boots the app with `FEATURES` switches set otherwise than they
+// ship ({ gm:false }), so a launched feature's switched-off path stays tested
+// (Decision 260). It throws on a switch the source doesn't have, so it can't
+// quietly test nothing.
+function withFeatures(html, features) {
+  const m = /const FEATURES = \{([^}]*)\};/.exec(html);
+  if (!m) throw new Error("boot: the built app has no FEATURES object");
+  let body = m[1];
+  for (const [name, on] of Object.entries(features)) {
+    const re = new RegExp("\\b" + name + ":\\s*(true|false)\\b");
+    if (!re.test(body)) throw new Error(`boot: FEATURES has no ${name} switch`);
+    body = body.replace(re, `${name}:${on ? "true" : "false"}`);
+  }
+  return html.replace(m[0], `const FEATURES = {${body}};`);
+}
+
+export function boot({ storage = null, width = null, features = null } = {}) {
   const screen = { width, queries: [] };
   const errors = [];
   const skipped = [];
@@ -32,7 +48,7 @@ export function boot({ storage = null, width = null } = {}) {
   vc.on("jsdomError", e => record(e.message));
   vc.on("error", (...a) => record(a.join(" ")));
 
-  const dom = new JSDOM(buildHtml(), {
+  const dom = new JSDOM(features ? withFeatures(buildHtml(), features) : buildHtml(), {
     runScripts: "dangerously",
     pretendToBeVisual: true,
     url: "https://shadows.test/",
