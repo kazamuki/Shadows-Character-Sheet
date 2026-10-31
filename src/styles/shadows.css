@@ -1137,7 +1137,7 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
 .app.table-mode main :is(input:not([type=checkbox],[type=radio],[type=range],[type=file],[type=hidden],[type=number]),select):not(.ro-sheet *,.enc-hit *,.cond-where *){max-width:min(100%, var(--table-field))}
 .app.table-mode main textarea:not(.ro-sheet *){max-width:min(100%, var(--table-area))}
 :where(.app.table-mode main :is(p,dd):not(.ro-sheet *,.enc-row *,.enc-bar *)){max-width:var(--table-measure)}
-.app.table-mode .ref-body > p{max-width:var(--table-measure)}
+.app.table-mode .ref-body:not(.ro-sheet *) > p{max-width:var(--table-measure)}
 .app.table-mode .roster-list{grid-template-columns:repeat(auto-fill, minmax(min(100%, var(--table-card)), 1fr))}
 .app.table-mode .roster-list > li{max-width:36rem}
 .app.table-mode .enc-rows{max-width:var(--enc-measure)}

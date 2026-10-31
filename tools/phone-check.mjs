@@ -96,6 +96,7 @@ function lockedCharacter(archetype = "arcanist", milestonePoints = 0, held = [],
     ch.trackers.aberrations.push({ id: "night-eyes", permanence: "permanent" }, { id: "nocturnal", permanence: "permanent" });
   }
   ch.creation.locked = true;
+  ch.meta.id = "TAG-AAAA-BBBB-CCCC";   // drawn at random otherwise, and it wraps differently from one run to the next
   return JSON.parse(JSON.stringify(ch));   // out of the engine's vm realm
 }
 
@@ -128,9 +129,28 @@ const frameBoxes = () => {
   window.scrollTo(0, 0);
   const out = { header: r(document.querySelector("header.top")), rail: r(document.querySelector("nav.ledger")),
     main: r(document.querySelector("main")), vitals: r(document.querySelector("aside.vitals")), children: [] };
+  // Every box under `main`, folded to a hash: a card, a field or a line of prose that moves changes it, which the
+  // direct children alone would not show (a list's cards sit inside one section whose box stays the same).
+  let h = 2166136261, n = 0;
+  for (const el of document.querySelectorAll("main *")) {
+    const b = el.getBoundingClientRect();
+    if (!b.width && !b.height) continue;
+    const t = `${el.tagName}.${el.getAttribute("class") || ""}|${Math.round(b.x * 10)}|${Math.round(b.y * 10)}|${Math.round(b.width * 10)}|${Math.round(b.height * 10)}`;
+    for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+    n++;
+  }
+  out.deep = `${n} boxes, ${h.toString(16)}`;
   [...document.querySelector("main").children].forEach((el, i) => out.children.push(`${i} ${el.tagName.toLowerCase()}${el.classList.length ? "." + [...el.classList].join(".") : ""} ${r(el).join(",")}`));
   return out;
 };
+
+// A transition caught half-way (Main's Health bar) would move a box between two runs of the same code.
+const STILL = () => document.addEventListener("DOMContentLoaded", () => {
+  const st = document.createElement("style"); st.textContent = "*,*::before,*::after{transition:none!important;animation:none!important}"; document.head.appendChild(st);
+});
+
+// Let a press settle (fonts, a redraw's second frame) before the boxes are read, so two runs of the same code agree.
+const snap = async page => { await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))); await page.waitForTimeout(120); return page.evaluate(frameBoxes); };
 
 async function recordFrames(browser, file, seed) {
   const frames = {};
@@ -138,6 +158,7 @@ async function recordFrames(browser, file, seed) {
     for (const pinned of [false, true]) {
       if (pinned && z.width < 1300) continue;
       const c = await browser.newContext({ viewport: { width: z.width, height: z.height } });
+      await c.addInitScript(STILL);
       await c.addInitScript(([s, pin]) => { try {
         if (!localStorage.getItem("shadows.active.v1")) localStorage.setItem("shadows.active.v1", s);
         if (pin) localStorage.setItem("shadows.ui.vitalsPinned", "pinned");
@@ -145,18 +166,19 @@ async function recordFrames(browser, file, seed) {
       const page = await c.newPage();
       const at = name => `${name} @${z.width}${pinned ? " pinned" : ""}`;
       await page.goto(pathToFileURL(file).href);
-      if (!pinned) frames[at("home")] = await page.evaluate(frameBoxes);
+      if (!pinned) frames[at("home")] = await snap(page);
       await page.click("[data-open]");
       await page.waitForSelector("#topnav [data-sec]");
       const tabs = await page.$$eval("#topnav [data-sec]", bs => bs.map(b => b.dataset.sec));
       for (const sec of tabs) {
         await page.click(`#topnav [data-sec="${sec}"]`);
-        frames[at(`sheet: ${sec}`)] = await page.evaluate(frameBoxes);
+        frames[at(`sheet: ${sec}`)] = await snap(page);
       }
       await c.close();
     }
     // The wizard: a new character driven as a player would, then every step, then Expert's four.
     const c = await browser.newContext({ viewport: { width: z.width, height: z.height } });
+      await c.addInitScript(STILL);
     const page = await c.newPage();
     await page.goto(pathToFileURL(file).href);
     await page.click("#btn-new");
@@ -173,11 +195,11 @@ async function recordFrames(browser, file, seed) {
     for (const id of ids) {
       await goStep(id);
       if (id === "archetype") { await page.click('[data-arch="professional"]'); await page.click('[data-spec="cleaner"]'); }
-      frames[`wizard: ${id} @${z.width}`] = await page.evaluate(frameBoxes);
+      frames[`wizard: ${id} @${z.width}`] = await snap(page);
     }
     await goStep("stats");
     await page.click("header [data-expert]");
-    for (const id of expertSteps) { await goStep(id); frames[`wizard: ${id}, Expert @${z.width}`] = await page.evaluate(frameBoxes); }
+    for (const id of expertSteps) { await goStep(id); frames[`wizard: ${id}, Expert @${z.width}`] = await snap(page); }
     await c.close();
   }
   return frames;
@@ -322,6 +344,13 @@ async function tableScreens(browser, file, rows, numbers) {
 async function tableExtras(browser, file, rows, numbers) {
   const seed = tableSeed();
   const cols = () => (document.querySelector(".main-grid") ? getComputedStyle(document.querySelector(".main-grid")).gridTemplateColumns.split(" ").map(parseFloat) : []);
+  // The widest field, textarea and prose block: a measure written into the read-only sheet would cap one of them.
+  // The read-only sheet sits in .ro-sheet under the table's own bar and title; the player's sheet is all of main.
+  const widest = root => {
+    const w = sel => Math.round(Math.max(0, ...[...document.querySelectorAll(sel.split(",").map(x => root + " " + x.trim()).join(","))].filter(e => e.getBoundingClientRect().height > 0).map(e => e.getBoundingClientRect().width)));
+    return [w("input:not([type=hidden]):not([type=checkbox]):not([type=radio]), select"), w("textarea"), w("p, dd")];
+  };
+  const TABS = ["main", "skills", "character", "trackers", "progression", "sessions", "loadout", "notes"];
   const ctx = async (z, init) => { const c = await browser.newContext({ viewport: { width: z.width, height: z.height } }); await c.addInitScript(init.fn, init.arg); return c; };
   for (const z of TABLE_WIDTHS.filter(z => z.width >= 1300)) {
     const tableInit = { fn: ([s, pk, pack]) => { try { localStorage.setItem("shadows.feature.gm", "on");
@@ -330,6 +359,8 @@ async function tableExtras(browser, file, rows, numbers) {
     await tp.goto(pathToFileURL(file).href); await tp.click("[data-topen]"); await tp.click('[data-tsec="players"]'); await tp.click("[data-seat]");
     await tp.waitForSelector(".main-grid");
     const ro = await tp.evaluate(cols);
+    const roWide = {};
+    for (const id of TABS) { await tp.click(`[data-rotab="${id}"]`); roWide[id] = await tp.evaluate(widest, ".ro-sheet"); }
     const seedChar = JSON.stringify({ ch: seed.char, section: "main" });
     await t.close();
     // The player's own sheet of the same file: the copy the seat holds, opened from Home.
@@ -337,9 +368,12 @@ async function tableExtras(browser, file, rows, numbers) {
     const op = await own.newPage();
     await op.goto(pathToFileURL(file).href); await op.click("[data-open]"); await op.waitForSelector(".main-grid");
     const mine = await op.evaluate(cols);
+    const ownWide = {};
+    for (const id of TABS) { await op.click(`#topnav [data-sec="${id}"]`); ownWide[id] = await op.evaluate(widest, "main"); }
+    const wideDiff = TABS.filter(id => roWide[id].some((x, i) => Math.abs(x - ownWide[id][i]) > 1));
     await own.close();
-    const same = ro.length > 0 && ro.length === mine.length && ro.every((w, i) => Math.abs(w - mine[i]) <= 1);
-    rows.push({ width: `table ${z.width}`, screen: "the read-only sheet's Main against the player's own", layout: same ? "ok" : `read-only ${ro.join("+")}, own ${mine.join("+")}`, ok: same });
+    const same = ro.length > 0 && ro.length === mine.length && ro.every((w, i) => Math.abs(w - mine[i]) <= 1) && !wideDiff.length;
+    rows.push({ width: `table ${z.width}`, screen: "the read-only sheet's Main against the player's own", layout: same ? "ok" : `read-only ${ro.join("+")}, own ${mine.join("+")}${wideDiff.map(id => `; ${id}: widest field, textarea, prose ${roWide[id].join("/")} against ${ownWide[id].join("/")}`).join("")}`, ok: same });
     numbers.push({ w: z.width, screen: "L2 .main-grid columns", main: `read-only ${ro.map(Math.round).join("+")}`, over: "", field: "", area: "", prose: "", cards: `own ${mine.map(Math.round).join("+")}`, enc: "", bar: "", header: "" });
   }
   for (const z of [{ width: 1279, height: 900 }, { width: 1300, height: 900 }, { width: 1980, height: 1080 }]) {

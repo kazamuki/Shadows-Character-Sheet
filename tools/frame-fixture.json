@@ -26,7 +26,8 @@
   ],
   "children": [
    "0 div.home-hero 16,138.2,358,718.1"
-  ]
+  ],
+  "deep": "30 boxes, e026e57d"
  },
  "sheet: main @390": {
   "header": [
@@ -62,7 +63,8 @@
    "5 div.cond-grid 16,311.4,358,374.1",
    "6 section.main-conditions 16,709.5,358,94.5",
    "7 div.main-grid 16,818,358,1872.9"
-  ]
+  ],
+  "deep": "511 boxes, fbb77624"
  },
  "sheet: skills @390": {
   "header": [
@@ -97,7 +99,8 @@
    "4 p.attack-note 16,411.4,358,16.8",
    "5 div.skill-cols 16,428.3,358,3699.7",
    "6 details.group 16,4128,358,30.3"
-  ]
+  ],
+  "deep": "799 boxes, 1cbf72c6"
  },
  "sheet: character @390": {
   "header": [
@@ -136,7 +139,8 @@
    "8 div.sect 16,3649.4,358,23.4",
    "9 div.reference 16,3684.7,358,298.8",
    "10 div.tab-links 16,4001.5,358,81.5"
-  ]
+  ],
+  "deep": "711 boxes, 9881dad3"
  },
  "sheet: trackers @390": {
   "header": [
@@ -172,7 +176,8 @@
    "5 div.sect 16,2560,358,23.4",
    "6 p.step-note 16,2595.3,358,116.3",
    "7 div.trk 16,2733.6,358,158.6"
-  ]
+  ],
+  "deep": "253 boxes, be5a3dc6"
  },
  "sheet: progression @390": {
   "header": [
@@ -211,7 +216,8 @@
    "8 div.trk 16,848.9,358,150.7",
    "9 details.group 16,1011.5,358,756.8",
    "10 details.group 16,1778.4,358,30.3"
-  ]
+  ],
+  "deep": "152 boxes, 708e90ac"
  },
  "sheet: sessions @390": {
   "header": [
@@ -249,7 +255,8 @@
    "7 div.sect 16,1076.1,358,23.4",
    "8 div.trk 16,1111.5,358,160.7",
    "9 p.step-note 16,1284.2,358,23.3"
-  ]
+  ],
+  "deep": "106 boxes, af284b07"
  },
  "sheet: loadout @390": {
   "header": [
@@ -302,7 +309,8 @@
    "22 div.subsect 16,1516.9,358,17.4",
    "23 button.btn.sm 16,1540.3,120.5,27",
    "24 p.step-note 16,1567.3,358,46.5"
-  ]
+  ],
+  "deep": "122 boxes, d5803f37"
  },
  "sheet: notes @390": {
   "header": [
@@ -335,7 +343,8 @@
    "2 h1.step-title 16,260.2,358,32.2",
    "3 p.step-note 16,296.4,358,46.5",
    "4 label.field 16,364.9,358,368.6"
-  ]
+  ],
+  "deep": "75 boxes, 18dc24aa"
  },
  "wizard: power-level @390": {
   "header": [
@@ -370,7 +379,8 @@
    "4 div.field.stat-method 16,1214.2,358,79.4",
    "5 div 16,1307.5,358,0",
    "6 div.wiznav 16,749,358,95"
-  ]
+  ],
+  "deep": "85 boxes, a21d630e"
  },
  "wizard: concept @390": {
   "header": [
@@ -405,7 +415,8 @@
    "4 div.field.tag-choice 16,746.1,358,127.1",
    "5 div 16,887.2,358,0",
    "6 div.wiznav 16,749,358,95"
-  ]
+  ],
+  "deep": "32 boxes, 5a48be19"
  },
  "wizard: stats @390": {
   "header": [
@@ -441,7 +452,8 @@
    "5 div.alloc 16,534.7,358,1243.5",
    "6 div 16,1792.2,358,20.3",
    "7 div.wiznav 16,749,358,95"
-  ]
+  ],
+  "deep": "73 boxes, 49d3c737"
  },
  "wizard: archetype @390": {
   "header": [
@@ -510,7 +522,8 @@
    "38 details.group 16,7476.9,358,30.3",
    "39 div 16,7521.3,358,90.4",
    "40 div.wiznav 16,749,358,95"
-  ]
+  ],
+  "deep": "275 boxes, 32a0a3d7"
  },
  "wizard: history @390": {
   "header": [
@@ -544,7 +557,8 @@
    "3 label.field 16,323.6,358,178.6",
    "4 div 16,516.2,358,0",
    "5 div.wiznav 16,532.2,358,95"
-  ]
+  ],
+  "deep": "10 boxes, 426e6f5f"
  },
  "wizard: skills @390": {
   "header": [
@@ -586,7 +600,8 @@
    "11 div.alloc 16,3094.8,358,1509.2",
    "12 div 16,4618,358,20.3",
    "13 div.wiznav 16,749,358,95"
-  ]
+  ],
+  "deep": "683 boxes, a73fc65c"
  },
  "wizard: character-points @390": {
   "header": [
@@ -634,7 +649,8 @@
    "17 div.alloc 16,31441.2,358,45.3",
    "18 div 16,31500.4,358,20.3",
    "19 div.wiznav 16,749,358,95"
-  ]
+  ],
+  "deep": "1201 boxes, bb89326d"
  },
  "wizard: review @390": {
   "header": [
@@ -670,7 +686,8 @@
    "5 div 16,860.5,358,204.1",
    "6 div.wiznav 16,698,358,146",
    "7 p.step-note 16,1252.6,358,69.8"
-  ]
+  ],
+  "deep": "111 boxes, d5d90e1a"
  },
  "wizard: stats, Expert @390": {
   "header": [
@@ -705,7 +722,8 @@
    "4 div.alloc 16,466.2,358,312",
    "5 div 16,792.2,358,20.3",
    "6 div.wiznav 16,749,358,95"
-  ]
+  ],
+  "deep": "72 boxes, 7b1391dd"
  },
  "wizard: archetype, Expert @390": {
   "header": [
@@ -773,7 +791,8 @@
    "37 details.group 16,5659.5,358,30.3",
    "38 div 16,5703.9,358,90.4",
    "39 div.wiznav 16,749,358,95"
-  ]
+  ],
+  "deep": "278 boxes, 9e3f519"
  },
  "wizard: skills, Expert @390": {
   "header": [
@@ -814,7 +833,8 @@
    "10 div.alloc 16,1797.3,358,834.5",
    "11 div 16,2645.8,358,20.3",
    "12 div.wiznav 16,749,358,95"
-  ]
+  ],
+  "deep": "682 boxes, 8b540998"
  },
  "wizard: character-points, Expert @390": {
   "header": [
@@ -861,7 +881,8 @@
    "16 div.alloc 16,15232.6,358,45.3",
    "17 div 16,15291.9,358,20.3",
    "18 div.wiznav 16,749,358,95"
-  ]
+  ],
+  "deep": "1200 boxes, 27307f5d"
  },
  "home @768": {
   "header": [
@@ -890,7 +911,8 @@
   ],
   "children": [
    "0 div.home-hero 104,138.2,560,540.8"
-  ]
+  ],
+  "deep": "30 boxes, 6807407a"
  },
  "sheet: main @768": {
   "header": [
@@ -926,7 +948,8 @@
    "5 div.cond-grid 16,270.6,736,268.3",
    "6 section.main-conditions 16,563,736,94.5",
    "7 div.main-grid 16,671.4,736,1040"
-  ]
+  ],
+  "deep": "522 boxes, 4b3ada22"
  },
  "sheet: skills @768": {
   "header": [
@@ -961,7 +984,8 @@
    "4 p.attack-note 16,377,736,16.8",
    "5 div.skill-cols 16,393.9,736,2047.9",
    "6 details.group 16,2441.8,736,30.3"
-  ]
+  ],
+  "deep": "821 boxes, 3ba6081e"
  },
  "sheet: character @768": {
   "header": [
@@ -1000,7 +1024,8 @@
    "8 div.sect 16,2622.6,736,23.4",
    "9 div.reference 16,2658,736,298.8",
    "10 div.tab-links 16,2974.7,736,62"
-  ]
+  ],
+  "deep": "711 boxes, 8ab9edd5"
  },
  "sheet: trackers @768": {
   "header": [
@@ -1036,7 +1061,8 @@
    "5 div.sect 16,2095.9,736,23.4",
    "6 p.step-note 16,2131.3,586.7,69.8",
    "7 div.trk 16,2223,736,158.6"
-  ]
+  ],
+  "deep": "253 boxes, 674743f3"
  },
  "sheet: progression @768": {
   "header": [
@@ -1075,7 +1101,8 @@
    "8 div.trk 16,630.5,736,91.3",
    "9 details.group 16,733.8,736,598.2",
    "10 details.group 16,1342.1,736,30.3"
-  ]
+  ],
+  "deep": "152 boxes, 24cdd8fb"
  },
  "sheet: sessions @768": {
   "header": [
@@ -1113,7 +1140,8 @@
    "7 div.sect 16,1004.5,736,23.4",
    "8 div.trk 16,1039.9,736,105.7",
    "9 p.step-note 16,1157.5,586.7,23.3"
-  ]
+  ],
+  "deep": "106 boxes, a3087217"
  },
  "sheet: loadout @768": {
   "header": [
@@ -1166,7 +1194,8 @@
    "22 div.subsect 16,1277.7,736,17.4",
    "23 button.btn.sm 16,1301,120.5,27",
    "24 p.step-note 16,1328,586.7,46.5"
-  ]
+  ],
+  "deep": "122 boxes, 3b0ca45d"
  },
  "sheet: notes @768": {
   "header": [
@@ -1199,7 +1228,8 @@
    "2 h1.step-title 16,237.1,736,42.2",
    "3 p.step-note 16,285.3,586.7,23.3",
    "4 label.field 16,330.5,736,368.6"
-  ]
+  ],
+  "deep": "75 boxes, 65daf8c"
  },
  "wizard: power-level @768": {
   "header": [
@@ -1234,7 +1264,8 @@
    "4 div.field.stat-method 16,746.9,736,60",
    "5 div 16,820.9,736,0",
    "6 div.wiznav 16,836.9,736,95"
-  ]
+  ],
+  "deep": "85 boxes, a2b7779c"
  },
  "wizard: concept @768": {
   "header": [
@@ -1269,7 +1300,8 @@
    "4 div.field.tag-choice 16,746.1,736,103.9",
    "5 div 16,863.9,736,0",
    "6 div.wiznav 16,879.9,736,95"
-  ]
+  ],
+  "deep": "32 boxes, d410ad8f"
  },
  "wizard: stats @768": {
   "header": [
@@ -1305,7 +1337,8 @@
    "5 div.alloc 16,451.5,736,601.5",
    "6 div 16,1067,736,20.3",
    "7 div.wiznav 16,929,736,95"
-  ]
+  ],
+  "deep": "73 boxes, cced589c"
  },
  "wizard: archetype @768": {
   "header": [
@@ -1374,7 +1407,8 @@
    "38 details.group 16,5197.4,736,30.3",
    "39 div 16,5241.8,736,90.4",
    "40 div.wiznav 16,929,736,95"
-  ]
+  ],
+  "deep": "275 boxes, 86281a65"
  },
  "wizard: history @768": {
   "header": [
@@ -1408,7 +1442,8 @@
    "3 label.field 16,323.6,736,178.6",
    "4 div 16,516.2,736,0",
    "5 div.wiznav 16,532.2,736,95"
-  ]
+  ],
+  "deep": "10 boxes, 7d7dce51"
  },
  "wizard: skills @768": {
   "header": [
@@ -1450,7 +1485,8 @@
    "11 div.alloc 16,1752.6,736,770.8",
    "12 div 16,2537.3,736,20.3",
    "13 div.wiznav 16,929,736,95"
-  ]
+  ],
+  "deep": "683 boxes, 67b7c341"
  },
  "wizard: character-points @768": {
   "header": [
@@ -1498,7 +1534,8 @@
    "17 div.alloc 16,23174.7,736,45.3",
    "18 div 16,23234,736,20.3",
    "19 div.wiznav 16,929,736,95"
-  ]
+  ],
+  "deep": "1201 boxes, cd4b4eb0"
  },
  "wizard: review @768": {
   "header": [
@@ -1534,7 +1571,8 @@
    "5 div 16,685.8,736,183.8",
    "6 div.wiznav 16,899.5,736,95",
    "7 p.step-note 16,1006.5,586.7,46.5"
-  ]
+  ],
+  "deep": "111 boxes, 780ef08"
  },
  "wizard: stats, Expert @768": {
   "header": [
@@ -1569,7 +1607,8 @@
    "4 div.alloc 16,406.3,736,312",
    "5 div 16,732.3,736,20.3",
    "6 div.wiznav 16,782.6,736,95"
-  ]
+  ],
+  "deep": "72 boxes, 845e977"
  },
  "wizard: archetype, Expert @768": {
   "header": [
@@ -1637,7 +1676,8 @@
    "37 details.group 16,3847.1,736,30.3",
    "38 div 16,3891.5,736,90.4",
    "39 div.wiznav 16,929,736,95"
-  ]
+  ],
+  "deep": "278 boxes, a4a4293e"
  },
  "wizard: skills, Expert @768": {
   "header": [
@@ -1678,7 +1718,8 @@
    "10 div.alloc 16,1442.2,736,632",
    "11 div 16,2088.2,736,20.3",
    "12 div.wiznav 16,929,736,95"
-  ]
+  ],
+  "deep": "682 boxes, 45c340f0"
  },
  "wizard: character-points, Expert @768": {
   "header": [
@@ -1725,7 +1766,8 @@
    "16 div.alloc 16,10931.4,736,45.3",
    "17 div 16,10990.6,736,20.3",
    "18 div.wiznav 16,929,736,95"
-  ]
+  ],
+  "deep": "1200 boxes, dc255b20"
  },
  "home @1300": {
   "header": [
@@ -1754,7 +1796,8 @@
   ],
   "children": [
    "0 div.home-hero 355,131.2,560,540.8"
-  ]
+  ],
+  "deep": "30 boxes, 1890670b"
  },
  "sheet: main @1300": {
   "header": [
@@ -1790,7 +1833,8 @@
    "5 div.cond-grid 30,319.6,1240,156.2",
    "6 section.main-conditions 30,499.8,1240,94.5",
    "7 div.main-grid 30,608.3,1240,557.9"
-  ]
+  ],
+  "deep": "524 boxes, d09403b4"
  },
  "sheet: skills @1300": {
   "header": [
@@ -1825,7 +1869,8 @@
    "4 p.attack-note 30,383,1240,16.8",
    "5 div.skill-cols 30,399.9,1240,1499.2",
    "6 details.group 30,1899.1,1240,30.3"
-  ]
+  ],
+  "deep": "821 boxes, ae0617ec"
  },
  "sheet: character @1300": {
   "header": [
@@ -1864,7 +1909,8 @@
    "8 div.sect 30,2458.5,1240,23.4",
    "9 div.reference 30,2493.9,1240,298.8",
    "10 div.tab-links 30,2810.7,1240,27"
-  ]
+  ],
+  "deep": "711 boxes, 5444b59c"
  },
  "sheet: trackers @1300": {
   "header": [
@@ -1900,7 +1946,8 @@
    "5 div.sect 30,1600.9,1240,23.4",
    "6 p.step-note 30,1636.3,586.7,69.8",
    "7 div.trk 30,1728,1240,158.6"
-  ]
+  ],
+  "deep": "253 boxes, 2b73c2b9"
  },
  "sheet: progression @1300": {
   "header": [
@@ -1939,7 +1986,8 @@
    "8 div.trk 30,587.5,1240,91.3",
    "9 details.group 30,690.8,1240,558.6",
    "10 details.group 30,1259.4,1240,30.3"
-  ]
+  ],
+  "deep": "152 boxes, a0e7510b"
  },
  "sheet: sessions @1300": {
   "header": [
@@ -1977,7 +2025,8 @@
    "7 div.sect 30,860.8,1240,23.4",
    "8 div.trk 30,896.1,1240,105.7",
    "9 p.step-note 30,1013.8,586.7,23.3"
-  ]
+  ],
+  "deep": "106 boxes, 229d9ca"
  },
  "sheet: loadout @1300": {
   "header": [
@@ -2030,7 +2079,8 @@
    "22 div.subsect 30,1266.3,1240,17.4",
    "23 button.btn.sm 30,1289.7,120.5,27",
    "24 p.step-note 30,1316.7,586.7,46.5"
-  ]
+  ],
+  "deep": "122 boxes, 301befb0"
  },
  "sheet: notes @1300": {
   "header": [
@@ -2063,7 +2113,8 @@
    "2 h1.step-title 30,243.1,1240,42.2",
    "3 p.step-note 30,291.3,586.7,23.3",
    "4 label.field 30,336.5,1240,368.6"
-  ]
+  ],
+  "deep": "75 boxes, 6bed27ee"
  },
  "sheet: main @1300 pinned": {
   "header": [
@@ -2099,7 +2150,8 @@
    "5 div.cond-grid 30,276.6,940,156.2",
    "6 section.main-conditions 30,456.8,940,94.5",
    "7 div.main-grid 30,565.3,940,777.5"
-  ]
+  ],
+  "deep": "522 boxes, efdfb8fb"
  },
  "sheet: skills @1300 pinned": {
   "header": [
@@ -2134,7 +2186,8 @@
    "4 p.attack-note 30,295.1,940,16.8",
    "5 div.skill-cols 30,312,940,2230.4",
    "6 details.group 30,2542.4,940,30.3"
-  ]
+  ],
+  "deep": "755 boxes, 1e5edc13"
  },
  "sheet: character @1300 pinned": {
   "header": [
@@ -2173,7 +2226,8 @@
    "8 div.sect 30,2476.6,940,23.4",
    "9 div.reference 30,2512,940,298.8",
    "10 div.tab-links 30,2828.7,940,27"
-  ]
+  ],
+  "deep": "645 boxes, da9383"
  },
  "sheet: trackers @1300 pinned": {
   "header": [
@@ -2209,7 +2263,8 @@
    "5 div.sect 30,1572.4,940,23.4",
    "6 p.step-note 30,1607.7,586.7,69.8",
    "7 div.trk 30,1699.5,940,158.6"
-  ]
+  ],
+  "deep": "187 boxes, 8d11078"
  },
  "sheet: progression @1300 pinned": {
   "header": [
@@ -2248,7 +2303,8 @@
    "8 div.trk 30,499.6,940,91.3",
    "9 details.group 30,602.9,940,598.2",
    "10 details.group 30,1211.2,940,30.3"
-  ]
+  ],
+  "deep": "86 boxes, 248d3a78"
  },
  "sheet: sessions @1300 pinned": {
   "header": [
@@ -2286,7 +2342,8 @@
    "7 div.sect 30,772.9,940,23.4",
    "8 div.trk 30,808.2,940,105.7",
    "9 p.step-note 30,925.9,586.7,23.3"
-  ]
+  ],
+  "deep": "40 boxes, a7c45e3"
  },
  "sheet: loadout @1300 pinned": {
   "header": [
@@ -2339,7 +2396,8 @@
    "22 div.subsect 30,1178.4,940,17.4",
    "23 button.btn.sm 30,1201.8,120.5,27",
    "24 p.step-note 30,1228.8,586.7,46.5"
-  ]
+  ],
+  "deep": "56 boxes, 845fdcf3"
  },
  "sheet: notes @1300 pinned": {
   "header": [
@@ -2372,7 +2430,8 @@
    "2 h1.step-title 30,155.2,940,42.2",
    "3 p.step-note 30,203.4,586.7,23.3",
    "4 label.field 30,248.6,940,368.6"
-  ]
+  ],
+  "deep": "9 boxes, 7aef75ea"
  },
  "wizard: power-level @1300": {
   "header": [
@@ -2407,7 +2466,8 @@
    "4 div.field.stat-method 248,604,774,60",
    "5 div 248,678,774,0",
    "6 div.wiznav 248,694,774,95"
-  ]
+  ],
+  "deep": "85 boxes, 4711f1af"
  },
  "wizard: concept @1300": {
   "header": [
@@ -2442,7 +2502,8 @@
    "4 div.field.tag-choice 248,422.1,774,103.9",
    "5 div 248,539.9,774,0",
    "6 div.wiznav 248,555.9,774,95"
-  ]
+  ],
+  "deep": "32 boxes, 578a664c"
  },
  "wizard: stats @1300": {
   "header": [
@@ -2478,7 +2539,8 @@
    "5 div.alloc 248,350.6,774,601.5",
    "6 div 248,966.1,774,20.3",
    "7 div.wiznav 248,805,774,95"
-  ]
+  ],
+  "deep": "73 boxes, 1574e8e0"
  },
  "wizard: archetype @1300": {
   "header": [
@@ -2547,7 +2609,8 @@
    "38 details.group 248,5035.6,774,30.3",
    "39 div 248,5079.9,774,90.4",
    "40 div.wiznav 248,805,774,95"
-  ]
+  ],
+  "deep": "275 boxes, fbda8237"
  },
  "wizard: history @1300": {
   "header": [
@@ -2581,7 +2644,8 @@
    "3 label.field 248,221.3,774,178.6",
    "4 div 248,413.9,774,0",
    "5 div.wiznav 248,429.9,774,95"
-  ]
+  ],
+  "deep": "10 boxes, bf6019c3"
  },
  "wizard: skills @1300": {
   "header": [
@@ -2623,7 +2687,8 @@
    "11 div.alloc 248,1631.9,774,770.8",
    "12 div 248,2416.6,774,20.3",
    "13 div.wiznav 248,805,774,95"
-  ]
+  ],
+  "deep": "683 boxes, e69f7e5e"
  },
  "wizard: character-points @1300": {
   "header": [
@@ -2671,7 +2736,8 @@
    "17 div.alloc 248,22930.7,774,45.3",
    "18 div 248,22990,774,20.3",
    "19 div.wiznav 248,805,774,95"
-  ]
+  ],
+  "deep": "1201 boxes, 719ab0a1"
  },
  "wizard: review @1300": {
   "header": [
@@ -2707,7 +2773,8 @@
    "5 div 248,583.4,774,183.8",
    "6 div.wiznav 248,797.2,774,95",
    "7 p.step-note 248,904.2,586.7,46.5"
-  ]
+  ],
+  "deep": "111 boxes, 835994cd"
  },
  "wizard: stats, Expert @1300": {
   "header": [
@@ -2742,7 +2809,8 @@
    "4 div.alloc 248,305.3,774,312",
    "5 div 248,631.3,774,20.3",
    "6 div.wiznav 248,681.7,774,95"
-  ]
+  ],
+  "deep": "72 boxes, eb6132d9"
  },
  "wizard: archetype, Expert @1300": {
   "header": [
@@ -2810,7 +2878,8 @@
    "37 details.group 248,3705.1,774,30.3",
    "38 div 248,3749.5,774,90.4",
    "39 div.wiznav 248,805,774,95"
-  ]
+  ],
+  "deep": "278 boxes, ad7696a5"
  },
  "wizard: skills, Expert @1300": {
   "header": [
@@ -2851,7 +2920,8 @@
    "10 div.alloc 248,1339.8,774,632",
    "11 div 248,1985.8,774,20.3",
    "12 div.wiznav 248,805,774,95"
-  ]
+  ],
+  "deep": "682 boxes, bb075b85"
  },
  "wizard: character-points, Expert @1300": {
   "header": [
@@ -2898,7 +2968,8 @@
    "16 div.alloc 248,10746.9,774,45.3",
    "17 div 248,10806.1,774,20.3",
    "18 div.wiznav 248,805,774,95"
-  ]
+  ],
+  "deep": "1200 boxes, e8968661"
  },
  "home @1980": {
   "header": [
@@ -2927,7 +2998,8 @@
   ],
   "children": [
    "0 div.home-hero 398,131.2,560,540.8"
-  ]
+  ],
+  "deep": "30 boxes, 51150aa5"
  },
  "sheet: main @1980": {
   "header": [
@@ -2963,7 +3035,8 @@
    "5 div.cond-grid 30,319.6,1920,156.2",
    "6 section.main-conditions 30,499.8,1920,94.5",
    "7 div.main-grid 30,608.3,1920,524.2"
-  ]
+  ],
+  "deep": "524 boxes, 5c93af27"
  },
  "sheet: skills @1980": {
   "header": [
@@ -2998,7 +3071,8 @@
    "4 p.attack-note 30,383,1920,16.8",
    "5 div.skill-cols 30,399.9,1920,1021.1",
    "6 details.group 30,1421,1920,30.3"
-  ]
+  ],
+  "deep": "821 boxes, 91b27722"
  },
  "sheet: character @1980": {
   "header": [
@@ -3037,7 +3111,8 @@
    "8 div.sect 30,2067.7,1920,23.4",
    "9 div.reference 30,2103.1,1920,298.8",
    "10 div.tab-links 30,2419.8,1920,27"
-  ]
+  ],
+  "deep": "711 boxes, 19da2f4a"
  },
  "sheet: trackers @1980": {
   "header": [
@@ -3073,7 +3148,8 @@
    "5 div.sect 30,1480.8,1920,23.4",
    "6 p.step-note 30,1516.1,586.7,69.8",
    "7 div.trk 30,1607.9,1920,158.6"
-  ]
+  ],
+  "deep": "253 boxes, beb39399"
  },
  "sheet: progression @1980": {
   "header": [
@@ -3112,7 +3188,8 @@
    "8 div.trk 30,587.5,1920,91.3",
    "9 details.group 30,690.8,1920,558.6",
    "10 details.group 30,1259.4,1920,30.3"
-  ]
+  ],
+  "deep": "152 boxes, c7aa1e3e"
  },
  "sheet: sessions @1980": {
   "header": [
@@ -3150,7 +3227,8 @@
    "7 div.sect 30,860.8,1920,23.4",
    "8 div.trk 30,896.1,1920,87.3",
    "9 p.step-note 30,995.5,586.7,23.3"
-  ]
+  ],
+  "deep": "106 boxes, b3ef8566"
  },
  "sheet: loadout @1980": {
   "header": [
@@ -3203,7 +3281,8 @@
    "22 div.subsect 30,1205.3,1920,17.4",
    "23 button.btn.sm 30,1228.6,120.5,27",
    "24 p.step-note 30,1255.6,586.7,46.5"
-  ]
+  ],
+  "deep": "122 boxes, 82e1f48f"
  },
  "sheet: notes @1980": {
   "header": [
@@ -3236,7 +3315,8 @@
    "2 h1.step-title 30,243.1,1920,42.2",
    "3 p.step-note 30,291.3,586.7,23.3",
    "4 label.field 30,336.5,1920,368.6"
-  ]
+  ],
+  "deep": "75 boxes, 10faa705"
  },
  "sheet: main @1980 pinned": {
   "header": [
@@ -3272,7 +3352,8 @@
    "5 div.cond-grid 30,276.6,1620,156.2",
    "6 section.main-conditions 30,456.8,1620,94.5",
    "7 div.main-grid 30,565.3,1620,524.2"
-  ]
+  ],
+  "deep": "522 boxes, afa6af55"
  },
  "sheet: skills @1980 pinned": {
   "header": [
@@ -3307,7 +3388,8 @@
    "4 p.attack-note 30,295.1,1620,16.8",
    "5 div.skill-cols 30,312,1620,1155.8",
    "6 details.group 30,1467.8,1620,30.3"
-  ]
+  ],
+  "deep": "755 boxes, baf89a85"
  },
  "sheet: character @1980 pinned": {
   "header": [
@@ -3346,7 +3428,8 @@
    "8 div.sect 30,2040.1,1620,23.4",
    "9 div.reference 30,2075.4,1620,298.8",
    "10 div.tab-links 30,2392.2,1620,27"
-  ]
+  ],
+  "deep": "645 boxes, 66fc12b5"
  },
  "sheet: trackers @1980 pinned": {
   "header": [
@@ -3382,7 +3465,8 @@
    "5 div.sect 30,1392.9,1620,23.4",
    "6 p.step-note 30,1428.2,586.7,69.8",
    "7 div.trk 30,1520,1620,158.6"
-  ]
+  ],
+  "deep": "187 boxes, beeecb1"
  },
  "sheet: progression @1980 pinned": {
   "header": [
@@ -3421,7 +3505,8 @@
    "8 div.trk 30,499.6,1620,91.3",
    "9 details.group 30,602.9,1620,558.6",
    "10 details.group 30,1171.5,1620,30.3"
-  ]
+  ],
+  "deep": "86 boxes, cfbba713"
  },
  "sheet: sessions @1980 pinned": {
   "header": [
@@ -3459,7 +3544,8 @@
    "7 div.sect 30,772.9,1620,23.4",
    "8 div.trk 30,808.2,1620,87.3",
    "9 p.step-note 30,907.6,586.7,23.3"
-  ]
+  ],
+  "deep": "40 boxes, 15087867"
  },
  "sheet: loadout @1980 pinned": {
   "header": [
@@ -3512,7 +3598,8 @@
    "22 div.subsect 30,1117.4,1620,17.4",
    "23 button.btn.sm 30,1140.7,120.5,27",
    "24 p.step-note 30,1167.7,586.7,46.5"
-  ]
+  ],
+  "deep": "56 boxes, c1e0eb69"
  },
  "sheet: notes @1980 pinned": {
   "header": [
@@ -3545,7 +3632,8 @@
    "2 h1.step-title 30,155.2,1620,42.2",
    "3 p.step-note 30,203.4,586.7,23.3",
    "4 label.field 30,248.6,1620,368.6"
-  ]
+  ],
+  "deep": "9 boxes, b47731c4"
  },
  "wizard: power-level @1980": {
   "header": [
@@ -3580,7 +3668,8 @@
    "4 div.field.stat-method 248,572,860,60",
    "5 div 248,646,860,0",
    "6 div.wiznav 248,662,860,95"
-  ]
+  ],
+  "deep": "85 boxes, 8ec27e72"
  },
  "wizard: concept @1980": {
   "header": [
@@ -3615,7 +3704,8 @@
    "4 div.field.tag-choice 248,422.1,860,103.9",
    "5 div 248,539.9,860,0",
    "6 div.wiznav 248,555.9,860,95"
-  ]
+  ],
+  "deep": "32 boxes, 58b90dd7"
  },
  "wizard: stats @1980": {
   "header": [
@@ -3651,7 +3741,8 @@
    "5 div.alloc 248,350.6,860,546.5",
    "6 div 248,911.1,860,20.3",
    "7 div.wiznav 248,961.4,860,95"
-  ]
+  ],
+  "deep": "73 boxes, b664c780"
  },
  "wizard: archetype @1980": {
   "header": [
@@ -3720,7 +3811,8 @@
    "38 details.group 248,4871.6,860,30.3",
    "39 div 248,4915.9,860,90.4",
    "40 div.wiznav 248,985,860,95"
-  ]
+  ],
+  "deep": "275 boxes, 8859f118"
  },
  "wizard: history @1980": {
   "header": [
@@ -3754,7 +3846,8 @@
    "3 label.field 248,221.3,860,178.6",
    "4 div 248,413.9,860,0",
    "5 div.wiznav 248,429.9,860,95"
-  ]
+  ],
+  "deep": "10 boxes, 6e831fd7"
  },
  "wizard: skills @1980": {
   "header": [
@@ -3796,7 +3889,8 @@
    "11 div.alloc 248,1595.2,860,770.8",
    "12 div 248,2379.9,860,20.3",
    "13 div.wiznav 248,985,860,95"
-  ]
+  ],
+  "deep": "683 boxes, c0d0eea4"
  },
  "wizard: character-points @1980": {
   "header": [
@@ -3844,7 +3938,8 @@
    "17 div.alloc 248,22387.4,860,45.3",
    "18 div 248,22446.7,860,20.3",
    "19 div.wiznav 248,985,860,95"
-  ]
+  ],
+  "deep": "1201 boxes, f8d88d49"
  },
  "wizard: review @1980": {
   "header": [
@@ -3880,7 +3975,8 @@
    "5 div 248,583.4,860,183.8",
    "6 div.wiznav 248,797.2,860,95",
    "7 p.step-note 248,904.2,586.7,46.5"
-  ]
+  ],
+  "deep": "111 boxes, ec5e6f30"
  },
  "wizard: stats, Expert @1980": {
   "header": [
@@ -3915,7 +4011,8 @@
    "4 div.alloc 248,305.3,860,312",
    "5 div 248,631.3,860,20.3",
    "6 div.wiznav 248,681.7,860,95"
-  ]
+  ],
+  "deep": "72 boxes, e9c0a1bd"
  },
  "wizard: archetype, Expert @1980": {
   "header": [
@@ -3983,7 +4080,8 @@
    "37 details.group 248,3609,860,30.3",
    "38 div 248,3653.3,860,90.4",
    "39 div.wiznav 248,985,860,95"
-  ]
+  ],
+  "deep": "278 boxes, 8b1cb480"
  },
  "wizard: skills, Expert @1980": {
   "header": [
@@ -4024,7 +4122,8 @@
    "10 div.alloc 248,1321.5,860,632",
    "11 div 248,1967.5,860,20.3",
    "12 div.wiznav 248,985,860,95"
-  ]
+  ],
+  "deep": "682 boxes, 146fc07e"
  },
  "wizard: character-points, Expert @1980": {
   "header": [
@@ -4071,6 +4170,7 @@
    "16 div.alloc 248,10620,860,45.3",
    "17 div 248,10679.2,860,20.3",
    "18 div.wiznav 248,985,860,95"
-  ]
+  ],
+  "deep": "1200 boxes, d352811e"
  }
 }

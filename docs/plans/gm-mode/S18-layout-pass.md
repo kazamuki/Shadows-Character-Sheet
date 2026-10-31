@@ -3,7 +3,7 @@
 **Plan:** [`../gm-mode.md`](../gm-mode.md), the *Still to build* row "Layout pass"
 (W80, W77; Ken: before launch, 2026-10-30), and [`WISHLIST.md`](../../WISHLIST.md)'s
 W80 and W77.
-**Status:** **drafted 2026-10-30 by Claude (Opus)**, the S3d reviewer, after #274
+**Status:** **Built 2026-10-30** (Decision 258, switched off). Drafted 2026-10-30 by Claude (Opus), the S3d reviewer, after #274
 (S3d, Decision 257) merged. Ken picked it as the next order (2026-10-30, through the
 conductor).
 **Approved by Ken 2026-10-30** (in the conductor session), as Rule or shape, one decision, no version moves, no `private/` commit.

@@ -75,3 +75,4 @@ then some lines will have outgrown themselves.
 - **Players.** A table seats each player's characters from their exported files, and shows
   them as cards: Health, Awareness and Conditions first. A name used in old sessions can
   count as the character. A seat's card opens that character's full sheet, as the player sees it: every tab to read, and Print. Nothing on it changes from the table.
+- **The table's screen.** A table fills a wide screen: the read-only sheet as wide as your own, lists in columns, and Back always in reach at the top of a page.
