@@ -341,7 +341,7 @@ function bindTable(){
   // The page's bar is a sideways row like the sheet's tabs: fades, a kept place and the wheel (Decision 165).
   const bar=$("main").querySelector(":scope > .tbl-bar, :scope > .enc-bar"); if (bar){
     // A row's place is kept by its key, and S.section is "main" on a table, so each page names its own: the next page's bar opens at the start.
-    bar.dataset.row += ":" + [S.tsection, S.castOpen, S.placeOpen, S.factionOpen, S.sessOpen, S.closeOut && S.closeOut.id, S.seatOpen, S.seatSheet, S.threatOpen, S.threatGroup, S.encOpen].filter(Boolean).join(":");
+    bar.dataset.row += ":" + [S.tsection, S.castOpen, S.placeOpen, S.factionOpen, S.sessOpen, S.closeOut && S.closeOut.id, S.seatOpen, S.seatSheet, S.threatOpen, S.threatGroup, S.encOpen].filter(x=>typeof x==="string" && x).join(":");
     bindScrollRows(bar);
   }
   const main=$("main");
