@@ -5331,6 +5331,20 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** Home gets its own layout (W80's rest), or a tab needs a column the measures lack.
      - **Built:** switched off (173); PR #276; log 2026-10-30 (S18).
 
+259. **On a table, F opens Find and J opens Jot, never while typing, and ⋮ → Keys lists them and turns them off.**
+     *2026-10-31 · Ken + Claude · Touches: keyboard shortcuts, keydown, F, J, Find, Jot, openFind, openJot, openModal, closeModal, aria-keyshortcuts, ⋮ menu, Keys, shadows.ui.keys, focus, W139, Decision 111, Decision 140, Decision 161, Decision 164, Decision 166, Decision 208*
+     - **Decided:** On a table's screen, a plain **F** opens Find and a plain **J** opens Jot, any case, unless focus is in a field, Ctrl, ⌘ or Alt or Shift is held, the key repeats, or a box is open. The key never types into the box it opens. Closing a box a key opened returns focus where it was, or to its header button, without moving the page. ⋮ → **Keys** lists F, J, Esc and Ctrl/⌘+Enter, and turns F and J off or on for this browser (`shadows.ui.keys`); the header buttons carry `aria-keyshortcuts` while they're on. Home, the wizard and the player's sheet have no shortcuts.
+     - **Why:** A GM mid-session reaches for the mouse to find a name or keep one. Letters are the only keys no browser reserves on a page; a field, a held modifier and an open box are where a letter means something else, and an off switch is what a single-letter shortcut owes speech-input users (WCAG 2.1.4).
+     - **Rejected:**
+       - `/` for Find: Firefox's quick find.
+       - Ctrl/⌘+K or Alt+letter: the browser's (Chrome's address bar, Windows' menus).
+       - A visible key chip on Find and Jot: header width at 390px (208's *Revisit if*).
+       - Keys on the player's sheet: it has no Find or Jot.
+       - More keys now (Next, the tabs): F and J prove the pattern first.
+     - **Replaces:** nothing. Extends 208 (Find and Jot open by key) and 164 (a key's box gives focus back without scrolling).
+     - **Revisit if:** a GM asks for another key, a browser takes F or J, or players get a sheet-wide search.
+     - **Built:** switched off (173); no version or schema move; PR #…; log 2026-10-31 (S19).
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data

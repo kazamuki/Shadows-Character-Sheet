@@ -76,3 +76,4 @@ then some lines will have outgrown themselves.
   them as cards: Health, Awareness and Conditions first. A name used in old sessions can
   count as the character. A seat's card opens that character's full sheet, as the player sees it: every tab to read, and Print. Nothing on it changes from the table.
 - **The table's screen.** A table fills a wide screen. A player's sheet opens as wide as they see it, lists sit in columns, a cast member's stats stay beside their notes, and Back stays in reach as a page scrolls.
+- **Keys.** On a table, F opens Find and J opens Jot, as long as you're not typing in a field. ⋮ → Keys lists them and turns them off.

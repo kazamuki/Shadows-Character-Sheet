@@ -94,6 +94,16 @@ test("Decision 259: F and J do nothing in a field, with a modifier, on repeat, o
   assert.ok(app.$("[data-jottext]") && !app.$("[data-findq]"), "F over Jot replaced the box");
   assert.equal(app.window.eval("S.jotDraft"), "keep me");
   pressEsc(app);
+  // The two guards Home's empty `S.table` would otherwise hide: the switch pulled while a table is open, and a screen
+  // that isn't a table's with a table still held (not a state the app reaches; the guard is what keeps it so).
+  const feat = app.window.localStorage.getItem("shadows.feature.gm");
+  app.window.localStorage.removeItem("shadows.feature.gm");
+  nothing(app.doc.body, "f", {}, "the gm switch off under an open table");
+  app.window.localStorage.setItem("shadows.feature.gm", feat);
+  app.window.eval('S.screen = "sheet"');
+  nothing(app.doc.body, "j", {}, "a screen that isn't a table's");
+  app.window.eval('S.screen = "table"');
+  press(app, app.doc.body, "f"); assert.ok(modalOpen(app), "the guards didn't let go again"); pressEsc(app);
   // Off a table: Home, with a character's sheet, and Home with GM mode off.
   app.click("[data-menu-toggle]"); app.click("[data-thome]");
   assert.equal(app.window.eval("S.screen"), "home");
