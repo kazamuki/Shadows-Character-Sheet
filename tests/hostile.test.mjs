@@ -1493,3 +1493,25 @@ test("a table file's players, seats and copies are gated, and draw as text on th
   assert.equal(app.window.eval("({}).polluted"), undefined);
   assert.deepEqual(app.errors, []);
 });
+
+// Decision 259: the browser's stored choice for the table keys is read as "off" or as anything else.
+test("Decision 259: a stored keys value that isn't \"off\" is on, and a storage that throws is on", async () => {
+  const { GM_ON, runTable } = await import("./smokekit.mjs");
+  const press = app => {
+    app.doc.activeElement.blur();
+    app.doc.body.dispatchEvent(new app.window.KeyboardEvent("keydown", { key: "f", bubbles: true, cancelable: true }));
+    return !!app.$("dialog.modal[open]");
+  };
+  for (const v of ["OFF ", "0", "{}", "x".repeat(10000), "false", ""]) {
+    const app = boot({ storage: Object.assign({}, GM_ON, { "shadows.ui.keys": v }) });
+    runTable(app, "T");
+    assert.equal(press(app), true, JSON.stringify(v.slice(0, 12)) + " turned the keys off");
+    assert.deepEqual(app.errors, []);
+  }
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T");
+  const proto = app.window.Storage.prototype, get = proto.getItem;
+  Object.defineProperty(proto, "getItem", { configurable: true, value(k) { if (k === "shadows.ui.keys") throw new Error("denied"); return get.call(this, k); } });
+  assert.equal(press(app), true);
+  assert.deepEqual(app.errors, []);
+});
