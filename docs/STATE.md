@@ -161,7 +161,7 @@ GM mode is launched (260): a GM session is an ordinary batch now, with its chang
   VK1b (the Mods number), and his in-person talk on vehicles without PROT and RES.
   The plan's §6 lists everything else it asks him.
 - **GM mode's open questions** (`GQ`_n_) and who holds each: `plans/gm-mode.md` §9.
-- **Scott:** the print plan's PQ1, PQ2 and PQ4 (the display font's licence, reusing his artwork, the Health Level "Active" tab), and whether the four inscribed Cantrips are TN 8 (the Book of Known Spells) or keep TN 7 (Magic). His TOL rewrite is in 0200 and 0400.
+- **Scott:** everything below and GM mode's items are on one page for him (2026-10-31, `plans/gm-mode.md` §9 links it): the print plan's PQ1, PQ2 and PQ4 (the display font's licence, reusing his artwork, the Health Level "Active" tab), and whether the four inscribed Cantrips are TN 8 (the Book of Known Spells) or keep TN 7 (Magic). His TOL rewrite is in 0200 and 0400.
 
 **Don't invest in** the Arcanist's creation-time Unique Aberrations: they
 follow `0411` (Decision 110), and Ken expects the Origins subtypes to replace
