@@ -958,7 +958,7 @@ const audit = [
 // ── the table ───────────────────────────────────────────────────────
 const table = {
   meta: {
-    kind: "shadows-table", id: tableId(), name: "Dead Air", tableSchemaVersion: "0.18",
+    kind: "shadows-table", id: tableId(), name: "Dead Air", tableSchemaVersion: "0.19",
     created: ts(DAY[1], 17), updated: ts(DAY[7], 21, 10),
   },
   audit,
