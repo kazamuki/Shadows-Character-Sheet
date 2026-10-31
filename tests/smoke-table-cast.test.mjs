@@ -14,13 +14,13 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { boot } from "./harness.mjs";
 import { syntheticPack, PACK_ID } from "./packfixture.mjs";
-import { Engine, search, clickIn, withDownloads, importFile, named, charKeys, sheetHome, tipShown, wizCss, GM_ON, tableKeys, tableCard, seedTable, type, runTable, notesTab, tableHome, tableFile, keyIn, castAdd, pick, threatsTab, tableWithPack, entryButton, packStored } from "./smokekit.mjs";
+import { Engine, search, clickIn, withDownloads, importFile, named, charKeys, sheetHome, tipShown, wizCss, GM_ON, GM_OFF, tableKeys, tableCard, seedTable, type, runTable, notesTab, tableHome, tableFile, keyIn, castAdd, pick, threatsTab, tableWithPack, entryButton, packStored } from "./smokekit.mjs";
 
 // ── Tables and the feature switch (Decisions 171, 173) ──────────────────
 const tableEntryOf = (app, id) => JSON.parse(app.window.localStorage.getItem("shadows.table.v1." + id));
 test("Decision 173: switched off, Home is today's, even with a table saved, and a table file is refused", async () => {
   const [t, storage] = seedTable("Tuesday");
-  const app = boot({ storage });
+  const app = boot({ storage, ...GM_OFF });
   assert.equal(app.$("#btn-run-table"), null, "Run a table shows with the switch off");
   assert.equal(app.$("#main .tables"), null, "Your tables shows with the switch off");
   assert.equal(app.$("#btn-import").textContent, "Import .shadows.json");
@@ -35,8 +35,20 @@ test("Decision 173: switched off, Home is today's, even with a table saved, and 
   assert.deepEqual(app.errors, []);
 });
 
-test("Decision 173: ?gm=on turns the switch on and keeps it, ?gm=off turns it off, anything else changes nothing", () => {
+test("Decision 260: GM mode is on for everyone: a browser with no switch set has Run a table, and ?gm=off can't hide it", () => {
   const app = boot();
+  const w = app.window;
+  assert.equal(w.localStorage.getItem("shadows.feature.gm"), null, "the fixture set the switch");
+  assert.equal(w.eval('featureOn("gm")'), true, "GM mode ships off");
+  assert.ok(app.$("#btn-run-table"), "Home has no Run a table");
+  assert.equal(app.$("#btn-import").textContent, "Import a file");
+  w.eval('applyFeatureQuery("?gm=off")');
+  assert.equal(w.eval('featureOn("gm")'), true, "?gm=off hid GM mode from a player");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 173: ?gm=on turns the switch on and keeps it, ?gm=off turns it off, anything else changes nothing", () => {
+  const app = boot(GM_OFF);
   const w = app.window;
   assert.equal(w.eval('featureOn("gm")'), false);
   for (const q of ["?gm=yes", "?other=on", "", "?gm="]) { w.eval(`applyFeatureQuery(${JSON.stringify(q)})`); assert.equal(w.eval('featureOn("gm")'), false, q); }
@@ -252,7 +264,7 @@ test("Decision 171: a tap on a table card opens it, and its buttons only do thei
 });
 
 test("Decision 173: with the switch off, a table can't be opened onto the screen", () => {
-  const app = boot();
+  const app = boot(GM_OFF);
   app.window.eval('S = { screen:"table", ch:null, table:Engine.newTable("x"), tsection:"notes" }; renderMain();');
   assert.equal(app.window.eval("S.screen"), "home");
   assert.deepEqual(app.errors, []);
@@ -1009,7 +1021,7 @@ const pickPack = async (app, obj) => {
   for (let i = 0; i < 50 && app.$("#pack-file"); i++) await new Promise(r => setTimeout(r, 10));
 };
 test("Decision 181: switched off, a pack file is refused as not a character, and nothing is stored", async () => {
-  const app = boot();
+  const app = boot(GM_OFF);
   await importFile(app, syntheticPack());
   assert.match(app.$("#undotoast").textContent, /That file isn't a character\./);
   assert.equal(packKeys(app).length, 0, "a pack was stored with the switch off");

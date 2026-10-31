@@ -23,8 +23,19 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.56.1
+## v0.57.0 — 2026-10-31
 
+- **Run a table.** Home has a second door: a place to run your game, with its sessions, its cast, the city, the Codex's threats and every fight in one table. It fills a wide screen, is kept in your browser, and exports as a file of its own that Home's **Import** reads back.
+- **Sessions.** Keep each one in the book's Campaign Journal: who came, what happened and what it set up. Follow threads, one of them the current quest, and **Next session** lists what's still open. Close a session out and everyone's IP, the Milestone Point and an off-screen job for whoever missed it are worked out for you, with an award log to read at the table.
+- **Players.** Seat each player's characters from their exported files. Their cards show Health, Awareness and Conditions first, and open the full sheet as the player sees it, to read or print. Nothing on it changes from the table.
+- **The cast.** Every NPC, from a name added mid-session to a full stat block with Health worked out. With a pack slotted in, a cast member's page offers the book's origins, roles, tiers and traits. Affiliations sort the cast into its crowds.
+- **Who knows what.** Every line between the crew and the cast reads as a sentence, crew first: *Scott told Bob “the lake is on fire”*. Or list them by who was there.
+- **The city.** The book's places, factions and powers to read and search, with the crew's own places beside them. Each faction the crew deals with keeps the book's Faction Tracker and its clocks, and a place can take one of the Codex's Site Profiles, with each character's Exposure.
+- **Threats.** Slot in a pack, the Threat Codex among them, and its threats, people and groups are a tab away, ready to copy into your cast or drop into a fight.
+- **Encounters.** Plan them on the book's Encounter Design worksheet and run them at the table: Combat Sense or **Wave Initiative**, as many sides as the fight has, Surprise, Ambush and Delay, and everyone's Health, Pain and Conditions in view. Reset lists what ticks, what ends and what needs a check. Add anyone to a fight from wherever you find them.
+- **The hit.** An NPC takes a hit the way your sheet does: armor, Shock, Massive damage, At Zero and Dying, by the book's rules for enemies. A player character takes it on the table's copy, and your own sheet changes only when you apply it. A wrap-up keeps the survivors worth keeping, writes the fight onto each NPC's record, and tells the players which die to roll for armor wear.
+- **The Reference tab.** Conditions, the Codex's tiers, roles and traits, defense, checks and modifiers, on one page you can search.
+- **Find, Jot and Undo.** Search everything you've written, and jot a line down mid-fight: it lands in your notes, and in tonight's session. On a table, F opens Find and J opens Jot; ⋮ → **Keys** turns them off. Every change to a table can be taken back, newest first, from **Activity** in the menu.
 - Closing What's new from the sheet's ⋮ menu puts you back on ⋮.
 
 ## v0.56.0 — 2026-10-29

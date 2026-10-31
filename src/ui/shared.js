@@ -110,7 +110,7 @@ function announceStep(dataStep){
 // Decision 214: a switch is either an unfinished feature (gm) or a released
 // one withdrawn until the team decides (crank). Decision 239: the team kept
 // CRANK, so its switch is on for everyone.
-const FEATURES = { gm:false, crank:true };
+const FEATURES = { gm:true, crank:true };
 const FEATURE_PREFIX = "shadows.feature.";
 function featureOn(name){
   if (!Object.prototype.hasOwnProperty.call(FEATURES, name)) return false;

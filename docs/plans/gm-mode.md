@@ -523,8 +523,9 @@ meets a GM mode sees one new number.
 **Each session is built from a work order** in [`gm-mode/`](gm-mode/README.md),
 drafted from `main` once the last one has merged, approved by Ken, and built and
 reviewed in the three-session loop ([`../WORK-ORDERS.md`](../WORK-ORDERS.md)). The
-README's table lists every order. Each session is one batch, merges **switched off**
-(`FEATURES.gm`, Decision 173), and leaves the app openable.
+README's table lists every order. Each session is one batch, merged **switched off**
+(`FEATURES.gm`, Decision 173) until the launch (Decision 260, app 0.57.0), and leaves the app openable.
+Since the launch a session ships visible, with its changelog lines and an app bump.
 
 **How to read the ids.** An S-number names a piece of the plan, not its place in
 line: the first draft (2026-10-02) numbered them by risk, and Scott's answers (§1a)
@@ -584,7 +585,7 @@ not a queue. What Scott's use of the table turns up can reorder it.
 | Layout pass | The table's own frame, and a layout audit of every GM tab at 390, 768, 1300 and full width (W80, W77). Today the table sits in the wizard's frame: a 218px ledger rail that's empty, a 248px vitals column, and `main` capped at 920px (`shadows.css` `.app` and `main`; only `.sheet-mode` escapes it, `app.js`). So a seat's read-only sheet (S3c) fills less than half a wide screen. The rail may stay as W80's **action rail** (Back, the page's primary action, navigation within a tab), or go: the order weighs it against a bar that stays at the top below 1060px | Rule or shape (the frame is a choice) | S3d, so it lays out S3d's screens too | **Built 2026-10-30** (Decision 258, switched off; [`gm-mode/S18-layout-pass.md`](gm-mode/S18-layout-pass.md)). Home's empty rail stays open (W80, SQ5). **Before launch** (Ken, 2026-10-30) |
 | Shortcuts | Keyboard shortcuts on a table's screen: a key for **Find** and one for **Jot** first (W139) | Rule or shape | Nothing | **Built 2026-10-31** (Decision 259, switched off; [`gm-mode/S19-shortcuts.md`](gm-mode/S19-shortcuts.md)). F and J only; more keys stay on W139. Before launch if it's ready (Ken, 2026-10-30) |
 | Notes | The Notes tab, given its own order: tags, categories, and notes grouped or filtered by the session they were taken in (already a soft tag, Decision 208), alongside Jot and Find (W140) | Rule or shape | Nothing | No order yet |
-| Launch | `FEATURES.gm` on for everyone, with `gm-mode/changelog-pending.md` | Release | Ken and Scott | — |
+| Launch | `FEATURES.gm` on for everyone, with `gm-mode/changelog-pending.md` | Release | Ken and Scott | **Built 2026-10-31** (Decision 260, app 0.57.0). Ken called it ready with Scott's sign-off; the pending lines went into `CHANGELOG.md`, trimmed to eleven. From here GM sessions ship visible, with changelog lines and app bumps |
 
 S12's split into S12a and S12b, and the names S10f and S17, are this table's
 (2026-10-23), so each piece can be picked on its own. The sections below still describe each session

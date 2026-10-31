@@ -15,7 +15,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { boot } from "./harness.mjs";
 import { syntheticPack, PACK_ID } from "./packfixture.mjs";
-import { Engine, lockedCharacter, openSheet, clickIn, withDownloads, importFile, card, tipShown, GM_ON, tableKeys, tableCard, type, runTable, notesTab, tableHome, tableFile, keyIn, castAdd, pick, threatsTab, tableWithPack, entryButton } from "./smokekit.mjs";
+import { Engine, lockedCharacter, openSheet, clickIn, withDownloads, importFile, card, tipShown, GM_ON, GM_OFF, tableKeys, tableCard, type, runTable, notesTab, tableHome, tableFile, keyIn, castAdd, pick, threatsTab, tableWithPack, entryButton } from "./smokekit.mjs";
 
 // ── The Encounters tab (Decisions 188–190) ─────────────────────────────
 const encTab = app => app.click('[data-tsec="encounters"]');
@@ -33,7 +33,7 @@ const addPcRow = (app, name) => { type(app, "[data-enc-pcname]", name); app.clic
 const statesOf = app => JSON.parse(app.window.eval("JSON.stringify(S.table.encounters)"));
 
 test("Decision 188: switched off there is no Encounters tab; switched on it sits between Threats and Notes (Reference follows it)", () => {
-  const off = boot();
+  const off = boot(GM_OFF);
   assert.equal(off.$("#btn-run-table"), null);
   const app = boot({ storage: GM_ON });
   runTable(app, "T");
@@ -877,7 +877,7 @@ test("Decisions 203–204: export and import keep sessions and threads, and a 0.
 });
 
 test("Decision 173: switched off, there is no table, so no Sessions tab", () => {
-  const app = boot();
+  const app = boot(GM_OFF);
   assert.equal(app.$("#btn-run-table"), null);
   assert.equal(app.$('[data-tsec="sessions"]'), null);
   assert.deepEqual(app.errors, []);
@@ -1172,7 +1172,7 @@ const refHeads = app => app.$$("#main .ref-h").map(h => h.textContent);
 const refChips = app => app.$$("#main .jumpbar .jump").map(b => b.textContent);
 
 test("Decision 207: switched off there is no Reference tab; switched on, a panel per row of the data, in order, and a chip for each", () => {
-  const off = boot();
+  const off = boot(GM_OFF);
   assert.equal(off.$("#btn-run-table"), null);
   assert.equal(off.$('[data-tsec="reference"]'), null);
   const app = boot({ storage: GM_ON });

@@ -12,7 +12,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { boot } from "./harness.mjs";
-import { Engine, D, lockedCharacter, onStep, CRANK_ON, openSheet, activeChar, clickIn, withDownloads, importFile, card, tipShown, pick, fill, focused } from "./smokekit.mjs";
+import { Engine, D, lockedCharacter, onStep, CRANK_ON, GM_OFF, openSheet, activeChar, clickIn, withDownloads, importFile, card, tipShown, pick, fill, focused } from "./smokekit.mjs";
 
 // ── CRANK rep (Decision 169) ──────────────────────────────────────────
 test("CRANK: Main's card reads 0 and Novice; the popover's Job done makes it 1, writes a ledger line, and Undo makes it 0", () => {
@@ -107,8 +107,11 @@ test("Decision 239: CRANK ships on, a browser with no switch set shows it, and ?
   assert.equal(w.eval('featureOn("crank")'), true, "CRANK ships off");
   w.eval('applyFeatureQuery("?crank=off")');
   assert.equal(w.eval('featureOn("crank")'), true, "?crank=off hid CRANK from a player");
-  assert.equal(w.eval('featureOn("gm")'), false, "CRANK's launch turned GM mode on");
   assert.deepEqual(app.errors, []);
+  // The switches are apart: built with GM mode off, CRANK is still on (Decision 260 launched GM mode on its own).
+  const off = boot(GM_OFF);
+  assert.equal(off.window.eval('featureOn("gm")'), false, "GM_OFF left GM mode on");
+  assert.equal(off.window.eval('featureOn("crank")'), true, "GM mode's switch turned CRANK off");
 });
 
 test("Decision 239: with no switch set, CRANK is on Main, Trackers, Admin and the print view, and its popover opens", () => {
