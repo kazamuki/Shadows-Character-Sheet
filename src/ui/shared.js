@@ -434,9 +434,10 @@ function modalEl(){
 // The head and the footer stay put while the body scrolls. `foot` is the
 // footer's HTML; any [data-modalclose] in it closes, and `bind` gets both
 // halves, since a footer's buttons can depend on the body's inputs.
-function openModal({ title, html, foot, bind, returnTo, onClose }){
+// `viaKey` (Decision 259): a key opened it, so focus comes back without moving the page.
+function openModal({ title, html, foot, bind, returnTo, onClose, viaKey }){
   const el=modalEl();
-  modalState={ opener: document.activeElement, returnTo, onClose };
+  modalState={ opener: document.activeElement, returnTo, onClose, viaKey: !!viaKey };
   el.innerHTML=`<div class="modal-inner"><div class="modal-head"><h2 id="modal-title">${esc(title)}</h2>
     <button class="modal-x" data-modalclose aria-label="Close">×</button></div>
     <div class="modal-body">${html}</div>${foot!=null?`<div class="modal-foot">${foot}</div>`:""}</div>`;
@@ -460,7 +461,7 @@ function closeModal(){
   // doesn't count as an opener.
   const back = st && st.opener && st.opener!==document.body && st.opener.isConnected ? st.opener
              : st && st.returnTo ? document.querySelector(st.returnTo) : null;
-  if (back && back.focus) back.focus();
+  if (back && back.focus){ if (st && st.viaKey) back.focus({ preventScroll:true }); else back.focus(); }
 }
 
 // ── Popover (W2/W3) ───────────────────────────────────────────────────

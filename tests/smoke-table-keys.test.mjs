@@ -112,10 +112,10 @@ test("Decision 259: closing a box a key opened gives focus back to the button it
   const back = () => calls[calls.length - 1];
   press(app, card(app), "f"); calls.length = 0; pressEsc(app);
   assert.equal(app.doc.activeElement, card(app));
-  assert.deepEqual(back().opts, { preventScroll: true }, "a key's return scrolls");
+  assert.equal(back().opts && back().opts.preventScroll, true, "a key's return scrolls");
   press(app, app.doc.body, "f"); calls.length = 0; pressEsc(app);
   assert.equal(app.doc.activeElement, app.$("[data-tfind]"));
-  assert.deepEqual(back().opts, { preventScroll: true });
+  assert.equal(back().opts && back().opts.preventScroll, true);
   // A click path is as it was: the same focus() with no options.
   app.click("[data-tfind]"); calls.length = 0; pressEsc(app);
   assert.equal(app.doc.activeElement, app.$("[data-tfind]"));
@@ -151,6 +151,7 @@ test("Decision 259: Jot's Save returns focus to where J was pressed", () => {
 
 test("Decision 259: ⋮ → Keys lists the keys and turns F and J off and on for this browser", () => {
   const app = tableApp();
+  app.$("[data-menu-toggle]").focus();   // a real click focuses the button; a dispatched one doesn't
   app.click("[data-menu-toggle]"); app.click("[data-tkeys]");
   assert.ok(modalOpen(app));
   assert.equal(app.$("#menu, #hdrmenu").hidden, true, "the menu stayed open under the box");
