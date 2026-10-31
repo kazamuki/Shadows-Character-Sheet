@@ -203,7 +203,7 @@ function tableSeed() {
   if (!Engine.importSeat(t, pid, ch).ok) throw new Error("the seed seat didn't import");
   t.audit = [];
   const pack = syntheticPack();
-  return JSON.parse(JSON.stringify({ table: { table: t, section: "sessions", changed: "2026-10-05T10:00:00.000Z", exported: null },
+  return JSON.parse(JSON.stringify({ char: ch, table: { table: t, section: "sessions", changed: "2026-10-05T10:00:00.000Z", exported: null },
     packKey: "shadows.pack.v1." + pack.meta.id, pack: { pack: Engine.migratePack(pack), imported: "2026-10-05T10:00:00.000Z" } }));
 }
 
@@ -306,13 +306,63 @@ async function tableScreens(browser, file, rows, numbers) {
       if (m.cards && z.width > 390 && (m.cardMin < CARD_MIN - 1 || m.cardMax > CARD_MAX + 1)) bad.push(`cards ${m.cardMin}-${m.cardMax}px`);
       if (s.enc && (m.enc > ENC_MAX + 1 || m.encCols !== 1)) bad.push(`rows ${m.enc}px in ${m.encCols} columns`);
       if (s.bar && !m.bar) bad.push("no bar");
-      if (m.bar > BAR_MAX) bad.push(`the bar is ${m.bar}px`);
+      if (m.barKind === "tbl-bar" && m.bar > BAR_MAX) bad.push(`the bar is ${m.bar}px`);
       if (m.bar && z.width <= 390 && (m.header + m.bar) / z.height > HEADER_MAX_SHARE) bad.push(`header + bar ${Math.round((m.header + m.bar) / z.height * 100)}%`);
       numbers.push({ w: z.width, screen: s.name, main: `${m.x}+${m.w}`, over: m.over, field: m.field, area: m.area, prose: `${m.prose}/${m.ch75}`,
         cards: m.cards ? `${m.perRow}/row ${m.cardMin}-${m.cardMax}` : "", enc: m.enc ? `${m.enc}px` : "", bar: m.bar ? `${m.barKind} ${m.bar}px` : "", header: m.header });
       rows.push({ width: `table ${z.width}`, screen: s.name, layout: bad.length ? bad.join("; ") : "ok", ok: !bad.length });
     }
     if (errors.length) rows.push({ width: `table ${z.width}`, screen: "(page errors)", layout: errors.join("; "), ok: false });
+    await c.close();
+  }
+}
+
+// L2: the read-only sheet lays out as the player's own sheet of the same file. L8: from 1280px a member's stat block is a
+// panel on the right that stays put under the bar; below that it is the last block of the page.
+async function tableExtras(browser, file, rows, numbers) {
+  const seed = tableSeed();
+  const cols = () => (document.querySelector(".main-grid") ? getComputedStyle(document.querySelector(".main-grid")).gridTemplateColumns.split(" ").map(parseFloat) : []);
+  const ctx = async (z, init) => { const c = await browser.newContext({ viewport: { width: z.width, height: z.height } }); await c.addInitScript(init.fn, init.arg); return c; };
+  for (const z of TABLE_WIDTHS.filter(z => z.width >= 1300)) {
+    const tableInit = { fn: ([s, pk, pack]) => { try { localStorage.setItem("shadows.feature.gm", "on");
+      localStorage.setItem("shadows.table.v1." + s.table.meta.id, JSON.stringify(s)); localStorage.setItem(pk, JSON.stringify(pack)); } catch (e) {} }, arg: [seed.table, seed.packKey, seed.pack] };
+    const t = await ctx(z, tableInit), tp = await t.newPage();
+    await tp.goto(pathToFileURL(file).href); await tp.click("[data-topen]"); await tp.click('[data-tsec="players"]'); await tp.click("[data-seat]");
+    await tp.waitForSelector(".main-grid");
+    const ro = await tp.evaluate(cols);
+    const seedChar = JSON.stringify({ ch: seed.char, section: "main" });
+    await t.close();
+    // The player's own sheet of the same file: the copy the seat holds, opened from Home.
+    const own = await ctx(z, { fn: s => { try { localStorage.setItem("shadows.active.v1", s); } catch (e) {} }, arg: seedChar });
+    const op = await own.newPage();
+    await op.goto(pathToFileURL(file).href); await op.click("[data-open]"); await op.waitForSelector(".main-grid");
+    const mine = await op.evaluate(cols);
+    await own.close();
+    const same = ro.length > 0 && ro.length === mine.length && ro.every((w, i) => Math.abs(w - mine[i]) <= 1);
+    rows.push({ width: `table ${z.width}`, screen: "the read-only sheet's Main against the player's own", layout: same ? "ok" : `read-only ${ro.join("+")}, own ${mine.join("+")}`, ok: same });
+    numbers.push({ w: z.width, screen: "L2 .main-grid columns", main: `read-only ${ro.map(Math.round).join("+")}`, over: "", field: "", area: "", prose: "", cards: `own ${mine.map(Math.round).join("+")}`, enc: "", bar: "", header: "" });
+  }
+  for (const z of [{ width: 1279, height: 900 }, { width: 1300, height: 900 }, { width: 1980, height: 1080 }]) {
+    const c = await browser.newContext({ viewport: { width: z.width, height: z.height } });
+    await c.addInitScript(([s, pk, pack]) => { try { localStorage.setItem("shadows.feature.gm", "on");
+      localStorage.setItem("shadows.table.v1." + s.table.meta.id, JSON.stringify(s)); localStorage.setItem(pk, JSON.stringify(pack)); } catch (e) {} }, [seed.table, seed.packKey, seed.pack]);
+    const page = await c.newPage();
+    await page.goto(pathToFileURL(file).href); await page.click("[data-topen]"); await page.click('[data-tsec="cast"]'); await page.click("[data-copen]");
+    const at = () => page.evaluate(() => { const pn = document.querySelector(".cast-panel"), bar = document.querySelector(".tbl-bar"), r = pn.getBoundingClientRect(), b = bar.getBoundingClientRect(), t = document.querySelector("[data-ctitle]").getBoundingClientRect();
+      return { x: Math.round(r.x), w: Math.round(r.width), top: Math.round(r.top), barBottom: Math.round(b.bottom), titleTop: Math.round(t.top), statusUnderName: document.querySelector("[data-ctitle]").nextElementSibling.matches(".cast-status") }; });
+    const before = await at();
+    await page.evaluate(() => window.scrollTo(0, 1000));
+    const after = await at();
+    const docked = z.width >= 1280;
+    const bad = [];
+    if (!before.statusUnderName) bad.push("the status isn't under the name");
+    if (docked) {
+      if (before.w < 352 || before.w > 448) bad.push(`the panel is ${before.w}px`);
+      if (before.x < z.width / 2) bad.push(`the panel is at x ${before.x}, not on the right`);
+      if (after.top < after.barBottom - 1 || after.top > after.barBottom + 60) bad.push(`after 1000px it is at y ${after.top}, the bar ends at ${after.barBottom}`);
+    } else if (before.x > 40 || after.top >= 0 && after.top < after.barBottom) bad.push(`below 1280px it should sit at the bottom of the page, not beside it (x ${before.x})`);
+    rows.push({ width: `table ${z.width}`, screen: "a member's stat block panel (L8)", layout: bad.length ? bad.join("; ") : "ok", ok: !bad.length });
+    numbers.push({ w: z.width, screen: "L8 stat block", main: `x ${before.x}, ${before.w}px wide`, over: "", field: "", area: "", prose: "", cards: `top ${before.top} -> ${after.top} after 1000px, bar ends ${after.barBottom}`, enc: "", bar: "", header: "" });
     await c.close();
   }
 }
@@ -529,7 +579,7 @@ try {
     }
   }
   // S18: a table's screens, at four widths.
-  if (!RECORD) await tableScreens(browser, file, rows, tableNumbers);
+  if (!RECORD) { await tableScreens(browser, file, rows, tableNumbers); await tableExtras(browser, file, rows, tableNumbers); }
   // S18 (L9): the frame fixture, recorded or diffed.
   const frames = await recordFrames(browser, file, seed);
   if (RECORD) {
