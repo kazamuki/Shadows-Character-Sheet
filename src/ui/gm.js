@@ -319,13 +319,13 @@ function openKeys(){
       <button type="button" data-keyon class="${on?"on":""}" aria-pressed="${on}"${on?" autofocus":""}>On</button>
       <button type="button" data-keyoff class="${on?"":"on"}" aria-pressed="${!on}"${on?"":" autofocus"}>Off</button></div>`; };
   openModal({ title:"Keys", returnTo:"[data-menu-toggle]",
-    html:`<ul class="step-note">
+    html:`<ul class="step-note keys-list">
         <li><b>F</b> · Find on this table</li>
         <li><b>J</b> · Jot it down</li>
         <li><b>Esc</b> · Close a box</li>
         <li><b>Ctrl/⌘+Enter</b> · Save a jot</li></ul>
       <p class="step-note">F and J don't fire while you're typing in a field.</p>
-      <div class="field"><span>F and J</span><div data-keyswitch>${draw()}</div></div>`,
+      <div class="field tag-choice"><span>F and J</span><div data-keyswitch>${draw()}</div></div>`,
     foot:`<button type="button" class="btn" data-modalclose>Close</button>`,
     bind(body){
       const sw=body.querySelector("[data-keyswitch]");
