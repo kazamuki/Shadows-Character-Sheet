@@ -72,7 +72,7 @@ test("Decision 171: Run a table asks for a name, opens the table, and Home lists
   assert.equal(tableKeys(app).length, 1);
   assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Sessions", "Players", "Cast", "City", "Threats", "Encounters", "Reference", "Notes"]);
   assert.equal(app.$("#topnav [data-sec]"), null, "the table's tabs are the sheet's");
-  assert.deepEqual(app.$$("#hdrmenu button").map(b => b.textContent), ["Rename", "Export .shadows-table.json", "Activity", "What's new", "Home"]);
+  assert.deepEqual(app.$$("#hdrmenu button").map(b => b.textContent), ["Rename", "Export .shadows-table.json", "Activity", "Keys", "What's new", "Home"]);
   tableHome(app);
   assert.equal(app.window.eval("S.screen"), "home");
   assert.ok(tableCard(app, "Tuesday nights"));

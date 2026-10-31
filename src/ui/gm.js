@@ -86,11 +86,12 @@ let tableBase = null;   // { table, copy }
 const tableCopy = t => clone(Object.assign({}, t, { audit:undefined, copies:undefined }));
 function rebaseTable(){ tableBase = S.table ? { table:S.table, copy:tableCopy(S.table) } : null; }
 // Typing is an `input` event on a field; a press that happens while a field still has focus isn't.
+const isTextField = el => !!el && (el.tagName==="TEXTAREA" || (el.tagName==="INPUT" && !/^(checkbox|radio|button|submit|reset|range|color|file)$/.test(el.type)));
 function typingNow(){
   const ev=lastEvent, el=ev && ev.target;
   if (!ev || ev.type!=="input" || !el || !el.tagName) return false;
   const m=$("main");
-  return !!m && m.contains(el) && (el.tagName==="TEXTAREA" || (el.tagName==="INPUT" && !/^(checkbox|radio|button|submit|reset|range|color|file)$/.test(el.type)));
+  return !!m && m.contains(el) && isTextField(el);
 }
 function tableChange(fn, redraw=true, label){
   const t=S.table;
@@ -282,19 +283,73 @@ function renderTableChrome(){
       <button data-trename="1">Rename</button>
       <button data-texport-open="1">Export .shadows-table.json</button>
       <button data-tactivity="1">Activity</button>
+      <button data-tkeys="1">Keys</button>
       <button data-whatsnew="1">What's new</button>
       <button data-thome="1">Home</button>
     </div>`;
-  act.querySelector("[data-tfind]").onclick=openFind;
-  act.querySelector("[data-tjot]").onclick=openJot;
+  act.querySelector("[data-tfind]").onclick=()=>openFind();
+  act.querySelector("[data-tjot]").onclick=()=>openJot();
+  keyHints();
   const menu=$("hdrmenu"), kb=act.querySelector("[data-menu-toggle]");
   kb.onclick=e=>{ e.stopPropagation(); const willOpen=menu.hidden; menu.hidden=!willOpen; kb.setAttribute("aria-expanded", willOpen?"true":"false"); };
   act.querySelector("[data-trename]").onclick=()=>{ menu.hidden=true; kb.setAttribute("aria-expanded","false");
     openNameModal({ title:"Rename table", value:t.meta.name, yes:"Save", then:name=>{ tableChange(()=>{ t.meta.name=name; }); const k=document.querySelector("[data-menu-toggle]"); if (k) k.focus(); } }); };
   act.querySelector("[data-texport-open]").onclick=()=>{ menu.hidden=true; exportTable(S.table); };
-  act.querySelector("[data-tactivity]").onclick=()=>{ menu.hidden=true; kb.setAttribute("aria-expanded","false"); openActivity(); };
+  act.querySelector("[data-tactivity]").onclick=()=>{ menu.hidden=true; kb.setAttribute("aria-expanded","false"); kb.focus(); openActivity(); };
+  // Focus ⋮ first: the item that was clicked is about to be hidden, and a box returns focus to what opened it.
+  act.querySelector("[data-tkeys]").onclick=()=>{ menu.hidden=true; kb.setAttribute("aria-expanded","false"); kb.focus(); openKeys(); };
   act.querySelector("[data-thome]").onclick=()=>{ lastTableSaved=null; goHome(); };
 }
+// ── Keys (Decision 259) ────────────────────────────────────────────────
+// F opens Find and J opens Jot on a table's screen. The choice to turn them off is this browser's
+// (`shadows.ui.keys` is "off", or anything else, or nothing, is on), not the table file's.
+const KEYS_PREF="shadows.ui.keys";
+function keysOn(){ try{ return localStorage.getItem(KEYS_PREF)!=="off"; }catch(e){ return true; } }
+function setKeys(on){ try{ if (on) localStorage.removeItem(KEYS_PREF); else localStorage.setItem(KEYS_PREF, "off"); }catch(e){} keyHints(); }
+// The header's buttons say their key to a screen reader while the keys are on.
+function keyHints(){
+  const on=keysOn();
+  for (const [sel, key] of [["[data-tfind]","F"],["[data-tjot]","J"]]){
+    const b=document.querySelector(sel); if (!b) continue;
+    if (on) b.setAttribute("aria-keyshortcuts", key); else b.removeAttribute("aria-keyshortcuts");
+  }
+}
+function openKeys(){
+  const draw=()=>{ const on=keysOn(); return `<div class="form-toggle" role="group" aria-label="F and J">
+      <button type="button" data-keyon class="${on?"on":""}" aria-pressed="${on}"${on?" autofocus":""}>On</button>
+      <button type="button" data-keyoff class="${on?"":"on"}" aria-pressed="${!on}"${on?"":" autofocus"}>Off</button></div>`; };
+  openModal({ title:"Keys", returnTo:"[data-menu-toggle]",
+    html:`<ul class="step-note keys-list">
+        <li><b>F</b> · Find on this table</li>
+        <li><b>J</b> · Jot it down</li>
+        <li><b>Esc</b> · Close a box</li>
+        <li><b>Ctrl/⌘+Enter</b> · Save a jot</li></ul>
+      <p class="step-note">F and J do nothing while you're typing in a field.</p>
+      <div class="field tag-choice"><span>F and J</span><div data-keyswitch>${draw()}</div></div>`,
+    foot:`<button type="button" class="btn" data-modalclose>Close</button>`,
+    bind(body){
+      const sw=body.querySelector("[data-keyswitch]");
+      const wire=()=>{
+        sw.querySelector("[data-keyon]").onclick=()=>{ setKeys(true); sw.innerHTML=draw(); wire(); sw.querySelector("[data-keyon]").focus(); };
+        sw.querySelector("[data-keyoff]").onclick=()=>{ setKeys(false); sw.innerHTML=draw(); wire(); sw.querySelector("[data-keyoff]").focus(); };
+      };
+      wire();
+    } });
+}
+// A field is typingNow's list plus select, contenteditable and an IME mid-word.
+const inField = el => !!el && (isTextField(el) || el.tagName==="SELECT" || !!(el.closest && el.closest('[contenteditable]:not([contenteditable="false"])')));
+document.addEventListener("keydown", e=>{
+  if (typeof e.key!=="string" || (e.key.toLowerCase()!=="f" && e.key.toLowerCase()!=="j")) return;
+  if (!featureOn("gm") || S.screen!=="table" || !S.table || !keysOn()) return;
+  if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey || e.repeat || e.isComposing) return;
+  if (inField(e.target) || inField(document.activeElement)) return;
+  if (document.querySelector("dialog.modal[open]")) return;
+  // The ⋮ menu is a layer: a box opened over it would hand focus back to a menu item the same Esc hides.
+  const menu=$("hdrmenu"); if (menu && !menu.hidden) return;
+  // Held back before the box opens: focus moves during this keydown, and the letter would be typed into it.
+  e.preventDefault();
+  if (e.key.toLowerCase()==="f") openFind({ viaKey:true }); else openJot({ viaKey:true });
+});
 function noteCardHtml(n){
   const id=esc(n.id);
   return `<div class="tbl-note" data-note="${id}">
@@ -437,8 +492,8 @@ function findResultsHtml(q){
         <span class="find-field">${esc(findFieldLabel(h.field))}</span> <span class="find-snip">${findSnipHtml(h.snip)}</span></button></li>`).join("")}</ul>` : "";
   }).join("");
 }
-function openFind(){
-  openModal({ title:"Find on this table", returnTo:"[data-tfind]",
+function openFind({ viaKey }={}){
+  openModal({ title:"Find on this table", returnTo:"[data-tfind]", viaKey,
     html:`<label class="field"><span>Search</span><input type="search" data-findq value="${esc(S.findQ||"")}" placeholder="Names, places, anything you wrote" autocomplete="off"></label>
       <p class="sr-only" data-findcount role="status" aria-live="polite"></p>
       <div data-findres>${findResultsHtml(S.findQ)}</div>`,
@@ -502,8 +557,9 @@ function jotWhere(){
     : today.length ? "Goes on the table's notes. More than one session is dated today."
     : "Goes on the table's notes. No session is dated today.";
 }
-function openJot(){
-  openModal({ title:"Jot it down", returnTo:"[data-tjot]",
+function openJot({ viaKey }={}){
+  const opener=document.activeElement;
+  openModal({ title:"Jot it down", returnTo:"[data-tjot]", viaKey,
     html:`<label class="field"><span>Jot</span><textarea data-jottext rows="5" autofocus placeholder="A name, a debt, a line to keep.">${esc(S.jotDraft||"")}</textarea></label>
       <p class="step-note" data-jotwhy role="alert"></p>
       <p class="step-note">${esc(jotWhere())}</p>`,
@@ -523,7 +579,9 @@ function openJot(){
         // The page under the jot stays as it was, unless it is the list the jot lands in.
         if (S.tsection==="notes" || (S.tsection==="sessions" && note && S.sessOpen && S.sessOpen===note.session)) renderTable();
         notice("Jotted.");
-        const j=document.querySelector("[data-tjot]"); if (j) j.focus();
+        // Where J was pressed, if that is still on the page; else the header's Jot (Decision 164).
+        if (viaKey && opener && opener!==document.body && opener.isConnected) return opener.focus({ preventScroll:true });
+        const j=document.querySelector("[data-tjot]"); if (j) viaKey ? j.focus({ preventScroll:true }) : j.focus();
       };
       foot.querySelector("[data-jotsave]").onclick=save;
       ta.onkeydown=ev=>{ if (ev.key==="Enter" && (ev.ctrlKey || ev.metaKey)){ ev.preventDefault(); save(); } };

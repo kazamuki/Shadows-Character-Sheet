@@ -12,7 +12,7 @@
 //   minor — a capability a player can use that wasn't there before
 //   major — existing character files or the workflow break
 // The other three versions have their own triggers; see CLAUDE.md.
-const APP_VERSION = "0.56.0";
+const APP_VERSION = "0.56.1";
 
 // ── Main render + events ─────────────────────────────────────────────
 // Header chrome: brand context + the section tabs (which now live in the
@@ -394,7 +394,10 @@ function boot(){
   // What's new opens from the home screen, the sheet's menu and the footer.
   document.addEventListener("click", e=>{
     const t=e.target.closest && e.target.closest("[data-whatsnew],[data-whatsnew-dismiss]"); if (!t) return;
+    const inMenu=!!t.closest("#hdrmenu");
     closeMenu();
+    // The clicked item is hidden by now, so the box would hand focus back to nothing: ⋮ is what opened it.
+    if (inMenu){ const kb=document.querySelector("#hdractions [data-menu-toggle]"); if (kb) kb.focus(); }
     if (t.hasAttribute("data-whatsnew")) openWhatsNew(); else markWhatsNewSeen();
   });
   renderHome();

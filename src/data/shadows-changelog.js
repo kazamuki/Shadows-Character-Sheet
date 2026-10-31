@@ -2,6 +2,14 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.56.1",
+    "date": null,
+    "intro": [],
+    "items": [
+      "Closing What's new from the sheet's ⋮ menu puts you back on ⋮."
+    ]
+  },
+  {
     "version": "0.56.0",
     "date": "2026-10-29",
     "intro": [],
