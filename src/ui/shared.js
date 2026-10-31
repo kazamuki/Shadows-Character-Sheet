@@ -796,7 +796,7 @@ function jumpBarHtml(list, { sticky=false, filter=null, extra="", row=false, wra
 // opens beside it. Keyboard focus scrolls a chip into view on its own.
 const rowScroll = {};
 function bindScrollRows(root){
-  root.querySelectorAll(".scroll-row").forEach(r=>{
+  (root.matches(".scroll-row") ? [root] : root.querySelectorAll(".scroll-row")).forEach(r=>{
     const k = `${r.dataset.row}|${S.section}`;
     if (rowScroll[k]) r.scrollLeft = rowScroll[k];
     tabRowFades(r);

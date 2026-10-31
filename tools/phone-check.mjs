@@ -210,7 +210,7 @@ async function recordFrames(browser, file, seed) {
 // encounter is made in the page, with Dez in it and the Hit panel open on his row, as S3d left it. Each screen is measured
 // at four widths: `main`'s box, anything past the right edge outside a sideways scroller, the widest field, textarea,
 // prose block and card, the cards a row, the encounter's rows, and the header and the bar together.
-const TABLE_WIDTHS = [{ width: 390, height: 844 }, { width: 768, height: 1024 }, { width: 1300, height: 900 }, { width: 1980, height: 1080 }];
+const TABLE_WIDTHS = [{ width: 390, height: 844 }, { width: 768, height: 1024 }, { width: 1300, height: 900 }, { width: 1980, height: 1080 }, { width: 390, height: 844, touch: true }];
 const FIELD_MAX = 36 * 16, AREA_MAX = 48 * 16, CARD_MIN = 20 * 16, CARD_MAX = 36 * 16, ENC_MAX = 64 * 16, BAR_MAX = 48;
 const CARDS_A_ROW = { 390: 1, 768: 2, 1300: 3, 1980: 4 };
 const DEZ_TAG = "TAG-EEEE-EEEE-EEEE";
@@ -255,6 +255,7 @@ const tableMeasure = () => {
     cards: lis.length, perRow,
     cardMin: lis.length ? Math.round(Math.min(...lis.map(l => box(l).width))) : 0, cardMax: widest(lis),
     enc: widest(rows), encCols: new Set(rows.map(r => Math.round(box(r).left))).size,
+    barCut: !!bar && bar.scrollWidth > bar.clientWidth + 1 && !bar.classList.contains("more-r"),
     bar: bar ? Math.round(box(bar).height) : 0, barKind: bar ? bar.className.split(" ")[0] : "",
     header: Math.round(hdr.getBoundingClientRect().height), scrollW: de.scrollWidth - de.clientWidth,
     rail: on("nav.ledger"), vitals: on("aside.vitals") };
@@ -263,7 +264,7 @@ const tableMeasure = () => {
 async function tableScreens(browser, file, rows, numbers) {
   const seed = tableSeed();
   for (const z of TABLE_WIDTHS) {
-    const c = await browser.newContext({ viewport: { width: z.width, height: z.height } });
+    const c = await browser.newContext({ viewport: { width: z.width, height: z.height }, hasTouch: !!z.touch, isMobile: !!z.touch });
     await c.addInitScript(([s, pk, pack]) => { try {
       localStorage.setItem("shadows.feature.gm", "on");
       if (!localStorage.getItem("shadows.table.v1." + s.table.meta.id)) {
@@ -281,7 +282,7 @@ async function tableScreens(browser, file, rows, numbers) {
       try {
         await act();
         screens.push({ name, m: await page.evaluate(tableMeasure), ...opts });
-      } catch (e) { rows.push({ width: `table ${z.width}`, screen: name, layout: `could not reach it: ${e.message.split("\n")[0]}`, ok: false }); }
+      } catch (e) { rows.push({ width: `table ${z.width}${z.touch ? " touch" : ""}`, screen: name, layout: `could not reach it: ${e.message.split("\n")[0]}`, ok: false }); }
     };
     const tab = id => () => page.click(`[data-tsec="${id}"]`);
     const click = sel => () => page.click(sel);
@@ -328,11 +329,12 @@ async function tableScreens(browser, file, rows, numbers) {
       if (m.cards && z.width > 390 && (m.cardMin < CARD_MIN - 1 || m.cardMax > CARD_MAX + 1)) bad.push(`cards ${m.cardMin}-${m.cardMax}px`);
       if (s.enc && (m.enc > ENC_MAX + 1 || m.encCols !== 1)) bad.push(`rows ${m.enc}px in ${m.encCols} columns`);
       if (s.bar && !m.bar) bad.push("no bar");
-      if (m.barKind === "tbl-bar" && m.bar > BAR_MAX) bad.push(`the bar is ${m.bar}px`);
+      if (m.barCut) bad.push("the bar scrolls sideways with no fade (no more-r)");
+      if (m.barKind === "tbl-bar" && m.bar > (z.touch ? 56 : BAR_MAX)) bad.push(`the bar is ${m.bar}px`);
       if (m.bar && z.width <= 390 && (m.header + m.bar) / z.height > HEADER_MAX_SHARE) bad.push(`header + bar ${Math.round((m.header + m.bar) / z.height * 100)}%`);
-      numbers.push({ w: z.width, screen: s.name, main: `${m.x}+${m.w}`, over: m.over, field: m.field, area: m.area, prose: `${m.prose}/${m.ch75}`,
+      numbers.push({ w: z.width + (z.touch ? " touch" : ""), screen: s.name, main: `${m.x}+${m.w}`, over: m.over, field: m.field, area: m.area, prose: `${m.prose}/${m.ch75}`,
         cards: m.cards ? `${m.perRow}/row ${m.cardMin}-${m.cardMax}` : "", enc: m.enc ? `${m.enc}px` : "", bar: m.bar ? `${m.barKind} ${m.bar}px` : "", header: m.header });
-      rows.push({ width: `table ${z.width}`, screen: s.name, layout: bad.length ? bad.join("; ") : "ok", ok: !bad.length });
+      rows.push({ width: `table ${z.width}${z.touch ? " touch" : ""}`, screen: s.name, layout: bad.length ? bad.join("; ") : "ok", ok: !bad.length });
     }
     if (errors.length) rows.push({ width: `table ${z.width}`, screen: "(page errors)", layout: errors.join("; "), ok: false });
     await c.close();
