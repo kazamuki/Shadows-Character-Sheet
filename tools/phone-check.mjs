@@ -720,8 +720,7 @@ if (tableNumbers.length) {
   console.log("\nA table's screens (main as x+width; fields and textareas the widest px; prose the widest px against 75ch; cards a row and their widths):");
   console.table(tableNumbers);
 }
-if (keyNumbers.length) { console.log("
-The keys (Decision 259), scrollY before and after Esc:"); console.table(keyNumbers); }
+if (keyNumbers.length) { console.log("\nThe keys (Decision 259), scrollY before and after Esc:"); console.table(keyNumbers); }
 const bad = rows.filter(r => !r.ok);
 for (const r of bad.filter(r => String(r.width).startsWith("table "))) console.log(`${r.width} | ${r.screen} | ${r.layout}`);
 const byWidth = [...new Set(bad.map(r => r.width))];
