@@ -47,6 +47,7 @@ import { chromium } from "playwright-core";
 import { buildHtml } from "./build.mjs";
 import { loadEngine } from "../tests/harness.mjs";
 import { characterFixtures } from "../tests/character-fixtures.mjs";
+import { syntheticPack } from "../tests/packfixture.mjs";
 
 // The share of the screen's height the pinned header may take, once scrolled.
 const HEADER_MAX_SHARE = 0.2;
@@ -182,6 +183,140 @@ async function recordFrames(browser, file, seed) {
   return frames;
 }
 
+// S18: a GM table's screens. A table is switched off for players (Decision 173), so `shadows.feature.gm` is the feature's own
+// switch. The table is the sample, Dead Air, with a player and a seat (Dez) added and a pack in the Threats tab; the
+// encounter is made in the page, with Dez in it and the Hit panel open on his row, as S3d left it. Each screen is measured
+// at four widths: `main`'s box, anything past the right edge outside a sideways scroller, the widest field, textarea,
+// prose block and card, the cards a row, the encounter's rows, and the header and the bar together.
+const TABLE_WIDTHS = [{ width: 390, height: 844 }, { width: 768, height: 1024 }, { width: 1300, height: 900 }, { width: 1980, height: 1080 }];
+const FIELD_MAX = 36 * 16, AREA_MAX = 48 * 16, CARD_MIN = 20 * 16, CARD_MAX = 36 * 16, ENC_MAX = 64 * 16, BAR_MAX = 48;
+const CARDS_A_ROW = { 390: 1, 768: 2, 1300: 3, 1980: 4 };
+const DEZ_TAG = "TAG-EEEE-EEEE-EEEE";
+
+function tableSeed() {
+  const { Engine } = loadEngine();
+  const t = Engine.migrateTable(JSON.parse(readFileSync(new URL("../samples/dead-air.shadows-table.json", import.meta.url), "utf8")));
+  const ch = lockedCharacter("professional");
+  for (const id of Object.keys(ch.stats)) ch.stats[id].base = 6;
+  ch.identity.name = "Dez"; ch.meta.id = DEZ_TAG; ch.meta.updated = "2026-10-02T10:00:00.000Z";
+  const pid = Engine.addPlayer(t, { name: "Brogan" }).id;
+  if (!Engine.importSeat(t, pid, ch).ok) throw new Error("the seed seat didn't import");
+  t.audit = [];
+  const pack = syntheticPack();
+  return JSON.parse(JSON.stringify({ table: { table: t, section: "sessions", changed: "2026-10-05T10:00:00.000Z", exported: null },
+    packKey: "shadows.pack.v1." + pack.meta.id, pack: { pack: Engine.migratePack(pack), imported: "2026-10-05T10:00:00.000Z" } }));
+}
+
+const tableMeasure = () => {
+  const de = document.documentElement, main = document.querySelector("main"), mb = main.getBoundingClientRect();
+  // 75ch is the width of 75 zeros in the block's own font, so it is measured inside each block.
+  const chOf = el => { const pr = document.createElement("span"); pr.style.cssText = "display:block;width:75ch;height:0;position:absolute;visibility:hidden"; el.appendChild(pr);
+    const w = pr.getBoundingClientRect().width; pr.remove(); return w; };
+  const inScroller = el => { for (let e = el.parentElement; e && e !== main; e = e.parentElement) { const o = getComputedStyle(e).overflowX; if (o === "auto" || o === "scroll") return true; } return false; };
+  const box = el => el.getBoundingClientRect();
+  const shown = el => { const r = box(el); return r.width > 0 && r.height > 0; };
+  let over = 0;
+  for (const el of main.querySelectorAll("*")) if (shown(el) && box(el).right > de.clientWidth + 0.5 && !inScroller(el)) over++;
+  const widest = els => Math.round(Math.max(0, ...[...els].filter(shown).map(e => box(e).width)));
+  const fields = main.querySelectorAll("input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=hidden]):not([type=number]), select");
+  const prose = [...main.querySelectorAll("p, dd, .step-note")].filter(e => !e.closest(".ro-sheet, .enc-row, .tbl-bar, .enc-bar"));
+  const lis = [...main.querySelectorAll(".roster-list > li")].filter(shown);
+  // Cards a row: the most on one row of any one list (Encounters draws two lists, a short one first).
+  const perRow = Math.max(0, ...[...main.querySelectorAll(".roster-list")].map(ul => { const k = [...ul.children].filter(shown); return k.length ? k.filter(l => Math.round(box(l).top) === Math.round(box(k[0]).top)).length : 0; }));
+  const rows = [...main.querySelectorAll(".enc-rows > li")].filter(shown);
+  const bar = main.querySelector(".tbl-bar, .enc-bar");
+  const hdr = document.querySelector("header.top");
+  const on = sel => { const e = document.querySelector(sel); return !!e && getComputedStyle(e).display !== "none"; };
+  const worst = prose.filter(shown).map(e => ({ w: box(e).width, ch: chOf(e) })).sort((a, b) => b.w / b.ch - a.w / a.ch)[0] || { w: 0, ch: 0 };
+  return { x: Math.round(mb.x), w: Math.round(mb.width), over, ch75: Math.round(worst.ch),
+    field: widest(fields), area: widest(main.querySelectorAll("textarea")), prose: Math.round(worst.w),
+    cards: lis.length, perRow,
+    cardMin: lis.length ? Math.round(Math.min(...lis.map(l => box(l).width))) : 0, cardMax: widest(lis),
+    enc: widest(rows), encCols: new Set(rows.map(r => Math.round(box(r).left))).size,
+    bar: bar ? Math.round(box(bar).height) : 0, barKind: bar ? bar.className.split(" ")[0] : "",
+    header: Math.round(hdr.getBoundingClientRect().height), scrollW: de.scrollWidth - de.clientWidth,
+    rail: on("nav.ledger"), vitals: on("aside.vitals") };
+};
+
+async function tableScreens(browser, file, rows, numbers) {
+  const seed = tableSeed();
+  for (const z of TABLE_WIDTHS) {
+    const c = await browser.newContext({ viewport: { width: z.width, height: z.height } });
+    await c.addInitScript(([s, pk, pack]) => { try {
+      localStorage.setItem("shadows.feature.gm", "on");
+      if (!localStorage.getItem("shadows.table.v1." + s.table.meta.id)) {
+        localStorage.setItem("shadows.table.v1." + s.table.meta.id, JSON.stringify(s));
+        localStorage.setItem(pk, JSON.stringify(pack));
+      }
+    } catch (e) {} }, [seed.table, seed.packKey, seed.pack]);
+    const page = await c.newPage();
+    const errors = [];
+    page.on("pageerror", e => errors.push(e.message));
+    await page.goto(pathToFileURL(file).href);
+    await page.click("[data-topen]");
+    const screens = [];
+    const walk = async (name, act, opts = {}) => {
+      try {
+        await act();
+        screens.push({ name, m: await page.evaluate(tableMeasure), ...opts });
+      } catch (e) { rows.push({ width: `table ${z.width}`, screen: name, layout: `could not reach it: ${e.message.split("\n")[0]}`, ok: false }); }
+    };
+    const tab = id => () => page.click(`[data-tsec="${id}"]`);
+    const click = sel => () => page.click(sel);
+    const then = (...fs) => async () => { for (const f of fs) await f(); };
+    await walk("sessions", tab("sessions"), { list: true });
+    await walk("a session", click("[data-sopen]"), { bar: true });
+    // The first sessions are closed already; the close-out's page is a session that isn't.
+    await walk("the close-out", async () => {
+      await page.click('[data-tsec="sessions"]');
+      const n = await page.locator("[data-sopen]").count();
+      for (let i = 0; i < n; i++) {
+        await page.locator("[data-sopen]").nth(i).click();
+        if (await page.locator("[data-co-open]").count()) break;
+        await page.click("[data-sback]");
+      }
+      await page.click("[data-co-open]");
+    }, { bar: true });
+    await walk("players", tab("players"));
+    await walk("the read-only sheet", click("[data-seat]"), { bar: true });
+    await walk("a seat's page", click("[data-roseat]"), { bar: true });
+    await walk("cast", tab("cast"), { list: true });
+    await walk("a member", click("[data-copen]"), { bar: true });
+    await walk("city", tab("city"), { list: true });
+    await walk("a place", click("[data-popen]"), { bar: true });
+    await walk("a faction", then(tab("city"), click('[data-cityview="factions"]'), click("[data-fcardopen]")), { bar: true });
+    await walk("threats", tab("threats"), { list: true });
+    await walk("a threat", click("[data-tentry]"), { bar: true });
+    await walk("a threat group", then(tab("threats"), click('[data-tview="group"]'), click("[data-tgroup]")), { bar: true });
+    await walk("encounters", tab("encounters"), { list: true });
+    await walk("an encounter with the Hit panel open", then(
+      () => page.fill("[data-enc-name]", "Docks"), click("[data-enc-new]"),
+      () => page.fill("[data-enc-pcname]", "Dez"), click("[data-enc-addpc]"), click("[data-ehit]")), { bar: true, enc: true });
+    await walk("reference", tab("reference"));
+    await walk("notes", tab("notes"));
+    for (const s of screens) {
+      const m = s.m, bad = [];
+      if (m.rail || m.vitals) bad.push("a rail or vitals column is drawn");
+      if (m.over) bad.push(`${m.over} elements past the right edge`);
+      if (m.scrollW > 0) bad.push(`the page scrolls sideways by ${m.scrollW}px`);
+      if (m.field > FIELD_MAX + 0.5) bad.push(`a field ${m.field}px`);
+      if (m.area > AREA_MAX + 0.5) bad.push(`a textarea ${m.area}px`);
+      if (m.prose > m.ch75 + 1) bad.push(`prose ${m.prose}px, 75ch is ${m.ch75}px`);
+      if (s.list && m.cards >= CARDS_A_ROW[z.width] && m.perRow < CARDS_A_ROW[z.width]) bad.push(`${m.perRow} cards a row, ${CARDS_A_ROW[z.width]} wanted`);
+      if (m.cards && z.width > 390 && (m.cardMin < CARD_MIN - 1 || m.cardMax > CARD_MAX + 1)) bad.push(`cards ${m.cardMin}-${m.cardMax}px`);
+      if (s.enc && (m.enc > ENC_MAX + 1 || m.encCols !== 1)) bad.push(`rows ${m.enc}px in ${m.encCols} columns`);
+      if (s.bar && !m.bar) bad.push("no bar");
+      if (m.bar > BAR_MAX) bad.push(`the bar is ${m.bar}px`);
+      if (m.bar && z.width <= 390 && (m.header + m.bar) / z.height > HEADER_MAX_SHARE) bad.push(`header + bar ${Math.round((m.header + m.bar) / z.height * 100)}%`);
+      numbers.push({ w: z.width, screen: s.name, main: `${m.x}+${m.w}`, over: m.over, field: m.field, area: m.area, prose: `${m.prose}/${m.ch75}`,
+        cards: m.cards ? `${m.perRow}/row ${m.cardMin}-${m.cardMax}` : "", enc: m.enc ? `${m.enc}px` : "", bar: m.bar ? `${m.barKind} ${m.bar}px` : "", header: m.header });
+      rows.push({ width: `table ${z.width}`, screen: s.name, layout: bad.length ? bad.join("; ") : "ok", ok: !bad.length });
+    }
+    if (errors.length) rows.push({ width: `table ${z.width}`, screen: "(page errors)", layout: errors.join("; "), ok: false });
+    await c.close();
+  }
+}
+
 const dir = mkdtempSync(join(tmpdir(), "shadows-phone-"));
 const file = join(dir, "shadows-character-sheet.html");
 writeFileSync(file, builtFile ? readFileSync(builtFile, "utf8") : buildHtml());
@@ -191,7 +326,7 @@ const majorSeed = JSON.stringify({ ch: lockedCharacter("professional", 10), sect
 const MAJOR = "progression: a Major";
 
 const browser = await launch();
-const rows = [];
+const rows = [], tableNumbers = [];
 try {
   for (const w of WIDTHS) {
     const errors = [];
@@ -393,6 +528,8 @@ try {
       await c.close();
     }
   }
+  // S18: a table's screens, at four widths.
+  if (!RECORD) await tableScreens(browser, file, rows, tableNumbers);
   // S18 (L9): the frame fixture, recorded or diffed.
   const frames = await recordFrames(browser, file, seed);
   if (RECORD) {
@@ -417,7 +554,12 @@ console.log(`Header budget: ${HEADER_MAX_SHARE * 100}% of the screen's height, p
 console.log(`Controls: 24px or more, 44px on the touch phone. Text: 11px or more.`);
 console.log(`Fold: on a phone, Main's Health card within ${HP_MAX_SHARE * 100}% of the screen's height; the vitals bar and a sheet's jump bar one row.\n`);
 console.table(rows.map(r => ({ ...r, ok: r.ok ? "ok" : "OVER" })));
+if (tableNumbers.length) {
+  console.log("\nA table's screens (main as x+width; fields and textareas the widest px; prose the widest px against 75ch; cards a row and their widths):");
+  console.table(tableNumbers);
+}
 const bad = rows.filter(r => !r.ok);
+for (const r of bad.filter(r => String(r.width).startsWith("table "))) console.log(`${r.width} | ${r.screen} | ${r.layout}`);
 const byWidth = [...new Set(bad.map(r => r.width))];
 console.log(bad.length ? `\nOver budget at: ${byWidth.join(", ")}.` : "\nEvery width fits.");
 process.exit(bad.length ? 1 : 0);

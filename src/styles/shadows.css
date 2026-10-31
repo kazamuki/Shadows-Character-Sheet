@@ -1127,6 +1127,20 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
 .app.table-mode nav.ledger,
 .app.table-mode aside.vitals{display:none}
 .app.table-mode main{max-width:none}
+/* The measures. Fields stop at 36rem (a textarea 48rem), prose at 75ch, cards fill 20–36rem columns, and an encounter's
+   rows stay one 64rem column. The read-only sheet (Decision 256) takes none of them: it lays out as the player's own.
+   Several forms cap their fields at 100% of their container, which this has to beat, so a field's rule has a
+   specificity of its own and leaves out the two forms with a narrower cap (the Hit panel's 26rem, the condition
+   form's 220px). The prose rule sits in :where(), so a prose block's own cap (62ch, 70ch) beats it and 75ch only
+   ever tightens a block with none. */
+.app.table-mode{--table-field:36rem; --table-area:48rem; --table-measure:75ch; --table-card:20rem; --enc-measure:64rem}
+.app.table-mode main :is(input:not([type=checkbox],[type=radio],[type=range],[type=file],[type=hidden],[type=number]),select):not(.ro-sheet *,.enc-hit *,.cond-where *){max-width:min(100%, var(--table-field))}
+.app.table-mode main textarea:not(.ro-sheet *){max-width:min(100%, var(--table-area))}
+:where(.app.table-mode main :is(p,dd):not(.ro-sheet *,.enc-row *,.enc-bar *)){max-width:var(--table-measure)}
+.app.table-mode .ref-body > p{max-width:var(--table-measure)}
+.app.table-mode .roster-list{grid-template-columns:repeat(auto-fill, minmax(min(100%, var(--table-card)), 1fr))}
+.app.table-mode .roster-list > li{max-width:36rem}
+.app.table-mode .enc-rows{max-width:var(--enc-measure)}
 .jump{background:none; border:1px solid var(--frame); border-radius:14px; color:var(--text); font:inherit;
   font-size:.74rem; padding:4px 11px; cursor:pointer}
 .jump:hover, .jump:focus-visible{border-color:var(--violet-hi)}
