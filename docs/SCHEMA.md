@@ -5329,7 +5329,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - The bar on every tab: a tab's action sits with its fields.
      - **Replaces:** Decision 211 in part (on a page Add to sits in the bar). Extends 35 (a table escapes the frame), 140 (a bar under the header), 188–189 (Back joins the encounter's bar).
      - **Revisit if:** Home gets a layout of its own (W80's rest), or a GM tab needs a column the measures don't give.
-     - **Built:** switched off (173); PR #TBD; log 2026-10-30 (S18).
+     - **Built:** switched off (173); PR #276; log 2026-10-30 (S18).
 
 ## 5. Open Flags
 
