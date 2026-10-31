@@ -238,3 +238,19 @@ test("Decision 259: the header's Find and Jot say their keys while the keys are 
   assert.equal(off.$("[data-tfind]").hasAttribute("aria-keyshortcuts"), false);
   assert.deepEqual(app.errors, []);
 });
+
+test("Decision 259: ⋮ → Activity and ⋮ → What's new close back to ⋮, not to the menu item that was hidden", () => {
+  for (const [item, name] of [["[data-tactivity]", "Activity"], ["#hdrmenu [data-whatsnew]", "What's new"]]) {
+    const app = tableApp();
+    const kb = app.$("[data-menu-toggle]");
+    kb.focus(); app.click("[data-menu-toggle]");
+    app.$(item).focus();   // a real press has focus on the item
+    app.click(item);
+    assert.ok(modalOpen(app), name);
+    // jsdom focuses a hidden element, so what proves it is what the box will return to.
+    assert.equal(app.window.eval("modalState.opener") === kb, true, name + ": the box would return focus to the hidden menu item");
+    pressEsc(app);
+    assert.equal(app.doc.activeElement, kb, name);
+    assert.deepEqual(app.errors, []);
+  }
+});

@@ -295,7 +295,7 @@ function renderTableChrome(){
   act.querySelector("[data-trename]").onclick=()=>{ menu.hidden=true; kb.setAttribute("aria-expanded","false");
     openNameModal({ title:"Rename table", value:t.meta.name, yes:"Save", then:name=>{ tableChange(()=>{ t.meta.name=name; }); const k=document.querySelector("[data-menu-toggle]"); if (k) k.focus(); } }); };
   act.querySelector("[data-texport-open]").onclick=()=>{ menu.hidden=true; exportTable(S.table); };
-  act.querySelector("[data-tactivity]").onclick=()=>{ menu.hidden=true; kb.setAttribute("aria-expanded","false"); openActivity(); };
+  act.querySelector("[data-tactivity]").onclick=()=>{ menu.hidden=true; kb.setAttribute("aria-expanded","false"); kb.focus(); openActivity(); };
   // Focus ⋮ first: the item that was clicked is about to be hidden, and a box returns focus to what opened it.
   act.querySelector("[data-tkeys]").onclick=()=>{ menu.hidden=true; kb.setAttribute("aria-expanded","false"); kb.focus(); openKeys(); };
   act.querySelector("[data-thome]").onclick=()=>{ lastTableSaved=null; goHome(); };
@@ -324,7 +324,7 @@ function openKeys(){
         <li><b>J</b> · Jot it down</li>
         <li><b>Esc</b> · Close a box</li>
         <li><b>Ctrl/⌘+Enter</b> · Save a jot</li></ul>
-      <p class="step-note">F and J don't fire while you're typing in a field.</p>
+      <p class="step-note">F and J do nothing while you're typing in a field.</p>
       <div class="field tag-choice"><span>F and J</span><div data-keyswitch>${draw()}</div></div>`,
     foot:`<button type="button" class="btn" data-modalclose>Close</button>`,
     bind(body){

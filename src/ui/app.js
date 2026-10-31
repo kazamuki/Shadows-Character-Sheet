@@ -394,7 +394,10 @@ function boot(){
   // What's new opens from the home screen, the sheet's menu and the footer.
   document.addEventListener("click", e=>{
     const t=e.target.closest && e.target.closest("[data-whatsnew],[data-whatsnew-dismiss]"); if (!t) return;
+    const inMenu=!!t.closest("#hdrmenu");
     closeMenu();
+    // The clicked item is hidden by now, so the box would hand focus back to nothing: ⋮ is what opened it.
+    if (inMenu){ const kb=document.querySelector("#hdractions [data-menu-toggle]"); if (kb) kb.focus(); }
     if (t.hasAttribute("data-whatsnew")) openWhatsNew(); else markWhatsNewSeen();
   });
   renderHome();

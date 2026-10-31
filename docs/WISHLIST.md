@@ -891,7 +891,7 @@ file is the player's words as the page reads them; it is the session's page's
 action, not a new tab. Out of S14's scope (§6).
 
 **W139 — Keyboard shortcuts on a table: Find and Jot a key away.** *Ken · 🔎 · Rule or shape · raised 2026-10-30*\
-**Plan:** [gm-mode's Shortcuts](plans/gm-mode.md), order [S19](plans/gm-mode/S19-shortcuts.md) (**built 2026-10-31**, Decision 259, switched off: F and J, an off switch in ⋮ → Keys; *more keys* (Next in a fight, the tabs, `?` for the list) stay open here) · **Goes with:** W140
+**Plan:** [gm-mode's Shortcuts](plans/gm-mode.md), order [S19](plans/gm-mode/S19-shortcuts.md) (**built 2026-10-31**, Decision 259, switched off: F and J, an off switch in ⋮ → Keys; *more keys* (Next in a fight, the tabs, `?` for the list) stay open here) · **Goes with:** W140, W141
 
 Find and Jot sit in the header on every table screen (Decision 208), but a
 GM at a laptop mid-session still has to reach for the mouse. The wish: a key
@@ -919,6 +919,17 @@ their tags; the activity log and undo cover every change (212); a table
 schema bump with a `migrateTable()` step if the note's shape moves (170).
 Look first at how much of this the cast's and threads' links already give
 before inventing a new kind of link.
+
+**W141 — Fix `.form-toggle`'s dark-mode frame, app-wide.** *Ken · 🔎 · Fix · raised 2026-10-31*\
+**Plan:** none yet · **Goes with:** W139
+
+The shared `.form-toggle` (`shadows.css`) frames its buttons with `--frame`. Measured in Chromium on the
+Keys box (S19): in the dark theme the ring against the box is **1.61:1**, and the pressed On button against the
+unpressed Off is **1.71:1**, both under the 3:1 that WCAG 1.4.11 asks of a control's boundary and state (light
+theme: ring 10.20:1). The text is fine (5.09:1 unpressed, 8.65:1 pressed). Ken accepted it for S19 and asked for
+the fix once, for every place the component is used (kind pickers, view toggles, stances, the Keys switch), not
+one box at a time. *To respect:* the contrast guards in `build.test.mjs` parse the rule; phone-check's finger
+sizes; every screen that uses `.form-toggle` in both themes.
 
 ### For the designers
 
@@ -1087,7 +1098,7 @@ with no DOM, so both halves have to load that way.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W141.** Everything above is open. What was built is in
+- **Next free number: W142.** Everything above is open. What was built is in
   [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)

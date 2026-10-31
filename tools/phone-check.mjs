@@ -472,10 +472,12 @@ async function tableKeys(browser, file, rows) {
   // B4: ⋮ → Keys, then Esc: the clicked menu item is hidden by then, so focus must come back to ⋮.
   {
     const [c, p] = await open({ width: 1300, height: 900 }), bad = [];
-    await p.click("[data-menu-toggle]"); await p.click("[data-tkeys]"); await p.keyboard.press("Escape");
-    const on = await p.evaluate(() => !!document.activeElement.hasAttribute && document.activeElement.hasAttribute("data-menu-toggle"));
-    if (!on) bad.push("focus isn't on ⋮ after closing Keys");
-    row("B4: Esc after ⋮ → Keys lands on ⋮", bad, "focus on ⋮");
+    for (const [item, name] of [["[data-tkeys]", "Keys"], ["[data-tactivity]", "Activity"], ["#hdrmenu [data-whatsnew]", "What's new"]]) {
+      await p.click("[data-menu-toggle]"); await p.click(item); await p.keyboard.press("Escape");
+      const on = await p.evaluate(() => !!document.activeElement.hasAttribute && document.activeElement.hasAttribute("data-menu-toggle"));
+      if (!on) bad.push(`focus isn't on ⋮ after closing ${name}`);
+    }
+    row("B4: Esc after ⋮ → Keys, Activity and What's new lands on ⋮", bad, "focus on ⋮ each time");
     await c.close();
   }
   // B3
