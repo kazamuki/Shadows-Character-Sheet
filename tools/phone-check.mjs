@@ -110,9 +110,81 @@ async function launch() {
   throw new Error(`no Chromium to drive. Set PHONE_CHECK_BROWSER to one, or run \`npx playwright-core install chromium\`.\n  ${failures.join("\n  ")}`);
 }
 
+// S18 (L9): the frame fixture. The boxes of the header, the rail, `main`, the vitals column and `main`'s direct
+// children on Home, every wizard step and every sheet tab, recorded before the table got its own frame. A table's
+// rules are scoped to `.table-mode`, so any difference here is a rule that reached a screen it shouldn't.
+// `npm run phone-check -- --record-fixture` rewrites it; do that only when a screen is meant to move.
+const FIXTURE_FILE = new URL("./frame-fixture.json", import.meta.url);
+const FIXTURE_SIZES = [
+  { width: 390, height: 844 }, { width: 768, height: 1024 }, { width: 1300, height: 900 }, { width: 1980, height: 1080 },
+];
+const args = process.argv.slice(2);
+const RECORD = args.includes("--record-fixture");
+const builtFile = args.find(a => !a.startsWith("--"));
+
+const frameBoxes = () => {
+  const r = el => { if (!el) return null; const b = el.getBoundingClientRect(); return [b.x, b.y, b.width, b.height].map(n => Math.round(n * 10) / 10); };
+  window.scrollTo(0, 0);
+  const out = { header: r(document.querySelector("header.top")), rail: r(document.querySelector("nav.ledger")),
+    main: r(document.querySelector("main")), vitals: r(document.querySelector("aside.vitals")), children: [] };
+  [...document.querySelector("main").children].forEach((el, i) => out.children.push(`${i} ${el.tagName.toLowerCase()}${el.classList.length ? "." + [...el.classList].join(".") : ""} ${r(el).join(",")}`));
+  return out;
+};
+
+async function recordFrames(browser, file, seed) {
+  const frames = {};
+  for (const z of FIXTURE_SIZES) {
+    for (const pinned of [false, true]) {
+      if (pinned && z.width < 1300) continue;
+      const c = await browser.newContext({ viewport: { width: z.width, height: z.height } });
+      await c.addInitScript(([s, pin]) => { try {
+        if (!localStorage.getItem("shadows.active.v1")) localStorage.setItem("shadows.active.v1", s);
+        if (pin) localStorage.setItem("shadows.ui.vitalsPinned", "pinned");
+      } catch (e) {} }, [seed, pinned]);
+      const page = await c.newPage();
+      const at = name => `${name} @${z.width}${pinned ? " pinned" : ""}`;
+      await page.goto(pathToFileURL(file).href);
+      if (!pinned) frames[at("home")] = await page.evaluate(frameBoxes);
+      await page.click("[data-open]");
+      await page.waitForSelector("#topnav [data-sec]");
+      const tabs = await page.$$eval("#topnav [data-sec]", bs => bs.map(b => b.dataset.sec));
+      for (const sec of tabs) {
+        await page.click(`#topnav [data-sec="${sec}"]`);
+        frames[at(`sheet: ${sec}`)] = await page.evaluate(frameBoxes);
+      }
+      await c.close();
+    }
+    // The wizard: a new character driven as a player would, then every step, then Expert's four.
+    const c = await browser.newContext({ viewport: { width: z.width, height: z.height } });
+    const page = await c.newPage();
+    await page.goto(pathToFileURL(file).href);
+    await page.click("#btn-new");
+    await page.click("[data-pl]");
+    await page.click('button:has-text("Continue")');
+    await page.fill('[data-id="name"]', "Mara Voss");
+    await page.click('button:has-text("Continue")');
+    await page.waitForSelector("[data-stat-floor]");
+    // The tag is drawn at random and wraps differently at a phone's width, so every run pins the same one.
+    await page.evaluate(() => { S.maxReached = STEPS.length - 1; S.ch.meta.id = "TAG-AAAA-BBBB-CCCC"; });
+    const ids = await page.evaluate(() => STEPS.map(s => s.id));
+    const goStep = id => page.evaluate(i => { S.step = STEPS.findIndex(s => s.id === i); update(); }, id);
+    const expertSteps = await page.evaluate(() => EXPERT_STEPS);
+    for (const id of ids) {
+      await goStep(id);
+      if (id === "archetype") { await page.click('[data-arch="professional"]'); await page.click('[data-spec="cleaner"]'); }
+      frames[`wizard: ${id} @${z.width}`] = await page.evaluate(frameBoxes);
+    }
+    await goStep("stats");
+    await page.click("header [data-expert]");
+    for (const id of expertSteps) { await goStep(id); frames[`wizard: ${id}, Expert @${z.width}`] = await page.evaluate(frameBoxes); }
+    await c.close();
+  }
+  return frames;
+}
+
 const dir = mkdtempSync(join(tmpdir(), "shadows-phone-"));
 const file = join(dir, "shadows-character-sheet.html");
-writeFileSync(file, process.argv[2] ? readFileSync(process.argv[2], "utf8") : buildHtml());
+writeFileSync(file, builtFile ? readFileSync(builtFile, "utf8") : buildHtml());
 const seed = JSON.stringify({ ch: lockedCharacter("arcanist", 0, ["long-lived"], true), section: "main" });
 // A Major unlocks at 10 Milestone Points; the Professional's list has the longest prerequisites.
 const majorSeed = JSON.stringify({ ch: lockedCharacter("professional", 10), section: "main" });
@@ -320,6 +392,21 @@ try {
       if (errors.length) rows.push({ width: w.name, screen: "(page errors)", layout: errors.join("; "), ok: false });
       await c.close();
     }
+  }
+  // S18 (L9): the frame fixture, recorded or diffed.
+  const frames = await recordFrames(browser, file, seed);
+  if (RECORD) {
+    writeFileSync(FIXTURE_FILE, JSON.stringify(frames, null, 1) + "\n");
+    console.log(`Recorded ${Object.keys(frames).length} frames to tools/frame-fixture.json.`);
+  } else {
+    const was = JSON.parse(readFileSync(FIXTURE_FILE, "utf8"));
+    const diffs = [];
+    for (const k of new Set([...Object.keys(was), ...Object.keys(frames)])) {
+      const a = JSON.stringify(was[k] ?? null), b = JSON.stringify(frames[k] ?? null);
+      if (a !== b) diffs.push(k);
+    }
+    rows.push({ width: "all", screen: `frame fixture (${Object.keys(was).length} frames)`,
+      layout: diffs.length ? `${diffs.length} differ: ${diffs.slice(0, 8).join("; ")}` : "no difference", ok: !diffs.length });
   }
 } finally {
   await browser.close();
