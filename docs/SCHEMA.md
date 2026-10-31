@@ -5356,7 +5356,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - Shipping the pending lines as written: twenty-one bullets, several outgrown, in a window players read.
      - **Replaces:** Decision 173 in part: GM mode is on, and `?gm=off` no longer hides it; the switch, its key and `?gm=on` stand.
      - **Revisit if:** GM mode has to be withdrawn (set the switch false again, as 214 did), or a later decision removes the switch.
-     - **Built:** app 0.57.0; no schema move; PR #…; log 2026-10-31 (GM mode's launch).
+     - **Built:** app 0.57.0; no schema move; PR #279; log 2026-10-31 (GM mode's launch).
 
 ## 5. Open Flags
 
