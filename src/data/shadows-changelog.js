@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.57.0",
-    "date": null,
+    "date": "2026-10-31",
     "intro": [],
     "items": [
       "**Run a table.** Home has a second door: a place to run your game, with its sessions, its cast, the city, the Codex's threats and every fight in one table. It fills a wide screen, is kept in your browser, and exports as a file of its own that Home's **Import** reads back.",

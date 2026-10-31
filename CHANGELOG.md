@@ -23,7 +23,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.57.0
+## v0.57.0 — 2026-10-31
 
 - **Run a table.** Home has a second door: a place to run your game, with its sessions, its cast, the city, the Codex's threats and every fight in one table. It fills a wide screen, is kept in your browser, and exports as a file of its own that Home's **Import** reads back.
 - **Sessions.** Keep each one in the book's Campaign Journal: who came, what happened and what it set up. Follow threads, one of them the current quest, and **Next session** lists what's still open. Close a session out and everyone's IP, the Milestone Point and an off-screen job for whoever missed it are worked out for you, with an award log to read at the table.
