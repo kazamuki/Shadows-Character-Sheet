@@ -5398,7 +5398,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** the row on the Major, with an id on every loadout row (LQ29); an index (rows move); a pick when taken (LQ30); refusing a move (LQ31); Signature on a written-in weapon (no mods).
      - **Replaces:** nothing; extends 120 (mod slots), 233 (a kicker beside the attack), 248 (`bonuses`).
      - **Revisit if:** L5b's powers need the pointer; Ken rules a weapon's "free Upgrade" (LQ34); a written-in weapon takes mods.
-     - **Built:** app 0.60.0, game data 0.51, character schema 0.32, PR #PRNUM, log 2026-11-01 (L5).
+     - **Built:** app 0.60.0, game data 0.51, character schema 0.32, PR #288, log 2026-11-01 (L5).
 
 ## 5. Open Flags
 
