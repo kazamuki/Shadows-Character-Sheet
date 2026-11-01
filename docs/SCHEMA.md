@@ -5386,7 +5386,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - The typed field beside the buttons: two ways to do one thing.
      - **Replaces:** nothing.
      - **Revisit if:** tables routinely seat more than eight, a GM needs a benched seat in a fight often, or the cast's crew lines (W142) get the same buttons.
-     - **Built:** app 0.59.0; PR #PRNUM; log 2026-10-31 (S21).
+     - **Built:** app 0.59.0; PR #285; log 2026-10-31 (S21).
 
 ## 5. Open Flags
 
