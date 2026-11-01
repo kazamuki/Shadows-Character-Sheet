@@ -931,6 +931,16 @@ the fix once, for every place the component is used (kind pickers, view toggles,
 one box at a time. *To respect:* the contrast guards in `build.test.mjs` parse the rule; phone-check's finger
 sizes; every screen that uses `.form-toggle` in both themes.
 
+**W142 — The cast's crew lines as buttons too.** *Ken · 🔎 · Rule or shape · raised 2026-10-31*\
+**Plan:** set aside by [S21](plans/gm-mode/S21-crew-buttons.md) §7, for after it lands
+
+S21 turns an encounter's Add a PC and a session's Who was there into a row of buttons, one per active
+seat, with Add a player for anyone else. A line between the crew and the cast (**Between them and the
+crew**, on a member's page and its quick add) still takes its crew as a typed list on `crew-names`. The
+wish: the same buttons there, if a GM using S21 finds the typed list the odd one out. *To respect:* a line's
+`crew` stays typed names, read as seats (254); the quick add saves as it's typed today; one rule for
+"answers to a seat", the engine's (`seatPicks`, `seatFor`).
+
 ### For the designers
 
 **W56 — A tuning bench: change the game's numbers, see what moves, hand back a change request.** *Ken · ⏭ · shaped with Claude 2026-10-01*\
@@ -1098,7 +1108,7 @@ with no DOM, so both halves have to load that way.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W142.** Everything above is open. What was built is in
+- **Next free number: W143.** Everything above is open. What was built is in
   [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)
