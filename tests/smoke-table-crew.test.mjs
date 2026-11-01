@@ -203,3 +203,17 @@ test("262: Add a player in Who was there splits on commas into one Undo, skippin
   assert.deepEqual(present(app, c.a), ["Rook"], "one Undo takes all of them back");
   assert.deepEqual(app.errors, []);
 });
+
+test("262: comma split in Who was there: two new names, a pressed seat's name skipped, a pair that folds together added once", () => {
+  const c = crewTable([]);
+  const app = open(c);
+  app.click('[data-tsec="sessions"]'); app.click(`.sess-open[data-sopen="${c.a}"]`);
+  whoAdd(app, "Cord, Rook");
+  assert.deepEqual(present(app, c.a), ["Cord", "Rook"]);
+  assert.deepEqual(whoNames(app).slice(-2), ["Cord", "Rook"], "two buttons");
+  whoPress(app, "Dez");
+  whoAdd(app, "Dez, Yuki, yuki");
+  assert.deepEqual(present(app, c.a), ["Cord", "Rook", "Dez", "Yuki"], "Dez was there already; Yuki once");
+  assert.equal(app.$("[data-crew-input]").value, "", "cleared when something was added");
+  assert.deepEqual(app.errors, []);
+});
