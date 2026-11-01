@@ -23,7 +23,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.60.0
+## v0.60.0 — 2026-11-01
 
 - **Majors on your gear.** Tuned Edge, Custom Fit, Signature Weapon and Weapon Expert go on the weapon or armor they're for, right on Loadout, and the sheet counts the rest: the damage, the PROT die, the mod slots, the kicker.
 
