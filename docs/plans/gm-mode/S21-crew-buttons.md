@@ -17,7 +17,7 @@ written in below as settled, not asked:
 3. **One press adds one row.** No multi-select.
 4. A session's **Who was there** gets the same treatment, in the same order.
 
-**Questions left for Ken:** SQ1–SQ4 (§4).
+**SQ1–SQ4 answered by Ken 2026-10-31 (in the conductor session): every default.** He picked "Toggle", "Refuse it", "Players tab order" and "Minor, 0.59.0".
 **Branch:** from `main` at `66b4303` or later, PR to `main`. **GM mode is launched (260):
 nothing is switched off.** This ships visible, with a `CHANGELOG.md` line and an app bump.
 **No `private/` commit.**
@@ -172,10 +172,10 @@ N. **The crew is a row of buttons: one per active seat, in the Players tab's ord
 
 | # | Question | Default | Answer |
 |---|---|---|---|
-| SQ1 | **Who was there, removing a name.** Default: **a seat's button toggles** (press to add, press again to remove every name in `present` that answers to it), and **any other name in `present`** (a guest, a benched seat's name, a spelling typed before seats) shows as a pressed button after the seats, a press removing it. The encounter keeps Ken's rule (a seat already in is disabled) and removing a row stays the row's own **Remove**, with its question: a row carries damage and Conditions, a name in a list doesn't. Or **the same as the encounter**: a name in is disabled, and Who was there gains a × on each to remove it? Two controls where one press does it. | **Toggle; other names as pressed buttons** | |
-| SQ2 | **A seat twice in a fight.** P2: today a second row for the same seat is added, and both claim its copy (257). Default: **`addParticipant` refuses it, "Already in."**, as it refuses a cast member twice; the typed field gets the same answer, so the disabled button is the engine's rule, not only the UI's. A rename onto a seat already in isn't refused (`editParticipant`, out of scope). Or **only the button stops it**, and a typed name still adds a second row? | **The engine refuses** | |
-| SQ3 | **The buttons' order.** Ken said "in the same order" in both places. Default: **the Players tab's order** (each player as listed, their active seats in order), so a GM sees the crew in one order on the card spread, the fight and the session. Or **alphabetical**, as today's datalist sorts the seats? | **The Players tab's order** | |
-| SQ4 | **The bump.** Default: **minor, 0.59.0**: how a GM adds the crew is new. Or **patch, 0.58.1**, as a usability fix? | **Minor** | |
+| SQ1 | **Who was there, removing a name.** Default: **a seat's button toggles** (press to add, press again to remove every name in `present` that answers to it), and **any other name in `present`** (a guest, a benched seat's name, a spelling typed before seats) shows as a pressed button after the seats, a press removing it. The encounter keeps Ken's rule (a seat already in is disabled) and removing a row stays the row's own **Remove**, with its question: a row carries damage and Conditions, a name in a list doesn't. Or **the same as the encounter**: a name in is disabled, and Who was there gains a × on each to remove it? Two controls where one press does it. | **Toggle; other names as pressed buttons** | Default (Ken, 2026-10-31) |
+| SQ2 | **A seat twice in a fight.** P2: today a second row for the same seat is added, and both claim its copy (257). Default: **`addParticipant` refuses it, "Already in."**, as it refuses a cast member twice; the typed field gets the same answer, so the disabled button is the engine's rule, not only the UI's. A rename onto a seat already in isn't refused (`editParticipant`, out of scope). Or **only the button stops it**, and a typed name still adds a second row? | **The engine refuses** | Default (Ken, 2026-10-31) |
+| SQ3 | **The buttons' order.** Ken said "in the same order" in both places. Default: **the Players tab's order** (each player as listed, their active seats in order), so a GM sees the crew in one order on the card spread, the fight and the session. Or **alphabetical**, as today's datalist sorts the seats? | **The Players tab's order** | Default (Ken, 2026-10-31) |
+| SQ4 | **The bump.** Default: **minor, 0.59.0**: how a GM adds the crew is new. Or **patch, 0.58.1**, as a usability fix? | **Minor** | Default (Ken, 2026-10-31) |
 
 Settled by the order, not asked (say so if Ken disagrees):
 - **A seat with no name** (its `name` is its TAG: no copy, nothing typed) gets **no button**, as
