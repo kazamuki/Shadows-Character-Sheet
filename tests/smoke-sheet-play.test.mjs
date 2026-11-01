@@ -1717,3 +1717,122 @@ test("L2b 6c (sheet): unticking the last mode on a typed-RoF row names what the 
   assert.equal(labels.at(-1), "Zip gun: fire modes → Single, Burst", "the audit said the row fires nothing");
   assert.deepEqual(app.errors, []);
 });
+
+// ── L5: a Major on one weapon or armor row (Decision 263) ──────────────
+const L5_HELD = ["tuned-edge", "custom-fit", "weapon-expert", "signature-weapon", "iconic-weapon"];
+function l5Character(held = L5_HELD) {
+  const ch = l3Character();
+  ch.identity.archetype = "professional";
+  ch.skills.melee = { rank: 3, ipe: 0 };
+  Engine.addLoadout(ch, "weapons", "combat-knife");
+  Engine.addLoadout(ch, "weapons", "ap7-sentry");
+  Engine.addLoadout(ch, "armor", "urban-tactics-vest");
+  held.forEach(id => ch.progression.milestones.major.push({ id, date: "2026-11-01T00:00:00.000Z" }));
+  return ch;
+}
+const majorBox = (app, kind, i, id) => app.$(`#main input[data-majorrow="${kind}|${i}|${id}"]`);
+const journalOf = app => app.$$("#main .jrow").map(r => r.querySelector(".what").textContent);
+
+test("L5 10 (sheet): a Major ticked on a weapon row moves its numbers, is one undoable action, and moves between rows", () => {
+  // none of the six held: no Majors line anywhere
+  const bare = openSheet(l5Character([]), "loadout");
+  assert.equal(bare.$$("#main .lo-majors").length, 0, "a Majors line with nothing to place");
+  const ch = l5Character();
+  const before = Engine.weaponLine(ch, 1).damage;
+  const app = openSheet(ch, "loadout");
+  const audit = () => activeChar(app).audit;
+  assert.ok(majorBox(app, "weapons", 1, "tuned-edge"), "the AP-7's row has no Tuned Edge box");
+  assert.equal(majorBox(app, "weapons", 1, "iconic-weapon"), null, "a Major that follows another was offered");
+  const n = audit().length;
+  flip(app, majorBox(app, "weapons", 1, "tuned-edge"), true);
+  assert.equal(audit().length, n + 1, "ticking wasn't one audit entry");
+  assert.equal(audit().at(-1).label, 'Tuned Edge on AP-7 "Sentry"');
+  assert.deepEqual(activeChar(app).weapons[1].majors, ["tuned-edge"]);
+  assert.match(cellsOf(rowOf(app, 1))[2], new RegExp(`^${before + 1}`));
+  assert.match(rowOf(app, 1).textContent, /\+1 from Tuned Edge/);
+  assert.equal(app.window.document.activeElement, majorBox(app, "weapons", 1, "tuned-edge"), "focus left the box");
+  assert.equal(majorBox(app, "weapons", 1, "tuned-edge").checked, true);
+  // the knife's box says where it is, and ticking it moves it
+  const knifeBox = majorBox(app, "weapons", 0, "tuned-edge");
+  assert.equal(knifeBox.checked, false);
+  assert.match(knifeBox.closest(".lo-majors").textContent, /on AP-7 "Sentry"/);
+  flip(app, knifeBox, true);
+  assert.equal(audit().at(-1).label, "Tuned Edge moved to Combat Knife");
+  assert.deepEqual(activeChar(app).weapons[0].majors, ["tuned-edge"]);
+  assert.ok(!Object.hasOwn(activeChar(app).weapons[1], "majors"), "the old row kept it");
+  assert.equal(app.window.document.activeElement, majorBox(app, "weapons", 0, "tuned-edge"), "focus left the box");
+  assert.doesNotMatch(rowOf(app, 1).textContent, /from Tuned Edge/);
+  app.click("[data-toastundo]");
+  assert.deepEqual(activeChar(app).weapons[1].majors, ["tuned-edge"], "undo didn't put it back on the AP-7");
+  assert.ok(!Object.hasOwn(activeChar(app).weapons[0], "majors"));
+  // taking it off
+  flip(app, majorBox(app, "weapons", 1, "tuned-edge"), false);
+  assert.equal(audit().at(-1).label, 'Tuned Edge off AP-7 "Sentry"');
+  assert.ok(!Object.hasOwn(activeChar(app).weapons[1], "majors"));
+  assert.equal(app.window.document.activeElement, majorBox(app, "weapons", 1, "tuned-edge"));
+  assert.deepEqual(app.errors, []);
+  // the engine's refusal (LQ32): Signature's slots hold mods, so it won't leave
+  const held = l5Character();
+  Engine.setMajorRow(held, "signature-weapon", 1);
+  for (const mod of ["Silencer", "Laser Sight", "Holo Sight", "Flashlight"]) Engine.addWeaponMod(held, 1, mod);
+  const app2 = openSheet(held, "loadout");
+  const logged = activeChar(app2).audit.length, box = majorBox(app2, "weapons", 0, "signature-weapon");
+  flip(app2, box, true);
+  assert.equal(activeChar(app2).audit.length, logged, "a refused move was audited");
+  assert.deepEqual(activeChar(app2).weapons[1].majors, ["signature-weapon"], "a refusal wrote");
+  assert.ok(!Object.hasOwn(activeChar(app2).weapons[0], "majors"));
+  assert.equal(box.checked, false, "the box shows a state that wasn't stored");
+  assert.match(app2.$("#undotoast").textContent, /Take 1 slot of mods off first/);
+  assert.deepEqual(app2.errors, []);
+});
+
+test("L5 11 (sheet): Custom Fit's die and Weapon Expert's kicker show on Loadout, Main, print and the hit modal", () => {
+  const ch = l5Character();
+  Engine.setMajorRow(ch, "custom-fit", 0);
+  Engine.setMajorRow(ch, "weapon-expert", 1);
+  const attack = Engine.weaponLine(ch, 1).attack;
+  const app = openSheet(ch, "loadout");
+  assert.match(armorCardOf(app, "Urban Tactics Vest").textContent, /PROT 1d8/);
+  assert.match(armorCardOf(app, "Urban Tactics Vest").textContent, /1d6 \+ a step from Custom Fit/);
+  assert.match(cellsOf(rowOf(app, 1))[1], new RegExp(`^1d10 \\+ ${attack} \\+ 1d4`));
+  assert.match(cellsOf(rowOf(app, 1))[1], /1d4 from Weapon Expert/);
+  assert.doesNotMatch(cellsOf(rowOf(app, 0))[1], /1d4/);
+  app.click('[data-sec="main"]');
+  assert.match(app.$("#main .lo-armor").textContent, /PROT 1d8/);
+  const mainRow = app.$$("#main table.ref tbody tr").find(tr => /AP-7/.test(tr.textContent));
+  assert.match(cellsOf(mainRow)[1], new RegExp(`^1d10 \\+ ${attack} \\+ 1d4`));
+  const page = app.window.renderPrintView(activeChar(app));
+  assert.match(page.split("<tr>").find(r => /AP-7/.test(r)), new RegExp(`1d10\\+${attack}\\+1d4`));
+  assert.match(page, /<td class="num">1d8<\/td>|>1d8</);
+  // the hit modal: a roll of 8 answers a d8
+  app.click('[data-sec="trackers"]');
+  app.click("[data-hitopen]");
+  assert.match(app.$("[data-hitpanel]").textContent, /Urban Tactics Vest · PROT 1d8/);
+  setHit(app, "damage", "12");
+  setHit(app, "protRoll", "8");
+  assert.match(app.$(".hitresult").textContent, /PROT 8/);
+  assert.doesNotMatch(app.$(".hitresult").textContent, /can't be more than/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("L5 12 (sheet): Progression's journal says where each Major is, and removing one takes it off its row", () => {
+  const ch = l5Character();
+  Engine.setMajorRow(ch, "tuned-edge", 1);
+  const damage = Engine.weaponLine(ch, 1).damage;
+  const app = openSheet(ch, "progression");
+  const j = journalOf(app);
+  assert.ok(j.includes('Tuned Edge: AP-7 "Sentry"'), j.join(" | "));
+  assert.ok(j.includes("Weapon Expert: not on a weapon yet"));
+  assert.ok(j.includes("Custom Fit: not on armor yet"));
+  assert.ok(j.includes("Iconic Weapon: goes with Signature Weapon"));
+  const row = app.$$("#main .jrow").find(r => /^Tuned Edge/.test(r.querySelector(".what").textContent));
+  row.querySelector("[data-delmajor]").dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  assert.match(app.$("#modal").textContent, /Tuned Edge comes off the record, and off AP-7 "Sentry" too\./);
+  app.click("[data-askyes], #modal [data-yes]");
+  assert.ok(!Object.hasOwn(activeChar(app).weapons[1], "majors"), "the row kept the removed Major");
+  assert.ok(activeChar(app).progression.milestones.major.every(m => m.id !== "tuned-edge"));
+  assert.equal(Engine.weaponLine(activeChar(app), 1).damage, damage - 1);
+  app.click("[data-toastundo]");
+  assert.deepEqual(activeChar(app).weapons[1].majors, ["tuned-edge"], "one undo didn't restore both");
+  assert.deepEqual(app.errors, []);
+});
