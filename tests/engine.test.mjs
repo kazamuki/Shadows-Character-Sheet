@@ -12112,7 +12112,7 @@ test("L5 2 (engine): Custom Fit steps a body piece's PROT die up the ladder, nev
   assert.equal(Engine.armorState(ch).pieces[top].prot, "1d12");
   assert.equal(Engine.armorState(ch).pieces[top].protMax, 12);
   ch.armor[top].prot = "2d6";
-  assert.deepEqual(plain(Engine.setMajorRow(ch, "custom-fit", top)), { ok: false, why: "Its PROT isn't one die." });
+  assert.deepEqual(plain(Engine.setMajorRow(ch, "custom-fit", top)), { ok: false, why: "Custom Fit needs a PROT that's one die, like 1d6." });
   assert.equal(Engine.armorState(ch).pieces[top].protMax, null, "a die the ladder doesn't hold was stepped");
   const hand = l3Have(ch, "armor", D.armor.find(a => a.slot === "head").id);
   assert.equal(Engine.setMajorRow(ch, "custom-fit", hand).ok, false);
@@ -12193,10 +12193,10 @@ test("L5 5 (engine): setMajorRow puts a Major on one row, moves it, takes it off
     if (why) assert.equal(r.why, why);
     assert.equal(JSON.stringify(ch), snap, `a refusal wrote something (${id} → ${index})`);
   };
-  refuses("tuned-edge", at.ap7, "Take it first.");
+  refuses("tuned-edge", at.ap7, "Take it on Progression first.");
   hold(ch, "tuned-edge", "custom-fit", "signature-weapon", "iconic-weapon", "weapon-expert", "specialist");
   refuses("specialist", at.ap7);
-  refuses("iconic-weapon", at.ap7, "It goes with Signature Weapon.");
+  refuses("iconic-weapon", at.ap7, "It follows Signature Weapon: put that one on a weapon.");
   refuses("nope", at.ap7);
   refuses("tuned-edge", 99);
   refuses("tuned-edge", -1);
@@ -12213,8 +12213,8 @@ test("L5 5 (engine): setMajorRow puts a Major on one row, moves it, takes it off
   Engine.setMajorRow(ch, "signature-weapon", at.ap7);
   for (const mod of ["Silencer", "Laser Sight", "Holo Sight", "Flashlight", "Biometrics"]) assert.equal(Engine.addWeaponMod(ch, at.ap7, mod).ok, true, mod);
   assert.equal(Engine.weaponLine(ch, at.ap7).modSlots.used, 6);
-  refuses("signature-weapon", at.knife, "Take 3 slots of mods off first: they're in Signature Weapon's slots.");
-  refuses("signature-weapon", null, "Take 3 slots of mods off first: they're in Signature Weapon's slots.");
+  refuses("signature-weapon", at.knife, "Take 3 slots of mods off first: Signature Weapon's slots are in use.");
+  refuses("signature-weapon", null, "Take 3 slots of mods off first: Signature Weapon's slots are in use.");
   [4, 3, 2].forEach(n => Engine.removeWeaponMod(ch, at.ap7, n));
   assert.equal(Engine.setMajorRow(ch, "signature-weapon", at.knife).ok, true, "two slots of mods fit the weapon's own three");
   // removing the Major itself can't be refused: a line over its slots says so

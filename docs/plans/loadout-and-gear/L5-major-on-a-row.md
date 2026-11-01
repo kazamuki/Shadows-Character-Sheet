@@ -4,7 +4,7 @@
 
 **The split (Ken's ruling, 2026-11-01, in the conductor session).** W136 had two halves: the six General Majors that change one carried weapon or armor row, and eight Vampire and Werewolf powers that change claws, fangs and melee damage while they run (LQ5). The powers can't be drafted without L4. A natural line has only a display name today ("Bite", "Claws", "Fangs"), so nothing says which line a power that names "your bite" reaches. And whether "+3 melee damage" reaches natural attacks is the question L4's handoff put to the 2026-10-29 meeting. Ken picked **"Split it"** over "hold all of L5" and "S13b instead". **L5 is the six Majors. The eight powers are L5b, after L4,** drafted from the meeting's notes, and LQ5's answer (conditional marks, never summed) stays with them.
 
-**Status: drafted 2026-11-01 by Claude (Opus), S21's reviewer, as the plan's orchestrator.**
+**Status: built 2026-11-01 (Decision 263; app 0.60.0, game data 0.51, character schema 0.32), PR #288.** Drafted by Claude (Opus), S21's reviewer, as the plan's orchestrator. Ken's voice pass on the review (six rewrites) is applied.
 
 **Approved by Ken 2026-11-01** (in the conductor session: "Approve it"), as drafted.
 **LQ29–LQ34 answered by Ken 2026-11-01 (in the conductor session): every default.** He picked "On the row", "On Loadout", "Both defaults" for LQ31 + LQ32, and "Both defaults" for LQ33 + LQ34. Recorded on #286 (issuecomment-6553843606).

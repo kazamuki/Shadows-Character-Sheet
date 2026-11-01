@@ -2205,7 +2205,7 @@ function armorRowHtml(ch, p){
   }
   if (body){
     h += `<div class="lo-armor-stats"><span class="hitarmor">${armorStatLine(p)}</span></div>${
-      p.majors.length ? `<p class="lo-sub">${esc(p.protBase)} + a step from ${esc(p.majors.map(m=>m.name).join(", "))}</p>` : ""}
+      p.majors.length ? `<p class="lo-sub">${esc(p.protBase)}, a step up from ${esc(p.majors.map(m=>m.name).join(", "))}</p>` : ""}
       <div class="lo-armor-int">${intBar(p)}</div>${majorsLineHtml(ch, "armor", p.index)}`;
   }
   const piece = p.custom ? null : (D.armor||[]).find(a=>a.id===p.id);

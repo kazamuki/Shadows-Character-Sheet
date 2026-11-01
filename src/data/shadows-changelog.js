@@ -6,7 +6,7 @@ window.SHADOWS_CHANGELOG = [
     "date": null,
     "intro": [],
     "items": [
-      "**Majors on your gear.** Put Tuned Edge, Custom Fit, Signature Weapon or Weapon Expert on the weapon or armor it's for, on Loadout, and the sheet does the math: the damage, the PROT die, the mod slots, the kicker."
+      "**Majors on your gear.** Tuned Edge, Custom Fit, Signature Weapon and Weapon Expert go on the weapon or armor they're for, right on Loadout, and the sheet counts the rest: the damage, the PROT die, the mod slots, the kicker."
     ]
   },
   {

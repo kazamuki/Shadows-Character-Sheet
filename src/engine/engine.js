@@ -2034,12 +2034,12 @@ const Engine = (() => {
   // `moved` is the name of the row it left. A refusal writes nothing.
   function setMajorRow(ch, id, index){
     if (!isPlainObj(ch)) return { ok:false, why:"That isn't on the sheet." };
-    if (typeof id!=="string" || !majorTakenIds(ch).includes(id)) return { ok:false, why:"Take it first." };
+    if (typeof id!=="string" || !majorTakenIds(ch).includes(id)) return { ok:false, why:"Take it on Progression first." };
     const defs = rowMajorDefs(), def = defs.find(x=>x.id===id);
     if (!def || (def.row.kind!=="weapons" && def.row.kind!=="armor" && !def.row.follows)) return { ok:false, why:"That Milestone doesn't go on a weapon or armor." };
     if (def.row.follows){
       const to = defs.find(x=>x.id===def.row.follows);
-      return { ok:false, why:`It goes with ${to ? txt(to.name) : "another Major"}.` };
+      return { ok:false, why:`It follows ${to ? txt(to.name) : "another Major"}: put that one on a weapon.` };
     }
     const kind = def.row.kind, list = listOf(ch, kind);
     const holders = list.map((e, i)=>isPlainObj(e) && majorsOn(e).includes(id) ? i : -1).filter(i=>i>=0);
@@ -2050,7 +2050,7 @@ const Engine = (() => {
       if (def.row.slot && armorPiece(e, index).slot!==def.row.slot) return { ok:false, why:`${txt(def.name)} goes on body armor.` };
       const ladder = (D().armorRules||{}).protDice;
       if ((def.row.grants||[]).some(g=>isPlainObj(g) && g.type==="protStep") && !(Array.isArray(ladder) && ladder.some(d=>dieMax(d)===armorPiece(e, index).protMax)))
-        return { ok:false, why:"Its PROT isn't one die." };
+        return { ok:false, why:"Custom Fit needs a PROT that's one die, like 1d6." };
     }
     // Its slots go when it leaves a row, and a mod can't be left without a slot (Decision 263).
     if ((def.row.grants||[]).some(g=>isPlainObj(g) && g.type==="modSlots"))
@@ -2059,7 +2059,7 @@ const Engine = (() => {
         const own = Number((weaponDefById(list[at].id)||{}).mods)||0, used = (weaponLine(ch, at).modSlots||{}).used||0;
         if (used>own){
           const n = used - own;
-          return { ok:false, why:`Take ${n} slot${n===1 ? "" : "s"} of mods off first: they're in ${txt(def.name)}'s slots.` };
+          return { ok:false, why:`Take ${n} slot${n===1 ? "" : "s"} of mods off first: ${txt(def.name)}'s slots are in use.` };
         }
       }
     const moved = holders.length && !(holders.length===1 && holders[0]===index) ? loadoutName(kind, list[holders[0]], holders[0]) : null;

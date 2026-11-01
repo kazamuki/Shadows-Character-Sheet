@@ -1782,7 +1782,7 @@ test("L5 10 (sheet): a Major ticked on a weapon row moves its numbers, is one un
   assert.deepEqual(activeChar(app2).weapons[1].majors, ["signature-weapon"], "a refusal wrote");
   assert.ok(!Object.hasOwn(activeChar(app2).weapons[0], "majors"));
   assert.equal(box.checked, false, "the box shows a state that wasn't stored");
-  assert.match(app2.$("#undotoast").textContent, /Take 1 slot of mods off first/);
+  assert.match(app2.$("#undotoast").textContent, /Take 1 slot of mods off first: Signature Weapon's slots are in use/);
   assert.deepEqual(app2.errors, []);
 });
 
@@ -1793,7 +1793,7 @@ test("L5 11 (sheet): Custom Fit's die and Weapon Expert's kicker show on Loadout
   const attack = Engine.weaponLine(ch, 1).attack;
   const app = openSheet(ch, "loadout");
   assert.match(armorCardOf(app, "Urban Tactics Vest").textContent, /PROT 1d8/);
-  assert.match(armorCardOf(app, "Urban Tactics Vest").textContent, /1d6 \+ a step from Custom Fit/);
+  assert.match(armorCardOf(app, "Urban Tactics Vest").textContent, /1d6, a step up from Custom Fit/);
   assert.match(cellsOf(rowOf(app, 1))[1], new RegExp(`^1d10 \\+ ${attack} \\+ 1d4`));
   assert.match(cellsOf(rowOf(app, 1))[1], /1d4 from Weapon Expert/);
   assert.doesNotMatch(cellsOf(rowOf(app, 0))[1], /1d4/);
