@@ -982,7 +982,11 @@ It renders on the Character tab (Decision 158).
   // Absent until ticked, and migrate() deletes one that isn't real. While it
   // is absent the typed `rof` reads as before; a tick never writes or clears
   // `rof`, and new rows have none.
+  // (0.32, Decision 263) Either kind of row may carry `majors`: ids of General Majors (the data's `row`) placed on it,
+  // absent when empty. migrate() keeps only ids that go on this kind of row, each once across the list. Whether the
+  // Major is held is the readers' to check, so a stray id counts for nothing.
   weapons: [ { id: "combat-knife", notes: "", mods: [], roundsSpent: 0 },
+             { id: "ap7-sentry", notes: "", mods: [], roundsSpent: 0, majors: ["tuned-edge"] },
              { id: "ads-lp9-viper", notes: "", mods: [], roundsSpent: 3, loaded: "silver-rounds" },
              { custom: true, name, damage, capacity, ammo, features, notes, roundsSpent: 0,
                category, damageType, range, acc,       // optional picks (0.29)
@@ -999,7 +1003,7 @@ It renders on the Character tab (Decision 158).
   // A custom piece may carry `coverage` (light/medium/full); absent reads as
   // light, which is what every reader did before, so a file without it is
   // valid both ways and there is no migrate() step or schema bump.
-  armor:   [ { id: "kevlar-vest", integrityLoss: 0, notes: "", worn: true, scrapped: false, upgrades: [] },
+  armor:   [ { id: "kevlar-vest", integrityLoss: 0, notes: "", worn: true, scrapped: false, upgrades: [], majors: ["custom-fit"] },
              { custom: true, name, prot, res, integrity, coverage, integrityLoss, notes, worn, scrapped, upgrades } ],
 
   progression: {
@@ -5387,6 +5391,14 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing.
      - **Revisit if:** tables routinely seat more than eight, a GM needs a benched seat in a fight often, or the cast's crew lines (W142) get the same buttons.
      - **Built:** app 0.59.0; PR #285; log 2026-10-31 (S21).
+263. **A General Major that changes one weapon or armor goes on that row: the row keeps the Major's id, so removing another row never moves it, and removing the row loses it.**
+     *2026-11-01 · Ken + Claude · Touches: majors on weapons and armor rows, setMajorRow, majorRows, untakeMilestone, row on a Major, follows, weaponLine, armorState, protDice, modSlots, kickers, bonuses, Tuned Edge, Custom Fit, Signature Weapon, Iconic Weapon, Legendary Weapon, Weapon Expert, W136, L5b, LQ29–LQ34, character schema 0.32, Decision 120, Decision 223, Decision 233, Decision 248*
+     - **Decided:** A Major whose data has `row` goes on one weapon or armor row of its `kind`, stored as its id in that row's `majors`; one row at a time, moved or cleared on Loadout, cleared when the Major is removed. Tuned Edge adds 1 damage (listed in `bonuses`); Custom Fit steps a body piece's PROT die up `armorRules.protDice`, never past d12; Signature adds 2 mod slots to a catalog weapon and Iconic and Legendary 1 each to Signature's (`follows`); Weapon Expert puts a 1d4 kicker on the line, a 1d6 when an unconditional 1d4 reaches its Skill. Readers count a Major only while it's held.
+     - **Why:** W136; the book says each applies "only to that weapon" or armor, "lost if it is sold, destroyed, or replaced".
+     - **Rejected:** the row on the Major, with an id on every loadout row (LQ29); an index (rows move); a pick when taken (LQ30); refusing a move (LQ31); Signature on a written-in weapon (no mods).
+     - **Replaces:** nothing; extends 120 (mod slots), 233 (a kicker beside the attack), 248 (`bonuses`).
+     - **Revisit if:** L5b's powers need the pointer; Ken rules a weapon's "free Upgrade" (LQ34); a written-in weapon takes mods.
+     - **Built:** app 0.60.0, game data 0.51, character schema 0.32, PR #288, log 2026-11-01 (L5).
 
 ## 5. Open Flags
 

@@ -2,6 +2,14 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.60.0",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**Majors on your gear.** Tuned Edge, Custom Fit, Signature Weapon and Weapon Expert go on the weapon or armor they're for, right on Loadout, and the sheet counts the rest: the damage, the PROT die, the mod slots, the kicker."
+    ]
+  },
+  {
     "version": "0.59.0",
     "date": "2026-11-01",
     "intro": [],

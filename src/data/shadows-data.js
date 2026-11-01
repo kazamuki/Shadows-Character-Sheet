@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.50",
+    "gamedataVersion": "0.51",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-10-08"
   },
@@ -3470,6 +3470,7 @@ window.SHADOWS_DATA = {
      (Decision 217). `majorGeneral` is offered where an archetype's
      `growth.majorMilestones` is "general" (the Professional); every other
      archetype's Majors live in its own `growth` list.
+     A Major with `row` goes on one weapon or armor row of the loadout, and its `grants` are read only there (Decision 263).
      `prerequisites` is the machine-enforced gate the app reads:
        majorCount: N            -> requires N majors already taken
        skills: { any:[[id,rank]] / all:[[id,rank]] }  -> skill thresholds by id
@@ -3610,6 +3611,7 @@ window.SHADOWS_DATA = {
         "prerequisites": {
           "majorCount": 0
         },
+        "row": { "kind": "armor", "slot": "body", "grants": [{ "type": "protStep", "amount": 1 }] },
         "benefit": "After personalizing a specific set of armor, permanently increase its damage reduction die by one step (d4 to d6, d6 to d8, max d12). Applies only to that armor; lost if it is sold, destroyed, or replaced."
       },
       {
@@ -3622,6 +3624,7 @@ window.SHADOWS_DATA = {
             "note": "Rank 1+ in the preferred Weapon skill"
           }
         },
+        "row": { "kind": "weapons", "grants": [{ "type": "weaponBonus", "to": "damage", "amount": 1 }] },
         "benefit": "After refining a specific weapon, it gains +1 to damage. Applies only to that weapon; lost if it's significantly modified again, replaced, or destroyed."
       },
       {
@@ -3674,6 +3677,7 @@ window.SHADOWS_DATA = {
           },
           "gmApproval": true
         },
+        "row": { "kind": "weapons", "catalog": true, "grants": [{ "type": "modSlots", "amount": 2 }] },
         "benefit": "Choose a base weapon. Upgrade it: +2 Mod Slots, +1 free Upgrade. Attunement: cannot be permanently taken from you except by destruction or conscious sacrifice; can always be repaired/rebuilt with time and resources."
       },
       {
@@ -3708,6 +3712,7 @@ window.SHADOWS_DATA = {
         "prerequisites": {
           "majorCount": 1
         },
+        "row": { "kind": "weapons", "grants": [{ "type": "kicker", "die": "1d4", "over": "1d4", "becomes": "1d6" }] },
         "benefit": "Select a specific weapon in your arsenal. Gain a +1d4 kicker to combat rolls using it; if a +1d4 already applies, it increases to +1d6 instead."
       },
       {
@@ -3884,6 +3889,7 @@ window.SHADOWS_DATA = {
           ]
         },
         "grants": [{ "type": "checkMod", "amount": 5, "skills": ["deception", "intimidation", "persuasion", "seduction"], "whenText": "while your Signature weapon is visible" }],
+        "row": { "follows": "signature-weapon", "grants": [{ "type": "modSlots", "amount": 1 }] },
         "benefit": "Upgrade it: +1 Mod Slot (total 3), +1 Upgrade (total 2). Attunement: Gain +5 on social skills (Deception, Intimidation, Persuasion, Seduction) when the weapon is visible."
       },
       {
@@ -3933,6 +3939,7 @@ window.SHADOWS_DATA = {
             "iconic-weapon"
           ]
         },
+        "row": { "follows": "signature-weapon", "grants": [{ "type": "modSlots", "amount": 1 }] },
         "benefit": "Upgrade it: +1 Mod Slot (total 4), +1 Upgrade (total 3). Signature Effect: a cinematic combat move or reactive ability once per session (work with GM; e.g. Vampiric weapon, Phasing attack, Surestrike). Attunement: bound to your identity - anyone else using it suffers significant penalties unless ritually attuned or part of your legacy."
       }
     ],
@@ -4269,6 +4276,9 @@ window.SHADOWS_DATA = {
        bypasses it entirely (Gear, Armor Properties). A custom piece with no
        `coverage` is treated as "light": all body armor covers the torso
        (Decision 98, CQ7). */
+    /* The book's ladder for Custom Fit (0412): "d4 to d6, d6 to d8, max d12". A body piece's
+       PROT die moves up it one step per `protStep`, and stops at the last. */
+    "protDice": ["1d4", "1d6", "1d8", "1d10", "1d12"],
     "baseResAgainst": ["kinetic"],
     "coverageLocations": {
       "light":  ["torso"],

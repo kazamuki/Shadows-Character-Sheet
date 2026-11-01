@@ -1,7 +1,7 @@
 # State of the build
 
-**Updated:** 2026-10-31
-**Versions:** app `0.59.0` · game data `0.50` · character schema `0.31` · table schema `0.19` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
+**Updated:** 2026-11-01
+**Versions:** app `0.60.0` · game data `0.51` · character schema `0.32` · table schema `0.19` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -141,10 +141,8 @@ rev 9's `C1`–`C3` are still forward notes.
 
 **Next is Ken's pick**, each built through a work order (`WORK-ORDERS.md`):
 - **Another of `plans/gm-mode.md`'s *Still to build*** (GM mode is launched, so each now ships visible; more keys are on W139; Home's own layout is W80's rest).
-- **The vehicles-and-gear plan** (`plans/loadout-and-gear.md`) is approved (Ken, 2026-10-24, LQ1–LQ10 on their defaults); L1 (weapon damage types), L2 (written-in weapons read like the catalog's), L2b (they tick their fire modes and reload from carried ammo) and L3 (worn armor and gear in use carry modifiers) are built.
-  L4 (natural attacks and the unarmed strike) waits on the 2026-10-29 meeting's notes. L5 (a Major on one
-  row) is drafted for Ken's approval (`plans/loadout-and-gear/L5-major-on-a-row.md`, LQ29–LQ34); its powers
-  half is L5b, after L4 (Ken, 2026-11-01); L6 (vehicles, was P14) and L7
+- **The vehicles-and-gear plan** (`plans/loadout-and-gear.md`) is approved (Ken, 2026-10-24, LQ1–LQ10 on their defaults); L1 (weapon damage types), L2 (written-in weapons read like the catalog's), L2b (they tick their fire modes and reload from carried ammo) and L3 (worn armor and gear in use carry modifiers) and L5 (a Major on one weapon or armor row, Decision 263) are built.
+  L4 (natural attacks and the unarmed strike) waits on the 2026-10-29 meeting's notes. L5b, the powers half of W136, follows L4 (Ken, 2026-11-01); L6 (vehicles, was P14) and L7
   (Powered Armor) wait on Deighton. The 2026-10-23 meeting's natural attacks (two a
   round) are in `reference/meeting-2026-10-23.md`, with five details for Deighton.
   The player sheet's plan (`plans/archive/sheet-wishlist.md`) closed 2026-10-24, P1–P21 built.

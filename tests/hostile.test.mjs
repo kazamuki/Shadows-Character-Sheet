@@ -1106,7 +1106,7 @@ test("Decision 216: powerIpe naming another Bloodline's or a nonexistent power h
 const same = (a, b, msg) => assert.equal(JSON.stringify(a), JSON.stringify(b), msg);
 test("P12b 10: migrate keeps the house rule, a running training and a landed entry's fields, and nothing else", () => {
   const mk = patch => { const c = Engine.newCharacter(); patch(c); return Engine.migrate(JSON.parse(JSON.stringify(c))); };
-  assert.equal(Engine.newCharacter().meta.schemaVersion, "0.31");
+  assert.equal(Engine.newCharacter().meta.schemaVersion, "0.32");
   assert.equal(mk(c => { c.houseRules.training = true; }).houseRules.training, true, "true survives");
   for (const junk of ["yes", 1, "true", {}, [], null])
     assert.equal(mk(c => { c.houseRules.training = junk; }).houseRules.training, false, `houseRules.training ${JSON.stringify(junk)}`);
@@ -1125,7 +1125,7 @@ test("P12b 10: migrate keeps the house rule, a running training and a landed ent
   assert.equal(log({ via: "training", mp: 3 }).mp, 3);
   for (const via of ["x", {}, 7, null, ["training"]]) assert.equal("via" in log({ via }), false, `via ${JSON.stringify(via)}`);
   for (const mp of ["3", -1, {}, 1.5, null, NaN]) assert.equal("mp" in log({ via: "training", mp }), false, `mp ${JSON.stringify(mp)}`);
-  assert.equal(Engine.migrate({}).meta.schemaVersion, "0.31");
+  assert.equal(Engine.migrate({}).meta.schemaVersion, "0.32");
 });
 
 test("a rule's text of markup renders as text on the CP step and a folded Character card (Decision 231)", () => {
@@ -1531,4 +1531,21 @@ test("Decision 259: a stored keys value that isn't \"off\" is on, and a storage 
   Object.defineProperty(proto, "getItem", { configurable: true, value(k) { if (k === "shadows.ui.keys") throw new Error("denied"); return get.call(this, k); } });
   assert.equal(press(app), true);
   assert.deepEqual(app.errors, []);
+});
+
+test("L5 6c: a file's majors lists come out as ids of real Majors, or nothing, and reach nothing they shouldn't", () => {
+  const mk = (weapons, armor) => {
+    const c = Engine.newCharacter();
+    c.weapons = weapons.map(m => ({ id: "ap7-sentry", notes: "", mods: [], roundsSpent: 0, majors: m }));
+    c.armor = armor.map(m => ({ id: "urban-tactics-vest", integrityLoss: 0, notes: "", worn: true, scrapped: false, upgrades: [], majors: m }));
+    return Engine.migrate(JSON.parse(JSON.stringify(c)));
+  };
+  const longId = "tuned-edge".padEnd(10000, "x"), many = Array.from({ length: 500 }, (_, i) => "m" + i);
+  const w = mk([[longId], many, ["__proto__", "constructor", "toString"], ["tuned-edge", "tuned-edge", "custom-fit", 5, null]], [["tuned-edge", "custom-fit", "custom-fit"]]);
+  assert.deepEqual(w.weapons.map(r => r.majors), [undefined, undefined, undefined, ["tuned-edge"]].map(x => x && JSON.parse(JSON.stringify(x))));
+  assert.deepEqual(JSON.parse(JSON.stringify(w.armor[0].majors)), ["custom-fit"]);
+  const ids = new Set(D.milestones.majorGeneral.map(m => m.id));
+  for (const r of w.weapons.concat(w.armor)) for (const id of r.majors || []) assert.ok(ids.has(id), id);
+  assert.equal(Object.keys({}).length, 0, "the prototype stayed clean");
+  assert.equal(({}).majors, undefined);
 });
