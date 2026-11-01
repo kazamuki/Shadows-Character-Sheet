@@ -821,6 +821,7 @@ not a queue. What Scott's use of the table turns up can reorder it.
 | S11 | CRANK work: the generator and the jobs board (`2625` revised) | Content + shape | S5 built; S2 for dispatched pay | No order yet |
 | Notes | The Notes tab, given its own order: tags, categories, and notes grouped or filtered by the session they were taken in (already a soft tag, Decision 208), alongside Jot and Find (W140) | Rule or shape | Nothing | No order yet |
 | S20 | Wave Initiative by one roll a side: whoever is closest to the danger rolls Combat Sense for their side, the higher side goes first, rolled again at the Reset (GQ30, answered by Deighton's Q34; 210's *Revisit if*) | Rule or shape (table schema 0.19, app minor) | Nothing | **Built 2026-10-31** (Decision 261; SQ1–SQ5 all Default): [order](gm-mode/S20-wave-rolls.md) |
+| S21 | The crew as buttons: one per active seat in an encounter's Add section and a session's Who was there, then Add a player for any other name; a seat already in a fight is disabled, a seat in Who was there toggles (Ken, 2026-10-31) | Rule or shape (app minor) | Ken: SQ1–SQ4 | **Drafted 2026-10-31**: [order](gm-mode/S21-crew-buttons.md) |
 
 S12's split into S12a and S12b, and the names S10f and S17, are this table's
 (2026-10-23), so each piece can be picked on its own. *What's left, session by session*, below, describes
