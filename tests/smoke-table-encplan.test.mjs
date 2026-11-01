@@ -21,7 +21,7 @@ const both = (app, sel, value) => {
 const submit = (app, sel) => app.$(sel).dispatchEvent(new app.window.Event("submit", { bubbles: true, cancelable: true }));
 const rowByName = (app, name) => app.$$("[data-erow]").find(li => li.querySelector(".enc-name").textContent === name);
 const rid = (app, name) => rowByName(app, name).dataset.erow;
-const addPc = (app, name) => { type(app, "[data-enc-pcname]", name); app.click("[data-enc-addpc]"); };
+const addPc = (app, name) => { if (!app.$("[data-enc-pname]")) app.click("[data-enc-player]"); type(app, "[data-enc-pname]", name); app.click("[data-enc-addplayer]"); };
 const hideToast = app => app.window.eval("hideUndoToast()");
 const labels = app => JSON.parse(app.window.eval("JSON.stringify(S.table.audit.map(e => e.label))"));
 const enc = app => JSON.parse(app.window.eval("JSON.stringify(S.table.encounters[0])"));

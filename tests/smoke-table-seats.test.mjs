@@ -282,17 +282,18 @@ test("255: Find finds a seat and opens its page on the heading", async () => {
   assert.deepEqual(app.errors, []);
 });
 
-test("255: the encounter's PC name field offers the seats' names", () => {
+test("255: the encounter's Add a player field offers the seats' names", () => {
   const app = boot({ storage: playedTable() });
   openSaved(app);
   seatPage(app, DEZ_TAG);
   app.click("[data-seatnameadd]"); both(app, '[data-seatname="0"]', "Okafor");
   app.click('[data-tsec="encounters"]');
   type(app, "[data-enc-name]", "Docks"); app.click("[data-enc-new]");
-  const input = app.$("[data-enc-pcname]");
+  app.click("[data-enc-player]");
+  const input = app.$("[data-enc-pname]");
   assert.equal(input.getAttribute("list"), "sess-crew");
   assert.deepEqual([...app.$$("#sess-crew option")].map(o => o.value).slice(0, 2).sort(), ["Dez", "Okafor"]);
-  assert.equal(input.getAttribute("placeholder"), "Who's at the table?");
+  assert.equal(input.getAttribute("placeholder"), null);
   assert.deepEqual(app.errors, []);
 });
 
@@ -305,7 +306,7 @@ test("254: Who knows what groups a name that answers to a seat under the charact
   app.click("[data-seatnameadd]"); both(app, '[data-seatname="0"]', "Dez Okafor");
   app.click('[data-tsec="cast"]'); app.click('[data-cview="crew"]');
   assert.deepEqual(app.$$(".crew-name").map(h => h.textContent), ["Dez"], "one group, headed by the character");
-  app.click('[data-tsec="sessions"]'); app.click("[data-snew]");
+  app.click('[data-tsec="sessions"]'); app.click("[data-snew]"); app.click("[data-crew-add]");
   assert.equal([...app.$$("#sess-crew option")][0].value, "Dez", "the seat's name leads Who was there");
   assert.deepEqual(app.errors, []);
 });

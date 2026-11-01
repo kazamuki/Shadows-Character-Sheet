@@ -1158,7 +1158,7 @@ function bindCastPage(main, n){
     }
     if (S.backClose && S.closeOut){
       S.backClose=false; S.castOpen=null; S.intAdd=null; S.tsection="sessions"; S.closeOut.view=true; window.scrollTo(0,0); update();
-      const el=$("main").querySelector(attrSel("data-co-open-cast", id)) || $("main").querySelector('[data-cosf="present"]'); if (el) el.focus();
+      const el=$("main").querySelector(attrSel("data-co-open-cast", id)) || $("main").querySelector('[data-crew-seat], [data-crew-name], [data-crew-add]'); if (el) el.focus();
       return;
     }
     if (S.backSess){
@@ -1900,7 +1900,58 @@ const hoursText = n => `${n} hour${n===1 ? "" : "s"}`;
 function sessionLine(s){
   return [ Engine.sessionTitle(s), s.date ? dayText(s.date) : "", (s.present||[]).join(", "), typeof s.hours==="number" ? hoursText(s.hours) : "" ].filter(Boolean).join(" · ");
 }
-// Every crew name the table knows, spelled as first written, for the Who was there field.
+// The crew as buttons (Decision 262): a button per active seat with a name, in the Players tab's order
+// (Engine.seatPicks), then Add a player for anyone else. Which seat a name answers to is the engine's alone.
+function crewAddHtml(open, tog){
+  return `<button type="button" class="btn crew-add" ${tog} aria-expanded="${open}">Add a player</button>`;
+}
+function crewFieldHtml(field, go){
+  return `<div class="cast-add crew-field"><label class="field"><span>Name</span><input type="text" ${field} list="sess-crew" autocomplete="off"></label>
+    <button type="button" class="btn" ${go}>Add</button></div>${datalistHtml("sess-crew", sessionCrewNames(S.table))}`;
+}
+// Who was there (a session's page and its close-out): a seat's button is pressed while a name in `present` answers to it;
+// any other name in `present` follows as a pressed button of its own.
+function whoHtml(s, key){
+  const t=S.table, present=Array.isArray(s.present) ? s.present : [], picks=Engine.seatPicks(t, present), tags=new Set(picks.map(p=>p.tag));
+  const seen=new Set(), others=present.filter(n=>{ const k=foldName(n); if (!k || seen.has(k)) return false; seen.add(k); return !tags.has(Engine.seatFor(t, n)); });
+  const open=S.crewAdd===key, mark=`<span class="crew-mark" aria-hidden="true">✓</span> `;
+  return `<div class="field crew-who" data-crew-box><span class="crew-label">Who was there</span>
+    <div class="crew-btns" role="group" aria-label="Who was there">${picks.map(p=>`<button type="button" class="btn crew-btn${p.in ? " on" : ""}" data-crew-seat="${esc(p.tag)}" aria-pressed="${p.in}">${p.in ? mark : ""}${esc(p.name)}</button>`).join("")}${others.map(n=>`<button type="button" class="btn crew-btn on" data-crew-name="${esc(n)}" aria-pressed="true">${mark}${esc(n)}</button>`).join("")}${crewAddHtml(open, "data-crew-add")}</div>
+    ${open ? crewFieldHtml("data-crew-input", "data-crew-go") : ""}</div>`;
+}
+// Binds a Who was there box. `key` says which page it is on; `after` runs once `present` is saved (the close-out redraws its lists).
+function bindWho(main, id, key, after){
+  const box=main.querySelector("[data-crew-box]"); if (!box) return;
+  const cur=()=>sessionById(id), foc=sel=>{ const el=$("main").querySelector(sel); if (el) el.focus(); return !!el; };
+  const save=list=>{ let r; tableChange(()=>{ r=Engine.editSession(S.table, id, { present:list }); }, false); if (!r.ok){ notice(r.why); return false; } return true; };
+  const draw=()=>{ box.outerHTML=whoHtml(cur(), key); bindWho($("main"), id, key, after); };
+  const has=(list, n)=>list.some(x=>foldName(x)===foldName(n));
+  const finish=sel=>{ if (after) after(); draw(); foc(sel); };
+  const addName=()=>{
+    const input=box.querySelector("[data-crew-input]"), name=input ? input.value.trim() : ""; if (!name){ if (input) input.focus(); return; }
+    const present=cur().present||[];
+    if (has(present, name)){ input.focus(); return; }
+    if (save(present.concat([name]))) finish("[data-crew-input]"); else input.focus();
+  };
+  box.onclick=ev=>{
+    const b=ev.target.closest("button"); if (!b || !box.contains(b)) return;
+    const s=cur(); if (!s) return; const t=S.table, present=Array.isArray(s.present) ? s.present : [];
+    if ("crewSeat" in b.dataset){
+      const tag=b.dataset.crewSeat, p=Engine.seatPicks(t, present).find(x=>x.tag===tag); if (!p) return;
+      const list=p.in ? present.filter(n=>Engine.seatFor(t, n)!==tag) : has(present, p.name) ? present : present.concat([p.name]);
+      if (save(list)) finish(`[data-crew-seat="${tag}"]`);
+    } else if ("crewName" in b.dataset){
+      const at=[...box.querySelectorAll(".crew-btns button")].indexOf(b);
+      if (save(present.filter(n=>foldName(n)!==foldName(b.dataset.crewName)))){
+        if (after) after(); draw();
+        const all=$("main").querySelectorAll("[data-crew-box] .crew-btns button"); (all[at] || all[all.length-1]).focus(); }
+    } else if ("crewAdd" in b.dataset){
+      S.crewAdd=S.crewAdd===key ? null : key; draw(); foc(S.crewAdd ? "[data-crew-input]" : "[data-crew-add]");
+    } else if ("crewGo" in b.dataset) addName();
+  };
+  box.onkeydown=ev=>{ if (ev.key==="Enter" && ev.target.matches("[data-crew-input]")){ ev.preventDefault(); addName(); } };
+}
+// Every crew name the table knows, spelled as first written, for the Add a player fields.
 function sessionCrewNames(t){
   const seen=new Map(), add = n => { const k=String(n||"").trim(); if (k && !seen.has(k.toLowerCase())) seen.set(k.toLowerCase(), k); };
   Engine.crewView(t, {}).forEach(g=>add(g.name));
@@ -1986,10 +2037,9 @@ function sessionPageHtml(s){
     <div class="sess-head">
       <label class="field"><span>Number</span><input type="number" step="1" min="0" inputmode="numeric" data-sf="number" value="${numAttr(s.number)}"></label>
       <label class="field"><span>Day</span><input type="date" data-sf="date" value="${esc(s.date||"")}"></label>
-      <label class="field"><span>Who was there</span><input type="text" data-sf="present" list="sess-crew" value="${esc((s.present||[]).join(", "))}" placeholder="Names, separated by commas" autocomplete="off"></label>
+      ${whoHtml(s, `s|${s.id}`)}
       <label class="field"><span>Hours</span><input type="number" step="0.5" min="0" max="24" inputmode="decimal" data-sf="hours" value="${numAttr(s.hours)}"></label>
     </div>
-    ${datalistHtml("sess-crew", sessionCrewNames(t))}
     ${JOURNAL.map(([k, label, hint])=>`<label class="field sess-part"><span>${esc(label)}</span><small class="field-hint">${esc(hint)}</small>
       <textarea data-sj="${k}">${esc(j[k]||"")}</textarea></label>${k==="threads" ? threadsBlock : ""}`).join("")}
     <h2 class="cast-h" tabindex="-1" data-sint-h>What passed between the crew and the cast</h2>
@@ -2081,17 +2131,18 @@ function bindSessionPage(main, s){
   const title = () => { const h=main.querySelector(".tbl-title"); if (h && own()) h.textContent=Engine.sessionTitle(own()); };
   // Saved as typed. A refused number or hours changes nothing; on blur the field shows what's stored.
   main.querySelectorAll("[data-sf]").forEach(el=>{
-    const key=el.dataset.sf, val = () => key==="present" ? splitList(el.value, /,/) : el.value;
+    const key=el.dataset.sf, val = () => el.value;
     el.addEventListener("input", ()=>{ const r=edit({ [key]:val() }); if (r.ok && key==="number") title(); });
     el.addEventListener("change", ()=>{
       const r=edit({ [key]:val() }); if (!r.ok) notice(r.why);
       const cur=own(); if (!cur) return;
-      el.value = key==="present" ? cur.present.join(", ") : key==="number" || key==="hours" ? numAttr(cur[key]) : (cur[key]||"");
+      el.value = key==="number" || key==="hours" ? numAttr(cur[key]) : (cur[key]||"");
       title();
     });
   });
   // The journal's boxes grow with what's written, so a long part reads without a scroll inside it.
   const grow = el => { el.style.height="auto"; el.style.height=(el.scrollHeight+el.offsetHeight-el.clientHeight)+"px"; };
+  bindWho(main, id, `s|${id}`);
   main.querySelectorAll("[data-sj]").forEach(el=>{ grow(el); el.addEventListener("input", ()=>{ edit({ journal:{ [el.dataset.sj]:el.value } }); grow(el); }); });
   main.querySelector("[data-sback]").onclick=()=>{
     S.sessOpen=null; window.scrollTo(0,0); update(); focus(".sess-open" + attrSel("data-sopen", id));
@@ -2281,10 +2332,9 @@ function closeSheetHtml(s){
   return `<div class="tbl-bar scroll-row" data-row="tblbar"><button type="button" class="btn sm" data-co-back>Back to ${hasNumber ? esc(title) : "the session"}</button></div>
     <h1 class="step-title tbl-title">Close out ${hasNumber ? esc(title) : "this session"}</h1>
     <div class="sess-head">
-      <label class="field"><span>Who was there</span><input type="text" data-cosf="present" list="sess-crew" value="${esc((s.present||[]).join(", "))}" placeholder="Names, separated by commas" autocomplete="off"></label>
+      ${whoHtml(s, `c|${s.id}`)}
       <label class="field"><span>Hours</span><input type="number" step="0.5" min="0" max="24" inputmode="decimal" data-cosf="hours" value="${numAttr(s.hours)}"></label>
     </div>
-    ${datalistHtml("sess-crew", sessionCrewNames(S.table))}
     <div data-co-lists>${coListsHtml(s)}</div>
     <p class="co-write"><button type="button" class="btn primary" data-co-write>Write the award log</button></p>`;
 }
@@ -2297,17 +2347,18 @@ function bindCloseOut(main, s){
   const edit = f => { let r; tableChange(()=>{ r=Engine.editSession(S.table, id, f); }, false); return r; };
   const cur = () => sessionById(id) || s;
   main.querySelectorAll("[data-cosf]").forEach(el=>{
-    const key=el.dataset.cosf, val = () => key==="present" ? splitList(el.value, /,/) : el.value;
+    const key=el.dataset.cosf, val = () => el.value;
     el.addEventListener("input", ()=>{
       const r=edit({ [key]:val() });
       if (r.ok){ closeSync(); drawLists(); }
     });
     el.addEventListener("change", ()=>{
       const r=edit({ [key]:val() }); if (!r.ok) notice(r.why);
-      el.value = key==="present" ? cur().present.join(", ") : numAttr(cur().hours);
+      el.value = numAttr(cur().hours);
       closeSync(); drawLists();
     });
   });
+  bindWho(main, id, `c|${id}`, ()=>{ closeSync(); drawLists(); });
   main.querySelector("[data-co-back]").onclick=()=>{
     c.view=false; window.scrollTo(0,0); update(); focus("[data-co-open]");
   };
@@ -2321,7 +2372,7 @@ function bindCloseOut(main, s){
       notice(r.why);
       const at = r.field ? c.lines.findIndex(l=>l.name===r.name) : -1;
       const el = at>=0 && main.querySelector(`[data-co-row="${at}"] [data-co="${r.field}"]`);
-      if (el) el.focus(); else focus('[data-cosf="present"]');
+      if (el) el.focus(); else focus('[data-crew-seat], [data-crew-name], [data-crew-add]');
       return;
     }
     S.closeOut=null; window.scrollTo(0,0); update(); focus("[data-sco-h]");
@@ -2369,7 +2420,7 @@ function bindCloseOut(main, s){
 function bindCloseOutSection(main, s){
   const id=s.id, focus = sel => { const el=$("main").querySelector(sel); if (el) el.focus(); return !!el; };
   const open=main.querySelector("[data-co-open]"), redo=main.querySelector("[data-co-redo]");
-  const show = c => { S.closeOut=c; window.scrollTo(0,0); update(); focus('[data-cosf="present"]'); };
+  const show = c => { S.closeOut=c; window.scrollTo(0,0); update(); focus('[data-crew-seat], [data-crew-name], [data-crew-add]'); };
   if (open) open.onclick=()=>{
     if (S.closeOut && S.closeOut.id===id){
       // Resuming: the same lines, and a fresh look at who is new.
@@ -3173,12 +3224,19 @@ function encCodexHtml(){
   const more=rows.length - CODEX_SHOWN;
   return `<div data-enccodexlist><ul class="roster-list">${rows.slice(0, CODEX_SHOWN).map(li).join("")}</ul>${more>0 ? `<p class="step-note">${more} more. Keep typing.</p>` : ""}</div>`;
 }
+// The crew as buttons (Decision 262): a seat already in the fight is disabled and marked In, the engine's own rule.
+function encCrewHtml(e){
+  const picks=Engine.seatPicks(S.table, e.rows.filter(r=>r.kind==="pc").map(r=>r.name)), open=S.encPlayer===e.id;
+  return `<div class="crew-btns" role="group" aria-label="Crew">${picks.map(p=>p.in
+    ? `<button type="button" class="btn crew-btn" data-enc-seat="${esc(p.tag)}" disabled aria-label="${esc(p.name)}, already in">${esc(p.name)} <span class="crew-in" aria-hidden="true">In</span></button>`
+    : `<button type="button" class="btn crew-btn" data-enc-seat="${esc(p.tag)}">${esc(p.name)}</button>`).join("")}${crewAddHtml(open, "data-enc-player")}</div>
+    ${open ? crewFieldHtml("data-enc-pname", "data-enc-addplayer") : ""}`;
+}
 function encAddHtml(e){
   return `<section class="enc-add"><h2 class="cast-h">Add</h2>
     <p><button class="btn" data-enc-pick aria-expanded="${!!S.encPick}">From the cast</button></p>
     ${S.encPick ? `<label class="field"><span>Search the cast</span><input type="search" data-enc-q value="${esc(S.encQ||"")}" autocomplete="off"></label>${encPickHtml(e)}` : ""}
-    <div class="cast-add"><label class="field"><span>PC name</span><input type="text" data-enc-pcname list="sess-crew" placeholder="Who's at the table?" autocomplete="off"></label>
-      <button class="btn" data-enc-addpc>Add a PC</button></div>${datalistHtml("sess-crew", sessionCrewNames(S.table))}
+    ${encCrewHtml(e)}
     ${packsMemo.length ? `<p><button class="btn" data-enc-codex aria-expanded="${!!S.encCodex}">From the Codex</button></p>
     ${S.encCodex ? `<label class="field"><span>Search the Codex</span><input type="search" data-enc-codexq value="${esc(S.encCodexQ||"")}" autocomplete="off"></label>${encCodexHtml()}` : ""}`
       : `<p class="step-note">From the Codex: slot a pack in on Threats.</p>`}</section>`;
@@ -3418,7 +3476,14 @@ function bindEncounters(main){
       tableChange(()=>{}); notice(msg); focus(attrSel("data-enc-addcodex", key)); },
     "data-enc-addcast": b => { const id=b.dataset.encAddcast, after=pickNextAdd(id), r=Engine.addParticipant(S.table, eid(), { kind:"cast", id });
       if (!r.ok){ notice(r.why); return; } tableChange(()=>{}); focus(after ? attrSel("data-enc-addcast", after) : "[data-enc-q]"); },
-    "data-enc-addpc": () => addPc(),
+    "data-enc-addplayer": () => addPlayer(),
+    "data-enc-player": () => { S.encPlayer=S.encPlayer===eid() ? null : eid(); redraw(); focus(S.encPlayer ? "[data-enc-pname]" : "[data-enc-player]"); },
+    "data-enc-seat": b => { const tag=b.dataset.encSeat, order=[...$("main").querySelectorAll("[data-enc-seat]")].map(x=>x.dataset.encSeat);
+      const p=Engine.seatPicks(S.table, encOpenNow().rows.filter(r=>r.kind==="pc").map(r=>r.name)).find(x=>x.tag===tag); if (!p || p.in) return;
+      const r=Engine.addParticipant(S.table, eid(), { kind:"pc", name:p.name }); if (!r.ok){ notice(r.why); return; }
+      tableChange(()=>{});
+      const to=order.slice(order.indexOf(tag)+1).find(x=>{ const el=$("main").querySelector(attrSel("data-enc-seat", x)); return el && !el.disabled; });
+      focus(to ? attrSel("data-enc-seat", to) : "[data-enc-player]"); },
     "data-eopencast": b => { const id=b.dataset.eopencast; if (!S.table.cast.some(n=>n.id===id)) return;
       S.tsection="cast"; S.castOpen=id; S.castFrom=null; S.intAdd=null; S.backSess=false; S.backClose=false; S.backEnc=eid(); S.castView="cast"; window.scrollTo(0,0); update(); focus("[data-cback]"); },
     "data-eopenseat": b => { const tag=b.dataset.eopenseat; if (!Engine.seatView(S.table, tag)) return;
@@ -3455,7 +3520,7 @@ function bindEncounters(main){
       askFirst({ title:`Remove ${r.name.trim() || "this row"}?`, text:"Their damage and Conditions in this encounter go with them.", yes:"Remove", then(){
         const ids=Engine.encounterView(S.table, eid(), packsMemo).rows.map(x=>x.row.id), pos=ids.indexOf(id), after=ids[pos+1] || ids[pos-1];
         change(()=>Engine.removeParticipant(S.table, eid(), id));
-        const el=after && rowEl(after); if (el) el.focus(); else focus("[data-enc-pcname]"); } }); },
+        const el=after && rowEl(after); if (el) el.focus(); else focus("[data-enc-seat]:not([disabled])") || focus("[data-enc-player]"); } }); },
     "data-ekeep": b => { const [row, i, what]=b.dataset.ekeep.split("|"); encResetNow().keep[`${row}|${i}`]= what==="keep"; redraw(); focus(attrSel("data-ekeep", b.dataset.ekeep)); },
     "data-efinish": () => { const st=encResetNow(), keep=Object.keys(st.keep).filter(k=>st.keep[k]).map(k=>{ const [row, i]=k.split("|"); return [row, +i]; });
       const was=encOpenNow(), words=`Reset ${Engine.encounterTitle(was)}, round ${was.round}`;
@@ -3465,11 +3530,11 @@ function bindEncounters(main){
     "data-eturn": (el, ev) => { if (ev.target.closest("button, input, select, label, a, summary")) return;
       const r=Engine.setTurn(S.table, eid(), el.dataset.eturn); if (!r.ok){ notice(r.why); return; } tableChange(()=>{}); toActive(); },
   };
-  function addPc(){
-    const input=$("main").querySelector("[data-enc-pcname]"); if (!input || !input.value.trim()) return;
+  function addPlayer(){
+    const input=$("main").querySelector("[data-enc-pname]"); if (!input || !input.value.trim()) return;
     const r=Engine.addParticipant(S.table, eid(), { kind:"pc", name:input.value });
-    if (!r.ok){ notice(r.why); return; }
-    tableChange(()=>{}); focus("[data-enc-pcname]");
+    if (!r.ok){ notice(r.why); input.focus(); return; }
+    tableChange(()=>{}); focus("[data-enc-pname]");
   }
   if (!encOpenNow()){
     main.onclick = ev => { const b=ev.target.closest("[data-enc-new], [data-enc-open], [data-ecard]"); if (!b) return;
@@ -3550,7 +3615,7 @@ function bindEncounters(main){
     S.encDmg=null; tableChange(()=>{}); focus(attrSel("data-edmg", `${row}|1`));
   };
   main.onkeydown = ev => {
-    if (ev.key==="Enter" && ev.target.matches("[data-enc-pcname]")){ ev.preventDefault(); addPc(); }
+    if (ev.key==="Enter" && ev.target.matches("[data-enc-pname]")){ ev.preventDefault(); addPlayer(); }
     else if (ev.key==="Enter" && ev.target.matches("[data-econd-src], [data-econd-rounds]")){ ev.preventDefault(); act["data-econd-add"](); }
     else if (ev.key==="Enter" && ev.target.matches("[data-ehit-damage], [data-ehit-from]")){ ev.preventDefault(); const b=main.querySelector("[data-ehit-apply]"); if (b && !b.disabled) act["data-ehit-apply"](); }
   };

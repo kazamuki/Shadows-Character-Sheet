@@ -29,7 +29,12 @@ const encRowByName = (app, name) => app.$$("[data-erow]").find(li => li.querySel
 const encId = (app, i = 0) => app.window.eval(`S.table.encounters[${i}].id`);
 const rowId = (li) => li.dataset.erow;
 const newEncounter = (app, name) => { type(app, "[data-enc-name]", name); app.click("[data-enc-new]"); };
-const addPcRow = (app, name) => { type(app, "[data-enc-pcname]", name); app.click("[data-enc-addpc]"); return encRowByName(app, name); };
+const addPcRow = (app, name) => { if (!app.$("[data-enc-pname]")) app.click("[data-enc-player]"); type(app, "[data-enc-pname]", name); app.click("[data-enc-addplayer]"); return encRowByName(app, name); };
+// Who was there (Decision 262): the buttons in the group, a press by name, and Add a player.
+const whoBtns = app => app.$$("[data-crew-box] .crew-btns button:not([data-crew-add])");
+const whoNames = app => whoBtns(app).map(b => b.textContent.replace("✓", "").trim());
+const whoPress = (app, name) => whoBtns(app).find(b => b.textContent.replace("✓", "").trim() === name).click();
+const whoAdd = (app, name) => { if (!app.$("[data-crew-input]")) app.click("[data-crew-add]"); type(app, "[data-crew-input]", name); app.click("[data-crew-go]"); };
 const statesOf = app => JSON.parse(app.window.eval("JSON.stringify(S.table.encounters)"));
 
 test("Decision 188: switched off there is no Encounters tab; switched on it sits between Threats and Notes (Reference follows it)", () => {
@@ -53,8 +58,8 @@ test("Decisions 188–189: plan an encounter, run a round with Take, Bleeding an
   assert.equal(app.$("[data-enc-title]").value, "Warehouse job");
   // Rows: a PC, then a cast member from the picker (which stays open and says Already in).
   const wren = addPcRow(app, "Wren");
-  assert.equal(app.doc.activeElement, app.$("[data-enc-pcname]"), "Add a PC didn't return to the name field");
-  assert.equal(app.$("[data-enc-pcname]").value, "");
+  assert.equal(app.doc.activeElement, app.$("[data-enc-pname]"), "Add a player didn't return to the name field");
+  assert.equal(app.$("[data-enc-pname]").value, "");
   changeTo(app, `[data-ehp="${rowId(wren)}"]`, "30"); changeTo(app, `[data-elevels="${rowId(wren)}"]`, "6");
   app.click("[data-enc-pick]");
   app.click("[data-enc-addcast]");
@@ -628,7 +633,7 @@ test("Decision 203: every field on a session saves as it's typed with no redraw,
   assert.equal(app.$("h1.step-title").textContent, "Session 21");
   assert.equal(app.$('[data-sf="number"]'), num, "typing redrew the field");
   type(app, '[data-sf="date"]', "2026-09-30");
-  type(app, '[data-sf="present"]', "Wren,  Rook ,");
+  whoAdd(app, "Wren"); whoAdd(app, "  Rook ");
   type(app, '[data-sf="hours"]', "4.5");
   const parts = ["happened", "fallout", "threads", "impact", "reflection", "seed"];
   for (const k of parts) type(app, `[data-sj="${k}"]`, `text ${k}`);
@@ -639,7 +644,7 @@ test("Decision 203: every field on a session saves as it's typed with no redraw,
   assert.equal(app.window.eval("S.tsection"), "sessions");
   assert.match(sessionRows(app)[0], /^Session 21 · .* · Wren, Rook · 4\.5 hours$/);
   app.$(".sess-open").click();
-  assert.equal(app.$('[data-sf="present"]').value, "Wren, Rook");
+  assert.deepEqual(whoNames(app), ["Wren", "Rook"]);
   for (const k of parts) assert.equal(app.$(`[data-sj="${k}"]`).value, `text ${k}`);
   // A refused number or hours changes nothing and reads what's stored once it loses focus.
   typeChange(app, '[data-sf="hours"]', "25");
@@ -852,7 +857,7 @@ test("Decisions 203–204: export and import keep sessions and threads, and a 0.
   const app = boot({ storage: GM_ON });
   const downloads = withDownloads(app);
   runTable(app, "Round", { stay: true });
-  app.click("[data-snew]"); type(app, '[data-sj="happened"]', "Things."); type(app, '[data-sf="present"]', "Wren");
+  app.click("[data-snew]"); type(app, '[data-sj="happened"]', "Things."); whoAdd(app, "Wren");
   type(app, "[data-sthadd]", "T1"); keyIn(app, "[data-sthadd]", "Enter");
   const before = JSON.parse(JSON.stringify(app.window.eval("({ s: S.table.sessions, t: S.table.threads })")));
   app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
@@ -910,7 +915,7 @@ test("205–206: Close out opens the sheet on Who was there; IP is 5 an hour rou
   assert.equal(app.$("[data-co-open]").textContent, "Close out Session 4");
   app.click("[data-co-open]");
   assert.equal(app.$("h1.step-title").textContent, "Close out Session 4");
-  assert.equal(app.doc.activeElement, app.$('[data-cosf="present"]'));
+  assert.equal(app.doc.activeElement, app.$("[data-crew-box] button"));
   assert.equal(app.$("[data-co-back]").textContent, "Back to Session 4");
   assert.deepEqual(["Wren", "Rook"].map(n => coField(app, n, "ip").value), ["18", "18"]);
   assert.ok(["Wren", "Rook"].every(n => coField(app, n, "milestone").checked));
@@ -1085,7 +1090,7 @@ test("205: Write stores the log in the player's words; IP so far shows; reload, 
   app.click("#modal [data-modalclose]");
   assert.ok(app.window.eval("S.closeOut") == null, "Cancel starts nothing");
   app.click("[data-co-redo]"); app.click("#modal [data-askyes]");
-  assert.equal(app.doc.activeElement, app.$('[data-cosf="present"]'));
+  assert.equal(app.doc.activeElement, app.$("[data-crew-box] button"));
   assert.equal(coField(app, "Wren", "credits").value, "250");
   assert.equal(coField(app, "Wren", "note").value, "Kept the gun.");
   assert.equal(coField(app, "Rook", "milestone").checked, false);
@@ -1107,11 +1112,11 @@ test("205: Write refused names the field, keeps what was typed and writes nothin
   assert.equal(coField(app, "Rook", "ip").value, "1.5");
   assert.equal(app.window.eval("S.table.sessions[0].close"), null);
   // Nobody: Who was there emptied.
-  type(app, '[data-cosf="present"]', ""); typeChange(app, '[data-cosf="present"]', "");
+  whoPress(app, "Wren"); whoPress(app, "Rook");
   assert.match(app.$("#main").textContent, /Add who was there to work out IP\./);
   app.click("[data-co-write]");
   assert.match(app.$("#undotoast").textContent, /Nobody to write down\./);
-  assert.equal(app.doc.activeElement, app.$('[data-cosf="present"]'));
+  assert.equal(app.doc.activeElement, app.$("[data-crew-add]"), "no names left: the first button is Add a player");
   assert.deepEqual(app.errors, []);
 });
 
@@ -1124,21 +1129,20 @@ test("205: deleting a session drops its draft", () => {
   assert.deepEqual(app.errors, []);
 });
 
-test("206 (review): a typed IP survives correcting a letter in Who was there, and an away line's tier and Çredits survive being typed present and back", () => {
+test("206 (review): a typed IP survives a name going and coming back in Who was there, and an away line's tier and Çredits survive being pressed present and back", () => {
   const { app, ids } = closeApp(t => { mkSession(t, 3, "2026-09-01", ["Rook", "Dez"], 2); return mkSession(t, 4, "2026-09-08", ["Wren", "Rook"], 3.5); });
   closeSheet(app, ids);
   coType(app, "Rook", "ip", "20");
-  type(app, '[data-cosf="present"]', "Wren, Roo");
-  type(app, '[data-cosf="present"]', "Wren, Rook");
+  whoPress(app, "Rook"); whoAdd(app, "Rook");
   assert.equal(coField(app, "Rook", "ip").value, "20", "Rook's typed IP");
   type(app, '[data-cosf="hours"]', "3");
   assert.equal(coField(app, "Rook", "ip").value, "20", "still typed after an Hours change");
   assert.equal(coField(app, "Wren", "ip").value, "15");
   typeChange(app, `[data-co-row="${coRow(app, "Dez").dataset.coRow}"] [data-co="tier"]`, "competent");
   coType(app, "Dez", "credits", "400");
-  type(app, '[data-cosf="present"]', "Wren, Rook, Dez");
+  whoAdd(app, "Dez");
   assert.ok(coField(app, "Dez", "ip"), "Dez is present now");
-  type(app, '[data-cosf="present"]', "Wren, Rook");
+  whoPress(app, "Dez");
   assert.equal(coField(app, "Dez", "tier").value, "competent");
   assert.equal(coField(app, "Dez", "credits").value, "400");
   assert.deepEqual(app.errors, []);
