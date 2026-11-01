@@ -1910,7 +1910,7 @@ function crewFieldHtml(field, go){
     <button type="button" class="btn" ${go}>Add</button></div>${datalistHtml("sess-crew", sessionCrewNames(S.table))}`;
 }
 // Who was there (a session's page and its close-out): a seat's button is pressed while a name in `present` answers to it;
-// any other name in `present` follows as a pressed button of its own.
+// any other name in `present` follows as a pressed button of its own. S.crewAdd says which page's Add a player field is open.
 function whoHtml(s, key){
   const t=S.table, present=Array.isArray(s.present) ? s.present : [], picks=Engine.seatPicks(t, present), tags=new Set(picks.map(p=>p.tag));
   const seen=new Set(), others=present.filter(n=>{ const k=foldName(n); if (!k || seen.has(k)) return false; seen.add(k); return !tags.has(Engine.seatFor(t, n)); });
@@ -2797,7 +2797,7 @@ function bindThreatPage(main, back, focusFirst){
 // Who's in an encounter, whose turn it is, and every Condition on everyone. State is on S, so it
 // goes with the open table and no further: S.encOpen (an encounter's id; it stays when the GM
 // moves to Threats or Cast, where it comes first for their Add buttons), S.encPick and S.encQ (the cast
-// picker), S.encCodex and S.encCodexQ (From the Codex), S.encDmg (a Take or Heal field open on a row), S.encHit (the Hit panel open on a row, with
+// picker), S.encCodex and S.encCodexQ (From the Codex), S.encPlayer (the encounter whose Add a player field is open, Decision 262), S.encDmg (a Take or Heal field open on a row), S.encHit (the Hit panel open on a row, with
 // its fields and answers), S.encCond (the Add a Condition draft), S.encMore (rows whose More is open)
 // S.encReset (the numbers and Keeps typed at a Reset) and S.encWrap (the wrap-up's draft, Decision 193). One of Take, Hit and the Condition form is
 // open at a time.
