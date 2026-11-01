@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.59.0",
-    "date": null,
+    "date": "2026-11-01",
     "intro": [],
     "items": [
       "**The crew as buttons.** Every seated character is a button now, in a fight and in who was there: one press puts them in. **Add a player** takes anyone else.",

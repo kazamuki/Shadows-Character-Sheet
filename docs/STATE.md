@@ -137,7 +137,7 @@ rev 9's `C1`–`C3` are still forward notes.
 
 ## 5. Where to start
 
-**The live site is v0.57.0** (data 0.50, schema 0.31), released 2026-10-31; it launches GM mode for everyone.
+**The live site is v0.59.0** (data 0.50, schema 0.31), released 2026-11-01.
 
 **Next is Ken's pick**, each built through a work order (`WORK-ORDERS.md`):
 - **Another of `plans/gm-mode.md`'s *Still to build*** (GM mode is launched, so each now ships visible; more keys are on W139; Home's own layout is W80's rest).
