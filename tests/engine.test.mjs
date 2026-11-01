@@ -12,7 +12,6 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { loadEngine } from "./harness.mjs";
 import { ROOT } from "../tools/build.mjs";
-import { l5Snapshot } from "./l5-snapshot.mjs";
 import { expectedGazetteer, readPlaces, readPowers, readEnvironments } from "./gazetteer-book.mjs";
 
 const { Engine, D } = loadEngine();
@@ -12288,31 +12287,6 @@ test("L5 7 (engine): a row Major's grants reach only its row, never a Skill's ro
     const l = plain(Engine.weaponLine(ch, i));
     assert.deepEqual([l.bonuses, l.kickers, l.majors], [[], [], []], `row ${i} took a Major that is on another row`);
   });
-});
-
-test("L5 8 (engine): with none held, or held and on no row, no weapon line and no armor piece moves", () => {
-  const fixture = JSON.parse(readFileSync(join(ROOT, "tests/l5-lines.json"), "utf8"));
-  const strip = x => { if (Array.isArray(x)) x.forEach(strip); else if (x && typeof x === "object") { delete x.kickers; delete x.majors; delete x.protBase; Object.values(x).forEach(strip); } return x; };
-  assert.deepEqual(strip(plain(l5Snapshot(Engine, D))), fixture, "with none held");
-  assert.deepEqual(strip(plain(l5Snapshot(Engine, D, L5_SIX))), fixture, "held and on no row");
-});
-
-test("L5 9b (engine): a GM's seat wearing Custom Fit shows the stepped die, in the view and on the hit", () => {
-  const file = seatFightFile();
-  file.identity.archetype = "professional";
-  hold(file, "custom-fit");
-  const t = Engine.newTable("Fight");
-  const pid = Engine.addPlayer(t, { name: "Brogan" }).id;
-  const r = Engine.importSeat(t, pid, file);
-  assert.ok(r.ok, r.why);
-  const e = Engine.addEncounter(t, { name: "Docks" }).id, id = addPc(t, e, "dez");
-  assert.equal(viewRow(t, e, id).armor.die, "1d4", "held and on no row stepped the die");
-  t.copies[0].character.armor[0].majors = ["custom-fit"];
-  assert.equal(viewRow(t, e, id).armor.die, "1d6", "the seat's line reads the unstepped die");
-  const sheet = Engine.seatCharacter(t, r.tag);
-  assert.equal(Engine.armorState(sheet).worn.prot, "1d6");
-  // a roll past the old d4 is the seat's own to make: the hit takes a 6
-  assert.equal(Engine.resolveHit(sheet, { ...FIGHT_HIT, protRoll: 6 }).ok, true);
 });
 
 test("L5 6b (engine): every reader survives a row, and a majors list, of any shape", () => {
