@@ -1847,6 +1847,15 @@ test("L5 10b (sheet): a written-in weapon takes Tuned Edge, shows the total fold
   assert.ok(majorBox(app, "weapons", 2, "tuned-edge").checked);
   assert.match(cellsOf(rowOf(app, 2))[2], new RegExp(`^${total + 1}`));
   assert.match(rowOf(app, 2).textContent, /\+1 from Tuned Edge/);
+  // Weapon Expert on the same written-in row: the kicker is beside its attack on Loadout (folded) and on Main
+  const ch2 = JSON.parse(JSON.stringify(ch));
+  Engine.setMajorRow(ch2, "weapon-expert", 2);
+  const melee = Engine.weaponLine(ch2, 2).attack;
+  const app2 = openSheet(ch2, "loadout");
+  assert.match(cellsOf(rowOf(app2, 2))[1], /^1d10 . \d+ . 1d4/);
+  app2.click('[data-sec="main"]');
+  const pipe = app2.$$("#main table.ref tbody tr").find(tr => /Pipe/.test(tr.textContent));
+  assert.ok(cellsOf(pipe)[1].includes(`${melee} + 1d4`), cellsOf(pipe)[1]);
   app.click('[data-loedit="weapons|2"]');
   assert.equal(app.$('[data-cell="weapons|2|damage"]').value, "BOD+2", "the edit row showed the total, not what was typed");
   assert.ok(majorBox(app, "weapons", 2, "tuned-edge"), "the open row lost its Majors line");
