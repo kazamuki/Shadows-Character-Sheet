@@ -6,7 +6,7 @@ window.SHADOWS_CHANGELOG = [
     "date": null,
     "intro": [],
     "items": [
-      "In Wave Initiative each side rolls Combat Sense once, and the higher roll goes first. Roll again at the Reset when the fight changes."
+      "**Wave Initiative, one roll a side.** Whoever is closest to the danger rolls Combat Sense for their side, and the higher side goes first. Roll again at the Reset if the fight has changed."
     ]
   },
   {

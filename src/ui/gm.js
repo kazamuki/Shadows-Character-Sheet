@@ -2756,7 +2756,7 @@ TIPS.condition = id => { const d=Engine.conditionById(id); return d && { title:d
 TIPS.enctrait = key => { const [row, i]=String(key).split("|"), e=encOpenNow(), v=e && Engine.encounterView(S.table, e.id, packsMemo).rows.find(x=>x.row.id===row),
   k=v && v.traits.find(x=>String(x.index)===i); return k && { title:k.name.trim() || "Trait", text:k.text }; };
 // What Wave Initiative means (Decision 210): the book's words for it, in the table's.
-TIPS.wave = () => ({ title:"Wave Initiative", text:"Whoever on each side is closest to the danger rolls Combat Sense. The higher roll’s side acts first, everyone on it, in any order; then the next side. Roll again at the Reset if the fight has changed. The book runs a round “as individuals or as sides, in waves”." });
+TIPS.wave = () => ({ title:"Wave Initiative", text:"Whoever on each side is closest to the danger rolls Combat Sense for it. The side with the higher roll acts first, everyone on it in any order, then the next side. At the Reset, roll again if the fight has changed. The book runs a round “as individuals or as sides, in waves”." });
 // The book's Surprise and Ambush (0530), a tap away from the Opening. The bonus and the Difficulty are the table's to apply.
 const OPENING_LIMITS = "Surprise or Ambush is limited to once per encounter. Weapons with the Silent tag are an exception, so long as Stealth is not broken.";
 TIPS.surprise = () => ({ title:"Surprise", text:"At least one attacker wins the check: the attackers' Stealth against the defenders' Awareness, made during Engagement.",
@@ -3068,7 +3068,7 @@ function encResetHtml(e, v){
       ${saves ? `<p class="cast-sub">Calls for a check</p><ul class="enc-list">${saves}</ul>` : ""}</section>`;
   }).join("");
   // Waves (Decision 261): the next round's rolls, in the sides' own order so a field doesn't move as it is typed.
-  const next = e.by==="wave" ? `<section class="enc-reset-row"><h3 class="cast-h">Next round</h3><p class="step-note">Roll Combat Sense again if the fight has changed.</p>
+  const next = e.by==="wave" ? `<section class="enc-reset-row"><h3 class="cast-h">Next round</h3><p class="step-note">If the fight has changed, each side rolls Combat Sense again.</p>
       <div class="enc-side-head">${(e.sides || []).map(s=>`<label class="enc-num"><span>${esc(Engine.sideTitle(e, s.id))}</span><input type="number" step="1" inputmode="numeric" data-esideroll="${esc(s.id)}" value="${numAttr(s.roll)}" aria-label="Combat Sense, ${esc(Engine.sideTitle(e, s.id))}"></label>`).join("")}</div></section>` : "";
   return `<section class="enc-reset" aria-labelledby="enc-reset-h"><h2 class="cast-h" id="enc-reset-h" tabindex="-1">Reset: round ${e.round} ends</h2>
     ${next}${body}${quiet.length ? `<p class="step-note">Nothing on: ${esc(quiet.join(", "))}.</p>` : ""}

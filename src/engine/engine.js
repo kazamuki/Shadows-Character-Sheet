@@ -8514,16 +8514,20 @@ const Engine = (() => {
   // The view's `open` and setSideRoll's refusal both read this, so the rule is written once.
   const _sideRollOpen = e => e.status!=="ended" && !(e.status==="running" && e.turn!==null && e.turn!==undefined && _actedIds(e).length > 0);
   // A side's Combat Sense roll in waves (Decision 261): a whole number, or none. Before anyone has acted, the turn
-  // is re-picked so the first row really is on the side that now goes first, as setOpening does.
+  // stays where the GM tapped it while its row is on the side that now goes first, and is re-picked otherwise,
+  // so the first row really is on the side that goes first, as setOpening does.
   function setSideRoll(t, encId, sideId, n){
     const l = _live(t, encId);
     if (l.why) return { ok:false, why:l.why };
     const sides = _sideList(l.e), s = sides.find(x=>x.id===sideId);
     if (!s) return { ok:false, why:"No such side." };
-    if (!_sideRollOpen(l.e)) return { ok:false, why:"Roll again at the Reset." };
+    if (!_sideRollOpen(l.e)) return { ok:false, why:"Someone has acted. Roll again at the Reset." };
     s.roll = typeof n==="number" || typeof n==="string" ? _int(n) : null;
     l.e.sides = sides;
-    if (l.e.status==="running" && l.e.turn!==null){ const next = _pick(l.e); if (next) l.e.turn = next.id; }
+    if (l.e.status==="running" && l.e.turn!==null){
+      const next = _pick(l.e), cur = _rowList(l.e).find(r=>r.id===l.e.turn);
+      if (next && !(cur && _rowSide(l.e, sides, cur)===_rowSide(l.e, sides, next))) l.e.turn = next.id;
+    }
     _tableStamp(t, l.e);
     return { ok:true };
   }

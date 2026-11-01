@@ -6921,7 +6921,7 @@ test("261: setSideRoll changes before anyone acts and at the Reset; mid-round it
   assert.equal(encOf(t, e).turn, t16, "nobody has acted: the turn is re-picked on the side that now leads");
   Engine.nextTurn(t, e);
   const before = JSON.stringify(t);
-  eq(Engine.setSideRoll(t, e, other, 20), { ok: false, why: "Roll again at the Reset." });
+  eq(Engine.setSideRoll(t, e, other, 20), { ok: false, why: "Someone has acted. Roll again at the Reset." });
   assert.equal(JSON.stringify(t), before, "nothing written, the stamp included");
   eq(Engine.encounterView(t, e, []).sides.map(s => s.open), [false, false]);
   while (!Engine.nextTurn(t, e).reset);
@@ -6930,6 +6930,21 @@ test("261: setSideRoll changes before anyone acts and at the Reset; mid-round it
   assert.ok(Engine.setSideRoll(t, e, "crew", 30).ok);
   assert.ok(Engine.applyEncounterReset(t, e, {}).ok);
   eq([encOf(t, e).round, encOf(t, e).turn], [2, pcA], "round 2 opens on the crew");
+});
+
+test("261: a roll typed before anyone acts keeps the GM's tapped turn while its side still goes first, and moves it when another side leads", () => {
+  const t = Engine.newTable("K");
+  const e = Engine.addEncounter(t, {}).id, other = encOf(t, e).sides[1].id;
+  const wren = addPc(t, e, "Wren"), juno = addPc(t, e, "Juno");
+  const tough = addPc(t, e, "Tough"); Engine.editParticipant(t, e, tough, { side: other });
+  wave(t, e); roll(t, e, "crew", 10); roll(t, e, other, 5);
+  assert.ok(Engine.startEncounter(t, e).ok);
+  assert.equal(encOf(t, e).turn, wren);
+  assert.ok(Engine.setTurn(t, e, juno).ok);
+  roll(t, e, other, 6);
+  assert.equal(encOf(t, e).turn, juno, "still lower: the tap stays");
+  roll(t, e, other, 11);
+  assert.equal(encOf(t, e).turn, tough, "another side leads now: its first row");
 });
 
 test("261: setSideRoll refuses a bad side and an ended encounter, and reads a non-number as none", () => {
