@@ -791,7 +791,7 @@ function hostileSessionsTable() {
 test("a hostile table's sessions and threads come out of the gate typed: ids unique, numbers numbers, links null, one current", () => {
   const J = x => JSON.parse(JSON.stringify(x));
   const m = Engine.migrateTable(hostileSessionsTable());
-  assert.equal(m.meta.tableSchemaVersion, "0.18");
+  assert.equal(m.meta.tableSchemaVersion, "0.19");
   const ids = m.sessions.map(s => s.id);
   assert.equal(new Set(ids).size, ids.length, "session ids repeat");
   assert.ok(ids.every(id => /^SE-[0-9A-HJKMNP-TV-Z]{8}$/.test(id)));
@@ -1016,6 +1016,23 @@ test("a side named markup, and a row named the same on it, render as text in wav
   assert.deepEqual(app.errors, []);
 });
 
+test("261: a side's roll is read as a whole number or none, the crew's included; a hostile wave file opens", () => {
+  const hostile = [["14", 14], [-3, -3], [1e309, null], ["1e3", null], [{}, null], [[], null], [true, null]];
+  const mk = roll => Engine.migrateTable({
+    meta: { kind: "shadows-table", id: Engine.newTable().meta.id, name: "T", tableSchemaVersion: "0.19" },
+    encounters: [{ id: "EN-AAAAAAAA", name: "E", status: "planned", by: "wave",
+      sides: [{ id: "crew", name: "", roll }, { id: "SD-AAAAAAAA", name: "", roll }], rows: [] }] }).encounters[0];
+  for (const [raw, want] of hostile) {
+    const e = mk(raw);
+    assert.equal(e.sides[0].roll, want, "the crew: " + JSON.stringify(raw));
+    assert.equal(e.sides[1].roll, want, "another side: " + JSON.stringify(raw));
+  }
+  const old = Engine.migrateTable({ meta: { kind: "shadows-table", id: Engine.newTable().meta.id, name: "T", tableSchemaVersion: "0.18" },
+    encounters: [{ id: "EN-AAAAAAAA", name: "E", status: "running", by: "wave", acted: "junk", turn: 5, rows: "junk", sides: 4 }] });
+  assert.equal(old.encounters[0].sides.length, 2);
+  assert.ok(old.encounters[0].sides.every(s => s.roll === null));
+});
+
 // ── Adding to a fight draws names as text (Decision 211, 124) ──────────────
 test("a hostile encounter, entry and group name render as text on the Add to buttons, their aria-labels and the Codex search (Decision 211)", () => {
   const key = "shadows.pack.v1." + PK;
@@ -1048,7 +1065,7 @@ test("a table file's trail draws its labels as text, drops every crafted entry, 
     ["__proto__", "polluted"], ["meta", "id"], ["meta", "tableSchemaVersion"], ["audit", 0, "label"], ["evil"], ["constructor", "prototype", "polluted"],
   ].map((path, i) => ({ seq: 10 + i, date: null, label: `crafted ${i}`, patch: [{ path, type: "scalar", before: "PWNED" }] }));
   const t = Engine.migrateTable({
-    meta: { kind: "shadows-table", id, name: "T", tableSchemaVersion: "0.18" },
+    meta: { kind: "shadows-table", id, name: "T", tableSchemaVersion: "0.19" },
     cast: [{ id: "C-AAAAAAAA", name: "After" }],
     audit: [...crafted, good],
   });
@@ -1445,7 +1462,7 @@ test("a table file's players, seats and copies are gated, and draw as text on th
     return Object.assign(ch, extra);
   };
   const raw = {
-    meta: { kind: "shadows-table", id, name: "T", tableSchemaVersion: "0.18" },
+    meta: { kind: "shadows-table", id, name: "T", tableSchemaVersion: "0.19" },
     players: [
       { id: "PY-AAAAAAAA", name: P("player"), seats: [
         { tag: DEZ, status: {}, names: [P("n1"), 5, null] }, { tag: "__proto__", status: "active", names: [] }, { tag: "<img>", status: "active", names: [] },

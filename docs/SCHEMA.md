@@ -1206,8 +1206,9 @@ commit** — a GM's table must never change under them.
     },
     opening: null,                   // 0.17 (Decision 253): null | { kind: "surprise" | "ambush", side } with side one of this encounter's sides (the attackers); anything else is null; set before anyone has acted in round 1, fixed after
     by: "person",                    // 0.11: "person" (one at a time) | "wave" (Wave Initiative); anything else reads "person" (Decision 210)
-    sides: [ { id: "crew", name: "" },              // 0.11: the crew first, always, its name never read; then one to five others, each `SD-XXXXXXXX`, at most six in all
-             { id: "SD-XXXXXXXX", name: "" } ],     // a blank name reads by its place: The other side, Side 3…
+    sides: [ { id: "crew", name: "", roll: null },  // 0.11: the crew first, always, its name never read; then one to five others, each `SD-XXXXXXXX`, at most six in all
+             { id: "SD-XXXXXXXX", name: "", roll: 14 } ],  // a blank name reads by its place: The other side, Side 3…
+                                     // 0.19 (Decision 261): roll, the side's Combat Sense result in waves; a safe integer or null (the crew's too); anything else is null
     rows: [ {
       id: "R-XXXXXXXX",              // unique in its encounter
       kind: "pc",                    // pc (typed name, the GM's scratch copy, 188) | cast (a link, read live) | entry (its own copy of a pack entry's block)
@@ -1242,7 +1243,7 @@ StatBlock: {                         // Decision 175: what the Codex prints, not
 
 Step history: **0.2** adds `cast` (`migrateTable()` gives an older table an empty
 one). **0.3** adds `interactions` and each member's `affiliations`. **0.4** adds each member's `from`, null for everyone already there. **0.5** adds `encounters`, empty for everyone already there. **0.6** adds each row's `massive`, `armorLoss`, `scrapped` and `armorId`, 0, false and null for everyone already there. **0.7** adds each row's `kept` and `struck`, null and false for everyone already there, and an interaction may be of kind `fought`. **0.8** adds `sessions` and `threads`, empty for everyone already there, and each interaction's `session`, null (nothing is converted by date on load). **0.9** adds each session's `close`, null for everyone already there (nothing is converted). **0.10** adds each note's `session`, null for everyone already there (nothing is converted). **0.11** adds each encounter's `by` and `sides`, each row's `side` and each cast member's `ally`: one at a time, the crew and one other side, PCs on the crew's, nobody an ally (nothing is guessed). Health, Health Levels, HP and each stat's bonus are `Engine.npc(block)`'s,
-computed and never written into the file (constraint 7). **0.12** adds `audit`, the activity log (Decision 212), empty for everyone already there; a file older than the app comes in with its trail emptied, so an undo never crosses a schema step. **0.13** adds each interaction's `encounter`, null for everyone already there (nothing is converted; Decision 241). **0.14** adds `places`, empty, and each interaction's `place`, null for everyone already there (Decision 243). **0.15** adds `factions` and `clocks`, both empty; nothing is converted, and a member's affiliations stay as typed (Decisions 244, 245). **0.16** gives each place `site`, `siteLevel` and `exposure`, empty for everyone already there; nothing is converted and no profile is guessed from a place's ground (Decision 251). **0.17** gives each encounter `design` (the empty plan) and `opening` (null), and each row `delay` (null); nothing is converted, and no opening is guessed from a row's Stealth (Decisions 252, 253). **0.18** gives a table `players` and `copies`, both empty; nothing is converted, and no seat is guessed from a typed name (Decisions 254, 255).
+computed and never written into the file (constraint 7). **0.12** adds `audit`, the activity log (Decision 212), empty for everyone already there; a file older than the app comes in with its trail emptied, so an undo never crosses a schema step. **0.13** adds each interaction's `encounter`, null for everyone already there (nothing is converted; Decision 241). **0.14** adds `places`, empty, and each interaction's `place`, null for everyone already there (Decision 243). **0.15** adds `factions` and `clocks`, both empty; nothing is converted, and a member's affiliations stay as typed (Decisions 244, 245). **0.16** gives each place `site`, `siteLevel` and `exposure`, empty for everyone already there; nothing is converted and no profile is guessed from a place's ground (Decision 251). **0.17** gives each encounter `design` (the empty plan) and `opening` (null), and each row `delay` (null); nothing is converted, and no opening is guessed from a row's Stealth (Decisions 252, 253). **0.18** gives a table `players` and `copies`, both empty; nothing is converted, and no seat is guessed from a typed name (Decisions 254, 255). **0.19** gives each side a `roll`, its Combat Sense result in waves: a wave encounter not ended takes each side's best as 210 read it, everything else none (Decision 261).
 
 The browser keeps each table as `shadows.table.v1.<id>` =
 `{ table, section, changed, exported }`, by the roster's rules (Decision 141).
@@ -4802,6 +4803,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 189 in part: in waves, a side's place comes before a row's result, and ties are flagged between sides. It extends 174 (`ally`) and 188 (sides).
      - **Revisit if:** GQ30 says the book orders sides another way, or seats (S3b) let a player end their own turn.
      - **Built:** table schema 0.11, switched off (173); log 2026-10-09.
+    → **Superseded in part by Decision 261** — in waves a side's place is its own roll, not its rows' best; a row's result isn't read in waves, so the Out and Goes last rule for a side's best goes.
 
 211. **Add to an encounter is always on screen, naming where it goes (the encounter open, else the running one, else the newest planned) or making a new one; an encounter searches the Codex itself; and a Threats card adds to the cast and to the encounter.**
      *2026-10-10 · Ken + Claude · Touches: Add to encounter, Add to a new encounter, encounterFor, addToEncounter, encTarget, Threats card, Add to cast, castFromEntry, From the Codex, encounter Add section, Decision 182, Decision 188, Decision 190, W74, W75, W76*
@@ -5357,6 +5359,20 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 173 in part: GM mode is on, and `?gm=off` no longer hides it; the switch, its key and `?gm=on` stand.
      - **Revisit if:** GM mode has to be withdrawn (set the switch false again, as 214 did), or a later decision removes the switch.
      - **Built:** app 0.57.0; no schema move; PR #279; log 2026-10-31 (GM mode's launch).
+
+261. **In Wave Initiative each side rolls Combat Sense once and the higher roll's side goes first; a side rolls again only before anyone acts in a round.**
+     *2026-10-31 · Ken + Claude · Touches: Wave Initiative, encounter sides, side roll, setSideRoll, _encOrder, Tied: reroll, Combat Sense, Goes last, Reset, table schema 0.19, migrateTable, Decision 189, Decision 210, Decision 253, GQ30*
+     - **Decided:** In waves a side has one Combat Sense result, `roll` (a whole number or null), typed on its heading: the roll of whoever is closest to the danger. Sides go highest roll first, a side with none after, in list order; equal rolls flag both headings for a reroll. A row's own result isn't read or shown in waves: within a side, rows go in the order added, Goes last at the end. A roll changes while planned, at the Reset, or before anyone has acted in the round; mid-round it's refused. One at a time is unchanged. Table schema 0.19: a wave fight not ended takes each side's old best as its roll.
+     - **Why:** Deighton (GQ30, Q34): one roll a side, the higher side first, its players in any order, then it flips; a mid-wave roll leads the next "when the turn resets". Rolling again "depends" (Ken): the GM's call each Reset.
+     - **Rejected:**
+       - The best of everyone's result (210): one roll a side is the book's way.
+       - A roll that applies mid-round: it can split a wave that has started.
+       - A roll held until the Reset: a second number to store and explain.
+       - Recording who rolled: nothing reads it.
+       - Converting nothing: a saved fight would reorder mid-round.
+     - **Replaces:** Decision 210 in part: a side's place is its own roll, not its rows' best; rows' results aren't read in waves, so SQ8's Out and Goes last rule goes.
+     - **Revisit if:** a GM needs a side to reroll mid-round, the CRB's Order of Engagement words it otherwise, or Combat Paralysis should go after every side.
+     - **Built:** app 0.58.0; table schema 0.19; PR #283; log 2026-10-31 (S20).
 
 ## 5. Open Flags
 

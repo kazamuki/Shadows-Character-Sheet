@@ -2756,7 +2756,7 @@ TIPS.condition = id => { const d=Engine.conditionById(id); return d && { title:d
 TIPS.enctrait = key => { const [row, i]=String(key).split("|"), e=encOpenNow(), v=e && Engine.encounterView(S.table, e.id, packsMemo).rows.find(x=>x.row.id===row),
   k=v && v.traits.find(x=>String(x.index)===i); return k && { title:k.name.trim() || "Trait", text:k.text }; };
 // What Wave Initiative means (Decision 210): the book's words for it, in the table's.
-TIPS.wave = () => ({ title:"Wave Initiative", text:"Everyone rolls Combat Sense. The side holding the best result acts first, everyone on it, in any order; then the side with the next best, and so on. The book runs a round “as individuals or as sides, in waves”." });
+TIPS.wave = () => ({ title:"Wave Initiative", text:"Whoever on each side is closest to the danger rolls Combat Sense for it. The side with the higher roll acts first, everyone on it in any order, then the next side. At the Reset, roll again if the fight has changed. The book runs a round “as individuals or as sides, in waves”." });
 // The book's Surprise and Ambush (0530), a tap away from the Opening. The bonus and the Difficulty are the table's to apply.
 const OPENING_LIMITS = "Surprise or Ambush is limited to once per encounter. Weapons with the Silent tag are an exception, so long as Stealth is not broken.";
 TIPS.surprise = () => ({ title:"Surprise", text:"At least one attacker wins the check: the attackers' Stealth against the defenders' Awareness, made during Engagement.",
@@ -3026,7 +3026,7 @@ function encRowHtml(v, e, sides){
     : `<button type="button" class="cast-open enc-name" data-eopencast="${esc(r.kept.id)}">${esc(v.kept.name)}</button>`}</p>` : "";
   return `<li class="enc-row${v.active?" active":""}${r.out?" out":""}" data-erow="${id}" tabindex="-1"${v.active ? ` aria-current="step"` : ""}>
     <div class="enc-head"${running && !r.out ? ` data-eturn="${id}"` : ""}>${name} ${mark}${r.out ? ` <span class="tag plain">Out</span>` : ""}${v.acted && !waiting ? ` <span class="tag plain">Done</span>` : ""}${openTag ? ` <span class="tag plain enc-open-tag">${esc(openTag)}</span>` : ""}${r.last ? ` <span class="tag plain">Goes last</span>` : ""}
-      ${num("data-eorder", r.order, "Combat Sense")}${v.ties ? `<span class="tag enc-tied">Tied: reroll</span>` : ""}${aware ? ` ${aware}` : ""}</div>
+      ${e.by==="wave" ? "" : num("data-eorder", r.order, "Combat Sense")}${v.ties ? `<span class="tag enc-tied">Tied: reroll</span>` : ""}${aware ? ` ${aware}` : ""}</div>
     ${waiting ? `<p class="enc-wait">Waiting${waiting.until.trim() ? `: ${esc(waiting.until)}` : ""}</p>` : ""}${kept}${seatLine}${encHealthHtml(v)}${encArmorHtml(v)}${pcFields}${encTraitsHtml(v, running)}
     ${v.conditions.length ? `<ul class="enc-conds">${v.conditions.map(c=>encCondHtml(v, c, ended)).join("")}</ul>` : ""}
     ${acts}</li>`;
@@ -3067,8 +3067,11 @@ function encResetHtml(e, v){
       ${out ? `<p class="cast-sub">Runs out now</p><ul class="enc-list">${out}</ul>` : ""}
       ${saves ? `<p class="cast-sub">Calls for a check</p><ul class="enc-list">${saves}</ul>` : ""}</section>`;
   }).join("");
+  // Waves (Decision 261): the next round's rolls, in the sides' own order so a field doesn't move as it is typed.
+  const next = e.by==="wave" ? `<section class="enc-reset-row"><h3 class="cast-h">Next round</h3><p class="step-note">If the fight has changed, each side rolls Combat Sense again.</p>
+      <div class="enc-side-head">${(e.sides || []).map(s=>`<label class="enc-num"><span>${esc(Engine.sideTitle(e, s.id))}</span><input type="number" step="1" inputmode="numeric" data-esideroll="${esc(s.id)}" value="${numAttr(s.roll)}" aria-label="Combat Sense, ${esc(Engine.sideTitle(e, s.id))}"></label>`).join("")}</div></section>` : "";
   return `<section class="enc-reset" aria-labelledby="enc-reset-h"><h2 class="cast-h" id="enc-reset-h" tabindex="-1">Reset: round ${e.round} ends</h2>
-    ${body}${quiet.length ? `<p class="step-note">Nothing on: ${esc(quiet.join(", "))}.</p>` : ""}
+    ${next}${body}${quiet.length ? `<p class="step-note">Nothing on: ${esc(quiet.join(", "))}.</p>` : ""}
     <p><button class="btn primary" data-efinish${res.ok ? "" : " disabled"}>Finish the round</button></p>
     ${res.ok ? "" : `<p class="step-note">${esc(res.why)}</p>`}</section>`;
 }
@@ -3180,7 +3183,13 @@ function encAddHtml(e){
     ${S.encCodex ? `<label class="field"><span>Search the Codex</span><input type="search" data-enc-codexq value="${esc(S.encCodexQ||"")}" autocomplete="off"></label>${encCodexHtml()}` : ""}`
       : `<p class="step-note">From the Codex: slot a pack in on Threats.</p>`}</section>`;
 }
-// A side under Wave Initiative (Decision 210): its heading, its best and a tie between sides, a More
+// A side's Combat Sense in waves (Decision 261): a field while its roll can change (the engine says so, `open`),
+// the number as text mid-round, and nothing when the fight has ended with none.
+function encSideRollHtml(s, ended){
+  if (s.open) return `<label class="enc-num"><span>Combat Sense</span><input type="number" step="1" inputmode="numeric" data-esideroll="${esc(s.id)}" value="${numAttr(s.roll)}"></label>`;
+  return ended && s.roll===null ? "" : `<span class="enc-num">Combat Sense ${s.roll===null ? "—" : esc(s.roll)}</span>`;
+}
+// A side under Wave Initiative (Decisions 210, 261): its heading, its Combat Sense and a tie between sides, a More
 // for its name and Remove, and its rows. The crew's name and the last other side can't be changed or taken away.
 function encSideHtml(s, v, e){
   const ended=e.status==="ended", crew=s.id==="crew", id=esc(s.id), others=v.sides.length - 1;
@@ -3189,7 +3198,7 @@ function encSideHtml(s, v, e){
       ${crew || others < 2 ? "" : `<button class="btn sm danger" data-esiderm="${id}">Remove side</button>`}</details>`;
   const rows = s.rowIds.map(rid=>v.rows.find(r=>r.row.id===rid)).filter(Boolean);
   return `<section class="enc-side" data-eside-sec="${id}">
-    <div class="enc-side-head"><h2 class="enc-side-h">${esc(s.title)}</h2>${s.best!==null ? `<span class="enc-num">Best ${esc(s.best)}</span>` : ""}${s.tied ? `<span class="tag enc-tied">Tied: reroll</span>` : ""}${more}</div>
+    <div class="enc-side-head"><h2 class="enc-side-h">${esc(s.title)}</h2>${encSideRollHtml(s, ended)}${s.tied ? `<span class="tag enc-tied">Tied: reroll</span>` : ""}${more}</div>
     ${rows.length ? `<ul class="enc-rows">${rows.map(r=>encRowHtml(r, e, ended ? null : v.sides)).join("")}</ul>` : `<p class="step-note">Nobody on this side.</p>`}</section>`;
 }
 // The plan (252): the book's Encounter Design worksheet. Labels and printed lists are 2642's words.
@@ -3485,6 +3494,7 @@ function bindEncounters(main){
     else if ("elevels" in d) row("elevels", v=>({ levels:v })); else if ("eaware" in d) row("eaware", v=>({ awareness:v }));
     else if ("eside" in d){ const r=Engine.editParticipant(S.table, eid(), d.eside, { side:el.value }); if (!r.ok){ notice(r.why); return; }
       S.encMore=Object.assign(S.encMore||{}, { [d.eside]:true }); tableChange(()=>{}); focus(attrSel("data-eside", d.eside)); }
+    else if ("esideroll" in d){ let r; change(()=>{ r=Engine.setSideRoll(S.table, eid(), d.esideroll, el.value); }); if (!r.ok) notice(r.why); focus(attrSel("data-esideroll", d.esideroll)); }
     else if ("esidename" in d){ const r=Engine.renameSide(S.table, eid(), d.esidename, el.value); if (!r.ok){ notice(r.why); return; }
       tableChange(()=>{}); focus(attrSel("data-esidename", d.esidename)); }
     else if ("ename" in d) { edit(d.ename, { name:el.value }); focus(attrSel("data-ename", d.ename)); }

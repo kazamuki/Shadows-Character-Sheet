@@ -6057,7 +6057,7 @@ const Engine = (() => {
     x.updated = _isoOrNull(x.updated);
   }
   // The table file's shape. A bump needs a migrateTable() step in the same change.
-  const TABLE_SCHEMA_VERSION = "0.18";
+  const TABLE_SCHEMA_VERSION = "0.19";
   function newTable(name){
     const now = new Date().toISOString();
     return { meta:{ kind:"shadows-table", id:newTableId(), name:String(name ?? ""),
@@ -6179,6 +6179,10 @@ const Engine = (() => {
       if (!Array.isArray(c.players)) c.players = [];
       if (!Array.isArray(c.copies)) c.copies = [];
     }
+    //   Schema 0.19 (Decision 261): a side keeps its Combat Sense roll. A wave fight not ended takes each side's best
+    //   as 210 read it, so a fight saved mid-round opens in the order it had; everything else starts with none.
+    //   The seed reads the gated rows, so the gate does it (_encounters).
+    const seedRolls = typeof arrived!=="string" || _versionNewer("0.19", arrived);
     if (!_versionNewer(m.tableSchemaVersion, TABLE_SCHEMA_VERSION)) m.tableSchemaVersion = TABLE_SCHEMA_VERSION;
     const usedCast = new Set();
     c.cast = (Array.isArray(c.cast) ? c.cast : []).filter(_isObj);
@@ -6216,7 +6220,7 @@ const Engine = (() => {
     const usedInteraction = new Set();
     c.interactions = (Array.isArray(c.interactions) ? c.interactions : []).filter(_isObj);
     for (const x of c.interactions) _interaction(x, usedInteraction, usedSession);
-    _encounters(c);
+    _encounters(c, seedRolls);
     // Players first, then the copies, which read the seats (Decision 254).
     _players(c);
     _copies(c, !!(opts && opts.keepCopies));
@@ -8193,14 +8197,16 @@ const Engine = (() => {
   // An encounter's sides, coerced: the crew first, then at most five others, each once; one other at least.
   // `mint` makes the id of an other side that has to be added.
   function _coerceSides(raw, mint){
-    const out = [{ id:"crew", name:"" }], seen = new Set(["crew"]);
-    for (const s of (Array.isArray(raw) ? raw : [])){
+    // The crew's entry in a file is rebuilt, but its roll (Decision 261) is read first.
+    const list = Array.isArray(raw) ? raw : [], crew = list.find(s=>_isObj(s) && s.id==="crew");
+    const out = [{ id:"crew", name:"", roll:crew ? _int(crew.roll) : null }], seen = new Set(["crew"]);
+    for (const s of list){
       if (out.length >= MAX_SIDES) break;
       if (!_isObj(s) || typeof s.id!=="string" || !SIDE_ID_RE.test(s.id) || seen.has(s.id)) continue;
       seen.add(s.id);
-      out.push({ id:s.id, name:_str(s.name) });
+      out.push({ id:s.id, name:_str(s.name), roll:_int(s.roll) });
     }
-    if (out.length===1) out.push({ id:mint(seen), name:"" });
+    if (out.length===1) out.push({ id:mint(seen), name:"", roll:null });
     return out;
   }
   const _sideList = e => _coerceSides(e && e.sides, ()=>"SD-00000000");
@@ -8316,7 +8322,7 @@ const Engine = (() => {
     r.armorId = typeof r.armorId==="string" && /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(r.armorId) ? r.armorId : null;
   }
   // The gate for t.encounters: called by migrateTable on every load.
-  function _encounters(c){
+  function _encounters(c, seedRolls){
     const used = new Set();
     c.encounters = (Array.isArray(c.encounters) ? c.encounters : []).filter(_isObj);
     for (const e of c.encounters){
@@ -8362,6 +8368,14 @@ const Engine = (() => {
       for (const r of e.rows) r.delay = live && _isObj(r.delay) ? { until:_str(r.delay.until) } : null;
       e.acted = live ? [...new Set((Array.isArray(e.acted) ? e.acted : []).filter(id=>typeof id==="string" && e.rows.some(r=>r.id===id)))] : [];
       if (live && e.round < 1) e.round = 1;
+      // Schema 0.19 (Decision 261): a wave fight not ended takes each side's best as 210 read it, from the gated rows.
+      if (seedRolls && e.by==="wave" && e.status!=="ended"){
+        const acted = new Set(e.acted);
+        for (const s of e.sides){
+          s.roll = null;
+          for (const r of e.rows) if (r.side===s.id && (!(r.out || r.last) || acted.has(r.id)) && r.order!==null && (s.roll===null || r.order > s.roll)) s.roll = r.order;
+        }
+      }
     }
   }
 
@@ -8394,7 +8408,7 @@ const Engine = (() => {
     const used = new Set(t.encounters.map(e=>e && e.id));
     const e = { id:newEncounterId(used), name:_str((f||{}).name).trim(), status:"planned", round:0, turn:null, acted:[], rows:[], created:now, updated:now };
     e.design = _design({}); e.opening = null;
-    e.by = "person"; e.sides = [{ id:"crew", name:"" }, { id:_firstOtherId(e), name:"" }];
+    e.by = "person"; e.sides = [{ id:"crew", name:"", roll:null }, { id:_firstOtherId(e), name:"", roll:null }];
     t.encounters.unshift(e);
     _tableStamp(t);
     return { ok:true, id:e.id };
@@ -8420,7 +8434,7 @@ const Engine = (() => {
     const sides = _sideList(l.e);
     if (sides.length >= MAX_SIDES) return { ok:false, why:"Six sides at most." };
     const id = newSideId(new Set(sides.map(s=>s.id)));
-    l.e.sides = sides.concat([{ id, name:_str((f||{}).name).trim() }]);
+    l.e.sides = sides.concat([{ id, name:_str((f||{}).name).trim(), roll:null }]);
     _tableStamp(t, l.e);
     return { ok:true, id };
   }
@@ -8465,28 +8479,22 @@ const Engine = (() => {
     return { ok:true };
   }
 
-  // The order shown (Decisions 189, 210). One at a time: Combat Sense highest first, a row with no
+  // The order shown (Decisions 189, 210, 261). One at a time: Combat Sense highest first, a row with no
   // result after those that have one in the order added, and Goes last after everyone by the same rule.
-  // Wave Initiative: the sides go first, the side holding the best result first (a side with none after
-  // those that have one, in list order), and within a side the same rule. A side's best leaves out a row
-  // that is Out or Goes last (SQ8) unless it has acted this round, so a row knocked out or pulled back
-  // halfway through its side's wave doesn't split the wave. Ties are shown, never broken: between rows one at a time, between
-  // sides' bests in waves. A stable sort keeps the order added.
+  // Wave Initiative: the sides go first, the side with the highest roll first (a side with none after
+  // those that have one, in list order), and within a side the rows go in the order added, Goes last at the
+  // end; a row's own result isn't read. Ties are shown, never broken: between rows one at a time, between
+  // sides' rolls in waves. A stable sort keeps the order added.
   function _encOrder(e){
     if (!_isObj(e)) return { rows:[], tied:()=>false, sides:[] };
     const rows = _rowList(e), wave = e.by==="wave", sides = _sideList(e);
-    const mine = new Map(sides.map(s=>[s.id, []]));
     const of = new Map();
-    for (const r of rows){ const id = _rowSide(e, sides, r); of.set(r, id); mine.get(id).push(r); }
-    const acted = new Set(_actedIds(e));
-    const info = sides.map((s, i)=>{
-      let best = null;
-      for (const r of mine.get(s.id)) if ((!(r.out || r.last) || acted.has(r.id)) && r.order!==null && (best===null || r.order > best)) best = r.order;
-      return { id:s.id, i, best };
-    });
-    const placed = wave ? info.slice().sort((a, b)=>(a.best===null) - (b.best===null) || (a.best!==null ? b.best - a.best : 0) || a.i - b.i) : info;
+    for (const r of rows) of.set(r, _rowSide(e, sides, r));
+    const info = sides.map((s, i)=>({ id:s.id, i, roll:s.roll }));
+    const placed = wave ? info.slice().sort((a, b)=>(a.roll===null) - (b.roll===null) || (a.roll!==null ? b.roll - a.roll : 0) || a.i - b.i) : info;
     const place = new Map(placed.map((s, p)=>[s.id, p]));
-    const key = r => [wave ? place.get(of.get(r)) : 0, r.last ? 1 : 0, r.order===null ? 1 : 0, r.order===null ? 0 : -r.order];
+    const key = wave ? r => [place.get(of.get(r)), r.last ? 1 : 0, 0, 0]
+                     : r => [0, r.last ? 1 : 0, r.order===null ? 1 : 0, r.order===null ? 0 : -r.order];
     const sorted = rows.map((r, i)=>({ r, i })).sort((a, b)=>{
       const x = key(a.r), y = key(b.r);
       for (let k = 0; k < 4; k++) if (x[k]!==y[k]) return x[k] - y[k];
@@ -8494,12 +8502,34 @@ const Engine = (() => {
     }).map(o=>o.r);
     const count = new Map();
     for (const r of rows) if (!r.last && r.order!==null) count.set(r.order, (count.get(r.order)||0) + 1);
-    const bests = new Map();
-    for (const s of info) if (s.best!==null) bests.set(s.best, (bests.get(s.best)||0) + 1);
+    const rolls = new Map();
+    for (const s of info) if (s.roll!==null) rolls.set(s.roll, (rolls.get(s.roll)||0) + 1);
+    const open = _sideRollOpen(e);
     return { rows:sorted,
              tied:r => !wave && !r.last && r.order!==null && count.get(r.order) > 1,
-             sides:placed.map(s=>({ id:s.id, title:sideTitle(e, s.id), best:s.best, tied:wave && s.best!==null && bests.get(s.best) > 1,
+             sides:placed.map(s=>({ id:s.id, title:sideTitle(e, s.id), roll:s.roll, tied:wave && s.roll!==null && rolls.get(s.roll) > 1, open,
                                     rowIds:sorted.filter(r=>of.get(r)===s.id).map(r=>r.id) })) };
+  }
+  // Whether a side's roll can change now (Decision 261): not once the encounter has ended, and not mid-round.
+  // The view's `open` and setSideRoll's refusal both read this, so the rule is written once.
+  const _sideRollOpen = e => e.status!=="ended" && !(e.status==="running" && e.turn!==null && e.turn!==undefined && _actedIds(e).length > 0);
+  // A side's Combat Sense roll in waves (Decision 261): a whole number, or none. Before anyone has acted, the turn
+  // stays where the GM tapped it while its row is on the side that now goes first, and is re-picked otherwise,
+  // so the first row really is on the side that goes first, as setOpening does.
+  function setSideRoll(t, encId, sideId, n){
+    const l = _live(t, encId);
+    if (l.why) return { ok:false, why:l.why };
+    const sides = _sideList(l.e), s = sides.find(x=>x.id===sideId);
+    if (!s) return { ok:false, why:"No such side." };
+    if (!_sideRollOpen(l.e)) return { ok:false, why:"Someone has acted. Roll again at the Reset." };
+    s.roll = typeof n==="number" || typeof n==="string" ? _int(n) : null;
+    l.e.sides = sides;
+    if (l.e.status==="running" && l.e.turn!==null){
+      const next = _pick(l.e), cur = _rowList(l.e).find(r=>r.id===l.e.turn);
+      if (next && !(cur && _rowSide(l.e, sides, cur)===_rowSide(l.e, sides, next))) l.e.turn = next.id;
+    }
+    _tableStamp(t, l.e);
+    return { ok:true };
   }
 
   function addParticipant(t, encId, f){
@@ -9358,7 +9388,7 @@ const Engine = (() => {
     FACTION_TYPES, FACTION_TYPE_LABELS, FACTION_ATTENTION, FACTION_STANCES, FACTION_FROM_KINDS, addFaction, editFaction, removeFaction, factionTitle, factionList,
     factionsKeyFor, factionAffiliated, addClock, editClock, removeClock, clocksOn,
     // Encounters: who is in one, whose turn it is, and what is still on them
-    ENCOUNTER_OBJECTIVES, ENCOUNTER_PROMPTS, addEncounter, editEncounter, addSide, renameSide, removeSide, sideTitle, removeEncounter, runningEncounter, encounterFor, addToEncounter, encounterTitle, addParticipant, participantFromEntry,
+    ENCOUNTER_OBJECTIVES, ENCOUNTER_PROMPTS, addEncounter, editEncounter, addSide, renameSide, setSideRoll, removeSide, sideTitle, removeEncounter, runningEncounter, encounterFor, addToEncounter, encounterTitle, addParticipant, participantFromEntry,
     participantsFromGroup, editParticipant, removeParticipant, participantDamage, participantAddCondition,
     participantRemoveCondition, participantConditionMarks, rowCharacter, startEncounter, nextTurn, setTurn, setOpening, delayTurn, actNow, resolveEncounterReset,
     applyEncounterReset, endEncounter, encounterWrapUp, encounterView, painFor,

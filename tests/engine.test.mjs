@@ -3361,7 +3361,7 @@ test("newTable stamps kind, a TBL- id, the name, schema 0.11, no notes, cast or 
   assert.equal(t.meta.kind, "shadows-table");
   assert.ok(Engine.isTableId(t.meta.id), t.meta.id);
   assert.equal(t.meta.name, "Tuesday");
-  assert.equal(t.meta.tableSchemaVersion, "0.18");
+  assert.equal(t.meta.tableSchemaVersion, "0.19");
   assert.equal(t.notes.length, 0);
   assert.equal(JSON.stringify(t.cast), "[]");
   assert.equal(JSON.stringify(t.interactions), "[]");
@@ -3436,7 +3436,7 @@ test("a newer table schema stamp is kept and reported; an older or unreadable on
   assert.equal(Engine.migrateTable(n).meta.tableSchemaVersion, "9.0");
   for (const v of ["0.7", "0.6", "0.5", "0.4", "0.2", "0.1", "0.0", "junk", undefined]) {
     const m = Engine.migrateTable({ meta: { tableSchemaVersion: v } });
-    assert.equal(m.meta.tableSchemaVersion, "0.18", String(v));
+    assert.equal(m.meta.tableSchemaVersion, "0.19", String(v));
     assert.equal(Engine.tableCheck(m).length, 0);
   }
 });
@@ -3488,7 +3488,7 @@ test("a 0.1 table migrates to 0.4 with an empty cast and its notes untouched", (
   Engine.addTableNote(old, { title: "B", text: "two" });
   old.meta.tableSchemaVersion = "0.1"; delete old.cast;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.18");
+  assert.equal(m.meta.tableSchemaVersion, "0.19");
   eq(m.cast, []); eq(m.interactions, []);
   assert.equal(JSON.stringify(m.notes), JSON.stringify(old.notes));
   assert.equal(Engine.tableCheck(m).length, 0);
@@ -3711,7 +3711,7 @@ test("a 0.2 table migrates to 0.3 with no interactions and no affiliations, and 
   delete old.interactions; old.meta.tableSchemaVersion = "0.2";
   for (const n of old.cast) delete n.affiliations;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.18");
+  assert.equal(m.meta.tableSchemaVersion, "0.19");
   eq(m.interactions, []);
   for (const n of m.cast) eq(n.affiliations, []);
   const strip = t => { const c = plain(t); delete c.interactions; delete c.meta.tableSchemaVersion; for (const n of c.cast) { delete n.affiliations; delete n.from; } return JSON.stringify(c); };
@@ -4073,7 +4073,7 @@ test("a 0.3 table migrates to 0.4 with from: null, and the rest is byte-identica
   for (const n of old.cast) delete n.from;
   old.meta.tableSchemaVersion = "0.3";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.18");
+  assert.equal(m.meta.tableSchemaVersion, "0.19");
   for (const n of m.cast) assert.equal(n.from, null);
   const strip = t => { const c = plain(t); delete c.meta.tableSchemaVersion; for (const n of c.cast) delete n.from; return JSON.stringify(c); };
   assert.equal(strip(m), strip(old));
@@ -4282,7 +4282,7 @@ test("188: newTable has encounters, and a 0.4 table migrates to 0.5 with none an
   delete old.encounters;
   old.meta.tableSchemaVersion = "0.4";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.18");
+  assert.equal(m.meta.tableSchemaVersion, "0.19");
   eq(m.encounters, []);
   eq(m.cast, old.cast); eq(m.notes, old.notes); eq(m.interactions, old.interactions);
 });
@@ -4798,7 +4798,7 @@ test("191: the hit's rows keep Massive levels and armor wear, and a 0.5 table op
   old.meta.tableSchemaVersion = "0.5";
   for (const r of old.encounters[0].rows) { delete r.massive; delete r.armorLoss; delete r.scrapped; }
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.18");
+  assert.equal(m.meta.tableSchemaVersion, "0.19");
   eq(m, Engine.migrateTable(t), "a 0.5 table is a 0.6 table with nothing worn or gone");
 });
 
@@ -5272,7 +5272,7 @@ test("193: the kinds are eight, and a 0.6 table opens as 0.7 with no row kept an
   old.meta.tableSchemaVersion = "0.6";
   for (const en of old.encounters) for (const r of en.rows) delete r.kept;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.18");
+  assert.equal(m.meta.tableSchemaVersion, "0.19");
   assert.ok(m.encounters[0].rows.every(r => r.kept === null));
   eq(m, Engine.migrateTable(t));
   // The gate: kept is a link on an entry row, else null.
@@ -5902,7 +5902,7 @@ test("203: a new table has no sessions or threads, and a 0.7 table opens as 0.8 
   delete old.sessions; delete old.threads;
   for (const x of old.interactions) delete x.session;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.18");
+  assert.equal(m.meta.tableSchemaVersion, "0.19");
   eq([m.sessions, m.threads], [[], []]);
   assert.ok(m.interactions.every(x => x.session === null));
   eq(m, Engine.migrateTable(t));
@@ -6190,7 +6190,7 @@ test("205: a new session has close null, and a 0.8 table opens as 0.9 with every
   // A 0.8 file that already carries a close (a hand edit) is not converted either.
   old.sessions[0].close = { at: null, lines: [here("Wren", 5)] };
   assert.equal(Engine.migrateTable(old).sessions[0].close, null);
-  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.18");
+  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.19");
 });
 
 test("206: offScreenPay is the tier's minimum to its midpoint, Legendary's to offScreenMax, and an unknown tier is null", () => {
@@ -6555,7 +6555,7 @@ function secretaryTable() {
 const found = (t, q) => Engine.tableSearch(t, q).map(h => [h.kind, h.id, h.field]);
 
 test("208: table schema 0.10; a note's session is null for an old table, kept when real, nulled when not", () => {
-  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.18");
+  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.19");
   const base = v => ({ meta: { tableSchemaVersion: v }, sessions: [{ id: "SE-AAAAAAA1", number: 1 }],
     notes: [{ id: "N-AAAAAAA1", session: "SE-AAAAAAA1" }, { id: "N-AAAAAAA2", session: "S-NOPE0000" }] });
   for (const n of Engine.migrateTable(base("0.9")).notes) assert.equal(n.session, null, "an old table guesses nothing");
@@ -6696,9 +6696,10 @@ function waveTable() {
 }
 const names = (t, e) => Engine.encounterView(t, e, []).rows.map(r => r.name);
 const wave = (t, e) => assert.ok(Engine.editEncounter(t, e, { by: "wave" }).ok);
+const roll = (t, e, side, n) => assert.ok(Engine.setSideRoll(t, e, side, n).ok);
 
 test("210: table schema 0.11; a 0.10 table opens one at a time with two sides, PCs on the crew's, nobody an ally", () => {
-  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.18");
+  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.19");
   const t = Engine.newTable("Old");
   const e = Engine.addEncounter(t, { name: "E" }).id;
   const m1 = Engine.addCastMember(t, { name: "Marta" }).id;
@@ -6709,8 +6710,8 @@ test("210: table schema 0.11; a 0.10 table opens one at a time with two sides, P
   for (const r of old.encounters[0].rows) delete r.side;
   old.cast[0].ally = true;   // a 0.10 file has none: nothing is guessed
   const m = Engine.migrateTable(old), en = m.encounters[0];
-  assert.equal(m.meta.tableSchemaVersion, "0.18");
-  eq([en.by, en.sides.length, en.sides[0]], ["person", 2, { id: "crew", name: "" }]);
+  assert.equal(m.meta.tableSchemaVersion, "0.19");
+  eq([en.by, en.sides.length, en.sides[0]], ["person", 2, { id: "crew", name: "", roll: null }]);
   eq(en.rows.map(r => r.side), ["crew", en.sides[1].id]);
   eq(m.cast.map(n => n.ally), [false]);
   eq(Engine.migrateTable(old), m, "the same table opens the same way twice");
@@ -6740,59 +6741,71 @@ test("210: a 0.11 file's hostile by, sides and side read their defaults; real va
   assert.equal(Engine.migrateTable(kept).encounters[0].by, "wave");
 });
 
-test("210: in waves the side holding the best Combat Sense goes first; one at a time is unchanged", () => {
-  const { t, e, pcA, t16 } = waveTable();
+test("261: in waves each side's own roll orders the sides, not its rows' results", () => {
+  const { t, e, other } = waveTable();
   eq(names(t, e), ["T16", "PC14", "PC8", "TNone"], "one at a time: everyone by result");
   wave(t, e);
-  eq(names(t, e), ["T16", "TNone", "PC14", "PC8"], "16 beats the crew's 14: the other side first");
-  Engine.editParticipant(t, e, t16, { order: 12 });
-  eq(names(t, e), ["PC14", "PC8", "T16", "TNone"], "the crew's 14 beats 12");
-  Engine.editParticipant(t, e, pcA, { last: true });
-  eq(names(t, e), ["T16", "TNone", "PC8", "PC14"], "Goes last is last of the crew, and the crew's best is now 8");
+  roll(t, e, "crew", 12); roll(t, e, other, 9);
+  eq(names(t, e), ["PC14", "PC8", "T16", "TNone"], "the crew's 12 beats 9, whatever the rows' results");
+  roll(t, e, other, 13);
+  eq(names(t, e), ["T16", "TNone", "PC14", "PC8"], "13 beats 12");
 });
 
-test("210: a side's best leaves out Out and Goes last rows; a side with no result goes after those with one", () => {
-  const { t, e, other, t16, pcA, pcB } = waveTable();
+test("261: within a side rows go in the order added, Goes last at the end; a row's own result is not read in waves", () => {
+  const { t, e, other, pcA, pcB } = waveTable();
   wave(t, e);
-  const bests = () => Engine.encounterView(t, e, []).sides.map(s => s.best);
-  Engine.editParticipant(t, e, t16, { out: true });
-  eq(bests(), [14, null], "an Out row is not the side's best");
-  Engine.editParticipant(t, e, t16, { out: false, last: true });
-  eq(bests(), [14, null], "nor a Goes last row");
-  Engine.editParticipant(t, e, t16, { last: false });
-  eq(bests(), [16, 14]);
-  for (const id of [t16, pcA, pcB]) Engine.editParticipant(t, e, id, { order: null });
-  eq(Engine.encounterView(t, e, []).sides.map(s => s.id), ["crew", other], "no result anywhere: list order, the crew first");
+  roll(t, e, "crew", 12); roll(t, e, other, 9);
+  Engine.editParticipant(t, e, pcB, { order: 20 });
+  eq(names(t, e), ["PC14", "PC8", "T16", "TNone"], "PC8's 20 doesn't move it, nor its side");
+  Engine.editParticipant(t, e, pcA, { last: true });
+  eq(names(t, e), ["PC8", "PC14", "T16", "TNone"], "Goes last is last of its side");
+  Engine.editParticipant(t, e, pcA, { last: false });
+  assert.ok(Engine.editEncounter(t, e, { by: "person" }).ok);
+  eq(names(t, e).slice(0, 1), ["PC8"], "one at a time reads the 20 again");
 });
 
-test("210: ties are between sides in waves, never between rows; one at a time still flags rows", () => {
-  const { t, e, t16, pcB } = waveTable();
+test("261: a side with no roll goes after those with one, in list order; none anywhere is list order, the crew first", () => {
+  const { t, e, other } = waveTable();
+  wave(t, e);
+  const third = Engine.addSide(t, e, { name: "The Saints" }).id;
+  Engine.editParticipant(t, e, addPc(t, e, "S", { order: 3 }), { side: third });
+  eq(Engine.encounterView(t, e, []).sides.map(s => s.id), ["crew", other, third], "none anywhere: list order, the crew first");
+  roll(t, e, third, 10);
+  eq(Engine.encounterView(t, e, []).sides.map(s => s.id), [third, "crew", other], "the one with a roll first, the rest in list order");
+  roll(t, e, third, null);
+  eq(Engine.encounterView(t, e, []).sides.map(s => s.id), ["crew", other, third]);
+});
+
+test("261: equal side rolls flag both sides, never a row; one at a time still flags rows", () => {
+  const { t, e, other, pcB } = waveTable();
   addPc(t, e, "Two", { order: 14 });
   eq(Engine.encounterView(t, e, []).rows.filter(r => r.ties).length, 2, "one at a time: the two 14s");
   wave(t, e);
-  Engine.editParticipant(t, e, t16, { order: 14 });
-  let v = Engine.encounterView(t, e, []);
-  eq(v.sides.map(s => s.tied), [true, true], "both bests are 14");
+  roll(t, e, "crew", 14); roll(t, e, other, 14);
+  const v = Engine.encounterView(t, e, []);
+  eq(v.sides.map(s => s.tied), [true, true]);
   assert.equal(v.rows.some(r => r.ties), false, "no row is flagged");
-  Engine.editParticipant(t, e, t16, { order: 9 });
+  roll(t, e, other, 9);
   eq(Engine.encounterView(t, e, []).sides.map(s => s.tied), [false, false]);
   Engine.editParticipant(t, e, pcB, { order: 14 });
-  assert.equal(Engine.encounterView(t, e, []).rows.some(r => r.ties), false, "two rows on 14 on one side: no tie");
+  assert.equal(Engine.encounterView(t, e, []).rows.some(r => r.ties), false, "rows' results are not read in waves");
 });
 
-test("210: three sides: the middle result goes second", () => {
-  const { t, e } = waveTable();
+test("261: three sides: the middle roll goes second", () => {
+  const { t, e, other } = waveTable();
   wave(t, e);
   const s = Engine.addSide(t, e, { name: "The Saints" });
   assert.ok(s.ok);
   Engine.editParticipant(t, e, addPc(t, e, "S15", { order: 15 }), { side: s.id });
+  roll(t, e, other, 16); roll(t, e, s.id, 15); roll(t, e, "crew", 14);
   eq(names(t, e), ["T16", "TNone", "S15", "PC14", "PC8"]);
   eq(Engine.encounterView(t, e, []).sides.map(x => x.title), ["The other side", "The Saints", "The crew"]);
 });
 
-test("210: Start in waves lands on the best side's first row; Next goes side by side, then Reset, then round 2", () => {
-  const { t, e, t16, tNone, pcA, pcB } = waveTable();
+test("261: Start in waves lands on the higher roll's first row; Next goes side by side, then Reset, then round 2", () => {
+  const { t, e, other, t16, tNone, pcA, pcB } = waveTable();
   wave(t, e);
+  roll(t, e, other, 16); roll(t, e, "crew", 14);
   assert.ok(Engine.startEncounter(t, e).ok);
   assert.equal(encOf(t, e).turn, t16, "the other side is first");
   const seen = [encOf(t, e).turn];
@@ -6814,9 +6827,10 @@ test("210: Start in waves picks the first side by its place, not the best row ad
   assert.equal(encOf(t, e).turn, wren, "a tie between sides: the crew, first in the list, goes first, though the Tough was added first");
 });
 
-test("210: switching mid-round keeps who has acted and the turn; Next never offers an acted row again", () => {
-  const { t, e, t16 } = waveTable();
+test("261: switching mid-round keeps who has acted and the turn; Next never offers an acted row again", () => {
+  const { t, e, other, t16 } = waveTable();
   wave(t, e);
+  roll(t, e, other, 16); roll(t, e, "crew", 14);
   Engine.startEncounter(t, e); Engine.nextTurn(t, e);
   const before = plain([encOf(t, e).turn, encOf(t, e).acted, encOf(t, e).round]);
   assert.ok(Engine.editEncounter(t, e, { by: "person" }).ok);
@@ -6828,22 +6842,24 @@ test("210: switching mid-round keeps who has acted and the turn; Next never offe
   assert.equal(seen.length, 2, "the two who hadn't gone");
 });
 
-test("210: a row that has acted and then goes Out or Goes last doesn't split its side's wave", () => {
+test("261: an Out or Goes last row doesn't move its side, nor split its side's wave", () => {
   for (const f of [{ out: true }, { last: true }]) {
     const t = Engine.newTable("S");
     const e = Engine.addEncounter(t, {}).id, other = encOf(t, e).sides[1].id;
     const pc14 = addPc(t, e, "PC14", { order: 14 }), pc8 = addPc(t, e, "PC8", { order: 8 });
     const mk = (n, o) => addPc(t, e, n, { order: o, side: other });
     const a = mk("A", 16), b = mk("B", 5), c = mk("C", 4);
-    wave(t, e); Engine.startEncounter(t, e); Engine.nextTurn(t, e);
+    wave(t, e); roll(t, e, other, 16); roll(t, e, "crew", 14);
+    Engine.startEncounter(t, e); Engine.nextTurn(t, e);
     assert.equal(encOf(t, e).turn, b);
     assert.ok(Engine.editParticipant(t, e, a, f).ok);
+    eq(Engine.encounterView(t, e, []).sides.map(s => s.id), [other, "crew"], JSON.stringify(f) + ": the sides keep their places");
     const seen = [encOf(t, e).turn];
     for (let n = 0; n < 4; n++) { const r = Engine.nextTurn(t, e); if (r.reset) break; seen.push(encOf(t, e).turn); }
     eq(seen, [b, c, pc14, pc8], JSON.stringify(f));
     assert.equal(encOf(t, e).turn, null, "at Reset");
     assert.ok(Engine.applyEncounterReset(t, e, {}).ok);
-    if (f.out) eq([encOf(t, e).round, encOf(t, e).turn], [2, pc14], "round 2: the Out Tough no longer counts, so the crew's 14 leads");
+    eq([encOf(t, e).round, encOf(t, e).turn], [2, b], "round 2: the other side still leads, on its first row that can act");
   }
 });
 
@@ -6886,12 +6902,113 @@ test("210: a blank side name reads by its place", () => {
   assert.equal(Engine.sideTitle(encOf(t, e), "nope"), "");
 });
 
-test("210: editParticipant moves a row; a moved row is ordered with its new side", () => {
-  const { t, e, t16 } = waveTable();
+test("261: editParticipant moves a row; a moved row is ordered with its new side", () => {
+  const { t, e, other, t16 } = waveTable();
   wave(t, e);
+  roll(t, e, "crew", 12); roll(t, e, other, 9);
   assert.ok(Engine.editParticipant(t, e, t16, { side: "crew" }).ok);
-  eq(names(t, e), ["T16", "PC14", "PC8", "TNone"], "16 is the crew's best now");
-  assert.equal(Engine.encounterView(t, e, []).rows[0].side, "crew");
+  eq(names(t, e), ["PC14", "PC8", "T16", "TNone"], "T16 is the crew's now, last of those added");
+  assert.equal(Engine.encounterView(t, e, []).rows[2].side, "crew");
+});
+
+test("261: setSideRoll changes before anyone acts and at the Reset; mid-round it is refused and writes nothing", () => {
+  const { t, e, other, t16, pcA } = waveTable();
+  wave(t, e);
+  roll(t, e, "crew", 12); roll(t, e, other, 9);
+  assert.ok(Engine.startEncounter(t, e).ok);
+  assert.equal(encOf(t, e).turn, pcA, "the crew is first on 12");
+  assert.ok(Engine.setSideRoll(t, e, other, 13).ok);
+  assert.equal(encOf(t, e).turn, t16, "nobody has acted: the turn is re-picked on the side that now leads");
+  Engine.nextTurn(t, e);
+  const before = JSON.stringify(t);
+  eq(Engine.setSideRoll(t, e, other, 20), { ok: false, why: "Someone has acted. Roll again at the Reset." });
+  assert.equal(JSON.stringify(t), before, "nothing written, the stamp included");
+  eq(Engine.encounterView(t, e, []).sides.map(s => s.open), [false, false]);
+  while (!Engine.nextTurn(t, e).reset);
+  assert.equal(encOf(t, e).turn, null);
+  eq(Engine.encounterView(t, e, []).sides.map(s => s.open), [true, true], "at the Reset the rolls can change");
+  assert.ok(Engine.setSideRoll(t, e, "crew", 30).ok);
+  assert.ok(Engine.applyEncounterReset(t, e, {}).ok);
+  eq([encOf(t, e).round, encOf(t, e).turn], [2, pcA], "round 2 opens on the crew");
+});
+
+test("261: a roll typed before anyone acts keeps the GM's tapped turn while its side still goes first, and moves it when another side leads", () => {
+  const t = Engine.newTable("K");
+  const e = Engine.addEncounter(t, {}).id, other = encOf(t, e).sides[1].id;
+  const wren = addPc(t, e, "Wren"), juno = addPc(t, e, "Juno");
+  const tough = addPc(t, e, "Tough"); Engine.editParticipant(t, e, tough, { side: other });
+  wave(t, e); roll(t, e, "crew", 10); roll(t, e, other, 5);
+  assert.ok(Engine.startEncounter(t, e).ok);
+  assert.equal(encOf(t, e).turn, wren);
+  assert.ok(Engine.setTurn(t, e, juno).ok);
+  roll(t, e, other, 6);
+  assert.equal(encOf(t, e).turn, juno, "still lower: the tap stays");
+  roll(t, e, other, 11);
+  assert.equal(encOf(t, e).turn, tough, "another side leads now: its first row");
+});
+
+test("261: setSideRoll refuses a bad side and an ended encounter, and reads a non-number as none", () => {
+  const { t, e, other } = waveTable();
+  eq(Engine.setSideRoll(t, e, "SD-NOPE0000", 5), { ok: false, why: "No such side." });
+  eq(Engine.setSideRoll(t, "ENC-NOPE0000", other, 5).why, "No such encounter.");
+  const sideRoll = () => encOf(t, e).sides.find(s => s.id === other).roll;
+  roll(t, e, other, "14"); assert.equal(sideRoll(), 14);
+  for (const bad of ["x", {}, 1.5, NaN, "", null, undefined, [14], true]) {
+    roll(t, e, other, 14); roll(t, e, other, bad);
+    assert.equal(sideRoll(), null, String(bad));
+  }
+  Engine.startEncounter(t, e); Engine.endEncounter(t, e);
+  eq(Engine.setSideRoll(t, e, other, 5).why, `${Engine.encounterTitle(encOf(t, e))} has ended.`);
+});
+
+test("261: a side's roll undoes in one step, and puts the turn back", () => {
+  const { t, e, other, t16, pcA } = waveTable();
+  wave(t, e);
+  roll(t, e, "crew", 12); roll(t, e, other, 9);
+  Engine.startEncounter(t, e);
+  assert.equal(encOf(t, e).turn, pcA);
+  const before = undoBase(t);
+  const r = recorded(t, () => Engine.setSideRoll(t, e, other, 13), undefined, { fold: false });
+  assert.ok(r.ok);
+  assert.equal(encOf(t, e).turn, t16);
+  assert.ok(Engine.undoTableAction(t).ok);
+  eq(undoBase(t), before, "the old roll and the old turn");
+});
+
+test("261: encounterView's sides carry a roll that is a number or null, on a hostile table too", () => {
+  const { t, e } = waveTable();
+  wave(t, e);
+  const h = plain(t);
+  h.meta.tableSchemaVersion = "0.18";
+  h.encounters[0].by = "wave"; h.encounters[0].status = "running"; h.encounters[0].acted = "x"; h.encounters[0].rows = [7, null, { id: "R-AAAAAAAA", kind: "pc", order: "14", side: "crew" }];
+  const m = Engine.migrateTable(h);
+  for (const enc of m.encounters) for (const s of Engine.encounterView(m, enc.id, []).sides) assert.ok(s.roll === null || Number.isSafeInteger(s.roll), String(s.roll));
+  eq(Engine.encounterView(m, m.encounters[0].id, []).sides.map(s => s.roll), [14, null]);
+});
+
+test("261: a 0.18 table: an open wave fight takes each side's old best; an ended or one-at-a-time one gets none; it opens the same twice", () => {
+  const { t, e, pcB } = waveTable();
+  wave(t, e);
+  Engine.startEncounter(t, e);
+  Engine.editParticipant(t, e, pcB, { out: true });
+  const old = plain(t);
+  old.meta.tableSchemaVersion = "0.18";
+  for (const s of old.encounters[0].sides) delete s.roll;
+  const m = Engine.migrateTable(old), me = m.encounters[0];
+  eq(me.sides.map(s => s.roll), [14, 16], "an Out row is left out, as 210 read it");
+  eq(Engine.migrateTable(old), m, "the same old table opens the same way twice");
+  const ended = plain(old); ended.encounters[0].status = "ended";
+  eq(Engine.migrateTable(ended).encounters[0].sides.map(s => s.roll), [null, null], "an ended fight gets none");
+  const person = plain(old); person.encounters[0].by = "person";
+  eq(Engine.migrateTable(person).encounters[0].sides.map(s => s.roll), [null, null], "one at a time gets none");
+  const same = plain(t);
+  for (const s of same.encounters[0].sides) s.roll = null;
+  eq(Engine.migrateTable(same).encounters[0].sides.map(s => s.roll), [null, null], "a 0.19 table is not seeded");
+  // The seed reads typed rows: a hostile order is not a number.
+  const odd = plain(old);
+  odd.encounters[0].rows.find(r => r.name === "PC14").order = "14";
+  odd.encounters[0].rows.find(r => r.name === "T16").order = {};
+  eq(Engine.migrateTable(odd).encounters[0].sides.map(s => s.roll), [14, null]);
 });
 
 test("210: a cast member who fights with the crew joins the crew's side; others, entries and groups, the other side", () => {
@@ -7366,7 +7483,7 @@ test("212: a table saved before 0.12 loads with an empty trail, and a new table 
   eq(Engine.migrateTable(old).audit, []);
   delete old.audit; delete old.meta.tableSchemaVersion;
   eq(Engine.migrateTable(old).audit, []);
-  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.18");
+  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.19");
   // A file from a newer app keeps its trail gated, not emptied.
   const newer = plain(t);
   newer.meta.tableSchemaVersion = "0.19";
@@ -9554,7 +9671,7 @@ test("241: the gate keeps a good encounter link, drops a bad one, and converts n
   old.meta.tableSchemaVersion = "0.12";
   old.interactions = [{ ...mk({ kind: "encounter", id: "EN-AAAAAAAA" }), id: "I-AAAAAAAA" }];
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.18");
+  assert.equal(m.meta.tableSchemaVersion, "0.19");
   assert.equal(m.interactions[0].encounter, null);
   assert.equal(m.interactions[0].text, "Fought them in Dock.");
   // constraint 8: new, add, migrate round-trips
@@ -9944,7 +10061,7 @@ test("243: the gate types places and a line's place, keeps an unknown gazetteer 
   old.interactions = [{ ...mk(undefined), id: "I-AAAAAAAA", text: "Unchanged." }];
   old.places = "x";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.18");
+  assert.equal(m.meta.tableSchemaVersion, "0.19");
   eq(m.places, []);
   assert.equal(m.interactions[0].place, null);
   assert.equal(m.interactions[0].text, "Unchanged.");
@@ -10123,7 +10240,7 @@ test("244: the gate types factions and converts nothing", () => {
   old.meta.tableSchemaVersion = "0.14";
   old.factions = "x"; old.clocks = 5;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.18");
+  assert.equal(m.meta.tableSchemaVersion, "0.19");
   eq([m.factions, m.clocks], [[], []]);
   eq(m.cast[0].affiliations, ["Eclipse"]);
   // constraint 8: new, add, migrate round-trips
@@ -10990,7 +11107,7 @@ test("251: the gate types a place's site, level and rows, and converts nothing",
   const fresh = Engine.newTable("R"), pid = Engine.addPlace(fresh, { from: "old-pike" }).id;
   Engine.setPlaceSite(fresh, pid, siteTable().packs, { pack: SITE_PK, id: "long-stretch" }); Engine.editPlace(fresh, pid, { exposure: [{ name: "Vex", n: 4 }] });
   eq(Engine.migrateTable(plain(fresh)), plain(fresh));
-  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.18");
+  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.19");
 });
 
 test("251: picking a profile reads as a change to the place; its copied clock is collateral, and an added clock alone still reads as added", () => {
@@ -11103,7 +11220,7 @@ test("252: a 0.16 table gains an empty plan, no opening and no delays, and conve
   old.meta.tableSchemaVersion = "0.16";
   for (const x of old.encounters) { delete x.design; delete x.opening; for (const r of x.rows) delete r.delay; }
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.18");
+  assert.equal(m.meta.tableSchemaVersion, "0.19");
   for (const x of m.encounters) {
     eq(x.design, { hook: "", stakes: "", objectives: "", terrain: "", hazards: "", city: "", beyondNotes: "", escalations: "", failure: "", success: "", escapes: "", failsafe: "", threads: "", milestones: "", pivot: "", stalls: "", adversaries: [], beyond: [] });
     assert.equal(x.opening, null);
@@ -11312,7 +11429,7 @@ test("254: a 0.17 table gains no players and no copies, and converts nothing", (
   const old = plain(t);
   delete old.players; delete old.copies; old.meta.tableSchemaVersion = "0.17";
   const m = Engine.migrateTable(old);
-  eq([m.players, m.copies, m.meta.tableSchemaVersion], [[], [], "0.18"]);
+  eq([m.players, m.copies, m.meta.tableSchemaVersion], [[], [], "0.19"]);
   eq(m.sessions[0].present, ["Dez"]);
   eq(Engine.playerList(m), [], "no seat is guessed from a typed name");
   const { t: s } = seated();

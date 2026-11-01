@@ -857,7 +857,7 @@ test("Decisions 203–204: export and import keep sessions and threads, and a 0.
   const before = JSON.parse(JSON.stringify(app.window.eval("({ s: S.table.sessions, t: S.table.threads })")));
   app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
   const file = await tableFile(downloads[0]);
-  assert.equal(file.meta.tableSchemaVersion, "0.18");
+  assert.equal(file.meta.tableSchemaVersion, "0.19");
   assert.deepEqual(file.sessions, before.s); assert.deepEqual(file.threads, before.t);
   const fresh = boot({ storage: GM_ON });
   withDownloads(fresh);
@@ -870,7 +870,7 @@ test("Decisions 203–204: export and import keep sessions and threads, and a 0.
   const older = boot({ storage: GM_ON });
   withDownloads(older);
   await importFile(older, old);
-  assert.equal(older.window.eval("S.table.meta.tableSchemaVersion"), "0.18");
+  assert.equal(older.window.eval("S.table.meta.tableSchemaVersion"), "0.19");
   assert.equal(older.window.eval("S.table.sessions.length + S.table.threads.length"), 0);
   assert.equal(older.window.eval("S.table.interactions[0].session"), null);
   assert.deepEqual([...app.errors, ...fresh.errors, ...older.errors], []);
@@ -1484,7 +1484,7 @@ test("Decision 208: a jot on the Notes tab or that session's page appears there;
   assert.deepEqual(app.errors, []);
 });
 
-// ── Wave Initiative (Decision 210) ─────────────────────────────────────
+// ── Wave Initiative (Decisions 210, 261) ─────────────────────────────────────
 function waveApp() {
   const app = boot({ storage: GM_ON });
   runTable(app, "T");
@@ -1498,42 +1498,57 @@ function waveApp() {
 }
 const headings = app => app.$$(".enc-side-h").map(h => h.textContent);
 const orderOf = (app, name, v) => changeTo(app, `[data-eorder="${rowId(encRowByName(app, name))}"]`, String(v));
+const otherId = app => app.window.eval("S.table.encounters[0].sides[1].id");
+const sideRoll = (app, side, v) => changeTo(app, `[data-esideroll="${side}"]`, String(v));
 
-test("210: a planned encounter is One at a time; Wave Initiative groups the rows under their sides and keeps the numbers", () => {
+test("261: in waves a side's heading has Combat Sense and its rows don't; typing a roll re-sorts the headings and keeps focus on that field", () => {
   const app = waveApp();
   assert.equal(app.$('[data-eby="person"]').getAttribute("aria-pressed"), "true");
   assert.equal(app.$$(".enc-side-h").length, 0, "one at a time has no headings");
   orderOf(app, "Wren", 14); orderOf(app, "Tough", 16);
-  const wave = app.$('[data-eby="wave"]');
-  wave.click();
+  app.$('[data-eby="wave"]').click();
   assert.equal(app.doc.activeElement, app.$('[data-eby="wave"]'), "focus left the pressed button");
   assert.equal(app.$('[data-eby="wave"]').getAttribute("aria-pressed"), "true");
-  assert.deepEqual(headings(app), ["The other side", "The crew"], "16 beats 14");
-  assert.match(app.$(".enc-side").textContent, /Best 16/);
-  assert.ok(app.$("[data-eorder]"), "Combat Sense is still there");
+  assert.deepEqual(headings(app), ["The crew", "The other side"], "nothing typed: list order, whatever the rows' results");
+  assert.equal(app.$$("[data-esideroll]").length, 2);
+  assert.equal(app.$("#main [data-eorder]"), null, "rows have no Combat Sense field in waves");
   assert.equal(app.$$(".enc-tied").length, 0);
-  // The tip.
-  app.$('[data-tip="wave"]').click();
-  assert.match(tipShown(app), /The side holding the best result acts first/);
+  const other = otherId(app);
+  sideRoll(app, other, 16);
+  assert.deepEqual(headings(app), ["The other side", "The crew"]);
+  assert.equal(app.doc.activeElement, app.$(`[data-esideroll="${other}"]`), "focus followed the field, not its place");
+  assert.equal(app.$(`[data-esideroll="${other}"]`).value, "16");
+  app.$('[data-eby="person"]').click();
+  assert.ok(app.$("[data-eorder]"), "one at a time has its Combat Sense fields back");
+  assert.equal(app.$$("[data-esideroll]").length, 0);
   assert.deepEqual(app.errors, []);
 });
 
-test("210: a tie between sides is flagged on both headings and on no row; the order follows the numbers", () => {
+test("261: the Wave Initiative tip says one roll a side", () => {
   const app = waveApp();
   app.$('[data-eby="wave"]').click();
-  orderOf(app, "Wren", 14); orderOf(app, "Tough", 14);
+  app.$('[data-tip="wave"]').click();
+  assert.match(tipShown(app), /closest to the danger/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("261: a tie between sides is flagged on both headings and on no row; the order follows the rolls", () => {
+  const app = waveApp();
+  app.$('[data-eby="wave"]').click();
+  const other = otherId(app);
+  sideRoll(app, "crew", 14); sideRoll(app, other, 14);
   assert.equal(app.$$(".enc-side-head .enc-tied").length, 2);
   assert.equal(app.$$(".enc-row .enc-tied").length, 0);
-  orderOf(app, "Tough", 15);
+  sideRoll(app, other, 15);
   assert.equal(app.$$(".enc-tied").length, 0);
   assert.deepEqual(headings(app), ["The other side", "The crew"]);
   assert.deepEqual(app.errors, []);
 });
 
-test("210: Start lands on the best side's first row; Next goes through it, then the crew, then Reset", () => {
+test("261: Start lands on the higher roll's first row; Next goes through it, then the crew, then Reset", () => {
   const app = waveApp();
   app.$('[data-eby="wave"]').click();
-  orderOf(app, "Wren", 14); orderOf(app, "Tough", 16);
+  sideRoll(app, "crew", 14); sideRoll(app, otherId(app), 16);
   app.click("[data-enc-start]");
   const active = () => app.$$("[aria-current=step] .enc-name").map(x => x.textContent).join();
   assert.equal(active(), "Tough");
@@ -1543,6 +1558,31 @@ test("210: Start lands on the best side's first row; Next goes through it, then 
   assert.deepEqual(seen, ["Tough", "Tough 2", "Wren", "Rook"]);
   app.click("[data-enext]");
   assert.match(app.$("#main").textContent, /Reset: round 1 ends/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("261: before anyone acts a roll re-picks the turn; mid-round a side's Combat Sense is text; at the Reset the next round's rolls are fields", () => {
+  const app = waveApp();
+  app.$('[data-eby="wave"]').click();
+  const other = otherId(app);
+  sideRoll(app, "crew", 14); sideRoll(app, other, 9);
+  app.click("[data-enc-start]");
+  const active = () => app.$$("[aria-current=step] .enc-name").map(x => x.textContent).join();
+  assert.equal(active(), "Wren");
+  assert.ok(app.$(`[data-esideroll="${other}"]`), "nobody has acted: still a field");
+  sideRoll(app, other, 16);
+  assert.equal(active(), "Tough", "the turn followed the side that now leads");
+  app.click("[data-enext]");
+  assert.equal(app.$$("[data-esideroll]").length, 0, "mid-round the field is text");
+  assert.match(app.$(".enc-side-head").textContent, /Combat Sense 16/);
+  for (let i = 0; i < 3; i++) app.click("[data-enext]");
+  assert.match(app.$("#main").textContent, /Reset: round 1 ends/);
+  assert.match(app.$("#main").textContent, /Next round/);
+  assert.equal(app.$$("[data-esideroll]").length, 2, "the Reset asks for both rolls");
+  sideRoll(app, "crew", 30);
+  assert.equal(app.doc.activeElement, app.$('[data-esideroll="crew"]'));
+  app.click("[data-efinish]");
+  assert.equal(active(), "Wren", "round 2 opens on the side with the higher roll");
   assert.deepEqual(app.errors, []);
 });
 

@@ -572,6 +572,8 @@ const encounter = (key, f, rows) => {
     design: EMPTY_PLAN(), opening: null,
     rows: [], created: ts(DAY[1], 21), updated: ts(DAY[1], 23), ...f,
   };
+  // Schema 0.19 (Decision 261): a side keeps its Combat Sense roll; only a wave fight has any.
+  e.sides = e.sides.map(sd => ({ id: sd.id, name: sd.name, roll: sd.roll ?? null }));
   e.rows = rows.map(({ key: rowKey, ...r }, i) => ({
     id: id("R", `${key}:${rowKey || r.name || i}`), kind: "pc", name: "", cast: null, from: null, block: null, side: "crew",
     order: null, last: false, out: false, damage: 0, massive: 0, armorLoss: 0, scrapped: false, kept: null, struck: false,
@@ -668,7 +670,7 @@ const entryRow = (key, name, blk, f = {}) => ({ kind: "entry", key, name, block:
   const O = sideId(key, "listener");
   encounter(key, {
     name: "Wharf 17: the Listener", round: 5, by: "wave", created: ts(DAY[6], 21, 30), updated: ts(DAY[6], 23, 10),
-    sides: [{ id: "crew", name: "" }, { id: O, name: "The Ports" }],
+    sides: [{ id: "crew", name: "", roll: 15 }, { id: O, name: "The Ports", roll: 18 }],
   }, [
     pc(MARA, { order: 14, damage: 3, conditions: [{ id: "frightened", source: "The Listener", rounds: null }] }),
     pc(DEX, { order: 15, damage: 11, struck: true, conditions: [{ id: "disoriented", source: "Voice from nowhere", rounds: 2 }] }),
@@ -698,7 +700,7 @@ const entryRow = (key, name, blk, f = {}) => ({ kind: "entry", key, name, block:
   const D = sideId(key, "devils"), E = sideId(key, "eclipse"), V = sideId(key, "volkov");
   encounter(key, {
     name: "Pier 9: three-way", round: 4, by: "wave", created: ts(DAY[3], 21, 20), updated: ts(DAY[3], 22, 40),
-    sides: [{ id: "crew", name: "" }, { id: D, name: "Dockside Devils" }, { id: E, name: "Eclipse" }, { id: V, name: "Volkov contractors" }],
+    sides: [{ id: "crew", name: "", roll: 16 }, { id: D, name: "Dockside Devils", roll: 6 }, { id: E, name: "Eclipse", roll: 10 }, { id: V, name: "Volkov contractors", roll: 15 }],
   }, [
     pc(MARA, { order: 12, damage: 4 }),
     pc(DEX, { order: 16, damage: 9, struck: true, conditions: [{ id: "injured", location: "left-arm", source: "Nine's baton", rounds: null }] }),
@@ -958,7 +960,7 @@ const audit = [
 // ── the table ───────────────────────────────────────────────────────
 const table = {
   meta: {
-    kind: "shadows-table", id: tableId(), name: "Dead Air", tableSchemaVersion: "0.18",
+    kind: "shadows-table", id: tableId(), name: "Dead Air", tableSchemaVersion: "0.19",
     created: ts(DAY[1], 17), updated: ts(DAY[7], 21, 10),
   },
   audit,

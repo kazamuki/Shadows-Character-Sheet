@@ -3,7 +3,7 @@
     "kind": "shadows-table",
     "id": "TBL-8E8Z-R2TG-6C8Z",
     "name": "Dead Air",
-    "tableSchemaVersion": "0.18",
+    "tableSchemaVersion": "0.19",
     "created": "2026-07-18T17:00:00.000Z",
     "updated": "2026-10-31T21:10:00.000Z"
   },
@@ -2372,11 +2372,13 @@
       "sides": [
         {
           "id": "crew",
-          "name": ""
+          "name": "",
+          "roll": null
         },
         {
           "id": "SD-HX9R6CCK",
-          "name": "Reclaim Solutions"
+          "name": "Reclaim Solutions",
+          "roll": null
         }
       ],
       "design": {
@@ -2715,11 +2717,13 @@
       "sides": [
         {
           "id": "crew",
-          "name": ""
+          "name": "",
+          "roll": null
         },
         {
           "id": "SD-64FNHY2G",
-          "name": "Eclipse"
+          "name": "Eclipse",
+          "roll": null
         }
       ],
       "design": {
@@ -3131,11 +3135,13 @@
       "sides": [
         {
           "id": "crew",
-          "name": ""
+          "name": "",
+          "roll": null
         },
         {
           "id": "SD-379X80WK",
-          "name": "Volkov"
+          "name": "Volkov",
+          "roll": null
         }
       ],
       "design": {
@@ -3407,11 +3413,13 @@
       "sides": [
         {
           "id": "crew",
-          "name": ""
+          "name": "",
+          "roll": 15
         },
         {
           "id": "SD-DMVEK0JW",
-          "name": "The Ports"
+          "name": "The Ports",
+          "roll": 18
         }
       ],
       "design": {
@@ -3601,11 +3609,13 @@
       "sides": [
         {
           "id": "crew",
-          "name": ""
+          "name": "",
+          "roll": null
         },
         {
           "id": "SD-49R8JYP0",
-          "name": "NeuroNet security"
+          "name": "NeuroNet security",
+          "roll": null
         }
       ],
       "design": {
@@ -3981,19 +3991,23 @@
       "sides": [
         {
           "id": "crew",
-          "name": ""
+          "name": "",
+          "roll": 16
         },
         {
           "id": "SD-S66VX5XQ",
-          "name": "Dockside Devils"
+          "name": "Dockside Devils",
+          "roll": 6
         },
         {
           "id": "SD-MA8DBK81",
-          "name": "Eclipse"
+          "name": "Eclipse",
+          "roll": 10
         },
         {
           "id": "SD-XWZ778DT",
-          "name": "Volkov contractors"
+          "name": "Volkov contractors",
+          "roll": 15
         }
       ],
       "design": {
@@ -4555,11 +4569,13 @@
       "sides": [
         {
           "id": "crew",
-          "name": ""
+          "name": "",
+          "roll": null
         },
         {
           "id": "SD-7FRGY5C0",
-          "name": "Volkov contractors"
+          "name": "Volkov contractors",
+          "roll": null
         }
       ],
       "design": {
@@ -4917,11 +4933,13 @@
       "sides": [
         {
           "id": "crew",
-          "name": ""
+          "name": "",
+          "roll": null
         },
         {
           "id": "SD-QE855GJH",
-          "name": "Eclipse"
+          "name": "Eclipse",
+          "roll": null
         }
       ],
       "design": {
