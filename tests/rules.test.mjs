@@ -3404,3 +3404,26 @@ test("L3 3b (rules): CRB 0460: the decks' Interface and the SMARTLink Gloves' AC
   assert.match(md, /\| PrecisionGrip Gloves \|[^\n]*\+2 to precision skill checks/);
   for (const id of ["hacking-visor", "hacking-gloves", "precisiongrip-gloves"]) assert.equal(D.armor.find(a => a.id === id).grants, undefined, `${id} computes something the book doesn't name`);
 });
+
+test("L5 9 (rules): CRB 0412: the six Majors' numbers are the book's", () => {
+  const md = crb("0412_Professional.md").replace(/\r/g, "").replace(/\*\*/g, "");
+  const major = id => D.milestones.majorGeneral.find(m => m.id === id);
+  const rows = id => JSON.parse(JSON.stringify(major(id).row));
+  // the book's words, then the data that carries them
+  assert.match(md, /Tuned Edge[\s\S]*?it gains a \+1 to damage/);
+  assert.deepEqual(rows("tuned-edge").grants, [{ type: "weaponBonus", to: "damage", amount: 1 }]);
+  const fit = /\(e\.g\., d4 → d6, d6 → d8, max d12\)/.exec(md);
+  assert.ok(fit, "Custom Fit's ladder moved in the book");
+  const ladder = JSON.parse(JSON.stringify(D.armorRules.protDice));
+  assert.deepEqual(ladder.slice(0, 3), ["1d4", "1d6", "1d8"]);
+  assert.equal(ladder[ladder.length - 1], "1d12");
+  assert.deepEqual(rows("custom-fit").grants, [{ type: "protStep", amount: 1 }]);
+  assert.match(md, /Signature Weapon[\s\S]*?\+2 Mod Slots/);
+  assert.deepEqual(rows("signature-weapon").grants, [{ type: "modSlots", amount: 2 }]);
+  assert.match(md, /Iconic Weapon[\s\S]*?\+1 Mod Slot \(total 3\)/);
+  assert.match(md, /Legendary Weapon[\s\S]*?\+1 Mod Slot \(total 4\)/);
+  assert.deepEqual(rows("iconic-weapon").grants, [{ type: "modSlots", amount: 1 }]);
+  assert.deepEqual(rows("legendary-weapon").grants, [{ type: "modSlots", amount: 1 }]);
+  assert.match(md, /Gain \+1d4 kicker to any combat rolls using this weapon\. If you have a \+1d4 already applied when using this weapon it increases by one die increment to \+1d6/);
+  assert.deepEqual(rows("weapon-expert").grants, [{ type: "kicker", die: "1d4", over: "1d4", becomes: "1d6" }]);
+});

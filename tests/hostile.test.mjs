@@ -1532,3 +1532,20 @@ test("Decision 259: a stored keys value that isn't \"off\" is on, and a storage 
   assert.equal(press(app), true);
   assert.deepEqual(app.errors, []);
 });
+
+test("L5 6c: a file's majors lists come out as ids of real Majors, or nothing, and reach nothing they shouldn't", () => {
+  const mk = (weapons, armor) => {
+    const c = Engine.newCharacter();
+    c.weapons = weapons.map(m => ({ id: "ap7-sentry", notes: "", mods: [], roundsSpent: 0, majors: m }));
+    c.armor = armor.map(m => ({ id: "urban-tactics-vest", integrityLoss: 0, notes: "", worn: true, scrapped: false, upgrades: [], majors: m }));
+    return Engine.migrate(JSON.parse(JSON.stringify(c)));
+  };
+  const longId = "tuned-edge".padEnd(10000, "x"), many = Array.from({ length: 500 }, (_, i) => "m" + i);
+  const w = mk([[longId], many, ["__proto__", "constructor", "toString"], ["tuned-edge", "tuned-edge", "custom-fit", 5, null]], [["tuned-edge", "custom-fit", "custom-fit"]]);
+  assert.deepEqual(w.weapons.map(r => r.majors), [undefined, undefined, undefined, ["tuned-edge"]].map(x => x && JSON.parse(JSON.stringify(x))));
+  assert.deepEqual(JSON.parse(JSON.stringify(w.armor[0].majors)), ["custom-fit"]);
+  const ids = new Set(D.milestones.majorGeneral.map(m => m.id));
+  for (const r of w.weapons.concat(w.armor)) for (const id of r.majors || []) assert.ok(ids.has(id), id);
+  assert.equal(Object.keys({}).length, 0, "the prototype stayed clean");
+  assert.equal(({}).majors, undefined);
+});
