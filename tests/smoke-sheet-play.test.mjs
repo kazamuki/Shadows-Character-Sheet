@@ -1836,3 +1836,19 @@ test("L5 12 (sheet): Progression's journal says where each Major is, and removin
   assert.deepEqual(activeChar(app).weapons[1].majors, ["tuned-edge"], "one undo didn't restore both");
   assert.deepEqual(app.errors, []);
 });
+
+test("L5 10b (sheet): a written-in weapon takes Tuned Edge, shows the total folded, and its edit row keeps the damage as typed", () => {
+  const ch = l5Character();
+  ch.weapons.push({ custom: true, name: "Pipe", damage: "BOD+2", category: "melee", capacity: "", ammo: "", features: "", notes: "", roundsSpent: 0 });
+  const total = Engine.weaponLine(ch, 2).damage;
+  Engine.setMajorRow(ch, "tuned-edge", 2);
+  const app = openSheet(ch, "loadout");
+  assert.equal(majorBox(app, "weapons", 2, "signature-weapon"), null, "Signature was offered on a weapon that takes no mods");
+  assert.ok(majorBox(app, "weapons", 2, "tuned-edge").checked);
+  assert.match(cellsOf(rowOf(app, 2))[2], new RegExp(`^${total + 1}`));
+  assert.match(rowOf(app, 2).textContent, /\+1 from Tuned Edge/);
+  app.click('[data-loedit="weapons|2"]');
+  assert.equal(app.$('[data-cell="weapons|2|damage"]').value, "BOD+2", "the edit row showed the total, not what was typed");
+  assert.ok(majorBox(app, "weapons", 2, "tuned-edge"), "the open row lost its Majors line");
+  assert.deepEqual(app.errors, []);
+});
