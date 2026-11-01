@@ -5361,7 +5361,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Built:** app 0.57.0; no schema move; PR #279; log 2026-10-31 (GM mode's launch).
 
 261. **In Wave Initiative each side rolls Combat Sense once and the higher roll's side goes first; a side rolls again only before anyone acts in a round.**
-     *2026-10-31 · Ken + Claude · Touches: Wave Initiative, encounter sides, side roll, setSideRoll, _encOrder, Tied: reroll, Combat Sense, Goes last, Reset, table schema 0.19, migrateTable, Decision 210, GQ30*
+     *2026-10-31 · Ken + Claude · Touches: Wave Initiative, encounter sides, side roll, setSideRoll, _encOrder, Tied: reroll, Combat Sense, Goes last, Reset, table schema 0.19, migrateTable, Decision 189, Decision 210, Decision 253, GQ30*
      - **Decided:** In waves a side has one Combat Sense result, `roll` (a whole number or null), typed on its heading: the roll of whoever is closest to the danger. Sides go highest roll first, a side with none after, in list order; equal rolls flag both headings for a reroll. A row's own result isn't read or shown in waves: within a side, rows go in the order added, Goes last at the end. A roll changes while planned, at the Reset, or before anyone has acted in the round; mid-round it's refused. One at a time is unchanged. Table schema 0.19: a wave fight not ended takes each side's old best as its roll.
      - **Why:** Deighton (GQ30, Q34): one roll a side, the higher side first, its players in any order, then it flips; a mid-wave roll leads the next "when the turn resets". Rolling again "depends" (Ken): the GM's call each Reset.
      - **Rejected:**

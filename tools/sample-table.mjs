@@ -700,7 +700,7 @@ const entryRow = (key, name, blk, f = {}) => ({ kind: "entry", key, name, block:
   const D = sideId(key, "devils"), E = sideId(key, "eclipse"), V = sideId(key, "volkov");
   encounter(key, {
     name: "Pier 9: three-way", round: 4, by: "wave", created: ts(DAY[3], 21, 20), updated: ts(DAY[3], 22, 40),
-    sides: [{ id: "crew", name: "", roll: 16 }, { id: D, name: "Dockside Devils", roll: 6 }, { id: E, name: "Eclipse", roll: 13 }, { id: V, name: "Volkov contractors", roll: 15 }],
+    sides: [{ id: "crew", name: "", roll: 16 }, { id: D, name: "Dockside Devils", roll: 6 }, { id: E, name: "Eclipse", roll: 10 }, { id: V, name: "Volkov contractors", roll: 15 }],
   }, [
     pc(MARA, { order: 12, damage: 4 }),
     pc(DEX, { order: 16, damage: 9, struck: true, conditions: [{ id: "injured", location: "left-arm", source: "Nine's baton", rounds: null }] }),
