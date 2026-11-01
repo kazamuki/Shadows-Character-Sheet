@@ -96,7 +96,8 @@ LQ1–LQ7 below are rewritten to the new numbers; Ken's answers stand.
 | **L3** | Worn modifiers, first cut | W69 without Powered Armor: a catalog entry's modifiers to Skills (ranks only), weapons by class (ranged or melee, kinetic or energy) and by feature (SMART Link), applied while the piece is worn or in use | Rule or shape (a data shape, a decision; a schema bump if "in use" is a new stored input on gear) | Nothing blocking: Deighton's Q12–Q16 answered stacking, the cap, the energy types and the stat reach. Two items' Skills are unclear (LQ4), stubbed and flagged | Merged · PR #257, app 0.56.0, game data 0.50, character schema 0.30, Decision 248, F49 (the Hacking Visor's, Hacking Gloves' and PrecisionGrip Gloves' Skills): [`L3-worn-modifiers.md`](loadout-and-gear/L3-worn-modifiers.md) |
 | **L2b** | Written-in weapons fire and reload like the catalog's | W109's written-in weapon part (Ken, 2026-10-28): its fire modes are ticked from `rofModes`, and with a weapon type it reloads from carried ammunition that fits the type, as a catalog weapon does (part-used magazines, specialty rounds). Reopens L2's LQ14 | Rule or shape, character schema (`rofModes` on a written-in row; `loaded` kept on one) | Nothing from Deighton. LQ23–LQ28 answered (Default) | Merged · PR #259, app 0.56.0, game data 0.50, character schema 0.31, Decision 249: [`L2b-custom-weapon-fire-and-reload.md`](loadout-and-gear/L2b-custom-weapon-fire-and-reload.md) |
 | **L4** | Natural attacks and the unarmed strike | W107: a fists line (Martial Arts) on Loadout and Main, and Death Touch's grant on it. The meeting's two natural attacks a round, said once for the fists and the claws and fangs | Rule or shape (a numbered decision for natural attacks; Content if the line needs no data shape) | The two-a-round rule is settled. Its five details are Deighton's (§6), and the order stubs each one it can't skip. Whether another character's Death Touch pierces Natural Armor doesn't block | Approved · held by Ken 2026-10-28 for the 2026-10-29 dev meeting on natural weapons; draft the order after it, from [`L4-handoff.md`](loadout-and-gear/L4-handoff.md) |
-| **L5** | One weapon or armor row, changed by a Major | W136: Tuned Edge, Custom Fit, Signature, Iconic and Legendary Weapon, Weapon Expert; and the powers on natural weapons (LQ5) | Rule or shape, character schema (a Major saves which row it changed; today a Major saves only a `power`, Decision 223) | Nothing from Deighton: Weapon Expert's text says how its kicker meets a 1d4, and P21's PQ6 answered "combat rolls" (the attacks). Reuses L3's line modifier | Approved · buildable now, after L3 |
+| **L5** | One weapon or armor row, changed by a Major | W136's Majors half: Tuned Edge, Custom Fit, Signature, Iconic and Legendary Weapon, Weapon Expert (split from the powers by Ken, 2026-11-01) | Rule or shape, character schema (the row keeps the Major's id, LQ29) | Nothing from Deighton: Weapon Expert's text says how its kicker meets a 1d4, and P21's PQ6 answered "combat rolls" (the attacks). Reuses L3's line modifier. Ken: LQ29–LQ34 | **Approved 2026-11-01** (LQ29–LQ34 all Default): [`L5-major-on-a-row.md`](loadout-and-gear/L5-major-on-a-row.md) |
+| **L5b** | Powers that change natural weapons while they run | W136's powers half (LQ5): Rend and Tear, Bone Spines, Monstrous Maw, Rending Claws, Blood of Valhalla (Vampire); Let It Loose, Steel Fangs, Serrated Claws (Werewolf) | Rule or shape (a natural line needs a kind: bite, claw) | **L4** and the 2026-10-29 meeting: which natural line is a bite or a claw, and whether "melee damage" reaches natural attacks. LQ5 is answered (conditional marks, never summed). Note for whoever drafts it: L5's six Majors are General, the Professional's alone (F9, `majorGeneralNote`), so these powers are the half most players at the table see | Split from L5 by Ken 2026-11-01 · after L4, drafted from the meeting's notes beside or after it |
 | **L6** | Vehicles, first cut | W91 (Powered Armor included): the order was P14, [`L6-vehicles.md`](loadout-and-gear/L6-vehicles.md) | Rule or shape (a save shape: `vehicles`, a schema bump) | **Deighton:** SH3 (a typed vehicle), VK1b (the Mods number), VD1 (vehicles without PROT and RES, his in-person talk). Then the order is revised to his rulings, as its Status lists | ⏸ Shelved 2026-10-23 (Ken), until Deighton answers |
 | **L7** | Powered Armor's enhancements | W69's suit half: Chipped Skill's +3 ranks (PA6), BOD-based Skills as Athletics and Survival (PA7), Enhanced Mobility doubling after every other bonus (PA8), changed between scenes (PA5) | Rule or shape | L6 (a suit is a vehicle) and L3 (the modifier). The rulings are in (PA5–PA8, both rounds) | ⏸ After L6 |
 
@@ -114,7 +115,7 @@ Deighton holds them.
 
 **Dependencies.** L2 after L1 (a custom weapon picks from L1's damage types).
 L3 after L2 (its class address reads `damageType`, on catalog and custom rows).
-L5 after L3. L7 after L6 and L3. L2b after L2 (it reloads by L2's weapon type); Ken put it
+L5 after L3. L5b after L4 (its powers name a bite or a claw, which L4 gives a natural line). L7 after L6 and L3. L2b after L2 (it reloads by L2's weapon type); Ken put it
 before L4 (2026-10-28). L4 can move anywhere. If L2 lands after L4,
 a custom weapon can't claim to be a natural one. If L4 lands first, it doesn't
 need to.
@@ -147,7 +148,11 @@ builder never decides them):
   order notes it and builds nothing for it.
 - **L5:** how a Major points at one loadout row so that removing another row
   doesn't move it (rows are an array today). Also, what happens when that row
-  is sold or dropped (Tuned Edge: "lost if it's significantly altered").
+  is sold or dropped (Tuned Edge: "lost if it's significantly altered"). *Settled by the L5 order:* the row keeps the Major's id (LQ29's
+  default), so removing the row loses it.
+- **L5b:** which natural line a power reaches (a bite, a claw, every natural
+  weapon, or "melee"), from L4's natural-attack shape and the 2026-10-29
+  meeting, and where the conditional marks sit (LQ5).
 
 ## 4. Not scheduled
 
