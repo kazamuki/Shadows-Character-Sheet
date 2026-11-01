@@ -314,7 +314,7 @@ async function tableScreens(browser, file, rows, numbers) {
     await walk("encounters", tab("encounters"), { list: true });
     await walk("an encounter with the Hit panel open", then(
       () => page.fill("[data-enc-name]", "Docks"), click("[data-enc-new]"),
-      () => page.fill("[data-enc-pcname]", "Dez"), click("[data-enc-addpc]"), click("[data-ehit]")), { bar: true, enc: true });
+      click("[data-enc-player]"), () => page.fill("[data-enc-pname]", "Dez"), click("[data-enc-addplayer]"), click("[data-ehit]")), { bar: true, enc: true });
     await walk("reference", tab("reference"));
     await walk("notes", tab("notes"));
     for (const s of screens) {

@@ -23,8 +23,9 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.58.0
+## [Unreleased] — app 0.59.0
 
+- **The crew as buttons.** Every seated character is a button now, in a fight and in who was there: one press puts them in. **Add a player** takes anyone else.
 - **Wave Initiative, one roll a side.** Whoever is closest to the danger rolls Combat Sense for their side, and the higher side goes first. Roll again at the Reset if the fight has changed.
 
 ## v0.57.0 — 2026-10-31

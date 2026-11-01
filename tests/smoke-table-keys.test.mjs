@@ -233,7 +233,7 @@ test("Decision 259: the header's Find and Jot say their keys while the keys are 
   app.click('[data-tsec="cast"]'); app.click("[data-copen]"); says("a member's page", true);
   app.click('[data-tsec="encounters"]');
   type(app, "[data-enc-name]", "Docks"); app.click("[data-enc-new]");
-  type(app, "[data-enc-pcname]", "Wren"); app.click("[data-enc-addpc]"); app.click("[data-enc-start]");
+  app.click("[data-enc-player]"); type(app, "[data-enc-pname]", "Wren"); app.click("[data-enc-addplayer]"); app.click("[data-enc-start]");
   assert.match(app.$(".enc-status").textContent, /Round 1/);
   says("a running encounter", true);
   const off = boot({ storage: Object.assign({}, GM_ON, { [KEYS]: "off" }) });

@@ -1,7 +1,7 @@
 # State of the build
 
 **Updated:** 2026-10-31
-**Versions:** app `0.58.0` · game data `0.50` · character schema `0.31` · table schema `0.19` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.59.0` · game data `0.50` · character schema `0.31` · table schema `0.19` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -109,7 +109,7 @@ is the authority on a flag's full text.
 | **Vampire** — `0413` | ✅ built (Decisions 200–202, 215, 223, 240): Bloodlines, the Thirst, 22 Majors; Base Powers and CP as the 2026-10-22 book prints | Nobody. Whether it leaves `draft` is Ken's (the chapter dropped "Under Construction") |
 | **Werewolf** — `0414` | ✅ built (Decisions 195–197, 199, 215, 240): Origins, Form, Call of the Wild, its own Majors; Base Powers and CP as the book prints | Nobody. As the Vampire: `draft` is Ken's call |
 | **Arcanist / Magic** | 🔶 spells, Cascade, Aberrations, magic on the sheet, holding a spell (Decision 224) all built · Origins still `draft` | Deighton: **F43** (the held spell's check). Deighton + Scott + Bill + Ken: Origins and spheres/implements, after the four-way comparison; not blocking |
-| **GM mode** — `plans/gm-mode.md` | 🔶 **launched in 0.57.0** (260): built through S3d (players, seats, the card spread, the read-only sheet and a PC row that takes the whole hit on its seat's copy), S7, S10f, S12b, S18 (a table's own frame), S19 (F and J) and S20 (Wave Initiative by one roll a side, 261, in 0.58.0). From here a GM session ships visible, with changelog lines and an app bump | Scott and Deighton: the open `GQ`s (§9) and Codex v2 (S12a, S17). Next: Ken's pick from `plans/gm-mode.md`'s *Still to build* |
+| **GM mode** — `plans/gm-mode.md` | 🔶 **launched in 0.57.0** (260): built through S3d (players, seats, the card spread, the read-only sheet and a PC row that takes the whole hit on its seat's copy), S7, S10f, S12b, S18 (a table's own frame), S19 (F and J), S20 (Wave Initiative by one roll a side, 261, in 0.58.0) and S21 (the crew as buttons in an encounter and in Who was there, 262, in 0.59.0). From here a GM session ships visible, with changelog lines and an app bump | Scott and Deighton: the open `GQ`s (§9) and Codex v2 (S12a, S17). Next: Ken's pick from `plans/gm-mode.md`'s *Still to build* |
 | **The book** — `plans/crb-catch-up.md` | 📋 what the CRB still needs from the sheet, by chapter | Ken. The sheet-from-book syncs are closed (`plans/archive/`); the next mirror refresh gets a new one |
 | **Print sheet — visual system** — `plans/print-sheet-scotts-look.md` | 📋 Scott's export landed 2026-09-23 (landscape) · front-page restyle proposed and mocked up · one known cosmetic defect | Ken: approve the plan. Scott: PQ1 (can Cerulean Nights be embedded), PQ2 (his artwork). Deighton: PQ3 (do the stat groups mean anything). The frame/texture print defect blocks on no one |
 

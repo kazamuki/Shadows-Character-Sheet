@@ -11967,3 +11967,61 @@ test("257: a row renamed off a seat takes back that seat's start unless somethin
   assert.ok(Engine.editParticipant(t, e, c, { name: "Rook 3" }).ok);
   assert.equal(rowOf(t, e, c).damage, 7, "a struck row keeps its numbers");
 });
+
+// ── The crew as buttons (Decision 262): seatPicks, and a seat added once ──
+// The engine runs in its own realm, so lists are copied out before deepEqual.
+const names262 = (t, n, f = p => p.name) => Array.from(Engine.seatPicks(t, n), f);
+const deadAir = () => Engine.migrateTable(JSON.parse(readFileSync(join(ROOT, "samples", "dead-air.shadows-table.json"), "utf8")));
+
+test("262: seatPicks lists the active seats with a name, in the Players tab's order, and marks those a name answers to", () => {
+  const t = deadAir();
+  const picks = Array.from(Engine.seatPicks(t, []));
+  assert.deepEqual(picks.map(p => p.name), ["Mara Okonkwo", "Dex Villanueva", "Juno Park"]);
+  assert.ok(picks.every(p => /^TAG-/.test(p.tag) && typeof p.player === "string" && p.in === false));
+  assert.ok(!picks.some(p => p.name.startsWith("TAG-")), "a seat with no name has no button");
+  const nameless = Array.from(Engine.playerList(t)).flatMap(g => Array.from(g.folded)).find(v => v.name === v.tag);
+  assert.ok(nameless, "the sample has a seat that is only a TAG");
+  assert.ok(Engine.setSeat(t, nameless.tag, { status: "active" }).ok);
+  assert.deepEqual(names262(t, []), ["Mara Okonkwo", "Dex Villanueva", "Juno Park"], "an active seat with no name has no button");
+  assert.deepEqual(names262(t, ["dex"], p => p.in), [false, true, false], "a name that answers to a seat marks it");
+  assert.deepEqual(names262(t, ["Kit Moreau"], p => p.in), [false, false, false], "a benched seat's name marks no button");
+});
+
+test("262: seatPicks is total", () => {
+  const t = deadAir();
+  for (const bad of [null, undefined, {}, 5, "x", { players: "x" }]) assert.deepEqual(Array.from(Engine.seatPicks(bad, [])), []);
+  assert.deepEqual(Array.from(Engine.seatPicks({ ...t, players: "x" }, [])), []);
+  assert.deepEqual(names262(t, "nope", p => p.in), [false, false, false]);
+  assert.deepEqual(names262(t, [5, {}, null, "Juno"], p => p.in), [false, false, true]);
+});
+
+test("262: seatPicks never marks a seat for a name two seats answer to", () => {
+  const { t, pid } = seatFightTable();
+  const other = seatFightFile("Wren");
+  other.meta.id = "TAG-ZZZZ-ZZZZ-ZZZZ";
+  const r = Engine.importSeat(t, pid, other);
+  assert.ok(r.ok, r.why);
+  Engine.setSeat(t, r.tag, { names: ["Dez"] });
+  assert.equal(Engine.seatFor(t, "Dez"), null);
+  assert.deepEqual(names262(t, ["Dez"], p => p.in), [false, false]);
+});
+
+test("262: addParticipant refuses a PC row for a seat already in, and a typed name that answers to it", () => {
+  const t = deadAir(), e = t.encounters.find(x => x.status === "running").id;
+  const before = JSON.stringify(t);
+  for (const name of ["Mara Okonkwo", "mara", "  MARA  "]) {
+    const r = Engine.addParticipant(t, e, { kind: "pc", name });
+    assert.deepEqual([r.ok, r.why], [false, "Already in."], name);
+  }
+  assert.equal(JSON.stringify(t), before, "a refusal writes nothing");
+  assert.ok(Engine.addParticipant(t, e, { kind: "pc", name: "Wren" }).ok);
+  assert.ok(Engine.addParticipant(t, e, { kind: "pc", name: "Wren" }).ok, "a name no seat answers to can be added twice");
+});
+
+test("262: once a seat's row is removed it can be added again", () => {
+  const t = deadAir(), e = t.encounters.find(x => x.status === "running").id;
+  const row = Engine.encounterView(t, e, []).rows.find(r => r.row.name === "Mara Okonkwo").row;
+  assert.ok(Engine.removeParticipant(t, e, row.id).ok);
+  assert.ok(Engine.addParticipant(t, e, { kind: "pc", name: "Mara" }).ok);
+  assert.equal(Engine.addParticipant(t, e, { kind: "pc", name: "Mara Okonkwo" }).why, "Already in.");
+});

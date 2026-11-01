@@ -38,7 +38,7 @@ const copiesOf = app => JSON.stringify((stored(app).table || stored(app)).copies
 const withDez = app => {
   app.click('[data-tsec="encounters"]');
   type(app, "[data-enc-name]", "Docks"); app.click("[data-enc-new]");
-  type(app, "[data-enc-pcname]", "Dez"); app.click("[data-enc-addpc]");
+  app.click("[data-enc-player]"); type(app, "[data-enc-pname]", "Dez"); app.click("[data-enc-addplayer]");
   return app.$("[data-erow]").dataset.erow;
 };
 const hitDez = (app, id, damage = "10", prot = "3") => {

@@ -1445,6 +1445,17 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .sess-item{padding:6px 0; border-bottom:1px solid var(--frame)}
 .sess-head{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:0 14px; align-items:end}
 .sess-head input{min-width:0; width:100%}
+/* The crew as buttons (Decision 262): a row that wraps to the width. A seat already in is dimmed but its In mark reads at full strength; pressed has a check, not only a colour. */
+.crew-btns{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px}
+.enc-add .crew-btns{margin-top:8px}
+.crew-who{grid-column:1 / -1}
+.crew-label{display:block; font-family:var(--mono); font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--dim); margin-bottom:6px}
+.crew-btn{max-width:100%; overflow-wrap:anywhere; text-align:left}
+.crew-btn.on{border-color:var(--cyan); color:var(--cyan)}
+.crew-mark, .crew-in{font-weight:700}
+.crew-btn:disabled{opacity:1; color:var(--dim); border-style:dashed}
+.crew-in{margin-left:6px; padding:0 6px; border:1px solid var(--dim); border-radius:4px; font-size:.75rem; color:var(--text)}
+.crew-field{margin-bottom:6px}
 .sess-part textarea{min-height:130px; width:100%; overflow-y:auto; resize:vertical}
 .field-hint{display:block; color:var(--dim); margin:0 0 4px; overflow-wrap:anywhere}
 .sess-threads{margin:0 0 14px}
