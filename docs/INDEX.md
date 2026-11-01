@@ -70,7 +70,7 @@ Each id is defined in exactly one place and referenced everywhere.
 | `AQ`_n_ | A question the 2026-09-24 audit raises for Ken | `plans/archive/audit-2026-09-remediation.md` §5 |
 | `GQ`_n_ | A question the GM-mode plan (W29) raises for Scott, Deighton or Ken | `plans/gm-mode.md` §9 |
 | `TQ`_n_ | A question the two-tabs plan (W38) raises for Ken | `plans/two-tabs-one-character.md` §5 |
-| `LQ`_n_, `L`_n_ | A question the vehicles-and-gear plan raises for Ken, and its sessions L1–L7 | `plans/loadout-and-gear.md` §5 and §3 |
+| `LQ`_n_, `L`_n_ | A question the vehicles-and-gear plan raises for Ken, and its sessions L1–L7 and L5b | `plans/loadout-and-gear.md` §5 and §3 |
 | `NQ`_n_, `N`_n_ | A question the accounts-and-sync plan (W138) raises for Ken, and its sessions N0–N6 | `plans/accounts-and-sync.md` §5 and §3 |
 | `XQ`_n_ | A question the custom-archetype plan raises for Ken | `plans/archive/custom-archetype.md` §6 |
 | `PQ`_n_ | A question the print-sheet plan raises for Scott, Deighton or Ken | `plans/print-sheet-scotts-look.md` §6 |

@@ -353,7 +353,7 @@ with standard ones (they can't share a magazine's tags); and whether it costs an
 action at the table. P9b leaves merging out of scope (its §7).
 
 **W136 — A Major or a power changes one weapon or armor row.** *Claude, from closing the sheet-wishlist plan · 💡 · Rule or shape · raised 2026-10-24*\
-**Plan:** [loadout-and-gear L5](plans/loadout-and-gear.md) (no order yet)
+**Plan:** [loadout-and-gear L5 and L5b](plans/loadout-and-gear.md): split by Ken 2026-11-01. The Majors are L5 (order drafted: [L5-major-on-a-row](plans/loadout-and-gear/L5-major-on-a-row.md)); the powers are L5b, after L4
 
 P21's inventory listed these as "later orders" (`plans/archive/sheet-wishlist/P21-inventory.md`, c20 and c22–c34), and the plan closed without them, so nothing covered them. Each is printed on its card and the player does it by hand on the weapon or armor:
 - **A Major on one row the player picks:** Tuned Edge ("it gains +1 to damage", that weapon only), Custom Fit (that armor's damage reduction die a step up, d4 to d6, never past d12), Signature, Iconic and Legendary Weapon (Mod Slots and free Upgrades on one weapon), Weapon Expert ("+1d4 kicker to combat rolls using it; if a +1d4 already applies, it increases to +1d6").
