@@ -25,7 +25,7 @@ own in the footer.
 
 ## [Unreleased] — app 0.59.0
 
-- **The crew as buttons.** Add the crew to a fight, and to who was there, with a press: each seated character is a button, and **Add a player** takes anyone else.
+- **The crew as buttons.** Every seated character is a button now, in a fight and in who was there: one press puts them in. Add a player takes anyone else.
 - **Wave Initiative, one roll a side.** Whoever is closest to the danger rolls Combat Sense for their side, and the higher side goes first. Roll again at the Reset if the fight has changed.
 
 ## v0.57.0 — 2026-10-31

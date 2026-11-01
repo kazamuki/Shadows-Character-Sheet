@@ -1928,11 +1928,16 @@ function bindWho(main, id, key, after){
   const has=(list, n)=>list.some(x=>foldName(x)===foldName(n));
   const finish=sel=>{ if (after) after(); draw(); foc(sel); };
   const addName=()=>{
-    const input=box.querySelector("[data-crew-input]"), name=input ? input.value.trim() : ""; if (!name){ if (input) input.focus(); return; }
-    const present=cur().present||[];
-    const seat=Engine.seatFor(S.table, name);
-    if (has(present, name) || (seat && Engine.seatPicks(S.table, present).some(p=>p.tag===seat && p.in))){ notice("Already in."); input.focus(); return; }
-    if (save(present.concat([name]))) finish("[data-crew-input]"); else input.focus();
+    const input=box.querySelector("[data-crew-input]"), names=input ? splitList(input.value, /,/) : []; if (!names.length){ if (input) input.focus(); return; }
+    const present=cur().present||[], list=present.slice();
+    // A comma separates names, as the old field did. A name already there, or answering to a seat already pressed, is skipped.
+    for (const name of names){
+      const seat=Engine.seatFor(S.table, name);
+      if (has(list, name) || (seat && Engine.seatPicks(S.table, list).some(p=>p.tag===seat && p.in))) continue;
+      list.push(name);
+    }
+    if (list.length===present.length){ notice("Already in."); input.focus(); return; }
+    if (save(list)) finish("[data-crew-input]"); else input.focus();
   };
   box.onclick=ev=>{
     const b=ev.target.closest("button"); if (!b || !box.contains(b)) return;

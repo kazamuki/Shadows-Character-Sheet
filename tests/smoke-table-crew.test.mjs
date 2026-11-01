@@ -191,3 +191,15 @@ test("262: Add a player in Who was there says Already in. for a name that's ther
   assert.deepEqual(present(app, c.a), ["Rook", "Dezzy"], "with the seat not pressed, its other name presses it");
   assert.deepEqual(app.errors, []);
 });
+
+test("262: Add a player in Who was there splits on commas into one Undo, skipping names already there", () => {
+  const c = crewTable(["Rook"]);
+  const app = open(c);
+  app.click('[data-tsec="sessions"]'); app.click(`.sess-open[data-sopen="${c.a}"]`);
+  whoAdd(app, "Wren , Cord,, rook, Yuki");
+  assert.deepEqual(present(app, c.a), ["Rook", "Wren", "Cord", "Yuki"], "three new names, the empty part and rook skipped");
+  assert.deepEqual(whoNames(app), ["Dez", "Wren", "Ivo", "Rook", "Cord", "Yuki"]);
+  app.click("#undotoast [data-toastundo]");
+  assert.deepEqual(present(app, c.a), ["Rook"], "one Undo takes all of them back");
+  assert.deepEqual(app.errors, []);
+});
