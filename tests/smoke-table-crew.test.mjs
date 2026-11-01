@@ -173,3 +173,21 @@ test("262: an old table opens with the seat pressed and nothing rewritten; no se
   assert.ok(alone.$("[data-crew-add]"));
   assert.deepEqual([...app.errors, ...alone.errors], []);
 });
+
+test("262: Add a player in Who was there says Already in. for a name that's there or answers to a pressed seat, and keeps the text", () => {
+  const c = crewTable(["Dez", "Rook"]);
+  const app = open(c);
+  app.click('[data-tsec="sessions"]'); app.click(`.sess-open[data-sopen="${c.a}"]`);
+  for (const name of ["dez", "Dezzy", "rook"]) {
+    app.window.eval("document.querySelector('#undotoast') && (document.querySelector('#undotoast').textContent = '')");
+    whoAdd(app, name);
+    assert.match(app.$("#undotoast").textContent, /Already in\./, name);
+    assert.deepEqual(present(app, c.a), ["Dez", "Rook"], name);
+    assert.equal(app.$("[data-crew-input]").value, name, "the field keeps the text");
+    assert.equal(app.doc.activeElement, app.$("[data-crew-input]"));
+  }
+  whoPress(app, "Dez");
+  whoAdd(app, "Dezzy");
+  assert.deepEqual(present(app, c.a), ["Rook", "Dezzy"], "with the seat not pressed, its other name presses it");
+  assert.deepEqual(app.errors, []);
+});

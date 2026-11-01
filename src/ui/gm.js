@@ -1930,7 +1930,8 @@ function bindWho(main, id, key, after){
   const addName=()=>{
     const input=box.querySelector("[data-crew-input]"), name=input ? input.value.trim() : ""; if (!name){ if (input) input.focus(); return; }
     const present=cur().present||[];
-    if (has(present, name)){ input.focus(); return; }
+    const seat=Engine.seatFor(S.table, name);
+    if (has(present, name) || (seat && Engine.seatPicks(S.table, present).some(p=>p.tag===seat && p.in))){ notice("Already in."); input.focus(); return; }
     if (save(present.concat([name]))) finish("[data-crew-input]"); else input.focus();
   };
   box.onclick=ev=>{
