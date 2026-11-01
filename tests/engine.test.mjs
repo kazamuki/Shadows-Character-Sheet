@@ -12297,6 +12297,24 @@ test("L5 8 (engine): with none held, or held and on no row, no weapon line and n
   assert.deepEqual(strip(plain(l5Snapshot(Engine, D, L5_SIX))), fixture, "held and on no row");
 });
 
+test("L5 9b (engine): a GM's seat wearing Custom Fit shows the stepped die, in the view and on the hit", () => {
+  const file = seatFightFile();
+  file.identity.archetype = "professional";
+  hold(file, "custom-fit");
+  const t = Engine.newTable("Fight");
+  const pid = Engine.addPlayer(t, { name: "Brogan" }).id;
+  const r = Engine.importSeat(t, pid, file);
+  assert.ok(r.ok, r.why);
+  const e = Engine.addEncounter(t, { name: "Docks" }).id, id = addPc(t, e, "dez");
+  assert.equal(viewRow(t, e, id).armor.die, "1d4", "held and on no row stepped the die");
+  t.copies[0].character.armor[0].majors = ["custom-fit"];
+  assert.equal(viewRow(t, e, id).armor.die, "1d6", "the seat's line reads the unstepped die");
+  const sheet = Engine.seatCharacter(t, r.tag);
+  assert.equal(Engine.armorState(sheet).worn.prot, "1d6");
+  // a roll past the old d4 is the seat's own to make: the hit takes a 6
+  assert.equal(Engine.resolveHit(sheet, { ...FIGHT_HIT, protRoll: 6 }).ok, true);
+});
+
 test("L5 6b (engine): every reader survives a row, and a majors list, of any shape", () => {
   const junk = [undefined, null, "x", 5, [], [null], [5, {}], ["tuned-edge"], ["nope"], ["x".repeat(10000)], Array.from({ length: 500 }, (_, i) => "m" + i), { a: 1 }];
   const readers = [c => Engine.majorRows(c), c => Engine.setMajorRow(c, "tuned-edge", 0), c => Engine.setMajorRow(c, "custom-fit", null), c => Engine.weaponLine(c, 0), c => Engine.armorState(c)];
