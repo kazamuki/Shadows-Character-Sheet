@@ -17,6 +17,7 @@ written in below as settled, not asked:
 3. **One press adds one row.** No multi-select.
 4. A session's **Who was there** gets the same treatment, in the same order.
 
+**Approved by Ken 2026-10-31** (in the conductor session: "Approve it"), as drafted.
 **SQ1–SQ4 answered by Ken 2026-10-31 (in the conductor session): every default.** He picked "Toggle", "Refuse it", "Players tab order" and "Minor, 0.59.0".
 **Branch:** from `main` at `66b4303` or later, PR to `main`. **GM mode is launched (260):
 nothing is switched off.** This ships visible, with a `CHANGELOG.md` line and an app bump.
