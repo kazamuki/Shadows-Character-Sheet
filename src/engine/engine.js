@@ -7740,6 +7740,21 @@ const Engine = (() => {
       return _isObj(ch) ? ch : null;
     } catch (e) { return null; }
   }
+  // The crew as buttons (Decision 262): one entry per active seat with a name, in the Players tab's order.
+  // `in` is whether some string in `names` answers to the seat (a name two seats answer to answers to neither).
+  function seatPicks(t, names){
+    try {
+      if (!_isTable(t)) return [];
+      const typed = Array.isArray(names) ? names.filter(x=>typeof x==="string") : [];
+      const hit = new Set(typed.map(n=>seatFor(t, n)).filter(Boolean));
+      const out = [];
+      for (const g of playerList(t)) for (const v of g.active){
+        if (v.name===v.tag) continue;
+        out.push({ tag:v.tag, name:v.name, player:g.player.name, in:hit.has(v.tag) });
+      }
+      return out;
+    } catch (e) { return []; }
+  }
   function playerList(t){
     try {
       if (!_isTable(t)) return [];
@@ -8548,6 +8563,8 @@ const Engine = (() => {
     } else {
       const name = _str(f.name).trim();
       if (!name) return { ok:false, why:"Name them first." };
+      const seat = seatFor(t, name);
+      if (seat && _rowList(l.e).some(r=>r.kind==="pc" && seatFor(t, r.name)===seat)) return { ok:false, why:"Already in." };
       row.name = name;
       _claimStart(t, row);
     }
@@ -9372,7 +9389,7 @@ const Engine = (() => {
     // The table file (GM mode): create, tell its kind, load, check, edit notes
     newTable, isTableId, fileKind, migrateTable, tableCheck, diffTable, tableActionLabel, recordTableAction, undoTableAction, clearTableActivity, addTableNote, editTableNote, removeTableNote, sessionNotes, tableSearch,
     // Players and seats: a table's characters, kept as copies (Decisions 254, 255)
-    addPlayer, editPlayer, removePlayer, importSeat, setSeat, removeSeat, seatFor, seatView, seatCharacter, playerList,
+    addPlayer, editPlayer, removePlayer, importSeat, setSeat, removeSeat, seatFor, seatPicks, seatView, seatCharacter, playerList,
     // The pack file (GM mode): load, check, read, and copy an entry into the cast
     isPackId, migratePack, packCheck, packFilter, packChoices, packTraits, castPackMatch, packEntry, siteProfiles, packSite, packGroups, gmReference, castFromEntry, entryLink,
     // The cast: a stat block read, and a member added, edited, removed, found
