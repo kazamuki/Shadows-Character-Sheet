@@ -22,7 +22,7 @@ const Engine = (() => {
   const INTAKE_RE = new RegExp(`^TAG-${INTAKE_BODY}$`);
   const OLD_INTAKE_RE = new RegExp(`^NCR-(${INTAKE_BODY})$`);
   // The character file's shape. A bump needs a migrate() step in the same change.
-  const SCHEMA_VERSION = "0.31";
+  const SCHEMA_VERSION = "0.32";
   const isIntakeId = v => typeof v==="string" && INTAKE_RE.test(v);
   function randomChars(n){
     const c = typeof globalThis!=="undefined" && globalThis.crypto && typeof globalThis.crypto.getRandomValues==="function" ? globalThis.crypto : null;
@@ -1439,7 +1439,7 @@ const Engine = (() => {
   function armorState(ch){
     const list = Array.isArray(ch && ch.armor) ? ch.armor : [];
     const pieces = [];
-    list.forEach((e,i)=>{ if (e && typeof e==="object") pieces.push(armorPiece(e,i)); });
+    list.forEach((e,i)=>{ if (e && typeof e==="object") pieces.push(applyArmorMajors(ch, armorPiece(e,i))); });
     const wornBody = pieces.filter(p=>p.worn && p.slot==="body");
     const problems = [];
     if (wornBody.length>1)
@@ -1926,6 +1926,151 @@ const Engine = (() => {
     }
     return line;
   }
+  // ── A Major on one weapon or armor row (Decision 263) ──
+  // A General Major whose data has `row` goes on one row of its `kind`, kept as its id in that row's `majors` (never
+  // an index: rows move when one is removed). Held is computed: a row names the Major, and it counts only while the
+  // character holds it. A `follows` Major (Iconic, Legendary) is never placed; it adds to the row of the Major it
+  // follows. Its `row.grants` are read here and nowhere else, so none reaches a Skill's row.
+  const majorsOn = e => Array.isArray(e && e.majors) ? [...new Set(e.majors.filter(x=>typeof x==="string"))] : [];
+  const rowMajorDefs = () => (D().milestones.majorGeneral||[]).filter(m=>isPlainObj(m) && isPlainObj(m.row));
+  const writtenIn = e => isPlainObj(e) && (e.custom===true || !e.id);
+  function loadoutName(kind, e, index){
+    const n = kind==="weapons" ? (writtenIn(e) ? String(e.name||"") : (weaponDefById(e.id)||{ name:String(e.id) }).name)
+                               : armorPiece(e, index).name;
+    return n || (kind==="weapons" ? "Unnamed weapon" : "Unnamed armor");
+  }
+  // The held Majors that apply to this row, those placed on it and then those that follow one of them.
+  function rowMajors(ch, kind, index){
+    const e = listOf(ch, kind)[index];
+    if (!isPlainObj(e)) return [];
+    const held = new Set(majorTakenIds(ch)), defs = rowMajorDefs(), here = [];
+    for (const id of majorsOn(e)){
+      const m = defs.find(x=>x.id===id);
+      if (!m || m.row.kind!==kind || !held.has(id) || m.row.follows) continue;
+      if (m.row.catalog && writtenIn(e)) continue;
+      if (m.row.slot && armorPiece(e, index).slot!==m.row.slot) continue;
+      here.push(m);
+    }
+    for (const m of defs) if (held.has(m.id) && typeof m.row.follows==="string" && here.some(x=>x.id===m.row.follows)) here.push(m);
+    return here;
+  }
+  function applyWeaponMajors(ch, index, line){
+    line.kickers = []; line.majors = [];
+    for (const m of rowMajors(ch, "weapons", index)){
+      let applied = false;
+      for (const g of Array.isArray(m.row.grants) ? m.row.grants : []){
+        if (!isPlainObj(g)) continue;
+        if (g.type==="weaponBonus" && (g.to==="acc" || g.to==="damage") && goodWhole(g.amount)){
+          if (g.to==="acc") line.acc = (line.acc||0) + g.amount;
+          else if (typeof line.damage==="number") line.damage += g.amount;
+          line.bonuses.push({ to:g.to, amount:g.amount, from:txt(m.name) });
+          applied = true;
+        } else if (g.type==="modSlots" && goodWhole(g.amount) && line.modSlots){
+          line.modSlots.slots += g.amount;
+          line.modSlots.free = Math.max(0, line.modSlots.slots - line.modSlots.used);
+          applied = true;
+        } else if (g.type==="kicker" && goodDie(g)){
+          // "If a +1d4 already applies, it increases to +1d6": the 1d4 that counts is one on this weapon's own Skill.
+          let die = g.die, instead = [];
+          if (typeof g.over==="string" && typeof g.becomes==="string" && KICKER_DIE.test(g.becomes) && line.skill){
+            for (const { g: k, ids } of traitRows(ch)){
+              if (k.type!=="kicker" || !goodDie(k) || k.die!==g.over || !ids.includes(line.skill.id)) continue;
+              const when = whenOf(k);
+              if (when===false) continue;
+              if (when===undefined){ die = g.becomes; instead = []; break; }
+              instead.push({ die:g.becomes, whenText:when });
+            }
+          }
+          line.kickers.push(instead.length ? { die, from:txt(m.name), instead } : { die, from:txt(m.name) });
+          applied = true;
+        }
+      }
+      if (applied) line.majors.push({ id:m.id, name:txt(m.name) });
+    }
+    // Mods left without a slot (the Major that gave them was removed) are named, and no new one fits.
+    if (line.modSlots && line.modSlots.used>line.modSlots.slots) line.modSlots.over = line.modSlots.used - line.modSlots.slots;
+    return line;
+  }
+  // Custom Fit: a body piece's PROT die moves up the book's ladder, stopping at its last. `protBase` keeps the die
+  // before it. A die the ladder doesn't hold (a written-in "2d6") is left as typed.
+  function applyArmorMajors(ch, p){
+    p.protBase = p.prot; p.majors = [];
+    const ladder = Array.isArray((D().armorRules||{}).protDice) ? D().armorRules.protDice : [];
+    for (const m of rowMajors(ch, "armor", p.index)){
+      let applied = false;
+      for (const g of Array.isArray(m.row.grants) ? m.row.grants : []){
+        if (!isPlainObj(g) || g.type!=="protStep" || !goodWhole(g.amount) || p.protMax==null) continue;
+        const at = ladder.findIndex(d=>dieMax(d)===p.protMax);
+        if (at<0) continue;
+        p.prot = ladder[Math.min(at + g.amount, ladder.length - 1)];
+        p.protMax = dieMax(p.prot);
+        applied = true;
+      }
+      if (applied) p.majors.push({ id:m.id, name:txt(m.name) });
+    }
+    return p;
+  }
+  // Where each held row Major is, in the order they were taken: `index` and `rowName` are null when it is on no row.
+  // A `follows` Major reads the row of the one it follows (null when that one isn't held or isn't placed).
+  function majorRows(ch){
+    const out = [];
+    if (!isPlainObj(ch)) return out;
+    const taken = majorTakenIds(ch), held = new Set(taken), defs = rowMajorDefs();
+    for (const id of held){
+      const def = defs.find(x=>x.id===id);
+      if (!def) continue;
+      const base = def.row.follows ? defs.find(x=>x.id===def.row.follows) : def;
+      const kind = base ? base.row.kind : null;
+      let index = null, rowName = null;
+      if (base && held.has(base.id) && (kind==="weapons" || kind==="armor")){
+        const list = listOf(ch, kind), at = list.findIndex(e=>isPlainObj(e) && majorsOn(e).includes(base.id));
+        if (at>=0){ index = at; rowName = loadoutName(kind, list[at], at); }
+      }
+      out.push({ id, name:txt(def.name), kind: kind || null, index, rowName, follows: def.row.follows || null });
+    }
+    return out;
+  }
+  // Puts a held Major on the row at `index`, or takes it off (null). It leaves every other row of its kind, and
+  // `moved` is the name of the row it left. A refusal writes nothing.
+  function setMajorRow(ch, id, index){
+    if (!isPlainObj(ch)) return { ok:false, why:"That isn't on the sheet." };
+    if (typeof id!=="string" || !majorTakenIds(ch).includes(id)) return { ok:false, why:"Take it first." };
+    const defs = rowMajorDefs(), def = defs.find(x=>x.id===id);
+    if (!def || (def.row.kind!=="weapons" && def.row.kind!=="armor" && !def.row.follows)) return { ok:false, why:"That Milestone doesn't go on a weapon or armor." };
+    if (def.row.follows){
+      const to = defs.find(x=>x.id===def.row.follows);
+      return { ok:false, why:`It goes with ${to ? txt(to.name) : "another Major"}.` };
+    }
+    const kind = def.row.kind, list = listOf(ch, kind);
+    const holders = list.map((e, i)=>isPlainObj(e) && majorsOn(e).includes(id) ? i : -1).filter(i=>i>=0);
+    if (index!==null){
+      const e = Number.isInteger(index) ? list[index] : null;
+      if (!isPlainObj(e)) return { ok:false, why:`That ${kind==="weapons" ? "weapon" : "armor"} isn't on the sheet.` };
+      if (def.row.catalog && writtenIn(e)) return { ok:false, why:"A weapon you wrote in takes no mods." };
+      if (def.row.slot && armorPiece(e, index).slot!==def.row.slot) return { ok:false, why:`${txt(def.name)} goes on body armor.` };
+      const ladder = (D().armorRules||{}).protDice;
+      if ((def.row.grants||[]).some(g=>isPlainObj(g) && g.type==="protStep") && !(Array.isArray(ladder) && ladder.some(d=>dieMax(d)===armorPiece(e, index).protMax)))
+        return { ok:false, why:"Its PROT isn't one die." };
+    }
+    // Its slots go when it leaves a row, and a mod can't be left without a slot (Decision 263).
+    if ((def.row.grants||[]).some(g=>isPlainObj(g) && g.type==="modSlots"))
+      for (const at of holders){
+        if (at===index) continue;
+        const own = Number((weaponDefById(list[at].id)||{}).mods)||0, used = (weaponLine(ch, at).modSlots||{}).used||0;
+        if (used>own){
+          const n = used - own;
+          return { ok:false, why:`Take ${n} slot${n===1 ? "" : "s"} of mods off first: they're in ${txt(def.name)}'s slots.` };
+        }
+      }
+    const moved = holders.length && !(holders.length===1 && holders[0]===index) ? loadoutName(kind, list[holders[0]], holders[0]) : null;
+    list.forEach(e=>{
+      if (!isPlainObj(e) || !majorsOn(e).includes(id)) return;
+      const rest = majorsOn(e).filter(x=>x!==id);
+      if (rest.length) e.majors = rest; else delete e.majors;
+    });
+    if (index!==null){ const e = list[index]; e.majors = majorsOn(e).concat(id); }
+    return { ok:true, moved };
+  }
   function weaponLine(ch, index){
     const e = listOf(ch, "weapons")[index];
     if (!e || typeof e!=="object") return null;
@@ -1935,7 +2080,9 @@ const Engine = (() => {
         customWeaponLine(ch, e), { rounds: roundsOf(e.capacity, e) });
       line.fireModes = fireModesOf(line.rof);
       loadedAndReloadFrom(ch, line, e);
-      return applyWeaponBonuses(ch, index, line, []);
+      applyWeaponBonuses(ch, index, line, []);
+      applyWeaponMajors(ch, index, line);
+      return line;
     }
     const def = weaponDefById(e.id);
     if (!def) return { index, missing:true, name:String(e.id), notes };
@@ -1959,6 +2106,7 @@ const Engine = (() => {
     line.fireModes = fireModesOf(def.rof);
     loadedAndReloadFrom(ch, line, e);
     applyWeaponBonuses(ch, index, line, Array.isArray(def.features) ? def.features : []);
+    applyWeaponMajors(ch, index, line);
     return line;
   }
   // W40: specialty rounds in the magazine name themselves, and their tags join
@@ -3184,8 +3332,18 @@ const Engine = (() => {
     ch.progression.milestones.major.push({ id, date:new Date().toISOString(), power:pid });
     return {ok:true, power:{ id:pid, name:txt(p.name) }};
   }
-  const untakeMilestone = (ch, tier, idx) =>
-    ch.progression.milestones[tier].splice(idx, 1);
+  // Removing a Major also takes its id off the weapon or armor row it was on (Decision 263), unless another copy is held.
+  function untakeMilestone(ch, tier, idx){
+    const gone = ch.progression.milestones[tier].splice(idx, 1);
+    const id = tier==="major" && gone[0] && typeof gone[0].id==="string" ? gone[0].id : null;
+    if (id && !majorTakenIds(ch).includes(id))
+      for (const kind of ["weapons", "armor"]) listOf(ch, kind).forEach(e=>{
+        if (!isPlainObj(e) || !majorsOn(e).includes(id)) return;
+        const rest = majorsOn(e).filter(x=>x!==id);
+        if (rest.length) e.majors = rest; else delete e.majors;
+      });
+    return gone;
+  }
 
   // A Major a GM wrote in (Decision 217): a name and what it does, kept on the
   // character as text. It uses a Major slot unless `admin`, costs nothing, and
@@ -4931,6 +5089,16 @@ const Engine = (() => {
       if (typeof a.scrapped!=="boolean") a.scrapped = false;
       if (!Array.isArray(a.upgrades)) a.upgrades = [];
     });
+    // Schema 0.32 (Decision 263): a row's `majors` keeps only ids of a General Major that goes on a row of this list's
+    // kind, each once, the first row holding an id keeping it. Whether the Major is held is the readers' to check.
+    for (const [kind, rows] of [["weapons", c.weapons], ["armor", c.armor]]){
+      const ok = new Set(rowMajorDefs().filter(m=>m.row.kind===kind && !m.row.follows).map(m=>m.id)), seen = new Set();
+      rows.forEach(r=>{
+        if (!isPlainObj(r)) return;
+        const keep = (Array.isArray(r.majors) ? r.majors : []).filter(x=>typeof x==="string" && ok.has(x) && !seen.has(x) && seen.add(x));
+        if (keep.length) r.majors = keep; else delete r.majors;
+      });
+    }
     if (typeof c.notes!=="string") c.notes="";
     if (!Array.isArray(c.audit)) c.audit=[];
     // An audit entry is only what recordAction writes: a patch of ops on the
@@ -9371,7 +9539,7 @@ const Engine = (() => {
     naturalHealing, heal, healStep, resolveReset, applyReset,
     // Loadout: weapons, gear, armor
     weaponLine, weaponDamage, setCustomWeapon, catalogLine, addLoadout, weaponModOptions, addWeaponMod, removeWeaponMod, fireWeapon, reloadWeapon,
-    gearLine, carriedGear, useGear, useCharge, rechargeGear, addCustomLoadout, removeLoadout, setWorn, setInUse, weaponClass,
+    gearLine, carriedGear, useGear, useCharge, rechargeGear, addCustomLoadout, removeLoadout, setWorn, setInUse, weaponClass, majorRows, setMajorRow,
     upgradeOptions, addUpgrade, removeUpgrade, armorWear, repairArmor,
     // Magic: the Cascade, Aberrations, the Grimoire, starting spells
     cascade, aberrationState, recordAberration, removeAberration,
