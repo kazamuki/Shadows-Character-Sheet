@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.60.0",
-    "date": null,
+    "date": "2026-11-01",
     "intro": [],
     "items": [
       "**Majors on your gear.** Tuned Edge, Custom Fit, Signature Weapon and Weapon Expert go on the weapon or armor they're for, right on Loadout, and the sheet counts the rest: the damage, the PROT die, the mod slots, the kicker."
