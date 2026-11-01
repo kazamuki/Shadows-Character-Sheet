@@ -463,11 +463,11 @@ function renderShMain(){
       lines.map(l=>{
         if (l.custom){ const w=ch.weapons[l.index];
           return `<tr><td>${esc(w.name)||"—"}${w.features?`<div class="lo-sub">${esc(w.features)}</div>`:""}</td>
-            <td class="num">${attackText(l.attack)}${l.acc?`<div class="lo-sub">+${l.acc} ACC Single</div>`:""}</td>
+            <td class="num">${attackWithKicker(l)}${l.acc?`<div class="lo-sub">+${l.acc} ACC Single</div>`:""}</td>
             <td class="num">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}</td>
             <td class="num">${esc(l.rof||"—")}</td><td class="num lo-rounds">${roundsHtml(l, w.capacity)}${w.ammo?` (${esc(w.ammo)})`:""}</td></tr>`; }
         return `<tr><td>${esc(l.name)}${(l.tags||[]).length+(l.features||[]).length?`<div class="tags">${tagChipsHtml([...(l.tags||[]), ...(l.features||[])])}</div>`:""}</td>
-          <td class="num">${attackText(l.attack)}${l.acc?`<div class="lo-sub">+${l.acc} ACC Single</div>`:""}${aimedHtml(l)}</td>
+          <td class="num">${attackWithKicker(l)}${l.acc?`<div class="lo-sub">+${l.acc} ACC Single</div>`:""}${aimedHtml(l)}</td>
           <td class="num">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}</td>
           <td class="num">${esc(l.rof||"—")}</td><td class="num lo-rounds">${roundsHtml(l, l.capacity)}</td></tr>`;
       }).join("") + `</tbody></table>` + attackNotesHtml(ch);
@@ -1676,7 +1676,10 @@ function renderShProgression(){
     // A Major that has no card (written in, or kept from a list this archetype no longer has) shows what it does here.
     const card = offered.some(o=>o.id===t.id), text = !card && typeof m.benefit==="string" ? m.benefit : "";
     const pick =typeof t.power==="string" && m.choice ? powerNameOf(ch, t.power) : "";
-    return `<div class="jrow"><span class="d">${esc(String(t.date||"").slice(0,10))}</span><span class="what">${esc(m.name)}${pick?`: ${esc(pick)}`:""}</span>
+    // Decision 263: a Major that goes on a weapon or armor says which.
+    const mr = Engine.majorRows(ch).find(r=>r.id===t.id);
+    const where = !mr ? "" : mr.follows ? `goes with ${(Engine.majorById(ch, mr.follows)||{name:mr.follows}).name}` : mr.rowName || (mr.kind==="armor" ? "not on armor yet" : "not on a weapon yet");
+    return `<div class="jrow"><span class="d">${esc(String(t.date||"").slice(0,10))}</span><span class="what">${esc(m.name)}${pick?`: ${esc(pick)}`:""}${where?`: ${esc(where)}`:""}</span>
       ${text?`<span class="note">${esc(text)}</span>`:""}<button class="x" data-delmajor="${i}" title="remove">✕</button></div>`; }).join("") + `</div>`;
   h += `</details>`;
   return h;
@@ -1742,6 +1745,9 @@ function auditChip(kind){
 // notes are editable. A custom piece is typed. Every number on a weapon line
 // comes from Engine.weaponLine(); every armor number from armorState().
 const attackText = n => n==null ? "—" : `1d10 ${n<0?"−":"+"} ${Math.abs(n)}`;
+// Decision 263: a Major's kicker sits beside the attack, never in the number.
+const kickerText = l => l.attack==null ? "" : (l.kickers||[]).map(k=>` + ${k.die}`).join("");
+const attackWithKicker = l => attackText(l.attack) + esc(kickerText(l));
 const priceText = d => typeof d.cost==="number" && d.cost>0 ? `${d.cost.toLocaleString("en-US")}${CR}` : "";
 const titleCase = s => String(s||"").replace(/^./, c=>c.toUpperCase());
 // ── The catalog browser (W4) ─────────────────────────────────────────
@@ -2016,6 +2022,27 @@ function gearRowsHtml(ch){
 }
 // Decision 248: what a worn piece or a tool in use added to a weapon's line, one sub line each.
 const bonusLinesHtml = (l, to) => (l.bonuses||[]).filter(b=>b.to===to).map(b=>`<div class="lo-sub">+${b.amount} from ${esc(b.from)}</div>`).join("");
+// Decision 263: the kicker a Major puts beside the attack, with the die it grows to while a condition holds.
+const kickerLinesHtml = l => (l.kickers||[]).map(k=>`<div class="lo-sub">${esc(k.die)} from ${esc(k.from)}</div>` +
+  (k.instead||[]).map(x=>`<div class="lo-sub">${esc(x.die)} instead ${esc(x.whenText)}</div>`).join("")).join("");
+// Decision 263: the held Majors that can go on one weapon or armor row, a box each, ticked while it is on this one.
+// One that is on another row is unticked and says where; ticking it moves it.
+function majorsLineHtml(ch, kind, index){
+  const e = (ch[kind]||[])[index];
+  if (!e || typeof e!=="object") return "";
+  const piece = kind==="armor" ? Engine.armorState(ch).pieces.find(p=>p.index===index) : null;
+  if (kind==="weapons" && Engine.weaponLine(ch, index).missing) return "";
+  const mine = Engine.majorRows(ch).filter(r=>{
+    if (r.follows || r.kind!==kind) return false;
+    const row = ((D.milestones.majorGeneral||[]).find(m=>m.id===r.id)||{}).row||{};
+    return !(row.catalog && (e.custom || !e.id)) && !(row.slot && (!piece || piece.slot!==row.slot));
+  });
+  if (!mine.length) return "";
+  const name = kind==="weapons" ? Engine.weaponLine(ch, index).name : piece.name;
+  return `<div class="lo-upgrades lo-majors" role="group" aria-label="Majors on ${esc(name)}"><span class="lo-sub">Majors</span>${mine.map(r=>
+    `<label class="check"><input type="checkbox" data-majorrow="${kind}|${index}|${esc(r.id)}" ${r.index===index?"checked":""}> ${esc(r.name)}</label>${
+      r.index!=null && r.index!==index ? `<span class="hitnote">on ${esc(r.rowName)}</span>` : ""}`).join("")}</div>`;
+}
 // W16: the magazine, where a weapon line is drawn (Loadout and Main). One
 // button per rate of fire the weapon has, each spending that mode's rounds
 // (0530), and Reload. A weapon whose capacity doesn't read shows it as text.
@@ -2075,7 +2102,12 @@ function weaponModsHtml(ch, l){
   const chips = l.mods.map((m,at)=>`<span class="cond-chip" title="${esc(m.description)}"><b>${esc(m.id)}</b>
     <button class="x" data-wmodrm="${l.index}|${at}" aria-label="Remove ${esc(m.id)}" title="Remove">✕</button></span>`).join("");
   const flagged = (D.weaponModGlossary||[]).filter(g=>g.flagged && l.mods.some(m=>m.id===g.id));
-  return `<div class="lo-upgrades"><span class="lo-sub">Mods · ${u.free} of ${u.slots} slot${u.slots===1?"":"s"} free</span>${chips}
+  const slotsFrom = (l.majors||[]).map(m=>{
+    const g = ((((D.milestones.majorGeneral||[]).find(x=>x.id===m.id)||{}).row||{}).grants||[]).find(x=>x.type==="modSlots");
+    return g ? `<span class="lo-sub">+${g.amount} from ${esc(m.name)}</span>` : "";
+  }).join("");
+  const slotsText = l.modSlots.over ? `${u.used} of ${u.slots} slot${u.slots===1?"":"s"} used` : `${u.free} of ${u.slots} slot${u.slots===1?"":"s"} free`;
+  return `<div class="lo-upgrades"><span class="lo-sub">Mods · ${slotsText}</span>${slotsFrom}${chips}
     ${u.free?`<select data-wmodpick="${l.index}" aria-label="Mod for ${esc(l.name)}"><option value="">Install a mod…</option>${
       u.options.map(o=>`<option value="${esc(o.id)}" ${o.ok?"":"disabled"} title="${esc(o.why||o.description)}">${esc(o.id)} (${o.slots} slot${o.slots===1?"":"s"})${o.ok?"":" — "+esc(o.why)}</option>`).join("")}</select>
     <button class="btn sm" data-wmodadd="${l.index}">Install</button>`:""}</div>${flagged.map(flagHtml).join("")}`;
@@ -2101,7 +2133,7 @@ function weaponOpenRowHtml(ch, l){
       ((D.weaponRules||{}).rofModes||[]).map(m=>`<label class="check"><input type="checkbox" data-weaponmode="${i}|${esc(m.id)}" ${(l.fireModes||[]).some(f=>f.id===m.id)?"checked":""}> ${esc(m.name)}</label>`).join("")}</div>` +
     (l.typeText ? `<span class="hitnote" data-weapontypehint>You wrote "${esc(l.typeText)}". Pick a type to give it an attack.</span>` : "") +
     (l.rof && !(l.fireModes||[]).length ? `<span class="hitnote" data-weaponrofhint>You wrote "${esc(l.rof)}". Tick its fire modes to give it fire buttons.</span>` : "") +
-    `</div></td></tr></tbody>`;
+    `</div>${majorsLineHtml(ch, "weapons", i)}</td></tr></tbody>`;
 }
 function weaponRowsHtml(ch){
   const lines = ch.weapons.map((e,i)=>Engine.weaponLine(ch,i)).filter(Boolean);
@@ -2117,9 +2149,9 @@ function weaponRowsHtml(ch){
         const sub = [l.skill&&l.skill.name, l.style, l.damageType && l.damageType!=="Normal" ? l.damageType : null].filter(Boolean);
         const range = [l.reach ? `Reach ${l.reach}` : l.range, l.radius ? `Radius ${l.radius}` : null, l.parry ? `Parry ${l.parry}` : null].filter(Boolean).join(" · ");
         const def = (D.weapons||[]).find(w=>w.id===l.id);
-        const mods = weaponModsHtml(ch, l) + (def && def.flagged ? flagHtml(def) : "");
+        const mods = weaponModsHtml(ch, l) + (def && def.flagged ? flagHtml(def) : "") + majorsLineHtml(ch, "weapons", l.index);
         return `<tr data-weaponrow="${l.index}"><td><b>${esc(l.name)}</b><div class="lo-sub">${esc(sub.join(" · "))}</div>${(l.tags||[]).length+(l.features||[]).length?`<div class="tags">${tagChipsHtml([...(l.tags||[]), ...(l.features||[])])}</div>`:""}</td>
-          <td class="num">${attackText(l.attack)}${l.acc?`<div class="lo-sub">+${l.acc} ACC on Single</div>`:""}${bonusLinesHtml(l, "acc")}${aimedHtml(l)}</td>
+          <td class="num">${attackWithKicker(l)}${l.acc?`<div class="lo-sub">+${l.acc} ACC on Single</div>`:""}${bonusLinesHtml(l, "acc")}${kickerLinesHtml(l)}${aimedHtml(l)}</td>
           <td class="num">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}${l.damage!=null&&l.damageFormula?`<div class="lo-sub">${esc(l.damageFormula)}</div>`:""}${
             l.damageBonus?`<div class="lo-sub">+${l.damageBonus} from mods</div>`:""}${bonusLinesHtml(l, "damage")}</td>
           <td>${esc(range||"—")}${l.defense?`<div class="lo-sub">${esc(defenseText(l))}</div>`:""}${l.escalation?`<div class="lo-sub">${esc(escalationText(l))}</div>`:""}</td><td class="num">${esc(l.rof||"—")}</td><td class="num lo-rounds">${roundsHtml(l, l.capacity)}</td>
@@ -2129,12 +2161,13 @@ function weaponRowsHtml(ch){
       }).join("") + folded.map(l=>{ const r=ch.weapons[l.index], t=c=>String(r[c]||"");
         const sub = [l.skill ? l.skill.name : l.typeText, l.damageType].filter(Boolean);
         return `<tr data-weaponrow="${l.index}"><td><b>${esc(l.name)}</b>${sub.length?`<div class="lo-sub">${esc(sub.join(" · "))}</div>`:""}${t("features")?`<div class="lo-sub">${esc(t("features"))}</div>`:""}</td>
-          <td class="num">${attackText(l.attack)}${l.acc?`<div class="lo-sub">+${l.acc} ACC on Single</div>`:""}${bonusLinesHtml(l, "acc")}</td>
+          <td class="num">${attackWithKicker(l)}${l.acc?`<div class="lo-sub">+${l.acc} ACC on Single</div>`:""}${bonusLinesHtml(l, "acc")}${kickerLinesHtml(l)}</td>
           <td class="num">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}${l.damage!=null&&l.damageFormula?`<div class="lo-sub">${esc(l.damageFormula)}</div>`:""}${bonusLinesHtml(l, "damage")}</td>
           <td>${esc(l.range||"—")}</td><td class="num">${esc(l.rof||"—")}</td>
           <td class="num lo-rounds">${roundsHtml(l, t("capacity"))}${t("ammo")?`<div class="lo-sub">${esc(t("ammo"))}</div>`:""}</td>
           <td><input type="text" data-lonote="weapons|${l.index}" value="${esc(l.notes)}" aria-label="${esc(l.name)} notes"></td>
-          <td class="rm lo-btns">${loEditHtml("weapons", l.index, l.name)}<button class="x" data-lorm="weapons|${l.index}" title="Remove" aria-label="Remove ${esc(l.name)}">✕</button></td></tr>`; }).join("") + `</tbody></table></div>`;
+          <td class="rm lo-btns">${loEditHtml("weapons", l.index, l.name)}<button class="x" data-lorm="weapons|${l.index}" title="Remove" aria-label="Remove ${esc(l.name)}">✕</button></td></tr>${
+          majorsLineHtml(ch, "weapons", l.index) ? `<tr class="lo-modrow"><td colspan="8">${majorsLineHtml(ch, "weapons", l.index)}</td></tr>` : ""}`; }).join("") + `</tbody></table></div>`;
     const pain = Engine.painState(ch);
     if (lines.some(l=>l.attack!=null)) h += `<p class="step-note">Attack is 1d10 + the weapon's skill${pain.level?", with Pain and Conditions already in it":""}. Single fire adds the weapon's ACC.</p>`;
   }
@@ -2171,8 +2204,9 @@ function armorRowHtml(ch, p){
         `<option value="${esc(c)}" ${(e.coverage||R.defaultCoverage)===c?"selected":""}>${esc((R.coverageNames||{})[c]||c)}</option>`).join("")}</select></label>${loDoneHtml("armor", p.index, e)}</div>`;
   }
   if (body){
-    h += `<div class="lo-armor-stats"><span class="hitarmor">${armorStatLine(p)}</span></div>
-      <div class="lo-armor-int">${intBar(p)}</div>`;
+    h += `<div class="lo-armor-stats"><span class="hitarmor">${armorStatLine(p)}</span></div>${
+      p.majors.length ? `<p class="lo-sub">${esc(p.protBase)} + a step from ${esc(p.majors.map(m=>m.name).join(", "))}</p>` : ""}
+      <div class="lo-armor-int">${intBar(p)}</div>${majorsLineHtml(ch, "armor", p.index)}`;
   }
   const piece = p.custom ? null : (D.armor||[]).find(a=>a.id===p.id);
   // A scrapped piece adds nothing though it's worn (wornGrants), so its line dims as an unworn one's does.
@@ -2748,14 +2782,15 @@ function pDefenseHtml(ch){
 }
 // The Loadout page's weapons: a catalog piece prints its computed line, and a
 // written-in one its picks the same way (Decision 247), the rest as typed.
+const pKickers = l => (l.kickers||[]).map(k=>"+"+k.die).join("");
 function pWeaponRows(ch){
   if (!ch) return [];
   return ch.weapons.map((e,i)=>Engine.weaponLine(ch,i)).filter(Boolean).map(l=>{
     if (l.custom){ const w=ch.weapons[l.index];
-      return { name:[w.name,l.typeText].filter(Boolean).join(" · "), attack:l.attack==null?"":"1d10+"+l.attack+(l.acc?` (+${l.acc} ACC)`:""),
+      return { name:[w.name,l.typeText].filter(Boolean).join(" · "), attack:l.attack==null?"":"1d10+"+l.attack+pKickers(l)+(l.acc?` (+${l.acc} ACC)`:""),
                damage: l.damage!=null ? String(l.damage)+(l.damageFormula?` (${l.damageFormula})`:"") : (l.damageFormula||""), range:l.range||"", rof:l.rof||"",
                capacity:[w.capacity, w.ammo?`(${w.ammo})`:""].filter(Boolean).join(" "), features:w.features, notes:w.notes }; }
-    return { name:l.name, attack:l.attack==null?"":"1d10+"+l.attack+(l.acc?` (+${l.acc} ACC)`:""),
+    return { name:l.name, attack:l.attack==null?"":"1d10+"+l.attack+pKickers(l)+(l.acc?` (+${l.acc} ACC)`:""),
              damage: l.damage!=null ? String(l.damage)+(l.damageFormula?` (${l.damageFormula})`:"") : (l.damageFormula||""),
              range: l.reach ? `Reach ${l.reach}` : (l.range||""), rof:l.rof||"", capacity:l.capacity||"",
              features:[...(l.tags||[]), ...(l.features||[]), ...(l.mods||[]).map(m=>m.id)].join(", "), notes:l.notes };
@@ -3840,7 +3875,8 @@ function bindSheet(){
     let pn = typeof t.power==="string" && (Engine.majorById(ch, t.id)||{}).choice ? powerNameOf(ch, t.power) : "";
     if (pn){ const after = clone(ch); Engine.untakeMilestone(after, "major", i); if (Engine.archetypePowers(after).some(p=>p.id===t.power)) pn = ""; }
     const kept = pn ?ch.progression.ip.log.filter(e=>e && e.kind==="spend" && e.targetType==="power" && e.targetId===t.power).reduce((n, e)=>n + (Number(e.amount)||0), 0) : 0;
-    askFirst({ title:"Remove this Major Milestone?", text:`${nm} comes off the record${pn?`, and ${pn} is no longer held${kept?`. Its ${kept} IP stay spent`:""}`:""}.`, yes:"Remove it",
+    const placed = (Engine.majorRows(ch).find(r=>r.id===t.id && !r.follows) || {}).rowName;
+    askFirst({ title:"Remove this Major Milestone?", text:`${nm} comes off the record${pn?`, and ${pn} is no longer held${kept?`. Its ${kept} IP stay spent`:""}`:""}${placed?`, and off ${placed} too`:""}.`, yes:"Remove it",
       then:()=>commit("milestone", `Remove Major: ${nm}`, ()=>{ Engine.untakeMilestone(ch,"major",i); }) });
   });
 
@@ -4018,6 +4054,15 @@ function bindSheet(){
   main.querySelectorAll("[data-worn]").forEach(cb=>cb.onchange=()=>{
     const i=Number(cb.dataset.worn), n=loName("armor", i);
     commit("loadout", `${cb.checked?"Put on":"Took off"} ${n}`, ()=>{ Engine.setWorn(ch, i, cb.checked); });
+  });
+  // Decision 263: a Major put on a weapon or armor row, moved to another, or taken off is one commit() through
+  // setMajorRow, which says why not; a refusal puts the box back as stored.
+  main.querySelectorAll("[data-majorrow]").forEach(cb=>cb.onchange=()=>{
+    const [kind, i, id]=cb.dataset.majorrow.split("|"), idx=Number(i), on=cb.checked;
+    const name=(Engine.majorById(ch, id)||{name:id}).name, row=loName(kind, idx);
+    const pre=Engine.setMajorRow(clone(ch), id, on ? idx : null);
+    if (!pre.ok){ cb.checked=!on; notice(pre.why); return; }
+    commit("loadout", !on ? `${name} off ${row}` : pre.moved ? `${name} moved to ${row}` : `${name} on ${row}`, ()=>{ Engine.setMajorRow(ch, id, on ? idx : null); });
   });
   // Decision 248: a gear row switched on or off is one commit() through setInUse, which says why not.
   main.querySelectorAll("[data-inuse]").forEach(cb=>cb.onchange=()=>{
