@@ -23,6 +23,10 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.58.0
+
+- In Wave Initiative each side rolls Combat Sense once, and the higher roll goes first. Roll again at the Reset when the fight changes.
+
 ## v0.57.0 — 2026-10-31
 
 - **Run a table.** Home has a second door: a place to run your game, with its sessions, its cast, the city, the Codex's threats and every fight in one table. It fills a wide screen, is kept in your browser, and exports as a file of its own that Home's **Import** reads back.

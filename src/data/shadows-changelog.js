@@ -2,6 +2,14 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.58.0",
+    "date": null,
+    "intro": [],
+    "items": [
+      "In Wave Initiative each side rolls Combat Sense once, and the higher roll goes first. Roll again at the Reset when the fight changes."
+    ]
+  },
+  {
     "version": "0.57.0",
     "date": "2026-10-31",
     "intro": [],
