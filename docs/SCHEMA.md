@@ -5372,7 +5372,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - Converting nothing: a saved fight would reorder mid-round.
      - **Replaces:** Decision 210 in part: a side's place is its own roll, not its rows' best; rows' results aren't read in waves, so SQ8's Out and Goes last rule goes.
      - **Revisit if:** a GM needs a side to reroll mid-round, the CRB's Order of Engagement words it otherwise, or Combat Paralysis should go after every side.
-     - **Built:** app 0.58.0; table schema 0.19; PR #…; log 2026-10-31 (S20).
+     - **Built:** app 0.58.0; table schema 0.19; PR #283; log 2026-10-31 (S20).
 
 ## 5. Open Flags
 
