@@ -2,10 +2,11 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
-    "version": "0.58.0",
+    "version": "0.59.0",
     "date": null,
     "intro": [],
     "items": [
+      "**The crew as buttons.** Add the crew to a fight, and to who was there, with a press: each seated character is a button, and **Add a player** takes anyone else.",
       "**Wave Initiative, one roll a side.** Whoever is closest to the danger rolls Combat Sense for their side, and the higher side goes first. Roll again at the Reset if the fight has changed."
     ]
   },

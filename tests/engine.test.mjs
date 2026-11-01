@@ -11979,6 +11979,10 @@ test("262: seatPicks lists the active seats with a name, in the Players tab's or
   assert.deepEqual(picks.map(p => p.name), ["Mara Okonkwo", "Dex Villanueva", "Juno Park"]);
   assert.ok(picks.every(p => /^TAG-/.test(p.tag) && typeof p.player === "string" && p.in === false));
   assert.ok(!picks.some(p => p.name.startsWith("TAG-")), "a seat with no name has no button");
+  const nameless = Array.from(Engine.playerList(t)).flatMap(g => Array.from(g.folded)).find(v => v.name === v.tag);
+  assert.ok(nameless, "the sample has a seat that is only a TAG");
+  assert.ok(Engine.setSeat(t, nameless.tag, { status: "active" }).ok);
+  assert.deepEqual(names262(t, []), ["Mara Okonkwo", "Dex Villanueva", "Juno Park"], "an active seat with no name has no button");
   assert.deepEqual(names262(t, ["dex"], p => p.in), [false, true, false], "a name that answers to a seat marks it");
   assert.deepEqual(names262(t, ["Kit Moreau"], p => p.in), [false, false, false], "a benched seat's name marks no button");
 });
