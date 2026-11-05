@@ -73,6 +73,7 @@ Each id is defined in exactly one place and referenced everywhere.
 | `LQ`_n_, `L`_n_ | A question the vehicles-and-gear plan raises for Ken, and its sessions L1–L7 and L5b | `plans/loadout-and-gear.md` §5 and §3 |
 | `NQ`_n_, `N`_n_ | A question the accounts-and-sync plan (W138) raises for Ken, and its sessions N0–N6 | `plans/accounts-and-sync.md` §5 and §3 |
 | `BQ`_n_ | A question W143's work order (powers bought with CP) raises for Ken | `plans/w143-powers-bought-with-cp.md` §4 |
+| `HQ`_n_, `H`_n_ | A question the powers-that-run plan (W110, W132) raises for Ken, and its sessions H1–H3 (H for Held: not `R`, which is the audit's) | `plans/powers-that-run.md` §5 and §3; H1's own questions in `plans/powers-that-run/H1-sustained-powers.md` §4 |
 | `XQ`_n_ | A question the custom-archetype plan raises for Ken | `plans/archive/custom-archetype.md` §6 |
 | `PQ`_n_ | A question the print-sheet plan raises for Scott, Deighton or Ken | `plans/print-sheet-scotts-look.md` §6 |
 | `CQ`_n_, `MQ`_n_ | Questions the combat and magic plans raised; all answered; the CRB edits they left (CQ5, CQ9, CQ12, CQ13) are in `plans/crb-catch-up.md` | `plans/archive/combat-and-conditions.md` §6 · `plans/archive/magic-on-the-sheet.md` |
