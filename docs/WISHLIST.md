@@ -72,8 +72,8 @@ it is, the clicking or not seeing the whole build at once, before writing the or
 *To respect:* Decision 232 and P19's N+1 (Expert mode is the browser's, never the character's); Decision 161 (the phone rail); Decision 162 (lock waits
 until every point that can buy something is spent); Decision 164 (a press keeps the keyboard's place).
 
-**W143 — Buy a power you don't hold yet with 5 CP at creation.** *Ken · ⏭ · Rule or shape · raised 2026-11-04 · next up, Ken starts the work order with Opus*\
-**Plan:** none yet
+**W143 — Buy a power you don't hold yet with 5 CP at creation.** *Ken · ⏭ · Rule or shape · raised 2026-11-04 · work order approved 2026-11-04, BQ1–BQ13 answered; ready to build*\
+**Plan:** [its work order](plans/w143-powers-bought-with-cp.md)
 
 During character creation, a character may spend **5 CP** to take a power they don't hold yet, at rank 1, from the powers their archetype offers (or a custom write-in). A power is rank 0 until learned, so the first rank costs the same 5 CP as every later one (Decision 157's `cpPerPowerRank`).
 **Boosts stay as they are (Ken's second point, a check, not new work):** a Character Point still raises a stat, a skill or LUCK 1 for 1 (`boostRules.cpCostPerPoint`, Decisions 97 and 218), so a stat at 9 goes to 10 for 1 CP, not the 2 Stat Points. The ceilings are the campaign's Max Boost (`maxBoost`, Decision 3), the human cap of 10 for a human, and Max Skill Rank. The work order's job is to confirm the engine does this today and pin it in a test, not to rebuild it.
