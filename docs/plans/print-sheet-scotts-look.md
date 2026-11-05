@@ -160,12 +160,17 @@ These are for Deighton and Scott, not for this plan to settle:
 
 - **PQ1 (Scott):** Can Cerulean Nights be embedded, even as a Latin subset
   inside the one file? If yes, Decision 137's "isn't ours to ship" is
-  revisited and most of §2's fallback work goes away.
+  revisited and most of §2's fallback work goes away. **Scott, 2026-11-03:
+  yes, embed it.** So 137 is revisited, and the fallback becomes a fallback
+  only. We need the font file from him.
 - **PQ2 (Scott):** Can we lift his artwork: the wordmark with its text
   converted to outlines, the LUCK glyph, and later the silhouettes?
+  **Scott, 2026-11-03: yes, all of it.** We need the files from him.
 - **PQ3 (Deighton):** Do the stat groups mean anything in the rules? If they
   do, name them; if not, `accent` keeps them presentation only.
 - **PQ4 (Scott):** What does the "Active" tab on a Health Level cell mark?
+  **Scott, 2026-11-03: the Health Level you're on right now.** So it can go
+  back on the printed sheet; how a printed sheet marks it is the restyle's call.
 - **PQ5 (Ken):** Should the live sheet's stat icons take the group colors too?
 
 ## 7. How it would be built
