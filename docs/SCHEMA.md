@@ -5407,7 +5407,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** a new power only with IP after play; counting placements and grants as Boosts; a separate learned-with-CP list (`powerCp` holds the ranks, so no schema bump); a Base Power on a CP-learned power (it double-pays rank 1); every power at rank 0 (W144); trimming a locked file.
      - **Replaces:** Decision 240 in part (CP raised a held power only). Decision 157 in part (a power rank is a Boost, not held to Max Power Rank). Decision 3 in part (power ranks are boosted targets again).
      - **Revisit if:** a Max Starting Rank passes the Max CP Boost (the cap then binds these archetypes), or custom powers get CP ranks past 1.
-     - **Built:** app 0.61.0, game data 0.52, no schema bump, PR #…, log 2026-11-04 (W143).
+     - **Built:** app 0.61.0, game data 0.52, no schema bump, PR #292, log 2026-11-04 (W143).
 
 265. **A Discipline takes CP Boosts up to the Max Character Point Boost on top of its start, with no other creation ceiling; Enchantment needs Evocation 3 and Alchemy needs Enchantment 3, at creation and in play; Max Power Rank is retired.**
      *2026-11-04 · Ken + Scott + Claude · Touches: coreMechanic.disciplines, maxRankBy, prerequisite, disciplineRanks, disciplineCap, buyDisciplineRank, disc stepper, ipCost power, spendable cp, validate, startingSpells, Evocation, Enchantment, Alchemy, powerLevels.maxPowerRank, Max Power Rank, Power cap chip, Admin Power Level note, 0411, 0434, 0480, W143*
@@ -5416,7 +5416,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** Max Power Rank 2/3/4/5 as the Discipline ceiling (Scott); the prerequisite in code (Decision 135); refusing − on Evocation while Enchantment is held (a broken pick is named, as a starting spell above its rank is); the prerequisite at creation only (`0480` says before attempting, at any time); keeping `maxPowerRank` as a label (a number that caps nothing reads as a rule).
      - **Replaces:** Decision 157 in part (Max Power Rank capped a Discipline). Decision 3 in part (Max Power Rank no longer applies on top). Decision 135 stands: the cap, the start and the prerequisite are data.
      - **Revisit if:** Scott or Deighton put a creation ceiling back on Disciplines, or Deighton gives custom powers a ceiling of their own (BQ1).
-     - **Built:** app 0.61.0, game data 0.52, no schema bump, PR #…, log 2026-11-04 (W143).
+     - **Built:** app 0.61.0, game data 0.52, no schema bump, PR #292, log 2026-11-04 (W143).
 
 ## 5. Open Flags
 
