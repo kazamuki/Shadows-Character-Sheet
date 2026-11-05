@@ -12627,6 +12627,10 @@ test("Decision 266: a Werewolf's power runs only in Werewolf Form, and shifting 
   // A running power read in the wrong form is not running, whatever is stored.
   ch.trackers.running = [{ id: "let-it-loose" }];
   assert.equal(Engine.isRunning(ch, "let-it-loose"), false);
+  // Nothing runs outside the form, so a stored entry (a hand-edited file) doesn't start free when the form comes back.
+  same(Engine.setToggle(ch, "form", "Werewolf").stopped, []);
+  assert.equal(Engine.isRunning(ch, "let-it-loose"), false, "a stale entry ran on the shift without paying");
+  same([ch.trackers.running, ch.trackers.sfr.spent], [[], 1]);
 });
 
 test("Decision 266: past Rate of Use a Werewolf's power still starts, and says it costs more than the RoU (HQ7, 0414)", () => {

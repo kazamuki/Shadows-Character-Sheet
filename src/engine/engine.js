@@ -736,7 +736,7 @@ const Engine = (() => {
     }
     ch.panelData[p.id] = o.name;
     // Decision 266: leaving the form a power runs in stops it, in the same press (and the same undo).
-    return { ok:true, cost, stopped: stopRunningOutsideForm(ch, p.id, o.name, wasRunning) };
+    return { ok:true, cost, stopped: stopRunningOutsideForm(ch, p.id, o.name, wasRunning, !!was && was.name===o.name) };
   }
   // A toggle panel as the sheet draws it: each option, which is on, and
   // what pressing an option that isn't would cost.
@@ -4182,14 +4182,15 @@ const Engine = (() => {
     ch.trackers.running = runEntries(ch).filter(e=>e.id!==id).map(e=>({ id:e.id }));
     return { ok:true, name:nameOfRunnable(ch, id) };
   }
-  // Leaving the form a power needs ends it. Every held sustained power's entry goes, whether or not it read as
-  // running, so a stale one can't come back when the form does. Returns the ids that were running.
-  function stopRunningOutsideForm(ch, panelId, option, was){
+  // Changing the form a power needs clears every held sustained power's entry, whether or not it read as running:
+  // leaving it ends them, and entering it starts none, so a stale entry (a hand-edited file) can't run unpaid when
+  // the form comes back. Returns the ids that were running and stopped.
+  function stopRunningOutsideForm(ch, panelId, option, was, same){
     const a = archetype(ch), r = a && a.runsIn;
-    if (!isPlainObj(r) || r.panel!==panelId || r.option===option || !isPlainObj(ch.trackers)) return [];
+    if (!isPlainObj(r) || r.panel!==panelId || same || !isPlainObj(ch.trackers)) return [];
     const defs = new Set(runnableDefs(ch).map(p=>p.id));
     ch.trackers.running = runEntries(ch).filter(e=>!defs.has(e.id)).map(e=>({ id:e.id }));
-    return was;
+    return r.option===option ? [] : was;
   }
   // What a Turn Reset would do to each running power that pays each round, in order: whether the pool covers it,
   // and what the pool had left when its turn came (`left`, null when the sheet knows no pool).
