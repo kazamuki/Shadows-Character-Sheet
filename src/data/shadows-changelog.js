@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.61.0",
-    "date": null,
+    "date": "2026-11-05",
     "intro": [],
     "items": [
       "**Vampires and Werewolves can learn a new power at creation**: 5 Character Points takes one of your Bloodline's or Origin's powers at rank 1, and more ranks cost 5 each, up to your Max Starting Rank.",
