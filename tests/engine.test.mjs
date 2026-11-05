@@ -12493,6 +12493,10 @@ test("Decisions 264, 265: a locked file over the new caps loads unchanged and is
     same(Engine.versionCheck(mig), []);
   }
   same(Engine.migrate(JSON.parse(JSON.stringify(v))).archetypeChoices.powerCp, { "shadow-play": 3 });
+  // The sheet shows the stored ranks, not capped ones.
+  const ma = Engine.migrate(JSON.parse(JSON.stringify(a))), mv = Engine.migrate(JSON.parse(JSON.stringify(v)));
+  same(Engine.disciplineRanks(ma).map(d => `${d.id}:${d.rank}`).filter(x => /^(evocation|enchantment|alchemy)/.test(x)), ["evocation:1", "enchantment:2", "alchemy:0"]);
+  assert.equal(Engine.archetypePowers(mv).find(p => p.id === "shadow-play").rank, 4);
 });
 
 test("Decision 264: a file saved with CP on a pool power it didn't hold round-trips through migrate() byte for byte", () => {
