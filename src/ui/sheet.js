@@ -1194,7 +1194,7 @@ function resetPanelHtml(ch, st){
     if (r.marks) lines.push(`You're Dying, so that's ${r.marks} Death Mark${r.marks===1?"":"s"}.`);
     // Decision 266: what is kept running is charged into the new round, so the round does not clear to 0 beside it.
     const kept = r.running.filter(x=>x.payable && !st.stop[x.id]), next = kept.reduce((n, x)=>n + x.sfr, 0);
-    r.turnSpend.forEach(t=>lines.push(`${t.title} spent this round: ${t.spent} → ${next}${kept.length ? ` (${kept.map(x=>x.name).join(", ")} keep${kept.length>1?"":"s"} running)` : ""}.`));
+    r.turnSpend.forEach(t=>lines.push(`${t.title} spent this round: ${t.spent} → ${next}${kept.length ? ` (${andList(kept.map(x=>x.name))} keep${kept.length>1?"":"s"} running)` : ""}.`));
     if (lines.length) h+=`<div class="hitresult">${lines.map(l=>`<p>${esc(l)}</p>`).join("")}</div>`;
     r.notes.forEach(n=>{ h+=noticeHtml(copy("unsettledLabel"), n); });
     r.running.forEach(x=>{ h+= x.payable

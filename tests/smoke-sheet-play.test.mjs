@@ -1932,6 +1932,15 @@ test("Decision 266: a Reset the pool can't pay says which power stops and why", 
   const app = openSheet(ch, "trackers");
   app.click('[data-actopen="reset"]');
   assert.match(app.$('[data-actpanel="reset"]').textContent, /Iron Hide stops: it needs 2 SFR, 1 left\./);
+  // Two kept powers read as a sentence, not a list.
+  const two = upyrSheet();
+  two.archetypeChoices.basePowers = { "iron-hide": 2, "cold-embrace": 1 };
+  two.trackers.running = [{ id: "iron-hide" }, { id: "cold-embrace" }];
+  two.trackers.sfr = { spent: 3, turn: 3 };
+  const app2 = openSheet(two, "trackers");
+  app2.click('[data-actopen="reset"]');
+  assert.match(app2.$('[data-actpanel="reset"]').textContent, /SFR spent this round: 3 → 3 \(Iron Hide and Cold Embrace keep running\)\./);
+  assert.deepEqual(app2.errors, []);
   assert.equal(app.$('[data-act="stop:iron-hide"]'), null, "an unpayable power has a Stop box");
   app.click("[data-actapply]");
   assert.deepEqual(activeChar(app).trackers.running, []);
