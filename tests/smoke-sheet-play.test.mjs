@@ -1892,7 +1892,7 @@ test("Decision 266: Start and Stop on the card and in the SFR popover, and focus
   assert.equal(focused(app), app.$('[data-runtoggle="iron-hide|stop"]'), "focus left the card's Stop");
   app.click('[data-sec="main"]');
   app.click('#main [data-vpop="sfr"]');
-  assert.match(app.$("#vpop").textContent, /Iron Hide · 2 a round/);
+  assert.match(app.$("#vpop").textContent, /Iron Hide · 2 SFR a round/);
   assert.equal(app.$('#vpop [data-runtoggle="iron-hide|stop"]').getAttribute("aria-label"), "Stop Iron Hide");
   press(app, '#vpop [data-runtoggle="iron-hide|stop"]');
   assert.deepEqual(activeChar(app).trackers.running, []);
@@ -1912,7 +1912,7 @@ test("Decision 266: Turn Reset lists what's running and a Stop box keeps it from
   app.click('[data-actopen="reset"]');
   const panel = () => app.$('[data-actpanel="reset"]').textContent;
   assert.match(panel(), /Iron Hide: 2 SFR to keep it running/);
-  assert.match(panel(), /SFR spent this round: 2 → 2, Iron Hide running/);
+  assert.match(panel(), /SFR spent this round: 2 → 2 \(Iron Hide keeps running\)/);
   const box = app.$('[data-act="stop:iron-hide"]');
   assert.equal(box.getAttribute("aria-label"), "Stop Iron Hide");
   box.focus(); box.checked = true; box.dispatchEvent(new app.window.Event("change", { bubbles: true }));
@@ -1967,5 +1967,26 @@ test("Decision 266: a hostile id in running renders as text, and a stale one is 
   assert.match(app.$("#main").textContent, /Running · 2 SFR a round/);
   app.click('[data-sec="trackers"]'); app.click('[data-actopen="reset"]');
   assert.equal(app.$$('[data-actpanel="reset"] img').length, 0);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 266 (Ken, 2026-11-05): a refused Start says why under the button, and a Start past RoU says so", () => {
+  const ch = lockedCharacter();
+  ch.identity.archetype = "werewolf"; ch.creation.powerLevel = "street";
+  for (const id of Object.keys(ch.stats)) ch.stats[id].base = 6;
+  ch.archetypeChoices.specialization = ["wildblood"]; ch.archetypeChoices.basePowers = { "let-it-loose": 1 };
+  ch.progression.powerIpe = { "let-it-loose": 3 };
+  const app = openSheet(ch, "character");
+  const btn = () => app.$('[data-runtoggle="let-it-loose|start"]');
+  assert.ok(btn().disabled);
+  assert.equal(app.$("[data-runwhy]").textContent, "Werewolf Form only", "the reason isn't on the page");
+  app.click('[data-sec="main"]'); app.click('#main [data-vpop="sfr"]');
+  assert.equal(app.$("#vpop [data-runwhy]").textContent, "Werewolf Form only", "the popover's disabled Start gives no reason");
+  app.click('#main [data-vpop="sfr"]');
+  app.click('[data-sec="loadout"]'); app.click('[data-ptoggle="form|Werewolf"]');
+  app.click('[data-sec="character"]');
+  assert.equal(app.$("[data-runwhy]"), null);
+  press(app, '[data-runtoggle="let-it-loose|start"]');
+  assert.match(app.$("#undotoast").textContent, /Started Let It Loose: 4 SFR, more than your RoU of 3\./);
   assert.deepEqual(app.errors, []);
 });

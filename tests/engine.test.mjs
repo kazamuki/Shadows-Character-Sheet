@@ -12660,7 +12660,7 @@ test("Decision 266: a power can't start twice, and Stop refunds nothing (HQ8, HQ
   Engine.startPower(ch, "iron-hide");
   const again = Engine.startPower(ch, "iron-hide");
   assert.equal(again.ok, false);
-  assert.equal(again.why, "Iron Hide is running.");
+  assert.equal(again.why, "Iron Hide is already running.");
   assert.equal(ch.trackers.sfr.spent, 2);
   assert.equal(Engine.stopPower(ch, "iron-hide").ok, true);
   same([ch.trackers.running, ch.trackers.sfr.spent], [[], 2]);
@@ -12737,4 +12737,19 @@ test("Decision 266: every reader and writer is total on a character with junk in
     assert.equal(Engine.startPower(wc, "let-it-loose").ok, true, "a runsIn naming no panel asks for nothing");
     Engine.setToggle(wc, "form", "Human");
   });
+});
+
+test("Decision 266 (Ken, 2026-11-05): Start is refused when the pool can't pay, and says what's left", () => {
+  const ch = upyrRunning();
+  ch.trackers.sfr.spent = 16;                   // 1 left of 17; Iron Hide rank 2 costs 2
+  const r = Engine.startPower(ch, "iron-hide");
+  assert.equal(r.ok, false);
+  assert.equal(r.why, "Iron Hide needs 2 SFR, 1 left.");
+  same([ch.trackers.sfr.spent, ch.trackers.running], [16, []]);
+  const can = Engine.runnablePowers(ch).find(p => p.id === "iron-hide").can;
+  same([can.ok, can.why, can.short], [false, "Iron Hide needs 2 SFR, 1 left.", "Not enough SFR"]);
+  ch.trackers.sfr.spent = 15;                   // exactly 2 left pays
+  assert.equal(Engine.startPower(ch, "iron-hide").ok, true);
+  const w = wildblood(0);
+  same(Engine.runnablePowers(w).find(p => p.id === "let-it-loose").can.short, "Werewolf Form only");
 });

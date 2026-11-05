@@ -1005,12 +1005,14 @@ function aberrationResultsHtml(ch){
 // S.hit holds the form while it's open; nothing is saved until Apply.
 // Decision 266: a sustained power that runs is a Start/Stop on its card. `r` is Engine.runnablePowers' row, or
 // undefined for a power that doesn't run. Whether it runs is the engine's (runningPowers); this only draws it.
+// Ken, 2026-11-05: a refused Start says why on the page, not only in its title (touch, keyboard).
+const runWhyHtml = r => !r.running && !r.can.ok ? `<span class="sub" data-runwhy>${esc(r.can.short)}</span>` : "";
 function runCardHtml(r){
   if (!r) return "";
   const btn = r.running
     ? `<button type="button" class="btn sm" data-runtoggle="${esc(r.id)}|stop" aria-label="Stop ${esc(r.name)}">Stop</button>`
     : `<button type="button" class="btn sm" data-runtoggle="${esc(r.id)}|start" aria-label="Start ${esc(r.name)}"${r.can.ok ? "" : ` disabled title="${esc(r.can.why)}"`}>Start</button>`;
-  return `<div class="run-row">${r.running ? `<span class="sub" data-runline>Running · ${r.sfr} SFR a round</span>` : ""}${btn}</div>`;
+  return `<div class="run-row">${r.running ? `<span class="sub" data-runline>Running · ${r.sfr} SFR a round</span>` : ""}${btn}${runWhyHtml(r)}</div>`;
 }
 function newHitForm(){
   return { damage:"", damageType:"ballistic", category:"regular", ap:false, spell:false, melee:false, location:"",
@@ -1192,7 +1194,7 @@ function resetPanelHtml(ch, st){
     if (r.marks) lines.push(`You're Dying, so that's ${r.marks} Death Mark${r.marks===1?"":"s"}.`);
     // Decision 266: what is kept running is charged into the new round, so the round does not clear to 0 beside it.
     const kept = r.running.filter(x=>x.payable && !st.stop[x.id]), next = kept.reduce((n, x)=>n + x.sfr, 0);
-    r.turnSpend.forEach(t=>lines.push(`${t.title} spent this round: ${t.spent} → ${next}${kept.length ? `, ${kept.map(x=>x.name).join(", ")} running` : ""}.`));
+    r.turnSpend.forEach(t=>lines.push(`${t.title} spent this round: ${t.spent} → ${next}${kept.length ? ` (${kept.map(x=>x.name).join(", ")} keep${kept.length>1?"":"s"} running)` : ""}.`));
     if (lines.length) h+=`<div class="hitresult">${lines.map(l=>`<p>${esc(l)}</p>`).join("")}</div>`;
     r.notes.forEach(n=>{ h+=noticeHtml(copy("unsettledLabel"), n); });
     r.running.forEach(x=>{ h+= x.payable
@@ -1423,8 +1425,8 @@ function vitalPopover(ch, key){
     // Decision 266 (HQ6): what is running, with Stop, and Start for each sustained power held and not running.
     const runs=Engine.runningPowers(ch), starts=Engine.runnablePowers(ch).filter(r=>!r.running);
     const runHtml = runs.length || starts.length ? `<div class="pop-runs" data-poprun>` +
-      runs.map(r=>`<div class="run-row"><span class="sub">${esc(r.name)} · ${r.sfr} a round</span><button type="button" class="btn sm" data-runtoggle="${esc(r.id)}|stop" aria-label="Stop ${esc(r.name)}">Stop</button></div>`).join("") +
-      starts.map(r=>`<div class="run-row"><button type="button" class="btn sm" data-runtoggle="${esc(r.id)}|start" aria-label="Start ${esc(r.name)}"${r.can.ok ? "" : ` disabled title="${esc(r.can.why)}"`}>Start ${esc(r.name)}</button></div>`).join("") + `</div>` : "";
+      runs.map(r=>`<div class="run-row"><span class="sub">${esc(r.name)} · ${r.sfr} SFR a round</span><button type="button" class="btn sm" data-runtoggle="${esc(r.id)}|stop" aria-label="Stop ${esc(r.name)}">Stop</button></div>`).join("") +
+      starts.map(r=>`<div class="run-row"><button type="button" class="btn sm" data-runtoggle="${esc(r.id)}|start" aria-label="Start ${esc(r.name)}"${r.can.ok ? "" : ` disabled title="${esc(r.can.why)}"`}>Start ${esc(r.name)}</button>${runWhyHtml(r)}</div>`).join("") + `</div>` : "";
     return { title:"SFR",
       html: now(`${left} / ${sf.value}`, turn && (turn.at||turn.past) ? "bad" : "", sf.rou!=null ? `RoU ${sf.rou}` : "") +
         `<div class="trk-row"><button class="btn sm" data-trk="${esc(p.id)}|-1">−1</button><button class="btn sm" data-trk="${esc(p.id)}|1">+1</button></div>` +
@@ -3622,7 +3624,7 @@ function bindVitalControls(root){
     const home = b.closest(".pop-body") ? popEl() : document.getElementById("main");
     const dry = start ? Engine.startPower(clone(ch), id) : Engine.stopPower(clone(ch), id);
     if (!dry.ok){ notice(dry.why); return; }
-    const label = start ? `Started ${dry.name}: ${dry.sfr} SFR` + (dry.overCap ? `. ${dry.name} costs ${dry.overCap.sfr} SFR, more than your RoU of ${dry.overCap.rou}.` : "") : `Stopped ${dry.name}`;
+    const label = start ? `Started ${dry.name}: ${dry.sfr} SFR` + (dry.overCap ? `, more than your RoU of ${dry.overCap.rou}.` : "") : `Stopped ${dry.name}`;
     commit("tracker", label, ()=>{ if (start) Engine.startPower(ch, id); else Engine.stopPower(ch, id); });
     const next = home && home.querySelector(attrSel("data-runtoggle", `${id}|${start ? "stop" : "start"}`));
     if (next) takeFocus(next);

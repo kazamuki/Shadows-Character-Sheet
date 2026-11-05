@@ -4147,20 +4147,24 @@ const Engine = (() => {
   const nameOfRunnable = (ch, id) => { const p = archetypePowers(ch).find(x=>x.id===id); return p ? txt(p.name) : "That power"; };
   // Why Start would refuse, in words the engine writes.
   function startCheck(ch, id){
-    if (!ch || !ch.creation || ch.creation.locked!==true) return { ok:false, why:"Powers run once the character is locked." };
+    if (!ch || !ch.creation || ch.creation.locked!==true) return { ok:false, why:"Powers run once the character is locked.", short:"Locked sheets only" };
     const p = runnableDefs(ch).find(x=>x.id===id);
     if (!p) return { ok:false, why:"That power doesn't run." };
     const name = txt(p.name);
-    if (isRunning(ch, id)) return { ok:false, why:`${name} is running.` };
+    if (isRunning(ch, id)) return { ok:false, why:`${name} is already running.`, short:"Already running" };
     const form = runForm(ch);
-    if (form && !form.on) return { ok:false, why:`${name} works only in ${form.option} Form.` };
+    if (form && !form.on) return { ok:false, why:`${name} works only in ${form.option} Form.`, short:`${form.option} Form only` };
+    // Ken, 2026-11-05: Start refuses what the pool can't pay, as Turn Reset stops it (Decision 266).
+    const cost = runCost(ch, p), sf = sfr(ch), s = ch.trackers && ch.trackers.sfr;
+    const left = sf && sf.value!=null ? Math.max(0, sf.value - nonNegInt(isPlainObj(s) ? s.spent : 0)) : Infinity;
+    if (left < cost) return { ok:false, why:`${name} needs ${cost} SFR, ${left} left.`, short:"Not enough SFR" };
     return { ok:true, p };
   }
   // The held sustained powers, for a Start control: what each costs and whether it can start.
   function runnablePowers(ch){
     if (!ch || typeof ch!=="object") return [];
     return runnableDefs(ch).map(p=>{ const c = startCheck(ch, p.id);
-      return { id:p.id, name:txt(p.name), rank:p.rank, sfr:runCost(ch, p), running:isRunning(ch, p.id), can:{ ok:c.ok, why:c.ok ? "" : c.why } }; });
+      return { id:p.id, name:txt(p.name), rank:p.rank, sfr:runCost(ch, p), running:isRunning(ch, p.id), can:{ ok:c.ok, why:c.ok ? "" : c.why, short:c.ok ? "" : c.short } }; });
   }
   // The most one power may cost in a round, where the archetype says so (`powerCostCap`, as a panel's `turnCap`).
   const powerCostCap = ch => { const a = archetype(ch), c = a && a.powerCostCap==="rou" ? (sfr(ch)||{}).rou : a && a.powerCostCap;
