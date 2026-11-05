@@ -132,7 +132,7 @@ decides "running"**, in the same way that `isHeld` is the one test for held (Dec
 
 | Session | What | Tier | Waits on |
 |---|---|---|---|
-| **H1** — W110 | §2 whole: `trackers.running` (schema N), `run` on the seven sustained powers, Start and Stop, Turn Reset charges, the Form ends a Werewolf's, Natural Armor starts ticked. [Order](powers-that-run/H1-sustained-powers.md) | Rule or shape | Ken: this plan, HQ1–HQ4, and the order's questions |
+| **H1** — W110 (**built 2026-11-05**, Decision 266) | §2 whole: `trackers.running` (schema N), `run` on the seven sustained powers, Start and Stop, Turn Reset charges, the Form ends a Werewolf's, Natural Armor starts ticked. [Order](powers-that-run/H1-sustained-powers.md) | Rule or shape | Ken: this plan, HQ1–HQ4, and the order's questions |
 | **H2** — W132, the hit | Odin's Aegis, Null Field, Red Mist, Spectral Veil, Elemental Blood, Silverscar, Battle Hardened; Adaptive Skeleton's Natural Armor 2 (b21). Elemental Blood and Battle Hardened save a pick (schema), Silverscar needs the hit to know silver | Rule or shape | H1 |
 | **H3** — W132, healing | Regeneration and Bone and Sinew (the Form), Vitality Surge, Blood of Valhalla, Quick Clot | Rule or shape | H1 |
 

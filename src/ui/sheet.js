@@ -591,12 +591,13 @@ function renderShCharacter(){
     const toPlace = bps && bps.left > 0 && specIds.length ? `<p class="step-note">${bps.left} Base Power${bps.left>1?"s":""} to place, on Admin.</p>` : "";
     const allowHtml = allow && powers.some(p=>!p.custom) ? `<p class="step-note">${[allow.basePowers!=null&&`Base Powers ${allow.basePowers}`, allow.maxStartingRank!=null&&`Max Starting Rank ${allow.maxStartingRank}`].filter(Boolean).join(" · ")}</p>${toPlace}` : "";
     const opening = Engine.specializationOpening(ch);
+    const runnable = new Map(Engine.runnablePowers(ch).map(r=>[r.id, r]));
     if (powers.length) parts.push(secs.sect("Powers") + allowHtml + cardsOf(powers.map(p=>
       p.custom && !content.writeIn ? powerCardHtml(p, []) :
       `<div class="pick" ${p.gainsSpecialization?`data-powercard="${esc(p.id)}" tabindex="-1"`:""}><div class="head"><h2>${esc(p.name)}</h2>
         ${p.origin&&!specIds.includes(p.origin)?`<span class="chip">${esc(specNameOf(ch, p.origin))}</span>`:""}
         ${p.rank!=null?`<span class="cost">rank ${p.rank}</span>`:""}${p.cost&&!p.custom?`<span class="cost">${esc(p.cost)}</span>`:""}${p.drain?`<span class="cost">drain ${esc(p.drain)}</span>`:""}${p.uses?`<span class="cost">uses ${esc(p.uses)}</span>`:""}</div>
-        <div class="desc">${esc(p.description||p.effect||"")}${p.perRank?"\nPer rank: "+esc(p.perRank):""}${p.notes?"\n— "+esc(p.notes):""}${[p.damage&&"Damage "+p.damage,p.range&&"Range "+p.range,p.duration&&"Duration "+p.duration].filter(Boolean).map(x=>"\n"+esc(x)).join("")}</div>${p.gainsSpecialization?openingHtml(opening):""}</div>`))
+        <div class="desc">${esc(p.description||p.effect||"")}${p.perRank?"\nPer rank: "+esc(p.perRank):""}${p.notes?"\n— "+esc(p.notes):""}${[p.damage&&"Damage "+p.damage,p.range&&"Range "+p.range,p.duration&&"Duration "+p.duration].filter(Boolean).map(x=>"\n"+esc(x)).join("")}</div>${runCardHtml(runnable.get(p.id))}${p.gainsSpecialization?openingHtml(opening):""}</div>`))
       + (content.powersText ? `<p class="step-note">${esc(content.powersText)}</p>` : ""));
     if (vulns.length) parts.push(secs.sect("Vulnerabilities") + cardsOf(vulns.map(v=>
       `<div class="pick"><div class="head"><h2>${esc(v.name)}</h2></div>
@@ -1002,6 +1003,15 @@ function aberrationResultsHtml(ch){
 // (plan P7): the engine resolves the hit, the player answers the checks it
 // asks for, and Apply is one commit(), so the whole hit undoes in one step.
 // S.hit holds the form while it's open; nothing is saved until Apply.
+// Decision 266: a sustained power that runs is a Start/Stop on its card. `r` is Engine.runnablePowers' row, or
+// undefined for a power that doesn't run. Whether it runs is the engine's (runningPowers); this only draws it.
+function runCardHtml(r){
+  if (!r) return "";
+  const btn = r.running
+    ? `<button type="button" class="btn sm" data-runtoggle="${esc(r.id)}|stop" aria-label="Stop ${esc(r.name)}">Stop</button>`
+    : `<button type="button" class="btn sm" data-runtoggle="${esc(r.id)}|start" aria-label="Start ${esc(r.name)}"${r.can.ok ? "" : ` disabled title="${esc(r.can.why)}"`}>Start</button>`;
+  return `<div class="run-row">${r.running ? `<span class="sub" data-runline>Running · ${r.sfr} SFR a round</span>` : ""}${btn}</div>`;
+}
 function newHitForm(){
   return { damage:"", damageType:"ballistic", category:"regular", ap:false, spell:false, melee:false, location:"",
            protRoll:"", shock:"", atZero:"", conds:{}, nat:{} };
@@ -1145,7 +1155,7 @@ function hitPanelHtml(ch, r){
 // a time, the hit panel included.
 function newActForm(kind){
   return { kind, sources:{}, atZero:"", dyingCheck:"", days:"1", speed:false, hp:"",
-           clear:{}, massive:"", difficulty:"medium", roll:"", shCheck:"", shRoll:"", dose:"1", fromGear:null };
+           clear:{}, stop:{}, massive:"", difficulty:"medium", roll:"", shCheck:"", shRoll:"", dose:"1", fromGear:null };
 }
 const actOpt=(v,l,sel)=>`<option value="${esc(v)}" ${sel?"selected":""}>${esc(l)}</option>`;
 const actNum=(st,k,label,extra="")=>`<label class="field"><span>${label}</span><input type="number" min="0" data-act="${k}" value="${esc(st[k])}" ${extra}></label>`;
@@ -1153,7 +1163,7 @@ const actPassFail=(st,k)=>`<select data-act="${k}" aria-label="result">${actOpt(
 const actButtons=(ok, label)=>`<div class="hitrow"><button class="btn primary" data-actapply="1" ${ok?"":"disabled"}>${esc(label)}</button>
   <button class="btn" data-actcancel="1">Cancel</button></div>`;
 function actInput(ch, st){
-  if (st.kind==="reset") return { sources: st.sources };
+  if (st.kind==="reset") return { sources: st.sources, stop: Object.keys(st.stop||{}).filter(k=>st.stop[k]) };
   if (st.kind==="rest"){
     // Decision 236: the engine's one proposal, with each multiplier named (Rapid Healing, Fast Metabolism, Speed Heal).
     const nh=Engine.naturalHealing(ch, { days: st.days, speed: st.speed });
@@ -1180,9 +1190,14 @@ function resetPanelHtml(ch, st){
     const lines=[];
     if (r.total) lines.push(`${r.total} damage goes on. HP left: ${r.before.hpLeft} → ${r.after.hpLeft}.`);
     if (r.marks) lines.push(`You're Dying, so that's ${r.marks} Death Mark${r.marks===1?"":"s"}.`);
-    r.turnSpend.forEach(t=>lines.push(`${t.title} spent this round: ${t.spent} → 0.`));
+    // Decision 266: what is kept running is charged into the new round, so the round does not clear to 0 beside it.
+    const kept = r.running.filter(x=>x.payable && !st.stop[x.id]), next = kept.reduce((n, x)=>n + x.sfr, 0);
+    r.turnSpend.forEach(t=>lines.push(`${t.title} spent this round: ${t.spent} → ${next}${kept.length ? `, ${kept.map(x=>x.name).join(", ")} running` : ""}.`));
     if (lines.length) h+=`<div class="hitresult">${lines.map(l=>`<p>${esc(l)}</p>`).join("")}</div>`;
     r.notes.forEach(n=>{ h+=noticeHtml(copy("unsettledLabel"), n); });
+    r.running.forEach(x=>{ h+= x.payable
+      ? `<div class="hitrow"><span class="hitarmor">${esc(x.name)}: ${x.sfr} SFR to keep it running</span><label class="check"><input type="checkbox" data-act="stop:${esc(x.id)}" aria-label="Stop ${esc(x.name)}" ${st.stop[x.id]?"checked":""}> Stop</label></div>`
+      : `<p class="hitwhy" data-runstops="${esc(x.id)}">${esc(x.name)} stops: it needs ${x.sfr} SFR, ${x.left} left.</p>`; });
     const P=r.prompts;
     if (P.atZero) h+=`<div class="hitcheck bad"><b>At zero</b> · ${esc(P.atZero.check)}<p>${esc(P.atZero.text)}${
       P.atZero.freePassHeld?" "+esc(P.atZero.freePass.text):""}</p>${actPassFail(st,"atZero")}</div>`;
@@ -1405,10 +1420,15 @@ function vitalPopover(ch, key){
   if (key==="sfr"){ const sf=Engine.sfr(ch), p=sfrPanel(ch);
     if (!sf || sf.value==null || !p) return null;
     const left=Math.max(0, sf.value-(ch.trackers.sfr.spent||0)), turn=Engine.panelTracker(ch, p).turn, line=sfrRoundText(turn);
+    // Decision 266 (HQ6): what is running, with Stop, and Start for each sustained power held and not running.
+    const runs=Engine.runningPowers(ch), starts=Engine.runnablePowers(ch).filter(r=>!r.running);
+    const runHtml = runs.length || starts.length ? `<div class="pop-runs" data-poprun>` +
+      runs.map(r=>`<div class="run-row"><span class="sub">${esc(r.name)} · ${r.sfr} a round</span><button type="button" class="btn sm" data-runtoggle="${esc(r.id)}|stop" aria-label="Stop ${esc(r.name)}">Stop</button></div>`).join("") +
+      starts.map(r=>`<div class="run-row"><button type="button" class="btn sm" data-runtoggle="${esc(r.id)}|start" aria-label="Start ${esc(r.name)}"${r.can.ok ? "" : ` disabled title="${esc(r.can.why)}"`}>Start ${esc(r.name)}</button></div>`).join("") + `</div>` : "";
     return { title:"SFR",
       html: now(`${left} / ${sf.value}`, turn && (turn.at||turn.past) ? "bad" : "", sf.rou!=null ? `RoU ${sf.rou}` : "") +
         `<div class="trk-row"><button class="btn sm" data-trk="${esc(p.id)}|-1">−1</button><button class="btn sm" data-trk="${esc(p.id)}|1">+1</button></div>` +
-        (line ? `<p class="sub sfr-round" data-sfrround>${esc(line)}</p>` : "") +
+        (line ? `<p class="sub sfr-round" data-sfrround>${esc(line)}</p>` : "") + runHtml +
         (turn && turn.spent ? `<div class="trk-actions"><button class="btn sm" data-popreset>Turn Reset</button></div>` : "") }; }
   if (key==="cred") return { title:"Çredits",
     html: now(`${CR} ${numText(ch.trackers.credits.current)}`, "gold", "") + `<div class="trk-row pop-cred">${creditControlsHtml()}</div>
@@ -3431,7 +3451,8 @@ function openTrainPicker(){
 function openHitModal(returnTo){
   const ch=S.ch; if (!ch) return;
   if (S.act){ S.act=null; renderMain(); }
-  S.hit=Object.assign(newHitForm(), { owner: ch });
+  // Decision 266: a Natural Armor source whose power is running starts ticked; unticking it is for this hit only.
+  S.hit=Object.assign(newHitForm(), { owner: ch, nat: runningNatural(ch) });
   const p=hitModalParts(ch);
   openModal({ title: "Take a hit", html: p.body, foot: p.foot, returnTo: typeof returnTo==="string" ? returnTo : "[data-hitopen]",
     onClose: ()=>{ S.hit=null; }, bind: bindHitModal });
@@ -3594,6 +3615,19 @@ function bindVitalControls(root){
     commit("tracker", `${pid.toUpperCase()} ${signed(delta)}`, ()=>{ Engine.adjustPanelTracker(ch, pid, delta); });
   });
 
+  // Decision 266: Start and Stop, on a power's card and in the SFR popover: one commit, so one undo takes back the SFR too.
+  // A Start past the Rate of Use still runs and says so; a refusal is the engine's words. Focus goes to the other half of the pair.
+  root.querySelectorAll("[data-runtoggle]").forEach(b=>b.onclick=()=>{
+    const at=b.dataset.runtoggle.lastIndexOf("|"), id=b.dataset.runtoggle.slice(0, at), start=b.dataset.runtoggle.slice(at+1)==="start";
+    const home = b.closest(".pop-body") ? popEl() : document.getElementById("main");
+    const dry = start ? Engine.startPower(clone(ch), id) : Engine.stopPower(clone(ch), id);
+    if (!dry.ok){ notice(dry.why); return; }
+    const label = start ? `Started ${dry.name}: ${dry.sfr} SFR` + (dry.overCap ? `. ${dry.name} costs ${dry.overCap.sfr} SFR, more than your RoU of ${dry.overCap.rou}.` : "") : `Stopped ${dry.name}`;
+    commit("tracker", label, ()=>{ if (start) Engine.startPower(ch, id); else Engine.stopPower(ch, id); });
+    const next = home && home.querySelector(attrSel("data-runtoggle", `${id}|${start ? "stop" : "start"}`));
+    if (next) takeFocus(next);
+  });
+
   // CRANK rep (Decision 169): the amount is the data's, never typed.
   root.querySelectorAll("[data-crk]").forEach(b=>b.onclick=()=>{
     const amt=Number(b.dataset.crk), note=(root.querySelector("[data-crknote]")||{}).value||"";
@@ -3693,6 +3727,7 @@ function bindSheet(){
     const k=el.dataset.act, v=el.type==="checkbox" ? el.checked : el.value;
     if (k.startsWith("src:")) st.sources[k.slice(4)]=v;
     else if (k.startsWith("clear:")) st.clear[k.slice(6)]=v;
+    else if (k.startsWith("stop:")) st.stop[k.slice(5)]=v;
     else {
       st[k]=v;
       if (st.kind==="rest" && (k==="days" || k==="speed")) st.hp="";     // re-propose BOD × days
@@ -3710,9 +3745,10 @@ function bindSheet(){
       if (r.prompts.atZero && !st.atZero){ notice("Mark the check at zero as passed or failed first."); return; }
       if (r.prompts.dyingCheck && !st.dyingCheck){ notice("Mark the Dying check as passed or failed first."); return; }
       const marks = r.marks + (r.prompts.dyingCheck && st.dyingCheck==="fail" ? 1 : 0);
-      const bits=[r.total?`${r.total} damage`:"", marks?plural(marks,"Death Mark"):"", r.prompts.dyingCheck&&st.dyingCheck==="pass"?"held on":"", r.turnSpend.length?"round's SFR cleared":""].filter(Boolean);
+      const keptNames = r.running.filter(x=>x.payable && !st.stop[x.id]).map(x=>x.name).join(", "), stoppedBy = r.running.filter(x=>!x.payable || st.stop[x.id]).map(x=>x.name).join(", ");
+      const bits=[r.total?`${r.total} damage`:"", marks?plural(marks,"Death Mark"):"", r.prompts.dyingCheck&&st.dyingCheck==="pass"?"held on":"", r.turnSpend.length?"round's SFR cleared":"", keptNames?`${keptNames} kept running`:"", stoppedBy?`${stoppedBy} stopped`:""].filter(Boolean);
       S.act=null;
-      commit("damage", `Turn Reset: ${bits.join(", ")||"nothing ticked"}`, ()=>{ Engine.applyReset(ch, input, { atZero:st.atZero, dyingCheck:st.dyingCheck }); });
+      commit("damage", `Turn Reset: ${bits.join(", ")||"nothing ticked"}`, ()=>{ Engine.applyReset(ch, input, { atZero:st.atZero, dyingCheck:st.dyingCheck, stop:input.stop }); });
     } else if (st.kind==="rest" || st.kind==="focused" || st.kind==="nanomed"){
       const r=Engine.heal(clone(ch), input);
       if (!r.ok){ notice(r.why); return; }
@@ -3902,8 +3938,8 @@ function bindSheet(){
       notes:(main.querySelector("[data-sesnotes]")||{}).value
     };
     // The Milestone Point may be the one a training waits for: logging lands it in the same commit (Decision 230).
-    const landed = Engine.logSession(clone(ch), entry).trained;
-    commit("session", `Log session${title?`: ${title}`:""}${landedLabel(landed)}`, ()=>{ Engine.logSession(ch, entry); });
+    const dry = Engine.logSession(clone(ch), entry), landed = dry.trained, off = stoppedNames(ch, dry.stopped);
+    commit("session", `Log session${title?`: ${title}`:""}${landedLabel(landed)}${off?`. ${off} stopped.`:""}`, ()=>{ Engine.logSession(ch, entry); });
     window.scrollTo(0,0);
   });
   main.querySelectorAll("[data-sesdel]").forEach(b=>b.onclick=()=>{
@@ -4172,7 +4208,9 @@ function bindSheet(){
     if (b.classList.contains("on")) return;
     const at=b.dataset.ptoggle.indexOf("|"), pid=b.dataset.ptoggle.slice(0,at), opt=b.dataset.ptoggle.slice(at+1);
     const p=Engine.archPanels(ch).find(x=>x.id===pid), cost=(Engine.toggleView(ch, p||{}).find(o=>o.name===opt)||{}).cost;
-    commit("loadout", `${p?p.title:pid}: ${opt}${cost?` (${cost.hl} HL${cost.category?` ${cost.category}`:""})`:""}`, ()=>{ Engine.setToggle(ch, pid, opt); });
+    // Decision 266: shifting out of the form a power needs stops it, and the toast says which.
+    const off=stoppedNames(ch, Engine.setToggle(clone(ch), pid, opt).stopped);
+    commit("loadout", `${p?p.title:pid}: ${opt}${cost?` (${cost.hl} HL${cost.category?` ${cost.category}`:""})`:""}${off?`. ${off} stopped.`:""}`, ()=>{ Engine.setToggle(ch, pid, opt); });
   });
 
   // ── Admin: free edits (each logged via commit) ───────────────────────

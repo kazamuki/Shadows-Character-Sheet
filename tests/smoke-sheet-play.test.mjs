@@ -42,7 +42,7 @@ test("Resume draft migrates the draft, like every other load path (review #3)", 
   const resumed = stored(app, { locked: false });
   assert.deepEqual([...resumed.archetypeChoices.specialization], ["arcane-fortitude"],
     "the resumed draft lost its specialization");
-  assert.equal(resumed.meta.schemaVersion, "0.32");
+  assert.equal(resumed.meta.schemaVersion, "0.33");
   // And the choice is visibly selected, not merely stored.
   assert.equal(app.$$('[data-spec].toggle').filter(b => /Chosen|Selected/.test(b.textContent)).length, 1);
 });
@@ -1859,5 +1859,113 @@ test("L5 10b (sheet): a written-in weapon takes Tuned Edge, shows the total fold
   app.click('[data-loedit="weapons|2"]');
   assert.equal(app.$('[data-cell="weapons|2|damage"]').value, "BOD+2", "the edit row showed the total, not what was typed");
   assert.ok(majorBox(app, "weapons", 2, "tuned-edge"), "the open row lost its Majors line");
+  assert.deepEqual(app.errors, []);
+});
+
+// ── Sustained powers run (H1, Decision 266, W110) ────────────────────────
+function upyrSheet() {
+  const ch = lockedVampire("upyr");
+  ch.archetypeChoices.basePowers = { "iron-hide": 2 };
+  ch.archetypeChoices.powerCp = {};
+  ch.archetypeChoices.optionPicks = {};
+  return ch;
+}
+
+test("Decision 266: one undo takes back a Start and its SFR", () => {
+  const app = openSheet(upyrSheet(), "character");
+  press(app, '[data-runtoggle="iron-hide|start"]');
+  assert.deepEqual(activeChar(app).trackers.running, [{ id: "iron-hide" }]);
+  assert.deepEqual(activeChar(app).trackers.sfr, { spent: 2, turn: 2 });
+  app.click("button[data-undolast], [data-toastundo]");
+  assert.deepEqual(activeChar(app).trackers.running, [], "undo left the power running");
+  assert.equal(activeChar(app).trackers.sfr.spent, 0, "undo didn't give the SFR back");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 266: Start and Stop on the card and in the SFR popover, and focus stays", () => {
+  const app = openSheet(upyrSheet(), "character");
+  const card = () => app.$('[data-runtoggle="iron-hide|start"], [data-runtoggle="iron-hide|stop"]').closest(".pick");
+  assert.equal(app.$('[data-runtoggle="iron-hide|start"]').getAttribute("aria-label"), "Start Iron Hide");
+  press(app, '[data-runtoggle="iron-hide|start"]');
+  assert.match(card().textContent, /Running · 2 SFR a round/);
+  assert.equal(app.$('[data-runtoggle="iron-hide|stop"]').getAttribute("aria-label"), "Stop Iron Hide");
+  assert.equal(focused(app), app.$('[data-runtoggle="iron-hide|stop"]'), "focus left the card's Stop");
+  app.click('[data-sec="main"]');
+  app.click('#main [data-vpop="sfr"]');
+  assert.match(app.$("#vpop").textContent, /Iron Hide · 2 a round/);
+  assert.equal(app.$('#vpop [data-runtoggle="iron-hide|stop"]').getAttribute("aria-label"), "Stop Iron Hide");
+  press(app, '#vpop [data-runtoggle="iron-hide|stop"]');
+  assert.deepEqual(activeChar(app).trackers.running, []);
+  assert.equal(activeChar(app).trackers.sfr.spent, 2, "Stop took back SFR");
+  assert.equal(focused(app), app.$('#vpop [data-runtoggle="iron-hide|start"]'), "focus didn't go to Start in the popover");
+  assert.equal(app.$('#vpop [data-runtoggle="iron-hide|start"]').textContent.trim(), "Start Iron Hide");
+  press(app, '#vpop [data-runtoggle="iron-hide|start"]');
+  assert.equal(focused(app), app.$('#vpop [data-runtoggle="iron-hide|stop"]'), "focus didn't go to Stop in the popover");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 266: Turn Reset lists what's running and a Stop box keeps it from being charged", () => {
+  const ch = upyrSheet();
+  ch.trackers.running = [{ id: "iron-hide" }];
+  ch.trackers.sfr = { spent: 2, turn: 2 };
+  const app = openSheet(ch, "trackers");
+  app.click('[data-actopen="reset"]');
+  const panel = () => app.$('[data-actpanel="reset"]').textContent;
+  assert.match(panel(), /Iron Hide: 2 SFR to keep it running/);
+  assert.match(panel(), /SFR spent this round: 2 → 2, Iron Hide running/);
+  const box = app.$('[data-act="stop:iron-hide"]');
+  assert.equal(box.getAttribute("aria-label"), "Stop Iron Hide");
+  box.focus(); box.checked = true; box.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  assert.match(panel(), /SFR spent this round: 2 → 0\./);
+  assert.ok(app.$('[data-act="stop:iron-hide"]').checked, "the Stop box came back unticked");
+  assert.equal(focused(app), app.$('[data-act="stop:iron-hide"]'), "focus left the Stop box");
+  app.click("[data-actapply]");
+  assert.deepEqual(activeChar(app).trackers.running, []);
+  assert.deepEqual(activeChar(app).trackers.sfr, { spent: 2, turn: 0 });
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 266: a Reset the pool can't pay says which power stops and why", () => {
+  const ch = upyrSheet();
+  ch.trackers.running = [{ id: "iron-hide" }];
+  ch.trackers.sfr = { spent: 16, turn: 2 };
+  const app = openSheet(ch, "trackers");
+  app.click('[data-actopen="reset"]');
+  assert.match(app.$('[data-actpanel="reset"]').textContent, /Iron Hide stops: it needs 2 SFR, 1 left\./);
+  assert.equal(app.$('[data-act="stop:iron-hide"]'), null, "an unpayable power has a Stop box");
+  app.click("[data-actapply]");
+  assert.deepEqual(activeChar(app).trackers.running, []);
+  assert.deepEqual(activeChar(app).trackers.sfr, { spent: 16, turn: 0 });
+});
+
+test("Decision 266: a running Iron Hide's Natural Armor starts ticked on Take a hit", () => {
+  const ch = upyrSheet();
+  ch.trackers.running = [{ id: "iron-hide" }];
+  const app = openSheet(ch, "trackers");
+  app.click("[data-hitopen]");
+  const box = () => app.$('[data-hitnat="iron-hide"]');
+  assert.ok(box().checked, "the box starts unticked while Iron Hide runs");
+  assert.match(app.$("[data-hitpanel]").textContent, /Natural Armor 3/);
+  box().checked = false; box().dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  assert.match(app.$("[data-hitpanel]").textContent, /Natural Armor 0/);
+  app.click("[data-hitcancel]");
+  app.click("[data-hitopen]");
+  assert.ok(box().checked, "unticking carried to the next hit");
+  // Not running: unticked, as before.
+  const cold = openSheet(upyrSheet(), "trackers");
+  cold.click("[data-hitopen]");
+  assert.equal(cold.$('[data-hitnat="iron-hide"]').checked, false);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 266: a hostile id in running renders as text, and a stale one is no Running line", () => {
+  const ch = upyrSheet();
+  ch.trackers.running = [{ id: "<img src=x onerror=alert(1)>" }, { id: "iron-hide" }];
+  ch.trackers.sfr = { spent: 2, turn: 2 };
+  const app = openSheet(ch, "character");
+  assert.equal(app.$$("#main img").length, 0, "a hostile running id made an element");
+  assert.match(app.$("#main").textContent, /Running · 2 SFR a round/);
+  app.click('[data-sec="trackers"]'); app.click('[data-actopen="reset"]');
+  assert.equal(app.$$('[data-actpanel="reset"] img').length, 0);
   assert.deepEqual(app.errors, []);
 });

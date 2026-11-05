@@ -36,7 +36,7 @@ test("engine loads without a DOM", () => {
 
 test("newCharacter matches the documented character schema", () => {
   const ch = Engine.newCharacter();
-  assert.equal(ch.meta.schemaVersion, "0.32");
+  assert.equal(ch.meta.schemaVersion, "0.33");
   assert.equal(ch.meta.gamedataVersion, D.meta.gamedataVersion);
   for (const k of ["identity", "creation", "archetypeChoices", "stats", "skills",
                    "advantages", "disadvantages", "trackers"]) {
@@ -158,7 +158,7 @@ test("migrate upgrades an older save in place", () => {
   old.meta.schemaVersion = "0.3";
   delete old.audit;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.32");
+  assert.equal(old.meta.schemaVersion, "0.33");
   assert.ok(Array.isArray(old.audit), "audit was not seeded");
 });
 
@@ -170,7 +170,7 @@ test("migrate drops the retired exhaustion tracker (schema 0.7, Decision 93)", (
   old.meta.schemaVersion = "0.6";
   old.trackers.exhaustion = 3;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.32");
+  assert.equal(old.meta.schemaVersion, "0.33");
   assert.equal(old.trackers.exhaustion, undefined);
 });
 
@@ -552,7 +552,7 @@ test("migrate tags a pre-0.6 weapons entry as custom and seeds armor (schema 0.6
   old.weapons = [{ name: "Old Reliable", type: "Pistol", damage: "2d6", notes: "" }];
   delete old.armor;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.32");
+  assert.equal(old.meta.schemaVersion, "0.33");
   assert.equal(old.weapons[0].custom, true, "a legacy free-typed weapon should be tagged custom, not silently reinterpreted");
   assert.equal(old.weapons[0].name, "Old Reliable", "migrate must not lose what the player already typed");
   assert.ok(Array.isArray(old.armor), "armor was not seeded");
@@ -668,7 +668,7 @@ test("migrate() returns every field newCharacter() has (B6)", () => {
   // version must still surface as an issue rather than silently matching.
   const bare = Engine.migrate({});
   assert.equal(bare.meta.gamedataVersion, undefined);
-  assert.equal(bare.meta.schemaVersion, "0.32");
+  assert.equal(bare.meta.schemaVersion, "0.33");
   assert.ok(Engine.versionCheck(bare).some(i => /game data/.test(i)));
 });
 
@@ -905,7 +905,7 @@ test("migrate folds the three old specialization fields into one array (A3)", ()
     assert.equal(c.archetypeChoices.aberrations, undefined);
     assert.equal(c.archetypeChoices.subtype, undefined);
     assert.equal(c.identity.specialization, undefined);
-    assert.equal(c.meta.schemaVersion, "0.32");
+    assert.equal(c.meta.schemaVersion, "0.33");
   }
   // Idempotent: migrating twice must not empty what the first pass moved.
   assert.deepEqual([...Engine.migrate(arc).archetypeChoices.specialization],
@@ -1179,7 +1179,7 @@ test("migrate brings a 0.7 file to 0.8: conditions, damage inputs, armor fields"
   delete old.trackers.conditions; delete old.trackers.massiveLevels; delete old.trackers.witheringDamage;
   old.armor = [{ id: "kevlar-vest", integrityLoss: 3, notes: "" }, { custom: true, name: "Coat", integrityLoss: 0 }];
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.32");
+  assert.equal(old.meta.schemaVersion, "0.33");
   assert.ok(Array.isArray(old.trackers.conditions));
   assert.equal(old.trackers.massiveLevels, 0);
   assert.equal(old.trackers.witheringDamage, 0);
@@ -1254,7 +1254,7 @@ test("schema 0.13 moves the natural-advantage marker out of notes, undo history 
     { path: ["advantages"], type: "array", op: "set", before: [{ id: "favored-skill", rank: 2, notes: "natural" }] },
     { path: ["advantages"], type: "array", op: "removeAt", index: 0, item: { id: "favored-skill", rank: 1, notes: "natural" } }] }];
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  assert.equal(m.meta.schemaVersion, "0.32");
+  assert.equal(m.meta.schemaVersion, "0.33");
   assert.equal(m.advantages[0].source, "natural");
   assert.equal(m.advantages[0].notes, "", "the marker stayed in the player's notes");
   assert.equal(m.advantages[1].source, undefined);
@@ -2412,7 +2412,7 @@ test("P9b 8: roundsLeft survives migrate and a hostile file, in both passes", ()
   const m = Engine.migrate(JSON.parse(JSON.stringify(ch)));
   same(m.gear.map(g => g.roundsLeft), [0, 0, 2, 0, 18]);
   same(Engine.migrate(JSON.parse(JSON.stringify(m))).gear, m.gear, "a round trip changed the rows");
-  assert.equal(m.meta.schemaVersion, "0.32");
+  assert.equal(m.meta.schemaVersion, "0.33");
   // The second place: undo restores what a file's audit says, and holds it to the same numbers.
   m.audit.push({ seq: 1, date: "x", kind: "edit", label: "crafted", patch: [{ path: ["gear", 4, "roundsLeft"], type: "scalar", before: "<i>9</i>" }] });
   Engine.undoLastAction(m);
@@ -2471,7 +2471,7 @@ test("W16: migrate to 0.10 gives a catalog weapon no mods and a full magazine, k
   old.weapons = [{ id: "ads-lp9-viper", notes: "grip tape" }, { custom: true, name: "Zip gun", capacity: "4", mods: ["Scope"] },
                  { id: "ts7-bulldog", notes: "", mods: ["Laser Sight", 7], roundsSpent: "5" }];
   const m = Engine.migrate(old);
-  assert.equal(m.meta.schemaVersion, "0.32");
+  assert.equal(m.meta.schemaVersion, "0.33");
   assert.deepEqual([[...m.weapons[0].mods], m.weapons[0].roundsSpent, m.weapons[0].notes], [[], 0, "grip tape"]);
   assert.equal(m.weapons[1].mods, undefined, "a custom weapon kept a mods list");
   assert.deepEqual([[...m.weapons[2].mods], m.weapons[2].roundsSpent], [["Laser Sight"], 5]);
@@ -2557,7 +2557,7 @@ test("B18: migrate() gives an older file a TAG, keeps a real one, and replaces a
   delete old.meta.id; old.meta.schemaVersion = "0.10";
   const m = Engine.migrate(old);
   assert.ok(Engine.isIntakeId(m.meta.id), "a file from before 0.11 got no TAG");
-  assert.equal(m.meta.schemaVersion, "0.32");
+  assert.equal(m.meta.schemaVersion, "0.33");
   const kept = Engine.migrate(JSON.parse(JSON.stringify(m)));
   assert.equal(kept.meta.id, m.meta.id, "migrate() reissued a TAG a file already had");
   for (const junk of ["", "NCR-0000-0000-000O", "TAG-0000-0000-000O", "<i>x</i>", 42, null, "ncr-abcd-efgh-jkmn", "tag-abcd-efgh-jkmn"]) {
@@ -2574,7 +2574,7 @@ test("Decision 133: a 0.11 NCR- number becomes a TAG with the same twelve charac
   c.meta.id = "NCR-7K2M-Q9XD-4HNB"; c.meta.schemaVersion = "0.11";
   const m = Engine.migrate(c);
   assert.equal(m.meta.id, "TAG-7K2M-Q9XD-4HNB");
-  assert.equal(m.meta.schemaVersion, "0.32");
+  assert.equal(m.meta.schemaVersion, "0.33");
   assert.equal(Engine.migrate(JSON.parse(JSON.stringify(m))).meta.id, "TAG-7K2M-Q9XD-4HNB", "the carried-over TAG didn't hold");
 });
 
@@ -2620,7 +2620,7 @@ test("W41: migrate() makes every older file TAG'd, and only a real true makes on
   const old = subject();
   delete old.identity.tagless; old.meta.schemaVersion = "0.13";
   const m = Engine.migrate(old);
-  same([m.identity.tagless, m.meta.schemaVersion], [false, "0.32"]);
+  same([m.identity.tagless, m.meta.schemaVersion], [false, "0.33"]);
   for (const junk of ["true", 1, "yes", {}, null])
     assert.equal(Engine.migrate(Object.assign(subject(), { identity: { name: "x", tagless: junk } })).identity.tagless, false, `${JSON.stringify(junk)} made a TAGless character`);
   const t = subject(); t.identity.tagless = true;
@@ -2845,7 +2845,7 @@ test("schema 0.15: an older file keeps rolling if it rolled, and a locked one is
   const a = Engine.migrate(old(true, 15));
   assert.equal(a.creation.statMethod, "rolled");
   assert.equal(a.creation.earlierTable, true);
-  assert.equal(a.meta.schemaVersion, "0.32");
+  assert.equal(a.meta.schemaVersion, "0.33");
   const b = Engine.migrate(old(false, null));
   assert.equal(b.creation.statMethod, "flat");
   assert.equal("earlierTable" in b.creation, false, "a draft was marked as built under the earlier table");
@@ -3312,7 +3312,7 @@ test("CRANK: a schema-0.16 character with no tracker migrates to rep 0", () => {
   delete old.trackers.crank; old.meta.schemaVersion = "0.16";
   const m = Engine.migrate(old);
   assert.deepEqual(JSON.parse(JSON.stringify(m.trackers.crank)), { rep: 0, ledger: [] });
-  assert.equal(m.meta.schemaVersion, "0.32");
+  assert.equal(m.meta.schemaVersion, "0.33");
 });
 
 test("CRANK: crankState reads the tier at every boundary", () => {
@@ -5643,7 +5643,7 @@ test("schema 0.19: newCharacter has basePowers and optionPicks; migrate keeps wh
   delete old.archetypeChoices.basePowers; delete old.archetypeChoices.optionPicks;
   old.trackers.panel = { "blood-pool": { value: 3, max: 20 }, "sfr": { value: 1 } };
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  same([m.meta.schemaVersion, m.archetypeChoices.basePowers, m.archetypeChoices.optionPicks, Object.keys(m.trackers.panel)], ["0.32", {}, {}, ["sfr"]]);
+  same([m.meta.schemaVersion, m.archetypeChoices.basePowers, m.archetypeChoices.optionPicks, Object.keys(m.trackers.panel)], ["0.33", {}, {}, ["sfr"]]);
   const junk = vampire("draugur");
   junk.archetypeChoices.basePowers = { "battleborn-instinct": "2", "hels-dread": -1, "odins-aegis": 1.7, "spectral-veil": "x", "blood-of-valhalla": 1e9, "x": null };
   junk.archetypeChoices.optionPicks = { "ancient-weapon": "blade", "code": { hunt: "the guilty", bond: 7, word: "<b>kept</b>" }, "n": 5, "a": ["blade"] };
@@ -5880,14 +5880,14 @@ test("Decision 215: migrate() 0.20 normalizes powerCp, gives a Vampire's Innate 
   old.archetypeChoices.basePowers = { "bestial-blessings": 2, "shadow-play": 1 };
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
   same(m.archetypeChoices.basePowers, { "shadow-play": 1 });
-  same([m.meta.schemaVersion, Engine.archetypePowers(m).find(p => p.id === "bestial-blessings").rank, Engine.basePowerState(m).left], ["0.32", 1, 2], "Bestial Blessings 1 granted, 2 Base Powers to place");
+  same([m.meta.schemaVersion, Engine.archetypePowers(m).find(p => p.id === "bestial-blessings").rank, Engine.basePowerState(m).left], ["0.33", 1, 2], "Bestial Blessings 1 granted, 2 Base Powers to place");
   // A saved Werewolf: untouched but for the stamp, its IP in an Origin power still on file.
   const w = werewolf("trueborn"); w.meta.schemaVersion = "0.19"; delete w.archetypeChoices.powerCp;
   assert.ok(Engine.placeBasePower(w, "apex-fury", 1).ok);
   assert.ok(Engine.spendIP(w, "power", "apex-fury").ok && Engine.spendIP(w, "power", "apex-fury").ok);
   w.archetypeChoices.basePowers = {};   // a 0.19 Werewolf held the kit with nothing placed
   const wm = Engine.migrate(JSON.parse(JSON.stringify(w)));
-  same([wm.meta.schemaVersion, wm.archetypeChoices.basePowers, wm.archetypeChoices.powerCp, wm.progression.powerIpe], ["0.32", {}, {}, { "apex-fury": 2 }]);
+  same([wm.meta.schemaVersion, wm.archetypeChoices.basePowers, wm.archetypeChoices.powerCp, wm.progression.powerIpe], ["0.33", {}, {}, { "apex-fury": 2 }]);
   // Decision 216 (PQ2): the IP is held again, at the ranks it bought, and versionCheck stops naming it.
   same(Engine.archetypePowers(wm).map(p => p.id), [...WWD().powers.filter(p => !p.origin).map(p => p.id), "apex-fury"]);
   assert.equal(Engine.archetypePowers(wm).find(p => p.id === "apex-fury").rank, 2, "the IP's two ranks");
@@ -7815,7 +7815,7 @@ test("schema 0.21: a 0.20 file's written power gets boughtWithCp false, and only
   old.meta.schemaVersion = "0.20";
   old.powers = [{ id: "pw-AAAAAAAA", custom: true, name: "Fade", uses: "", effect: "", notes: "" }, { id: "pw-BBBBBBBB", name: "Paid", boughtWithCp: true }];
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  same([m.meta.schemaVersion, m.powers.map(p => p.boughtWithCp)], ["0.32", [false, true]]);
+  same([m.meta.schemaVersion, m.powers.map(p => p.boughtWithCp)], ["0.33", [false, true]]);
   for (const v of ["yes", 1, {}, [], null, "true"]) {
     const c = Engine.migrate(Object.assign(JSON.parse(JSON.stringify(old)), { powers: [{ id: "pw-CCCCCCCC", name: "X", boughtWithCp: v }] }));
     assert.equal(c.powers[0].boughtWithCp, false, JSON.stringify(v));
@@ -8003,7 +8003,7 @@ test("Decision 217: a Major can be written in; it uses a slot, Admin needs none,
     assert.equal("custom" in e, false, JSON.stringify(v));
     assert.equal("name" in e, false);
   }
-  assert.equal(m.meta.schemaVersion, "0.32");
+  assert.equal(m.meta.schemaVersion, "0.33");
 });
 
 // ── P6 review fixes (Decision 217) ──────────────────────────────────────
@@ -8325,7 +8325,7 @@ test("P8b 12: house rules survive migrate and a hostile file", () => {
   assert.equal(Engine.newCharacter().houseRules.keepDamagePastZero, false);
   const old = Engine.newCharacter(); delete old.houseRules; old.meta.schemaVersion = "0.22";
   const m = Engine.migrate(old);
-  assert.equal(m.meta.schemaVersion, "0.32");
+  assert.equal(m.meta.schemaVersion, "0.33");
   eq(m.houseRules, { keepDamagePastZero: false, training: false });
   for (const junk of ["yes", 1, [], null, "true", { keepDamagePastZero: "yes" }, { keepDamagePastZero: 1 }]) {
     const c = Engine.newCharacter(); c.houseRules = junk;
@@ -8535,13 +8535,13 @@ test("P17 8: a gained Bloodline doesn't count for a Bloodline's Majors", () => {
 
 test("P17 9: the Major's power and the gained Bloodlines survive migrate and a hostile file", () => {
   same(Engine.newCharacter().progression.specializationsGained, []);
-  assert.equal(Engine.migrate({}).meta.schemaVersion, "0.32");
+  assert.equal(Engine.migrate({}).meta.schemaVersion, "0.33");
   const ch = vMaj();
   Engine.takeMajorChoice(ch, "splice", { power: "iron-hide" });
   Engine.gainSpecialization(ch, "draugur");
   const round = Engine.migrate(clone17(ch));
   eq(round.progression, ch.progression);
-  assert.equal(round.meta.schemaVersion, "0.32");
+  assert.equal(round.meta.schemaVersion, "0.33");
   const junk = clone17(ch);
   junk.progression.milestones.major = [{ id: "splice", power: 7 }, { id: "x", power: { a: 1 } }, { id: "y", power: "" }, { id: "z", power: "<b>x</b>" }];
   junk.progression.specializationsGained = [1, {}, null, "upyr", "upyr", "strigoi", "no-such", "<img src=x>"];
@@ -8823,12 +8823,12 @@ test("P11 7: a Custom pool's max is read by the engine, and it has no Rate of Us
 
 test("P11 8: the round's count survives migrate and a hostile file", () => {
   assert.equal(Engine.newCharacter().trackers.sfr.turn, 0);
-  assert.equal(Engine.newCharacter().meta.schemaVersion, "0.32");
+  assert.equal(Engine.newCharacter().meta.schemaVersion, "0.33");
   for (const [label, sfrVal] of [["a string", "x"], ["turn text", { spent: 2, turn: "x" }], ["negative", { turn: -3 }], ["null", null], ["fraction", { turn: 2.7 }], ["infinite", { turn: 1e999 }]]) {
     const m = Engine.migrate({ identity: { archetype: "vampire" }, trackers: { sfr: sfrVal } });
     assert.equal(typeof m.trackers.sfr.turn, "number", label);
     assert.ok(Number.isInteger(m.trackers.sfr.turn) && m.trackers.sfr.turn >= 0, `${label}: turn is ${m.trackers.sfr.turn}`);
-    same(m.meta.schemaVersion, "0.32");
+    same(m.meta.schemaVersion, "0.33");
   }
   same(Engine.migrate({ trackers: { sfr: { turn: -3 } } }).trackers.sfr.turn, 0);
   const ch = rou11(); Engine.adjustPanelTracker(ch, "sfr", 3);
@@ -10488,7 +10488,7 @@ test("L2 6 (engine): migrate to 0.30 keeps a saved type as text, shows it until 
   const old = zipGun({ type: "pistol", name: "Old iron" });
   old.meta.schemaVersion = "0.28";
   const m = Engine.migrate(old);
-  assert.equal(m.meta.schemaVersion, "0.32");
+  assert.equal(m.meta.schemaVersion, "0.33");
   assert.equal(m.weapons[0].type, "pistol");
   for (const k of ["category", "damageType", "range", "acc"]) assert.ok(!Object.hasOwn(m.weapons[0], k), `migrate added ${k}`);
   assert.equal(Engine.weaponLine(m, 0).typeText, "pistol");
@@ -10744,7 +10744,7 @@ test("L3 8 (engine): migrate to 0.30 keeps inUse only where it's true on a catal
   old.gear.push({ custom: true, name: "Rig", type: "tech", notes: "" }, { id: "smart-brace", qty: 1, notes: "" });
   old.meta.schemaVersion = "0.29";
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  assert.equal(m.meta.schemaVersion, "0.32");
+  assert.equal(m.meta.schemaVersion, "0.33");
   assert.ok(m.gear.every(r => !Object.hasOwn(r, "inUse")), "migrate added inUse");
   old.gear[0].inUse = true;
   const k = Engine.migrate(JSON.parse(JSON.stringify(old)));
@@ -10907,7 +10907,7 @@ test("L2b 9 (engine): migrate to 0.31 keeps a typed rof, adds nothing, and keeps
     const old = l2bGun({ rof, loaded: "silver-rounds" });
     old.meta.schemaVersion = "0.30";
     const m = Engine.migrate(old);
-    assert.equal(m.meta.schemaVersion, "0.32");
+    assert.equal(m.meta.schemaVersion, "0.33");
     assert.equal(m.weapons[0].rof, rof);
     assert.ok(!Object.hasOwn(m.weapons[0], "rofModes"), "migrate added rofModes");
     assert.equal(m.weapons[0].loaded, "silver-rounds");
@@ -12253,7 +12253,7 @@ test("L5 6 (engine): migrate to 0.32 keeps a well-formed majors list and drops t
     return ch;
   };
   const clean = (w, a) => Engine.migrate(plain(mk(w, a)));
-  assert.equal(clean([]).meta.schemaVersion, "0.32");
+  assert.equal(clean([]).meta.schemaVersion, "0.33");
   const w = clean(["tuned-edge", ["tuned-edge", "tuned-edge"], [5, null, "nope", "custom-fit"], ["iconic-weapon"], ["tuned-edge", "weapon-expert"]]).weapons;
   assert.ok(!Object.hasOwn(w[0], "majors"), "a string");
   assert.deepEqual(w[1].majors, ["tuned-edge"], "once");
@@ -12532,5 +12532,205 @@ test("Decision 265: the Arcanist's Discipline ceiling is the Max CP Boost, and a
     const evo = Engine.disciplineRanks(ch).find(d => d.id === "evocation");
     same([evo.cap, evo.capBy], [5, "boost"]);   // start 2 + 3 Boosts
     withData(spec, "maxRankBy", "powerLevel.maxBoost", () => same(Engine.disciplineRanks(ch).find(d => d.id === "evocation").cap, 3));
+  });
+});
+
+// ── Sustained powers run (H1, Decision 266, W110) ─────────────────────
+// A power with `run` is started by its player; Start and every Turn Reset spend its SFR through the
+// tracker's one writer, so the round's count (Decision 225) includes it. runningPowers is the one reader.
+function upyrRunning(ranks = { "iron-hide": 2 }) {
+  const ch = vampire("upyr", { pl: "heroic" });
+  ch.archetypeChoices.basePowers = Object.assign({}, ranks);
+  return ch;
+}
+const sfrNow = ch => [ch.trackers.sfr.spent, ch.trackers.sfr.turn];
+function wildblood(rankIpe = 3) {
+  const ch = werewolf("wildblood");
+  ch.creation.powerLevel = "street";
+  ch.archetypeChoices.basePowers = { "let-it-loose": 1 };
+  ch.progression.powerIpe["let-it-loose"] = rankIpe;
+  return ch;
+}
+
+test("Decision 266: starting Iron Hide spends rank SFR into this round", () => {
+  const ch = upyrRunning();
+  same([Engine.sfr(ch).value, Engine.sfr(ch).rou], [17, 6]);
+  const r = Engine.startPower(ch, "iron-hide");
+  assert.equal(r.ok, true, r.why);
+  same(ch.trackers.running, [{ id: "iron-hide" }]);
+  same(sfrNow(ch), [2, 2]);
+  assert.equal(Engine.isRunning(ch, "iron-hide"), true);
+  assert.equal(Engine.runningPowers(ch)[0].sfr, 2);
+  same([r.sfr, r.turn, r.overCap], [2, 2, null]);
+});
+
+test("Decision 266: a Turn Reset charges a running power again", () => {
+  const ch = upyrRunning();
+  Engine.startPower(ch, "iron-hide");
+  Engine.adjustPanelTracker(ch, "sfr", 2);
+  same(sfrNow(ch), [4, 4]);
+  const r = Engine.resolveReset(ch, {});
+  same(r.running, [{ id: "iron-hide", name: "Iron Hide", sfr: 2, payable: true, left: 13 }]);
+  assert.equal(r.hasEffect, true);
+  const a = Engine.applyReset(ch, {}, {});
+  same(sfrNow(ch), [6, 2], "zero the round, then charge the kept power into the new one");
+  same(a.charged, [{ id: "iron-hide", sfr: 2 }]);
+  assert.equal(Engine.isRunning(ch, "iron-hide"), true);
+});
+
+test("Decision 266: a power stopped at Turn Reset isn't charged", () => {
+  const ch = upyrRunning();
+  Engine.startPower(ch, "iron-hide");
+  Engine.adjustPanelTracker(ch, "sfr", 2);
+  const a = Engine.applyReset(ch, {}, { stop: ["iron-hide"] });
+  same(sfrNow(ch), [4, 0]);
+  same(ch.trackers.running, []);
+  same(a.stopped, [{ id: "iron-hide", why: "stop" }]);
+});
+
+test("Decision 266: a running power the pool can't pay stops at Turn Reset (HQ2)", () => {
+  const ch = upyrRunning();
+  ch.trackers.sfr.spent = 16;
+  ch.trackers.running = [{ id: "iron-hide" }];
+  const r = Engine.resolveReset(ch, {});
+  same([r.running[0].payable, r.running[0].left], [false, 1]);
+  const a = Engine.applyReset(ch, {}, {});
+  same(sfrNow(ch), [16, 0], "nothing is charged for a power the pool can't pay");
+  same(ch.trackers.running, []);
+  same(a.stopped, [{ id: "iron-hide", why: "unpaid" }]);
+});
+
+test("Decision 266: a Reset pays running powers in order, each from what the one before left", () => {
+  const ch = upyrRunning({ "iron-hide": 2, "cold-embrace": 1 });
+  ch.trackers.sfr.spent = 13;                  // 4 left: Iron Hide 2 and Cold Embrace 1 both fit
+  ch.trackers.running = [{ id: "iron-hide" }, { id: "cold-embrace" }];
+  same(Engine.resolveReset(ch, {}).running.map(x => x.payable), [true, true]);
+  ch.trackers.sfr.spent = 15;                  // 2 left: Iron Hide takes both, Cold Embrace can't
+  same(Engine.resolveReset(ch, {}).running.map(x => x.payable), [true, false]);
+  const a = Engine.applyReset(ch, {}, {});
+  same([a.charged.map(x => x.id), a.stopped.map(x => x.id), sfrNow(ch)], [["iron-hide"], ["cold-embrace"], [17, 2]]);
+});
+
+test("Decision 266: a Werewolf's power runs only in Werewolf Form, and shifting back stops it (0414)", () => {
+  const ch = wildblood(0);                      // rank 1
+  const no = Engine.startPower(ch, "let-it-loose");
+  assert.equal(no.ok, false);
+  assert.equal(no.why, "Let It Loose works only in Werewolf Form.");
+  assert.equal(Engine.setToggle(ch, "form", "Werewolf").ok, true);
+  const yes = Engine.startPower(ch, "let-it-loose");
+  assert.equal(yes.ok, true, yes.why);
+  assert.equal(ch.trackers.sfr.spent, 1);
+  const back = Engine.setToggle(ch, "form", "Human");
+  same(back.stopped, ["let-it-loose"]);
+  same(ch.trackers.running, []);
+  assert.equal(ch.trackers.sfr.spent, 1);
+  // A running power read in the wrong form is not running, whatever is stored.
+  ch.trackers.running = [{ id: "let-it-loose" }];
+  assert.equal(Engine.isRunning(ch, "let-it-loose"), false);
+});
+
+test("Decision 266: past Rate of Use a Werewolf's power still starts, and says it costs more than the RoU (HQ7, 0414)", () => {
+  const w = wildblood(3);                       // rank 4, costs 4
+  Engine.setToggle(w, "form", "Werewolf");
+  same([Engine.sfr(w).value, Engine.sfr(w).rou], [8, 3]);
+  const r = Engine.startPower(w, "let-it-loose");
+  assert.equal(r.ok, true, r.why);
+  same([w.trackers.sfr.spent, r.overCap, r.turn > r.cap, r.cap], [4, { sfr: 4, rou: 3 }, true, 3]);
+  const d = vampire("draugur", { pl: "street" });
+  d.archetypeChoices.basePowers = { "spectral-veil": 1 };
+  d.progression.powerIpe["spectral-veil"] = 2;  // rank 3, costs 5
+  same([Engine.sfr(d).value, Engine.sfr(d).rou], [11, 4]);
+  const v = Engine.startPower(d, "spectral-veil");
+  assert.equal(v.ok, true, v.why);
+  same([d.trackers.sfr.spent, v.turn > v.cap, v.cap, v.overCap], [5, true, 4, null]);
+});
+
+test("Decision 266: an unranked sustained power costs its flat price (Preternatural Speed)", () => {
+  const ch = vampire("strigoi", { pl: "heroic" });
+  assert.equal(Engine.startPower(ch, "preternatural-speed").ok, true);
+  assert.equal(ch.trackers.sfr.spent, 2);
+});
+
+test("Decision 266: a power can't start twice, and Stop refunds nothing (HQ8, HQ9)", () => {
+  const ch = upyrRunning();
+  Engine.startPower(ch, "iron-hide");
+  const again = Engine.startPower(ch, "iron-hide");
+  assert.equal(again.ok, false);
+  assert.equal(again.why, "Iron Hide is running.");
+  assert.equal(ch.trackers.sfr.spent, 2);
+  assert.equal(Engine.stopPower(ch, "iron-hide").ok, true);
+  same([ch.trackers.running, ch.trackers.sfr.spent], [[], 2]);
+  const gone = Engine.stopPower(ch, "iron-hide");
+  assert.equal(gone.ok, false);
+  assert.equal(gone.why, "Iron Hide isn't running.");
+  assert.equal(Engine.startPower(ch, "bestial-blessings").why, "That power doesn't run.");
+  const open = vampire("upyr", { pl: "heroic", locked: false });
+  open.archetypeChoices.basePowers = { "iron-hide": 1 };
+  assert.equal(Engine.startPower(open, "iron-hide").why, "Powers run once the character is locked.");
+});
+
+test("Decision 266: logging a session stops every running power (HQ3)", () => {
+  const ch = upyrRunning({ "iron-hide": 2, "cold-embrace": 1 });
+  Engine.startPower(ch, "iron-hide"); Engine.startPower(ch, "cold-embrace");
+  const r = Engine.logSession(ch, { title: "x" });
+  same(r.stopped, ["iron-hide", "cold-embrace"]);
+  same(ch.trackers.running, []);
+});
+
+test("Decision 266: a running power that isn't held is read as not running, and kept", () => {
+  const ch = vampire("strigoi", { pl: "heroic" });
+  ch.trackers.running = [{ id: "iron-hide" }];
+  same(Engine.runningPowers(ch), []);
+  assert.equal(Engine.isRunning(ch, "iron-hide"), false);
+  same(Engine.migrate(JSON.parse(JSON.stringify(ch))).trackers.running, [{ id: "iron-hide" }]);
+  const r = Engine.resolveReset(ch, {});
+  same([r.running, r.hasEffect], [[], false]);
+  Engine.applyReset(ch, {}, {});
+  assert.equal(ch.trackers.sfr.spent, 0);
+});
+
+test("Decision 266: trackers.running round-trips through migrate(), and junk is dropped", () => {
+  const old = Engine.newCharacter();
+  delete old.trackers.running;
+  old.meta.schemaVersion = "0.32";
+  const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
+  same(m.trackers.running, []);
+  assert.equal(m.meta.schemaVersion, "0.33");
+  const junk = Engine.newCharacter();
+  junk.trackers.running = ["x", { id: 3 }, { id: "iron-hide", used: 2 }, { id: "iron-hide" }, null, { id: "" }];
+  same(Engine.migrate(JSON.parse(JSON.stringify(junk))).trackers.running, [{ id: "iron-hide" }]);
+  const long = Engine.newCharacter();
+  long.trackers.running = Array.from({ length: 30 }, (_, i) => ({ id: "p" + i + "x".repeat(200) }));
+  const out = Engine.migrate(JSON.parse(JSON.stringify(long))).trackers.running;
+  assert.equal(out.length, 20);
+  assert.ok(out.every(e => e.id.length <= 120));
+  const str = Engine.newCharacter(); str.trackers.running = "iron-hide";
+  same(Engine.migrate(JSON.parse(JSON.stringify(str))).trackers.running, []);
+});
+
+test("Decision 266: every reader and writer is total on a character with junk in running", () => {
+  for (const junk of ["x", 5, {}, [null, {}, { id: 4 }, "iron-hide"], null]) {
+    for (const ch of [upyrRunning(), Engine.newCharacter(), vampire(null)]) {
+      ch.trackers.running = junk;
+      Engine.runningPowers(ch); Engine.runnablePowers(ch); Engine.isRunning(ch, "iron-hide");
+      Engine.startPower(ch, "iron-hide"); Engine.stopPower(ch, "iron-hide");
+      ch.trackers.running = junk;
+      Engine.resolveReset(ch, {}); Engine.applyReset(ch, {}, { stop: "x" });
+      Engine.applyReset(ch, {}, null);
+    }
+  }
+  const noArch = Engine.newCharacter();
+  same([Engine.runningPowers(noArch), Engine.runnablePowers(noArch)], [[], []]);
+  // A run with strings for numbers, and a runsIn naming no panel: no throw, no NaN.
+  const ch = upyrRunning();
+  const iron = D.archetypes.find(a => a.id === "vampire").powers.find(p => p.id === "iron-hide");
+  withData(iron, "run", { sfr: { perRank: "x", plus: "y" }, each: "round" }, () => {
+    assert.equal(Engine.runnablePowers(ch).find(p => p.id === "iron-hide").sfr, 0);
+    assert.equal(Engine.startPower(ch, "iron-hide").ok, true);
+  });
+  const wc = wildblood(0); Engine.setToggle(wc, "form", "Werewolf");
+  withData(WWD(), "runsIn", { panel: "nope", option: "x" }, () => {
+    assert.equal(Engine.startPower(wc, "let-it-loose").ok, true, "a runsIn naming no panel asks for nothing");
+    Engine.setToggle(wc, "form", "Human");
   });
 });

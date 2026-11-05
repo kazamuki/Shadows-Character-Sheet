@@ -23,6 +23,11 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.62.0
+
+- **Sustained powers run.** Start one from its card or the SFR popover and its SFR is spent; each Turn Reset spends it again, and stops it if you can't pay. Iron Hide's Natural Armor counts on a hit while it runs.
+- **A Werewolf's powers run only in Werewolf Form**, and shifting back stops them.
+
 ## v0.61.0 — 2026-11-05
 
 - **Vampires and Werewolves can learn a new power at creation**: 5 Character Points takes one of your Bloodline's or Origin's powers at rank 1, and more ranks cost 5 each, up to your Max Starting Rank.

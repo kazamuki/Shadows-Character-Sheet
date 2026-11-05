@@ -3496,7 +3496,10 @@ function bindEncounters(main){
       S.backEnc=eid(); S.tsection="players"; openSeat(tag); },
     "data-eopenentry": b => openThreat(b.dataset.eopenentry, null, null, eid()),
     "data-edmg": b => { const [row, sign]=b.dataset.edmg.split("|"); S.encDmg={ row, sign:+sign }; S.encHit=null; S.encCond=null; redraw(); focus("[data-edmgn]"); },
-    "data-ehit": b => { S.encHit=encHitNew(b.dataset.ehit); S.encDmg=null; S.encCond=null; redraw(); focus("[data-ehit-damage]"); },
+    "data-ehit": b => { S.encHit=encHitNew(b.dataset.ehit);
+      // Decision 266: a seat's running power starts its Natural Armor box ticked, as on the player's own sheet.
+      const hr=encHitRow(); if (encSeatOn(hr)) S.encHit.nat=runningNatural(Engine.rowCharacter(S.table, S.encOpen, hr.id));
+      S.encDmg=null; S.encCond=null; redraw(); focus("[data-ehit-damage]"); },
     "data-ehit-cancel": () => { const row=S.encHit.row; S.encHit=null; redraw(); focus(attrSel("data-ehit", row)); },
     "data-ehit-cat": b => { const d=S.encHit; d.cat=b.dataset.ehitCat; d.conds={}; d.shock=""; d.atZero=""; d.err=""; redraw(); focus(attrSel("data-ehit-cat", d.cat)); },
     "data-ehit-ap": () => { const d=S.encHit; d.ap=!d.ap; d.err=""; redraw(); focus("[data-ehit-ap]"); },

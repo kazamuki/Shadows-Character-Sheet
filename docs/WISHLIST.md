@@ -177,11 +177,6 @@ so build the line once for both. **Separate, and for Deighton:** when someone
 Decision 219 lets only AP from a spell through, and Chi isn't a spell. Ask
 with F42.
 
-**W110 — A sustained power is marked active, and Turn Reset charges it.** *Ken, from P11's PQ2 · 💡 · Rule or shape · raised 2026-10-15*\
-**Plan:** [powers that run](plans/powers-that-run.md), H1 ([order](plans/powers-that-run/H1-sustained-powers.md), drafted) · **Goes with:** W132
-
-P11 (Decision 225) counts the SFR a player spends each round, but a sustained power ("2 SFR per round, sustained", "Rank per round, sustained") is still spent by hand with +1 every round. The ask: an Active toggle per sustained power, and Turn Reset charges what is active. *To respect:* every power cost is text today ("Rank + 2 per round"), so this starts with a data pass turning about ten costs into numbers (Decision 135); it is a work order of its own. Ken took the default in PQ2: the player spends it each round for now.
-
 **W128 — The sheet knows when an encounter ends.** *Claude, from P18's sign-off · 🔎 · Rule or shape · raised 2026-10-16*\
 **Plan:** none yet
 
@@ -194,7 +189,7 @@ encounter starts and ends.
 uses counters as P18-shaped data on the effect. Its own plan, probably two orders.
 
 **W132 — Powers that answer a hit, or heal while they run.** *Ken, from re-running P21's pre-flight · 💡 · Rule or shape · raised 2026-10-21*\
-**Plan:** [powers that run](plans/powers-that-run.md), H2 (the hit) and H3 (healing), after H1 · **Goes with:** W110
+**Plan:** [powers that run](plans/powers-that-run.md), H2 (the hit) and H3 (healing), after H1
 
 P20b taught Take a hit and Rest what a held **trait** does (Scrapper, Giant, Thick Skull, Rapid Healing). The same jobs done by a **power, Aberration or Major** are still table rules, and the player does the arithmetic. The P21 inventory listed them for P20 (c44–c53). P20b's order passed them to "P21", and P21 leaves them to later orders, so nothing in the sheet-wishlist plan builds them. Ken parked them here so that plan can close (2026-10-21).
 - **The hit:** Odin's Aegis ("Reduce the damage of one Elemental, Spirit, or Aether attack by your BOD bonus + 2 × rank"), Null Field ("Absorbs up to 5 Elemental, Spirit, or Aether damage", +5 a rank), Red Mist and Spectral Veil ("immune to Physical damage" while running), Elemental Blood ("Halve damage you take from that element", rolled 1d3), Silverscar ("Withering damage from silver is halved (never below 1)"), Battle Hardened's immunity to one combat condition (a second and third in place of a Major).
