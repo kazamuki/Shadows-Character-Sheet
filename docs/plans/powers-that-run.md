@@ -84,7 +84,7 @@ A power that can run carries `run` in the data, beside its `cost` text:
 
 | Event | What happens to a running power | Where |
 |---|---|---|
-| **Start** (the player) | Added to `running`; the first payment is charged through the SFR tracker's one writer, so it counts against this round's Rate of Use. Past RoU it warns (Decision 225) and still starts | Character tab power card; Main's SFR popover |
+| **Start** (the player) | Added to `running`; the first payment is charged through the SFR tracker's one writer, so it counts against this round's Rate of Use. A power costing more than the RoU warns too, where the archetype's data names that limit (the Werewolf, `0414:180`; HQ7). Past RoU it warns (Decision 225) and still starts | Character tab power card; Main's SFR popover |
 | **Stop** (the player) | Removed. No refund | The same two places |
 | **Turn Reset** | Each `"round"` power is listed with its cost, kept by default, with **Stop** a tap away (Decision 189's "runs out" row, on the player's side). Apply zeroes the round, then charges the kept ones into the new round | Main's Turn Reset panel (the SFR popover's Turn Reset opens the same one) |
 | **The pool can't pay at Reset** | It stops, and Reset says so ("Iron Hide stops: it needs 3 SFR, 1 left"). Today nothing stops a spend: the SFR tracker doesn't clamp `spent` (it has no `stepsFrom`), so this is a new rule | HQ2 |
@@ -166,6 +166,20 @@ work, and nothing in H3 touches armor.
 | HQ2 | **A sustained power the pool can't pay at Turn Reset** | It stops, and Reset says which and why. The alternative, charging what's left and keeping it running, spends SFR the book says it needs in full | |
 | HQ3 | **Log session stops every running power** | Yes: a session ends every scene, and a power left on from last week is a surprise. The alternative is that only Stop and Reset end one | |
 | HQ4 | **A Werewolf's powers run only in Werewolf Form** (`0414:180`, built in H1: Start refused in human form, shifting back stops them) | Yes, as the book prints it. A Vampire has no form rule (`0413` prints none) | |
+| HQ5 | **W144: fold "every power at rank 0 with its own max" into H1's data pass?** | — | **Closed (PR #294): already the design.** Rank is derived from placement + CP + IP. The two `ranked: false` powers can't take maxRank 1, because maxRank caps creation only (Decision 196). H1 doesn't change `ranked` |
 
-HQ5 was W144's placeholder, withdrawn: Ken closed W144 (2026-11-05) as already the design, so H1's data pass
-doesn't change `ranked`. The number isn't reused. H1's own questions are in its order, §4.
+H1's own questions are in its order, §4.
+
+## 6. For the book
+
+Questions for Ken about `0413` and `0414`, none of them built. Each goes to `plans/crb-catch-up.md` if Ken wants it
+there.
+
+- **Does a Vampire's power have the per-power RoU limit?** `0414:180` prints "no single power can cost more than
+  your RoU" for Werewolves; `0413` prints nothing like it. H1 warns only where the data names the limit
+  (`powerCostCap`, the Werewolf), so a Vampire's Spectral Veil at rank 3 costing 5 against RoU 4 gets only the
+  round's warning every spend gets. If the book means both, it's one data key on the Vampire. My read: it's
+  probably meant for both, since the rebalancing sheet gives the two archetypes one cost logic, but that's the
+  book's to say.
+- **Does a Vampire's power need any state to run?** `0414` ties a Werewolf's to Werewolf Form; `0413` ties
+  nothing. Assumed no (HQ4).

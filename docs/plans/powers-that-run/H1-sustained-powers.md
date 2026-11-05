@@ -50,7 +50,7 @@ boxes), the data (seven `run` rows and the Werewolf's `runsIn`), tests and docs.
 |---|---|
 | Heroic Upyr, Iron Hide placed + 1 CP (rank 2), stats 6 | SFR 17, RoU 6. `naturalArmor(ch, [])` total 0, Iron Hide conditional, 3, not active; with `["iron-hide"]`, 3 |
 | The same, +3 SFR on the tracker, then Turn Reset | spent 3, turn 3; `turnSpend` `[{ SFR, 3 }]`; after: spent 3, turn 0. Nothing charged |
-| Street Draugur, Spectral Veil placed + 2 IP (rank 3) | SFR 11, RoU 4. Its cost, rank + 2, is 5 |
+| Street Wildblood, Let It Loose placed + 3 IP (rank 4), Werewolf form | SFR 8, RoU 3 (the shift moves neither). Its cost, rank, is 4 |
 | Street Wildblood, Let It Loose placed (rank 1), Human form | SFR 8, RoU 3. `setToggle(ch, "form", "Werewolf")` → `{ ok, cost: null }` |
 | Heroic Strigoi, Preternatural Speed (Innate, unranked) | rank 1, `ranked: false`; SFR 17, RoU 6 |
 
@@ -71,7 +71,8 @@ When this is merged:
 5. **Logging a session stops every running power** (HQ3).
 6. **Iron Hide and Icebound Resilience's Natural Armor start ticked** on Take a hit while they run, on the sheet
    and on a GM's seat hit. Unticking still works for one hit.
-7. **Past Rate of Use it warns and still starts** (Decision 225, HQ7).
+7. **Past Rate of Use it warns and still starts** (Decision 225, HQ7). A Werewolf's power that costs more than its
+   RoU also says so, from the data (`0414:180`); a Vampire's doesn't (`0413` prints no such limit).
 8. **A GM's read-only sheet shows what's running** and can't change it.
 9. **One undo takes back** a Start, a Stop, a Reset or a shift, its SFR included.
 10. **Nothing else moves**, shown by an outputs diff (§11): no number on any tab changes for a character with
@@ -98,9 +99,9 @@ Paste as **N** in `SCHEMA.md` §4, with an INDEX §3 line under the topic Decisi
 ```
 N. **A sustained power runs from Start until it's stopped: the sheet stores which, Start and every Turn Reset spend its SFR, and a Werewolf's run only in Werewolf Form.**
      *2026-11-xx · Ken + Claude · Touches: trackers.running, runningPowers, isRunning, startPower, stopPower, run, run.sfr, run.each, runsIn, cost, resolveReset, applyReset, turnSpend, running, adjustPanelTracker, setToggle, logSession, naturalArmor activeIds, Take a hit's Natural Armor boxes, the seat hit, Character tab power card, Main's SFR popover, Turn Reset panel, migrate, character schema 0.33, 0414, W110, W132*
-     - **Decided:** A power with `run` (`{ sfr: { perRank, plus }, each: "round" }`) can be started by its player; `trackers.running` holds `{ id }` for each, and `runningPowers` is the one reader (held, with `run`, in its archetype's `runsIn` form). Start spends `perRank × rank + plus` through the SFR tracker, so the round counts it; every Turn Reset clears the round, then spends each kept one again, and one the pool can't pay stops. Leaving the form a `runsIn` names, and logging a session, stop them. A `while` grant on a running power starts ticked on Take a hit. Past Rate of Use it warns.
+     - **Decided:** A power with `run` (`{ sfr: { perRank, plus }, each: "round" }`) can be started by its player; `trackers.running` holds `{ id }` for each, and `runningPowers` is the one reader (held, with `run`, in its archetype's `runsIn` form). Start spends `perRank × rank + plus` through the SFR tracker, so the round counts it; every Turn Reset clears the round, then spends each kept one again, and one the pool can't pay stops. Leaving the form a `runsIn` names, and logging a session, stop them. A `while` grant on a running power starts ticked on Take a hit. Past Rate of Use it warns, and a power costing more than the RoU warns too where the archetype's `powerCostCap` says so.
      - **Why:** W110; `0414:180` and the rebalancing sheet: sustained powers "pay their cost again each round; outside an encounter, they cost once per scene", and a Werewolf's work only in Werewolf Form.
-     - **Rejected:** a `running` flag on the power's row (play state, as Decision 224 rejected for a hold); counting rounds down (the player stops a power); stopping at encounter end (the sheet doesn't know one, W128); charging what's left when the pool can't pay (HQ2); refusing Start past RoU (Decision 225); summing `whenText` grants while running (each names a second condition); a cost read from the `cost` text (Decision 135).
+     - **Rejected:** a `running` flag on the power's row (play state, as Decision 224 rejected for a hold); counting rounds down (the player stops a power); stopping at encounter end (the sheet doesn't know one, W128); charging what's left when the pool can't pay (HQ2); refusing Start past RoU (Decision 225); the per-power RoU limit for a Vampire (`0413` prints none); summing `whenText` grants while running (each names a second condition); a cost read from the `cost` text (Decision 135).
      - **Replaces:** Decision 104 in part (a conditional source is asked on a hit only if it isn't running). Decision 225's Revisit if ("sustained powers' costs become numbers") happened; its rule stands. Extends 195 (the form ends a power) and 224 (the same shape of store).
      - **Revisit if:** W128 lets the sheet know an encounter; a power needs a countdown in rounds; a Vampire gets a form rule; H2 or H3 needs `each: "start"` (data only).
      - **Built:** app 0.62.0, game data 0.53, character schema 0.33, PR #…, log 2026-11-xx (H1).
@@ -123,7 +124,7 @@ The plan's HQ1–HQ4 come first. These are this order's. Each has a default; a q
 | Id | Question | Default | Answer |
 |---|---|---|---|
 | HQ6 | **Where Start and Stop live.** The Character tab's power card has the power's text and cost; Main's SFR popover is where SFR is spent in a fight | **Both**: the card has Start/Stop, the popover lists what's running with Stop and offers Start for each sustained power held | |
-| HQ7 | **Past Rate of Use.** `0414` says no single power can cost more than RoU (Werewolves; `0413` says nothing). A Street Draugur's Spectral Veil at rank 3 costs 5 against RoU 4 | **Warn, never refuse** (Decision 225): it starts, and the round reads past RoU as any spend does | |
+| HQ7 | **Past Rate of Use.** `0414:180` says no single power can cost more than RoU, for Werewolves; `0413` prints no such limit. A Street Wildblood's Let It Loose at rank 4 (placed + 3 IP) costs 4 against RoU 3 | **Warn, never refuse** (Decision 225), and **only where the archetype's data names the limit** (`powerCostCap`, the Werewolf today). A Vampire past RoU gets the round's warning every spend gets (225) and no per-power line: warning it would answer a rules question `0413` doesn't ask. Whether Vampires share the limit is a book item for Ken (plan §6) | |
 | HQ8 | **Starting a power already running** (a second press, or the popover and the card at once) | **Refused**, "Iron Hide is running." No second charge | |
 | HQ9 | **Stop refunds nothing**, even in the round it started | **No refund.** The SFR is spent when it's paid, as the book prices it | |
 | HQ10 | **The words on the button.** "Start / Stop" (tool voice), or the book's "activate", or the sheet's own "running" | **Start / Stop**, with the card's line reading "Running · 2 SFR a round". Voice pass | |
@@ -135,7 +136,7 @@ Grepped at `377c2ce`. Line numbers are as of the pre-flight.
 | What | Today (where) | After | Guards that read it · where it renders · text that points at it |
 |---|---|---|---|
 | `trackers.running` | — | `[{ id }]`, newCharacter `[]` (`engine.js` ~88, beside `heldSpells`) | `migrate()` (~5048, `heldSpells`'s rule); `hostile.test.mjs:68` (every tracker key filled: add it); `SCHEMA.md` §3's tracker example (~893); the Dead Air sample (`samples/`, regenerated by `tools/sample-table.mjs`); undo's structural diff (by construction) |
-| `run` (data) | — | on the seven powers (§8a); `runsIn` on the Werewolf archetype | Decision 135's key guard (`engine.test.mjs` `dataKeys`, ~339): `run`, `sfr`, `each`, `runsIn`, `panel`, `option` must each be read. `perRank` and `plus` are names the grants already use: check the guard doesn't pass them for that reason alone (its known gap, Decision 135) |
+| `run` (data) | — | on the seven powers (§8a); `runsIn` and `powerCostCap` on the Werewolf archetype | Decision 135's key guard (`engine.test.mjs` `dataKeys`, ~339): `run`, `sfr`, `each`, `runsIn`, `panel`, `option`, `powerCostCap` must each be read. `perRank` and `plus` are names the grants already use: check the guard doesn't pass them for that reason alone (its known gap, Decision 135) |
 | `cost` text | rendered: Character tab card (`sheet.js:598`), print's Uses column (`sheet.js:2915`), wizard Base Powers rows (`wizard.js:444, 452`) | unchanged, and checked against `run` by a test | none of these change |
 | `runningPowers`, `isRunning` | — | new, the one reader (plan §2.5) | H2 and H3 read it. Nothing in the UI derives running itself |
 | `adjustPanelTracker` | the only writer that counts a round (4081) | Start and Reset's charge go through it (or one helper it shares), so `turn` counts them | `turnCount`, `panelTurnCap`, Main's SFR card (`sheet.js:248, 421`), Trackers' row (279), the popover (1405): all read `spent` and `turn`, so they follow |
@@ -195,7 +196,9 @@ the 14 `whenText` "while X runs" grants (they stay marks, plan §2.5).
    | Spectral Veil (Draugur) | "Rank + 2 per round, sustained" | the same |
    | Let It Loose (Wildblood) | "Rank, sustained" | `{ "sfr": { "perRank": 1 }, "each": "round" }` |
 
-2. **`runsIn` on the Werewolf archetype**: `{ "panel": "form", "option": "Werewolf" }`. It applies to the
+2. **`runsIn` and `powerCostCap` on the Werewolf archetype**: `runsIn: { "panel": "form", "option": "Werewolf" }`,
+   and `powerCostCap: "rou"` (`0414:180`: "no single power can cost more than your RoU"; HQ7). `"rou"` reads the
+   same Rate of Use `sfr()` returns, as `turnCap: "rou"` does. The Vampire has neither. It applies to the
    archetype's `powers` (Innate and Origin), which is what `0414:180` names. CyberWolf Protocol is a starter
    power, not in `powers`, so it's exempt by structure, as the book has it. The Vampire has none.
 3. **A comment** beside the first `run` saying what it is (Decision N): `each: "round"` pays on Start and at every
@@ -222,7 +225,8 @@ Every reader stays total (constraint 8): bad input gives a refusal or an empty l
    ("${name} is running."), one whose form isn't on ("${name} works only in ${option} Form."), and an unlocked
    character ("Powers run once the character is locked."). Else push `{ id }`, then spend `runCost` through the
    SFR tracker's writer so `turn` counts it. Returns `{ ok, sfr, turn }` (the panel's `turn` and cap, as
-   `adjustPanelTracker` returns them, so the caller can say "past RoU").
+   `adjustPanelTracker` returns them, so the caller can say "past RoU"), and `overCap: { sfr, rou }` when the
+   archetype has `powerCostCap` and this power's cost passes it, else `null`. It starts either way (HQ7).
 5. **`stopPower(ch, id)`**: remove every entry with that id. Refuse an id not in the list ("${name} isn't
    running."). No refund (HQ9).
 6. **`resolveReset(ch, input)`** adds `running: [{ id, name, sfr, payable }]`, where `payable` is whether the
@@ -244,6 +248,7 @@ into the PR as it renders.
 | Where | Today | After |
 |---|---|---|
 | Character tab, a power with `run` | rank, cost chips | + a line "Running · ${sfr} SFR a round" when it runs, and a button **Start** (or **Stop**). `aria-label` "Start ${name}" / "Stop ${name}". A refused Start is disabled with its `why` as `title` |
+| Start past the limit (a Werewolf, HQ7) | — | the toast after Start: "${name} costs ${sfr} SFR, more than your RoU of ${rou}." The power runs |
 | Main's SFR popover | −1/+1, Turn Reset | + under the round's line, each running power: "${name} · ${sfr} a round" with **Stop**; then **Start ${name}** for each held sustained power not running (HQ6). The popover's own −1/+1 are unchanged |
 | Turn Reset panel | "SFR spent this round: 3 → 0." | + per running power, a row "${name}: ${sfr} SFR to keep it running" with a **Stop** checkbox (unticked = keep). One the pool can't pay reads "${name} stops: it needs ${sfr} SFR, ${left} left." and has no box |
 | Take a hit, Natural Armor | boxes start unticked | a `while` grant whose power runs starts **ticked**; its label is unchanged |
@@ -275,7 +280,7 @@ Write these first, show them failing on `main`, then build. Characters are `engi
 | 3 | "Decision N: a power stopped at Turn Reset isn't charged" (`engine.test.mjs`) | from 1 + 2 more: `applyReset(…, { stop: ["iron-hide"] })` | turn 0, spent 4, `running` empty, `stopped` `[{ iron-hide, "stop" }]` |
 | 4 | "Decision N: a running power the pool can't pay stops at Turn Reset (HQ2)" (`engine.test.mjs`) | Heroic Upyr (SFR 17), spent 16, Iron Hide running: Reset | `payable` false; after: spent 16, `running` empty, `stopped` `[{ iron-hide, "unpaid" }]` |
 | 5 | "Decision N: a Werewolf's power runs only in Werewolf Form, and shifting back stops it (0414)" (`engine.test.mjs`) | Street Wildblood, Let It Loose rank 1, Human: `startPower`; `setToggle` Werewolf; `startPower`; `setToggle` Human | refused "Let It Loose works only in Werewolf Form."; then ok, spent 1; then `stopped` `["let-it-loose"]`, `running` empty, spent still 1 |
-| 6 | "Decision N: past Rate of Use a power still starts, and the round reads past it (HQ7)" (`engine.test.mjs`) | Street Draugur, Spectral Veil placed + 2 IP (rank 3; SFR 11, RoU 4): `startPower` | ok; spent 5; the returned `turn` reads past the cap of 4 |
+| 6 | "Decision N: past Rate of Use a Werewolf's power still starts, and says it costs more than the RoU (HQ7, 0414)" (`engine.test.mjs`) | Street Wildblood, Let It Loose placed + 3 IP (rank 4; SFR 8, RoU 3), Werewolf form: `startPower`. Then a Street Draugur, Spectral Veil placed + 2 IP (rank 3; SFR 11, RoU 4) | Wildblood: ok, spent 4, `overCap` `{ sfr: 4, rou: 3 }`, the returned `turn` past its cap of 3. Draugur: ok, spent 5, the `turn` past its cap of 4, **`overCap` null** (no `powerCostCap` on the Vampire) |
 | 7 | "Decision N: an unranked sustained power costs its flat price (Preternatural Speed)" (`engine.test.mjs`) | Heroic Strigoi: `startPower("preternatural-speed")` | spent 2 |
 | 8 | "Decision N: a power can't start twice, and Stop refunds nothing (HQ8, HQ9)" (`engine.test.mjs`) | from 1: `startPower` again; `stopPower` | refused "Iron Hide is running.", spent still 2; stop: spent 2, `running` empty; `stopPower` again refused "Iron Hide isn't running." |
 | 9 | "Decision N: logging a session stops every running power (HQ3)" (`engine.test.mjs`) | Iron Hide and Cold Embrace running: `logSession` | `running` empty, `stopped` both |
@@ -298,14 +303,14 @@ Write these first, show them failing on `main`, then build. Characters are `engi
 - **Totality**: `runningPowers`, `runnablePowers`, `startPower`, `stopPower`, `resolveReset`, `applyReset` on a
   character with junk in `trackers.running` (a string, a number, `{}` entries, `null`), no archetype, no power
   level, a `run` with strings for numbers (`withData`), and a `runsIn` naming no panel: no throw.
-- **Decision 135**: the key guard sees `run`, `each`, `runsIn`, `panel`, `option` read; no power or archetype id
+- **Decision 135**: the key guard sees `run`, `each`, `runsIn`, `panel`, `option`, `powerCostCap` read; no power or archetype id
   in the new code (the existing guard).
 - **Hostile** (`hostile.test.mjs`): a file whose `running` holds markup in an id renders it as text everywhere it
   shows (the card, the popover, the Reset row), and undo of a Start writes only inside the character.
 - **Voice**: every new string through `voice.test.mjs`. No "activate"/"sustain" jargon in a button.
 - **Mutation-test**, listing the mutants in the PR and the log: drop the charge from `startPower`; drop it from
   `applyReset`; let `applyReset` charge an unpayable one; drop the form check from `runningPowers`; drop
-  `setToggle`'s stop; drop `logSession`'s stop; seed the hit's boxes unticked; let `runningPowers` count an
+  `setToggle`'s stop; drop `logSession`'s stop; seed the hit's boxes unticked; give `overCap` to a Vampire (read the limit without `powerCostCap`); let `runningPowers` count an
   unheld power. Each must fail a test. **Check each for a second path** (the card's disabled Start is not a
   guard: `startPower`'s refusal is).
 
@@ -373,7 +378,8 @@ two toasts), for the voice pass.
 - [ ] Every charge goes through the SFR tracker's writer, so `turn` counts it; `applyReset` is still the only
       place a round ends.
 - [ ] `run` agrees with `cost` by script, and every sustained cost has one.
-- [ ] `runsIn` is data; no archetype, panel or option name in code.
+- [ ] `runsIn` and `powerCostCap` are data; no archetype, panel or option name in code; a Vampire gets no per-power
+      RoU line.
 - [ ] `migrate()` normalizes `running`; a 0.32 file gains `[]`; junk goes; a hand-edited id renders as text.
 - [ ] The seat hit (`gm.js`) and the sheet's hit both seed from `isRunning`; the read-only sheet's Start/Stop are
       disabled and absent from `RO_READERS`.
