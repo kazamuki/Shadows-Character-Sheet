@@ -23,7 +23,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.61.0
+## v0.61.0 — 2026-11-05
 
 - **Vampires and Werewolves can learn a new power at creation**: 5 Character Points takes one of your Bloodline's or Origin's powers at rank 1, and more ranks cost 5 each, up to your Max Starting Rank.
 - **An Arcanist's Disciplines go further at creation**: Character Points raise each one up to your Max Character Point Boost above where it starts. Enchantment opens at Evocation 3, and Alchemy at Enchantment 3.

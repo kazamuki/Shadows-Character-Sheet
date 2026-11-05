@@ -985,6 +985,17 @@ During character creation, a character may spend **5 CP** to take a power they d
 **The CRB may need updating (flagged 2026-11-04; Ken confirms with Deighton and Scott).** Three things here could make the book wrong as written: CP buying a power the character doesn't hold (`0413`, `0414` say CP raises held powers only), one term for Max Starting Rank and Max Power Rank, and a CP-bought power rank counting toward Max Boost. Nothing builds until they answer. If the book changes, it goes into `plans/crb-catch-up.md` first and the sheet follows.
 *Rules question for Deighton:* does this reopen the Base Power rule (Decision 240: a Base Power takes a power once, at rank 1, and the book, `0413` and `0414`, say CP raises held powers only)? If the book still reads "CP raises", the CRB text changes first (`plans/crb-catch-up.md`), and the sheet follows.
 
+**W144 — Every power starts at rank 0 and carries its own maximum.** *Claude, from W143 (Ken's idea, 2026-11-04) · → closed 2026-11-04, not built: it is already the design, and the two powers left over must stay as they are*\
+**Plan:** none yet
+
+W143's idea, weighed and set aside. Every power would start at rank 0 and carry its own max rank, so a power with no ranks (a Draugur's Deathless Resilience, the Werewolf's starter power) is no special case and the calculations get simpler later (Ken). It changes the data shape of every unranked power and of the Werewolf's starter power (a specialization's feature, not a pool power), so saved files need a `migrate()` step and a schema bump, and W143 doesn't need it: an unheld power already reads as rank 0 in `powerRanks` (Learn a new power) and W143 adds no special case. Worth doing when something else makes the shape move.
+
+*Closed by Ken, 2026-11-04, on Claude's review (the Powers-that-run plan's conductor):*
+- **Already true.** A saved file stores what raised a power: a Base Power placed in it (0 or 1), the CP spent and the IP spent (`archetypeChoices.basePowers`, `powerCp`, `progression.powerIpe`). The rank is their sum, worked out on every read (`archetypePowers`). So a power you don't hold already reads rank 0, which is how W143's Learn rows work. Every ranked Vampire and Werewolf power (45 of 45) already carries the book's `maxRank`.
+- **What's left is two powers:** Preternatural Speed and Deathless Resilience, the only `ranked: false` ones. Giving them `maxRank: 1` would break them. `maxRank` caps creation only, and IP raises a power to 10 in play (Decision 196, VQ14), so after lock a player could buy rank 2 of a power that has no ranks. Keeping them right needs a second marker meaning "never ranks", which is `ranked: false` under another name.
+- **The Werewolf's starter power** is a specialization's feature, not a pool power. Nothing here moves it.
+- **Revisit if** the book gives either power ranks, or prints a maximum that holds in play rather than only at creation. Either would make a per-power maximum that binds in play worth adding to the data, and then `ranked: false` could fold into it.
+
 ### Modals & pickers
 
 These build on the modal primitive (`openModal`, Decision 111), whose first
