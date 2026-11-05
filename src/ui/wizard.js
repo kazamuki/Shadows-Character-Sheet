@@ -437,7 +437,7 @@ function basePowersHtml(ch, sel, creating = true){
   if (!st || !Engine.specializationIds(ch).length) return "";
   const spec = Engine.specializationChosen(ch), noun = (sel.specialization && sel.specialization.label) || "specialization";
   let h = `<div class="sect">Powers${st.count!=null?` — place ${st.count} Base Power${st.count>1?"s":""}`:""}</div>
-    <p class="step-note">Your Innate powers are yours at rank 1. Each Base Power takes one of your ${esc(noun)}'s powers at rank 1. ${st.cap==null||!creating?"":st.cap>1?`On the Character Points step, CP raises any of your powers up to rank ${st.cap}, or learns a new one. `:"On the Character Points step, CP can learn a new power at rank 1; none rises past it at this Power Level. "}<em>${st.spent}/${st.count==null?"—":st.count} placed.</em></p>`;
+    <p class="step-note">Your Innate powers are yours at rank 1. Each Base Power takes one of your ${esc(noun)}'s powers at rank 1. ${st.cap==null||!creating?"":st.cap>1?`On the Character Points step, CP raises any of your powers up to rank ${st.cap}, or learns a new one. `:`On the Character Points step, ${Engine.powerRankCost()} CP learns a new power at rank 1. None goes higher at this Power Level. `}<em>${st.spent}/${st.count==null?"—":st.count} placed.</em></p>`;
   const defs = sel.powers||[];
   const innate = Engine.archetypePowers(ch).filter(p=>!p.origin);
   if (innate.length) h += `<h3 class="sub-sect">Innate powers</h3>` + innate.map(p=>`<div class="pick selected"><div class="head"><h2>${esc(p.name)}</h2>
@@ -644,10 +644,10 @@ function renderCP(){
         <div class="desc"${foldAttr("apow|"+r.id)}>${esc(p.effect||"")}${p.perRank&&r.ranked?"\nPer rank: "+esc(p.perRank):""}</div></div>`; };
     h += secs.sect("Powers", `Powers — ${per} CP per rank`);
     if (heldRows.length && heldRows.every(r=>r.cap!=null && r.start >= r.cap))
-      h += `<p class="step-note">Your powers start at rank 1 at this Power Level.${learnRows.length?" CP can still learn one you don't have.":""}</p>`;
+      h += `<p class="step-note">At this Power Level your powers start, and stay, at rank 1.${learnRows.length?` ${Engine.powerRankCost()} CP still learns one you don't have.`:""}</p>`;
     h += heldRows.map(pickRow).join("");
     if (learnRows.length){
-      h += `<h3 class="sub-sect">Powers you could learn</h3>`;
+      h += `<h3 class="sub-sect">Powers you don't have yet</h3>`;
       for (const o of Engine.specializationChosen(ch)){
         const own = learnRows.filter(r=>r.origin===o.id);
         if (own.length) h += `<h3 class="sub-sect">${esc(o.name)} powers</h3>` + own.map(pickRow).join("");

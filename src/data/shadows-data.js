@@ -5481,7 +5481,7 @@ window.SHADOWS_DATA = {
         "n": 7,
         "short": "Character Points",
         "label": "Spend Character Points on Advantages, Disadvantages, and powers. Allocate any remaining points.",
-        "note": "Formerly 'Freebie Points'. Disadvantages grant CP (no cap). Leftover CP may buy LUCK, boost skills and stats, or raise or learn a power, up to the Max Character Point Boost on each."
+        "note": "Formerly 'Freebie Points'. Disadvantages grant CP (no cap). Leftover CP buys LUCK, boosts skills and stats, or raises or learns a power, up to the Max Character Point Boost on each."
       }
     ],
     "boostRules": {

@@ -4138,7 +4138,7 @@ const Engine = (() => {
       return { ok:true };
     }
     const pl = powerLevel(ch);
-    if (!pl) return { ok:false, why:"No power level." };
+    if (!pl) return { ok:false, why:"Pick a Power Level first." };
     if (d.bought >= pl.maxBoost) return { ok:false, why:boostReached(pl) };
     if (d.capBy==="ceiling" && d.start >= d.cap) return { ok:false, why:`${d.name} is at its highest starting rank, ${d.cap}.` };
     if (d.start < 1 && d.needs && !d.needs.met) return { ok:false, why:`${d.name} needs ${d.needs.name} ${d.needs.rank}.` };
@@ -4294,7 +4294,7 @@ const Engine = (() => {
       const a = archetype(ch), p = (a.powers||[]).find(x=>x && x.id===id);
       return { ok:false, why: p && isGranted(a, p) ? `${txt(p.name)} is yours already. Innate powers aren't bought.` : "That power isn't one you can take." };
     }
-    if (row.learned) return { ok:false, why:`${row.name} is yours already: Character Points learned it. Take that back to place a Base Power here.` };
+    if (row.learned) return { ok:false, why:`You learned ${row.name} with CP. Take those CP back to place a Base Power on it.` };
     if (next > row.cap) return { ok:false, why: row.ranked ? `${row.name} is yours already: a Base Power takes a power once, at rank 1.` : `${row.name} has no ranks.` };
     if (st.left!=null && st.left < 1) return { ok:false, why:"No Base Powers left." };
     ac.basePowers[id] = next;

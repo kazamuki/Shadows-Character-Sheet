@@ -12389,7 +12389,7 @@ test("Decision 264: a Base Power can't go in a power CP learned, and Base Powers
   withData(VAD().campaignPowerScaling.byPowerLevel.heroic, "basePowers", 6, () => {
     Engine.buyPowerRank(ch, "bone-spines", 1);
     const r = Engine.placeBasePower(ch, "bone-spines", 1);
-    assert.equal(r.why, `${VAD().powers.find(p => p.id === "bone-spines").name} is yours already: Character Points learned it. Take that back to place a Base Power here.`);
+    assert.equal(r.why, `You learned ${VAD().powers.find(p => p.id === "bone-spines").name} with CP. Take those CP back to place a Base Power on it.`);
     assert.equal(ch.archetypeChoices.basePowers["bone-spines"], undefined);
     assert.ok(Engine.basePowerState(ch).rows.find(x => x.id === "bone-spines").learned);
     for (const id of ["shadow-play", "nightmare-echo", "veil-of-night", "monstrous-maw", "rending-claws"]) assert.ok(Engine.placeBasePower(ch, id, 1).ok, id);

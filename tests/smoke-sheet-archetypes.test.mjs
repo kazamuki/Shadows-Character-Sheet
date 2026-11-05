@@ -714,7 +714,7 @@ test("Decisions 215, 240: a Street Strigoi's Bloodline step shows the Innate pow
   const innate = ["bestial-blessings", "vitality-surge", "preternatural-speed", "cursed-evolution"];
   for (const id of innate) assert.equal(app.$(`[data-step^="bp|${id}|"]`), null, `${id} has a Base Power stepper`);
   for (const id of ["shadow-play", "veil-of-night", "bone-spines"]) assert.ok(app.$(`[data-step="bp|${id}|1"]`), `${id} has no stepper`);
-  assert.match(app.$("#main").textContent, /Your Innate powers are yours at rank 1\. Each Base Power takes one of your Bloodline's powers at rank 1\. On the Character Points step, CP can learn a new power at rank 1; none rises past it at this Power Level\./);
+  assert.match(app.$("#main").textContent, /Your Innate powers are yours at rank 1\. Each Base Power takes one of your Bloodline's powers at rank 1\. On the Character Points step, 5 CP learns a new power at rank 1. None goes higher at this Power Level./);
   app.click('[data-step="bp|shadow-play|1"]'); app.click('[data-step="bp|veil-of-night|1"]');
   const draft = stored(app, { locked: false });
   assert.deepEqual({ ...draft.archetypeChoices.basePowers }, { "shadow-play": 1, "veil-of-night": 1 });
@@ -761,20 +761,20 @@ test("Decision 240: a Heroic Strigoi's Bloodline step takes each power once, and
 test("Decisions 240, 264: a Street Vampire is told CP can learn a power but raises none, and a locked Vampire placed under Decision 215 keeps rank 2 on Admin", () => {
   const app = onArchetypeStep("vampire", "street");
   app.click('[data-spec="strigoi"]');
-  assert.match(app.$("#main").textContent, /On the Character Points step, CP can learn a new power at rank 1; none rises past it at this Power Level\./);
+  assert.match(app.$("#main").textContent, /On the Character Points step, 5 CP learns a new power at rank 1\. None goes higher at this Power Level\./);
   assert.doesNotMatch(app.$("#main").textContent, /CP raises any of your powers/);
   // The CP step says it too, under its header, with the rows kept (Ken, on the review).
   const cpStreet = onStep("vampire", "street", "character-points", ch => {
     ch.archetypeChoices.specialization = ["strigoi"];
     ch.archetypeChoices.basePowers = { "shadow-play": 1 };
   });
-  assert.match(cpStreet.$("#main").textContent, /Powers — 5 CP per rank\s*Your powers start at rank 1 at this Power Level\. CP can still learn one you don't have\./);
+  assert.match(cpStreet.$("#main").textContent, /Powers — 5 CP per rank\s*At this Power Level your powers start, and stay, at rank 1\. 5 CP still learns one you don't have\./);
   assert.ok(cpStreet.$('[data-step="apow|shadow-play|1"]'), "the rows went");
   const cpHeroic = onStep("vampire", "heroic", "character-points", ch => {
     ch.archetypeChoices.specialization = ["strigoi"];
     ch.archetypeChoices.basePowers = { "shadow-play": 1 };
   });
-  assert.doesNotMatch(cpHeroic.$("#main").textContent, /Your powers start at rank 1 at this Power Level/);
+  assert.doesNotMatch(cpHeroic.$("#main").textContent, /your powers start, and stay, at rank 1/);
   assert.deepEqual([app.errors, cpStreet.errors, cpHeroic.errors], [[], [], []]);
   assert.deepEqual(app.errors, []);
 
@@ -935,7 +935,7 @@ test("Decision 264: the CP step lists the powers you could learn, learning one m
     ch.archetypeChoices.basePowers = { "shadow-play": 1 };
   });
   const bone = '[data-step="apow|bone-spines|1"]';
-  assert.match(cp.$("#main").textContent, /Powers you could learn/);
+  assert.match(cp.$("#main").textContent, /Powers you don't have yet/);
   assert.match(cp.$("#main").textContent, /Strigoi powers/);
   const before = Engine.cp(Engine.migrate(JSON.parse(JSON.stringify(draft(cp))))).left;
   assert.match(cp.$(bone).closest(".pick").textContent, /rank 0/);
@@ -947,7 +947,7 @@ test("Decision 264: the CP step lists the powers you could learn, learning one m
   assert.match(row.textContent, /learned with CP · rank 1/);
   assert.match(cp.$(bone).getAttribute("aria-label"), /^Raise Bone Spines \(Unmasked\) with CP$/);
   assert.equal(cp.window.document.activeElement, cp.$(bone), "focus left the stepper that was pressed");
-  const learnList = [...cp.$$(".sub-sect")].find(h => /Powers you could learn/.test(h.textContent));
+  const learnList = [...cp.$$(".sub-sect")].find(h => /Powers you don't have yet/.test(h.textContent));
   assert.ok(learnList.compareDocumentPosition(row) & 2 /* the row precedes the learn list */, "a learned power is still under the learn list");
   cp.click('[data-step="apow|bone-spines|-1"]');
   assert.deepEqual({ ...draft(cp).archetypeChoices.powerCp }, {});
