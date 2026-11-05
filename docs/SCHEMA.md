@@ -5434,7 +5434,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** a `running` flag on the power's row (play state, Decision 224); counting rounds down; stopping at encounter end (W128); charging what's left when the pool can't pay; refusing Start past RoU (Decision 225); a per-power RoU limit for a Vampire (`0413` prints none); a cost read from the `cost` text (Decision 135).
      - **Replaces:** Decision 104 in part (a conditional source is asked on a hit only if it isn't running). Decision 225's Revisit if (sustained costs become numbers) happened; its rule stands. Extends 195 and 224.
      - **Revisit if:** W128 lets the sheet know an encounter; a power needs a countdown in rounds; a Vampire gets a form rule; H2 or H3 needs `each: "start"` (data only).
-     - **Built:** app 0.62.0, game data 0.53, character schema 0.33, PR #…, log 2026-11-05 (H1).
+     - **Built:** app 0.62.0, game data 0.53, character schema 0.33, PR #297, log 2026-11-05 (H1).
 
 ## 5. Open Flags
 
