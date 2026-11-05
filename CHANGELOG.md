@@ -23,6 +23,12 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.61.0
+
+- **Vampires and Werewolves can learn a new power at creation**: 5 Character Points takes one of your Bloodline's or Origin's powers at rank 1, and more ranks cost 5 each, up to your Max Starting Rank.
+- **An Arcanist's Disciplines go further at creation**: Character Points raise each one up to your Max Character Point Boost above where it starts. Enchantment opens at Evocation 3, and Alchemy at Enchantment 3.
+- **The Power cap is gone from the Campaign Power Level card.** Each power's own ceiling is shown where you buy it.
+
 ## v0.60.0 — 2026-11-01
 
 - **Majors on your gear.** Tuned Edge, Custom Fit, Signature Weapon and Weapon Expert go on the weapon or armor they're for, right on Loadout, and the sheet counts the rest: the damage, the PROT die, the mod slots, the kicker.

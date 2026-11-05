@@ -1179,10 +1179,10 @@ test("R14: every spell in the Book of Known Spells is in the catalog, as the boo
 
 test("Deighton's table: flat Stat Points, Skill Points, CP and Max Skill Rank by Campaign level", () => {
   const want = {
-    street:  { flat: 45, skills: 40, cp: 5,  skillCap: 4, powerCap: 2, boost: 2 },
-    heroic:  { flat: 50, skills: 45, cp: 10, skillCap: 5, powerCap: 3, boost: 3 },
-    shadows: { flat: 55, skills: 50, cp: 15, skillCap: 6, powerCap: 4, boost: 4 },
-    wcd:     { flat: 60, skills: 55, cp: 20, skillCap: 7, powerCap: 5, boost: 5 },
+    street:  { flat: 45, skills: 40, cp: 5,  skillCap: 4, boost: 2 },
+    heroic:  { flat: 50, skills: 45, cp: 10, skillCap: 5, boost: 3 },
+    shadows: { flat: 55, skills: 50, cp: 15, skillCap: 6, boost: 4 },
+    wcd:     { flat: 60, skills: 55, cp: 20, skillCap: 7, boost: 5 },
   };
   for (const [id, w] of Object.entries(want)) {
     const p = D.powerLevels.find(x => x.id === id);
@@ -1191,7 +1191,7 @@ test("Deighton's table: flat Stat Points, Skill Points, CP and Max Skill Rank by
     assert.equal(p.skillPoints.plusStats.join("+"), "INT+REF", `${id}: Skill Points add INT + REF`);
     assert.equal(p.characterPoints, w.cp, `${id}: CP`);
     assert.equal(p.maxSkillRank, w.skillCap, `${id}: Max Skill Rank`);
-    assert.equal(p.maxPowerRank, w.powerCap, `${id}: Max Power Rank`);
+    assert.equal(p.maxPowerRank, undefined, `${id}: Max Power Rank is retired (Decision 265)`);
     assert.equal(p.maxBoost, w.boost, `${id}: Max Boost`);
   }
 });
@@ -1254,6 +1254,7 @@ test('0450: a Power or Discipline costs "Current rank × 20" ("Evocation 3 → 4
   assert.equal(evo().rank, 3);
   const c = Engine.ipCost(ch, "power", "evocation");
   assert.deepEqual([c.from, c.to, c.cost], [3, 4, 60], "the book's own example");
+  ch.archetypeChoices.disciplines.enchantment = 3;    // Alchemy's first rank waits on Enchantment 3 (Decision 265)
   assert.equal(Engine.ipCost(ch, "power", "alchemy").cost, 40, "rank 1 in a Discipline never trained");
 });
 
@@ -1463,18 +1464,18 @@ test("R16: the Vampire's Campaign Power Scaling matches 0413, row for row", () =
   // The book prints the rule Decision 240 builds (YQ1): every Vampire gets the full set of Innate Powers,
   // then a number of Bloodline powers at Rank 1; the next test pins the data's notes to it.
   assert.match(md, /Every Vampire gets the full set of Innate Powers\. You then are granted a number of Bloodline powers during character creation, at Rank 1\./);
-  assert.match(VA().campaignPowerScaling.notes, /Innate powers are yours at rank 1\. Each Base Power takes one of your Bloodline's powers at rank 1, and Character Points raise a power up to your Max Starting Rank\./);
+  assert.match(VA().campaignPowerScaling.notes, /Innate powers are yours at rank 1\. Each Base Power takes one of your Bloodline's powers at rank 1, and Character Points raise a power up to your Max Starting Rank or learn a new one at rank 1./);
   assert.equal(JSON.stringify(VA().powersBought), JSON.stringify({ countBy: "campaignPowerScaling.basePowers", maxRankBy: "campaignPowerScaling.maxStartingRank", granted: "innate" }));
   // The Werewolf buys the same way, reading the same columns of its own table.
   assert.equal(JSON.stringify(WW().powersBought), JSON.stringify(VA().powersBought));
-  assert.match(WW().campaignPowerScaling.notes, /Innate powers are yours at rank 1\. Each Base Power takes one of your Origin's powers at rank 1, and Character Points raise a power up to your Max Starting Rank\./);
+  assert.match(WW().campaignPowerScaling.notes, /Innate powers are yours at rank 1\. Each Base Power takes one of your Origin's powers at rank 1, and Character Points raise a power up to your Max Starting Rank or learn a new one at rank 1./);
 });
 
 test("CRB 0413, 0414: a Base Power takes a power at rank 1, and CP raises it only to Max Starting Rank (Decision 240)", () => {
   assert.match(crb("0413_Vampire.md"), /You then are granted a number of Bloodline powers during character creation, at Rank 1\. You can raise these up to your Max Starting Rank with Character Points\./);
   assert.match(crb("0414_Werewolf.md"), /You then are granted a number of Origin powers during character creation, at Rank 1\. You can raise these up to your Max Starting Rank with Character Points\./);
-  assert.match(VA().campaignPowerScaling.notes, /Each Base Power takes one of your Bloodline's powers at rank 1, and Character Points raise a power up to your Max Starting Rank\./);
-  assert.match(WW().campaignPowerScaling.notes, /Each Base Power takes one of your Origin's powers at rank 1, and Character Points raise a power up to your Max Starting Rank\./);
+  assert.match(VA().campaignPowerScaling.notes, /Each Base Power takes one of your Bloodline's powers at rank 1, and Character Points raise a power up to your Max Starting Rank or learn a new one at rank 1./);
+  assert.match(WW().campaignPowerScaling.notes, /Each Base Power takes one of your Origin's powers at rank 1, and Character Points raise a power up to your Max Starting Rank or learn a new one at rank 1./);
 });
 
 test("R16: every Innate and Bloodline power is the book's, by name, cost, effect, Per Rank and printed maximum", () => {
@@ -3426,4 +3427,39 @@ test("L5 9 (rules): CRB 0412: the six Majors' numbers are the book's", () => {
   assert.deepEqual(rows("legendary-weapon").grants, [{ type: "modSlots", amount: 1 }]);
   assert.match(md, /Gain \+1d4 kicker to any combat rolls using this weapon\. If you have a \+1d4 already applied when using this weapon it increases by one die increment to \+1d6/);
   assert.deepEqual(rows("weapon-expert").grants, [{ type: "kicker", die: "1d4", over: "1d4", becomes: "1d6" }]);
+});
+
+// ── W143: Character Points buy a Boost, 1 for 1, under the Max CP Boost (Decisions 3, 218, 264) ─────
+test("W143: a CP Boost on a stat, a skill or LUCK is 1 for 1 under the Max CP Boost and the human cap (Decisions 3, 218)", () => {
+  const ch = subject({ bod: 9 });
+  ch.identity.archetype = "professional"; ch.creation.rolls = { statPoints: 40, skillPoints: 30 };
+  assert.ok(Engine.canBoost(ch, "stat", "BOD").ok);
+  Engine.addBoost(ch, "stat", "BOD", 1);
+  assert.equal(Engine.statValue(ch, "BOD"), 10);
+  assert.match(Engine.canBoost(ch, "stat", "BOD").why, /Stat cap 10/);
+  // LUCK: Street Level holds the bonus to 2, at 1 CP each.
+  const before = Engine.cp(ch).spent;
+  for (let i = 0; i < 2; i++) { assert.ok(Engine.canBoost(ch, "luck", "LUCK").ok); ch.trackers.luck.bonus++; }
+  assert.equal(Engine.cp(ch).spent - before, 2 * D.resources.luck.cpCostPerPoint);
+  assert.match(Engine.canBoost(ch, "luck", "LUCK").why, /^Max Character Point Boost reached: 2 each at Street Level\.$/);
+  // A skill stops at the Max Skill Rank (4 at Street Level) before the Boost count does.
+  const sk = D.skills.find(s => !s.locked) || D.skills[0], cap = Engine.skillRankCap(ch, sk.id);
+  ch.skills[sk.id] = { rank: cap - 1 };
+  assert.ok(Engine.canBoost(ch, "skill", sk.id).ok);
+  Engine.addBoost(ch, "skill", sk.id, 1);
+  assert.match(Engine.canBoost(ch, "skill", sk.id).why, new RegExp(`^Max Skill Rank ${cap}\.$`));
+});
+
+test("CRB 0433, 0434: 5 CP raises a Power a rank or gives a new one at rank 1, under the Max CP Boost", () => {
+  const md = crb("0433_Final_Character_Points.md");
+  assert.match(md, /The Campaign Power Level caps the boost Character Points buy on any one Stat, Skill, or Power, up to its limit\./);
+  assert.match(md, /5 Character Points raise a Power by 1 rank or give you a new Power at rank 1\./);
+  const recap = crb("0434_Character_Creation_Recap.md");
+  assert.match(recap, /\| Max CP Boost \|/);
+  assert.doesNotMatch(recap, /Max Power Rank/);
+  // The book's Max CP Boost column is the data's maxBoost, level for level.
+  const rows = crbTableAfter(recap, "Every Campaign Power Level number in one place.");
+  for (const r of rows) assert.equal(String(D.powerLevels.find(p => p.name === r[0]).maxBoost), r[5], r[0]);
+  // Scott's Discipline ruling is in the book: 3 ranks of one before attempting the next.
+  assert.match(crb("0480_Magic.md"), /An Arcanist must have 3 ranks of Evocation before attempting Enchantment, and 3 ranks of Enchantment before attempting Alchemy\./);
 });

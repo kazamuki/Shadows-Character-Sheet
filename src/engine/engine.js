@@ -947,9 +947,23 @@ const Engine = (() => {
     const spec = disciplineSpec(ch);
     if (!spec) return 0;
     const cost = powerRankCost();
-    return Object.values(ch.archetypeChoices.disciplines||{}).reduce((s,r)=>s + r*cost, 0);
+    return Object.values(disciplinesOf(ch)).reduce((s,r)=>s + nonNegInt(r)*cost, 0);
   }
-  const disciplineCap = ch => { const spec = disciplineSpec(ch); return spec && spec.maxRankBy ? dataPath(ch, spec.maxRankBy) : null; };
+  // The ceiling a Discipline's data declares for its creation rank (Decision 265), or null. The Arcanist
+  // declares none: the Max CP Boost above its start is the only creation limit. An archetype that sets
+  // `maxRankBy` still gets one.
+  const disciplineCap = ch => { const spec = disciplineSpec(ch); const n = spec && spec.maxRankBy ? dataPath(ch, spec.maxRankBy) : null; return typeof n==="number" ? n : null; };
+  // One Boost limit for any power or Discipline CP raises (Decision 264): `start` is the rank before CP, the
+  // Boosts are the ranks CP bought, so the rank stops at start + Max CP Boost, or at the ceiling if that's
+  // lower. `by` is the one that binds ("ceiling" on a tie). No power level: no Boost limit.
+  function powerBoostCap(ch, start, ceiling){
+    const pl = powerLevel(ch), top = typeof ceiling==="number" ? ceiling : null;
+    if (!pl) return { cap: top, by: top==null ? null : "ceiling" };
+    const boost = start + nonNegInt(pl.maxBoost);
+    return top!=null && top <= boost ? { cap: top, by: "ceiling" } : { cap: boost, by: "boost" };
+  }
+  // The refusal when a target already has the Max Character Point Boost (Decision 218), said once.
+  const boostReached = pl => `Max Character Point Boost reached: ${pl.maxBoost} each at ${pl.name}.`;
   // The custom powers creation paid CP for (Decision 216): each is one power
   // rank's price. The mark is on the row, not in powerCp, which the wizard
   // prunes to the specialization's powers.
@@ -971,7 +985,7 @@ const Engine = (() => {
     const isLuck = type==="luck";
     const times = isLuck ? nonNegInt(ch.trackers.luck.bonus) : boostsFor(ch, type, id);
     if (times >= pl.maxBoost)
-      return {ok:false, why:`Max Character Point Boost reached: ${pl.maxBoost} each at ${pl.name}.`};
+      return {ok:false, why:boostReached(pl)};
     if (type==="stat"){
       const cap = statMax(ch, id);
       if (statValue(ch,id) >= cap.max)
@@ -2981,6 +2995,9 @@ const Engine = (() => {
     if (targetType==="power"){
       const p = powerRanks(ch).find(x=>x.id===targetId);
       if (!p) return {ok:false, why:"That power isn't on this sheet."};
+      // A Discipline's first rank waits on its prerequisite in play too (Decision 265).
+      const need = p.kind==="discipline" && p.rank===0 ? (disciplineRanks(ch).find(d=>d.id===p.id) || {}).needs : null;
+      if (need && !need.met) return {ok:false, why:`${p.name} needs ${need.name} ${need.rank}.`};
       if (p.ranked===false && p.rank >= 1) return {ok:false, why:`${p.name} has no ranks.`};
       if (p.rank >= D().ip.rankCap) return {ok:false, why:`Rank cap ${D().ip.rankCap}.`};
       const price = D().ip.powerIncreaseCost;
@@ -4079,18 +4096,56 @@ const Engine = (() => {
     }
     return { ok:true };
   }
+  // A Discipline's bought ranks, normalized: an undo or a hand edit can put anything in the map.
+  const disciplinesOf = ch => { const m = (((ch||{}).archetypeChoices)||{}).disciplines; return isPlainObj(m) ? m : {}; };
+  // Each Discipline with its ranks. `base` is its starting rank, `bought` the CP ranks (each a Boost, Decision
+  // 265), `start` base + bought (the creation rank), `rank` that + IP. `cap` is the creation limit on `start`:
+  // the Max CP Boost above `base`, or the data's declared ceiling if lower (`capBy` says which). `needs` is the
+  // Discipline and rank its first rank wants, from the data's `prerequisite`: `met` reads the creation rank
+  // before lock and the full rank, IP included, after it.
   function disciplineRanks(ch){
     const spec = disciplineSpec(ch);
     if (!spec) return [];
-    const cap = disciplineCap(ch);
-    return (spec.list||[]).map(d=>{
+    const ceiling = disciplineCap(ch), locked = !!ch.creation && ch.creation.locked===true;
+    const rows = (spec.list||[]).map(d=>{
       const base = d.startingRankBy ? (dataPath(ch, d.startingRankBy)||0) : 0;
-      const bought = (ch.archetypeChoices.disciplines||{})[d.id]||0;
-      const ipe = powerIpeOf(ch, d.id);
-      // `cap` is the creation cap (Max Power Rank): it bounds base + bought,
-      // never what IP buys afterwards (Ken, 2026-10-08).
-      return { id:d.id, name:d.name, base, bought, ipe, start: base+bought, rank: base+bought+ipe, cap, description:d.description };
+      const m = disciplinesOf(ch), bought = Object.prototype.hasOwnProperty.call(m, d.id) ? nonNegInt(m[d.id]) : 0;
+      const ipe = powerIpeOf(ch, d.id), c = powerBoostCap(ch, base, ceiling);
+      // `cap` bounds base + bought, never what IP buys afterwards (Ken, 2026-10-08).
+      return { id:d.id, name:d.name, base, bought, ipe, start: base+bought, rank: base+bought+ipe, cap:c.cap, capBy:c.by, needs:null, description:d.description, dataWarning:null };
     });
+    (spec.list||[]).forEach((d, i)=>{
+      const pre = d.prerequisite;
+      if (!isPlainObj(pre)) return;
+      const need = rows.find(r=>r.id===pre.discipline);
+      if (!need){ rows[i].dataWarning = `${d.name} names a prerequisite Discipline that isn't in the list.`; return; }
+      const rank = nonNegInt(pre.rank);
+      rows[i].needs = { id:need.id, name:need.name, rank, met: (locked ? need.rank : need.start) >= rank };
+    });
+    return rows;
+  }
+  // CP raising (delta 1) or giving back (delta -1) one rank of a Discipline (Decisions 135, 265). Each rank is a
+  // Boost; the first rank of one with a prerequisite waits on it. Giving back is never refused while a bought
+  // rank is there: a pick the prerequisite no longer covers is named by validate, not blocked here.
+  function buyDisciplineRank(ch, id, delta){
+    const d = disciplineRanks(ch).find(r=>r.id===id);
+    if (!d) return { ok:false, why:"That isn't a Discipline you can raise." };
+    const ac = ch.archetypeChoices;
+    if (!isPlainObj(ac.disciplines)) ac.disciplines = {};
+    if (delta < 0){
+      if (d.bought < 1) return { ok:false, why:`There's no CP in ${d.name}.` };
+      if (d.bought > 1) ac.disciplines[id] = d.bought - 1; else delete ac.disciplines[id];
+      return { ok:true };
+    }
+    const pl = powerLevel(ch);
+    if (!pl) return { ok:false, why:"Pick a Power Level first." };
+    if (d.bought >= pl.maxBoost) return { ok:false, why:boostReached(pl) };
+    if (d.capBy==="ceiling" && d.start >= d.cap) return { ok:false, why:`${d.name} is at its highest starting rank, ${d.cap}.` };
+    if (d.start < 1 && d.needs && !d.needs.met) return { ok:false, why:`${d.name} needs ${d.needs.name} ${d.needs.rank}.` };
+    const bal = cp(ch);
+    if (bal && bal.left < powerRankCost()) return { ok:false, why:"No Character Points left." };
+    ac.disciplines[id] = d.bought + 1;
+    return { ok:true };
   }
   // Ranks IP bought for one power (Decision 194). An undo can put anything a
   // file's audit holds back into the map, so the read normalizes.
@@ -4119,9 +4174,10 @@ const Engine = (() => {
         return Object.assign({}, p, { rank:start+cpR+ipe, start, cp:cpR, ipe, ranked, maxRank: Number(p.maxRank) || null }); });
   }
   // Under `powersBought` a pool power is held if it is granted, a Base Power
-  // is placed in it, or IP learned it (Decision 216). The IP is read raw: an
+  // is placed in it, CP learned it (Decision 264), or IP learned it (Decision 216). The IP is read raw: an
   // unranked power's `ipe` shows as 0, but its learning is still IP in the map.
-  const isHeld = (ch, a, p, placed) => isGranted(a, p) || placed[p.id] > 0 || powerIpeOf(ch, p.id) > 0 || splicedPowers(ch).has(p.id);
+  // CP on a pool power holds it too (Decision 264): 5 CP learns a power at rank 1. This is the one test for held.
+  const isHeld = (ch, a, p, placed) => isGranted(a, p) || placed[p.id] > 0 || powerCpOf(ch)[p.id] > 0 || powerIpeOf(ch, p.id) > 0 || splicedPowers(ch).has(p.id);
   // Whether `powersBought` grants this power outright (Decision 215).
   const isGranted = (a, p) => !!a && isPlainObj(a.powersBought) && a.powersBought.granted==="innate" && !p.origin;
   // The archetype's powers this character could hold: every Innate one (no
@@ -4204,10 +4260,11 @@ const Engine = (() => {
     if (!spec) return null;
     // `cap` is Max Starting Rank, kept for the copy: a row's own cap is 1.
     const count = spec.countBy ? dataPath(ch, spec.countBy) : null, cap = spec.maxRankBy ? dataPath(ch, spec.maxRankBy) : null;
-    const placed = basePowersOf(ch), pool = powerPool(ch).filter(p=>!isGranted(a, p)), ids = new Set(pool.map(p=>p.id));
+    const placed = basePowersOf(ch), cpOn = powerCpOf(ch), pool = powerPool(ch).filter(p=>!isGranted(a, p)), ids = new Set(pool.map(p=>p.id));
     const rows = pool.map(p=>{
       const ranked = p.ranked!==false;
-      return { id:p.id, name:txt(p.name), origin:p.origin || null, ranked, placed: placed[p.id] || 0, cap: 1 };
+      // `learned`: CP took this power (Decision 264), so a Base Power can't go in it and it is no open row.
+      return { id:p.id, name:txt(p.name), origin:p.origin || null, ranked, placed: placed[p.id] || 0, cap: 1, learned: !placed[p.id] && cpOn[p.id] > 0 };
     });
     const spent = Object.values(placed).reduce((s, n)=>s + n, 0);
     // Ranks placed in a power the character can't hold (another Bloodline's)
@@ -4237,6 +4294,7 @@ const Engine = (() => {
       const a = archetype(ch), p = (a.powers||[]).find(x=>x && x.id===id);
       return { ok:false, why: p && isGranted(a, p) ? `${txt(p.name)} is yours already. Innate powers aren't bought.` : "That power isn't one you can take." };
     }
+    if (row.learned) return { ok:false, why:`You learned ${row.name} with CP. Take those CP back to place a Base Power on it.` };
     if (next > row.cap) return { ok:false, why: row.ranked ? `${row.name} is yours already: a Base Power takes a power once, at rank 1.` : `${row.name} has no ranks.` };
     if (st.left!=null && st.left < 1) return { ok:false, why:"No Base Powers left." };
     ac.basePowers[id] = next;
@@ -4255,21 +4313,37 @@ const Engine = (() => {
     if (!a || writeInSpec(ch) || !isPlainObj(a.powersBought)) return 0;
     return Object.values(powerCpOf(ch)).reduce((s, n)=>s + n, 0) * powerRankCost();
   };
-  // Every held, ranked archetype power with the CP on it. `start` is its
-  // rank before CP (1 granted, the Base Powers placed otherwise), `rank` is
-  // start + CP at creation, and `cap` is the lower of Max Starting Rank
-  // (`powersBought.maxRankBy`, Decision 240) and the book's printed maximum.
-  // `stray` ids hold CP the character has no power for.
+  // The rows the Character Points step raises (Decisions 215, 240, 264): every held, ranked archetype power, and
+  // every power of the character's own pool it doesn't hold yet, at rank 0, to learn for one rank's CP. A held
+  // power with no ranks has no row unless CP learned it (to take back). `start` is the rank before CP (1 granted,
+  // the Base Powers placed otherwise, 0 learned or not held), `rank` start + CP at creation. `cap` is the
+  // lowest of Max Starting Rank (`powersBought.maxRankBy`), the book's printed maximum and start + Max CP Boost,
+  // and `capBy` says whether the ceiling or the Boost limit binds. `learned` is held by CP alone. Held rows come
+  // first, in archetypePowers' order, then the unheld by Bloodline or Origin in the data's order.
   function powerCpState(ch){
     const a = archetype(ch);
     if (!a || writeInSpec(ch) || !isPlainObj(a.powersBought)) return [];
     const msr = a.powersBought.maxRankBy ? dataPath(ch, a.powersBought.maxRankBy) : null, most = typeof msr==="number" ? msr : Infinity;
-    return archetypePowers(ch).filter(p=>p.ranked).map(p=>{
-      const printed = Number(p.maxRank) || Infinity, cap = Math.min(most, printed);
-      return { id:p.id, name:txt(p.name), start:p.start, cp:p.cp, rank:p.start + p.cp, cap: cap===Infinity ? null : cap };
-    });
+    const placed = basePowersOf(ch), cpOn = powerCpOf(ch), spliced = splicedPowers(ch);
+    const make = (p, held, start, cpR) => {
+      const ranked = p.ranked!==false, printed = Number(p.maxRank) || Infinity;
+      const c = powerBoostCap(ch, start, ranked ? Math.min(most, printed) : 1);
+      return { id:p.id, name:txt(p.name), origin:p.origin || null, ranked, held, learned: held && cpR > 0 && !isGranted(a, p) && !(placed[p.id] > 0) && !spliced.has(p.id),
+               start, cp:cpR, rank:start + cpR, cap:c.cap===Infinity ? null : c.cap, capBy:c.by, effect:txt(p.effect), perRank:txt(p.perRank) };
+    };
+    const rows = [];
+    for (const p of archetypePowers(ch)){
+      const cpR = cpOn[p.id] || 0, learned = cpR > 0 && !isGranted(a, p) && !(placed[p.id] > 0) && !spliced.has(p.id);
+      if (p.ranked) rows.push(make(p, true, learned ? 0 : p.start, cpR));
+      else if (learned) rows.push(make(p, true, 0, cpR));
+    }
+    const heldIds = new Set(archetypePowers(ch).map(p=>p.id)), origins = specializationIds(ch);
+    const unheld = powerPool(ch).filter(p=>!heldIds.has(p.id)).map(p=>make(p, false, 0, 0));
+    const order = id => { const i = origins.indexOf(id); return i < 0 ? origins.length : i; };
+    return rows.concat(unheld.sort((x, y)=>order(x.origin) - order(y.origin)));
   }
-  // CP raising (delta 1) or giving back (delta -1) one rank of a held power.
+  // CP raising (delta 1) or giving back (delta -1) one rank of a power, learning it at rank 1 if it isn't held
+  // (Decision 264). Each CP rank is a Boost.
   function buyPowerRank(ch, id, delta){
     const ac = ch.archetypeChoices;
     if (!isPlainObj(ac.powerCp)) ac.powerCp = {};
@@ -4280,7 +4354,13 @@ const Engine = (() => {
       return { ok:true };
     }
     const row = powerCpState(ch).find(r=>r.id===id);
-    if (!row) return { ok:false, why:"That power isn't one you hold, or it has no ranks." };
+    if (!row){
+      const held = archetypePowers(ch).find(p=>p.id===id);
+      return { ok:false, why: held ? `${txt(held.name)} has no ranks.` : "That power isn't one you can take." };
+    }
+    if (!row.ranked && row.rank >= 1) return { ok:false, why:`${row.name} has no ranks.` };
+    const pl = powerLevel(ch);
+    if (pl && row.cp >= pl.maxBoost) return { ok:false, why:boostReached(pl) };
     if (row.cap!=null && row.rank >= row.cap) return { ok:false, why:`${row.name} is at its highest starting rank, ${row.cap}.` };
     const bal = cp(ch);
     if (bal && bal.left < powerRankCost()) return { ok:false, why:"No Character Points left." };
@@ -5511,7 +5591,8 @@ const Engine = (() => {
     if (pool==="focusBonus") return true;
     if (pool==="basePowers"){
       const st = basePowerState(ch);
-      return !!st && st.left > 0 && st.rows.some(r=>r.cap==null || r.placed < r.cap);
+      // A row CP learned takes no Base Power (Decision 264), so it is not one left to place.
+      return !!st && st.left > 0 && st.rows.some(r=>!r.learned && (r.cap==null || r.placed < r.cap));
     }
     if (pool==="statBonus") return D().stats.some(s => statValue(ch, s.id) < statMax(ch, s.id).max);
     if (pool==="cp"){
@@ -5521,9 +5602,10 @@ const Engine = (() => {
       // that it caps out (Decision 162). Custom powers and picks aren't sinks.
       const bal = cp(ch);
       if (!bal) return false;
+      // A power to learn or raise (Decision 264) and a Discipline whose prerequisite is met are sinks too.
       const rankOpen = bal.left >= powerRankCost()
         && (powerCpState(ch).some(r => r.cap==null || r.rank < r.cap)
-            || disciplineRanks(ch).some(d => d.cap==null || d.rank < d.cap));
+            || disciplineRanks(ch).some(d => (d.cap==null || d.start < d.cap) && (d.start > 0 || !d.needs || d.needs.met)));
       return canBoost(ch, "luck", "LUCK").ok || rankOpen
         || D().stats.some(s => canBoost(ch, "stat", s.id).ok)
         || D().skills.some(s => canBoost(ch, "skill", s.id).ok);
@@ -5706,11 +5788,13 @@ const Engine = (() => {
       const barred = ch.advantages.filter(x=>x.source!=="natural" && !canBuyAdvantage(ch, x.id));
       if (barred.length)
         E(`${cls.name}s can't buy ${barred.map(x=>(advById(x.id)||{name:x.id}).name).join(", ")}. Only Universal Advantages are open to them.`);
-      // The discipline cap (Decision 135) is the data's `maxRankBy`. The
-      // stepper stops at it, so only an edited file or a lower power level
-      // chosen afterwards can pass it.
-      for (const d of disciplineRanks(ch))
+      // The discipline cap (Decisions 135, 265) is its start plus the Max CP Boost, or a ceiling the data declares.
+      // buyDisciplineRank stops at it, so only an edited file or a lower power level chosen afterwards can pass it.
+      // Enchantment needs Evocation 3 and Alchemy Enchantment 3: lowering the one before is allowed, and named here.
+      for (const d of disciplineRanks(ch)){
         if (d.cap!=null && d.start > d.cap) E(`${d.name} is rank ${d.start}. It can start at ${d.cap} at most.`);
+        if (d.bought > 0 && d.needs && !d.needs.met) E(`${d.name} needs ${d.needs.name} ${d.needs.rank}. Raise ${d.needs.name} or take back ${d.name}.`);
+      }
       // CP in archetype powers (Decision 215): the stepper stops at the cap
       // and at a power not held, so only an edited file, a lower power level
       // or a Base Power taken back can leave CP where it can't stay.
@@ -9522,7 +9606,7 @@ const Engine = (() => {
     // Stats, skills and derived values
     powerLevel, archetype, classification, canBuyAdvantage, archetypeContent, writeInOptions, addPower, addCustomPower, ownPowers, improvePower, newPower, removePower, statMod, statValue, statTable, baseStatTable, statReading, archStatBonus, scalingRow,
     derived, health, sfr, skillLine, adjFor, skillRankCap, disciplineCap, disciplineRanks, powerRanks, archetypePowers, powerAllowance,
-    powerPool, basePowerState, placeBasePower, powerCpOf, powerCpSpent, powerCpState, buyPowerRank, optionChoices, setOptionPick, archetypeWeapons, painImmunity,
+    powerPool, basePowerState, placeBasePower, powerCpOf, powerCpSpent, powerCpState, buyPowerRank, buyDisciplineRank, optionChoices, setOptionPick, archetypeWeapons, painImmunity,
     feedView, feedGain, feed, goUnfed, goUnrested,
     // Creation: pools, costs, grants and the wizard's checks
     boostsFor, addBoost, canBoost, spendable, statPool, statSpent, statCost, nextStatCost, statFloor, raiseStatsToFloor, skillPool, skillSpent,

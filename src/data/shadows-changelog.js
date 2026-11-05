@@ -2,6 +2,16 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.61.0",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**Vampires and Werewolves can learn a new power at creation**: 5 Character Points takes one of your Bloodline's or Origin's powers at rank 1, and more ranks cost 5 each, up to your Max Starting Rank.",
+      "**An Arcanist's Disciplines go further at creation**: Character Points raise each one up to your Max Character Point Boost above where it starts. Enchantment opens at Evocation 3, and Alchemy at Enchantment 3.",
+      "**The Power cap is gone from the Campaign Power Level card.** Each power's own ceiling is shown where you buy it."
+    ]
+  },
+  {
     "version": "0.60.0",
     "date": "2026-11-01",
     "intro": [],

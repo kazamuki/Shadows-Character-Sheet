@@ -8,6 +8,7 @@ BQ10, BQ13 in his words, the rest on their defaults. **BQ12, done:** the mirror 
 (private `cbe379a`, 2026-11-04: `0411`, `0413`, `0414`, `0480` re-pulled and the new `0433`, `0434` added). The suite
 passes against it unchanged. **Before the builder starts**, that commit is pushed and `main`'s `private` pointer moved
 to it. The rest of the 11-01 split (`0430`–`0432`, the spells, Gear…) waits for a full refresh of its own.
+**Built 2026-11-04** (app 0.61.0, Decisions 264 and 265, PR #292).
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 **Runs alone.** It touches `engine.js` (the powers and Disciplines readers, `spendable`, `validate`, `ipCost`),
 `wizard.js` (the CP step's Powers and Disciplines, the Base Powers note, the Power Level card), one `sheet.js` line, the

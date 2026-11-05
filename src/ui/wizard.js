@@ -113,12 +113,13 @@ function wizardRailHtml(ch){
 // ── Wizard-only widgets ──────────────────────────────────────────────
 // `name` is what the row changes ("Body", "Handguns"): the buttons read
 // "Raise Body", and announceStep() reads it back with the new value (W59).
-function stepper(val, dataAttr, downOk, upOk, name){
+// `up` is the + button's verb: "Learn" for a power not held yet (W59), "Raise" otherwise.
+function stepper(val, dataAttr, downOk, upOk, name, up = "Raise"){
   const n = esc(name);
   return `<div class="stepper" data-name="${n}">
     <button data-step="${dataAttr}|-1" ${downOk?"":"disabled"} aria-label="Lower ${n}">−</button>
     <span class="val">${val}</span>
-    <button data-step="${dataAttr}|1" ${upOk?"":"disabled"} aria-label="Raise ${n}">+</button></div>`;
+    <button data-step="${dataAttr}|1" ${upOk?"":"disabled"} aria-label="${esc(up)} ${n}">+</button></div>`;
 }
 // A stat a trait caps says so under its name, a price-like line Expert mode never folds (Decision 235).
 const capLine = t => t ? `<small class="next-cost stat-max">${esc(t)}</small>` : "";
@@ -203,7 +204,6 @@ function renderPowerLevel(){
         <span>Skills <b>${p.skillPoints.base}+${(p.skillPoints.plusStats||[]).join("+")}</b></span>
         <span>CP <b>${p.characterPoints}</b></span>
         <span>Skill cap <b>${p.maxSkillRank}</b></span>
-        <span>Power cap <b>${p.maxPowerRank}</b></span>
         <span>Max CP Boost <b>${p.maxBoost}</b></span>
         <span>${CR} <b>${p.startingCredits.roll}×${p.startingCredits.multiplier}</b></span>
       </div>
@@ -437,7 +437,7 @@ function basePowersHtml(ch, sel, creating = true){
   if (!st || !Engine.specializationIds(ch).length) return "";
   const spec = Engine.specializationChosen(ch), noun = (sel.specialization && sel.specialization.label) || "specialization";
   let h = `<div class="sect">Powers${st.count!=null?` — place ${st.count} Base Power${st.count>1?"s":""}`:""}</div>
-    <p class="step-note">Your Innate powers are yours at rank 1. Each Base Power takes one of your ${esc(noun)}'s powers at rank 1. ${st.cap==null||!creating?"":st.cap>1?`CP raises any of your powers on the Character Points step, up to rank ${st.cap}. `:"At this Power Level, CP raises no power: every one starts at rank 1. "}<em>${st.spent}/${st.count==null?"—":st.count} placed.</em></p>`;
+    <p class="step-note">Your Innate powers are yours at rank 1. Each Base Power takes one of your ${esc(noun)}'s powers at rank 1. ${st.cap==null||!creating?"":st.cap>1?`On the Character Points step, CP raises any of your powers up to rank ${st.cap}, or learns a new one. `:`On the Character Points step, ${Engine.powerRankCost()} CP learns a new power at rank 1. None goes higher at this Power Level. `}<em>${st.spent}/${st.count==null?"—":st.count} placed.</em></p>`;
   const defs = sel.powers||[];
   const innate = Engine.archetypePowers(ch).filter(p=>!p.origin);
   if (innate.length) h += `<h3 class="sub-sect">Innate powers</h3>` + innate.map(p=>`<div class="pick selected"><div class="head"><h2>${esc(p.name)}</h2>
@@ -445,10 +445,12 @@ function basePowersHtml(ch, sel, creating = true){
       <div class="desc">${esc(p.effect||"")}${p.perRank&&p.ranked?"\nPer rank: "+esc(p.perRank):""}</div></div>`).join("");
   const groups = spec.map(o=>[`${o.name} powers`, st.rows.filter(r=>r.origin===o.id)]);
   const row = r => { const p = defs.find(x=>x && x.id===r.id) || {};
-    const up = (st.left==null || st.left > 0) && r.placed < r.cap;
+    // A power CP learned takes no Base Power (Decision 264): the stepper says why.
+    const up = (st.left==null || st.left > 0) && r.placed < r.cap && !r.learned;
+    const why = r.learned ? Engine.placeBasePower(clone(ch), r.id, 1).why : "";
     return `<div class="pick ${r.placed?"selected":""}"><div class="head"><h2>${esc(r.name)}</h2>
       ${p.cost?`<span class="cost">${esc(p.cost)}</span>`:""}<span class="cost grant">${r.ranked?"rank 1":"no ranks"}</span>
-      <div class="controls">${stepper(r.placed, "bp|"+esc(r.id), r.placed>0, up, "Base Powers in "+r.name)}</div></div>
+      <div class="controls">${stepper(r.placed, "bp|"+esc(r.id), r.placed>0, up, "Base Powers in "+r.name)}${why?`<span class="mod" title="${esc(why)}">⛔</span>`:""}</div></div>
       <div class="desc">${esc(p.effect||"")}${p.perRank&&r.ranked?"\nPer rank: "+esc(p.perRank):""}</div></div>`; };
   for (const [title, rows] of groups) if (rows.length) h += `<h3 class="sub-sect">${esc(title)}</h3>` + rows.map(row).join("");
   if (st.stray.length) h += st.stray.map(r=>`<div class="pick"><div class="head"><h2>${esc(r.name)}</h2>
@@ -609,28 +611,50 @@ function renderCP(){
     <div class="controls">${stepper(luck.startingValue+ch.trackers.luck.bonus, "luck|x", ch.trackers.luck.bonus>0, luckCan.ok, "LUCK")}<span class="mod" title="${esc(luckCan.ok?"":luckCan.why)}">${luckCan.ok?"":"⛔"}</span></div></div>
     <div class="desc"${foldAttr("luck")}>Everyone starts at ${luck.startingValue}. ${esc(luck.refresh)}</div></div>`;
 
-  // Disciplines: price, cap and starting ranks are the data's (Decision 135).
+  // Disciplines: price, starting ranks and prerequisites are the data's (Decision 135); each CP rank is a
+  // Boost, so a Discipline rises at most the Max CP Boost above where it starts (Decision 265). The words a
+  // refused + shows come from the engine, asked of a copy.
+  const refusal = (fn) => { const c = clone(ch), r = fn(c); return r && !r.ok ? r.why : ""; };
   const discs = Engine.disciplineRanks(ch);
   if (discs.length){
-    const per = Engine.powerRankCost(), cap = Engine.disciplineCap(ch);
-    h += secs.sect("Disciplines", `Disciplines — ${per} CP per rank${cap==null?"":` · cap ${cap}`}`);
-    h += discs.map(d=>`<div class="pick ${d.rank>0?"selected":""}"><div class="head"><h2>${esc(d.name)}</h2>${d.description?foldBtn("disc|"+d.id, d.name):""}
-        <span class="cost">${d.base?`starts at ${d.base} · `:""}rank ${d.rank}</span>
-        <div class="controls">${stepper(d.rank,"disc|"+d.id, d.bought>0, (cap==null || d.rank<cap) && bal.left>=per, d.name)}</div></div>
-        <div class="desc"${foldAttr("disc|"+d.id)}>${esc(d.description)}</div></div>`).join("");
+    const per = Engine.powerRankCost();
+    h += secs.sect("Disciplines", `Disciplines — ${per} CP per rank · up to +${pl.maxBoost} each (Max CP Boost)`);
+    h += discs.map(d=>{
+      const why = refusal(c=>Engine.buyDisciplineRank(c, d.id, 1)), locked = d.needs && !d.needs.met;
+      return `<div class="pick ${d.rank>0?"selected":""}"><div class="head"><h2>${esc(d.name)}</h2>${d.description?foldBtn("disc|"+d.id, d.name):""}
+        <span class="cost">${d.base?`starts at ${d.base} · `:""}rank ${d.rank}${d.cap==null?"":` · up to ${d.cap}`}</span>
+        ${locked?`<span class="cost">needs ${esc(d.needs.name)} ${d.needs.rank}</span>`:""}
+        <div class="controls">${stepper(d.rank,"disc|"+d.id, d.bought>0, !why, d.name)}${why?`<span class="mod" title="${esc(why)}">⛔</span>`:""}</div></div>
+        <div class="desc"${foldAttr("disc|"+d.id)}>${esc(d.description)}</div></div>`; }).join("");
   }
 
-  // Powers CP raises (Decisions 215, 240): a held, ranked archetype power,
-  // Innate or bought. The price is the Disciplines'; the cap is Max Starting
-  // Rank (or the book's printed maximum, if lower).
+  // Powers CP raises or learns (Decisions 215, 240, 264): the held, ranked archetype powers, then the ones of
+  // the character's own Bloodline or Origin it could learn at rank 1. One price, the Disciplines'; a rank is a
+  // Boost, held to the Max CP Boost and to Max Starting Rank (or the book's printed maximum, if lower).
   const pcs = Engine.powerCpState(ch);
   if (pcs.length){
-    const per = Engine.powerRankCost();
+    const per = Engine.powerRankCost(), defs = (Engine.archetype(ch)||{}).powers || [];
+    const heldRows = pcs.filter(r=>r.held), learnRows = pcs.filter(r=>!r.held);
+    const pickRow = r => {
+      const why = refusal(c=>Engine.buyPowerRank(c, r.id, 1));
+      const p = defs.find(x=>x && x.id===r.id) || {};
+      return `<div class="pick ${r.cp>0?"selected":""}"><div class="head"><h2>${esc(r.name)}</h2>${p.effect?foldBtn("apow|"+r.id, r.name):""}
+        <span class="cost">${r.learned?"learned with CP · ":r.start>1||(r.cp&&!r.learned)?`starts at ${r.start} · `:""}rank ${r.rank}${r.cap==null?"":` · cap ${r.cap}`}</span>
+        <div class="controls">${stepper(r.rank,"apow|"+r.id, r.cp>0, !why, r.name+" with CP", r.held ? "Raise" : "Learn")}${why?`<span class="mod" title="${esc(why)}">⛔</span>`:""}</div></div>
+        <div class="desc"${foldAttr("apow|"+r.id)}>${esc(p.effect||"")}${p.perRank&&r.ranked?"\nPer rank: "+esc(p.perRank):""}</div></div>`; };
     h += secs.sect("Powers", `Powers — ${per} CP per rank`);
-    if (pcs.every(r=>r.cap!=null && r.start >= r.cap)) h += `<p class="step-note">At this Power Level, CP raises no power: every one starts at rank 1.</p>`;
-    h += pcs.map(r=>`<div class="pick ${r.cp>0?"selected":""}"><div class="head"><h2>${esc(r.name)}</h2>
-        <span class="cost">${r.start>1||r.cp?`starts at ${r.start} · `:""}rank ${r.rank}${r.cap==null?"":` · cap ${r.cap}`}</span>
-        <div class="controls">${stepper(r.rank,"apow|"+r.id, r.cp>0, (r.cap==null || r.rank<r.cap) && bal.left>=per, r.name+" with CP")}</div></div></div>`).join("");
+    if (heldRows.length && heldRows.every(r=>r.cap!=null && r.start >= r.cap))
+      h += `<p class="step-note">At this Power Level your powers start, and stay, at rank 1.${learnRows.length?` ${Engine.powerRankCost()} CP still learns one you don't have.`:""}</p>`;
+    h += heldRows.map(pickRow).join("");
+    if (learnRows.length){
+      h += `<h3 class="sub-sect">Powers you don't have yet</h3>`;
+      for (const o of Engine.specializationChosen(ch)){
+        const own = learnRows.filter(r=>r.origin===o.id);
+        if (own.length) h += `<h3 class="sub-sect">${esc(o.name)} powers</h3>` + own.map(pickRow).join("");
+      }
+      h += learnRows.filter(r=>!r.origin).map(pickRow).join("");
+    }
+    h += `<p class="step-note">Or write one with your GM under Custom powers, below.</p>`;
   }
   // CP on a power with no row (a hand-edited file, an undo): take-back only.
   const rowIds = new Set(pcs.map(r=>r.id)), cpOn = Engine.powerCpOf(ch);
@@ -1195,11 +1219,7 @@ function applyStep(key, delta){
     else Engine.trimSelections(ch,"disadvantage",id);
   }
   if (kind==="luck"){ ch.trackers.luck.bonus=Math.max(0, ch.trackers.luck.bonus+delta); }
-  if (kind==="disc"){
-    const cur=ch.archetypeChoices.disciplines[id]||0, v=cur+delta;
-    if (v<0) return; ch.archetypeChoices.disciplines[id]=v;
-    if (v===0) delete ch.archetypeChoices.disciplines[id];
-  }
+  if (kind==="disc") Engine.buyDisciplineRank(ch, id, delta);
   if (kind==="bp") Engine.placeBasePower(ch, id, delta);
   if (kind==="apow") Engine.buyPowerRank(ch, id, delta);
   if (kind==="boost"){ const [type,tid]=[rest[0],rest.slice(1).join("|")]; Engine.addBoost(ch,type,tid,delta); }
