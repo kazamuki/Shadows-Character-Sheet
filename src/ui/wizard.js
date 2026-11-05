@@ -113,12 +113,13 @@ function wizardRailHtml(ch){
 // ── Wizard-only widgets ──────────────────────────────────────────────
 // `name` is what the row changes ("Body", "Handguns"): the buttons read
 // "Raise Body", and announceStep() reads it back with the new value (W59).
-function stepper(val, dataAttr, downOk, upOk, name){
+// `up` is the + button's verb: "Learn" for a power not held yet (W59), "Raise" otherwise.
+function stepper(val, dataAttr, downOk, upOk, name, up = "Raise"){
   const n = esc(name);
   return `<div class="stepper" data-name="${n}">
     <button data-step="${dataAttr}|-1" ${downOk?"":"disabled"} aria-label="Lower ${n}">−</button>
     <span class="val">${val}</span>
-    <button data-step="${dataAttr}|1" ${upOk?"":"disabled"} aria-label="Raise ${n}">+</button></div>`;
+    <button data-step="${dataAttr}|1" ${upOk?"":"disabled"} aria-label="${esc(up)} ${n}">+</button></div>`;
 }
 // A stat a trait caps says so under its name, a price-like line Expert mode never folds (Decision 235).
 const capLine = t => t ? `<small class="next-cost stat-max">${esc(t)}</small>` : "";
@@ -619,7 +620,7 @@ function renderCP(){
     const per = Engine.powerRankCost();
     h += secs.sect("Disciplines", `Disciplines — ${per} CP per rank · up to +${pl.maxBoost} each (Max CP Boost)`);
     h += discs.map(d=>{
-      const why = refusal(c=>Engine.buyDisciplineRank(c, d.id, 1)), locked = d.start<1 && d.needs && !d.needs.met;
+      const why = refusal(c=>Engine.buyDisciplineRank(c, d.id, 1)), locked = d.needs && !d.needs.met;
       return `<div class="pick ${d.rank>0?"selected":""}"><div class="head"><h2>${esc(d.name)}</h2>${d.description?foldBtn("disc|"+d.id, d.name):""}
         <span class="cost">${d.base?`starts at ${d.base} · `:""}rank ${d.rank}${d.cap==null?"":` · up to ${d.cap}`}</span>
         ${locked?`<span class="cost">needs ${esc(d.needs.name)} ${d.needs.rank}</span>`:""}
@@ -639,7 +640,7 @@ function renderCP(){
       const p = defs.find(x=>x && x.id===r.id) || {};
       return `<div class="pick ${r.cp>0?"selected":""}"><div class="head"><h2>${esc(r.name)}</h2>${p.effect?foldBtn("apow|"+r.id, r.name):""}
         <span class="cost">${r.learned?"learned with CP · ":r.start>1||(r.cp&&!r.learned)?`starts at ${r.start} · `:""}rank ${r.rank}${r.cap==null?"":` · cap ${r.cap}`}</span>
-        <div class="controls">${stepper(r.rank,"apow|"+r.id, r.cp>0, !why, (r.held?"":"Learn ")+r.name+" with CP")}${why?`<span class="mod" title="${esc(why)}">⛔</span>`:""}</div></div>
+        <div class="controls">${stepper(r.rank,"apow|"+r.id, r.cp>0, !why, r.name+" with CP", r.held ? "Raise" : "Learn")}${why?`<span class="mod" title="${esc(why)}">⛔</span>`:""}</div></div>
         <div class="desc"${foldAttr("apow|"+r.id)}>${esc(p.effect||"")}${p.perRank&&r.ranked?"\nPer rank: "+esc(p.perRank):""}</div></div>`; };
     h += secs.sect("Powers", `Powers — ${per} CP per rank`);
     if (heldRows.length && heldRows.every(r=>r.cap!=null && r.start >= r.cap))

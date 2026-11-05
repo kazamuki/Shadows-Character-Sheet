@@ -366,7 +366,11 @@ window.SHADOWS_DATA = {
         // number from the scaling row or the power level, like `countBy`.
         disciplines: {
           list: [ { id: "evocation", name: "Evocation", description: "...",
-                    startingRankBy: "campaignPowerScaling.evocationStartingRank" } ]
+                    startingRankBy: "campaignPowerScaling.evocationStartingRank" },
+                  // (Decision 265) The Discipline and rank its first rank needs, with CP or IP.
+                  { id: "enchantment", name: "Enchantment", description: "...",
+                    prerequisite: { discipline: "evocation", rank: 3 } } ]
+          // maxRankBy: optional, a path to a creation ceiling below the Max CP Boost (Decision 265).
         },
         // Declares extra character-sheet panels this archetype needs.
         // The app renders panels generically from these declarations.
@@ -1389,7 +1393,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
 19. **(Phase 2)** Arcanist Disciplines are purchasable in the CP step at
     6 CP/rank, capped at the power level's Max Power Rank. Evocation's
     starting rank comes from the scaling table and is computed, not stored.
-    → **Superseded in part by Decision 157** — a rank costs 5 CP, the price of any power rank.
+    → **Superseded in part by Decisions 157 and 265** — a rank costs 5 CP, the price of any power rank (157), and Max Power Rank no longer caps a Discipline (265).
 20. **(Phase 2)** Aberration prose benefits display as reference text only;
     only structured fields (e.g. `tolBonus`) auto-apply to computed values.
     → Resolved in Phase 3 by Decision 26 (manual adjustments ledger).
@@ -5414,7 +5418,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Decided:** Evocation starts at `evocationStartingRank`, Enchantment and Alchemy at 0, and CP raises each up to `maxBoost` times on top (264). The Arcanist's `disciplines.maxRankBy` goes; the engine still honours one an archetype declares. A Discipline's `prerequisite` (`{ discipline, rank }`, data) must be met for its first rank, bought with CP or IP: Evocation 3 for Enchantment, Enchantment 3 for Alchemy. Lowering the one before in the wizard is allowed, and `validate` blocks the lock until it's fixed. `powerLevels[].maxPowerRank`, which caps nothing now, is removed with its chip; Max Starting Rank is the one term for an archetype's printed ceiling.
      - **Why:** Scott's ruling (via Ken, 2026-11-04). `0480` already asks for 3 ranks of Evocation "before attempting Enchantment". The book's recap (`0434`) prints no Max Power Rank.
      - **Rejected:** Max Power Rank 2/3/4/5 as the Discipline ceiling (Scott); the prerequisite in code (Decision 135); refusing − on Evocation while Enchantment is held (a broken pick is named, as a starting spell above its rank is); the prerequisite at creation only (`0480` says before attempting, at any time); keeping `maxPowerRank` as a label (a number that caps nothing reads as a rule).
-     - **Replaces:** Decision 157 in part (Max Power Rank capped a Discipline). Decision 3 in part (Max Power Rank no longer applies on top). Decision 135 stands: the cap, the start and the prerequisite are data.
+     - **Replaces:** Decisions 19 and 157 in part (Max Power Rank capped a Discipline). Decision 3 in part (it no longer applies on top). Decision 135 stands: the cap, the start and the prerequisite are data.
      - **Revisit if:** Scott or Deighton put a creation ceiling back on Disciplines, or Deighton gives custom powers a ceiling of their own (BQ1).
      - **Built:** app 0.61.0, game data 0.52, no schema bump, PR #292, log 2026-11-04 (W143).
 

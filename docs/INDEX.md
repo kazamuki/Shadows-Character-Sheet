@@ -214,7 +214,7 @@ What a number *is*. Change one of these and characters change.
 - **14** — IP costs: stat increase = current value ×10; skill rank = 5× current (Focused 3×); skills/powers cap at rank 10 via... → **superseded in part by 97**
 - **16** *(Phase 2)* — Ranked Advantages cost cost per rank (Archery Master rank 2 = 12 CP).
 - **18** *(Phase 2)* — Arcanist focus-stat bonus may push a stat past 10; the modifier curve extrapolates +1 per point above 10. → **superseded in part by 98** → **superseded in part by 197**
-- **19** *(Phase 2)* — Arcanist Disciplines are purchasable in the CP step at 6 CP/rank, capped at the power level's Max Power Rank. → **superseded in part by 157**
+- **19** *(Phase 2)* — Arcanist Disciplines are purchasable in the CP step at 6 CP/rank, capped at the power level's Max Power Rank. → **superseded in part by 157 and 265**
 - **64** *(B3)* — 1 Health Level per BOD is an invariant, not a tunable.
 - **66** *(B8)* — The two Pain Level floors are numbers the engine carries and the sheet states.
 - **67** *(B9)* — The milestone cadence comes from the data, once.

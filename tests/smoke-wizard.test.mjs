@@ -944,7 +944,9 @@ test("P4 (W59): every stepper in the wizard says what it changes", () => {
       for (const b of app.$$("#main [data-step]")) {
         seen++;
         const l = b.getAttribute("aria-label");
-        assert.match(l || "", /^(Raise|Lower) \S/, `${arch}/${id}: ${b.dataset.step} reads "${l}"`);
+        // A power not held yet is learned, not raised (Decision 264).
+        assert.match(l || "", /^(Raise|Lower|Learn) \S/, `${arch}/${id}: ${b.dataset.step} reads "${l}"`);
+        assert.doesNotMatch(l || "", /^(Raise|Lower|Learn) (Raise|Lower|Learn) /, `${arch}/${id}: ${b.dataset.step} reads "${l}"`);
         assert.ok(b.closest(".stepper").dataset.name && !/undefined|null/.test(l), `${b.dataset.step} has no name`);
       }
     }
@@ -1646,5 +1648,10 @@ test("Decision 265: the Power Level card has no Power cap chip, and the Discipli
   assert.equal(ench.disabled, true);
   assert.match(ench.closest(".pick").textContent, /needs Evocation 3/);
   assert.match(ench.closest(".controls").querySelector(".mod").title, /^Enchantment needs Evocation 3\.$/);
+  // Bought, then Evocation lowered under it (BQ7): the row still says what it needs.
+  cp.click('[data-step="disc|evocation|1"]'); cp.click('[data-step="disc|enchantment|1"]'); cp.click('[data-step="disc|evocation|-1"]');
+  const ench2 = cp.$('[data-step="disc|enchantment|1"]').closest(".pick");
+  assert.match(ench2.textContent, /rank 1/);
+  assert.match(ench2.textContent, /needs Evocation 3/, "a broken prerequisite went quiet on its row");
   assert.deepEqual([card1.errors, cp.errors], [[], []]);
 });

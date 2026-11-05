@@ -797,7 +797,7 @@ test("Decisions 240, 264: a Street Vampire is told CP can learn a power but rais
 });
 
 test("Decision 215: CP left on a power with no row shows a take-back-only row, and one press clears its error", () => {
-// An Upyr power on a Strigoi: another Bloodline's is the stray now; a Strigoi power CP learned is a row (Decision 264).
+  // An Upyr power on a Strigoi: another Bloodline's is the stray now; a Strigoi power CP learned is a row (Decision 264).
   const app = onStep("vampire", "street", "character-points", ch => {
     ch.archetypeChoices.specialization = ["strigoi"];
     ch.archetypeChoices.powerCp = { "iron-hide": 1, "preternatural-speed": 1 };
@@ -939,11 +939,13 @@ test("Decision 264: the CP step lists the powers you could learn, learning one m
   assert.match(cp.$("#main").textContent, /Strigoi powers/);
   const before = Engine.cp(Engine.migrate(JSON.parse(JSON.stringify(draft(cp))))).left;
   assert.match(cp.$(bone).closest(".pick").textContent, /rank 0/);
+  assert.match(cp.$(bone).getAttribute("aria-label"), /^Learn Bone Spines \(Unmasked\) with CP$/, "a power to learn reads as one to raise (W59)");
   cp.$(bone).focus(); cp.click(bone);
   assert.deepEqual({ ...draft(cp).archetypeChoices.powerCp }, { "bone-spines": 1 });
   assert.equal(Engine.cp(Engine.migrate(JSON.parse(JSON.stringify(draft(cp))))).left, before - 5);
   const row = cp.$(bone).closest(".pick");
   assert.match(row.textContent, /learned with CP · rank 1/);
+  assert.match(cp.$(bone).getAttribute("aria-label"), /^Raise Bone Spines \(Unmasked\) with CP$/);
   assert.equal(cp.window.document.activeElement, cp.$(bone), "focus left the stepper that was pressed");
   const learnList = [...cp.$$(".sub-sect")].find(h => /Powers you could learn/.test(h.textContent));
   assert.ok(learnList.compareDocumentPosition(row) & 2 /* the row precedes the learn list */, "a learned power is still under the learn list");
