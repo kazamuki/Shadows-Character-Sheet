@@ -2,6 +2,15 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.62.0",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**Sustained powers run.** Start one from its card or the SFR popover and its SFR is spent; each Turn Reset spends it again, and stops it if you can't pay. Iron Hide's Natural Armor counts on a hit while it runs.",
+      "**A Werewolf's powers run only in Werewolf Form**, and shifting back stops them."
+    ]
+  },
+  {
     "version": "0.61.0",
     "date": "2026-11-05",
     "intro": [],

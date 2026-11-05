@@ -7,7 +7,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { boot } from "./harness.mjs";
-import { Engine, GM_ON, lockedCharacter, tableCard, type } from "./smokekit.mjs";
+import { Engine, GM_ON, lockedCharacter, lockedVampire, tableCard, type } from "./smokekit.mjs";
 
 const DEZ_TAG = "TAG-EEEE-EEEE-EEEE";
 
@@ -141,5 +141,25 @@ test("257: a Compromised vest reads 'Compromised: RES is gone' on the row and in
   assert.match(app.$(".enc-seat-armor").textContent, /INT 0\/10 · Compromised: RES is gone$/);
   ev(app, `tableChange(() => { S.table.encounters[0].rows[0].scrapped = true; })`);
   assert.match(app.$("[data-erow] .enc-armor").textContent, /· Scrap$/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 266: a GM's seat hit starts a running power's box ticked, and the read-only sheet can't stop it", () => {
+  const ch = lockedVampire("upyr");
+  Object.assign(ch.archetypeChoices, { basePowers: { "iron-hide": 2 }, powerCp: {}, optionPicks: {} });
+  ch.identity.name = "Dez"; ch.meta.id = DEZ_TAG; ch.meta.updated = "2026-10-02T10:00:00.000Z";
+  ch.trackers.running = [{ id: "iron-hide" }];
+  ch.trackers.sfr = { spent: 2, turn: 2 };
+  const app = open(ch);
+  const id = withDez(app);
+  app.click(`[data-ehit="${id}"]`);
+  assert.equal(app.$('[data-ehit-nat="iron-hide"]').checked, true, "the seat's box starts unticked while Iron Hide runs");
+  assert.match(app.$("[data-ehitpanel]").textContent, /Natural Armor 3/);
+  app.click("[data-ehit-cancel]");
+  app.click("[data-eopenseat]");
+  app.click('[data-rotab="character"]');
+  assert.match(app.$("[data-rosheet]").textContent, /Running · 2 SFR a round/, "the read-only sheet doesn't show what runs");
+  const stop = app.$('[data-rosheet] [data-runtoggle="iron-hide|stop"]');
+  assert.ok(stop && stop.disabled, "Stop is live on a read-only sheet");
   assert.deepEqual(app.errors, []);
 });

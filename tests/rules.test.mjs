@@ -3463,3 +3463,39 @@ test("CRB 0433, 0434: 5 CP raises a Power a rank or gives a new one at rank 1, u
   // Scott's Discipline ruling is in the book: 3 ranks of one before attempting the next.
   assert.match(crb("0480_Magic.md"), /An Arcanist must have 3 ranks of Evocation before attempting Enchantment, and 3 ranks of Enchantment before attempting Alchemy\./);
 });
+
+// ── Sustained powers run (H1, Decision 266) ──────────────────────────────
+
+test("Decision 266: every run cost agrees with the power's cost text, and every sustained cost has one", () => {
+  const sustained = [];
+  for (const a of D.archetypes) for (const p of a.powers || []) {
+    const text = String(p.cost || "");
+    if (/sustained/i.test(text)) {
+      sustained.push(`${a.id}/${p.id}`);
+      assert.ok(p.run, `${p.id}: "${text}" is sustained and has no run`);
+    }
+    if (!p.run) continue;
+    assert.ok(/sustained/i.test(text), `${p.id} has a run and a cost that isn't sustained: "${text}"`);
+    assert.equal(p.run.each, "round", `${p.id}: "sustained" pays each round`);
+    const s = p.run.sfr;
+    if (/^Rank \+ (\d+)\b/.test(text)) assert.equal(JSON.stringify(s), JSON.stringify({ perRank: 1, plus: Number(/^Rank \+ (\d+)/.exec(text)[1]) }), p.id);
+    else if (/^Rank\b/.test(text)) assert.equal(JSON.stringify(s), JSON.stringify({ perRank: 1 }), p.id);
+    else if (/^(\d+) SFR\b/.test(text)) assert.equal(JSON.stringify(s), JSON.stringify({ plus: Number(/^(\d+) SFR/.exec(text)[1]) }), p.id);
+    else assert.fail(`${p.id}: "${text}" fits none of Rank + N, Rank and N SFR`);
+  }
+  assert.equal(sustained.length, 7, `the book's sustained powers: ${sustained.join(", ")}`);
+});
+
+test("CRB 0414: sustained powers pay again each round, and a Werewolf's work only in Werewolf Form", () => {
+  const md = crb("0414_Werewolf.md").replace(/\s+/g, " ");
+  assert.match(md, /every Innate and Origin power works only in Werewolf Form, except CyberWolf Protocol/);
+  assert.match(md, /no single power can cost more than your RoU/);
+  assert.match(md, /Sustained powers pay their cost again each round; outside an encounter, they cost once per scene/);
+  assert.match(crb("APPROVED_Vampire_and_Werewolf_rebalancing.md").replace(/\s+/g, " "), /Sustained:\*\* Pays its cost again every round it stays active\. Outside an encounter, it costs once per scene/);
+  // The data says the same: the form is the Werewolf's, the cap too, and CyberWolf Protocol is not one of `powers`.
+  assert.equal(JSON.stringify(WW().runsIn), JSON.stringify({ panel: "form", option: "Werewolf" }));
+  assert.equal(WW().powerCostCap, "rou");
+  assert.equal(VA().runsIn, undefined, "0413 prints no form for a Vampire's powers");
+  assert.equal(VA().powerCostCap, undefined, "0413 prints no per-power limit");
+  assert.ok(!WW().powers.some(p => /cyberwolf/i.test(p.id) || /cyberwolf/i.test(p.name)), "CyberWolf Protocol is a starter power, exempt by not being one of powers");
+});

@@ -410,6 +410,11 @@ Main's SFR card and the vitals read `Engine.sfr()`, which takes its size from
 the archetype's scaling row, and a written-in archetype has none. Main could
 read the tracker panel's player-set max instead.
 
+**W110 — A sustained power is marked active, and Turn Reset charges it.** *Ken, from P11's PQ2 · → Decision 266, app 0.62.0: a sustained power runs from Start to Stop, and Turn Reset charges it*
+P11 (Decision 225) counts the SFR a player spends each round, but a sustained power ("2 SFR per round, sustained", "Rank per round, sustained") is still spent by hand with +1 every round. The ask: an Active toggle per sustained power, and Turn Reset charges what is active. *To respect:* every power cost is text today ("Rank + 2 per round"), so this starts with a data pass turning about ten costs into numbers (Decision 135); it is a work order of its own. Ken took the default in PQ2: the player spends it each round for now.
+
+*Built as H1 of the powers-that-run plan (2026-11-05): `docs/plans/powers-that-run/H1-sustained-powers.md`. W132's Plan line still points at the plan (H2 and H3).*
+
 ### Loadout & catalog
 
 **W4 — Search, filter, and a full view for the weapon/armor catalog.** *Ken · → Decision 118, app 0.22.0: a modal with search, section, afford and sort, the numbers before Add/Buy*

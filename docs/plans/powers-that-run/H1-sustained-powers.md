@@ -2,7 +2,7 @@
 
 **Plan:** [`powers-that-run.md`](../powers-that-run.md), session H1. **Wish:** **W110** (Ken, from P11's PQ2).
 Decisions 104, 135, 189, 195, 224, 225, 256, 264.
-**Status:** **drafted 2026-11-05 by Claude (Opus)**, pre-flighted against `main` at `377c2ce` (PR #292 merged: app
+**Status:** **built 2026-11-05** (Decision 266; PR #297). **Drafted 2026-11-05 by Claude (Opus)**, pre-flighted against `main` at `377c2ce` (PR #292 merged: app
 0.61.0, released 2026-11-05 after the pre-flight in #294, game data 0.52, character schema 0.32, table 0.19, pack 0.3; the last decision is 265). **Approved
 by Ken 2026-11-04** ("All defaults", in the W143 conductor session): the plan's HQ1–HQ4 and this order's HQ6–HQ10 (HQ5 was withdrawn with W144).
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.

@@ -22,7 +22,7 @@ const Engine = (() => {
   const INTAKE_RE = new RegExp(`^TAG-${INTAKE_BODY}$`);
   const OLD_INTAKE_RE = new RegExp(`^NCR-(${INTAKE_BODY})$`);
   // The character file's shape. A bump needs a migrate() step in the same change.
-  const SCHEMA_VERSION = "0.32";
+  const SCHEMA_VERSION = "0.33";
   const isIntakeId = v => typeof v==="string" && INTAKE_RE.test(v);
   function randomChars(n){
     const c = typeof globalThis!=="undefined" && globalThis.crypto && typeof globalThis.crypto.getRandomValues==="function" ? globalThis.crypto : null;
@@ -86,6 +86,7 @@ const Engine = (() => {
                  credits:{current:0, ledger:[]},
                  crank:{rep:0, ledger:[]},     // schema 0.17 (Decision 169); the tier is derived, never stored
                  heldSpells:[],                // schema 0.26 (Decision 224): ids of the Concentration spells being held
+                 running:[],                   // schema 0.33 (Decision 266): { id } of each sustained power the player has started
                  adjustments:[],               // manual adjustments ledger
                  panel:{} },                   // generic archetype tracker panels
       panelData:{},                            // archetype table/toggle panel content
@@ -725,7 +726,7 @@ const Engine = (() => {
     if (!p) return { ok:false, why:"That isn't on this sheet." };
     const o = toggleOptions(p).find(x=>x.name===name);
     if (!o) return { ok:false, why:"That isn't one of its options." };
-    const was = toggleCurrent(ch, p);
+    const was = toggleCurrent(ch, p), wasRunning = runningPowers(ch).map(r=>r.id);
     if (!ch.panelData || typeof ch.panelData!=="object") ch.panelData = {};
     const cost = was && was.name===o.name ? null : toggleCost(ch, p, o);
     if (cost){
@@ -734,7 +735,8 @@ const Engine = (() => {
       if (cost.withering) t.witheringDamage = nonNegInt(t.witheringDamage) + cost.hp;
     }
     ch.panelData[p.id] = o.name;
-    return { ok:true, cost };
+    // Decision 266: leaving the form a power runs in stops it, in the same press (and the same undo).
+    return { ok:true, cost, stopped: stopRunningOutsideForm(ch, p.id, o.name, wasRunning, !!was && was.name===o.name) };
   }
   // A toggle panel as the sheet draws it: each option, which is on, and
   // what pressing an option that isn't would cost.
@@ -2813,19 +2815,24 @@ const Engine = (() => {
     // Decision 225: the SFR spent this round is cleared by a Reset, and that alone is worth applying.
     const turnSpend = archPanels(ch).filter(p=>p && p.type==="tracker" && p.turnCap && p.resource && turnCount(ch, p)>0)
       .map(p=>({ title:txt(p.title), spent:turnCount(ch, p) }));
+    // Decision 266: what is running is charged again into the new round. `input.stop` is the ids the player ticked Stop on.
+    const running = resetRunning(ch, input.stop).map(({ id, name, sfr, payable, left })=>({ id, name, sfr, payable, left: Number.isFinite(left) ? left : null }));
     return { ok:true, ticks, total, before, after, dying:d.dying, marks,
-             prompts: { atZero:d.atZero, dyingCheck, concentration:d.concentration }, recovery, notes, turnSpend,
-             hasEffect: total>0 || !!dyingCheck || turnSpend.length>0 };
+             prompts: { atZero:d.atZero, dyingCheck, concentration:d.concentration }, recovery, notes, turnSpend, running,
+             hasEffect: total>0 || !!dyingCheck || turnSpend.length>0 || running.length>0 };
   }
   // The one writer, re-resolving from its inputs like applyHit. `choices`:
-  //   { atZero: "pass"|"fail", dyingCheck: "pass"|"fail" }
+  //   { atZero: "pass"|"fail", dyingCheck: "pass"|"fail", stop: [power ids to stop rather than keep running] }
   function applyReset(ch, input, choices){
-    const r = resolveReset(ch, input);
+    choices = isPlainObj(choices) ? choices : {};
+    const stop = Array.isArray(choices.stop) ? choices.stop.filter(x=>typeof x==="string") : [];
+    const r = resolveReset(ch, Object.assign({}, input, { stop }));
     if (!r.ok) return r;
-    choices = choices || {};
     const t = ch.trackers;
     t.damage = r.after.damage;
     archPanels(ch).forEach(p=>{ if (p && p.type==="tracker" && p.turnCap && p.resource && isPlainObj(t[p.resource])) t[p.resource].turn = 0; });
+    // Decision 266: the round is cleared first, then each kept power is charged into the new one, through the one writer.
+    const { charged, stopped } = chargeRunning(ch, stop);
     const marks = r.marks + (r.prompts.dyingCheck && choices.dyingCheck==="fail" ? 1 : 0);
     const added = [];
     const A = r.prompts.atZero;
@@ -2835,7 +2842,7 @@ const Engine = (() => {
       const i = t.conditions.findIndex(e=>e && e.id===((D().damageRules||{}).whileDying||{}).condition);
       if (i>=0) setConditionMarks(ch, i, (Number(t.conditions[i].marks)||0) + marks);
     }
-    return { ok:true, result:r, marks, added };
+    return { ok:true, result:r, marks, added, charged, stopped };
   }
 
   function luckState(ch){
@@ -3516,6 +3523,8 @@ const Engine = (() => {
     return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
   }
   function logSession(ch, s){
+    const stopped = runningPowers(ch).map(r=>r.id);   // Decision 266 (HQ3): a session ending stops every running power
+    ch.trackers.running = [];
     ch.sessions.push({
       date: s.date || localDay(),
       title: s.title||"",
@@ -3525,7 +3534,7 @@ const Engine = (() => {
     });
     ch.trackers.luck.spent = 0;
     // The Milestone Point this session earned may be the one a training was waiting for (Decision 230).
-    return {ok:true, trained:settleTraining(ch)};
+    return {ok:true, trained:settleTraining(ch), stopped};
   }
 
   // ── Çredits ──────────────────────────────────────────────────────────
@@ -4095,6 +4104,122 @@ const Engine = (() => {
       return { ok:true, turn, cap:panelTurnCap(ch, p) };
     }
     return { ok:true };
+  }
+  // ── Sustained powers run (Decision 266, W110) ──
+  // A power with `run` ({ sfr: { perRank, plus }, each: "round" }) is started by its player. `trackers.running` holds
+  // { id } for each; whether one is really running is `runningPowers`, the one reader: held, in its archetype's
+  // `runsIn` form (a toggle panel and the option it needs: the Werewolf's, 0414), and with a `run`. Start and every Turn
+  // Reset spend the cost through adjustPanelTracker, the one writer that counts a round (Decision 225), so `turn` and
+  // the Rate of Use warning follow. Nothing here names an archetype, a power or a panel: they are all the data's.
+  const sfrTrackerPanel = ch => archPanels(ch).find(x=>x && x.type==="tracker" && x.resource==="sfr" && x.turnCap) || null;
+  const finiteOr0 = v => typeof v==="number" && Number.isFinite(v) ? v : 0;
+  // What a running power costs now: perRank × rank + plus. Null for a power with no `run`.
+  function runCost(ch, p){
+    if (!p || !isPlainObj(p.run)) return null;
+    const s = isPlainObj(p.run.sfr) ? p.run.sfr : {};
+    return Math.max(0, Math.floor(finiteOr0(s.perRank) * (Number(p.rank) || 1) + finiteOr0(s.plus)));
+  }
+  const runEntries = ch => { const t = ch && ch.trackers; return isPlainObj(t) && Array.isArray(t.running) ? t.running.filter(e=>isPlainObj(e) && typeof e.id==="string" && e.id) : []; };
+  // The form the archetype's powers need: null when they need none, or the panel and option, and whether it's on.
+  function runForm(ch){
+    const a = archetype(ch), r = a && a.runsIn;
+    if (!isPlainObj(r) || typeof r.panel!=="string" || typeof r.option!=="string") return null;
+    const p = archPanels(ch).find(x=>x && x.id===r.panel && x.type==="toggle");
+    if (!p) return null;                                    // names no panel on this sheet: it asks for nothing
+    const cur = toggleCurrent(ch, p);
+    return { panel:r.panel, option:r.option, title:txt(p.title), on: !!cur && cur.name===r.option };
+  }
+  const runnableDefs = ch => archetypePowers(ch).filter(p=>isPlainObj(p.run));
+  // Each stored entry that is a held power with `run`, in the form it needs. The one place running is decided.
+  function runningPowers(ch){
+    const form = runForm(ch);
+    if (form && !form.on) return [];
+    const defs = runnableDefs(ch), seen = new Set(), out = [];
+    for (const e of runEntries(ch)){
+      const p = defs.find(x=>x.id===e.id);
+      if (!p || seen.has(e.id)) continue;
+      seen.add(e.id);
+      out.push({ id:p.id, name:txt(p.name), rank:p.rank, sfr:runCost(ch, p), each: p.run.each==="start" ? "start" : "round", def:p });
+    }
+    return out;
+  }
+  const isRunning = (ch, id) => runningPowers(ch).some(r=>r.id===id);
+  const nameOfRunnable = (ch, id) => { const p = archetypePowers(ch).find(x=>x.id===id); return p ? txt(p.name) : "That power"; };
+  // Why Start would refuse, in words the engine writes.
+  function startCheck(ch, id){
+    if (!ch || !ch.creation || ch.creation.locked!==true) return { ok:false, why:"Powers run once the character is locked.", short:"Locked sheets only" };
+    const p = runnableDefs(ch).find(x=>x.id===id);
+    if (!p) return { ok:false, why:"That power doesn't run." };
+    const name = txt(p.name);
+    if (isRunning(ch, id)) return { ok:false, why:`${name} is already running.`, short:"Already running" };
+    const form = runForm(ch);
+    if (form && !form.on) return { ok:false, why:`${name} works only in ${form.option} Form.`, short:`${form.option} Form only` };
+    // Ken, 2026-11-05: Start refuses what the pool can't pay, as Turn Reset stops it (Decision 266).
+    const cost = runCost(ch, p), sf = sfr(ch), s = ch.trackers && ch.trackers.sfr;
+    const left = sf && sf.value!=null ? Math.max(0, sf.value - nonNegInt(isPlainObj(s) ? s.spent : 0)) : Infinity;
+    if (left < cost) return { ok:false, why:`${name} needs ${cost} SFR, ${left} left.`, short:"Not enough SFR" };
+    return { ok:true, p };
+  }
+  // The held sustained powers, for a Start control: what each costs and whether it can start.
+  function runnablePowers(ch){
+    if (!ch || typeof ch!=="object") return [];
+    return runnableDefs(ch).map(p=>{ const c = startCheck(ch, p.id);
+      return { id:p.id, name:txt(p.name), rank:p.rank, sfr:runCost(ch, p), running:isRunning(ch, p.id), can:{ ok:c.ok, why:c.ok ? "" : c.why, short:c.ok ? "" : c.short } }; });
+  }
+  // The most one power may cost in a round, where the archetype says so (`powerCostCap`, as a panel's `turnCap`).
+  const powerCostCap = ch => { const a = archetype(ch), c = a && a.powerCostCap==="rou" ? (sfr(ch)||{}).rou : a && a.powerCostCap;
+    return typeof c==="number" && Number.isFinite(c) && c>=0 ? c : null; };
+  function startPower(ch, id){
+    const c = startCheck(ch, id);
+    if (!c.ok) return c;
+    const cost = runCost(ch, c.p), t = ch.trackers;
+    t.running = runEntries(ch).filter(e=>e.id!==id).map(e=>({ id:e.id })).concat([{ id }]);
+    const panel = sfrTrackerPanel(ch), w = panel && cost>0 ? adjustPanelTracker(ch, panel.id, cost) : null;
+    const cap = powerCostCap(ch);
+    return { ok:true, name:txt(c.p.name), sfr:cost, turn: w ? w.turn : null, cap: w ? w.cap : null,
+             overCap: cap!=null && cost>cap ? { sfr:cost, rou:cap } : null };
+  }
+  // Stop takes nothing back: the SFR was spent when it was paid (HQ9).
+  function stopPower(ch, id){
+    const had = runEntries(ch).some(e=>e.id===id);
+    if (!had) return { ok:false, why:`${nameOfRunnable(ch, id)} isn't running.` };
+    ch.trackers.running = runEntries(ch).filter(e=>e.id!==id).map(e=>({ id:e.id }));
+    return { ok:true, name:nameOfRunnable(ch, id) };
+  }
+  // Changing the form a power needs clears every held sustained power's entry, whether or not it read as running:
+  // leaving it ends them, and entering it starts none, so a stale entry (a hand-edited file) can't run unpaid when
+  // the form comes back. Returns the ids that were running and stopped.
+  function stopRunningOutsideForm(ch, panelId, option, was, same){
+    const a = archetype(ch), r = a && a.runsIn;
+    if (!isPlainObj(r) || r.panel!==panelId || same || !isPlainObj(ch.trackers)) return [];
+    const defs = new Set(runnableDefs(ch).map(p=>p.id));
+    ch.trackers.running = runEntries(ch).filter(e=>!defs.has(e.id)).map(e=>({ id:e.id }));
+    return r.option===option ? [] : was;
+  }
+  // What a Turn Reset would do to each running power that pays each round, in order: whether the pool covers it,
+  // and what the pool had left when its turn came (`left`, null when the sheet knows no pool).
+  // A power the player ticked Stop on takes nothing from the pool.
+  function resetRunning(ch, stop){
+    const gone = Array.isArray(stop) ? stop : [], sf = sfr(ch), s = ch && ch.trackers && ch.trackers.sfr;
+    let left = sf && sf.value!=null ? Math.max(0, sf.value - nonNegInt(isPlainObj(s) ? s.spent : 0)) : Infinity;
+    return runningPowers(ch).filter(r=>r.each==="round").map(r=>{
+      if (gone.includes(r.id)) return Object.assign({ payable:true, left }, r);
+      const payable = left >= r.sfr, had = left;
+      if (payable) left -= r.sfr;
+      return Object.assign({ payable, left:had }, r);
+    });
+  }
+  // The round is already cleared: charge each kept, payable power into the new one; stop the rest.
+  function chargeRunning(ch, stop){
+    const rows = resetRunning(ch, stop), panel = sfrTrackerPanel(ch), charged = [], stopped = [], drop = new Set();
+    for (const r of rows){
+      if (stop.includes(r.id)){ drop.add(r.id); stopped.push({ id:r.id, why:"stop" }); }
+      else if (!r.payable){ drop.add(r.id); stopped.push({ id:r.id, why:"unpaid" }); }
+      else { if (panel && r.sfr>0) adjustPanelTracker(ch, panel.id, r.sfr); charged.push({ id:r.id, sfr:r.sfr }); }
+    }
+    for (const id of stop) if (!drop.has(id) && runEntries(ch).some(e=>e.id===id)){ drop.add(id); stopped.push({ id, why:"stop" }); }
+    if (drop.size) ch.trackers.running = runEntries(ch).filter(e=>!drop.has(e.id)).map(e=>({ id:e.id }));
+    return { charged, stopped };
   }
   // A Discipline's bought ranks, normalized: an undo or a hand edit can put anything in the map.
   const disciplinesOf = ch => { const m = (((ch||{}).archetypeChoices)||{}).disciplines; return isPlainObj(m) ? m : {}; };
@@ -5046,6 +5171,12 @@ const Engine = (() => {
     // Schema 0.26 (Decision 224): the ids of held spells. Strings only, each once, at most 20, 120 characters
     // each. Which of them is a held Concentration spell is read every time (heldSpells), never trusted.
     t.heldSpells = [...new Set((Array.isArray(t.heldSpells) ? t.heldSpells : []).filter(x=>typeof x==="string" && x).map(x=>x.slice(0, 120)))].slice(0, 20);
+    // Schema 0.33 (Decision 266): the sustained powers the player started, as { id }. Plain entries with a string id,
+    // each id once, at most 20, 120 characters each, and no other key. Whether the power is held, and in the form it
+    // needs, is read every time (runningPowers), never trusted: an id the character no longer holds is kept, and not running.
+    { const seenRun = new Set();
+      t.running = (Array.isArray(t.running) ? t.running : []).filter(e=>isPlainObj(e) && typeof e.id==="string" && e.id)
+        .map(e=>e.id.slice(0, 120)).filter(id=>!seenRun.has(id) && seenRun.add(id)).slice(0, 20).map(id=>({ id })); }
     if (!t.panel || typeof t.panel!=="object") t.panel={};
     // Schema 0.8 (Decision 95): Conditions, plus the two damage inputs the hit
     // resolver writes. A hand-edited file can hold junk or a duplicate; keep
@@ -9628,6 +9759,7 @@ const Engine = (() => {
     // Magic: the Cascade, Aberrations, the Grimoire, starting spells
     cascade, aberrationState, recordAberration, removeAberration,
     spellForms, spellForm, grimoire, spellPower, spAmounts, spellAttack, addSpell, linkSpell, removeGrimoireRow, heldSpells, holdSpell, releaseSpell,
+    runCost, runningPowers, isRunning, runnablePowers, startPower, stopPower,
     castingPool, startingSpells, canAddStartingSpell, addStartingSpell,
     // Progression and play: IP, Milestones, sessions, Çredits, panels
     ipState, ipCost, spendIP, grantIP, advantageOffer,

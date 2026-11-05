@@ -290,6 +290,19 @@ function update(rerenderMain=true){
 // the character, run the mutation, record a reversible audit entry, then save +
 // re-render. Admin edits use the same path, so the activity log is complete.
 const clone = x => (x==null ? x : JSON.parse(JSON.stringify(x)));
+// Decision 266: the Natural Armor boxes a hit opens with ticked: each conditional source whose power is running
+// (Engine.runningPowers decides that, nothing here reads the stored list). Both hits seed from it: the sheet's and a GM's seat's.
+function runningNatural(ch){
+  const on = new Set(Engine.runningPowers(ch).map(r=>r.id)), nat = {};
+  Engine.naturalArmor(ch, []).conditional.forEach(c=>{ if (on.has(c.id)) nat[c.id] = true; });
+  return nat;
+}
+// "Iron Hide and Cold Embrace": names as a sentence says them.
+const andList = names => names.length>1 ? names.slice(0, -1).join(", ") + " and " + names[names.length-1] : names[0] || "";
+// The same for the ids of powers that stopped (a toast's words).
+function stoppedNames(ch, ids){
+  return andList(Engine.runnablePowers(ch).filter(r=>(ids||[]).includes(r.id)).map(r=>r.name));
+}
 function commit(kind, label, fn){
   const ch=S.ch; if(!ch) return;
   const before=clone(ch);

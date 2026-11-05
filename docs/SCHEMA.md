@@ -739,7 +739,10 @@ Base Powers placed a rank in it (Decisions 200, 215). With `granted: "innate"`
 a power with no `origin` is held at rank 1, and Base Powers place ranks only
 in the specialization's powers; CP raises any held, ranked power
 (`archetypeChoices.powerCp`). A power with `ranked: false` takes one to hold
-and is never raised. A power's `grants` count at its rank; grants that share
+and is never raised. A power with `run` (`{ sfr: { perRank, plus }, each }`, Decision 266) is
+sustained: its player starts it, Start and every Turn Reset spend `perRank × rank + plus`
+SFR, and `cost` stays its text. An archetype's `runsIn` (`{ panel, option }`) is the toggle
+it must be in, and `powerCostCap: "rou"` warns when one power costs more than the Rate of Use. A power's `grants` count at its rank; grants that share
 a `noStack` value count once, the highest (Decision 215). A specialization
 option's `choices` (`{ id, name, type: "weapon" | "text", options | fields,
 examples? }`) ask for something at creation. A `feed` panel's `unrested`
@@ -762,7 +765,7 @@ It renders on the Character tab (Decision 158).
 ```js
 {
   meta: {
-    schemaVersion: "0.29",
+    schemaVersion: "0.33",
     // (0.11, Decisions 128 and 133) The character's TAG, its permanent
     // identity: TAG- + 12 Crockford base-32 characters. Issued by
     // newCharacter(), backfilled by migrate(), never reissued. 0.12 renamed
@@ -890,6 +893,7 @@ It renders on the Character tab (Decision 158).
     // tracked value (Decision 93).
     credits: { current: 800, ledger: [ { date, amount, note } ] },
     crank: { rep: 0, ledger: [ { date, amount, note } ] },          // (0.17) CRANK rep (Decision 169); tier is derived
+    running: [ { id: "iron-hide" } ],   // (0.33, Decision 266) the sustained powers the player started: { id } only, each once, at most 20, 120 characters each; migrate drops anything else and keeps an id the character no longer holds. Whether one is running is runningPowers (held, with run, in its archetype's runsIn form), never this list
     heldSpells: [ "fog-shroud" ],    // (0.26, Decision 224) ids of Concentration spells the player is holding. migrate keeps strings, each once, at most 20, 120 characters each; heldSpells() keeps only Grimoire book spells with the tag, the first Evocation-rank of them as held, and deletes nothing
     // (0.8) Active Conditions (Decision 95). One entry per id ("you have it or
     // you don't"), except a location-bearing Condition, which is one per body
@@ -2916,6 +2920,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
     → **Superseded in part by Decision 196** — Resilient Spirit is gone with Lunar Phase Blessing; `resAgainst` stays, with no source in the data.
     → **Superseded in part by Decision 199** — `grants()` now reads taken Major Milestones too (types `rou`, `sfrMax`, `form`); Natural Armor keeps its own scan, through `majorById`.
     → **Superseded in part by Decision 219** — AP on a hit marked as a spell pierces it; F25 closed.
+    → **Superseded in part by Decision 266** — a conditional source on a running power starts on.
 105. **(Nanomed Kit — combat plan cleanup, CQ12, data + engine + app)**
     **054's "With Çredits" list is the master: a Nanomed Kit clears
     Agonized, Bleeding, Paralyzed and Poisoned and stabilizes the Dying.**
@@ -5421,6 +5426,15 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decisions 19 and 157 in part (Max Power Rank capped a Discipline). Decision 3 in part (it no longer applies on top). Decision 135 stands: the cap, the start and the prerequisite are data.
      - **Revisit if:** Scott or Deighton put a creation ceiling back on Disciplines, or Deighton gives custom powers a ceiling of their own (BQ1).
      - **Built:** app 0.61.0, game data 0.52, no schema bump, PR #292, log 2026-11-04 (W143).
+
+266. **A sustained power runs from Start until it's stopped: the sheet stores which, Start and every Turn Reset spend its SFR, and a Werewolf's run only in Werewolf Form.**
+     *2026-11-05 · Ken + Claude · Touches: trackers.running, runningPowers, startPower, stopPower, run, runsIn, powerCostCap, whenText, adjustPanelTracker, resolveReset, applyReset, setToggle, logSession, naturalArmor, Take a hit's Natural Armor boxes, power card, the SFR popover, Turn Reset, migrate, W132*
+     - **Decided:** A power with `run` is started by its player; `trackers.running` holds `{ id }` for each, and `runningPowers` is the one reader (held, with `run`, in its archetype's `runsIn` form). Start spends `perRank × rank + plus` through the SFR tracker's writer, so the round counts it, and is refused when the pool's left is less. Every Turn Reset clears the round, then spends each kept one again; one the pool can't pay stops. Leaving the form a `runsIn` names, and logging a session, stop them. A `while` grant on a running power starts ticked on Take a hit. Past Rate of Use it warns; where `powerCostCap` says so, so does one power costing more than the RoU.
+     - **Why:** W110; `0414:180` and the rebalancing sheet: sustained powers pay again each round, and a Werewolf's work only in Werewolf Form.
+     - **Rejected:** a `running` flag on the power's row (play state, Decision 224); counting rounds down; stopping at encounter end (W128); charging what's left when the pool can't pay; refusing Start past RoU (Decision 225); a per-power RoU limit for a Vampire (`0413` prints none); summing a `whenText` grant while its power runs (each names a second condition); a cost read from the `cost` text (Decision 135).
+     - **Replaces:** Decision 104 in part (a running power's conditional source starts ticked on a hit). Decision 225's Revisit if happened (costs are numbers); its rule stands. Extends 195 and 224.
+     - **Revisit if:** W128 lets the sheet know an encounter; a power counts rounds down; a Vampire gets a form rule; H2 or H3 needs `each: "start"` (data only).
+     - **Built:** app 0.62.0, game data 0.53, character schema 0.33, PR #297, log 2026-11-05 (H1).
 
 ## 5. Open Flags
 
