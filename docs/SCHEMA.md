@@ -134,28 +134,28 @@ window.SHADOWS_DATA = {
     { id: "street",  name: "Street Level",
       statPoints:  { base: 30, roll: "2d10" },
       skillPoints: { base: 40, roll: "3d10" },
-      maxSkillRank: 4, maxPowerRank: 2, maxBoost: 2,
+      maxSkillRank: 4, maxBoost: 2,
       characterPoints: 10,
       startingCredits: { roll: "3d4", multiplier: 100 },
       description: "..." },
     { id: "heroic",  name: "Heroic",
       statPoints:  { base: 40, roll: "3d10" },
       skillPoints: { base: 45, roll: "3d10" },
-      maxSkillRank: 5, maxPowerRank: 3, maxBoost: 3,
+      maxSkillRank: 5, maxBoost: 3,
       characterPoints: 15,
       startingCredits: { roll: "4d4", multiplier: 100 },
       description: "..." },
     { id: "shadows", name: "Shadows",
       statPoints:  { base: 50, roll: "4d10" },
       skillPoints: { base: 50, roll: "3d10" },
-      maxSkillRank: 5, maxPowerRank: 4, maxBoost: 4,
+      maxSkillRank: 5, maxBoost: 4,
       characterPoints: 20,
       startingCredits: { roll: "5d4", multiplier: 100 },
       description: "..." },
     { id: "wcd",     name: "World Coming Down",
       statPoints:  { base: 60, roll: "5d10" },
       skillPoints: { base: 55, roll: "3d10" },
-      maxSkillRank: 6, maxPowerRank: 5, maxBoost: 5,
+      maxSkillRank: 6, maxBoost: 5,
       characterPoints: 25,
       startingCredits: { roll: "5d10", multiplier: 100 },
       description: "..." }
@@ -365,7 +365,6 @@ window.SHADOWS_DATA = {
         // (Decision 135) Bought in the Character Points step. A path reads a
         // number from the scaling row or the power level, like `countBy`.
         disciplines: {
-          maxRankBy: "powerLevel.maxPowerRank",
           list: [ { id: "evocation", name: "Evocation", description: "...",
                     startingRankBy: "campaignPowerScaling.evocationStartingRank" } ]
         },
@@ -1336,7 +1335,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
    `maxBoost` times (anti-min-max throttle). Enforced via the `boosts` ledger.
    Table maximums (Max Skill Rank, Max Power Rank, stat cap 10) still apply on
    top.
-    → **Superseded in part by Decision 218** — LUCK bought with CP is a boosted target too.
+    → **Superseded in part by Decisions 218, 264 and 265** — LUCK bought with CP is a boosted target too (218), power ranks are boosted targets again (264), and Max Power Rank no longer applies (265).
 4. **Costs at creation:** Stat Points 1:1 (stats start at base 1, max 10).
    Skill Points 1:1 up to Max Skill Rank. Advantages cost CP; disadvantages
    grant CP, **no cap** — design philosophy: do whatever you want, at a cost.
@@ -4090,7 +4089,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 5 in part (start at 4, not 2); Decision 19 in part (5 CP, not 6); Decision 97 in part (a power is no longer boosted at 1 CP a point). Decision 135 stands: the price is still data, now one key for every power. Closes W37.
      - **Revisit if:** LUCK is wanted by Campaign level after all, or a power needs a price of its own.
      - **Built:** app 0.35.0, game data 0.28, no schema bump; `rules.test.mjs` pins both. Log 2026-10-01.
-     → **Superseded in part by Decision 218** — "bought up to 5 becomes 7" holds only for a locked file or a level whose cap allows it.
+     → **Superseded in part by Decisions 218, 264 and 265** — "bought up to 5 becomes 7" holds only for a locked file or a level whose cap allows it (218), a power rank bought with CP is a Boost (264), and a Discipline has no Max Power Rank (265).
 
 158. **Traits and Archetype are one Character tab: the archetype, then Advantages beside Disadvantages.**
      *2026-10-01 · Ken + Claude · Touches: Character tab, Traits tab, Archetype tab, SHEET_SECTIONS, LEGACY_SECTION, renderShCharacter, arch-cols, trait-cols, Expand all, Collapse all, traitsOpen, data-gotab, jump bar, Baseline Traits, Powers, Vulnerabilities, Advantages, Disadvantages*
@@ -5107,6 +5106,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 215 in part: Base Powers placed ranks up to Max Starting Rank, and CP raised to Max Power Rank. 215 rejected Max Starting Rank capping CP; the book now prints it.
      - **Revisit if:** the book gives Base Powers a rank above 1 at a Power Level, or lets CP buy a new power at creation; or a third archetype buys powers this way with a different cap.
      - **Built:** app 0.54.0, game data 0.47, no schema bump, PR #230. Log 2026-10-23 (Y4).
+     → **Superseded in part by Decision 264**: CP also learns a power not held, at rank 1.
 
 241. **A line between the crew and the cast reads as a sentence, crew first, in every list; a fight's line links to its encounter and keeps only the figures.**
      *2026-10-23 · Ken + Claude · Touches: interactions, interactionSentence, kind labels, owed, Between them and the crew, Who knows what, session page, Edit, encounter link, linkName, removeEncounter, _endLine, wrap-up, fought, crewView, tableSearch, table schema 0.13, Decision 178, Decision 179, Decision 193, W79, W82*
@@ -5399,6 +5399,24 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing; extends 120 (mod slots), 233 (a kicker beside the attack), 248 (`bonuses`).
      - **Revisit if:** L5b's powers need the pointer; Ken rules a weapon's "free Upgrade" (LQ34); a written-in weapon takes mods.
      - **Built:** app 0.60.0, game data 0.51, character schema 0.32, PR #288, log 2026-11-01 (L5).
+
+264. **At creation, 5 CP learns a power of the character's own Bloodline or Origin at rank 1, and every power rank CP buys is a Boost, held to the Max Character Point Boost.**
+     *2026-11-04 · Ken + Claude · Touches: powersBought, isHeld, archetypePowers, powerCpState, buyPowerRank, placeBasePower, basePowerState, archetypeChoices.powerCp, Learn a new power, spendable cp, validate, maxBoost, Max Starting Rank, Character Points step, Base Powers block, 0433, W143*
+     - **Decided:** Under `powersBought`, CP raises any power of the character's own pool from rank 0 at `powerRankCost()` a rank, and CP on a power (`archetypeChoices.powerCp`) holds it, as a placement or IP does; one with no ranks is held for one rank's price. Each rank CP buys on any power, a Discipline included, is one Boost: at most `maxBoost` on one power, never past its ceiling (Max Starting Rank, the printed maximum), the lower binding. Placements, Innate grants and IP are no Boost. A Base Power can't go in a power CP learned. A locked file is never changed or reported.
+     - **Why:** `0433` (Ken, 2026-11-01): "5 Character Points raise a Power by 1 rank or give you a new Power at rank 1", and the Max CP Boost caps "any one Stat, Skill, or Power". Ken (2026-11-04): only CP spent counts, as with LUCK.
+     - **Rejected:** a new power only with IP after play; counting placements and grants as Boosts; a separate learned-with-CP list (`powerCp` holds the ranks, so no schema bump); a Base Power on a CP-learned power (it double-pays rank 1); every power at rank 0 (W144); trimming a locked file.
+     - **Replaces:** Decision 240 in part (CP raised a held power only). Decision 157 in part (a power rank is a Boost, not held to Max Power Rank). Decision 3 in part (power ranks are boosted targets again).
+     - **Revisit if:** a Max Starting Rank passes the Max CP Boost (the cap then binds these archetypes), or custom powers get CP ranks past 1.
+     - **Built:** app 0.61.0, game data 0.52, no schema bump, PR #…, log 2026-11-04 (W143).
+
+265. **A Discipline takes CP Boosts up to the Max Character Point Boost on top of its start, with no other creation ceiling; Enchantment needs Evocation 3 and Alchemy needs Enchantment 3, at creation and in play; Max Power Rank is retired.**
+     *2026-11-04 · Ken + Scott + Claude · Touches: coreMechanic.disciplines, maxRankBy, prerequisite, disciplineRanks, disciplineCap, buyDisciplineRank, disc stepper, ipCost power, spendable cp, validate, startingSpells, Evocation, Enchantment, Alchemy, powerLevels.maxPowerRank, Max Power Rank, Power cap chip, Admin Power Level note, 0411, 0434, 0480, W143*
+     - **Decided:** Evocation starts at `evocationStartingRank`, Enchantment and Alchemy at 0, and CP raises each up to `maxBoost` times on top (264). The Arcanist's `disciplines.maxRankBy` goes; the engine still honours one an archetype declares. A Discipline's `prerequisite` (`{ discipline, rank }`, data) must be met for its first rank, bought with CP or IP: Evocation 3 for Enchantment, Enchantment 3 for Alchemy. Lowering the one before in the wizard is allowed, and `validate` blocks the lock until it's fixed. `powerLevels[].maxPowerRank`, which caps nothing now, is removed with its chip; Max Starting Rank is the one term for an archetype's printed ceiling.
+     - **Why:** Scott's ruling (via Ken, 2026-11-04). `0480` already asks for 3 ranks of Evocation "before attempting Enchantment". The book's recap (`0434`) prints no Max Power Rank.
+     - **Rejected:** Max Power Rank 2/3/4/5 as the Discipline ceiling (Scott); the prerequisite in code (Decision 135); refusing − on Evocation while Enchantment is held (a broken pick is named, as a starting spell above its rank is); the prerequisite at creation only (`0480` says before attempting, at any time); keeping `maxPowerRank` as a label (a number that caps nothing reads as a rule).
+     - **Replaces:** Decision 157 in part (Max Power Rank capped a Discipline). Decision 3 in part (Max Power Rank no longer applies on top). Decision 135 stands: the cap, the start and the prerequisite are data.
+     - **Revisit if:** Scott or Deighton put a creation ceiling back on Disciplines, or Deighton gives custom powers a ceiling of their own (BQ1).
+     - **Built:** app 0.61.0, game data 0.52, no schema bump, PR #…, log 2026-11-04 (W143).
 
 ## 5. Open Flags
 

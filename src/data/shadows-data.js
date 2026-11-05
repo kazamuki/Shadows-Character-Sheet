@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.51",
+    "gamedataVersion": "0.52",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-10-08"
   },
@@ -339,7 +339,6 @@ window.SHADOWS_DATA = {
         "plusStats": ["INT", "REF"]
       },
       "maxSkillRank": 4,
-      "maxPowerRank": 2,
       "maxBoost": 2,
       "characterPoints": 5,
       "startingCredits": {
@@ -361,7 +360,6 @@ window.SHADOWS_DATA = {
         "plusStats": ["INT", "REF"]
       },
       "maxSkillRank": 5,
-      "maxPowerRank": 3,
       "maxBoost": 3,
       "characterPoints": 10,
       "startingCredits": {
@@ -383,7 +381,6 @@ window.SHADOWS_DATA = {
         "plusStats": ["INT", "REF"]
       },
       "maxSkillRank": 6,
-      "maxPowerRank": 4,
       "maxBoost": 4,
       "characterPoints": 15,
       "startingCredits": {
@@ -405,7 +402,6 @@ window.SHADOWS_DATA = {
         "plusStats": ["INT", "REF"]
       },
       "maxSkillRank": 7,
-      "maxPowerRank": 5,
       "maxBoost": 5,
       "characterPoints": 20,
       "startingCredits": {
@@ -2251,9 +2247,11 @@ window.SHADOWS_DATA = {
      `resource` keeps the count on that resource's own tracker, like SFR), "text",
      "powers" (the character's own written powers, Decision 153).
 
-     DISCIPLINES (Decision 135): a rank costs `creationFlow.boostRules.cpPerPowerRank`
-     like any power (Decision 157), `maxRankBy` a path to the cap and a discipline's `startingRankBy` a path to
-     its starting rank. A path reads "campaignPowerScaling.<key>" from the
+     DISCIPLINES (Decisions 135, 265): a rank costs `creationFlow.boostRules.cpPerPowerRank`
+     like any power (Decision 157), and each CP rank is a Boost of it: up to the power level's `maxBoost`
+     above its start, with no other creation ceiling. `maxRankBy` is optional, a path to a ceiling below
+     that; a discipline's `startingRankBy` is a path to its starting rank, and `prerequisite`
+     ({ discipline, rank }) names the Discipline and rank its first rank needs, at creation and in play. A path reads "campaignPowerScaling.<key>" from the
      current power level's row, or "powerLevel.<key>" from the power level,
      the same way `specialization.countBy` does. `campaignPowerScaling.focusStats`
      names the stats a `focusStatBonusRoll` may raise.
@@ -2398,7 +2396,6 @@ window.SHADOWS_DATA = {
         "name": "Magic",
         "description": "Channeling the flow of Aether through your body. Every spell is a Spellcraft roll: Discipline rank sets the d10 pool, dice meeting the Target Number (TN) are Hits, and any 1 is a Dud. Net Hits measured against the spell's Threshold (TH) decide the outcome. If Duds exceed Hits, the Aether ruptures back on the caster and Tolerance (TOL) drops by the difference. At 0 TOL the Arcanist is Exhausted and cannot cast until TOL recovers above zero (one hour of rest restores 1 point); a Rupture that would push TOL below zero is a Cascade. Your Grimoire, under Loadout & Powers, holds the Known spells you take from the book. The Magic reference on the Character tab holds the Spellcraft roll, the spell tiers, the Cascade and the Aberrations.",
         "disciplines": {
-          "maxRankBy": "powerLevel.maxPowerRank",
           "list": [
             {
               "id": "evocation",
@@ -2409,11 +2406,13 @@ window.SHADOWS_DATA = {
             {
               "id": "enchantment",
               "name": "Enchantment",
+              "prerequisite": { "discipline": "evocation", "rank": 3 },
               "description": "Preparation made permanent, or near enough. Weaves Aether into a physical material in advance, producing a Talisman that carries the spell until activation."
             },
             {
               "id": "alchemy",
               "name": "Alchemy",
+              "prerequisite": { "discipline": "enchantment", "rank": 3 },
               "description": "The longest horizon of the three. Days of ritual and rare materials produce an Artifact -- a suspended spell chain given physical form, durable enough to outlast the session."
             }
           ]
@@ -2829,7 +2828,7 @@ window.SHADOWS_DATA = {
           "Base Powers",
           "Max Starting Rank"
         ],
-        "notes": "Focus Stats are BOD, REF, and MOB. Bonus stat points can push a base stat beyond 10. Innate powers are yours at rank 1. Each Base Power takes one of your Bloodline's powers at rank 1, and Character Points raise a power up to your Max Starting Rank.",
+        "notes": "Focus Stats are BOD, REF, and MOB. Bonus stat points can push a base stat beyond 10. Innate powers are yours at rank 1. Each Base Power takes one of your Bloodline's powers at rank 1, and Character Points raise a power up to your Max Starting Rank or learn a new one at rank 1.",
         "focusStats": [
           "BOD",
           "REF",
@@ -2870,7 +2869,9 @@ window.SHADOWS_DATA = {
          power of the Bloodline at rank 1, held once placed. A power with no
          `origin` is Innate: `granted` holds it at rank 1 and Base Powers
          never go in it. `countBy` and `maxRankBy` are data paths (Decision
-         135); `maxRankBy` caps a power's starting rank, CP included. */
+         135); `maxRankBy` caps a power's starting rank, CP included. CP also
+         learns a power of the Bloodline at rank 1 (Decision 264), and every CP rank
+         is a Boost, held to the power level's `maxBoost`. */
       "powersBought": {
         "countBy": "campaignPowerScaling.basePowers",
         "maxRankBy": "campaignPowerScaling.maxStartingRank",
@@ -3122,7 +3123,7 @@ window.SHADOWS_DATA = {
           "Base Powers",
           "Max Starting Rank"
         ],
-        "notes": "Focus Stats are BOD, REF, and MOB. Bonus stat points can push a base stat beyond 10, and Werewolf form adds +2 REF, +2 MOB and +4 BOD on top. Innate powers are yours at rank 1. Each Base Power takes one of your Origin's powers at rank 1, and Character Points raise a power up to your Max Starting Rank.",
+        "notes": "Focus Stats are BOD, REF, and MOB. Bonus stat points can push a base stat beyond 10, and Werewolf form adds +2 REF, +2 MOB and +4 BOD on top. Innate powers are yours at rank 1. Each Base Power takes one of your Origin's powers at rank 1, and Character Points raise a power up to your Max Starting Rank or learn a new one at rank 1.",
         "focusStats": [
           "BOD",
           "REF",
@@ -3159,8 +3160,8 @@ window.SHADOWS_DATA = {
           }
         }
       },
-      /* As the Vampire's (Decisions 215, 240): Innate powers granted at rank 1,
-         each Base Power takes one of the Origin's at rank 1. */
+      /* As the Vampire's (Decisions 215, 240, 264): Innate powers granted at rank 1,
+         each Base Power takes one of the Origin's at rank 1, and CP learns one at rank 1 too. */
       "powersBought": {
         "countBy": "campaignPowerScaling.basePowers",
         "maxRankBy": "campaignPowerScaling.maxStartingRank",
@@ -5426,7 +5427,7 @@ window.SHADOWS_DATA = {
      `boostRules.cpCostPerPoint` is what one Boost of a stat or skill costs from
      leftover Character Points (F2, closed by Decision 97), and
      `boostRules.cpPerPowerRank` what one rank of any power costs, a Discipline
-     included, up to the power level's Max Power Rank (Decision 157). The rest of the
+     included (Decision 157), and CP can learn a power at rank 1 (Decision 264). The rest of the
      boost rules are the engine's, not settings: any one target is boosted at
      most the power level's `maxBoost` times (Decision 3), the stat cap and
      Max Skill Rank still bound it, and LUCK bought with CP is a Boost of
@@ -5480,7 +5481,7 @@ window.SHADOWS_DATA = {
         "n": 7,
         "short": "Character Points",
         "label": "Spend Character Points on Advantages, Disadvantages, and powers. Allocate any remaining points.",
-        "note": "Formerly 'Freebie Points'. Disadvantages grant CP (no cap). Leftover CP may buy LUCK or boost skills and stats, up to the Max Character Point Boost on each."
+        "note": "Formerly 'Freebie Points'. Disadvantages grant CP (no cap). Leftover CP may buy LUCK, boost skills and stats, or raise or learn a power, up to the Max Character Point Boost on each."
       }
     ],
     "boostRules": {

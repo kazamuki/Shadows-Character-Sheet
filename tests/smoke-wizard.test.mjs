@@ -526,7 +526,7 @@ const withDisciplines = d => d.archetypes.find(a => a.coreMechanic && a.coreMech
 test("the wizard draws Disciplines, Focus Stats and the Stat Bonus from the data (Decision 135)", () => {
   const arc = withDisciplines(D).id;
   const cp = draftOn(arc, "character-points", d => { d.creationFlow.boostRules.cpPerPowerRank = 7; });
-  assert.match(cp.$("#main").textContent, /Disciplines — 7 CP per rank · cap \d/);
+  assert.match(cp.$("#main").textContent, /Disciplines — 7 CP per rank · up to \+\d each \(Max CP Boost\)/);
   assert.deepEqual(cp.errors, []);
 
   const focus = draftOn(arc, "archetype", d => { withDisciplines(d).campaignPowerScaling.focusStats = ["INT", "EMP"]; });
@@ -1612,4 +1612,39 @@ test("P21 10 (wizard): a Fence's option shows the note a player needs", () => {
   assert.ok(fence, "the Fence option isn't on the Archetype step");
   assert.match(fence.textContent, /Your GM names the Skill an appraisal uses\. Add the 1d4 to that roll\./);
   assert.deepEqual(arch.errors, []);
+});
+
+// ── W143: Disciplines take Boosts; the Power Level card has no Power cap (Decision 265) ──
+test("Decision 265: a Street Arcanist's Evocation 3 opens TH 3 starting spells", () => {
+  const five = D.disadvantages.find(d => d.pointsGranted === 5);
+  const app = arcanistOnCP(ch => {
+    ch.archetypeChoices.rolls.startingSpells = 3;
+    ch.disadvantages = [{ id: five.id, rank: 1, notes: "" }];             // 5 Disadvantage points: 10 CP in all
+  });
+  app.click('[data-spellpickopen="wizard"]');
+  search(app, "fireball");                                               // Advanced, TH 3
+  assert.equal(app.$('#modal [data-startadd="fireball"]').disabled, true, "a TH 3 spell was open at Evocation 1");
+  assert.match(app.$('#modal [data-startadd="fireball"]').textContent, /Needs Evocation 3/);
+  app.$("#modal").dispatchEvent(new app.window.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+  app.click('[data-step="disc|evocation|1"]'); app.click('[data-step="disc|evocation|1"]');
+  app.click('[data-spellpickopen="wizard"]');
+  search(app, "fireball");
+  assert.equal(app.$('#modal [data-startadd="fireball"]').disabled, false, "Evocation 3 didn't open TH 3");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 265: the Power Level card has no Power cap chip, and the Disciplines heading names the Max CP Boost", () => {
+  const first = D.creationFlow.steps[0].id;
+  const card1 = onStep("arcanist", "street", first);
+  assert.doesNotMatch(card1.$("#main").textContent, /Power cap|Max Power Rank/);
+  assert.match(card1.$("#main").textContent, /Max CP Boost/);
+  const cp = onStep("arcanist", "heroic", "character-points");
+  assert.match(cp.$("#main").textContent, /Disciplines — 5 CP per rank · up to \+3 each \(Max CP Boost\)/);
+  assert.doesNotMatch(cp.$("#main").textContent, /Max Power Rank/);
+  // Enchantment says what it needs, and its + is off with that for a title.
+  const ench = cp.$('[data-step="disc|enchantment|1"]');
+  assert.equal(ench.disabled, true);
+  assert.match(ench.closest(".pick").textContent, /needs Evocation 3/);
+  assert.match(ench.closest(".controls").querySelector(".mod").title, /^Enchantment needs Evocation 3\.$/);
+  assert.deepEqual([card1.errors, cp.errors], [[], []]);
 });
