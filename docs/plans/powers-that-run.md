@@ -2,7 +2,7 @@
 
 **Status:** **drafted 2026-11-05 by Claude (Opus)**, from W110 and W132. Ken approved the idea in the W143
 conductor session ("I like the idea, so lets draft the plan"). Pre-flighted against `main` at `377c2ce` (PR #292
-merged: app 0.61.0 unreleased, game data 0.52, character schema 0.32). **Not approved yet:** Ken approves this
+merged: app 0.61.0, released 2026-11-05 in #294, game data 0.52, character schema 0.32). **Not approved yet:** Ken approves this
 plan and H1's questions (`powers-that-run/H1-sustained-powers.md` §4) before anything is built.
 **Tier of this document:** *Docs*. H1, H2 and H3 are each *Rule or shape*.
 
@@ -166,6 +166,6 @@ work, and nothing in H3 touches armor.
 | HQ2 | **A sustained power the pool can't pay at Turn Reset** | It stops, and Reset says which and why. The alternative, charging what's left and keeping it running, spends SFR the book says it needs in full | |
 | HQ3 | **Log session stops every running power** | Yes: a session ends every scene, and a power left on from last week is a surprise. The alternative is that only Stop and Reset end one | |
 | HQ4 | **A Werewolf's powers run only in Werewolf Form** (`0414:180`, built in H1: Start refused in human form, shifting back stops them) | Yes, as the book prints it. A Vampire has no form rule (`0413` prints none) | |
-| HQ5 | **W144: fold "every power at rank 0 with its own max" into H1's data pass, or not?** | *(no default: the conductor is vetting W144 with Ken)* | |
 
-H1's own questions are in its order, §4.
+HQ5 was W144's placeholder, withdrawn: Ken closed W144 (2026-11-05) as already the design, so H1's data pass
+doesn't change `ranked`. The number isn't reused. H1's own questions are in its order, §4.

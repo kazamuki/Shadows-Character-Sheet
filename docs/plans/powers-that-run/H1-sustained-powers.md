@@ -3,8 +3,8 @@
 **Plan:** [`powers-that-run.md`](../powers-that-run.md), session H1. **Wish:** **W110** (Ken, from P11's PQ2).
 Decisions 104, 135, 189, 195, 224, 225, 256, 264.
 **Status:** **drafted 2026-11-05 by Claude (Opus)**, pre-flighted against `main` at `377c2ce` (PR #292 merged: app
-0.61.0 unreleased, game data 0.52, character schema 0.32, table 0.19, pack 0.3; the last decision is 265). **Not
-approved.** Ken answers the plan's HQ1–HQ5 and this order's HQ6–HQ10 first.
+0.61.0, released 2026-11-05 after the pre-flight in #294, game data 0.52, character schema 0.32, table 0.19, pack 0.3; the last decision is 265). **Not
+approved.** Ken answers the plan's HQ1–HQ4 and this order's HQ6–HQ10 first (HQ5 was withdrawn with W144).
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 **Runs alone.** H2 and H3 wait on it. It touches `engine.js` (a new reader and three writers, `resolveReset` and
 `applyReset`, `setToggle`, `logSession`, `migrate`, `newCharacter`), `sheet.js` (the Character tab's power card,
@@ -81,9 +81,8 @@ When this is merged:
 
 - **Tier: Rule or shape.** One decision, **N** (the lowest free number on `origin/main` when you write it; 266 at
   the pre-flight).
-- **App:** a new capability, so a minor. **`[Unreleased]` already heads 0.61.0** (W143, unreleased at the
-  pre-flight): add H1's lines under it and don't bump again. If 0.61.0 has been released when you build,
-  `npm run bump -- 0.62.0`. Say which in the PR.
+- **App: minor, `npm run bump -- 0.62.0`** (a new capability). 0.61.0 was released 2026-11-05 (#294). If
+  `[Unreleased]` already heads another minor when you build, add to it and don't bump again; say which in the PR.
 - **Game data: 0.52 → 0.53** (Decision 68): Turn Reset now spends SFR for a character with a running power, a
   computed value that moves, and two keys are added.
 - **Character schema: 0.32 → 0.33** (or the next, if another branch takes it first): `trackers.running` is a new
@@ -104,7 +103,7 @@ N. **A sustained power runs from Start until it's stopped: the sheet stores whic
      - **Rejected:** a `running` flag on the power's row (play state, as Decision 224 rejected for a hold); counting rounds down (the player stops a power); stopping at encounter end (the sheet doesn't know one, W128); charging what's left when the pool can't pay (HQ2); refusing Start past RoU (Decision 225); summing `whenText` grants while running (each names a second condition); a cost read from the `cost` text (Decision 135).
      - **Replaces:** Decision 104 in part (a conditional source is asked on a hit only if it isn't running). Decision 225's Revisit if ("sustained powers' costs become numbers") happened; its rule stands. Extends 195 (the form ends a power) and 224 (the same shape of store).
      - **Revisit if:** W128 lets the sheet know an encounter; a power needs a countdown in rounds; a Vampire gets a form rule; H2 or H3 needs `each: "start"` (data only).
-     - **Built:** app 0.61.0 (or 0.62.0), game data 0.53, character schema 0.33, PR #…, log 2026-11-xx (H1).
+     - **Built:** app 0.62.0, game data 0.53, character schema 0.33, PR #…, log 2026-11-xx (H1).
 ```
 
 **Supersession marks:** Decision 104 already carries four marks, one per line (143, 196, 199, 219), and its INDEX
@@ -118,7 +117,7 @@ copies its "Keep a tap away" on the player's side and changes nothing there); **
 
 ## 4. Questions for Ken
 
-The plan's HQ1–HQ5 come first. These are this order's. Each has a default; a question left blank is answered
+The plan's HQ1–HQ4 come first. These are this order's. Each has a default; a question left blank is answered
 "Default" (`WORK-ORDERS.md`).
 
 | Id | Question | Default | Answer |
@@ -177,7 +176,8 @@ the 14 `whenText` "while X runs" grants (they stay marks, plan §2.5).
 - **Counting rounds down**, encounter end (W128), and a GM writing a seat.
 - **Werewolf costs beyond the seven**: "1 SFR per scene", "1 SFR per wolf (up to 3)". They're not sustained.
 - **Written-in powers** (`powers[]`): no `run`.
-- **W144**, whatever Ken answers HQ5: if it folds in, the conductor amends this order first.
+- **`ranked`.** W144 is closed (Ken, 2026-11-05): an unranked power stays `ranked: false`, and nothing here
+  changes it.
 
 ## 8. The shapes
 
@@ -404,5 +404,5 @@ The two prompts are `WORK-ORDERS.md`'s, with this order's path,
 > 6. **The read-only sheet disables new buttons by itself.** Don't add Start or Stop to `RO_READERS`; do check the
 >    Running line still shows there.
 >
-> Tier: Rule or shape. One decision, the next free number. App: add to 0.61.0 if it's unreleased, else 0.62.0;
+> Tier: Rule or shape. One decision, the next free number. App 0.62.0;
 > game data 0.53; character schema 0.33. Use the close-the-session skill at the end.

@@ -73,7 +73,7 @@ it is, the clicking or not seeing the whole build at once, before writing the or
 until every point that can buy something is spent); Decision 164 (a press keeps the keyboard's place).
 
 **W144 — Every power starts at rank 0 and carries its own maximum.** *Claude, from W143 (Ken's idea, 2026-11-04) · 🔎 · Rule or shape · raised 2026-11-04*\
-**Plan:** under question in [powers that run](plans/powers-that-run.md) (HQ5: fold into H1's data pass, or not)
+**Plan:** none yet
 
 W143's idea, weighed and set aside. Every power would start at rank 0 and carry its own max rank, so a power with no ranks (a Draugur's Deathless Resilience, the Werewolf's starter power) is no special case and the calculations get simpler later (Ken). It changes the data shape of every unranked power and of the Werewolf's starter power (a specialization's feature, not a pool power), so saved files need a `migrate()` step and a schema bump, and W143 doesn't need it: an unheld power already reads as rank 0 in `powerRanks` (Learn a new power) and W143 adds no special case. Worth doing when something else makes the shape move.
 
