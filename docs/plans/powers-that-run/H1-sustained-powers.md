@@ -3,8 +3,8 @@
 **Plan:** [`powers-that-run.md`](../powers-that-run.md), session H1. **Wish:** **W110** (Ken, from P11's PQ2).
 Decisions 104, 135, 189, 195, 224, 225, 256, 264.
 **Status:** **drafted 2026-11-05 by Claude (Opus)**, pre-flighted against `main` at `377c2ce` (PR #292 merged: app
-0.61.0, released 2026-11-05 after the pre-flight in #294, game data 0.52, character schema 0.32, table 0.19, pack 0.3; the last decision is 265). **Not
-approved.** Ken answers the plan's HQ1–HQ4 and this order's HQ6–HQ10 first (HQ5 was withdrawn with W144).
+0.61.0, released 2026-11-05 after the pre-flight in #294, game data 0.52, character schema 0.32, table 0.19, pack 0.3; the last decision is 265). **Approved
+by Ken 2026-11-04** ("All defaults", in the W143 conductor session): the plan's HQ1–HQ4 and this order's HQ6–HQ10 (HQ5 was withdrawn with W144).
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 **Runs alone.** H2 and H3 wait on it. It touches `engine.js` (a new reader and three writers, `resolveReset` and
 `applyReset`, `setToggle`, `logSession`, `migrate`, `newCharacter`), `sheet.js` (the Character tab's power card,
@@ -123,11 +123,11 @@ The plan's HQ1–HQ4 come first. These are this order's. Each has a default; a q
 
 | Id | Question | Default | Answer |
 |---|---|---|---|
-| HQ6 | **Where Start and Stop live.** The Character tab's power card has the power's text and cost; Main's SFR popover is where SFR is spent in a fight | **Both**: the card has Start/Stop, the popover lists what's running with Stop and offers Start for each sustained power held | |
-| HQ7 | **Past Rate of Use.** `0414:180` says no single power can cost more than RoU, for Werewolves; `0413` prints no such limit. A Street Wildblood's Let It Loose at rank 4 (placed + 3 IP) costs 4 against RoU 3 | **Warn, never refuse** (Decision 225), and **only where the archetype's data names the limit** (`powerCostCap`, the Werewolf today). A Vampire past RoU gets the round's warning every spend gets (225) and no per-power line: warning it would answer a rules question `0413` doesn't ask. Whether Vampires share the limit is a book item for Ken (plan §6) | |
-| HQ8 | **Starting a power already running** (a second press, or the popover and the card at once) | **Refused**, "Iron Hide is running." No second charge | |
-| HQ9 | **Stop refunds nothing**, even in the round it started | **No refund.** The SFR is spent when it's paid, as the book prices it | |
-| HQ10 | **The words on the button.** "Start / Stop" (tool voice), or the book's "activate", or the sheet's own "running" | **Start / Stop**, with the card's line reading "Running · 2 SFR a round". Voice pass | |
+| HQ6 | **Where Start and Stop live.** The Character tab's power card has the power's text and cost; Main's SFR popover is where SFR is spent in a fight | **Both**: the card has Start/Stop, the popover lists what's running with Stop and offers Start for each sustained power held | **Ken, 2026-11-04: the default** ("All defaults", in the conductor session). |
+| HQ7 | **Past Rate of Use.** `0414:180` says no single power can cost more than RoU, for Werewolves; `0413` prints no such limit. A Street Wildblood's Let It Loose at rank 4 (placed + 3 IP) costs 4 against RoU 3 | **Warn, never refuse** (Decision 225), and **only where the archetype's data names the limit** (`powerCostCap`, the Werewolf today). A Vampire past RoU gets the round's warning every spend gets (225) and no per-power line: warning it would answer a rules question `0413` doesn't ask. Whether Vampires share the limit is a book item for Ken (plan §6) | **Ken, 2026-11-04: the default** ("All defaults", in the conductor session). |
+| HQ8 | **Starting a power already running** (a second press, or the popover and the card at once) | **Refused**, "Iron Hide is running." No second charge | **Ken, 2026-11-04: the default** ("All defaults", in the conductor session). |
+| HQ9 | **Stop refunds nothing**, even in the round it started | **No refund.** The SFR is spent when it's paid, as the book prices it | **Ken, 2026-11-04: the default** ("All defaults", in the conductor session). |
+| HQ10 | **The words on the button.** "Start / Stop" (tool voice), or the book's "activate", or the sheet's own "running" | **Start / Stop**, with the card's line reading "Running · 2 SFR a round". Voice pass | **Ken, 2026-11-04: the default** ("All defaults", in the conductor session). |
 
 ## 5. The assumption sweep
 
