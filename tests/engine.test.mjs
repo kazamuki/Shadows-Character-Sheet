@@ -12931,3 +12931,19 @@ test("Decision 267: a seat's hit drops Odin's Aegis and Null Field, keeps immuni
   assert.ok(Engine.applyEncounterHit(b.t, b.e, b.id, nf, {}).ok);
   same(Engine.rowCharacter(b.t, b.e, b.id).trackers.running, [{ id: "null-field" }]);
 });
+
+test("Decision 267: a hitTaken row answers magical types only when it says magical (Decision 135)", () => {
+  const nf = forgeFang(); Engine.setToggle(nf, "form", "Werewolf"); Engine.startPower(nf, "null-field");
+  const wolf = D.archetypes.find(a => a.id === "werewolf").powers.find(p => p.id === "null-field");
+  const phys = { ...H2, damage: 3, powers: ["null-field"] };
+  assert.equal(Engine.resolveHit(nf, phys).through, 3, "Null Field absorbed a Physical hit");
+  withData(wolf.grants[0], "magical", false, () => {
+    assert.equal(Engine.resolveHit(nf, phys).through, 0, "a row that isn't magical should answer any type");
+    assert.equal(Engine.hitAnswers(nf).absorb[0].magical, false);
+  });
+  const dr = draugurAnswers({ "odins-aegis": 2 });
+  const aegis = VAD().powers.find(p => p.id === "odins-aegis");
+  const hit = { ...H2, damage: 10, react: ["odins-aegis"] };
+  assert.equal(Engine.resolveHit(dr, hit).through, 10);
+  withData(aegis.grants[0], "magical", false, () => same([Engine.resolveHit(dr, hit).through, Engine.resolveHit(dr, hit).reactBy.sfr], [6, 2]));
+});

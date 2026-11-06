@@ -170,6 +170,7 @@ test("Decision 267: the seat hit offers immunity and silver, and spends nothing 
   ch.identity.name = "Dez"; ch.meta.id = DEZ_TAG; ch.meta.updated = "2026-10-02T10:00:00.000Z";
   ch.trackers.running = [{ id: "spectral-veil" }];
   ch.trackers.sfr = { spent: 3, turn: 3 };
+  ch.armor = [{ id: "kevlar-vest", worn: true, integrityLoss: 0 }];
   const app = open(ch);
   const id = withDez(app);
   app.click(`[data-ehit="${id}"]`);
@@ -178,7 +179,12 @@ test("Decision 267: the seat hit offers immunity and silver, and spends nothing 
   assert.match(app.$("[data-ehit-ownsheet]").textContent, /Null Field and Odin's Aegis answer on the player's own sheet\./);
   const before = copiesOf(app);
   type(app, "[data-ehit-damage]", "10");
-  assert.match(app.$("[data-ehit-preview]").textContent, /0 through/);
+  assert.equal(app.$("[data-ehit-prot]"), null, "the seat asked for a PROT roll on a hit that does nothing");
+  assert.equal(app.$("[data-ehit-preview]").textContent, "Spectral Veil: no damage", "the preview talks about armor");
+  const box = app.$('[data-ehit-pow="spectral-veil"]'); box.checked = false; box.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  assert.ok(app.$("[data-ehit-prot]"), "unticking didn't bring the PROT field back");
+  assert.equal(app.doc.activeElement.dataset.ehitPow, "spectral-veil", "focus left the box");
+  const again = app.$('[data-ehit-pow="spectral-veil"]'); again.checked = true; again.dispatchEvent(new app.window.Event("change", { bubbles: true }));
   app.click("[data-ehit-apply]");
   assert.equal(copiesOf(app), before, "the seat's hit wrote the copy");
   assert.deepEqual(app.errors, []);

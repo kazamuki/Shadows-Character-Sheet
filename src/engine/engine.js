@@ -1742,8 +1742,10 @@ const Engine = (() => {
     const nat = immune ? { total:0, absorbed:0, skipped:null, sources:[] } : mitigateNatural(ch, m.through, type, hit, cat);
     // Decision 267 (HQ12): after armor and Natural Armor, on magical damage that got through: Odin's Aegis, then Null Field.
     let left = m.through - nat.absorbed, reactBy = null, absorbedBy = null, sfrSpend = 0, running = null;
-    if (type.magical===true && !immune){
-      const reacts = answers.react.filter(x=>ids(hit.react).includes(x.id));
+    // A row marked `magical` answers magical types only; one that isn't answers any.
+    const applies = x => !x.magical || type.magical===true;
+    if (!immune){
+      const reacts = answers.react.filter(x=>applies(x) && ids(hit.react).includes(x.id));
       const bad = reacts.find(x=>!x.can.ok);
       if (bad) return { ok:false, why:bad.can.why };
       for (const x of reacts){
@@ -1751,7 +1753,7 @@ const Engine = (() => {
         const to = Math.max(0, left - x.minus);
         reactBy = { id:x.id, name:x.name, from:left, to, sfr:x.sfr }; sfrSpend += x.sfr; left = to;
       }
-      for (const x of answers.absorb.filter(y=>ticked.has(y.id))){
+      for (const x of answers.absorb.filter(y=>applies(y) && ticked.has(y.id))){
         if (!(left>0)) break;
         const take = Math.min(left, x.left), usedAfter = x.used + take;
         if (!absorbedBy) absorbedBy = { id:x.id, name:x.name, from:left, to:left - take, absorbed:take, usedAfter, usedUp: usedAfter>=x.cap };
@@ -4299,7 +4301,7 @@ const Engine = (() => {
     for (const r of runningPowers(ch)){
       const rows = hitRows(r.def);
       if (rows.some(g=>g.immune===true)) out.immune.push({ id:r.id, name:r.name });
-      if (r.cap!=null && r.absorbLeft>0) out.absorb.push({ id:r.id, name:r.name, cap:r.cap, used:r.used, left:r.absorbLeft });
+      if (r.cap!=null && r.absorbLeft>0) out.absorb.push({ id:r.id, name:r.name, cap:r.cap, used:r.used, left:r.absorbLeft, magical: rows.some(g=>isPlainObj(g.absorb) && g.magical===true) });
     }
     const locked = !!ch.creation && ch.creation.locked===true, form = runForm(ch);
     const sf = sfr(ch), s = ch.trackers && ch.trackers.sfr;
@@ -4315,7 +4317,7 @@ const Engine = (() => {
       const can = !locked ? { ok:false, why:"Powers run once the character is locked.", short:"Locked sheets only" }
         : left < cost ? { ok:false, why:`${name} needs ${cost} SFR, ${left} left.`, short:"Not enough SFR" }
         : { ok:true, why:"", short:"" };
-      out.react.push({ id:p.id, name, minus, sfr:cost, can });
+      out.react.push({ id:p.id, name, minus, sfr:cost, can, magical: g.magical===true });
     }
     return out;
   }

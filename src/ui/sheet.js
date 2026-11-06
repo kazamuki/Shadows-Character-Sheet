@@ -1142,7 +1142,7 @@ function hitPanelHtml(ch, r){
     h+=`<div class="hitrow" data-hitpowers>` +
       ans.immune.map(x=>box("data-hitpow", x.id, st.pw[x.id], `${x.name}: immune to Physical`)).join("") +
       ans.absorb.map(x=>box("data-hitpow", x.id, st.pw[x.id], `${x.name}: absorbs up to ${x.left} Elemental, Spirit or Aether`)).join("") +
-      ans.react.map(x=>{ const why = !magical ? "Elemental, Spirit or Aether only" : x.can.ok ? "" : x.can.short;
+      ans.react.map(x=>{ const why = x.magical && !magical ? "Elemental, Spirit or Aether only" : x.can.ok ? "" : x.can.short;
         return `<span class="hit-react">${box("data-hitreact", x.id, st.react[x.id], `${x.name}: −${x.minus}, ${x.sfr} SFR`, !!why)}${why?`<span class="sub" data-hitreactwhy>${esc(why)}</span>`:""}</span>`; }).join("") + `</div>`;
   }
 
