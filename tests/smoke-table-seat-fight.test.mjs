@@ -221,9 +221,17 @@ test("Decision 268: a GM's Reset writes nothing to a regenerating seat and says 
   const f = open(fresh), fid = withDez(f);
   f.click("[data-enc-start]"); f.click("[data-enext]");
   assert.equal(f.$(`[data-eheals="${fid}"]`).textContent, "Regeneration heals on the player's own sheet.");
+  // Quick Clot ends Bleeding on the copy's own sheet too (Ken, PR 301): a second line, nothing written to the row.
+  const qc = wolfDez(); qc.trackers.aberrations = [{ id: "quick-clot", permanence: "permanent" }];
+  const q = open(qc), qid = withDez(q);
+  q.click("[data-enc-start]"); q.click("[data-enext]");
+  assert.equal(q.$(`[data-eends="${qid}"]`).textContent, "Quick Clot ends Bleeding on the player's own sheet.");
+  q.click("[data-efinish]");
+  assert.ok(JSON.parse(ev(q, "JSON.stringify(S.table.encounters[0].rows[0].conditions)")).some(c => c.id === "bleeding"), "the row's Bleeding was ended");
   const human = open(wolfDez("Human"));
   const hid = withDez(human);
   human.click("[data-enc-start]"); human.click("[data-enext]");
   assert.equal(human.$(`[data-eheals="${hid}"]`), null, "a seat in human form gets a heals line");
+  assert.equal(human.$(`[data-eends="${hid}"]`), null, "a seat without Quick Clot gets an ends line");
   assert.deepEqual(human.errors, []);
 });

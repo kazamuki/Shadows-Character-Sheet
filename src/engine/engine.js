@@ -2878,7 +2878,7 @@ const Engine = (() => {
     const push = (id, name, hl, by, ended, note)=>{
       const h = ended ? { hp:0, from:damage, to:damage, why:"The form has ended." } : _supernaturalHeal(ch, hl, { damage });
       damage = h.to;
-      out.push({ id, name, hl, hp:h.hp, from:h.from, to:h.to, why:h.why, by, note:note||"" });
+      out.push({ id, name, hl, hp:h.hp, from:h.from, to:h.to, leftFrom:hlState(ch, { damage:h.from }).hpLeft, leftTo:hlState(ch, { damage:h.to }).hpLeft, why:h.why, by, note:note||"" });
     };
     const view = formView(ch);
     if (view && view.regen && view.regen.hl>0) push(view.regen.id, view.regen.name, view.regen.hl, view.regen.by, view.ended, view.regen.note);
@@ -9493,7 +9493,11 @@ const Engine = (() => {
       // The line names only what its copy would regenerate on the player's own sheet.
       const stand = r.kind==="pc" ? _seatStandIn(t, r) : null;
       const heals = stand ? roundHeals(stand, { damage: nonNegInt(r.damage) + ticks.reduce((n, x)=>n + (x.hp||0), 0) }).filter(h=>!h.why).map(h=>h.name) : [];
-      rows.push({ rowId:r.id, name:r.name, heals, missed:_isObj(r.delay) ? _str(r.delay.until) : null, ticks, expiring, recovery, dying, dyingMarks, dyingText, dyingIndex,
+      // Quick Clot likewise ends a Condition on the copy's own sheet, not on the row (Ken, PR 301).
+      const enders = stand ? aberrationState(stand).resetEnds : [];
+      const ends = [];
+      for (const c of r.conditions){ const by = enders.find(x=>x.id===c.id), def = by && conditionById(c.id); if (by && !ends.some(x=>x.id===c.id)) ends.push({ id:c.id, name:def.name, by:by.by }); }
+      rows.push({ rowId:r.id, name:r.name, heals, ends, missed:_isObj(r.delay) ? _str(r.delay.until) : null, ticks, expiring, recovery, dying, dyingMarks, dyingText, dyingIndex,
                   total:ticks.reduce((n, x)=>n + (x.hp||0), 0) });
     }
     if (missing) return { ok:false, why:`Enter this round's ${missing.tick.name} damage for ${missing.rowName.trim() || "them"}. Put 0 if it's out.`, rows };

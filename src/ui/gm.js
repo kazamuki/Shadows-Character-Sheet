@@ -3111,7 +3111,7 @@ function encResetHtml(e, v){
   const st=encResetNow(), res=Engine.resolveEncounterReset(S.table, e.id, encResetInput());
   const rows=res.rows, quiet=[];
   const body = rows.map(x=>{
-    if (!x.ticks.length && !x.expiring.length && !x.recovery.length && !x.dying && x.missed===null && !x.heals.length){ quiet.push(x.name.trim() || "Unnamed"); return ""; }
+    if (!x.ticks.length && !x.expiring.length && !x.recovery.length && !x.dying && x.missed===null && !x.heals.length && !x.ends.length){ quiet.push(x.name.trim() || "Unnamed"); return ""; }
     const id=esc(x.rowId), view=v.rows.find(r=>r.row.id===x.rowId);
     const ticks = x.ticks.map(k=> k.source
       ? `<li><label class="enc-num"><span>${esc(k.name)}:</span><input type="number" min="0" step="1" inputmode="numeric" required data-esrc="${id}|${k.index}" value="${esc(((st.sources[x.rowId]||{})[k.index])??"")}"><span>HP</span></label></li>`
@@ -3132,8 +3132,9 @@ function encResetHtml(e, v){
     const missed = x.missed===null ? "" : `<p class="enc-wait">${x.missed.trim() ? `Waited for “${esc(x.missed)}”. It never came: no action this round.` : "Waited. Nothing came: no action this round."}</p>`;
     // Decision 268 (HQ24): a seat's row keeps no Withering, so nothing heals here; the line says what heals on the player's own sheet.
     const heals = x.heals.length ? `<p class="step-note" data-eheals="${id}">${esc(x.heals.join(" and "))} ${x.heals.length===1 ? "heals" : "heal"} on the player's own sheet.</p>` : "";
+    const clot = x.ends.map(e=>`<p class="step-note" data-eends="${id}">${esc(e.by)} ends ${esc(e.name)} on the player's own sheet.</p>`).join("");
     return `<section class="enc-reset-row"><h3 class="cast-h">${esc(x.name.trim() || "Unnamed")}</h3>
-      ${missed}${heals}${ticks || dying ? `<ul class="enc-list">${ticks}${dying}</ul>` : ""}
+      ${missed}${heals}${clot}${ticks || dying ? `<ul class="enc-list">${ticks}${dying}</ul>` : ""}
       ${out ? `<p class="cast-sub">Runs out now</p><ul class="enc-list">${out}</ul>` : ""}
       ${saves ? `<p class="cast-sub">Calls for a check</p><ul class="enc-list">${saves}</ul>` : ""}</section>`;
   }).join("");

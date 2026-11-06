@@ -2128,7 +2128,7 @@ test("Decision 268: Turn Reset shows the heal and Quick Clot, and one undo takes
   const app = openSheet(ch, "trackers");
   app.click('[data-actopen="reset"]');
   const panel = app.$('[data-actpanel="reset"]').textContent;
-  assert.match(panel, /Regeneration heals 1 HL: 21 → 16\./);
+  assert.match(panel, /Regeneration heals 5 HP: HP left 29 → 34\./);
   assert.match(panel, /Bleeding ends \(Quick Clot\)\./);
   app.click("[data-actapply]");
   const now = activeChar(app).trackers;
