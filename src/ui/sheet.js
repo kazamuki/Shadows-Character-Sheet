@@ -1249,7 +1249,7 @@ function resetPanelHtml(ch, st){
     if (r.marks) lines.push(`You're Dying, so that's ${r.marks} Death Mark${r.marks===1?"":"s"}.`);
     // Decision 268: the round's heals come after the ticks (the At Zero check above is asked from the ticks), then what ends.
     r.heals.forEach(x=>{ if (x.hp>0) lines.push(`${x.name}${x.by?` (${x.by})`:""} heals ${x.hl} HL: ${x.from} → ${x.to}.`);
-      else if (x.why && x.why!=="Nothing to heal.") lines.push(`${x.name}: ${x.why.charAt(0).toLowerCase()+x.why.slice(1)}`); });
+      else if (x.why && x.from>0) lines.push(`${x.name}: ${x.why.charAt(0).toLowerCase()+x.why.slice(1)}`); });
     r.ends.forEach(x=>lines.push(`${x.name} ends (${x.by}).`));
     // Decision 266: what is kept running is charged into the new round, so the round does not clear to 0 beside it.
     const kept = r.running.filter(x=>x.payable && !st.stop[x.id]), next = kept.reduce((n, x)=>n + x.sfr, 0);

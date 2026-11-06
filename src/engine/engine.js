@@ -2944,7 +2944,8 @@ const Engine = (() => {
       ends.push({ index:i, id:def.id, name: def.name + (loc ? ` (${loc.name})` : ""), by:by.by });
       if (by.note && !notes.includes(by.note)) notes.push(by.note);
     });
-    heals.forEach(h=>{ if (h.note && !notes.includes(h.note)) notes.push(h.note); });   // a flagged rule says it is unsettled (F50, F51)
+    // a flagged rule says it is unsettled (F50, F51), only where it has damage to act on: not every round at full health
+    heals.forEach(h=>{ if (h.note && h.from>0 && !notes.includes(h.note)) notes.push(h.note); });
     return { ok:true, ticks, total, before, after, dying:d.dying, marks,
              prompts: { atZero:d.atZero, dyingCheck, concentration:d.concentration }, recovery, notes, turnSpend, running, heals, ends, final,
              hasEffect: total>0 || !!dyingCheck || turnSpend.length>0 || running.length>0 || heals.some(h=>h.hp>0) || ends.length>0 };

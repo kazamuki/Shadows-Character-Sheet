@@ -12988,6 +12988,7 @@ test("Decision 268: a Werewolf in form regenerates 1 HL at Turn Reset, never Wit
   const low = wolfHurt(7, 5);
   Engine.applyReset(low, {}, {});
   same([low.trackers.damage, low.trackers.witheringDamage], [5, 5], "Withering is the floor: only 2 of the 5 healed");
+  same([r.notes.length, Engine.resolveReset(wolfHurt(0, 0), {}).notes], [1, []], "F51's note shows where Regeneration has damage to act on, not at full health");
   const human = hurt(wildblood(0), 20, 5);
   assert.equal(Engine.resolveReset(human, {}).heals.length, 0);
   Engine.applyReset(human, {}, {});
