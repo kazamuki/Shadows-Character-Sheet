@@ -16,7 +16,7 @@
    0,
    70.2,
    390,
-   884.1
+   886.1
   ],
   "vitals": [
    0,
@@ -25,9 +25,9 @@
    0
   ],
   "children": [
-   "0 div.home-hero 16,138.2,358,718.1"
+   "0 div.home-hero 16,138.2,358,720.1"
   ],
-  "deep": "30 boxes, e026e57d"
+  "deep": "32 boxes, 6ba33b22"
  },
  "sheet: main @390": {
   "header": [
@@ -650,7 +650,7 @@
    "18 div 16,31542,358,20.3",
    "19 div.wiznav 16,749,358,95"
   ],
-  "deep": "1201 boxes, f5ed95fc"
+  "deep": "1201 boxes, 6b489efa"
  },
  "wizard: review @390": {
   "header": [
@@ -882,7 +882,7 @@
    "17 div 16,15333.5,358,20.3",
    "18 div.wiznav 16,749,358,95"
   ],
-  "deep": "1200 boxes, 73310ac2"
+  "deep": "1200 boxes, 39eefdd4"
  },
  "home @768": {
   "header": [
@@ -901,7 +901,7 @@
    0,
    70.2,
    768,
-   706.8
+   761.8
   ],
   "vitals": [
    0,
@@ -910,9 +910,9 @@
    0
   ],
   "children": [
-   "0 div.home-hero 104,138.2,560,540.8"
+   "0 div.home-hero 104,138.2,560,595.8"
   ],
-  "deep": "30 boxes, 6807407a"
+  "deep": "32 boxes, 65d86532"
  },
  "sheet: main @768": {
   "header": [
@@ -1535,7 +1535,7 @@
    "18 div 16,23234,736,20.3",
    "19 div.wiznav 16,929,736,95"
   ],
-  "deep": "1201 boxes, c85a7a9c"
+  "deep": "1201 boxes, d744715f"
  },
  "wizard: review @768": {
   "header": [
@@ -1767,7 +1767,7 @@
    "17 div 16,10990.6,736,20.3",
    "18 div.wiznav 16,929,736,95"
   ],
-  "deep": "1200 boxes, 6dbd27c4"
+  "deep": "1200 boxes, e489145b"
  },
  "home @1300": {
   "header": [
@@ -1795,9 +1795,9 @@
    0
   ],
   "children": [
-   "0 div.home-hero 355,131.2,560,540.8"
+   "0 div.home-hero 355,131.2,560,595.8"
   ],
-  "deep": "30 boxes, 1890670b"
+  "deep": "32 boxes, bb67404c"
  },
  "sheet: main @1300": {
   "header": [
@@ -2737,7 +2737,7 @@
    "18 div 248,22990,774,20.3",
    "19 div.wiznav 248,805,774,95"
   ],
-  "deep": "1201 boxes, a71b1bbd"
+  "deep": "1201 boxes, 509d2a4c"
  },
  "wizard: review @1300": {
   "header": [
@@ -2969,7 +2969,7 @@
    "17 div 248,10806.1,774,20.3",
    "18 div.wiznav 248,805,774,95"
   ],
-  "deep": "1200 boxes, 5a4052c5"
+  "deep": "1200 boxes, 57b72efc"
  },
  "home @1980": {
   "header": [
@@ -2997,9 +2997,9 @@
    0
   ],
   "children": [
-   "0 div.home-hero 398,131.2,560,540.8"
+   "0 div.home-hero 398,131.2,560,595.8"
   ],
-  "deep": "30 boxes, 51150aa5"
+  "deep": "32 boxes, 4588465d"
  },
  "sheet: main @1980": {
   "header": [
@@ -3939,7 +3939,7 @@
    "18 div 248,22446.7,860,20.3",
    "19 div.wiznav 248,985,860,95"
   ],
-  "deep": "1201 boxes, 738c6175"
+  "deep": "1201 boxes, 3ddb975a"
  },
  "wizard: review @1980": {
   "header": [
@@ -4171,6 +4171,6 @@
    "17 div 248,10679.2,860,20.3",
    "18 div.wiznav 248,985,860,95"
   ],
-  "deep": "1200 boxes, 50f9a232"
+  "deep": "1200 boxes, d5f82c0f"
  }
 }

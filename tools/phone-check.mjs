@@ -169,7 +169,13 @@ async function recordFrames(browser, file, seed) {
       const page = await c.newPage();
       const at = name => `${name} @${z.width}${pinned ? " pinned" : ""}`;
       await page.goto(pathToFileURL(file).href);
-      if (!pinned) frames[at("home")] = await snap(page);
+      // Home prints the app's version ("Updated to 0.56.1."), whose width moves its boxes on every bump, so the
+      // fixture went stale with each release (from bfe477f). It's held at one string here: a rule is what this watches.
+      if (!pinned) {
+        await page.evaluate(() => { const w = document.createTreeWalker(document.getElementById("homenews"), NodeFilter.SHOW_TEXT);
+          while (w.nextNode()) w.currentNode.textContent = w.currentNode.textContent.split(APP_VERSION).join("0.00.0"); });
+        frames[at("home")] = await snap(page);
+      }
       await page.click("[data-open]");
       await page.waitForSelector("#topnav [data-sec]");
       const tabs = await page.$$eval("#topnav [data-sec]", bs => bs.map(b => b.dataset.sec));
@@ -361,7 +367,9 @@ async function tableExtras(browser, file, rows, numbers) {
     const tableInit = { fn: ([s, pk, pack]) => { try { localStorage.setItem("shadows.feature.gm", "on");
       localStorage.setItem("shadows.table.v1." + s.table.meta.id, JSON.stringify(s)); localStorage.setItem(pk, JSON.stringify(pack)); } catch (e) {} }, arg: [seed.table, seed.packKey, seed.pack] };
     const t = await ctx(z, tableInit), tp = await t.newPage();
-    await tp.goto(pathToFileURL(file).href); await tp.click("[data-topen]"); await tp.click('[data-tsec="players"]'); await tp.click("[data-seat]");
+    await tp.goto(pathToFileURL(file).href); await tp.click("[data-topen]"); await tp.click('[data-tsec="players"]');
+    // Dez's seat, the one the player's sheet below opens: Dead Air seats its own crew first (since bc3b7cd).
+    await tp.click(`[data-seat="${DEZ_TAG}"]`);
     await tp.waitForSelector(".main-grid");
     const ro = await tp.evaluate(cols);
     const roWide = {};
@@ -573,6 +581,11 @@ try {
     await measure("home");
     await page.click("[data-open]");
     await page.waitForSelector("#topnav [data-sec]");
+    // The seed holds Quick Study, a General Major, on an Arcanist for P21's Combat Sense kicker. Since Decision 217
+    // the General Majors are the Professional's, so loading it raises a finding that sits atop every tab until
+    // dismissed, and pushed Main's Health card from 28% to 37% on the phone. Dismissed as a player would, so the
+    // fold is measured on the sheet a character without findings sees.
+    await page.click("[data-importdismiss]");
     const tabs = await page.$$eval("#topnav [data-sec]", bs => bs.map(b => b.dataset.sec));
     for (const sec of tabs) {
       await page.click(`#topnav [data-sec="${sec}"]`);
