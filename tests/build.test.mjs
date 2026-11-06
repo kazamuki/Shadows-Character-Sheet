@@ -378,3 +378,11 @@ test("P16 4: no inline font size in the UI, and no .76rem in the stylesheets", (
   const odd = css.filter(f => /\.76rem/.test(readFileSync(join(ROOT, "src/styles", f), "utf8")));
   assert.deepEqual(odd, [], ".76rem is back");
 });
+
+// U4 (finding 33): GM mode's markup carries no style attribute but a segment's computed transform, which no class can hold.
+test("U4: gm.js has no inline style but a computed transform", () => {
+  const src = readFileSync(join(ROOT, "src/ui/gm.js"), "utf8");
+  const styles = src.match(/style="[^"]*"/g) || [];
+  const stray = styles.filter(x => !/^style="transform:scaleX\(\$\{[^}]+\}\)/.test(x));
+  assert.deepEqual(stray, [], "gm.js writes a style attribute that isn't a computed transform");
+});

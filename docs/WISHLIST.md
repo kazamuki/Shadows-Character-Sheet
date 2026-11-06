@@ -1101,9 +1101,17 @@ scripts would give each session a smaller file to hold.
 `tools/build.mjs` and the build tests list the scripts. Tests load the engine
 with no DOM, so both halves have to load that way.
 
+**W145 — GM tabs with their own icons.** *Ken · 🔎 · Fix · raised 2026-11-06*\
+**Plan:** none yet
+
+U4 (UQ16) kept the borrowed icons until Scott's set arrives. The GM's section tabs borrow the player sheet's icons (`TABLE_SECTIONS[].ui` → `uiIcon()`, `gm.js`): Players has
+Main's, Encounters has Trackers'. Scott is to draw six of the GM's own; when they come they go into `src/data/`
+and the `ui` keys change, with no layout change since the slots are the same size. *To respect:* the icons are data
+(no `gamedataVersion`, Decision 68), one stroke and weight with the sheet's set.
+
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W145.** Everything above is open. What was built is in
+- **Next free number: W146.** Everything above is open. What was built is in
   [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)

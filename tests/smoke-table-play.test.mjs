@@ -470,7 +470,7 @@ test("Decision 192: the active row lists its traits, and a trait's text is a tap
 
 test("Decision 191 (hostile): a block's armor line of markup is text, and the panel's fields come out as text", () => {
   const app = hitApp({ armor: ["<img src=x onerror=window.__pwn=1> (PROT 1d4)"], traits: [{ name: "<b>x</b>", text: "<img src=y onerror=window.__pwn=1>" }] });
-  assert.match(encRowByName(app, "Dez").querySelector(".enc-armor").textContent, /^<img src=x onerror=window\.__pwn=1> \(PROT 1d4\) · not in the Gear tables$/);
+  assert.match(encRowByName(app, "Dez").querySelector(".enc-armor").textContent, /^<img src=x onerror=window\.__pwn=1> \(PROT 1d4\) · not a piece the book lists$/);
   hitBtn(app, "Dez").click(); fillHit(app, 5, "blade", "<img src=z onerror=window.__pwn=1>");
   app.click('[data-ehit-cond="bleeding"]'); app.click("[data-ehit-apply]");
   clickIn(app, app.$('[data-tip="enctrait"]'));
@@ -1844,11 +1844,11 @@ test("Decision 212: a press that wrote before tableChange is recorded; the toast
   app.click(`[data-edmg="${dez}|1"]`); app.$("[data-edmgn]").value = "6"; submit(app, "[data-edmgform]");
   const damage = () => app.window.eval(`S.table.encounters[0].rows.find(r => r.id === "${dez}").damage`);
   assert.equal(damage(), 6);
-  assert.match(toastText(app), /^Changed Job/);
+  assert.match(toastText(app), /^Dez took 6/);
   assert.ok(app.$("[data-toastundo]"));
   app.click("[data-toastundo]");
   assert.equal(damage(), 0, "the toast's Undo didn't take the damage back");
-  assert.match(toastText(app), /Undone: Changed Job/);
+  assert.match(toastText(app), /Undone: Dez took 6/);
   assert.equal(auditLabels(app).length, 0);
   assert.deepEqual(app.errors, []);
 });
@@ -2421,5 +2421,42 @@ test("U1: opening a running encounter scrolls the acting row into view", () => {
   const active = app.$(".enc-row.active");
   assert.ok(active, "a row is acting");
   assert.ok(seen.includes(active.dataset.erow), "scrollIntoView ran on the acting row when the page opened");
+  assert.deepEqual(app.errors, []);
+});
+
+// U4: Activity says what a press did, so the log is specific enough to undo with confidence.
+test("U4: Activity says what a hit, a Take, a Heal and a clock did", () => {
+  const app = hitApp();
+  const labels = () => JSON.parse(app.window.eval("JSON.stringify(S.table.audit.map(e => e.label))"));
+  // Take sits under the row's More (U1), so a press on it opens More first; jsdom would let a closed one through.
+  const ask = (name, sign, n) => {
+    const b = app.$(`[data-edmg="${rowId(encRowByName(app, name))}|${sign}"]`), more = b.closest("[data-emore]");
+    if (more){ more.open = true; more.dispatchEvent(new app.window.Event("toggle")); }
+    assert.equal(!!b.closest("details:not([open])"), false, "the button is inside a closed More");
+    app.click(`[data-edmg="${rowId(encRowByName(app, name))}|${sign}"]`); app.$("[data-edmgn]").value = String(n); submit(app, "[data-edmgform]"); };
+  // A hit carries the preview's own words, read before Apply from the same function the panel shows.
+  hitBtn(app, "Dez").click();
+  fillHit(app, 12, "ballistic", "Rook's SMG");
+  const words = preview(app);
+  assert.equal(words, "Leather Jacket stops 5 (PROT 3 + RES 2) · 7 through · 1 Health Level");
+  app.click("[data-ehit-apply]");
+  assert.equal(labels().at(-1), `Hit Dez: ${words}`);
+  assert.match(app.$("#undotoast").textContent, /Hit Dez: Leather Jacket stops 5/);
+  ask("Wren", 1, 5);
+  assert.equal(labels().at(-1), "Wren took 5");
+  ask("Wren", -1, 3);
+  assert.equal(labels().at(-1), "Healed Wren 3");
+  // A clock's + and − say where it stands.
+  app.click("[data-clkadd]"); type(app, '[data-kf="name"]', "Alarm"); app.click("[data-clkdone]");
+  app.window.eval("rebaseTable()");
+  const of = () => app.$(".clock-count").textContent;
+  app.click("[data-clkplus]");
+  assert.equal(labels().at(-1), `Alarm: ${of()}`);
+  const was = labels().at(-1);
+  app.click("[data-clkplus]");
+  assert.notEqual(labels().at(-1), was, "a second press didn't change the label");
+  assert.equal(labels().at(-1), `Alarm: ${of()}`);
+  app.click("[data-clkminus]");
+  assert.equal(labels().at(-1), `Alarm: ${of()}`);
   assert.deepEqual(app.errors, []);
 });

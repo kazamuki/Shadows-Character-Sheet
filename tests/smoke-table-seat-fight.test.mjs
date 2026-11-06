@@ -84,7 +84,7 @@ test("257: the Hit panel on a claimed row asks the sheet's questions, and Apply 
   assert.match(app.$("[data-ehit-preview]").textContent, /Reinforced Denim Vest stops 7 \(PROT 3 \+ RES 4\) · 3 through · 1 Health Level/);
   app.click("[data-ehit-apply]");
   assert.match(app.$("[data-erow] .enc-health").textContent, /HP 23 \/ 30/);
-  assert.equal(JSON.parse(ev(app, "JSON.stringify(S.table.audit.map(e => e.label))")).at(-1), "Hit Dez");
+  assert.equal(JSON.parse(ev(app, "JSON.stringify(S.table.audit.map(e => e.label))")).at(-1), "Hit Dez: Reinforced Denim Vest stops 7 (PROT 3 + RES 4) · 3 through · 1 Health Level");
   assert.equal(ev(app, "S.ch"), null);
   assert.deepEqual(Object.keys(app.window.localStorage).filter(k => k.startsWith("shadows.char.v1.")), []);
   assert.deepEqual(app.errors, []);

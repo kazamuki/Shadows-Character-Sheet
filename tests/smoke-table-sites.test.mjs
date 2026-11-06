@@ -104,7 +104,7 @@ test("251: with no pack slotted the select is replaced by the line that says why
   runTable(app, "None");
   cityTab(app); cityView(app, "city"); app.click('[data-gadd="old-pike"]'); cityView(app, "places"); app.click("[data-popen]");
   assert.equal(app.$("[data-psite]"), null);
-  assert.match(app.$("[data-psite-none]").textContent, /^Slot in a pack with site profiles to use one here\.$/);
+  assert.match(app.$("[data-psite-none]").textContent, /^No site profiles yet\. Slot in a pack that has them, on Threats\.$/);
   assert.deepEqual(app.errors, []);
 });
 

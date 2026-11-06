@@ -1,7 +1,7 @@
 # State of the build
 
-**Updated:** 2026-11-05
-**Versions:** app `0.63.0` · game data `0.53` · character schema `0.34` · table schema `0.19` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
+**Updated:** 2026-11-06
+**Versions:** app `0.63.1` · game data `0.53` · character schema `0.34` · table schema `0.19` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -147,7 +147,7 @@ rev 9's `C1`–`C3` are still forward notes.
   round) are in `reference/meeting-2026-10-23.md`, with five details for Deighton.
   The player sheet's plan (`plans/archive/sheet-wishlist.md`) closed 2026-10-24, P1–P21 built.
 - **The powers-that-run plan** (`plans/powers-that-run.md`, approved by Ken 2026-11-04): H1 (sustained powers run, Decision 266), H2 (powers that answer a hit, Decision 267) and H3 (powers that heal, Decision 268) are built. What's left of W132 is Battle Hardened and Elemental Blood, which wait on the book (its Conditions and elements aren't the sheet's: plan §6).
-- **The GM-at-the-table plan** (`plans/gm-at-the-table.md`, approved by Ken 2026-11-05, UQ1–UQ8 on their defaults): U1 (the encounter row) first, then U4, U2, U3, U5. **U1 is built** (269, app 0.63.0; its order `plans/gm-at-the-table/U1-encounter-instrument.md`, UQ9–UQ12 on their defaults). **U4's order is approved** (`plans/gm-at-the-table/U4-back-inside-the-system.md`, UQ13–UQ17 on their defaults) and is next to build.
+- **The GM-at-the-table plan** (`plans/gm-at-the-table.md`, approved by Ken 2026-11-05, UQ1–UQ8 on their defaults): U1 (the encounter row) first, then U4, U2, U3, U5. **U1 is built** (269, app 0.63.0; its order `plans/gm-at-the-table/U1-encounter-instrument.md`, UQ9–UQ12 on their defaults). **U4 is built** (app 0.63.1, no decision; its order `plans/gm-at-the-table/U4-back-inside-the-system.md`, UQ13–UQ17 on their defaults; the tab icons stay borrowed until Scott's set, W145). **U2** (the Tonight strip) is next.
 - **W90**, cybernetics: six questions before a plan.
 
 **Ken alone:** F12 and F32, W38's plan (`plans/two-tabs-one-character.md`,

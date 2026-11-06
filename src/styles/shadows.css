@@ -1274,8 +1274,14 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .cast-open:hover{color:var(--cyan)}
 .cast-line, .cast-meta{overflow-wrap:anywhere; min-width:0}
 .cast-line{margin-top:3px; font-style:italic; color:var(--dim)}
+.mono{font-family:var(--mono)}
+.gm-door{margin-top:8px}
 .cast-title, .cast-h{overflow-wrap:anywhere}
-.cast-h{margin:26px 0 10px; font-size:1.1rem}
+/* U4: three steps. A record's name is the Title voice (.cast-h on a player, a crew, a site, a Reset row); a section head is a Mono Caps
+   label over a rule in the frame colour (.sec-h); a sub-section (.ref-sub, .next-h) is the same label without the rule. */
+.cast-h{margin:26px 0 10px; font-family:var(--display); font-weight:600; font-size:1.15rem; letter-spacing:.04em}
+.sec-h, .ref-sub, .next-h{font-family:var(--mono); font-size:.74rem; font-weight:500; letter-spacing:.14em; text-transform:uppercase; color:var(--dim)}
+.sec-h{color:var(--violet-text); padding-bottom:6px; border-bottom:1px solid var(--frame)}   /* Aether Pulse, read: as the sheet's .sect, per the Mono Caps Rule */
 .cast-codex{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:0 14px}
 .cast-health{margin:0 0 10px; overflow-wrap:anywhere}
 .cast-stats{display:grid; grid-template-columns:repeat(auto-fill,minmax(112px,1fr)); gap:10px; margin-bottom:16px}
@@ -1437,7 +1443,7 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .next-session{margin-bottom:18px; min-width:0}
 .next-current{font-size:1.05rem; margin:0 0 10px; overflow-wrap:anywhere}
 .next-tag{display:inline-block; background:var(--violet); color:var(--on-accent); border-radius:4px; padding:1px 8px; font-size:.8rem; font-weight:700; margin-right:6px}
-.next-h{margin:14px 0 6px; font-size:.95rem; color:var(--dim)}
+.next-h{margin:14px 0 6px}
 .next-list li{padding:4px 0}
 .next-seed{white-space:pre-wrap; overflow-wrap:anywhere; margin:0 0 6px}
 .thread-row{background:var(--panel); border:1px solid var(--frame); border-radius:6px; padding:8px 12px; margin-bottom:8px; min-width:0}
@@ -1492,7 +1498,7 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 /* The Reference (Decision 207). A table wider than the screen scrolls inside its own frame, never the page. */
 .ref-panel{margin:0 0 26px; min-width:0}
 .ref-h{margin:18px 0 8px; font-size:1.15rem; scroll-margin-top:calc(var(--hdr-off) + 64px); overflow-wrap:anywhere}
-.ref-sub{margin:14px 0 6px; font-size:.95rem; overflow-wrap:anywhere}
+.ref-sub{margin:14px 0 6px; overflow-wrap:anywhere}
 .ref-text{margin:0 0 6px; max-width:62ch; overflow-wrap:anywhere}
 .ref-text::first-letter{text-transform:uppercase}
 .ref-foot{margin:-8px 0 10px; font-size:.78rem; color:var(--dim); overflow-wrap:anywhere}
@@ -1622,6 +1628,12 @@ h2.city-name{font-size:1.15rem}
 /* The Players tab (Decisions 254, 255): a card is a cast card with its numbers; a folded list keeps its marker. */
 .player{margin:18px 0}
 .seat-card .seat-line, .seat-block .seat-line, .seat-names .int-line{overflow-wrap:anywhere; min-width:0}
+/* U4: a seat's vitals are a readout (Decision 255's three lines, restyled). Same voice as the encounter row's HP. */
+.seat-line{margin-top:3px; display:flex; flex-wrap:wrap; align-items:baseline; gap:0 6px; min-width:0}
+.seat-key{font-family:var(--mono); font-size:.74rem; letter-spacing:.12em; text-transform:uppercase; color:var(--dim)}
+.seat-val{font-family:var(--mono); font-size:.85rem; color:var(--text)}
+.seat-hp{font-family:var(--numeric); font-size:1.1rem; font-weight:600; line-height:1.2; letter-spacing:.01em; font-variant-numeric:tabular-nums; color:var(--green)}
+.seat-hp.down{color:var(--magenta-text)}
 .seat-status{margin-left:6px}
 .seat-shut{margin:6px 0}
 .seat-shut summary{cursor:pointer; color:var(--dim)}
@@ -1631,13 +1643,18 @@ h2.city-name{font-size:1.15rem}
 .seat-block{cursor:default}
 
 /* The read-only sheet (Decision 256): a seat's copy on the sheet's own renderers, drawn in the table's column.
-   Its tabs are one sideways row, as the table's are. A disabled control keeps its colours (a pressed chip still
-   shows its state) and only stops looking pressable. */
-.ro-tabs{display:flex; white-space:nowrap; gap:0 2px; border-bottom:1px solid var(--line, rgba(128,128,128,.25)); margin:10px 0 14px}
-.ro-tabs .tab{flex:none}
+   Its tabs are one sideways row. A disabled control keeps its colours (a pressed chip still
+   shows its state), takes a dimmer, dashed look (U4) and stops looking pressable. */
+/* U4: the copy's tabs are the sheet's own, so they read as a smaller outlined row under a label, not as a second copy of the table's tabs. */
+.ro-label{font-family:var(--mono); font-size:.74rem; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); margin:10px 0 4px}
+.ro-tabs{display:flex; white-space:nowrap; gap:0 6px; margin:0 0 14px; padding-bottom:2px}
+.ro-tabs .tab{flex:none; padding:5px 11px; font-size:.8rem; border:1px solid var(--frame); border-radius:4px; margin-bottom:0}
+.ro-tabs .tab.active{border-color:var(--cyan); color:var(--cyan)}
 .ro-sheet{min-width:0}
 /* No hover at all: the sheet's hover rules don't skip :disabled, and overriding them one by one loses the fill. */
 .ro-sheet button:disabled, .ro-sheet select:disabled, .ro-sheet input:disabled{cursor:default; pointer-events:none}
+/* U4: only the controls that act look disabled. The readers the sheet draws as buttons (the vitals tiles and pills, Progression's toggles) stay at full strength: they carry the numbers the copy exists to show. */
+.ro-sheet :is(.btn, .cond-chip.add, select, input):disabled{opacity:.55; border-style:dashed}
 /* A read-only field keeps its edge (still --frame, so the same contrast) and takes a different fill and a dashed line: it reads as shown, not as typed. */
 .ro-sheet input[readonly], .ro-sheet textarea[readonly]{background:var(--panel-2); border-style:dashed; cursor:default}
 

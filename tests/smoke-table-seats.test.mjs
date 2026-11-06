@@ -8,7 +8,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { boot } from "./harness.mjs";
-import { Engine, GM_ON, lockedCharacter, type, runTable, keyIn, tableCard } from "./smokekit.mjs";
+import { Engine, GM_ON, lockedCharacter, type, runTable, keyIn, tableCard, wizCss } from "./smokekit.mjs";
 
 const playersTab = app => app.click('[data-tsec="players"]');
 const both = (app, sel, value) => {
@@ -346,5 +346,33 @@ test("255: a hurt character's card reads Pain the way the sheet's chip does", as
   const hurt = dez(); hurt.trackers.damage = 10;
   await pickFiles(app, importBtn(app, "Brogan"), [hurt]);
   assert.match(cards(app)[0].textContent, /Pain Lv \d+ \(−\d+ skill\)/);
+  assert.deepEqual(app.errors, []);
+});
+
+// U4 (finding 27): the three lines are a readout. Their text is Decision 255's, as it was; only the markup under it changed.
+test("U4: a seat card's lines are a readout, their text unchanged", async () => {
+  const app = fresh();
+  addPlayer(app, "Brogan");
+  await pickFiles(app, importBtn(app, "Brogan"), [dez()]);
+  const card = cards(app)[0];
+  const lines = [...card.querySelectorAll(".seat-line")];
+  assert.equal(lines.length, 3);
+  assert.match(lines[0].textContent, /^HP \d+\/\d+$/);
+  assert.match(lines[1].textContent, /^Awareness [+−]?\d+$/);
+  assert.equal(lines[2].textContent, "No Conditions");
+  assert.ok(lines[0].querySelector(".seat-hp"), "the HP figure is a readout");
+  assert.equal(lines[0].querySelector(".seat-hp").textContent, lines[0].textContent.replace(/^HP /, ""));
+  assert.ok(lines[1].querySelector(".seat-key") && lines[1].querySelector(".seat-val"), "Awareness is a key and a value");
+  for (const l of lines) assert.equal(l.classList.contains("cast-line"), false, "a seat line is still the cast's italic dim line");
+  // The seat page's first block is the same function.
+  seatPage(app, DEZ_TAG);
+  assert.ok(app.$(".seat-block .seat-hp"), "the seat page shows the readout");
+  assert.deepEqual([...app.$$(".seat-block .seat-line")].map(x => x.textContent).slice(0, 3), lines.map(x => x.textContent));
+  // A Down seat's figure is the magenta one.
+  const css = wizCss();
+  assert.match(css, /\.seat-hp\{[^}]*font-family:var\(--numeric\)/);
+  assert.match(css, /\.seat-hp\.down\{[^}]*color:var\(--magenta-text\)/);
+  assert.match(css, /\.seat-line\{[^}]*display:flex/);
+  assert.doesNotMatch(css, /\.seat-line\{[^}]*italic/);
   assert.deepEqual(app.errors, []);
 });

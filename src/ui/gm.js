@@ -93,6 +93,8 @@ function typingNow(){
   const m=$("main");
   return !!m && m.contains(el) && isTextField(el);
 }
+// What a delete's ask says (Decisions 171, 176, 212): the table can always take it back.
+const UNDO_ASK = "Undo brings it back, from the toast or ⋮ → Activity.";
 function tableChange(fn, redraw=true, label){
   const t=S.table;
   fn();
@@ -180,8 +182,10 @@ function gmImportTable(raw){
 
 // ── Home: the door and the list ────────────────────────────────────────
 function gmTableCardHtml(e){
-  const t=Engine.migrateTable(clone(e.table)), id=esc(e.id), n=t.notes.length;
-  const bits=[`Table`, `${n} note${n===1?"":"s"}`, whenText(e.changed)?"changed "+whenText(e.changed):""].filter(Boolean).map(esc).join(" · ");
+  const t=Engine.migrateTable(clone(e.table)), id=esc(e.id), ns=t.sessions.length, nc=t.cast.length;
+  // Sessions, cast, and when it last changed; a count of none is left out, and a table with neither says Empty.
+  const held=[ns ? `${ns} session${ns===1?"":"s"}` : "", nc ? `${nc} cast` : ""].filter(Boolean);
+  const bits=[...(held.length ? held : ["Empty"]), whenText(e.changed)?"changed "+whenText(e.changed):""].filter(Boolean).map(esc).join(" · ");
   return `<li class="roster-card" data-tcard="${id}">
     <div class="roster-top"><b class="roster-name">${esc(tableName(t))}</b></div>
     <div class="roster-meta">${bits}</div>
@@ -201,12 +205,12 @@ function gmTableListHtml(tables){
   return `<section class="roster tables" aria-labelledby="tables-h">
       <h2 id="tables-h" class="roster-h">Your tables</h2>
       <ul class="roster-list">${tables.map(gmTableCardHtml).join("")}</ul>
-      <p class="step-note">Tables stay in this browser until you remove them, but it isn't a backup. The exported <span style="font-family:var(--mono)">.shadows-table.json</span> is the copy that lasts.</p>
+      <p class="step-note">Tables stay in this browser until you remove them, but it isn't a backup. The exported <span class="mono">.shadows-table.json</span> is the copy that lasts.</p>
     </section>`;
 }
 function gmDoorHtml(){
   if (!featureOn("gm")) return "";
-  return `<p class="step-note" style="margin-top:8px">Running the game? <button class="btn sm" id="btn-run-table">Run a table</button></p>`;
+  return `<p class="step-note gm-door">Running the game? <button class="btn sm" id="btn-run-table">Run a table</button></p>`;
 }
 function gmTableEntries(){ return featureOn("gm") ? tableEntries() : []; }
 
@@ -427,7 +431,7 @@ function bindNotes(main){
   };
   main.querySelectorAll("[data-ndel]").forEach(b=>b.onclick=()=>{
     const id=b.dataset.ndel, at=S.table.notes.findIndex(n=>n.id===id);
-    askFirst({ title:"Delete this note?", text:"It isn't kept anywhere else unless you've exported the table.", yes:"Delete",
+    askFirst({ title:"Delete this note?", text:UNDO_ASK, yes:"Delete",
       then(){
         tableChange(()=>Engine.removeTableNote(S.table, id));
         const next=S.table.notes[at], el=next && $("main").querySelector(`[data-ntitle="${next.id}"]`) || $("main").querySelector("[data-tnew]");
@@ -716,7 +720,7 @@ function sentenceHtml(t, x, o={}){
 function crewViewHtml(t){
   const groups=Engine.crewView(t, { q:S.castQ||"" });
   if (!groups.length) return S.castQ && String(S.castQ).trim() ? `<p class="step-note">No one matches.</p>` : `<p class="step-note">Nothing between the crew and anyone yet.</p>`;
-  return groups.map(g=>`<section class="crew-group"><h2 class="cast-h crew-name">${esc(g.name || "No one named")}</h2><ul class="int-list">${g.interactions.map(x=>{
+  return groups.map(g=>`<section class="crew-group"><h2 class="cast-h rec-name crew-name">${esc(g.name || "No one named")}</h2><ul class="int-list">${g.interactions.map(x=>{
     return `<li class="int-line">${sentenceHtml(t, x, { where:`${g.name.trim().toLowerCase()}|${x.id}` })}</li>`; }).join("")}</ul></section>`).join("");
 }
 // A day as the GM's locale shows it. Built from its parts, so it is the day it says in any zone.
@@ -766,7 +770,7 @@ function castStatBlockHtml(n){
       <input type="text" data-ctname="${i}" value="${esc(k.name)}" placeholder="Trait" aria-label="Trait name" autocomplete="off">
       <textarea data-cttext="${i}" aria-label="Trait text" placeholder="What it does.">${esc(k.text)}</textarea>
       <button class="btn sm danger" data-ctdel="${i}">Remove</button></div>`).join("");
-  return `<h2 class="cast-h">Stat block</h2>
+  return `<h2 class="cast-h sec-h">Stat block</h2>
     <p class="cast-health" data-chealth-row hidden>Health <b data-chealth></b></p>
     ${packs ? `<p class="cast-guide" data-cmodnote hidden></p><p class="cast-guide" data-cstatguide hidden></p>` : ""}
     <div class="cast-stats">${stats}${authored}</div>
@@ -800,7 +804,7 @@ function interactionRowHtml(x, n){
 function castInteractionsHtml(n){
   const a=intAdd(), rows=Engine.interactionsFor(S.table, n.id);
   const names=crewNameChoices(S.table);
-  return `<h2 class="cast-h">Between them and the crew</h2>
+  return `<h2 class="cast-h sec-h">Between them and the crew</h2>
     <datalist id="crew-names">${names.map(x=>`<option value="${esc(x)}">`).join("")}</datalist>
     <div class="int-add">
       <div class="int-fields">
@@ -925,7 +929,7 @@ function bindCastList(main){
 function castFigures(main, n){
   const r=Engine.npc(n.block);
   main.querySelectorAll("[data-cbonus]").forEach(el=>{ const s=r.stats[el.dataset.cbonus]; el.textContent = s && s.mod!==null ? castSigned(s.mod) : ""; });
-  main.querySelectorAll("[data-cformula]").forEach(el=>{ const a=r.authored[el.dataset.cformula]; el.textContent = a && a.formula!==null ? `formula ${a.formula}` : ""; });
+  main.querySelectorAll("[data-cformula]").forEach(el=>{ const a=r.authored[el.dataset.cformula]; el.textContent = a && a.formula!==null ? `book: ${a.formula}` : ""; });
   const row=main.querySelector("[data-chealth-row]");
   if (row){
     row.hidden = !r.health;
@@ -1286,7 +1290,7 @@ const siteValue = e => `${e.pack.meta.id}|${e.site.id}`;
 // The select of every slotted pack's profiles, the place's own kind of ground first.
 function siteSelectHtml(p, info){
   const list=Engine.siteProfiles(packsMemo);
-  if (!list.length && !info.link) return `<p class="step-note" data-psite-none>Slot in a pack with site profiles to use one here.</p>`;
+  if (!list.length && !info.link) return `<p class="step-note" data-psite-none>No site profiles yet. Slot in a pack that has them, on Threats.</p>`;
   const groups=[];
   for (const e of list){
     let g=groups.find(x=>x.cat===e.site.category);
@@ -1346,7 +1350,7 @@ function siteProfileHtml(p, info){
   const s=info.site;
   if (!s) return `<p class="step-note" data-psite-gone>${esc(String(info.link.name||"").trim() || "This site profile")} isn't in any pack slotted in.</p>`;
   return `<div class="site-profile" data-psite-profile>
-    <h2 class="cast-h site-name">${esc(s.name)}</h2>
+    <h2 class="cast-h rec-name site-name">${esc(s.name)}</h2>
     <p class="roster-meta">${esc([gazName(s.category), s.canon].filter(x=>String(x||"").trim()).join(" · "))}</p>
     ${String(s.flavor||"").trim() ? `<p class="site-flavor"><em>${esc(s.flavor)}</em></p>` : ""}
     ${siteText("Presence", s.presence)}${siteText("Rules", s.rules)}
@@ -1434,15 +1438,15 @@ function placePageHtml(p){
       `<button type="button" data-pground="${esc(e.id)}" class="${e.id===p.environment ? "on" : ""}" aria-pressed="${e.id===p.environment}">${esc(e.name)}</button>`).join("")}</div></div>
     ${siteSelectHtml(p, info)}
     ${siteProfileHtml(p, info)}
-    <h2 class="cast-h">Clocks</h2>
+    <h2 class="cast-h sec-h">Clocks</h2>
     ${info.here && !info.site.clock && String(info.site.clockText||"").trim() ? `<p class="site-text">${esc(info.site.clockText)}</p>` : ""}
     ${clocksHtml(siteOwner(p))}
     <label class="field"><span>Notes</span><textarea data-pf="notes" placeholder="What the crew should remember about it.">${esc(p.notes)}</textarea></label>
-    ${entry && entry.summary ? `<h2 class="cast-h">From the book</h2><p class="city-sum">${esc(entry.summary)}</p>` : ""}
-    <h2 class="cast-h">What happened here</h2>
+    ${entry && entry.summary ? `<h2 class="cast-h sec-h">From the book</h2><p class="city-sum">${esc(entry.summary)}</p>` : ""}
+    <h2 class="cast-h sec-h">What happened here</h2>
     ${lines.length ? `<ul class="int-list">${lines.map(x=>`<li class="int-line">${sentenceHtml(t, x, { where:`place|${x.id}`, ownPlace:p.id })}</li>`).join("")}</ul>`
       : `<p class="step-note">Nothing yet. Name this place as Where on a line.</p>`}
-    <h2 class="cast-h">Met here</h2>
+    <h2 class="cast-h sec-h">Met here</h2>
     ${met.length ? `<ul class="int-list">${met.map(m=>`<li class="int-line">${m.gone ? goneHtml(m.name)
       : `<button class="cast-open int-who" data-copen="${esc(m.id)}" data-cwhere="met|${esc(m.id)}">${esc(m.name)}</button>`}</li>`).join("")}</ul>`
       : `<p class="step-note">No one yet.</p>`}
@@ -1681,7 +1685,8 @@ function clocksHtml(owner, opts){
 }
 function bindClocks(main, owner){
   const focus = sel => { const el=$("main").querySelector(sel); if (el) el.focus(); };
-  const clockEdit = (cid, o) => tableChange(()=>Engine.editClock(S.table, cid, o), false);
+  const clockEdit = (cid, o, label) => tableChange(()=>Engine.editClock(S.table, cid, o), false, label);
+  const clockStep = (cid, by) => { const c=clockOf(cid); if (!c) return; const now=Math.max(0, Math.min(c.segments, c.filled+by)); clockEdit(cid, { filled:now }, `${String(c.name||"").trim() || "A clock"}: ${now} of ${c.segments}`); };
   const clockOf = cid => Engine.clocksOn(S.table, owner).find(c=>c.id===cid);
   const paintClock = cid => {
     const c=clockOf(cid), root=main.querySelector(attrSel("data-clock", cid)); if (!c || !root) return;
@@ -1698,8 +1703,8 @@ function bindClocks(main, owner){
   const redrawClocks = () => { main.querySelector("[data-fclocks]").innerHTML=Engine.clocksOn(S.table, owner).map(clockHtml).join(""); bindAll(); };
   const bindAll = () => main.querySelectorAll("[data-clock]").forEach(root=>{
     const cid=root.dataset.clock, q = sel => root.querySelector(sel);
-    q("[data-clkplus]").onclick=()=>{ const c=clockOf(cid); if (!c) return; clockEdit(cid, { filled:c.filled+1 }); paintClock(cid); if (q("[data-clkplus]").disabled) q("[data-clkminus]").focus(); };
-    q("[data-clkminus]").onclick=()=>{ const c=clockOf(cid); if (!c) return; clockEdit(cid, { filled:c.filled-1 }); paintClock(cid); if (q("[data-clkminus]").disabled) q("[data-clkplus]").focus(); };
+    q("[data-clkplus]").onclick=()=>{ if (!clockOf(cid)) return; clockStep(cid, 1); paintClock(cid); if (q("[data-clkplus]").disabled) q("[data-clkminus]").focus(); };
+    q("[data-clkminus]").onclick=()=>{ if (!clockOf(cid)) return; clockStep(cid, -1); paintClock(cid); if (q("[data-clkminus]").disabled) q("[data-clkplus]").focus(); };
     const ed=q("[data-clkedit]");
     if (ed) ed.onclick=()=>{ S.clockEdit=cid; redrawClocks(); focus(`${attrSel("data-clock", cid)} [data-kf="name"]`); };
     root.querySelectorAll("[data-kf]").forEach(el=>{
@@ -1746,20 +1751,20 @@ function factionPageHtml(f){
       <label class="field"><span>Territory</span><select data-ff="territory"><option value=""${!f.territory ? " selected" : ""}>None</option>${g.territories.map(r=>opt(r.entry.id, r.entry.name, r.entry.id===f.territory)).join("")}${unknownT}</select></label>
       <label class="field"><span>Base</span><input type="text" data-ff="base" value="${esc(f.base)}" autocomplete="off"></label>
     </div>
-    <h2 class="cast-h">Key NPCs</h2>
+    <h2 class="cast-h sec-h">Key NPCs</h2>
     <div data-fkeys>${factionKeysHtml(t, f)}</div>
     <label class="field"><span>What they want</span><textarea data-ff="wants">${esc(f.wants)}</textarea></label>
     <label class="field"><span>Resources &amp; reach</span><textarea data-ff="reach">${esc(f.reach)}</textarea></label>
-    <h2 class="cast-h">Tipping points</h2>
+    <h2 class="cast-h sec-h">Tipping points</h2>
     <div data-ftipgroup="for">${factionTipHtml(f, "for")}</div>
     <div data-ftipgroup="against">${factionTipHtml(f, "against")}</div>
     <div class="tag-choice"><span>Stance</span><div data-fstances>${factionToggleHtml("data-fstance", "Stance", FACTION_STANCE_STEPS.map(([v, text, name])=>[String(v), text, name]), f.stance===null ? "" : String(f.stance))}</div></div>
     <div class="tag-choice"><span>Attention</span><div data-fattns>${factionToggleHtml("data-fattn", "Attention", Engine.FACTION_ATTENTION.map(k=>[k, FACTION_ATTENTION_LABELS[k], ""]), f.attention)}</div></div>
     <label class="field"><span>Notes</span><textarea data-ff="notes" placeholder="What the crew should remember about them.">${esc(f.notes)}</textarea></label>
-    ${entry && entry.summary ? `<h2 class="cast-h">From the book</h2><p class="city-sum">${esc(entry.summary)}</p>` : ""}
-    ${tied.length ? `<h2 class="cast-h">Tied by affiliation</h2><ul class="int-list">${tied.map(n=>
+    ${entry && entry.summary ? `<h2 class="cast-h sec-h">From the book</h2><p class="city-sum">${esc(entry.summary)}</p>` : ""}
+    ${tied.length ? `<h2 class="cast-h sec-h">Tied by affiliation</h2><ul class="int-list">${tied.map(n=>
       `<li class="int-line"><button class="cast-open int-who" data-copen="${esc(n.id)}" data-cwhere="aff|${esc(n.id)}">${esc(String(n.name||"").trim() || "Unnamed")}</button></li>`).join("")}</ul>` : ""}
-    <h2 class="cast-h">Clocks</h2>
+    <h2 class="cast-h sec-h">Clocks</h2>
     ${clocksHtml({ kind:"faction", id:f.id })}
     <p class="cast-delete"><button class="btn danger" data-fdel>Delete</button></p>`;
 }
@@ -1771,7 +1776,7 @@ function memberRoute(key){
 }
 function castKeyToHtml(n){
   const of=Engine.factionsKeyFor(S.table, n.id);
-  return of.length ? `<h2 class="cast-h">Key to</h2><ul class="int-list">${of.map(f=>
+  return of.length ? `<h2 class="cast-h sec-h">Key to</h2><ul class="int-list">${of.map(f=>
     `<li class="int-line"><button class="cast-open int-who" data-fopen="${esc(f.id)}">${esc(Engine.factionTitle(S.table, f))}</button></li>`).join("")}</ul>` : "";
 }
 function openFactionPage(id, route){
@@ -2002,7 +2007,7 @@ function threadRowHtml(h){
 }
 function threadsHtml(t){
   const all=Engine.threadList(t), open=all.filter(h=>h.status==="open"), shut=all.filter(h=>h.status!=="open");
-  return `<h2 class="cast-h" tabindex="-1" data-threads-h>Threads</h2>
+  return `<h2 class="cast-h sec-h" tabindex="-1" data-threads-h>Threads</h2>
     <div class="cast-add thread-add">
       <label class="field"><span>New thread</span><input type="text" data-thadd value="${esc(S.threadAdd||"")}" placeholder="What's still open?" autocomplete="off"></label>
       <button type="button" class="btn primary" data-thadd-btn>Add</button></div>
@@ -2011,9 +2016,9 @@ function threadsHtml(t){
 }
 function sessionsTabHtml(t){
   const list=Engine.sessionList(t);
-  return `<h2 class="cast-h" tabindex="-1">Next session</h2>${nextSessionHtml(t)}
+  return `<h2 class="cast-h sec-h" tabindex="-1">Next session</h2>${nextSessionHtml(t)}
     ${threadsHtml(t)}
-    <h2 class="cast-h" tabindex="-1">Sessions</h2>
+    <h2 class="cast-h sec-h" tabindex="-1">Sessions</h2>
     ${coTotalsHtml(t)}
     <p><button type="button" class="btn primary" data-snew>New session</button></p>
     ${list.length ? `<ul class="roster-list sess-list">${list.map(s=>
@@ -2026,7 +2031,7 @@ function sessionInteractionHtml(t, x, offered){
 // What was jotted in this session (Decision 208): the text, then the title when it has one.
 function jottedHtml(s){
   const jots=Engine.sessionNotes(S.table, s.id);
-  return jots.length ? `<h2 class="cast-h">Jotted</h2><ul class="int-list">${jots.map(n=>{
+  return jots.length ? `<h2 class="cast-h sec-h">Jotted</h2><ul class="int-list">${jots.map(n=>{
     const text=n.text.trim(), title=n.title.trim();
     return `<li class="int-line"><button type="button" class="cast-open" data-jotopen="${esc(n.id)}">${esc(text || title || "Untitled note")}${text && title ? ` <span class="int-kind">${esc(title)}</span>` : ""}</button></li>`; }).join("")}</ul>` : "";
 }
@@ -2049,7 +2054,7 @@ function sessionPageHtml(s){
     </div>
     ${JOURNAL.map(([k, label, hint])=>`<label class="field sess-part"><span>${esc(label)}</span><small class="field-hint">${esc(hint)}</small>
       <textarea data-sj="${k}">${esc(j[k]||"")}</textarea></label>${k==="threads" ? threadsBlock : ""}`).join("")}
-    <h2 class="cast-h" tabindex="-1" data-sint-h>What passed between the crew and the cast</h2>
+    <h2 class="cast-h sec-h" tabindex="-1" data-sint-h>What passed between the crew and the cast</h2>
     ${lines.length ? `<ul class="int-list">${lines.map(x=>sessionInteractionHtml(t, x, false)).join("")}</ul>` : `<p class="step-note">Nothing yet.</p>`}
     ${offered.length ? `<h3 class="next-h">Also that day</h3><ul class="int-list" data-soffered>${offered.map(x=>sessionInteractionHtml(t, x, true)).join("")}</ul>` : ""}
     ${jottedHtml(s)}
@@ -2127,7 +2132,7 @@ function bindSessionsTab(main){
   });
   main.querySelectorAll("[data-thdel]").forEach(b=>b.onclick=()=>{
     const id=b.dataset.thdel, h=found(id); if (!h) return;
-    askFirst({ title:`Delete ${threadTitle(h)}?`, text:"It isn't kept anywhere else unless you've exported the table.", yes:"Delete",
+    askFirst({ title:`Delete ${threadTitle(h)}?`, text:UNDO_ASK, yes:"Delete",
       then(){ tableChange(()=>Engine.removeThread(S.table, id)); focus("[data-thadd]"); } });
   });
 }
@@ -2264,10 +2269,10 @@ function writtenDay(at){
 }
 function closeOutSectionHtml(s){
   const c=s.close, name=Number.isFinite(s.number) ? Engine.sessionTitle(s) : "this session";
-  if (!c) return `<h2 class="cast-h" tabindex="-1" data-sco-h>Close-out</h2>
+  if (!c) return `<h2 class="cast-h sec-h" tabindex="-1" data-sco-h>Close-out</h2>
     <p><button type="button" class="btn primary" data-co-open>Close out ${esc(name)}</button></p>`;
   const day=writtenDay(c.at);
-  return `<h2 class="cast-h" tabindex="-1" data-sco-h>Close-out</h2>
+  return `<h2 class="cast-h sec-h" tabindex="-1" data-sco-h>Close-out</h2>
     <p class="step-note">${day ? `Written ${esc(day)}.` : "Written."}</p>
     ${c.lines.length ? `<ul class="int-list co-log">${c.lines.map(l=>`<li class="int-line">${coLogLine(l)}</li>`).join("")}</ul>` : `<p class="step-note">It said nothing.</p>`}
     <p><button type="button" class="btn" data-co-redo>Redo the close-out</button></p>`;
@@ -2279,7 +2284,7 @@ function coTotalsHtml(t){
 function coIpRows(c){
   const rows=c.lines.map((l, i)=>[l, i]).filter(([l])=>l.present);
   const s=sessionById(c.id);
-  return `<h2 class="cast-h" tabindex="-1" data-co-ip-h>Improvement Points</h2>
+  return `<h2 class="cast-h sec-h" tabindex="-1" data-co-ip-h>Improvement Points</h2>
     <p class="field-hint">${esc(D.ip.perHour)} an hour, rounded up. Change any of it.</p>
     ${!rows.length ? `<p class="step-note">Add who was there to work out IP.</p>` : s && typeof s.hours!=="number" ? `<p class="step-note">Add the hours to work out IP.</p>` : ""}
     <ul class="int-list co-rows">${rows.map(([l, i])=>`<li class="co-row" data-co-row="${i}">
@@ -2292,7 +2297,7 @@ function coIpRows(c){
 function coAwayRows(c){
   const rows=c.lines.map((l, i)=>[l, i]).filter(([l])=>!l.present);
   if (!rows.length) return "";
-  return `<h2 class="cast-h" tabindex="-1" data-co-away-h>Away tonight</h2>
+  return `<h2 class="cast-h sec-h" tabindex="-1" data-co-away-h>Away tonight</h2>
     <ul class="int-list co-rows">${rows.map(([l, i])=>{
       const head=`<span class="co-name">${esc(l.name)}</span>
         <label class="co-check"><input type="checkbox" data-co="took"${l.took ? " checked" : ""}> <span>Took a job</span></label>`;
@@ -2307,7 +2312,7 @@ function coAwayRows(c){
 }
 function coThreads(){
   const open=Engine.threadList(S.table).filter(h=>h.status==="open");
-  return `<h2 class="cast-h" tabindex="-1" data-co-threads-h>Threads</h2>
+  return `<h2 class="cast-h sec-h" tabindex="-1" data-co-threads-h>Threads</h2>
     ${open.length ? `<ul class="int-list">${open.map(h=>{ const id=esc(h.id); return `<li class="thread-row" data-co-thread="${id}"><div class="thread-main">
       <span class="co-name">${esc(threadTitle(h))}</span>
       <button type="button" class="btn sm thread-cur${h.current?" on":""}" data-co-cur="${id}" aria-pressed="${h.current}">Current</button>
@@ -2317,7 +2322,7 @@ function coThreads(){
 function coNewcomers(c){
   const members=c.newcomers.map(id=>(S.table.cast||[]).find(n=>n.id===id)).filter(Boolean);
   if (!members.length) return "";
-  return `<h2 class="cast-h" tabindex="-1" data-co-new-h>Anyone new?</h2>
+  return `<h2 class="cast-h sec-h" tabindex="-1" data-co-new-h>Anyone new?</h2>
     <ul class="int-list">${members.map(n=>{ const id=esc(n.id); return `<li class="co-new" data-co-member="${id}">
       <button type="button" class="cast-open" data-co-open-cast="${id}">${esc(n.name.trim() || "Unnamed")}</button>
       <div class="co-new-fields">
@@ -2626,7 +2631,7 @@ function threatListHtml(){
 }
 function threatsTabHtml(){
   if (!packsMemo.length){
-    return `<p class="step-note">No pack slotted in. A pack is a file of threats your GM material came with.</p>
+    return `<p class="step-note">No threats yet. Slot in the pack that came with your GM material to see its threats here.</p>
       <p><button class="btn primary" data-pslot>Slot in a pack</button>
       <input type="file" id="pack-file" accept=".json,.shadows-pack.json" hidden></p>`;
   }
@@ -2649,19 +2654,19 @@ function readBlockHtml(block){
   if (!block) return "";
   const r=Engine.npc(block), b=block, rows=[];
   for (const s of D.stats){ const v=r.stats[s.id]; if (v.value!==null) rows.push([s.id, v.value, castSigned(v.mod)]); }
-  for (const d of D.derived.filter(x=>x.type==="sumOfModifiers")){ const a=r.authored[d.id]; if (a && a.value!==null) rows.push([d.id, a.value, a.formula!==null ? `formula ${a.formula}` : ""]); }
+  for (const d of D.derived.filter(x=>x.type==="sumOfModifiers")){ const a=r.authored[d.id]; if (a && a.value!==null) rows.push([d.id, a.value, a.formula!==null ? `book: ${a.formula}` : ""]); }
   const stats=rows.map(([id, v, fig])=>`<div class="cast-stat"><span class="cast-stat-id">${esc(id)}</span><b class="threat-val">${esc(v)}</b><span class="cast-fig">${esc(fig)}</span></div>`).join("");
   const skills=b.skills.filter(k=>k.name.trim() || k.total!==null).map(k=>`<li>${esc(k.name.trim() || "Skill")}${k.total!==null ? " "+esc(k.total) : ""}</li>`).join("");
   const list=(label, items)=>{ const l=items.filter(x=>x.trim()); return l.length ? `<div class="cast-lines"><span class="cast-sub">${esc(label)}</span><ul class="threat-list">${l.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>` : ""; };
   const traits=b.traits.filter(k=>k.name.trim() || k.text.trim()).map(k=>`<li>${k.name.trim() ? `<b>${esc(k.name)}</b> ` : ""}${esc(k.text)}</li>`).join("");
   const health=r.health ? `<p class="cast-health">Health <b>${r.health.total}</b> (${r.health.levels} Health Level${r.health.levels===1?"":"s"})</p>` : "";
   if (!stats && !skills && !health && !traits && !b.armor.some(x=>x.trim()) && !b.gear.some(x=>x.trim())) return "";
-  return `<h2 class="cast-h">Stat block</h2>${health}${stats ? `<div class="cast-stats">${stats}</div>` : ""}
+  return `<h2 class="cast-h sec-h">Stat block</h2>${health}${stats ? `<div class="cast-stats">${stats}</div>` : ""}
     ${skills ? `<div class="cast-lines"><span class="cast-sub">Skills</span><ul class="threat-list">${skills}</ul></div>` : ""}
     ${list("Armor", b.armor)}${list("Gear", b.gear)}
     ${traits ? `<div class="cast-lines"><span class="cast-sub">Traits</span><ul class="threat-list">${traits}</ul></div>` : ""}`;
 }
-const threatText = (label, text) => String(text||"").trim() ? `<h2 class="cast-h">${esc(label)}</h2><p class="threat-text">${esc(text)}</p>` : "";
+const threatText = (label, text) => String(text||"").trim() ? `<h2 class="cast-h sec-h">${esc(label)}</h2><p class="threat-text">${esc(text)}</p>` : "";
 function entryPageHtml(found){
   const { pack, entry:e }=found, multi=packsMemo.length>1;
   const tier=e.tier!==null && (pack.tiers.find(t=>t.id===e.tier) || { id:e.tier, name:"" });
@@ -2688,7 +2693,7 @@ function groupPageHtml({ pack, group:g, members }){
   return `<div class="tbl-bar scroll-row" data-row="tblbar"><button class="btn sm" data-tback="group">Back to threats</button>${encAddBtnHtml("data-tgrpenc", "")}</div>
     <h1 class="step-title tbl-title cast-title" data-ttitle tabindex="-1">${esc(g.name.trim() || "Unnamed")}</h1>
     ${meta ? `<p class="roster-meta cast-meta">${meta}</p>` : ""}
-    ${members.length ? `<h2 class="cast-h">Who's in it</h2><ul class="threat-list threat-members">${members.map(m=>
+    ${members.length ? `<h2 class="cast-h sec-h">Who's in it</h2><ul class="threat-list threat-members">${members.map(m=>
       `<li>${m.count}× <button class="cast-open" data-tmember="${esc(entryKey(pack.meta.id, m.entry.id))}">${esc(m.entry.name.trim() || "Unnamed")}</button></li>`).join("")}</ul>` : ""}
     ${threatText("The situation", g.situation)}${threatText("Tactics", g.tactics)}`;
 }
@@ -2868,7 +2873,7 @@ function encListHtml(t){
   const card = (e, meta) => `<li class="roster-card cast-card" data-ecard="${esc(e.id)}">
     <button class="cast-open" data-enc-open="${esc(e.id)}">${esc(Engine.encounterTitle(e))}</button>
     <div class="roster-meta cast-meta">${esc(meta)}</div></li>`;
-  const sect = (h, items) => items.length ? `<h2 class="cast-h">${h}</h2><ul class="roster-list">${items.join("")}</ul>` : "";
+  const sect = (h, items) => items.length ? `<h2 class="cast-h sec-h">${h}</h2><ul class="roster-list">${items.join("")}</ul>` : "";
   return `<div class="cast-add">
       <label class="field"><span>Name</span><input type="text" data-enc-name placeholder="Warehouse job (optional)" autocomplete="off"></label>
       <button class="btn primary" data-enc-new>New encounter</button></div>
@@ -2913,7 +2918,7 @@ function encArmorHtml(v){
   const a=v.armor; if (!a || a.line===null) return "";
   let main;
   if (a.seat) main = seatArmorText(a.piece.name, a.die, a);
-  else if (!a.piece) main = `${esc(a.line)} · not in the Gear tables`;
+  else if (!a.piece) main = `${esc(a.line)} · not a piece the book lists`;
   else if (a.scrapped) main = `${esc(a.piece.name)} · Scrap`;
   else main = `${esc(a.piece.name)} · stops ${a.stops.prot + (a.compromised ? 0 : a.stops.res)} · INT ${a.integrity}/${a.integrityMax}${a.compromised ? " · Compromised: RES is gone" : ""}`;
   return `<p class="enc-armor">${main}</p>${a.extra ? `<p class="enc-armor enc-armor-extra">${esc(a.extra)}</p>` : ""}`;
@@ -3157,15 +3162,15 @@ function encResetHtml(e, v){
     // Decision 268 (HQ24): a seat's row keeps no Withering, so nothing heals here; the line says what heals on the player's own sheet.
     const heals = x.heals.length ? `<p class="step-note" data-eheals="${id}">${esc(x.heals.join(" and "))} ${x.heals.length===1 ? "heals" : "heal"} on the player's own sheet.</p>` : "";
     const clot = x.ends.map(e=>`<p class="step-note" data-eends="${id}">${esc(e.by)} ends ${esc(e.name)} on the player's own sheet.</p>`).join("");
-    return `<section class="enc-reset-row"><h3 class="cast-h">${esc(shown.trim() || "Unnamed")}</h3>
+    return `<section class="enc-reset-row"><h3 class="cast-h rec-name">${esc(shown.trim() || "Unnamed")}</h3>
       ${missed}${heals}${clot}${ticks || dying ? `<ul class="enc-list">${ticks}${dying}</ul>` : ""}
       ${out ? `<p class="cast-sub">Runs out now</p><ul class="enc-list">${out}</ul>` : ""}
       ${saves ? `<p class="cast-sub">Calls for a check</p><ul class="enc-list">${saves}</ul>` : ""}</section>`;
   }).join("");
   // Waves (Decision 261): the next round's rolls, in the sides' own order so a field doesn't move as it is typed.
-  const next = e.by==="wave" ? `<section class="enc-reset-row"><h3 class="cast-h">Next round</h3><p class="step-note">If the fight has changed, each side rolls Combat Sense again.</p>
+  const next = e.by==="wave" ? `<section class="enc-reset-row"><h3 class="cast-h rec-name">Next round</h3><p class="step-note">If the fight has changed, each side rolls Combat Sense again.</p>
       <div class="enc-side-head">${(e.sides || []).map(s=>`<label class="enc-num"><span>${esc(Engine.sideTitle(e, s.id))}</span><input type="number" step="1" inputmode="numeric" data-esideroll="${esc(s.id)}" value="${numAttr(s.roll)}" aria-label="Combat Sense, ${esc(Engine.sideTitle(e, s.id))}"></label>`).join("")}</div></section>` : "";
-  return `<section class="enc-reset" aria-labelledby="enc-reset-h"><h2 class="cast-h" id="enc-reset-h" tabindex="-1">Reset: round ${e.round} ends</h2>
+  return `<section class="enc-reset" aria-labelledby="enc-reset-h"><h2 class="cast-h sec-h" id="enc-reset-h" tabindex="-1">Reset: round ${e.round} ends</h2>
     ${next}${body}${quiet.length ? `<p class="step-note">Nothing on: ${esc(quiet.join(", "))}.</p>` : ""}
     <p><button class="btn primary" data-efinish${res.ok ? "" : " disabled"}>Finish the round</button></p>
     ${res.ok ? "" : `<p class="step-note">${esc(res.why)}</p>`}</section>`;
@@ -3219,14 +3224,14 @@ function encWearHtml(w){
   if (!w.crew.length && !w.hit.length) return "";
   const die = (w.dice.find(d=>d.id===S.encWrap.diff)||{}).die;
   const says = !die ? "" : w.hit.length ? `${w.hit.map(h=>h.name).join(", ")}: roll ${die} for armor wear on your sheet.` : "No player took a hit.";
-  return `<section class="enc-wear"><h3 class="cast-h">Armor wear</h3>
+  return `<section class="enc-wear"><h3 class="cast-h sec-h">Armor wear</h3>
     <label class="field"><span>How hard was it</span><select data-ew-diff><option value="">Choose…</option>${w.dice.map(d=>
       `<option value="${esc(d.id)}"${d.id===S.encWrap.diff?" selected":""}>${esc(`${d.name} (${d.die})`)}</option>`).join("")}</select></label>
     <p class="step-note" data-ew-says>${esc(says)}</p></section>`;
 }
 function encWrapHtml(e, title){
   const w=Engine.encounterWrapUp(S.table, e.id), labels=new Map(Engine.encounterView(S.table, e.id, packsMemo).rows.map(v=>[v.row.id, v.label]));
-  return `<section class="enc-wrap" aria-labelledby="enc-wrap-h"><h2 class="cast-h" id="enc-wrap-h" data-ew-h tabindex="-1">Wrap up ${esc(title)}</h2>
+  return `<section class="enc-wrap" aria-labelledby="enc-wrap-h"><h2 class="cast-h rec-name" id="enc-wrap-h" data-ew-h tabindex="-1">Wrap up ${esc(title)}</h2>
     <p class="step-note">Nothing is saved until you end it.</p>
     ${w.rows.length ? `<ul class="enc-rows">${w.rows.map(u=>encWrapRowHtml(u, e, w.crew, labels)).join("")}</ul>` : ""}
     ${encWearHtml(w)}
@@ -3277,7 +3282,7 @@ function encCrewHtml(e){
     ${open ? crewFieldHtml("data-enc-pname", "data-enc-addplayer") : ""}`;
 }
 function encAddHtml(e){
-  return `<section class="enc-add"><h2 class="cast-h">Add</h2>
+  return `<section class="enc-add"><h2 class="cast-h sec-h">Add</h2>
     <p><button class="btn" data-enc-pick aria-expanded="${!!S.encPick}">From the cast</button></p>
     ${S.encPick ? `<label class="field"><span>Search the cast</span><input type="search" data-enc-q value="${esc(S.encQ||"")}" autocomplete="off"></label>${encPickHtml(e)}` : ""}
     ${encCrewHtml(e)}
@@ -3323,7 +3328,7 @@ function encAdvHtml(e, v){
 function encPlanEditHtml(e, v){
   const d=v.design, P=Engine.ENCOUNTER_PROMPTS;
   const open = S.encPlan && e.id in S.encPlan ? S.encPlan[e.id] : e.status==="planned";
-  return `<details class="enc-plan" data-eplan-d="${esc(e.id)}"${open ? " open" : ""}><summary><h2 class="cast-h">The plan</h2></summary>
+  return `<details class="enc-plan" data-eplan-d="${esc(e.id)}"${open ? " open" : ""}><summary><h2 class="cast-h sec-h">The plan</h2></summary>
     <h3 class="ref-sub">Encounter Basics</h3>
     ${planField(d, "hook", "Scene Hook / Trigger")}${planField(d, "stakes", "Core Stakes")}${planField(d, "objectives", "Player Objectives")}
     <h3 class="ref-sub">NPCs / Adversaries</h3>
@@ -3366,7 +3371,7 @@ function encPlanReadHtml(v){
     section("Hooks for Next Scene", field("New threads", d.threads) + field("Character goals", d.milestones)),
     section("GM Notes / Improv Prompts", field("Quick pivot", d.pivot)),
     section("When Momentum Stalls", field("Notes", d.stalls)) ].join("");
-  return body ? `<h2 class="cast-h">The plan</h2>${body}` : "";
+  return body ? `<h2 class="cast-h sec-h">The plan</h2>${body}` : "";
 }
 // The opening (253): set while planned, or in round 1 before anyone has acted; text after.
 function encOpeningHtml(v){
@@ -3399,8 +3404,8 @@ function encPageHtml(e){
   const rows = v.by==="wave" ? v.sides.map(s=>encSideHtml(s, v, e)).join("") + (!ended && v.sides.length < 6 ? `<p><button class="btn" data-eaddside>Add a side</button></p>` : "")
     : v.rows.length ? `<ul class="enc-rows">${v.rows.map(r=>encRowHtml(r, e, null)).join("")}</ul>` : `<p class="step-note">Nobody in it yet.</p>`;
   const clockOwner={ kind:"encounter", id:e.id };
-  const clocks = ended ? (Engine.clocksOn(S.table, clockOwner).length ? `<h2 class="cast-h">Clocks</h2>${clocksHtml(clockOwner, { readOnly:true })}` : "")
-    : wrapping ? "" : `<h2 class="cast-h">Clocks</h2>${clocksHtml(clockOwner)}`;
+  const clocks = ended ? (Engine.clocksOn(S.table, clockOwner).length ? `<h2 class="cast-h sec-h">Clocks</h2>${clocksHtml(clockOwner, { readOnly:true })}` : "")
+    : wrapping ? "" : `<h2 class="cast-h sec-h">Clocks</h2>${clocksHtml(clockOwner)}`;
   const plan = ended ? encPlanReadHtml(v) : encPlanEditHtml(e, v);
   return `${bar}
     ${ended ? `<h1 class="step-title tbl-title cast-title" data-enc-h tabindex="-1">${esc(title)}</h1>`
@@ -3481,7 +3486,7 @@ function bindEncounters(main){
     const hitRow=Engine.encounterView(S.table, eid(), packsMemo).rows.find(x=>x.row.id===row), who=hitRow && String(hitRow.name||"").trim() || "a row";
     const a=Engine.applyEncounterHit(S.table, eid(), row, encHitInput(d, seat), choices);
     if (!a.ok){ d.err=a.why; hitLive(); focus("[data-ehit-apply]"); return; }
-    S.encHit=null; tableChange(()=>{}, true, `Hit ${who}`); focus(attrSel("data-ehit", row)) || focus(attrSel("data-edmg", `${row}|-1`)); };
+    S.encHit=null; tableChange(()=>{}, true, `Hit ${who}: ${encHitPreviewText({ seat, pc:r.kind==="pc" && !seat, res })}`); focus(attrSel("data-ehit", row)) || focus(attrSel("data-edmg", `${row}|-1`)); };
   const act = {
     "data-enc-new": () => { const input=main.querySelector("[data-enc-name]"); let id; change(()=>{ id=Engine.addEncounter(S.table, { name:input.value }).id; }); open(id); },
     "data-enc-open": b => open(b.dataset.encOpen),
@@ -3501,7 +3506,7 @@ function bindEncounters(main){
       askFirst({ title:`End ${t}?`, text:"It's kept, read-only, under Past encounters.", yes:"End it", danger:false, then(){
         const id=eid(); S.encOpen=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; change(()=>Engine.endEncounter(S.table, id)); focus("[data-enc-new]"); } }); },
     "data-enc-del": () => { const e=encOpenNow(), t=Engine.encounterTitle(e), n=Engine.clocksOn(S.table, { kind:"encounter", id:e.id }).length;
-      askFirst({ title:`Delete ${t}?`, text:n ? `It and its ${n} ${n===1 ? "clock" : "clocks"} aren't kept anywhere else unless you've exported the table.` : "It isn't kept anywhere else unless you've exported the table.", yes:"Delete", then(){
+      askFirst({ title:`Delete ${t}?`, text:n ? `It and its ${n} ${n===1 ? "clock" : "clocks"} go. Undo brings ${n===1 ? "it" : "them"} back, from the toast or ⋮ → Activity.` : UNDO_ASK, yes:"Delete", then(){
         const id=eid(); S.clockEdit=null; S.encOpen=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; change(()=>Engine.removeEncounter(S.table, id)); focus("[data-enc-new]"); } }); },
     "data-ew-cancel": () => { S.encWrap=null; redraw(); focus("[data-enc-end]"); },
     "data-ew-end": () => { const e=encOpenNow(), w=Engine.encounterWrapUp(S.table, e.id), rows={};
@@ -3693,7 +3698,8 @@ function bindEncounters(main){
     if (Number(raw) < 0){ notice("Enter a whole number."); return; }
     const r=Engine.participantDamage(S.table, eid(), row, Number(raw) * sign);
     if (!r.ok){ notice(r.why); return; }
-    S.encDmg=null; tableChange(()=>{}); focus(attrSel("data-edmg", `${row}|${sign}`));
+    const named=Engine.encounterView(S.table, eid(), packsMemo).rows.find(x=>x.row.id===row), who=named && String(named.name||"").trim() || "a row";
+    S.encDmg=null; tableChange(()=>{}, true, sign>0 ? `${who} took ${Number(raw)}` : `Healed ${who} ${Number(raw)}`); focus(attrSel("data-edmg", `${row}|${sign}`));
   };
   main.onkeydown = ev => {
     if (ev.key==="Enter" && ev.target.matches("[data-enc-pname]")){ ev.preventDefault(); addPlayer(); }
@@ -3736,10 +3742,14 @@ const crewNameChoices = t => namesSeatsFirst(t, Engine.crewView(t, {}).map(g=>g.
 function seatTopHtml(v){
   const c=v.copy;
   if (!c) return "";
-  const hp=c.health, hpText = hp ? [`HP ${hp.pastZero ? "−"+hp.pastZero : hp.hpLeft}/${hp.total}`, hp.lost ? `${hp.lost} Health Level${hp.lost===1 ? "" : "s"} lost` : "", hp.down ? "Down" : ""].filter(Boolean).join(" · ") : "";
-  const aware = typeof c.awareness==="number" ? `Awareness ${castSigned(c.awareness)}` : "";
-  const cond = Array.isArray(c.conditions) ? (c.conditions.length ? `Conditions: ${c.conditions.join(", ")}` : "No Conditions") : "";
-  return [hpText, aware, cond].filter(Boolean).map(x=>`<div class="cast-line seat-line">${esc(x)}</div>`).join("");
+  const hp=c.health, line = html => `<div class="seat-line">${html}</div>`, out=[];
+  if (hp){
+    const rest=[hp.lost ? `${hp.lost} Health Level${hp.lost===1 ? "" : "s"} lost` : "", hp.down ? "Down" : ""].filter(Boolean).join(" · ");
+    out.push(line(`<span class="seat-key">HP</span> <span class="seat-hp${hp.down ? " down" : ""}">${esc(`${hp.pastZero ? "−"+hp.pastZero : hp.hpLeft}/${hp.total}`)}</span>${rest ? `<span class="seat-val"> · ${esc(rest)}</span>` : ""}`));
+  }
+  if (typeof c.awareness==="number") out.push(line(`<span class="seat-key">Awareness</span> <span class="seat-val">${esc(castSigned(c.awareness))}</span>`));
+  if (Array.isArray(c.conditions)) out.push(line(c.conditions.length ? `<span class="seat-key">Conditions:</span> <span class="seat-val">${esc(c.conditions.join(", "))}</span>` : `<span class="seat-val">No Conditions</span>`));
+  return out.join("");
 }
 // How old a copy is, in the card's words: the file's own date, then when it was imported.
 const seatWhen = c => [ stampText(c.updated) ? `File from ${stampText(c.updated)}` : "", stampText(c.importedAt) ? `Imported ${stampText(c.importedAt)}` : "" ].filter(Boolean);
@@ -3765,7 +3775,7 @@ function seatCardHtml(v, tagged){
 function playerHtml(g){
   const p=g.player, id=esc(p.id), more=!!(S.playerMore && S.playerMore[p.id]), shut=!!(S.seatShut && S.seatShut[p.id]);
   return `<section class="player" data-player="${id}">
-    <h2 class="cast-h" tabindex="-1" data-pyh="${id}">${esc(playerTitle(p))}</h2>
+    <h2 class="cast-h rec-name" tabindex="-1" data-pyh="${id}">${esc(playerTitle(p))}</h2>
     <p><button type="button" class="btn" data-pyimport="${id}">Import characters</button>
       <input type="file" class="seat-file" accept=".json,application/json" multiple hidden data-pyfile="${id}" aria-label="Characters to import for ${esc(playerTitle(p))}"></p>
     ${g.active.length ? `<ul class="roster-list">${g.active.map(v=>seatCardHtml(v, false)).join("")}</ul>` : g.folded.length ? "" : `<p class="step-note">No characters yet.</p>`}
@@ -3800,7 +3810,7 @@ function seatPageHtml(v){
     <div class="roster-card seat-block" data-seatblock>${seatBlockHtml(v)}</div>
     <div class="field"><span>Status</span><div class="form-toggle int-kinds" role="group" aria-label="Status" data-seatstatus>${Object.keys(SEAT_STATUS_LABELS).map(k=>
       `<button type="button" data-seatst="${k}" class="${k===v.status ? "on" : ""}" aria-pressed="${k===v.status}">${esc(SEAT_STATUS_LABELS[k])}</button>`).join("")}</div></div>
-    <h2 class="cast-h">Answers to</h2>
+    <h2 class="cast-h sec-h">Answers to</h2>
     <div data-seatnames>${seatNameRowsHtml(v)}</div>
     <p class="step-note">Sessions, the award log and lines that use any of these names count as ${esc(name)}.</p>
     <div data-seatclash>${seatClashHtml(v)}</div>
@@ -3843,9 +3853,9 @@ function inertSheet(root){
 // The seat to draw as a sheet, or null: the sheet is open, the seat is there and it has a copy.
 function seatSheetNow(v){ return v && v.copy && S.seatSheet && RO_SECTIONS.some(s=>s.id===S.seatSheet) ? v : null; }
 function readOnlyTabsHtml(){
-  return `<div data-rotabs><nav class="ro-tabs scroll-row" data-row="rotabs" aria-label="Sheet tabs">${RO_SECTIONS.map(sec=>{
-    const on=sec.id===S.seatSheet, ico=sec.ui ? `<span class="tico">${uiIcon(sec.ui)}</span>` : "";
-    return `<button type="button" class="tab${on ? " active" : ""}" data-rotab="${sec.id}"${on ? ` aria-current="page"` : ""}>${ico}${esc(sec.label)}</button>`;
+  return `<p class="ro-label" id="ro-tabs-l">Sheet</p><div data-rotabs><nav class="ro-tabs scroll-row" data-row="rotabs" aria-labelledby="ro-tabs-l">${RO_SECTIONS.map(sec=>{
+    const on=sec.id===S.seatSheet;
+    return `<button type="button" class="tab${on ? " active" : ""}" data-rotab="${sec.id}"${on ? ` aria-current="page"` : ""}>${esc(sec.label)}</button>`;
   }).join("")}</nav></div>`;
 }
 function readOnlySheetHtml(v){
@@ -3866,6 +3876,8 @@ function bindReadOnlySheet(main, v){
     if (!RO_SECTIONS.some(s=>s.id===id)) id="main";
     S.seatSheet=id; window.scrollTo(0,0); update(); focus(`[data-rotab="${id}"]`);
   };
+  // The page's own h1 is the copy's name (Decision 256's focus target); the sheet draws it again, so the copy drops its own.
+  const own=main.querySelector("[data-rosheet] > h1.step-title"); if (own) own.remove();
   inertSheet(main.querySelector("[data-rosheet]"));
   bindSheetReaders(main.querySelector("[data-rosheet]"), goTab);
   bindScrollRows(main.querySelector("[data-rotabs]"));   // the nav is a scroll-row itself, so its wrapper is what we hand over
