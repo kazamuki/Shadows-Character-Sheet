@@ -76,7 +76,7 @@ detector rather than from the design review.
 | 24 | On a thread that isn't current, the "Current" toggle reads as a state label | U3 |
 | 25 | A cast page has the clock it needs (Ibarra's patience) at the bottom of another record's page | U3 |
 | 26 | Each entity page has no summary at the top (who, what they want, their line) | U3 |
-| 27 | A seat card's live vitals show in italic dim Inter, because they reuse `.cast-line` (`gm.js:3688`, `shadows.css:1281`) | U4 |
+| 27 | A seat card's live vitals show in italic dim Inter, because they reuse `.cast-line` (`gm.js:3691`, `shadows.css:1281`) | U4 |
 | 28 | Section headings ("Threads", "Clocks", "Stat block") are Inter bold in sentence case (`.cast-h`, `.next-h`), where DESIGN.md calls for Mono Caps | U4 |
 | 29 | GM tabs reuse the player sheet's icons (`gm.js:260`): Players has Main's, Encounters has Trackers' | U4 (UQ6) |
 | 30 | Software voice shows through: "not in the Gear tables" (`gm.js:2906`), "formula 2" (`gm.js:927`), "Slot in a pack with site profiles…" (`gm.js:1288`) | U4 |
