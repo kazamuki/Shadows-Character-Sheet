@@ -1015,11 +1015,12 @@ function runCardHtml(r){
   return `<div class="run-row">${r.running ? `<span class="sub" data-runline>${esc(runWords(r, "Running"))}</span>` : ""}${btn}${runWhyHtml(r)}</div>`;
 }
 // What a running power says it is doing (Decision 267): "a round" is only for a power that pays each round; one that paid
-// once at Start just runs, and Null Field says how much it can still soak. `lead` is "Running" on a card or the power's name.
-function runWords(r, lead){
+// once at Start just runs, and Null Field says how much it can still soak. `lead` is "Running" on a card or the power's name;
+// `alone` is what a started power with nothing to count says ("Running" on a card, "Red Mist · running" in the popover).
+function runWords(r, lead, alone = lead){
   const left = r.left!=null ? r.left : r.absorbLeft;
   if (r.each==="round") return `${lead} · ${r.sfr} SFR a round`;
-  return left!=null ? `${lead} · ${left} left` : lead;
+  return left!=null ? `${lead} · ${left} left` : alone;
 }
 // A starter-power row that runs (Adaptive Skeleton) is not a card of its own: its Start sits under the starter table.
 function starterRunHtml(ch, o){
@@ -1470,7 +1471,7 @@ function vitalPopover(ch, key){
     // Decision 266 (HQ6): what is running, with Stop, and Start for each sustained power held and not running.
     const runs=Engine.runningPowers(ch), starts=Engine.runnablePowers(ch).filter(r=>!r.running);
     const runHtml = runs.length || starts.length ? `<div class="pop-runs" data-poprun>` +
-      runs.map(r=>`<div class="run-row"><span class="sub">${esc(runWords(r, r.name))}</span><button type="button" class="btn sm" data-runtoggle="${esc(r.id)}|stop" aria-label="Stop ${esc(r.name)}">Stop</button></div>`).join("") +
+      runs.map(r=>`<div class="run-row"><span class="sub">${esc(runWords(r, r.name, `${r.name} · running`))}</span><button type="button" class="btn sm" data-runtoggle="${esc(r.id)}|stop" aria-label="Stop ${esc(r.name)}">Stop</button></div>`).join("") +
       starts.map(r=>`<div class="run-row"><button type="button" class="btn sm" data-runtoggle="${esc(r.id)}|start" aria-label="Start ${esc(r.name)}"${r.can.ok ? "" : ` disabled title="${esc(r.can.why)}"`}>Start ${esc(r.name)}</button>${runWhyHtml(r)}</div>`).join("") + `</div>` : "";
     return { title:"SFR",
       html: now(`${left} / ${sf.value}`, turn && (turn.at||turn.past) ? "bad" : "", sf.rou!=null ? `RoU ${sf.rou}` : "") +

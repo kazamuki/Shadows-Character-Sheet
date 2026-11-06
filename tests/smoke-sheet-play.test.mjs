@@ -2062,6 +2062,9 @@ test("Decision 267: a starter row's table has no Id or Run column, and its Start
   assert.ok(stop);
   assert.equal(app.doc.activeElement, stop, "focus didn't move to Stop");
   assert.equal(app.$('[data-starterrun="adaptive-skeleton"] [data-runline]').textContent, "Running");
+  // The popover names a started power and says it runs; "a round" is only for one that pays each round (order §9).
+  const pop = app.window.eval('vitalPopover(S.ch, "sfr").html');
+  assert.match(pop, /Adaptive Skeleton · running/, "the popover's row for a started power doesn't say it runs");
   app.click('[data-sec="trackers"]'); app.click("[data-hitopen]");
   assert.equal(app.$('[data-hitnat="adaptive-skeleton"]').checked, true, "Adaptive Skeleton's Natural Armor starts unticked");
   assert.deepEqual(app.errors, []);

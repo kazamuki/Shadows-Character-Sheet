@@ -893,7 +893,7 @@ It renders on the Character tab (Decision 158).
     // tracked value (Decision 93).
     credits: { current: 800, ledger: [ { date, amount, note } ] },
     crank: { rep: 0, ledger: [ { date, amount, note } ] },          // (0.17) CRANK rep (Decision 169); tier is derived
-    running: [ { id: "iron-hide" }, { id: "null-field", used: 3 } ],   // (0.33, Decision 266; `used` 0.34, Decision 267: what Null Field has absorbed, a whole number 0 to 999, kept only where a number was) the sustained powers the player started: { id } only, each once, at most 20, 120 characters each; migrate drops anything else and keeps an id the character no longer holds. Whether one is running is runningPowers (held, with run, in its archetype's runsIn form), never this list
+    running: [ { id: "iron-hide" }, { id: "null-field", used: 3 } ],   // (0.33, Decision 266; `used` 0.34, Decision 267: what Null Field has absorbed, a whole number 0 to 999, kept only where a number was) the powers the player started: { id } and that `used`, nothing else, each id once, at most 20, 120 characters each; migrate drops any other key and keeps an id the character no longer holds. Whether one is running is runningPowers (held, with run, in its archetype's runsIn form unless it is a starter row), never this list
     heldSpells: [ "fog-shroud" ],    // (0.26, Decision 224) ids of Concentration spells the player is holding. migrate keeps strings, each once, at most 20, 120 characters each; heldSpells() keeps only Grimoire book spells with the tag, the first Evocation-rank of them as held, and deletes nothing
     // (0.8) Active Conditions (Decision 95). One entry per id ("you have it or
     // you don't"), except a location-bearing Condition, which is one per body
