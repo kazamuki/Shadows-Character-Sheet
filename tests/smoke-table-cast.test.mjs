@@ -1728,7 +1728,7 @@ test("U4: a section head is Mono Caps and a name isn't", () => {
   assert.deepEqual(named, [], "a name is in Mono Caps");
   const css = wizCss();
   assert.match(css, /\.sec-h, \.ref-sub, \.next-h\{[^}]*font-family:var\(--mono\)[^}]*text-transform:uppercase/);
-  assert.match(css, /\.sec-h\{[^}]*border-bottom:1px solid var\(--frame\)/);
+  assert.match(css, /\.sec-h\{[^}]*color:var\(--violet-text\)[^}]*border-bottom:1px solid var\(--frame\)/);
   assert.match(css, /\.cast-h\{[^}]*font-family:var\(--display\)/);
   // And the page agrees: a cast member's Stat block is a section; a player's name on Players is not.
   const app = boot({ storage: GM_ON });

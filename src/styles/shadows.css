@@ -1281,7 +1281,7 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
    label over a rule in the frame colour (.sec-h); a sub-section (.ref-sub, .next-h) is the same label without the rule. */
 .cast-h{margin:26px 0 10px; font-family:var(--display); font-weight:600; font-size:1.15rem; letter-spacing:.04em}
 .sec-h, .ref-sub, .next-h{font-family:var(--mono); font-size:.74rem; font-weight:500; letter-spacing:.14em; text-transform:uppercase; color:var(--dim)}
-.sec-h{padding-bottom:6px; border-bottom:1px solid var(--frame)}
+.sec-h{color:var(--violet-text); padding-bottom:6px; border-bottom:1px solid var(--frame)}   /* Aether Pulse, read: as the sheet's .sect, per the Mono Caps Rule */
 .cast-codex{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:0 14px}
 .cast-health{margin:0 0 10px; overflow-wrap:anywhere}
 .cast-stats{display:grid; grid-template-columns:repeat(auto-fill,minmax(112px,1fr)); gap:10px; margin-bottom:16px}
