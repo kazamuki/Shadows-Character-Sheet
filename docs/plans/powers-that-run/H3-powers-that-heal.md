@@ -4,7 +4,7 @@
 Decisions 105, 135, 189, 195, 199, 220, 225, 236, 257, 266, 267.
 **Status:** **drafted 2026-11-05 by Claude (Opus)**, the H2 reviewer acting as orchestrator. Pre-flighted against `main` at `f85b7d5` (PR #299
 merged: app 0.62.0 under `[Unreleased]`, game data 0.53 unreleased, character schema 0.34, table 0.19, pack 0.3; the last decision is 267).
-**Approved by Ken 2026-11-05** ("All defaults, flag 22 & 23", in the H1 conductor session): HQ19–HQ25, with HQ22 and HQ23 also sent to Deighton as book items (plan §6).
+**Approved by Ken 2026-11-05** ("All defaults, flag 22 & 23", in the H1 conductor session): HQ19–HQ25, with HQ22 and HQ23 built as their defaults and opened as two F-number flags for Deighton (Ken, 2026-11-05: "Open two F-flags"; §2, §13).
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 **Runs alone.** It touches `engine.js`'s Turn Reset, form and running code, and `sheet.js`'s Reset panel and power card, which every
 powers order shares (`WORK-ORDERS.md`, *Running more than one at once*). It touches `engine.js` (`formGrants`, `formState`, `setToggle`,
@@ -108,8 +108,12 @@ When this is merged:
 - **Character schema: no bump.** Nothing is stored: every heal is computed from the form, `running`, the Majors, the Aberrations and
   the damage, at the press. Check it: a 0.34 file round-trips through `migrate()` unchanged.
 - **Table and pack schemas: no bump.** The GM's Reset gains a line; the table stores nothing new.
-- **No flag opens or closes.** HQ22 and HQ23 read the book where it's quiet. If Ken would rather Deighton rule, they become flags
-  instead of defaults, and the build stubs them as §13 says.
+- **Two flags open** (Ken, 2026-11-05: "Open two F-flags"). HQ22 and HQ23 read the book where it's quiet, so each is built as its
+  default and opened as a flag for Deighton, at the next two free F-numbers: `flagged: true` and a `flagNote` naming the F-number
+  on Quick Clot's data entry and on the Werewolf form option, a `playerNote` on each, a `SCHEMA.md` §5 row and an `INDEX.md` §2
+  line each (`close-a-flag` skill). `playerNote` drafts, for the voice pass: "Whether Bleeding ticks once more before Quick Clot
+  ends it isn't settled. The sheet ticks it once." and "Whether Regeneration stops when you're knocked out isn't settled. The
+  sheet stops it only when Withering ends the form." None closes.
 
 ## 3. The decision, drafted
 
@@ -149,8 +153,8 @@ read the book where it's quiet, and Ken may want Deighton's word on them.
 | HQ19 | **When in Turn Reset a round heals** | **After the ongoing damage ticks.** At Zero, Dying and a held spell's check are asked from the ticks, as now. Then the heals apply, and the panel shows both. So Bleeding that drops a Werewolf to 0 still asks At Zero, even if Regeneration brings it back. The alternative nets the two first, so a tick that regeneration covers asks nothing | **Ken, 2026-11-05: the default** ("All defaults, flag 22 & 23", in the H1 conductor session). |
 | HQ20 | **Blood of Valhalla at a Reset that stops it** (Stop ticked, or the pool can't pay the next round) | **It heals for the round that ends.** That round was paid, at Start or at the last Reset. The alternative heals only if it keeps running | **Ken, 2026-11-05: the default** ("All defaults, flag 22 & 23", in the H1 conductor session). |
 | HQ21 | **Vitality Surge's "up to your rank in HL per round"** | **One press heals 1 to rank HL; the sheet doesn't count presses in a round.** Counting would store what was surged this round and clear it at Reset, a schema bump for a limit the table already polices, as Rate of Use is warned and not blocked (Decision 225). The alternative stores it | **Ken, 2026-11-05: the default** ("All defaults, flag 22 & 23", in the H1 conductor session). |
-| HQ22 | **Quick Clot: does Bleeding tick at the Reset it ends?** "Bleeding ends on its own at the next Reset" | **It ticks once, then ends.** "Almost as fast as they open" reads as a wound that costs a little. The alternative is that it ends without ticking, so a Quick Clot character never loses HP to Bleeding | **Ken, 2026-11-05: the default, and to Deighton as a book item** (plan §6; "All defaults, flag 22 & 23", in the H1 conductor session). |
-| HQ23 | **Regeneration when the form has ended but the toggle still says Werewolf** | **Withering's end is read** (`formView.ended`, which exists) and stops Regeneration, with the reason on the Reset panel. **Unconscious is not read**: the book ends the form there too ("when you are knocked unconscious"), but the sheet leaves the toggle to the player and doesn't end it on a Condition. The alternative also stops Regeneration while Unconscious is active | **Ken, 2026-11-05: the default, and to Deighton as a book item** (plan §6; "All defaults, flag 22 & 23", in the H1 conductor session). |
+| HQ22 | **Quick Clot: does Bleeding tick at the Reset it ends?** "Bleeding ends on its own at the next Reset" | **It ticks once, then ends.** "Almost as fast as they open" reads as a wound that costs a little. The alternative is that it ends without ticking, so a Quick Clot character never loses HP to Bleeding | **Ken, 2026-11-05: the default, opened as an F-number flag for Deighton** ("Open two F-flags", in the H1 conductor session; §2, §13). |
+| HQ23 | **Regeneration when the form has ended but the toggle still says Werewolf** | **Withering's end is read** (`formView.ended`, which exists) and stops Regeneration, with the reason on the Reset panel. **Unconscious is not read**: the book ends the form there too ("when you are knocked unconscious"), but the sheet leaves the toggle to the player and doesn't end it on a Condition. The alternative also stops Regeneration while Unconscious is active | **Ken, 2026-11-05: the default, opened as an F-number flag for Deighton** ("Open two F-flags", in the H1 conductor session; §2, §13). |
 | HQ24 | **A GM's encounter Reset on a claimed row whose copy would heal** | **Write nothing new, and say so in one line on that row**: "Regeneration heals on the player's own sheet." (naming only what the copy has, H2's rule). The row keeps no Withering (Decision 257), so it can't honour "never Withering". The alternative heals the row anyway | **Ken, 2026-11-05: the default** ("All defaults, flag 22 & 23", in the H1 conductor session). |
 | HQ25 | **Bone and Sinew's "shifting into Werewolf form ends Maimed"** | **Every Maimed ends, on every body part, in the shift's commit**, and the switch's label says which. Shifting back to human ends nothing. The alternative asks which one | **Ken, 2026-11-05: the default** ("All defaults, flag 22 & 23", in the H1 conductor session). |
 
@@ -371,8 +375,8 @@ stats 6 unless named. Numbers below are from the pre-flight's probes.
 - a reader of `resolveReset`'s result that §5 doesn't list would show the HP wrong (grep `.after`, `.total`, `hasEffect` in `src/ui`);
 - a heal would have to lower `witheringDamage` to make a test pass;
 - the outputs diff moves a number for a character with no damage;
-- Ken routes HQ22 or HQ23 to Deighton and they're unanswered when you reach them: then build the default, mark the data entry
-  `flagged: true` with a `flagNote` naming a new F-number, add its `playerNote`, and open the flag (`close-a-flag` skill);
+- (not a stop: Ken routed HQ22 and HQ23 to Deighton, §2) build each default, mark the data entry `flagged: true` with a `flagNote`
+  naming a new F-number, add its `playerNote`, and open the flag (`close-a-flag` skill);
 - a test other than the ones below breaks.
 
 **Expected breaks, not stops** (update them, never weaken the guard):
