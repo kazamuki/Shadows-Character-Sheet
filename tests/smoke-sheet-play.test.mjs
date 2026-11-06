@@ -2103,3 +2103,80 @@ test("Decision 267 (Ken, 2026-11-05): the voice pass: Aegis's label, the commit 
   assert.match(wolf.$("[data-hitpanel] .hitresult").textContent, /Null Field absorbs 1: 3 → 2. The field is spent./);
   assert.deepEqual([app.errors, wolf.errors], [[], []]);
 });
+
+// ── Powers that heal (H3, Decision 268, W132) ────────────────────────────
+function wildbloodSheet(bone = false) {
+  const ch = forgeFangSheet(true);
+  ch.archetypeChoices.basePowers = {};
+  if (bone) ch.progression.milestones.major.push({ id: "bone-and-sinew", date: "2026-10-08" });
+  return ch;
+}
+function surgeSheet(rankCp = 1) {
+  const ch = lockedVampire("draugur");
+  ch.archetypeChoices.basePowers = {};
+  ch.archetypeChoices.powerCp = { "vitality-surge": rankCp };
+  ch.archetypeChoices.optionPicks = {};
+  return ch;
+}
+
+test("Decision 268: Turn Reset shows the heal and Quick Clot, and one undo takes them back", () => {
+  const ch = wildbloodSheet();
+  Engine.setToggle(ch, "form", "Werewolf");
+  ch.trackers.damage = 20; ch.trackers.witheringDamage = 5;
+  ch.trackers.conditions = [{ id: "bleeding" }];
+  ch.trackers.aberrations = [{ id: "quick-clot", permanence: "permanent" }];
+  const app = openSheet(ch, "trackers");
+  app.click('[data-actopen="reset"]');
+  const panel = app.$('[data-actpanel="reset"]').textContent;
+  assert.match(panel, /Regeneration heals 5 HP: HP left 29 → 34\./);
+  assert.match(panel, /Bleeding ends \(Quick Clot\)\./);
+  app.click("[data-actapply]");
+  const now = activeChar(app).trackers;
+  assert.deepEqual([now.damage, now.witheringDamage, now.conditions], [16, 5, []]);
+  app.click('[data-sec="sessions"]');
+  assert.match(app.$("#main").textContent, /Turn Reset: 1 damage, Regeneration \+5 HP, Bleeding ended \(Quick Clot\)/);
+  app.click("button[data-undolast]");
+  const back = activeChar(app).trackers;
+  assert.deepEqual([back.damage, back.witheringDamage, back.conditions.map(c => c.id)], [20, 5, ["bleeding"]]);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 268: Vitality Surge on the card and the HP popover, disabled with its reason while Blood of Valhalla runs", () => {
+  const ch = surgeSheet();
+  ch.trackers.damage = 20; ch.trackers.witheringDamage = 4;
+  const app = openSheet(ch, "character");
+  const sel = app.$('[data-surgehl="vitality-surge"]'), go = () => app.$('[data-surgego="vitality-surge"]');
+  assert.equal(go().textContent.trim(), "Surge: heal 1 HL for 2 SFR");
+  sel.value = "2"; sel.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  assert.equal(go().textContent.trim(), "Surge: heal 2 HL for 4 SFR", "the picker didn't redraw the label");
+  press(app, '[data-surgego="vitality-surge"]');
+  const t = activeChar(app).trackers;
+  assert.deepEqual([t.damage, t.witheringDamage, t.sfr.spent, t.sfr.turn], [10, 4, 4, 4]);
+  assert.match(app.$("#undotoast").textContent, /Vitality Surge: \+10 HP, 4 SFR/);
+  assert.equal(focused(app), go(), "focus left the Surge button");
+  // A pool that can pay only 1 HL offers only 1 (a refusal belongs on the page, not in a toast).
+  const poor = surgeSheet(); poor.trackers.damage = 20; poor.trackers.sfr = { spent: Engine.sfr(poor).value - 3, turn: 0 };
+  const app3 = openSheet(poor, "character");
+  assert.equal(app3.window.document.querySelectorAll('[data-surgehl="vitality-surge"] option').length, 1);
+  // Blood of Valhalla running: the popover's button is disabled and the reason is on the page.
+  app.click("button[data-undolast], [data-toastundo]");
+  const run = surgeSheet(); run.archetypeChoices.basePowers = { "blood-of-valhalla": 1 };
+  run.trackers.damage = 20; run.trackers.running = [{ id: "blood-of-valhalla" }];
+  const app2 = openSheet(run, "main");
+  app2.click('#main [data-vpop="hp"]');
+  assert.ok(app2.$('#vpop [data-surgego="vitality-surge"]').disabled);
+  assert.equal(app2.$("#vpop [data-runwhy]").textContent, "Not while Blood of Valhalla runs");
+  assert.deepEqual([app.errors, app2.errors], [[], []]);
+});
+
+test("Decision 268: shifting in with Bone and Sinew says which Maimed ended, and undo brings it back", () => {
+  const ch = wildbloodSheet(true);
+  ch.trackers.conditions = [{ id: "maimed", location: "left-arm" }];
+  const app = openSheet(ch, "loadout");
+  app.click('[data-ptoggle="form|Werewolf"]');
+  assert.match(app.$("#undotoast").textContent, /Form: Werewolf\. Maimed \(Left Arm\) ends\./);
+  assert.deepEqual(activeChar(app).trackers.conditions, []);
+  app.click("button[data-undolast], [data-toastundo]");
+  assert.deepEqual(activeChar(app).trackers.conditions.map(c => c.id), ["maimed"]);
+  assert.deepEqual(app.errors, []);
+});

@@ -3523,3 +3523,38 @@ test("CRB 0414: sustained powers pay again each round, and a Werewolf's work onl
   assert.equal(VA().powerCostCap, undefined, "0413 prints no per-power limit");
   assert.ok(!WW().powers.some(p => /cyberwolf/i.test(p.id) || /cyberwolf/i.test(p.name)), "CyberWolf Protocol is a starter power, exempt by not being one of powers");
 });
+
+// ── Powers that heal (H3, Decision 268) ──────────────────────────────────
+
+test("Decision 268: every surge and roundHeal agrees with its power's text", () => {
+  const rows = [];
+  for (const a of D.archetypes) for (const p of a.powers || []) {
+    const heal = (p.grants || []).find(g => g && g.type === "roundHeal");
+    if (p.surge || heal) rows.push({ id: p.id, p, heal });
+  }
+  same(rows.map(r => r.id).sort(), ["blood-of-valhalla", "vitality-surge"], "the powers that heal are exactly these two");
+  const vs = rows.find(r => r.id === "vitality-surge").p, bov = rows.find(r => r.id === "blood-of-valhalla");
+  assert.match(vs.cost, /^2 SFR per HL healed$/);
+  same(vs.surge.sfr, { perHl: 2 });
+  assert.match(vs.effect, /heal up to your rank in HL per round/);
+  same(vs.surge.hl, { perRank: 1 });
+  assert.match(bov.p.effect, /regenerate HL equal to rank each round \(never Withering\)/);
+  same(bov.heal, { type: "roundHeal", perRank: 1 });
+  assert.match(bov.p.effect, /Vitality Surge can't be used while active/);
+  same(bov.p.blocks, ["vitality-surge"]);
+});
+
+test("CRB 0413/0414 and Aberrations: the heals say what the data does", () => {
+  const w = crb("0414_Werewolf.md").replace(/\s+/g, " "), v = crb("0413_Vampire.md").replace(/\s+/g, " ").replace(/’/g, "'");
+  assert.match(w, /While shifted, regenerate 1 HL per round\. Regeneration never restores Withering damage/);
+  assert.match(w, /Regeneration restores 2 HL per round, and shifting into Werewolf form ends Maimed/);
+  assert.match(v, /heal up to your rank in HL per round\. Can't restore Withering damage/);
+  assert.match(v, /regenerate HL equal to rank each round \(never Withering\)\. Vitality Surge can't be used while active/);
+  assert.match(crb("Appendix_Aberrations.md").replace(/\s+/g, " "), /Quick Clot\*\* — Your blood closes wounds almost as fast as they open\. Bleeding ends on its own at the next Reset/);
+  const wolf = D.archetypes.find(a => a.id === "werewolf");
+  const trait = wolf.baselineTraits.find(t => t.id === "regeneration");
+  assert.match(trait.benefit, /^While shifted, regenerate 1 HL per round\. Regeneration never restores Withering damage/);
+  const form = wolf.coreMechanic.panels.find(p => p.id === "form").options.find(o => o.name === "Werewolf");
+  same([form.regenerates.hl, form.regenerates.trait], [1, "regeneration"]);
+  assert.ok(JSON.stringify(wolf).includes('"id":"bone-and-sinew"') && JSON.stringify(wolf).includes('{"type":"form","regenerates":2,"ends":["maimed"]}'), "Bone and Sinew replaces the number with 2 and ends Maimed");
+});

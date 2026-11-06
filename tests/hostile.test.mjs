@@ -1550,3 +1550,28 @@ test("L5 6c: a file's majors lists come out as ids of real Majors, or nothing, a
   assert.equal(Object.keys({}).length, 0, "the prototype stayed clean");
   assert.equal(({}).majors, undefined);
 });
+
+test("Decision 268: a file's Withering and Aberrations can't make a Reset heal past it or end what it shouldn't", () => {
+  const mk = w => {
+    const ch = Engine.newCharacter();
+    ch.identity.archetype = "werewolf"; ch.creation.powerLevel = "street"; ch.creation.locked = true;
+    for (const id of Object.keys(ch.stats)) ch.stats[id].base = 6;
+    ch.archetypeChoices.specialization = ["wildblood"];
+    Engine.setToggle(ch, "form", "Werewolf");
+    ch.trackers.damage = 10; ch.trackers.witheringDamage = w;
+    return Engine.migrate(JSON.parse(JSON.stringify(ch)));
+  };
+  for (const w of ["junk", -5, "7", 30, 1e9]) {
+    const ch = mk(w), kept = ch.trackers.witheringDamage;
+    assert.ok(Engine.applyReset(ch, {}, {}).ok, String(w));
+    assert.equal(ch.trackers.witheringDamage, kept, `Withering ${w} was rewritten`);
+    assert.ok(Number.isFinite(ch.trackers.damage) && ch.trackers.damage >= 0, `damage ${ch.trackers.damage} for ${w}`);
+  }
+  const ab = mk(0);
+  ab.trackers.aberrations = [{ id: "no-such", permanence: "permanent" }];
+  Engine.addCondition(ab, { id: "bleeding" });
+  const r = Engine.resolveReset(ab, {});
+  assert.equal(r.ends.length, 0);
+  Engine.applyReset(ab, {}, {});
+  assert.deepEqual(ab.trackers.conditions.map(c => c.id), ["bleeding"]);
+});
