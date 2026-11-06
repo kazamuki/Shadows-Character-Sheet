@@ -597,7 +597,7 @@ function renderShCharacter(){
       `<div class="pick" ${p.gainsSpecialization?`data-powercard="${esc(p.id)}" tabindex="-1"`:""}><div class="head"><h2>${esc(p.name)}</h2>
         ${p.origin&&!specIds.includes(p.origin)?`<span class="chip">${esc(specNameOf(ch, p.origin))}</span>`:""}
         ${p.rank!=null?`<span class="cost">rank ${p.rank}</span>`:""}${p.cost&&!p.custom?`<span class="cost">${esc(p.cost)}</span>`:""}${p.drain?`<span class="cost">drain ${esc(p.drain)}</span>`:""}${p.uses?`<span class="cost">uses ${esc(p.uses)}</span>`:""}</div>
-        <div class="desc">${esc(p.description||p.effect||"")}${p.perRank?"\nPer rank: "+esc(p.perRank):""}${p.notes?"\n— "+esc(p.notes):""}${[p.damage&&"Damage "+p.damage,p.range&&"Range "+p.range,p.duration&&"Duration "+p.duration].filter(Boolean).map(x=>"\n"+esc(x)).join("")}</div>${runCardHtml(runnable.get(p.id))}${p.gainsSpecialization?openingHtml(opening):""}</div>`))
+        <div class="desc">${esc(p.description||p.effect||"")}${p.perRank?"\nPer rank: "+esc(p.perRank):""}${p.notes?"\n— "+esc(p.notes):""}${[p.damage&&"Damage "+p.damage,p.range&&"Range "+p.range,p.duration&&"Duration "+p.duration].filter(Boolean).map(x=>"\n"+esc(x)).join("")}</div>${runCardHtml(runnable.get(p.id))}${surgeHtml(ch, p.id)}${p.gainsSpecialization?openingHtml(opening):""}</div>`))
       + (content.powersText ? `<p class="step-note">${esc(content.powersText)}</p>` : ""));
     if (vulns.length) parts.push(secs.sect("Vulnerabilities") + cardsOf(vulns.map(v=>
       `<div class="pick"><div class="head"><h2>${esc(v.name)}</h2></div>
@@ -1014,6 +1014,15 @@ function runCardHtml(r){
     : `<button type="button" class="btn sm" data-runtoggle="${esc(r.id)}|start" aria-label="Start ${esc(r.name)}"${r.can.ok ? "" : ` disabled title="${esc(r.can.why)}"`}>Start</button>`;
   return `<div class="run-row">${r.running ? `<span class="sub" data-runline>${esc(runWords(r, "Running"))}</span>` : ""}${btn}${runWhyHtml(r)}</div>`;
 }
+// Decision 268: a power that heals on a press (Vitality Surge). A picker for how many HL, and a button that says what it spends.
+// The engine refuses (Engine.surgePower); a disabled button only shows its reason on the page, as Start does.
+const surgeLabel = (s, n) => `Surge: heal ${n} HL for ${n*s.sfrPerHl} SFR`;
+function surgeHtml(ch, id){
+  const s = Engine.surgeable(ch).find(x=>x.id===id);
+  if (!s) return "";
+  const picker = s.maxHl>0 ? `<select class="sm" data-surgehl="${esc(s.id)}" aria-label="HL to heal with ${esc(s.name)}">${Array.from({ length:s.maxHl }, (_, i)=>`<option value="${i+1}">${i+1} HL</option>`).join("")}</select>` : "";
+  return `<div class="run-row" data-surge="${esc(s.id)}">${picker}<button type="button" class="btn sm" data-surgego="${esc(s.id)}" data-surgeper="${s.sfrPerHl}"${s.can.ok ? "" : ` disabled title="${esc(s.can.why)}"`}>${esc(surgeLabel(s, 1))}</button>${s.can.ok ? "" : `<span class="sub" data-runwhy>${esc(s.can.short)}</span>`}</div>`;
+}
 // What a running power says it is doing (Decision 267): "a round" is only for a power that pays each round; one that paid
 // once at Start just runs, and Null Field says how much it can still soak. `lead` is "Running" on a card or the power's name;
 // `alone` is what a started power with nothing to count says ("Running" on a card, "Red Mist · running" in the popover).
@@ -1238,6 +1247,10 @@ function resetPanelHtml(ch, st){
     const lines=[];
     if (r.total) lines.push(`${r.total} damage goes on. HP left: ${r.before.hpLeft} → ${r.after.hpLeft}.`);
     if (r.marks) lines.push(`You're Dying, so that's ${r.marks} Death Mark${r.marks===1?"":"s"}.`);
+    // Decision 268: the round's heals come after the ticks (the At Zero check above is asked from the ticks), then what ends.
+    r.heals.forEach(x=>{ if (x.hp>0) lines.push(`${x.name}${x.by?` (${x.by})`:""} heals ${x.hl} HL: ${x.from} → ${x.to}.`);
+      else if (x.why && x.why!=="Nothing to heal.") lines.push(`${x.name}: ${x.why.charAt(0).toLowerCase()+x.why.slice(1)}`); });
+    r.ends.forEach(x=>lines.push(`${x.name} ends (${x.by}).`));
     // Decision 266: what is kept running is charged into the new round, so the round does not clear to 0 beside it.
     const kept = r.running.filter(x=>x.payable && !st.stop[x.id]), next = kept.reduce((n, x)=>n + x.sfr, 0);
     r.turnSpend.forEach(t=>lines.push(`${t.title} spent this round: ${t.spent} → ${next}${kept.length ? ` (${andList(kept.map(x=>x.name))} keep${kept.length>1?"":"s"} running)` : ""}.`));
@@ -1453,7 +1466,7 @@ function vitalPopover(ch, key){
   const pain=Engine.painState(ch), hp=Engine.health(ch);
   const now = (big, cls, sub) => `<div class="pop-now"><span class="big ${cls}">${big}</span>${sub?`<span class="sub">${sub}</span>`:""}</div>`;
   if (key==="hp") return { title:"Health",
-    html: now(`${pain.hpLeft} / ${hp.total} HP`, pain.down?"bad":"hp", esc(pain.label)+(pain.pastZero?" · "+pastZeroText(pain):"")) + damageStepperHtml(ch) +
+    html: now(`${pain.hpLeft} / ${hp.total} HP`, pain.down?"bad":"hp", esc(pain.label)+(pain.pastZero?" · "+pastZeroText(pain):"")) + damageStepperHtml(ch) + Engine.surgeable(ch).map(x=>surgeHtml(ch, x.id)).join("") +
       `<div class="trk-actions"><button class="btn sm primary" data-pophit>Take a hit</button>
        <button class="btn sm" data-popgo="trackers">Recovery on Trackers</button></div>` };
   if (key==="pain" || key==="cond") return { title:"Pain & Conditions",
@@ -3682,6 +3695,21 @@ function bindVitalControls(root){
     if (next) takeFocus(next);
   });
 
+  // Decision 268: Vitality Surge. The picker only redraws the button's words; the press is one commit (damage and SFR together).
+  root.querySelectorAll("[data-surgehl]").forEach(sel=>sel.onchange=()=>{
+    const b=sel.closest("[data-surge]").querySelector("[data-surgego]");
+    b.textContent=surgeLabel({ sfrPerHl:Number(b.dataset.surgeper) }, Number(sel.value));
+  });
+  root.querySelectorAll("[data-surgego]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.surgego, row=b.closest("[data-surge]"), sel=row.querySelector("[data-surgehl]"), n=sel?Number(sel.value):1;
+    const home = b.closest(".pop-body") ? popEl() : document.getElementById("main");
+    const dry = Engine.surgePower(clone(ch), id, n);
+    if (!dry.ok){ notice(dry.why); return; }
+    commit("damage", `${dry.name}: +${dry.hp} HP, ${dry.sfr} SFR` + (dry.overCap ? `, more than your RoU of ${dry.overCap.rou}.` : ""), ()=>{ Engine.surgePower(ch, id, n); });
+    const next = home && home.querySelector(attrSel("data-surgego", id));
+    if (next) takeFocus(next.disabled && home.querySelector(attrSel("data-surgehl", id)) ? home.querySelector(attrSel("data-surgehl", id)) : next);
+  });
+
   // CRANK rep (Decision 169): the amount is the data's, never typed.
   root.querySelectorAll("[data-crk]").forEach(b=>b.onclick=()=>{
     const amt=Number(b.dataset.crk), note=(root.querySelector("[data-crknote]")||{}).value||"";
@@ -3800,7 +3828,7 @@ function bindSheet(){
       if (r.prompts.dyingCheck && !st.dyingCheck){ notice("Mark the Dying check as passed or failed first."); return; }
       const marks = r.marks + (r.prompts.dyingCheck && st.dyingCheck==="fail" ? 1 : 0);
       const keptNames = r.running.filter(x=>x.payable && !st.stop[x.id]).map(x=>x.name).join(", "), stoppedBy = r.running.filter(x=>!x.payable || st.stop[x.id]).map(x=>x.name).join(", ");
-      const bits=[r.total?`${r.total} damage`:"", marks?plural(marks,"Death Mark"):"", r.prompts.dyingCheck&&st.dyingCheck==="pass"?"held on":"", r.turnSpend.length?"round's SFR cleared":"", keptNames?`${keptNames} kept running`:"", stoppedBy?`${stoppedBy} stopped`:""].filter(Boolean);
+      const bits=[r.total?`${r.total} damage`:"", ...r.heals.filter(x=>x.hp>0).map(x=>`${x.name} +${x.hp} HP`), ...r.ends.map(x=>`${x.name} ended (${x.by})`), marks?plural(marks,"Death Mark"):"", r.prompts.dyingCheck&&st.dyingCheck==="pass"?"held on":"", r.turnSpend.length?"round's SFR cleared":"", keptNames?`${keptNames} kept running`:"", stoppedBy?`${stoppedBy} stopped`:""].filter(Boolean);
       S.act=null;
       commit("damage", `Turn Reset: ${bits.join(", ")||"nothing ticked"}`, ()=>{ Engine.applyReset(ch, input, { atZero:st.atZero, dyingCheck:st.dyingCheck, stop:input.stop }); });
     } else if (st.kind==="rest" || st.kind==="focused" || st.kind==="nanomed"){
@@ -4263,8 +4291,8 @@ function bindSheet(){
     const at=b.dataset.ptoggle.indexOf("|"), pid=b.dataset.ptoggle.slice(0,at), opt=b.dataset.ptoggle.slice(at+1);
     const p=Engine.archPanels(ch).find(x=>x.id===pid), cost=(Engine.toggleView(ch, p||{}).find(o=>o.name===opt)||{}).cost;
     // Decision 266: shifting out of the form a power needs stops it, and the toast says which.
-    const off=stoppedNames(ch, Engine.setToggle(clone(ch), pid, opt).stopped);
-    commit("loadout", `${p?p.title:pid}: ${opt}${cost?` (${cost.hl} HL${cost.category?` ${cost.category}`:""})`:""}${off?`. ${off} stopped.`:""}`, ()=>{ Engine.setToggle(ch, pid, opt); });
+    const dry=Engine.setToggle(clone(ch), pid, opt), off=stoppedNames(ch, dry.stopped), gone=(dry.ended||[]).map(e=>e.label);
+    commit("loadout", `${p?p.title:pid}: ${opt}${cost?` (${cost.hl} HL${cost.category?` ${cost.category}`:""})`:""}${off?`. ${off} stopped.`:""}${gone.length?`. ${andList(gone)} ${gone.length===1?"ends":"end"}.`:""}`, ()=>{ Engine.setToggle(ch, pid, opt); });
   });
 
   // ── Admin: free edits (each logged via commit) ───────────────────────

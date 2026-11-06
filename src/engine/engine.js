@@ -589,7 +589,7 @@ const Engine = (() => {
   // A held Major's `form` grants, merged: what they change on a form
   // (Decision 199). `by` names the Majors, for the sheet to say why.
   function formGrants(ch){
-    const out = { withering:null, weaponTags:[], barsPenalty:null, by:[] };
+    const out = { withering:null, weaponTags:[], barsPenalty:null, regenerates:null, regenBy:null, ends:[], by:[] };
     for (const id of new Set(majorTakenIds(ch))){
       const m = majorById(ch, id);
       const gs = ((m && Array.isArray(m.grants)) ? m.grants : []).filter(g=>g && g.type==="form");
@@ -599,9 +599,16 @@ const Engine = (() => {
         if (g.withering===false) out.withering = false;
         if (Array.isArray(g.weaponTags)) out.weaponTags.push(...g.weaponTags.filter(t=>typeof t==="string"));
         if (Number.isFinite(Number(g.barsPenalty)) && g.barsPenalty!=null) out.barsPenalty = Number(g.barsPenalty);
+        // Decision 268: the highest number wins (it replaces the form's own, it doesn't add to it), and the Conditions that
+        // shifting in ends. A string for a number, or an id that is no Condition, counts as nothing.
+        if (typeof g.regenerates==="number" && Number.isFinite(g.regenerates) && g.regenerates>=0 && (out.regenerates==null || g.regenerates>out.regenerates)){
+          out.regenerates = g.regenerates; out.regenBy = txt(m.name);
+        }
+        if (Array.isArray(g.ends)) out.ends.push(...g.ends.filter(c=>typeof c==="string" && conditionById(c)));
       }
     }
     out.weaponTags = [...new Set(out.weaponTags)];
+    out.ends = [...new Set(out.ends)];
     return out;
   }
 
@@ -690,10 +697,20 @@ const Engine = (() => {
         if (id && Number.isFinite(n)) stats[id] = (stats[id]||0) + n;
       }
       const fg = formGrants(ch);
+      // Decision 268: what the form restores at Turn Reset. A Major's number replaces the option's when higher (Bone and
+      // Sinew's 2 is 2, not 1 + 2). The name is the baseline trait's; the option's own when the trait is missing.
+      let regen = null;
+      const rg = isPlainObj(o.regenerates) ? o.regenerates : null, rgHl = rg && typeof rg.hl==="number" && Number.isFinite(rg.hl) && rg.hl>=0 ? rg.hl : null;
+      if (rgHl!=null){
+        const a = archetype(ch), tr = (a && Array.isArray(a.baselineTraits) ? a.baselineTraits : []).find(x=>isPlainObj(x) && x.id===rg.trait);
+        const raised = fg.regenerates!=null && fg.regenerates>rgHl;
+        regen = { hl: raised ? fg.regenerates : rgHl, name: tr && txt(tr.name) ? txt(tr.name) : txt(o.name), by: raised ? fg.regenBy : null,
+                  id: typeof rg.trait==="string" && rg.trait ? rg.trait : p.id, note: o.flagged===true ? txt(o.playerNote) : "" };
+      }
       const bars = o.bars && normStat(o.bars.stat) ? { stat:normStat(o.bars.stat), name:txt(o.bars.name), penalty:fg.barsPenalty } : null;
       return { panelId:p.id, name:o.name, stats, bars, weaponTags:fg.weaponTags, changedBy:fg.by,
                naturalWeapons: (Array.isArray(o.naturalWeapons) ? o.naturalWeapons : []).filter(isPlainObj),
-               endsAtWithering: Number(o.endsAtWithering) || null, summary:txt(o.summaryText), endsText:txt(o.endsText) };
+               endsAtWithering: Number(o.endsAtWithering) || null, summary:txt(o.summaryText), endsText:txt(o.endsText), regen };
     }
     return null;
   }
@@ -742,8 +759,19 @@ const Engine = (() => {
       if (cost.withering) t.witheringDamage = nonNegInt(t.witheringDamage) + cost.hp;
     }
     ch.panelData[p.id] = o.name;
+    // Decision 268: shifting into a form from one that isn't ends the Conditions the held Majors name (Bone and Sinew's
+    // Maimed), on every body part, in this press. Shifting back ends nothing. Highest index first, so none shifts under another.
+    const ended = [];
+    if (hasForm(o) && !hasForm(was)){
+      const ids = formGrants(ch).ends, list = isPlainObj(ch.trackers) && Array.isArray(ch.trackers.conditions) ? ch.trackers.conditions : [];
+      list.map((e,i)=>({ e, i })).filter(x=>x.e && ids.includes(x.e.id)).reverse().forEach(({ e, i })=>{
+        const def = conditionById(e.id), loc = locationById(e.location);
+        ended.unshift({ id:e.id, name:def.name, location: loc ? loc.name : "", label: def.name + (loc ? ` (${loc.name})` : "") });
+        removeCondition(ch, i);
+      });
+    }
     // Decision 266: leaving the form a power runs in stops it, in the same press (and the same undo).
-    return { ok:true, cost, stopped: stopRunningOutsideForm(ch, p.id, o.name, wasRunning, !!was && was.name===o.name) };
+    return { ok:true, cost, ended, stopped: stopRunningOutsideForm(ch, p.id, o.name, wasRunning, !!was && was.name===o.name) };
   }
   // A toggle panel as the sheet draws it: each option, which is on, and
   // what pressing an option that isn't would cost.
@@ -2825,6 +2853,44 @@ const Engine = (() => {
     return Object.assign({ ok:true }, w);
   }
 
+  // ── A round's healing (Decision 268, W132) ──
+  // Supernatural healing never restores Withering ("never Withering": 0413, 0414). heal() and healStep() trim Withering to
+  // the damage left, so a heal capped after the fact would still lower it: the HP is capped at what is left above
+  // Withering BEFORE _healMath, which still wipes damage past zero first (Decision 220). witheringDamage is never written.
+  function _healable(ch, over){
+    const hs = hlState(ch, over), w = nonNegInt(((ch||{}).trackers||{}).witheringDamage);
+    const room = Math.max(0, _healMath(hs, Infinity, false, ch && ch.houseRules).healed - w);
+    return { hs, room };
+  }
+  function _supernaturalHeal(ch, hl, over){
+    const { hs, room } = _healable(ch, over);
+    const hp = Math.min(Math.max(0, Math.floor(hl)) * hs.hpPer, room);
+    const m = _healMath(hs, hp, false, ch && ch.houseRules);
+    const why = hp>0 ? "" : !hs.damage ? "Nothing to heal." : "Only Withering is left.";
+    return { hp:m.healed, from:m.before, to:m.after, why };
+  }
+  // The one reader of what heals at the next Turn Reset: the form's Regeneration (unless Withering has ended the form) and
+  // each running power's `roundHeal`. Each heal sees the last one's result. `over` ({ damage }) is the ticked state.
+  function roundHeals(ch, over){
+    const out = [];
+    if (!ch || typeof ch!=="object" || !isPlainObj(ch.trackers)) return out;
+    let damage = hlState(ch, over).damage;
+    const push = (id, name, hl, by, ended, note)=>{
+      const h = ended ? { hp:0, from:damage, to:damage, why:"The form has ended." } : _supernaturalHeal(ch, hl, { damage });
+      damage = h.to;
+      out.push({ id, name, hl, hp:h.hp, from:h.from, to:h.to, why:h.why, by, note:note||"" });
+    };
+    const view = formView(ch);
+    if (view && view.regen && view.regen.hl>0) push(view.regen.id, view.regen.name, view.regen.hl, view.regen.by, view.ended, view.regen.note);
+    for (const r of runningPowers(ch)){
+      const g = (Array.isArray(r.def.grants) ? r.def.grants : []).find(x=>isPlainObj(x) && x.type==="roundHeal");
+      if (!g) continue;
+      const hl = Math.floor(finiteOr0(g.perRank) * (Number(r.rank) || 1) + finiteOr0(g.plus));
+      if (hl>0) push(r.id, r.name, hl, null, false);
+    }
+    return out;
+  }
+
   // Turn Reset (plan P8): a bookkeeping helper, not an automation. Each active
   // Condition with `ongoing` damage ticks -- a fixed amount (Bleeding) or the
   // number entered for its source (Burning, Shocked). The damage goes straight
@@ -2865,9 +2931,23 @@ const Engine = (() => {
       .map(p=>({ title:txt(p.title), spent:turnCount(ch, p) }));
     // Decision 266: what is running is charged again into the new round. `input.stop` is the ids the player ticked Stop on.
     const running = resetRunning(ch, input.stop).map(({ id, name, sfr, payable, left })=>({ id, name, sfr, payable, left: Number.isFinite(left) ? left : null }));
+    // Decision 268 (HQ19): At Zero, Dying and a held spell's check are asked from the ticks above. The round's heals come
+    // after, against the ticked damage, and a Condition an Aberration ends goes last. `final` is the track after the heals.
+    const heals = roundHeals(ch, { damage: after.damage });
+    const final = hlState(ch, { damage: heals.length ? heals[heals.length - 1].to : after.damage });
+    const enders = aberrationState(ch).resetEnds;
+    const ends = [];
+    conds.forEach((e,i)=>{
+      const by = e && enders.find(x=>x.id===e.id);
+      if (!by) return;
+      const def = conditionById(e.id), loc = locationById(e.location);
+      ends.push({ index:i, id:def.id, name: def.name + (loc ? ` (${loc.name})` : ""), by:by.by });
+      if (by.note && !notes.includes(by.note)) notes.push(by.note);
+    });
+    heals.forEach(h=>{ if (h.note && !notes.includes(h.note)) notes.push(h.note); });   // a flagged rule says it is unsettled (F50, F51)
     return { ok:true, ticks, total, before, after, dying:d.dying, marks,
-             prompts: { atZero:d.atZero, dyingCheck, concentration:d.concentration }, recovery, notes, turnSpend, running,
-             hasEffect: total>0 || !!dyingCheck || turnSpend.length>0 || running.length>0 };
+             prompts: { atZero:d.atZero, dyingCheck, concentration:d.concentration }, recovery, notes, turnSpend, running, heals, ends, final,
+             hasEffect: total>0 || !!dyingCheck || turnSpend.length>0 || running.length>0 || heals.some(h=>h.hp>0) || ends.length>0 };
   }
   // The one writer, re-resolving from its inputs like applyHit. `choices`:
   //   { atZero: "pass"|"fail", dyingCheck: "pass"|"fail", stop: [power ids to stop rather than keep running] }
@@ -2877,7 +2957,7 @@ const Engine = (() => {
     const r = resolveReset(ch, Object.assign({}, input, { stop }));
     if (!r.ok) return r;
     const t = ch.trackers;
-    t.damage = r.after.damage;
+    t.damage = r.final.damage;      // the ticks, then the round's heals (Decision 268); Withering is never written
     archPanels(ch).forEach(p=>{ if (p && p.type==="tracker" && p.turnCap && p.resource && isPlainObj(t[p.resource])) t[p.resource].turn = 0; });
     // Decision 266: the round is cleared first, then each kept power is charged into the new one, through the one writer.
     const { charged, stopped } = chargeRunning(ch, stop);
@@ -2890,7 +2970,9 @@ const Engine = (() => {
       const i = t.conditions.findIndex(e=>e && e.id===((D().damageRules||{}).whileDying||{}).condition);
       if (i>=0) setConditionMarks(ch, i, (Number(t.conditions[i].marks)||0) + marks);
     }
-    return { ok:true, result:r, marks, added, charged, stopped };
+    // Decision 268: Conditions an Aberration ends go last, highest index first, after anything this press added.
+    r.ends.map(x=>x.index).sort((a,b)=>b-a).forEach(i=>removeCondition(ch, i));
+    return { ok:true, result:r, marks, added, charged, stopped, ended: r.ends };
   }
 
   function luckState(ch){
@@ -3756,7 +3838,7 @@ const Engine = (() => {
     const raw = (((ch||{}).trackers||{}).aberrations), list = Array.isArray(raw) ? raw : [];
     const active = [], adjust = {};
     let painLevels = 0;
-    const healTimes = [];
+    const healTimes = [], resetEnds = [];
     list.forEach((e, index)=>{
       if (!e || typeof e!=="object") return;
       const def = aberrationById(e.id);
@@ -3768,9 +3850,11 @@ const Engine = (() => {
       if (!def) return;                 // versionCheck reports the orphan
       if (typeof def.painLevels==="number") painLevels += def.painLevels;
       if (typeof def.naturalHealingTimes==="number" && Number.isFinite(def.naturalHealingTimes) && def.naturalHealingTimes>1) healTimes.push({ name: def.name, x: def.naturalHealingTimes });
+      // Decision 268: the Conditions this Aberration ends at Turn Reset (Quick Clot's Bleeding). Resolve reads it.
+      if (Array.isArray(def.resetEnds)) for (const c of def.resetEnds) if (typeof c==="string" && conditionById(c)) resetEnds.push({ id:c, by:def.name, note: def.flagged===true ? txt(def.playerNote) : "" });
       for (const [k, v] of Object.entries(def.adjust||{})) if (typeof v==="number") adjust[k] = (adjust[k]||0) + v;
     });
-    return { active, permanent: active.filter(a=>a.permanence==="permanent"),
+    return { resetEnds, active, permanent: active.filter(a=>a.permanence==="permanent"),
              temporary: active.filter(a=>a.permanence==="temporary"), painLevels, healTimes, adjust };
   }
   // Current TOL doesn't move when an Aberration changes max TOL (MQ2,
@@ -4254,6 +4338,51 @@ const Engine = (() => {
     if (!had) return { ok:false, why:`${nameOfRunnable(ch, id)} isn't running.` };
     ch.trackers.running = runEntries(ch).filter(e=>e.id!==id).map(keepEntry);
     return { ok:true, name:nameOfRunnable(ch, id) };
+  }
+  // ── Vitality Surge (Decision 268, W132) ──
+  // A power with `surge` ({ hl: { perRank, plus }, sfr: { perHl } }) heals 1 to its HL cap on a press, spending perHl SFR an
+  // HL through adjustPanelTracker, never Withering. A running power whose `blocks` names it refuses it. The engine refuses;
+  // the button only shows the reason.
+  const surgeDefs = ch => archetypePowers(ch).filter(p=>isPlainObj(p.surge));
+  const surgePerHl = p => Math.max(0, Math.floor(finiteOr0((isPlainObj(p.surge.sfr) ? p.surge.sfr : {}).perHl)));
+  const sfrLeft = ch => { const sf = sfr(ch), s = ch && ch.trackers && ch.trackers.sfr;
+    return sf && sf.value!=null ? Math.max(0, sf.value - nonNegInt(isPlainObj(s) ? s.spent : 0)) : Infinity; };
+  function surgeMax(ch, p){
+    const g = isPlainObj(p.surge.hl) ? p.surge.hl : {}, { hs, room } = _healable(ch);
+    const cap = Math.max(0, Math.floor(finiteOr0(g.perRank) * (Number(p.rank) || 1) + finiteOr0(g.plus)));
+    return Math.min(cap, hs.hpPer>0 ? Math.ceil(room / hs.hpPer) : 0);
+  }
+  function surgeCheck(ch, p, hl){
+    const name = txt(p.name);
+    if (!ch.creation || ch.creation.locked!==true) return { ok:false, why:"Powers run once the character is locked.", short:"Locked sheets only" };
+    const blocker = runningPowers(ch).find(r=>Array.isArray(r.def.blocks) && r.def.blocks.includes(p.id));
+    if (blocker) return { ok:false, why:`${name} can't be used while ${blocker.name} runs.`, short:`Not while ${blocker.name} runs` };
+    const { hs, room } = _healable(ch), max = surgeMax(ch, p);
+    if (!hs.damage) return { ok:false, why:"Nothing to heal.", short:"Nothing to heal" };
+    if (room<=0) return { ok:false, why:`Only Withering is left, and ${name} can't heal it.`, short:"Only Withering left" };
+    const n = hl===undefined ? 1 : (typeof hl==="number" || (typeof hl==="string" && /^\s*\d+\s*$/.test(hl))) ? Number(hl) : NaN;
+    if (!Number.isInteger(n) || n<1 || n>max) return { ok:false, why:`Pick 1 to ${max} HL.`, short:`Pick 1 to ${max}` };
+    const cost = n * surgePerHl(p), left = sfrLeft(ch);
+    if (left < cost) return { ok:false, why:`${name} needs ${cost} SFR, ${left} left.`, short:"Not enough SFR" };
+    return { ok:true, n, cost, max };
+  }
+  // The held powers that surge, for a control: how many HL it can take now and whether it can press.
+  function surgeable(ch){
+    if (!ch || typeof ch!=="object" || !isPlainObj(ch.trackers)) return [];
+    return surgeDefs(ch).map(p=>{ const c = surgeCheck(ch, p);
+      return { id:p.id, name:txt(p.name), rank:p.rank, maxHl:surgeMax(ch, p), sfrPerHl:surgePerHl(p),
+               can:{ ok:c.ok, why:c.ok ? "" : c.why, short:c.ok ? "" : c.short } }; });
+  }
+  function surgePower(ch, id, hl){
+    const p = ch && isPlainObj(ch.trackers) ? surgeDefs(ch).find(x=>x.id===id) : null;
+    if (!p) return { ok:false, why:"That power doesn't heal." };
+    const c = surgeCheck(ch, p, hl===undefined ? null : hl);   // a press names its count; only surgeable() asks without one
+    if (!c.ok) return c;
+    const h = _supernaturalHeal(ch, c.n);
+    ch.trackers.damage = h.to;
+    const panel = sfrTrackerPanel(ch), w = panel && c.cost>0 ? adjustPanelTracker(ch, panel.id, c.cost) : null, cap = powerCostCap(ch);
+    return { ok:true, name:txt(p.name), hl:c.n, hp:h.hp, sfr:c.cost, before:h.from, after:h.to, turn: w ? w.turn : null,
+             overCap: cap!=null && c.cost>cap ? { sfr:c.cost, rou:cap } : null };
   }
   // Changing the form a power needs clears every held sustained power's entry, whether or not it read as running:
   // leaving it ends them, and entering it starts none, so a stale entry (a hand-edited file) can't run unpaid when
@@ -9359,7 +9488,11 @@ const Engine = (() => {
       const dyingMarks = hasDying ? ticks.filter(x=>x.hp > 0).length : 0;
       const dying = hasDying ? _str(W.resetCheck) || null : null;
       const dyingText = dyingMarks ? _str(W.text) : null;
-      rows.push({ rowId:r.id, name:r.name, missed:_isObj(r.delay) ? _str(r.delay.until) : null, ticks, expiring, recovery, dying, dyingMarks, dyingText, dyingIndex,
+      // Decision 268 (HQ24): a claimed row keeps no Withering (Decision 257), so it can't honour "never Withering" and is healed by nothing here.
+      // The line names only what its copy would regenerate on the player's own sheet.
+      const stand = r.kind==="pc" ? _seatStandIn(t, r) : null;
+      const heals = stand ? roundHeals(stand).filter(h=>!h.why).map(h=>h.name) : [];
+      rows.push({ rowId:r.id, name:r.name, heals, missed:_isObj(r.delay) ? _str(r.delay.until) : null, ticks, expiring, recovery, dying, dyingMarks, dyingText, dyingIndex,
                   total:ticks.reduce((n, x)=>n + (x.hp||0), 0) });
     }
     if (missing) return { ok:false, why:`Enter this round's ${missing.tick.name} damage for ${missing.rowName.trim() || "them"}. Put 0 if it's out.`, rows };
@@ -9869,7 +10002,7 @@ const Engine = (() => {
     // Magic: the Cascade, Aberrations, the Grimoire, starting spells
     cascade, aberrationState, recordAberration, removeAberration,
     spellForms, spellForm, grimoire, spellPower, spAmounts, spellAttack, addSpell, linkSpell, removeGrimoireRow, heldSpells, holdSpell, releaseSpell,
-    runCost, runningPowers, isRunning, runnablePowers, startPower, stopPower, hitAnswers,
+    runCost, runningPowers, isRunning, runnablePowers, startPower, stopPower, hitAnswers, roundHeals, surgeable, surgePower,
     castingPool, startingSpells, canAddStartingSpell, addStartingSpell,
     // Progression and play: IP, Milestones, sessions, Çredits, panels
     ipState, ipCost, spendIP, grantIP, advantageOffer,

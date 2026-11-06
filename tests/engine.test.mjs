@@ -12962,3 +12962,173 @@ test("Decision 267 (Ken, 2026-11-05): an Odin's Aegis tick that cuts nothing cos
   const cuts = Engine.resolveHit(ch, { ...soaked, damage: 10, protRoll: 1 });
   same([cuts.ok, cuts.why], [false, "Odin's Aegis needs 2 SFR, 1 left."]);
 });
+
+// ── Powers that heal (Decision 268, W132; H3) ─────────────────────────────
+// A round's healing happens at Turn Reset, and none of it restores Withering.
+const inForm = (ch, form = "Werewolf") => { assert.equal(Engine.setToggle(ch, "form", form).ok, true); return ch; };
+const hurt = (ch, damage, wither = 0) => { ch.trackers.damage = damage; ch.trackers.witheringDamage = wither; return ch; };
+const wolfHurt = (damage, wither = 0) => hurt(inForm(wildblood(0)), damage, wither);
+function bovDraugur(rank = 2) {
+  const ch = draugurAnswers({ "blood-of-valhalla": rank });
+  return ch;
+}
+function surger() {
+  const ch = draugurAnswers({});
+  ch.archetypeChoices.powerCp = { "vitality-surge": 1 };
+  return ch;
+}
+
+test("Decision 268: a Werewolf in form regenerates 1 HL at Turn Reset, never Withering, and not in human form", () => {
+  const ch = wolfHurt(20, 5);
+  same([Engine.hlState(ch).hpPer, Engine.hlState(ch).total], [5, 50]);
+  const r = Engine.resolveReset(ch, {});
+  same([r.heals[0].name, r.heals[0].hl, r.heals[0].hp, r.hasEffect], ["Regeneration", 1, 5, true]);
+  assert.ok(Engine.applyReset(ch, {}, {}).ok);
+  same([ch.trackers.damage, ch.trackers.witheringDamage], [15, 5]);
+  const low = wolfHurt(7, 5);
+  Engine.applyReset(low, {}, {});
+  same([low.trackers.damage, low.trackers.witheringDamage], [5, 5], "Withering is the floor: only 2 of the 5 healed");
+  const human = hurt(wildblood(0), 20, 5);
+  assert.equal(Engine.resolveReset(human, {}).heals.length, 0);
+  Engine.applyReset(human, {}, {});
+  assert.equal(human.trackers.damage, 20);
+});
+
+test("Decision 268: Bone and Sinew regenerates 2 HL (not 1 + 2) and ends Maimed on shifting in (HQ25)", () => {
+  const mk = bone => {
+    const ch = wildblood(0); if (bone) withMajors(ch, "bone-and-sinew");
+    Engine.addCondition(ch, { id: "maimed", location: "left-arm" });
+    Engine.addCondition(ch, { id: "bleeding" });
+    Engine.addCondition(ch, { id: "maimed", location: "right-arm" });
+    return hurt(ch, 20);
+  };
+  const ch = mk(true), s = Engine.setToggle(ch, "form", "Werewolf");
+  same(s.ended.map(e => e.label), ["Maimed (Left Arm)", "Maimed (Right Arm)"]);
+  same(ch.trackers.conditions.map(c => c.id), ["bleeding"], "only Maimed went; index shifts must not eat Bleeding");
+  const r = Engine.resolveReset(ch, {});
+  same([r.heals[0].hl, r.heals[0].name, r.heals[0].by], [2, "Regeneration", "Bone and Sinew"]);
+  Engine.applyReset(ch, {}, {});
+  assert.equal(ch.trackers.damage, 11, "20 + 1 from Bleeding, then 2 HL (10) healed");
+  // Shifting back ends nothing; without the Major both Maimed stay.
+  const back = mk(true); inForm(back); back.trackers.conditions.push({ id: "maimed", location: "head" });
+  same(Engine.setToggle(back, "form", "Human").ended, []);
+  assert.equal(back.trackers.conditions.length, 2, "Bleeding and the new Maimed stay when shifting back");
+  const plain = mk(false);
+  same(Engine.setToggle(plain, "form", "Werewolf").ended, []);
+  assert.equal(plain.trackers.conditions.length, 3);
+});
+
+test("Decision 268: a form Withering has ended doesn't regenerate, though the toggle says Werewolf (HQ23)", () => {
+  const ch = wolfHurt(25, 25);
+  assert.equal(Engine.formView(ch).ended, true);
+  const r = Engine.resolveReset(ch, {});
+  same([r.heals[0].why, r.heals[0].hp, r.hasEffect], ["The form has ended.", 0, false]);
+  Engine.applyReset(ch, {}, {});
+  assert.equal(ch.trackers.damage, 25);
+});
+
+test("Decision 268: Blood of Valhalla heals rank HL at Reset while it runs, never Withering, and heals the round that ends (HQ20)", () => {
+  const ch = bovDraugur(); hurt(ch, 20, 4);
+  assert.equal(Engine.startPower(ch, "blood-of-valhalla").ok, true);
+  same(sfrNow(ch), [4, 4]);
+  Engine.applyReset(ch, {}, {});
+  same([ch.trackers.damage, ch.trackers.witheringDamage, ch.trackers.sfr.spent, ch.trackers.sfr.turn], [10, 4, 8, 4]);
+  hurt(ch, 12, 4);
+  const a = Engine.applyReset(ch, {}, { stop: ["blood-of-valhalla"] });
+  same([ch.trackers.damage, ch.trackers.witheringDamage, ch.trackers.running, a.stopped.map(x => x.id)], [4, 4, [], ["blood-of-valhalla"]], "8 healed, Withering kept, stopped");
+  const idle = bovDraugur(); hurt(idle, 20, 4);
+  Engine.applyReset(idle, {}, {});
+  assert.equal(idle.trackers.damage, 20, "not running: no heal");
+});
+
+test("Decision 268: Vitality Surge heals 1 to rank HL and spends 2 SFR an HL, in one commit (HQ21)", () => {
+  const ch = surger(); hurt(ch, 20, 4);
+  same([Engine.sfr(ch).value, Engine.surgeable(ch)[0].maxHl, Engine.surgeable(ch)[0].rank], [17, 2, 2]);
+  const r = Engine.surgePower(ch, "vitality-surge", 2);
+  assert.equal(r.ok, true, r.why);
+  same([r.hp, r.hl, r.sfr, ch.trackers.damage, ch.trackers.witheringDamage, ...sfrNow(ch)], [10, 2, 4, 10, 4, 4, 4]);
+  same([hurt(surger(), 7, 4)].map(c => Engine.surgeable(c)[0].maxHl), [1]);
+  const one = hurt(surger(), 20, 0); Engine.surgePower(one, "vitality-surge", "1");
+  same([one.trackers.damage, sfrNow(one)], [15, [2, 2]]);
+});
+
+test("Decision 268: Vitality Surge refuses a short pool, Blood of Valhalla, only Withering, a count out of range, and writes nothing", () => {
+  const snap = ch => JSON.stringify(ch.trackers);
+  const refuse = (ch, hl, why) => { const s = snap(ch), r = Engine.surgePower(ch, "vitality-surge", hl); same([r.ok, r.why], [false, why]); assert.equal(snap(ch), s, "a refusal wrote something"); return r; };
+  const poor = hurt(surger(), 20, 0); poor.trackers.sfr.spent = 14;
+  refuse(poor, 2, "Vitality Surge needs 4 SFR, 3 left.");
+  same(Engine.surgeable(poor)[0].can, { ok: true, why: "", short: "" }, "1 HL still fits");
+  const run = hurt(draugurAnswers({ "blood-of-valhalla": 1 }), 20, 0);
+  run.archetypeChoices.powerCp = { "vitality-surge": 1 };
+  Engine.startPower(run, "blood-of-valhalla");
+  const r = refuse(run, 1, "Vitality Surge can't be used while Blood of Valhalla runs.");
+  assert.equal(r.short, "Not while Blood of Valhalla runs");
+  refuse(hurt(surger(), 4, 4), 1, "Only Withering is left, and Vitality Surge can't heal it.");
+  refuse(hurt(surger(), 0, 0), 1, "Nothing to heal.");
+  const ok = hurt(surger(), 20, 0);
+  for (const bad of [3, 0, -1, 1.5, "x", NaN, null, undefined, "2.5"]) refuse(ok, bad, "Pick 1 to 2 HL.");
+  const un = hurt(surger(), 20, 0); un.creation.locked = false;
+  refuse(un, 1, "Powers run once the character is locked.");
+});
+
+test("Decision 268: Quick Clot ends Bleeding at Turn Reset after it ticks once (HQ22)", () => {
+  const mk = clot => { const ch = subject(); if (clot) Engine.recordAberration(ch, { id: "quick-clot", permanence: "permanent" });
+    Engine.addCondition(ch, { id: "bleeding" }); return hurt(ch, 3); };
+  const ch = mk(true), r = Engine.resolveReset(ch, {});
+  same([r.ends.length, r.ends[0].id, r.ends[0].by, r.hasEffect], [1, "bleeding", "Quick Clot", true]);
+  Engine.applyReset(ch, {}, {});
+  same([ch.trackers.damage, ch.trackers.conditions], [4, []]);
+  const no = mk(false); Engine.applyReset(no, {}, {});
+  same([no.trackers.damage, no.trackers.conditions.map(c => c.id)], [4, ["bleeding"]]);
+});
+
+test("Decision 268: a Reset ticks first, asks from the ticks, then heals (HQ19)", () => {
+  const ch = wolfHurt(49, 0); Engine.addCondition(ch, { id: "bleeding" });
+  const r = Engine.resolveReset(ch, {});
+  same([r.after.hpLeft, r.final.damage, !!r.prompts.atZero], [0, 45, true]);
+});
+
+test("Decision 268: a round's heal wipes damage past zero first (Decision 220)", () => {
+  const ch = wolfHurt(54, 0);
+  Engine.applyReset(ch, {}, {});
+  assert.equal(ch.trackers.damage, 45, "the 4 past zero go, then 5");
+});
+
+test("Decision 268: roundHeals, resolveReset, surgeable and surgePower are total on junk in the new keys, and never lower Withering", () => {
+  const wolf = D.archetypes.find(a => a.id === "werewolf"), opt = wolf.coreMechanic.panels.find(p => p.id === "form").options[1];
+  for (const junk of ["x", null, [], { hl: "1" }, { hl: -3 }, { hl: NaN, trait: 5 }, { hl: 1, trait: "no-such" }]) {
+    withData(opt, "regenerates", junk, () => {
+      const ch = wolfHurt(20, 5);
+      const r = Engine.resolveReset(ch, {});
+      assert.equal(r.ok, true);
+      for (const h of r.heals) assert.ok(Number.isFinite(h.hp) && Number.isFinite(h.to), JSON.stringify(h));
+      Engine.applyReset(ch, {}, {});
+      assert.ok(ch.trackers.witheringDamage === 5 && Number.isFinite(ch.trackers.damage));
+    });
+  }
+  const vs = D.archetypes.find(a => a.id === "vampire").powers.find(p => p.id === "vitality-surge");
+  for (const junk of ["x", null, [], { hl: "a", sfr: 3 }, { hl: { perRank: "1" }, sfr: { perHl: "2" } }]) {
+    withData(vs, "surge", junk, () => {
+      const ch = hurt(surger(), 20, 4);
+      Engine.surgeable(ch); const r = Engine.surgePower(ch, "vitality-surge", 1);
+      assert.ok(typeof r.ok === "boolean");
+      assert.ok(Number.isFinite(ch.trackers.damage) && ch.trackers.witheringDamage === 4);
+    });
+  }
+  const bov = D.archetypes.find(a => a.id === "vampire").powers.find(p => p.id === "blood-of-valhalla");
+  for (const junk of [{ type: "roundHeal", perRank: "2" }, { type: "roundHeal" }]) withData(bov, "grants", [junk], () => {
+    const ch = hurt(bovDraugur(), 20, 4); Engine.startPower(ch, "blood-of-valhalla");
+    Engine.applyReset(ch, {}, {});
+    assert.ok(ch.trackers.damage === 20 && ch.trackers.witheringDamage === 4);
+  });
+  withData(bov, "blocks", "vitality-surge", () => assert.equal(Engine.surgePower(hurt(surger(), 5, 0), "vitality-surge", 1).ok, true));
+  const qc = D.aberrations.find(a => a.id === "quick-clot");
+  withData(qc, "resetEnds", ["no-such", 7], () => {
+    const ch = subject(); Engine.recordAberration(ch, { id: "quick-clot", permanence: "permanent" });
+    Engine.addCondition(ch, { id: "bleeding" });
+    assert.equal(Engine.resolveReset(ch, {}).ends.length, 0);
+  });
+  const bare = Engine.newCharacter();
+  same([Engine.roundHeals(bare), Engine.surgeable(bare), Engine.surgePower(bare, "vitality-surge", 1).ok], [[], [], false]);
+  same([Engine.roundHeals(null), Engine.surgeable(null)], [[], []]);
+});

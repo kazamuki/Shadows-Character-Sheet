@@ -2,7 +2,7 @@
 
 **Plan:** [`powers-that-run.md`](../powers-that-run.md), session H3. **Wish:** **W132** (Ken, from re-running P21's pre-flight), its "heal" half.
 Decisions 105, 135, 189, 195, 199, 220, 225, 236, 257, 266, 267.
-**Status:** **drafted 2026-11-05 by Claude (Opus)**, the H2 reviewer acting as orchestrator. Pre-flighted against `main` at `f85b7d5` (PR #299
+**Status:** **built 2026-11-05 (Decision 268)**; drafted 2026-11-05 by Claude (Opus), the H2 reviewer acting as orchestrator. Pre-flighted against `main` at `f85b7d5` (PR #299
 merged: app 0.62.0 under `[Unreleased]`, game data 0.53 unreleased, character schema 0.34, table 0.19, pack 0.3; the last decision is 267).
 **Approved by Ken 2026-11-05** ("All defaults, flag 22 & 23", in the H1 conductor session): HQ19–HQ25, with HQ22 and HQ23 built as their defaults and opened as two F-number flags for Deighton (Ken, 2026-11-05: "Open two F-flags"; §2, §13).
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
