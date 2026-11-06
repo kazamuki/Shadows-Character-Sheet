@@ -18,8 +18,12 @@ lose Sanity, reload, and need the right number without breaking the scene.
 Making a character in the eight-step wizard is a one-time job that comes first
 but carries less weight.
 
-**GMs are secondary.** They hand a player the folder or the single HTML file,
-and they read the `.shadows.json` files players bring to the table.
+**GMs are the second audience, and GM mode is theirs.** They hand a player the
+folder or the single HTML file, and they read the `.shadows.json` files players
+bring to the table. In GM mode they run the session: an encounter, the threads,
+the clocks, the cast, with players waiting. **GM mode is designed for play
+first, prep second** (Ken, 2026-11-05; `docs/plans/gm-at-the-table.md`): what
+the GM needs mid-scene is a glance away, and editing is a press further.
 
 The people behind it: Deighton (lead designer, all rules authority), Scott (GM
 toolkit, magic, the print sheet's look), Ken (writes the CRB and builds the app).

@@ -147,6 +147,7 @@ rev 9's `C1`–`C3` are still forward notes.
   round) are in `reference/meeting-2026-10-23.md`, with five details for Deighton.
   The player sheet's plan (`plans/archive/sheet-wishlist.md`) closed 2026-10-24, P1–P21 built.
 - **The powers-that-run plan** (`plans/powers-that-run.md`, approved by Ken 2026-11-04): H1 (sustained powers run, Decision 266) and H2 (powers that answer a hit, Decision 267) are built; **H3** (powers that heal) is next, a work order that adds `run` rows as data. Battle Hardened and Elemental Blood wait on the book (its Conditions and elements aren't the sheet's: plan §6).
+- **The GM-at-the-table plan** (`plans/gm-at-the-table.md`, proposed 2026-11-05 from an Impeccable critique): U1 (the encounter row) first, then U4, U2, U3, U5. Ken approves it and UQ1–UQ8 before U1's order is drafted.
 - **W90**, cybernetics: six questions before a plan.
 
 **Ken alone:** F12 and F32, W38's plan (`plans/two-tabs-one-character.md`,

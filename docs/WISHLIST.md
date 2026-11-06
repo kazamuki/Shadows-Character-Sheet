@@ -886,7 +886,7 @@ file is the player's words as the page reads them; it is the session's page's
 action, not a new tab. Out of S14's scope (§6).
 
 **W139 — Keyboard shortcuts on a table: Find and Jot a key away.** *Ken · 🔎 · Rule or shape · raised 2026-10-30*\
-**Plan:** [gm-mode's Shortcuts](plans/gm-mode.md), order [S19](plans/gm-mode/S19-shortcuts.md) (**built 2026-10-31**, Decision 259, switched off: F and J, an off switch in ⋮ → Keys; *more keys* (Next in a fight, the tabs, `?` for the list) stay open here) · **Goes with:** W140, W141
+**Plan:** [gm-mode's Shortcuts](plans/gm-mode.md), order [S19](plans/gm-mode/S19-shortcuts.md) (**built 2026-10-31**, Decision 259, switched off: F and J, an off switch in ⋮ → Keys; *more keys* (Next in a fight, the tabs, `?` for the list) stay open here; **proposed** as [gm-at-the-table's](plans/gm-at-the-table.md) U5, 2026-11-05) · **Goes with:** W140, W141
 
 Find and Jot sit in the header on every table screen (Decision 208), but a
 GM at a laptop mid-session still has to reach for the mouse. The wish: a key

@@ -828,6 +828,8 @@ not a queue. What Scott's use of the table turns up can reorder it.
 | S20 | Wave Initiative by one roll a side: whoever is closest to the danger rolls Combat Sense for their side, the higher side goes first, rolled again at the Reset (GQ30, answered by Deighton's Q34; 210's *Revisit if*) | Rule or shape (table schema 0.19, app minor) | Nothing | **Built 2026-10-31** (Decision 261; SQ1–SQ5 all Default): [order](gm-mode/S20-wave-rolls.md) |
 | S21 | The crew as buttons: one per active seat in an encounter's Add section and a session's Who was there, then Add a player for any other name; a seat already in a fight is disabled, a seat in Who was there toggles (Ken, 2026-10-31) | Rule or shape (app minor) | Nothing | **Built 2026-10-31** (Decision 262; SQ1–SQ4 all Default): [order](gm-mode/S21-crew-buttons.md) |
 
+**How the screen behaves in play** (a critique's 41 findings: the encounter row, a Tonight strip, records that open to read, the design system, more keys) is its own plan, [`gm-at-the-table.md`](gm-at-the-table.md), sessions U1–U5 (proposed 2026-11-05). It reopens 176 and 208 in part, and adds no record.
+
 S12's split into S12a and S12b, and the names S10f and S17, are this table's
 (2026-10-23), so each piece can be picked on its own. *What's left, session by session*, below, describes
 each open session as first drafted, with the splits noted where they happened.
