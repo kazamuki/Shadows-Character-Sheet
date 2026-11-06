@@ -4,8 +4,9 @@
 sample table (24/40; the snapshot is `.impeccable/critique/2026-11-06T04-35-27Z__src-ui-gm-js.md`). Ken's
 answers to the critique: **GM mode is a play-first product** (it's designed for the GM running a session, and
 prep comes second), **the encounter screen goes first**, and the work runs as work orders, with Impeccable's
-commands used inside each session. Not yet pre-flighted: each order is pre-flighted against `main` when it's
-drafted. Nothing here is approved until Ken says so.
+commands used inside each session. **Approved by Ken 2026-11-05:** he merged it (#302) and asked for U1's order
+("okay, lets build our first work order for U1!"). UQ1–UQ8 were left blank, so each is its default
+(`WORK-ORDERS.md`). Each order is pre-flighted against `main` when it's drafted.
 **Tier of this document:** *Docs*. U1, U2, U3 and U5 are *Rule or shape*. U4 is *Fix*.
 
 Sessions are `U1`… (U for *use at the table*). Questions are `UQ`_n_. Not `T`, because `TQ` is the two-tabs
@@ -123,7 +124,7 @@ so that one area isn't fixed while it drifts somewhere else:
 
 | Session | What a GM gets | Findings | Impeccable | Tier | Waits on |
 |---|---|---|---|---|---|
-| **U1** — the encounter as an instrument | The acting row carries a NOW badge, and Next scrolls and moves focus to it. HP is a green Oxanium readout over the sheet's Health Level boxes, read-only. Hit and Heal are each row's primary pair, with the rest under More; a row that's Down shows only what it can still use. Duplicate names get A/B when drawn. The Hit panel keeps Apply in one place, warns past 2× HP (UQ4), and announces its preview. The encounter bar wraps at phone width. The plan form's labels are short and in sentence case | 1–8 | shape (the row) · typeset · colorize · harden · adapt · polish | Rule or shape (app minor; no schema) | Ken: this plan, UQ1–UQ5 |
+| **U1** — the encounter as an instrument (**order approved 2026-11-05**: [U1](gm-at-the-table/U1-encounter-instrument.md)) | The acting row carries a NOW badge, and Next scrolls and moves focus to it. HP is a green Oxanium readout over the sheet's Health Level boxes, read-only. Hit and Heal are each row's primary pair, with the rest under More; a row that's Down shows only what it can still use. Duplicate names get A/B when drawn. The Hit panel keeps Apply in one place, warns past 2× HP (UQ4), and announces its preview. The encounter bar wraps at phone width. The plan form's labels are short and in sentence case | 1–8 | shape (the row) · typeset · colorize · harden · adapt · polish | Rule or shape (app minor; no schema) | Ken: this plan, UQ1–UQ5 |
 | **U4** — back inside the system | Seat vitals are readouts. Section heads are Mono Caps. The heading scale is stepped. Tab icons are the GM's own (UQ6). The software voice goes. Delete copy knows about Undo. Activity labels carry their values. Home's table card leads with sessions, cast and when it last changed. The seat copy has one name and one tab bar, and its inert buttons read as inert | 27–37 | typeset · clarify · polish | Fix (app patch) | U1 merged |
 | **U2** — Tonight | One strip in 258's bar, shown while an encounter runs or a session is open: round and actor, the current thread, the clocks within two of full, who's down, and *Unexported* (UQ7). A table opens at the top. Jot files to today's session, or else to the latest one not closed out (UQ3). A live session folds its debrief until Close out. Close out ends on its award summary and an Export (UQ8). Clocks show "4 of 6" and tick from any list | 9–15 | shape (the strip) · layout · distill · onboard (close-out's end) · polish | Rule or shape (app minor; Jot's rule is engine, no schema) | U4 merged |
 | **U3** — read first | Cast members, places, factions, threads and sessions open as a dossier: the name in the display face, a summary line, then the line, what they want and if pushed, as prose; the stat block as readouts; their clocks first. **Edit** turns the page into today's form (UQ2). Notes is a list of titles that opens one at a time. Add sits below the content. Grids, breadcrumbs and Sessions' order are made consistent | 16–26 | shape (the dossier) · distill · layout · typeset · polish · **document** (after merge: GM components into DESIGN.md) | Rule or shape (app minor; no schema) | U2 merged |
@@ -182,7 +183,7 @@ Each has a default. A question with a default that Ken leaves blank is answered 
 
 ## 7. Where things land
 
-The orders go in `plans/gm-at-the-table/` (made with U1's), one per session, named `U1-encounter-instrument.md`
+The orders go in [`gm-at-the-table/`](gm-at-the-table/), one per session, named `U1-encounter-instrument.md`
 and so on, in `WORK-ORDERS.md`'s fifteen sections (U4's folded to a page). The critique snapshots go in
 `.impeccable/critique/`, committed. When U5 merges, this plan closes to `plans/archive/` with a line in
 `log/shipped.md`, and gm-mode.md's *Still to build* row for it is struck.
