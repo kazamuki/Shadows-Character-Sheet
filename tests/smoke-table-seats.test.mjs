@@ -30,14 +30,36 @@ const DEZ_TAG = "TAG-AAAA-AAAA-AAAA", WREN_TAG = "TAG-BBBB-BBBB-BBBB";
 const dez = (updated = "2026-10-02T10:00:00.000Z") => charFile("Dez", updated, DEZ_TAG);
 const wren = (updated = "2026-10-02T10:00:00.000Z") => charFile("Wren", updated, WREN_TAG);
 
+/** The import a file input started, kept as it runs: the page drops seatImport's promise, so this wraps the global once. */
+function keepImports(app) {
+  const w = app.window;
+  if (!w.__keptImport) {
+    const run = w.seatImport;
+    w.seatImport = (...a) => (w.__keptImport.last = run(...a));
+    w.__keptImport = { last: null };
+  }
+  return w.__keptImport;
+}
+/** Wait until the import has finished, or stopped on the older-copy ask (it finishes once the ask is answered). */
+async function importSettled(app) {
+  const kept = keepImports(app), started = Date.now();
+  let done = false;
+  kept.last.then(() => { done = true; }, () => { done = true; });
+  while (!done && !app.$("#modal[open]")) {
+    if (Date.now() - started > 10000) throw new Error("the import neither finished nor asked within 10s");
+    await tick(5);
+  }
+}
 /** Hand files to an input the way the browser does, and wait for the import to finish. */
 async function pickFiles(app, sel, files) {
-  const input = app.$(sel);
+  const input = app.$(sel), kept = keepImports(app);
   const list = files.map((f, i) => f instanceof app.window.File ? f
     : new app.window.File([typeof f === "string" ? f : JSON.stringify(f)], `file${i}.json`, { type: "application/json" }));
   Object.defineProperty(input, "files", { value: list, configurable: true });
+  kept.last = null;
   input.dispatchEvent(new app.window.Event("change", { bubbles: true }));
-  await tick(80);
+  assert.ok(kept.last, "the change started an import");
+  await importSettled(app);
 }
 // A card with a copy opens the read-only sheet (Decision 256); Seat goes on to the seat's page.
 const seatPage = (app, tag) => { app.click(`[data-seat="${tag}"]`); app.click("[data-roseat]"); };
@@ -122,12 +144,12 @@ test("255: an older copy asks; Cancel writes nothing; Use takes it", async () =>
   assert.match(app.$("#modal .modal-body").textContent, /This file was saved .+; the table's copy is from /);
   const before = stored(app, "JSON.stringify(S.table.copies)");
   app.click("#modal [data-modalclose]");
-  await tick(30);
+  await importSettled(app);
   assert.equal(updated(), "2026-10-05T10:00:00.000Z");
   assert.equal(stored(app, "JSON.stringify(S.table.copies)"), before, "Cancel writes nothing");
   await pickFiles(app, importBtn(app, "Brogan"), [dez("2026-10-01T10:00:00.000Z")]);
   app.click("#modal [data-askyes]");
-  await tick(60);
+  await importSettled(app);
   assert.equal(updated(), "2026-10-01T10:00:00.000Z");
   assert.match(app.$("#undotoast").textContent, /Updated Dez/);
   assert.deepEqual(app.errors, []);

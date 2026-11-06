@@ -1380,3 +1380,10 @@ encounter, read-only (Decision 188).
   page, in *Who knows what* (179) and on a session's page (S5a).
 
 *Built as GM mode S16 (2026-10-23): table schema 0.13, switched off. Ended encounters are read-only, so a fight's name changes only before it ends.*
+
+**W135 — Main's Health card is over the phone budget.** → *fixed in `phone-check`, not the layout (2026-11-06)* *Ken, from P16's review · 🔎 · Fix · raised 2026-10-24*\
+**Plan:** none yet
+
+On a phone, the Main tab's Health card starts 35–37% of the way down the screen (311px at 390×844, 297px on the touch phone) against `phone-check`'s 30% budget (W45). It's the only red row in `npm run phone-check`, and it's red on `main` before P16: P16 doesn't touch Main. Find what grew above the card (the hero, the vitals row, the pin button) and bring it back under, or move the budget with a decision if the card's place is right.
+
+*Fixed 2026-11-06 (Fix tier, no app change):* the layout never moved. P21 (`5c1a9d4`) seeded Quick Study, a General Major, on phone-check's Arcanist, and since Decision 217 a General Major on an Arcanist raises a load finding that sits atop every tab until dismissed. phone-check now dismisses it as a player would: Health starts at 28% on the phone and the touch phone.
