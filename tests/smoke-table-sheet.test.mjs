@@ -293,11 +293,15 @@ test("U4: the seat copy names its seat once, and its disabled controls read as d
   assert.equal(app.$(".ro-tabs").getAttribute("aria-labelledby"), "ro-tabs-l");
   // A disabled control looks disabled: dimmed, with a dashed edge.
   goTab(app, "main");
-  const off = app.$(".ro-sheet button:disabled");
-  assert.ok(off, "no disabled control on Main");
+  const off = app.$(".ro-sheet .btn:disabled");
+  assert.ok(off, "no disabled .btn on Main");
   const cs = app.window.getComputedStyle(off);
-  assert.ok(Number(cs.opacity) < 1, "a disabled control isn't dimmed (opacity " + cs.opacity + ")");
+  assert.ok(Number(cs.opacity) < 1, "a disabled .btn isn't dimmed (opacity " + cs.opacity + ")");
   assert.equal(cs.borderStyle, "dashed");
+  // The readers the sheet draws as buttons carry the numbers, so they stay at full strength (contrast).
+  const tiles = app.$$(".ro-sheet button.cond.act, .ro-sheet button.vpill.act");
+  assert.ok(tiles.length, "no vitals tile on Main");
+  for (const r of tiles) assert.equal(app.window.getComputedStyle(r).opacity, "1", "a reader is dimmed: " + r.className);
   assert.match(app.$("#main").textContent, /Read only/);
   assert.deepEqual(app.errors, []);
 });

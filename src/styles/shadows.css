@@ -1652,7 +1652,9 @@ h2.city-name{font-size:1.15rem}
 .ro-tabs .tab.active{border-color:var(--cyan); color:var(--cyan)}
 .ro-sheet{min-width:0}
 /* No hover at all: the sheet's hover rules don't skip :disabled, and overriding them one by one loses the fill. */
-.ro-sheet button:disabled, .ro-sheet select:disabled, .ro-sheet input:disabled{cursor:default; pointer-events:none; opacity:.55; border-style:dashed}
+.ro-sheet button:disabled, .ro-sheet select:disabled, .ro-sheet input:disabled{cursor:default; pointer-events:none}
+/* U4: only the controls that act look disabled. The readers the sheet draws as buttons (the vitals tiles and pills, Progression's toggles) stay at full strength: they carry the numbers the copy exists to show. */
+.ro-sheet :is(.btn, .cond-chip.add, select, input):disabled{opacity:.55; border-style:dashed}
 /* A read-only field keeps its edge (still --frame, so the same contrast) and takes a different fill and a dashed line: it reads as shown, not as typed. */
 .ro-sheet input[readonly], .ro-sheet textarea[readonly]{background:var(--panel-2); border-style:dashed; cursor:default}
 
