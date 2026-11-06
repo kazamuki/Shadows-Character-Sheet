@@ -2428,7 +2428,12 @@ test("U1: opening a running encounter scrolls the acting row into view", () => {
 test("U4: Activity says what a hit, a Take, a Heal and a clock did", () => {
   const app = hitApp();
   const labels = () => JSON.parse(app.window.eval("JSON.stringify(S.table.audit.map(e => e.label))"));
-  const ask = (name, sign, n) => { app.click(`[data-edmg="${rowId(encRowByName(app, name))}|${sign}"]`); app.$("[data-edmgn]").value = String(n); submit(app, "[data-edmgform]"); };
+  // Take sits under the row's More (U1), so a press on it opens More first; jsdom would let a closed one through.
+  const ask = (name, sign, n) => {
+    const b = app.$(`[data-edmg="${rowId(encRowByName(app, name))}|${sign}"]`), more = b.closest("[data-emore]");
+    if (more){ more.open = true; more.dispatchEvent(new app.window.Event("toggle")); }
+    assert.equal(!!b.closest("details:not([open])"), false, "the button is inside a closed More");
+    app.click(`[data-edmg="${rowId(encRowByName(app, name))}|${sign}"]`); app.$("[data-edmgn]").value = String(n); submit(app, "[data-edmgform]"); };
   // A hit carries the preview's own words, read before Apply from the same function the panel shows.
   hitBtn(app, "Dez").click();
   fillHit(app, 12, "ballistic", "Rook's SMG");
