@@ -13133,3 +13133,47 @@ test("Decision 268: roundHeals, resolveReset, surgeable and surgePower are total
   same([Engine.roundHeals(bare), Engine.surgeable(bare), Engine.surgePower(bare, "vitality-surge", 1).ok], [[], [], false]);
   same([Engine.roundHeals(null), Engine.surgeable(null)], [[], []]);
 });
+
+// ── U1: what a row needs to draw itself ───────────────────────────────────
+test("U1: a row's health carries hpPer, and a row that names another reads A and B by the order added", () => {
+  const { t, e } = encTable();
+  const wren = addPc(t, e, "Wren", { hp: 30, levels: 6 });
+  const odd = addPc(t, e, "Odd", { hp: 31, levels: 6 });
+  const bare = addPc(t, e, "Bare");
+  const v = Engine.encounterView(t, e, []);
+  const row = id => v.rows.find(r => r.row.id === id);
+  assert.equal(row(wren).health.hpPer, 5);
+  assert.equal(row(odd).health.hpPer, null, "HP that doesn't divide by its levels has no whole Health Level");
+  assert.equal(row(bare).health.hpPer, null);
+  // An NPC with a BOD reads its stand-in's hpPer, which is what hlState says.
+  const cast = Engine.addParticipant(t, e, { kind: "cast", id: t.cast.find(n => n.name === "Dez").id }).id;
+  assert.equal(Engine.encounterView(t, e, []).rows.find(r => r.row.id === cast).health.hpPer > 0, true);
+  // Labels: one name is itself; two (case and spaces aside) get A and B by when they were added, not by turn.
+  assert.deepEqual(v.rows.map(r => r.label), v.rows.map(r => r.name), "no duplicates, no letters");
+  const a = addPc(t, e, "Reclaim cleaner"), b = addPc(t, e, "  reclaim CLEANER"), c = addPc(t, e, "Reclaim cleaner");
+  assert.ok(Engine.editParticipant(t, e, a, { order: 1 }).ok); assert.ok(Engine.editParticipant(t, e, c, { order: 20 }).ok);
+  const w = Engine.encounterView(t, e, []);
+  const label = id => w.rows.find(r => r.row.id === id).label;
+  assert.equal(w.rows[0].row.id, c, "C leads the turn order");
+  assert.deepEqual([label(a), label(b), label(c)], ["Reclaim cleaner A", "reclaim CLEANER B", "Reclaim cleaner C"]);
+  assert.equal(label(wren), "Wren");
+  // Nothing is stored.
+  assert.doesNotMatch(JSON.stringify(t), /cleaner [ABC]"/);
+});
+
+test("U1: past Z the letters are numbers, and a removed cast member still counts so no letter shifts", () => {
+  const { t, e } = encTable();
+  const ids = Array.from({ length: 28 }, () => addPc(t, e, "Goon"));
+  const labels = () => Engine.encounterView(t, e, []).rows.map(r => r.label);
+  const byId = Object.fromEntries(Engine.encounterView(t, e, []).rows.map(r => [r.row.id, r.label]));
+  assert.equal(byId[ids[0]], "Goon A"); assert.equal(byId[ids[25]], "Goon Z");
+  assert.equal(byId[ids[26]], "Goon 27"); assert.equal(byId[ids[27]], "Goon 28");
+  assert.equal(new Set(labels()).size, 28);
+  // A cast member removed from the cast keeps its row, and its letter.
+  const dez = t.cast.find(n => n.name === "Dez");
+  const r1 = Engine.addParticipant(t, e, { kind: "cast", id: dez.id }).id, r2 = addPc(t, e, "Dez");
+  assert.deepEqual([Engine.encounterView(t, e, []).rows.find(r => r.row.id === r1).label, Engine.encounterView(t, e, []).rows.find(r => r.row.id === r2).label], ["Dez A", "Dez B"]);
+  Engine.removeCastMember(t, dez.id);
+  const after = Engine.encounterView(t, e, []).rows;
+  assert.equal(after.find(r => r.row.id === r2).label, "Dez B", "a letter never shifts when the other is struck through");
+});

@@ -1575,3 +1575,30 @@ test("Decision 268: a file's Withering and Aberrations can't make a Reset heal p
   Engine.applyReset(ab, {}, {});
   assert.deepEqual(ab.trackers.conditions.map(c => c.id), ["bleeding"]);
 });
+
+// ── U1: a row's drawn figures and label are total over a hostile table ─────
+test("U1: encounterView over hostile rows gives hpPer null or a positive number and a string label, even for a 10,000-character duplicate name", () => {
+  const t = Engine.newTable(P("tbl.name"));
+  const long = "n".repeat(10000);
+  const bad = ["x", -3, 1e400, { x: 1 }, [], null, "1e400", 0];
+  t.encounters = [{ id: "EN-ABCDEFGH", name: "e", status: "planned", rows: [
+    ...bad.map(v => ({ kind: "pc", name: long, hp: v, levels: v, damage: "x" })),
+    ...bad.map(v => ({ kind: "pc", name: P("row.pc"), hp: 30, levels: v, damage: v })),
+    { kind: "entry", name: long, block: { stats: { BOD: "x" } }, damage: -3 },
+    { kind: "entry", name: long, block: { stats: { BOD: 1e400 } } },
+  ] }];
+  const m = Engine.migrateTable(t), v = Engine.encounterView(m, m.encounters[0].id, []);
+  assert.ok(v.rows.length >= 18);
+  for (const r of v.rows) {
+    assert.ok(r.health.hpPer === null || (typeof r.health.hpPer === "number" && r.health.hpPer > 0 && Number.isFinite(r.health.hpPer)), `hpPer ${r.health.hpPer}`);
+    assert.equal(typeof r.label, "string");
+    assert.ok(r.label.length > 0);
+  }
+  const dups = v.rows.filter(r => r.name === long);
+  assert.equal(new Set(dups.map(r => r.label)).size, dups.length, "each duplicate is told apart");
+  const app = boot({ storage: { "shadows.feature.gm": "on", ["shadows.table.v1." + m.meta.id]: { table: m, section: "encounters", changed: "2026-10-05T10:00:00.000Z", exported: null } } });
+  app.$("[data-topen]").click();
+  app.window.eval(`S.encOpen = ${JSON.stringify(m.encounters[0].id)}; renderTable();`);
+  assert.equal(app.$$("[data-erow]").length, v.rows.length, `rows drawn (tab ${app.window.eval("S.tsection")}, open ${app.window.eval("S.encOpen")})`);
+  assert.deepEqual(app.errors, []);
+});

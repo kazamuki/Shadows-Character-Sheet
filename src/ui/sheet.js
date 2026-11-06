@@ -219,8 +219,9 @@ function hlMiniHtml(ch){
 
 // One entry per Health Level, the way every track draws it (Decision 99):
 // damage empties levels from the left, Massive removes them from the right.
-function hlCells(ch){
-  const hs=Engine.hlState(ch);
+function hlCells(ch){ return hlCellsOf(Engine.hlState(ch)); }
+// The same cells from the four numbers they need, for a row that has no character (U1): { levels, hpPer, damage, massive }.
+function hlCellsOf(hs){
   return Array.from({length:hs.levels}, (_,i)=>{
     if (i >= hs.levels - hs.massive) return { massive:true, gone:true, dmg:hs.hpPer, left:0, frac:1 };
     const dmg=Math.max(0, Math.min(hs.hpPer, hs.damage - i*hs.hpPer));

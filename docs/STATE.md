@@ -1,7 +1,7 @@
 # State of the build
 
 **Updated:** 2026-11-05
-**Versions:** app `0.62.0` · game data `0.53` · character schema `0.34` · table schema `0.19` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.63.0` · game data `0.53` · character schema `0.34` · table schema `0.19` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -109,7 +109,7 @@ is the authority on a flag's full text.
 | **Vampire** — `0413` | ✅ built (Decisions 200–202, 215, 223, 240, 264, 266): Bloodlines, the Thirst, 22 Majors; Base Powers and CP as the 2026-10-22 book prints; sustained powers run (Start/Stop, Turn Reset charges them) | Nobody. Whether it leaves `draft` is Ken's (the chapter dropped "Under Construction") |
 | **Werewolf** — `0414` | ✅ built (Decisions 195–197, 199, 215, 240, 264, 266): Origins, Form, Call of the Wild, its own Majors; Base Powers and CP as the book prints; its powers run only in Werewolf Form | Nobody. As the Vampire: `draft` is Ken's call |
 | **Arcanist / Magic** | 🔶 spells, Cascade, Aberrations, magic on the sheet, holding a spell (Decision 224), Disciplines as Boosts with their prerequisites (Decision 265) all built · Origins still `draft` | Deighton: **F43** (the held spell's check). Deighton + Scott + Bill + Ken: Origins and spheres/implements, after the four-way comparison; not blocking |
-| **GM mode** — `plans/gm-mode.md` | 🔶 **launched in 0.57.0** (260): built through S3d (players, seats, the card spread, the read-only sheet and a PC row that takes the whole hit on its seat's copy), S7, S10f, S12b, S18 (a table's own frame), S19 (F and J), S20 (Wave Initiative by one roll a side, 261, in 0.58.0) and S21 (the crew as buttons in an encounter and in Who was there, 262, in 0.59.0). From here a GM session ships visible, with changelog lines and an app bump | Scott answered his questions 2026-11-03; what's left for him is to-dos (§9's table: Codex v2 for S12a and S17, the Site Profiles, the print files). Next: Ken's pick from `plans/gm-mode.md`'s *Still to build*, where his answers added WILL, Wounds, Off-screen pay, CRANK rep and Reference+ |
+| **GM mode** — `plans/gm-mode.md` | 🔶 **launched in 0.57.0** (260): built through S3d (players, seats, the card spread, the read-only sheet and a PC row that takes the whole hit on its seat's copy), S7, S10f, S12b, S18 (a table's own frame), S19 (F and J), S20 (Wave Initiative by one roll a side, 261, in 0.58.0) and S21 (the crew as buttons in an encounter and in Who was there, 262, in 0.59.0) and U1 (the encounter as an instrument, 269, in 0.63.0). From here a GM session ships visible, with changelog lines and an app bump | Scott answered his questions 2026-11-03; what's left for him is to-dos (§9's table: Codex v2 for S12a and S17, the Site Profiles, the print files). Next: Ken's pick from `plans/gm-mode.md`'s *Still to build*, where his answers added WILL, Wounds, Off-screen pay, CRANK rep and Reference+ |
 | **The book** — `plans/crb-catch-up.md` | 📋 what the CRB still needs from the sheet, by chapter | Ken. The sheet-from-book syncs are closed (`plans/archive/`); the next mirror refresh gets a new one |
 | **Print sheet — visual system** — `plans/print-sheet-scotts-look.md` | 📋 Scott's export landed 2026-09-23 (landscape) · front-page restyle proposed and mocked up · one known cosmetic defect | Ken: approve the plan. Scott said yes to PQ1 (embed Cerulean Nights) and PQ2 (all his artwork) and answered PQ4, 2026-11-03; he still has to send the files. Deighton: PQ3 (do the stat groups mean anything). The frame/texture print defect blocks on no one |
 
@@ -147,7 +147,7 @@ rev 9's `C1`–`C3` are still forward notes.
   round) are in `reference/meeting-2026-10-23.md`, with five details for Deighton.
   The player sheet's plan (`plans/archive/sheet-wishlist.md`) closed 2026-10-24, P1–P21 built.
 - **The powers-that-run plan** (`plans/powers-that-run.md`, approved by Ken 2026-11-04): H1 (sustained powers run, Decision 266), H2 (powers that answer a hit, Decision 267) and H3 (powers that heal, Decision 268) are built. What's left of W132 is Battle Hardened and Elemental Blood, which wait on the book (its Conditions and elements aren't the sheet's: plan §6).
-- **The GM-at-the-table plan** (`plans/gm-at-the-table.md`, approved by Ken 2026-11-05, UQ1–UQ8 on their defaults): U1 (the encounter row) first, then U4, U2, U3, U5. **U1's order is approved** (`plans/gm-at-the-table/U1-encounter-instrument.md`, Ken 2026-11-05, UQ9–UQ12 on their defaults) and is next to build.
+- **The GM-at-the-table plan** (`plans/gm-at-the-table.md`, approved by Ken 2026-11-05, UQ1–UQ8 on their defaults): U1 (the encounter row) first, then U4, U2, U3, U5. **U1 is built** (269, app 0.63.0; its order `plans/gm-at-the-table/U1-encounter-instrument.md`, UQ9–UQ12 on their defaults); **U4 is next**.
 - **W90**, cybernetics: six questions before a plan.
 
 **Ken alone:** F12 and F32, W38's plan (`plans/two-tabs-one-character.md`,

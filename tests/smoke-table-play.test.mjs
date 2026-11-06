@@ -174,13 +174,13 @@ test("Decision 190: Add to cast and Add to the encounter open; two planned, the 
   app.window.eval(`Engine.addEncounter(S.table, { name: "First" }); Engine.addEncounter(S.table, { name: "Second" });`);
   entryButton(app, "gull").click();
   assert.equal(app.$("[data-tuse]").textContent, "Add to cast");
-  assert.equal(app.$("[data-tenc]").textContent, "Add to Second", "with none open, the newest planned (211)");
+  assert.equal(app.$("[data-tenc]").textContent, "Add to encounter: Second", "with none open, the newest planned (211)");
   app.click('[data-tsec="encounters"]');
   app.$$("[data-enc-open]").find(b => b.textContent === "Second").click();
   app.click('[data-tsec="threats"]');
   assert.equal(app.window.eval("S.threatOpen"), null, "the Threats tab kept its page across a tab switch");
   entryButton(app, "gull").click();
-  assert.equal(app.$("[data-tenc]").textContent, "Add to Second");
+  assert.equal(app.$("[data-tenc]").textContent, "Add to encounter: Second");
   const btn = app.$("[data-tenc]"); btn.focus();
   app.click("[data-tenc]"); app.click("[data-tenc]");
   assert.match(app.$("#undotoast").textContent, /Gull 2 is in Second\./);
@@ -189,23 +189,23 @@ test("Decision 190: Add to cast and Add to the encounter open; two planned, the 
   assert.equal(app.doc.activeElement, btn);
   const ids = app.window.eval("S.table.encounters.map(e => e.name + ':' + e.rows.map(r => r.name).join('|'))");
   assert.deepEqual([...ids], ["Second:Gull|Gull 2", "First:"]);
-  assert.equal(app.window.eval("S.table.cast.length"), 0, "Add to the encounter touched the cast");
+  assert.equal(app.window.eval("S.table.cast.length"), 0, "Add to encounter: the encounter touched the cast");
   // A group: every member, and back on the list the button names the other one.
   app.click("[data-tback]"); app.click('[data-tview="group"]'); app.click("[data-tgroup]");
-  assert.equal(app.$("[data-tgrpenc]").textContent, "Add to Second");
+  assert.equal(app.$("[data-tgrpenc]").textContent, "Add to encounter: Second");
   app.click("[data-tgrpenc]");
   assert.match(app.$("#undotoast").textContent, /Pier Watch: 4 added to Second\./);
   assert.equal(app.window.eval("S.table.encounters[0].rows.length"), 6);
   app.click('[data-tsec="encounters"]'); app.click("[data-enc-back]");
   app.$$("[data-enc-open]").find(b => b.textContent === "First").click();
   app.click('[data-tsec="threats"]'); app.click('[data-tview="group"]'); app.click("[data-tgroup]");
-  assert.equal(app.$("[data-tgrpenc]").textContent, "Add to First");
+  assert.equal(app.$("[data-tgrpenc]").textContent, "Add to encounter: First");
   // Add to cast does what Use did.
   app.click("[data-tback]"); app.click('[data-tview="threat"]'); entryButton(app, "gull").click(); app.click("[data-tuse]");
   assert.equal(app.window.eval("S.tsection"), "cast");
   assert.equal(app.window.eval("S.table.cast.length"), 1);
   // A cast member's page offers the encounter, and Back from a row returns to it.
-  assert.equal(app.$("[data-cenc]").textContent, "Add to First");
+  assert.equal(app.$("[data-cenc]").textContent, "Add to encounter: First");
   app.click("[data-cenc]");
   assert.match(app.$("#undotoast").textContent, /Gull is in First\./);
   app.click("[data-cenc]");
@@ -376,14 +376,23 @@ test("Decision 192: Shock and At Zero show the check and the Conditions, never t
   assert.match(app.$("[data-ehitpanel]").textContent, /At zero: WILL Essence Check TN 8 TH 2\. Passed: Unconscious, Prone\. Failed: Dying\./);
   app.click("[data-ehit-apply]");
   assert.match(dez().textContent, /Down/); assert.equal(conds().length, 2);
-  // Down and hit again: At Zero is asked again; Failed is Dying; then a hit while Dying is a Death Mark.
-  hitBtn(app, "Dez").click(); fillHit(app, 20);
-  app.click('[data-ehit-ans="atZero|fail"]'); app.click("[data-ehit-apply]");
+  // A Down row offers no Hit (U1), so Dying is put on it by hand; then a hit while Dying is a Death Mark.
+  assert.equal(hitBtn(app, "Dez"), null, "a Down row has no Hit");
+  app.click(`[data-econdopen="${rowId(dez())}"]`); changeTo(app, "[data-econd-id]", "dying"); app.click("[data-econd-add]");
   assert.ok(conds().some(c => c[0] === "dying"));
   hitBtn(app, "Dez").click(); fillHit(app, 20);
   assert.match(app.$("[data-ehitpanel]").textContent, /Dying: this hit is a Death Mark\./);
   app.click("[data-ehit-apply]");
   assert.match(dez().querySelector(".enc-conds").textContent, /Death Marks 1\/3/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 192 (U1): a hit to zero with At Zero answered Failed puts Dying on the row, and Hit stays while it's Dying", () => {
+  const app = hitApp();
+  hitBtn(app, "Dez").click(); fillHit(app, 60);
+  app.click('[data-ehit-ans="atZero|fail"]'); app.click("[data-ehit-apply]");
+  assert.ok(statesOf(app)[0].rows.find(r => r.name === "Dez").conditions.some(c => c.id === "dying"));
+  assert.ok(hitBtn(app, "Dez"), "Dying: a hit is a Death Mark, so Hit stays");
   assert.deepEqual(app.errors, []);
 });
 
@@ -402,6 +411,8 @@ test("Decision 191: Massive takes Health Levels and scraps the armor; an arm on 
   type(app, "[data-ehit-damage]", "25");
   assert.equal(preview(app), "Massive: 3 Health Levels gone · Kevlar Vest scrapped");
   app.click("[data-ehit-apply]");
+  assert.match(app.$("#modal").textContent, /That's 25 against 8 Health Levels./, "25 is past twice 8 Health Levels (U1)");
+  app.click("#modal [data-askyes]");
   assert.match(dez().textContent, /5 of 8 Health Levels/);
   assert.match(dez().querySelector(".enc-armor").textContent, /^Kevlar Vest · Scrap$/);
   assert.equal(statesOf(app)[0].rows[0].massive, 3);
@@ -1689,21 +1700,21 @@ test("Decision 211: with no encounter at all, Add to a new encounter shows on a 
   app.click("[data-tenc]");
   assert.match(app.$("#undotoast").textContent, /Gull is in a new encounter, Encounter \d{4}-\d\d-\d\d\./);
   assert.equal(app.$("[data-tenc]"), btn, "the page was redrawn under the button");
-  assert.match(btn.textContent, /^Add to Encounter \d{4}-\d\d-\d\d$/);
+  assert.match(btn.textContent, /^Add to encounter: Encounter \d{4}-\d\d-\d\d$/);
   assert.equal(app.doc.activeElement, btn);
   app.click("[data-tenc]");
   assert.equal(encRows(app).length, 1);
   assert.deepEqual(encRows(app)[0].rows, ["Gull", "Gull 2"]);
   assert.equal(encRows(app)[0].status, "planned");
   app.click("[data-tback]"); app.click('[data-tview="group"]'); app.click("[data-tgroup]");
-  assert.match(app.$("[data-tgrpenc]").textContent, /^Add to Encounter /);
+  assert.match(app.$("[data-tgrpenc]").textContent, /^Add to encounter: Encounter /);
   // A cast page, with every encounter ended, reads a new one.
   app.window.eval(`S.table.encounters[0].status = "ended"`);
   app.window.eval(`Engine.addCastMember(S.table, { name: "Dez" }); S.tsection = "cast"; S.castOpen = S.table.cast[0].id; S.threatGroup = null; update();`);
   assert.equal(app.$("[data-cenc]").textContent, "Add to a new encounter");
   app.click("[data-cenc]");
   assert.equal(encRows(app).length, 2);
-  assert.match(app.$("[data-cenc]").textContent, /^Add to Encounter /);
+  assert.match(app.$("[data-cenc]").textContent, /^Add to encounter: Encounter /);
   assert.deepEqual(app.errors, []);
 });
 
@@ -1715,8 +1726,8 @@ test("Decision 211: a Threats card adds to the cast and the encounter without op
   const card = () => app.$(`[data-tcard="${PACK_ID}|gull"]`);
   assert.equal(card().querySelectorAll("button").length, 3);
   const castBtn = card().querySelector("[data-tcardcast]"), encBtn = card().querySelector("[data-tcardenc]");
-  assert.equal(castBtn.textContent, "Add to cast"); assert.equal(encBtn.textContent, "Add to Dock fight");
-  assert.equal(encBtn.getAttribute("aria-label"), "Add Gull to Dock fight");
+  assert.equal(castBtn.textContent, "Add to cast"); assert.equal(encBtn.textContent, "Add to encounter: Dock fight");
+  assert.equal(encBtn.getAttribute("aria-label"), "Add Gull to the encounter Dock fight");
   assert.equal(castBtn.getAttribute("aria-label"), "Add Gull to the cast");
   encBtn.focus();
   for (let i = 0; i < 3; i++) app.click(`[data-tcardenc="${PACK_ID}|gull"]`);
@@ -1733,7 +1744,7 @@ test("Decision 211: a Threats card adds to the cast and the encounter without op
   assert.equal(encRows(app)[0].rows.length, 4, "a card's button died after the list redrew");
   app.click('[data-tview="group"]');
   const g = app.$("[data-tcard] [data-tcardgrp]");
-  assert.equal(g.textContent, "Add to Dock fight");
+  assert.equal(g.textContent, "Add to encounter: Dock fight");
   assert.equal(app.$("[data-tcard] [data-tcardcast]"), null, "a group card has no Add to cast");
   app.click("[data-tcardgrp]");
   assert.match(app.$("#undotoast").textContent, /Pier Watch: 4 added to Dock fight\./);
@@ -1748,13 +1759,13 @@ test("Decision 211: a card's button names the running encounter, then the newest
     Engine.addEncounter(S.table, { name: "New" });`);
   threatsTab(app);
   const label = () => app.$("[data-tcardenc]").textContent;
-  assert.equal(label(), "Add to Run");
+  assert.equal(label(), "Add to encounter: Run");
   app.window.eval(`S.table.encounters.find(e => e.name === "Run").status = "ended"; update();`);
-  assert.equal(label(), "Add to New");
+  assert.equal(label(), "Add to encounter: New");
   app.click('[data-tsec="encounters"]');
   app.$$("[data-enc-open]").find(b => b.textContent === "Old").click();
   threatsTab(app);
-  assert.equal(label(), "Add to Old", "the open encounter comes first");
+  assert.equal(label(), "Add to encounter: Old", "the open encounter comes first");
   assert.deepEqual(app.errors, []);
 });
 
@@ -2170,5 +2181,233 @@ test("241 (review): the wrap-up's sentence follows a Keep's name as it's typed, 
   assert.match(sent(), /^Wren and Rook fought Gull in Job on /, "a cleared name didn't read as the row's");
   app.click(`[data-ew-line="${rid}"]`); app.click(`[data-ew-line="${rid}"]`);   // a redraw reads the draft the same way
   assert.match(sent(), /^Wren and Rook fought Gull in Job on /);
+  assert.deepEqual(app.errors, []);
+});
+
+// ── U1: the encounter as an instrument ─────────────────────────────────
+// hitApp: Dez (cast, BOD 8 → 8 Health Levels of 5, acts first), Wren (PC, 30 HP over 6 levels).
+// A closed <details> hides its controls in a browser but not in jsdom, so these helpers say where a control is.
+const u1Outside = (li, sel) => [...li.querySelectorAll(sel)].filter(b => !b.closest("[data-emore]"));
+const u1Inside = (li, sel) => [...li.querySelectorAll(`[data-emore] ${sel}`)];
+const u1Later = app => new Promise(r => app.window.setTimeout(r, 60));
+const u1Dialog = app => app.$("#modal[open]");
+const u1Take = (app, id, n) => { app.click(`[data-edmg="${id}|1"]`); app.$("[data-edmgn]").value = String(n); submit(app, "[data-edmgform]"); };
+
+test("U1: a row's HP is a readout over its Health Levels, and its sentence is unchanged", () => {
+  const app = hitApp();
+  const wid = rowId(encRowByName(app, "Wren"));
+  u1Take(app, wid, 12);
+  const li = encRowByName(app, "Wren");
+  const painLabel = app.D.resources.healthLevels.painLevels.find(p => p.hlLostThreshold === 2).label;
+  assert.equal(li.querySelector(".enc-health").textContent, `HP 18 / 30 · 12 taken · 4 of 6 Health Levels · ${painLabel}`);
+  const segs = [...li.querySelectorAll(".hl-mini .seg")];
+  assert.equal(segs.length, 6, "one segment per Health Level");
+  assert.equal(segs.filter(s => s.classList.contains("gone")).length, 2, "two emptied");
+  assert.equal(li.querySelector(".hl-mini").getAttribute("aria-hidden"), "true");
+  const hp = li.querySelector(".enc-health .enc-hp");
+  assert.ok(hp, "the HP figure has the readout class");
+  assert.equal(hp.textContent, "HP 18 / 30");
+  assert.ok(!hp.classList.contains("down"));
+  assert.equal(encRowByName(app, "Dez").querySelectorAll(".hl-mini .seg").length, 8);
+  // Down: the readout says Down, and every segment is gone.
+  u1Take(app, wid, 30);
+  const down = encRowByName(app, "Wren");
+  assert.match(down.querySelector(".enc-health .enc-hp.down").textContent, /^Down/);
+  assert.equal(down.querySelectorAll(".hl-mini .seg.gone").length, 6);
+  assert.deepEqual(app.errors, []);
+});
+
+test("U1: Massive Health Levels draw hatched from the right, and a row with no Health Levels draws none", () => {
+  const app = hitApp();
+  const wren = rowId(encRowByName(app, "Wren"));
+  app.click(`[data-ehit="${wren}"]`); app.click('[data-ehit-cat="massive"]'); type(app, "[data-ehit-damage]", "2"); app.click("[data-ehit-apply]");
+  const segs = [...encRowByName(app, "Wren").querySelectorAll(".hl-mini .seg")];
+  assert.deepEqual(segs.map(s => s.classList.contains("massive")), [false, false, false, false, true, true]);
+  const bare = hitApp({ stats: {} });
+  assert.equal(encRowByName(bare, "Dez").querySelector(".hl-mini"), null);
+  assert.equal(encRowByName(bare, "Dez").querySelector(".enc-health").textContent, "0 taken");
+  assert.deepEqual(app.errors.concat(bare.errors), []);
+});
+
+test("U1: the acting row says Now, and Next keeps focus and announces the next", async () => {
+  const app = hitApp();
+  assert.equal(app.$$(".enc-now").length, 1);
+  assert.equal(app.$(".enc-now").textContent, "Now");
+  assert.ok(app.$(".enc-now").closest("[aria-current=step]"), "Now sits on the acting row");
+  assert.equal(app.$(".enc-status").textContent, "Round 1 · Dez");
+  app.click("[data-enext]");
+  await u1Later(app);
+  assert.equal(app.doc.activeElement, app.$("[data-enext]"));
+  assert.equal(app.$$(".enc-now").length, 1);
+  assert.equal(app.$(".enc-now").closest("[aria-current=step]").querySelector(".enc-name").textContent, "Wren");
+  assert.equal(app.$(".enc-status").textContent, "Round 1 · Wren");
+  const a = app.$("#announcer");
+  assert.ok(a && !app.$("#main").contains(a), "the region is outside what a redraw replaces");
+  assert.equal(a.textContent, "Wren acts");
+  app.click("[data-enext]");
+  await u1Later(app);
+  assert.equal(app.$("#announcer"), a, "the same node");
+  assert.match(app.$("#main").textContent, /Reset: round 1 ends/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("U1: a row's own buttons are Hit and Heal; the rest are under More", () => {
+  const app = hitApp();
+  const li = encRowByName(app, "Dez"), id = rowId(li);
+  const own = [...li.querySelectorAll(".enc-acts > button")];
+  assert.deepEqual(own.map(b => b.dataset.ehit !== undefined ? "hit" : b.dataset.edmg), ["hit", `${id}|-1`]);
+  assert.equal(own[0].textContent, "Hit"); assert.ok(own[0].classList.contains("primary"));
+  assert.equal(own[1].textContent, "Heal");
+  assert.equal(u1Outside(li, "[data-edmg$='|1']").length, 0, "Take is under More");
+  assert.equal(u1Outside(li, "[data-econdopen]").length, 0, "Add a Condition is under More");
+  assert.equal(u1Outside(li, "[data-edelay-open]").length, 0, "Delay is under More");
+  const more = li.querySelector("[data-emore]");
+  const order = [...more.querySelectorAll("button, input, select")].map(el => el.dataset.edmg ? "take" : el.dataset.econdopen ? "cond" : el.dataset.edelayOpen ? "delay" : el.dataset.ename !== undefined ? "name" : el.dataset.elast ? "last" : el.dataset.eout ? "out" : el.dataset.erm ? "remove" : "?");
+  assert.deepEqual(order.slice(0, 3), ["take", "cond", "delay"]);
+  assert.equal(order.at(-1), "remove");
+  assert.equal(u1Inside(encRowByName(app, "Wren"), "[data-edelay-open]").length, 0, "Delay is the acting row's only");
+  // A press inside More keeps More open through the redraw, and focus returns to it.
+  more.open = true; more.dispatchEvent(new app.window.Event("toggle"));
+  app.click(`[data-elast="${id}"]`);
+  assert.ok(encRowByName(app, "Dez").querySelector("[data-emore]").open, "More stayed open");
+  assert.equal(app.doc.activeElement, app.$(`[data-elast="${id}"]`));
+  assert.deepEqual(app.errors, []);
+});
+
+test("U1: a waiting row shows Act now before Hit", () => {
+  const app = hitApp();
+  const id = rowId(encRowByName(app, "Dez"));
+  app.click(`[data-edelay-open="${id}"]`); type(app, "[data-edelay-until]", "the door opens"); submit(app, "[data-edelayform]");
+  const li = encRowByName(app, "Dez");
+  assert.equal(u1Inside(li, "[data-eacnow]").length, 0);
+  assert.deepEqual([...li.querySelectorAll(".enc-acts > button")].map(b => b.dataset.eacnow !== undefined ? "act" : b.dataset.ehit !== undefined ? "hit" : "heal"), ["act", "hit", "heal"]);
+  assert.deepEqual(app.errors, []);
+});
+
+test("U1: a row that can't be hit shows Take", () => {
+  const app = hitApp({ stats: {} });
+  const li = encRowByName(app, "Dez"), id = rowId(li);
+  assert.equal(li.querySelectorAll("[data-ehit]").length, 0, "no BOD, no Hit");
+  const take = u1Outside(li, `[data-edmg="${id}|1"]`);
+  assert.equal(take.length, 1, "Take stands where Hit would be");
+  assert.equal(take[0].textContent, "Take");
+  assert.ok(take[0].classList.contains("primary"));
+  assert.equal(u1Inside(li, `[data-edmg="${id}|1"]`).length, 0, "Take isn't also under More");
+  assert.equal(u1Outside(li, `[data-edmg="${id}|-1"]`).length, 1, "Heal stays");
+  assert.deepEqual(app.errors, []);
+});
+
+test("U1: a Down row offers Heal, and Hit only while Dying", () => {
+  const app = hitApp();
+  const wid = rowId(encRowByName(app, "Wren"));
+  assert.equal(u1Outside(encRowByName(app, "Wren"), "[data-ehit]").length, 1);
+  u1Take(app, wid, 30);
+  let li = encRowByName(app, "Wren");
+  assert.equal(li.querySelectorAll("[data-ehit]").length, 0, "Down: no Hit anywhere on the row");
+  assert.equal(u1Outside(li, `[data-edmg="${wid}|-1"]`).length, 1, "Down: Heal");
+  assert.ok(li.querySelector("[data-emore]"), "Down: More");
+  app.click(`[data-econdopen="${wid}"]`); changeTo(app, "[data-econd-id]", "dying"); app.click("[data-econd-add]");
+  li = encRowByName(app, "Wren");
+  assert.equal(u1Outside(li, "[data-ehit]").length, 1, "Dying: a hit is a Death Mark, so Hit is back");
+  assert.ok(li.querySelector(".enc-conds"), "Conditions stay visible on a Down row");
+  assert.deepEqual(app.errors, []);
+});
+
+test("U1: two rows with one name read A and B, and nothing stores it", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T"); encTab(app); newEncounter(app, "Dock");
+  addPcRow(app, "Reclaim cleaner"); addPcRow(app, "Dez"); addPcRow(app, "reclaim cleaner ");
+  const [a, , b] = app.window.eval("S.table.encounters[0].rows.map(r => r.id)");
+  const labels = () => Object.fromEntries(app.$$("[data-erow]").map(li => [rowId(li), li.querySelector(".enc-name").textContent]));
+  assert.equal(labels()[a], "Reclaim cleaner A");
+  assert.equal(labels()[b], "reclaim cleaner B", "the name as typed, then the letter");
+  // The letters go by when the rows were added, not by Combat Sense: B first in turn order is still B.
+  changeTo(app, `[data-eorder="${a}"]`, "1"); changeTo(app, `[data-eorder="${b}"]`, "20");
+  assert.equal(app.$$("[data-erow]")[0].dataset.erow, b, "B leads the turn order");
+  assert.equal(labels()[a], "Reclaim cleaner A"); assert.equal(labels()[b], "reclaim cleaner B");
+  // Nothing stores the letter, and the Reset panel draws it.
+  const stored = JSON.stringify(statesOf(app)) + app.window.eval("JSON.stringify(S.table.audit)");
+  assert.doesNotMatch(stored, /cleaner [AB]\b/);
+  app.click("[data-enc-start]"); app.click("[data-enext]"); app.click("[data-enext]"); app.click("[data-enext]");
+  assert.match(app.$(".enc-reset").textContent, /Reclaim cleaner A/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("U1: a hit past twice the row's HP asks first; Cancel keeps the number", () => {
+  const app = hitApp();
+  const wid = rowId(encRowByName(app, "Wren"));
+  const wrenDamage = () => app.window.eval(`S.table.encounters[0].rows.find(r => r.id === ${JSON.stringify(wid)}).damage`);
+  app.click(`[data-ehit="${wid}"]`);
+  fillHit(app, 99);
+  app.click("[data-ehit-apply]");
+  const dlg = u1Dialog(app);
+  assert.ok(dlg, "a modal asks");
+  assert.match(dlg.textContent, /That's 99 against 30 HP\./);
+  assert.equal(wrenDamage(), 0, "nothing is applied while it asks");
+  dlg.querySelector(".modal-foot [data-modalclose]").click();
+  assert.equal(u1Dialog(app), null);
+  assert.equal(app.doc.activeElement, app.$("[data-ehit-damage]"), "focus returns to the damage field");
+  assert.equal(app.$("[data-ehit-damage]").value, "99", "the number is kept");
+  assert.equal(wrenDamage(), 0);
+  app.click("[data-ehit-apply]");
+  app.click("#modal [data-askyes]");
+  assert.equal(wrenDamage(), 99, "Apply it applies the hit as Apply does");
+  assert.deepEqual(app.errors, []);
+});
+
+test("U1: no ask at exactly twice the HP, and none on a row with no total", () => {
+  const app = hitApp();
+  const wid = rowId(encRowByName(app, "Wren"));
+  app.click(`[data-ehit="${wid}"]`); fillHit(app, 60); app.click("[data-ehit-apply]");
+  assert.equal(u1Dialog(app), null, "2× exactly doesn't ask");
+  assert.equal(app.$("[data-ehitpanel]"), null, "it applied");
+  const bare = boot({ storage: GM_ON });
+  runTable(bare, "T"); encTab(bare); newEncounter(bare, "E"); addPcRow(bare, "Nox"); bare.click("[data-enc-start]");
+  bare.click(`[data-ehit="${rowId(encRowByName(bare, "Nox"))}"]`); fillHit(bare, 500); bare.click("[data-ehit-apply]");
+  assert.equal(u1Dialog(bare), null, "no total, no ask");
+  assert.equal(bare.$("[data-ehitpanel]"), null);
+  assert.deepEqual(app.errors.concat(bare.errors), []);
+});
+
+test("U1: Massive asks past twice the Health Levels, and Enter in the damage field asks too", () => {
+  const app = hitApp();
+  const dez = rowId(encRowByName(app, "Dez"));
+  app.click(`[data-ehit="${dez}"]`); app.click('[data-ehit-cat="massive"]'); type(app, "[data-ehit-damage]", "16"); app.click("[data-ehit-apply]");
+  assert.equal(u1Dialog(app), null, "16 is exactly twice 8 Health Levels");
+  app.click(`[data-ehit="${dez}"]`); app.click('[data-ehit-cat="massive"]'); type(app, "[data-ehit-damage]", "17");
+  keyIn(app, "[data-ehit-damage]", "Enter");
+  const dlg = u1Dialog(app);
+  assert.ok(dlg, "Enter asks as Apply does");
+  assert.match(dlg.textContent, /17 against 8 Health Levels/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("U1: Apply sits above the preview and the preview updates in place", () => {
+  const app = hitApp();
+  const dez = rowId(encRowByName(app, "Dez"));
+  app.click(`[data-ehit="${dez}"]`);
+  const apply = app.$("[data-ehit-apply]"), pre = app.$("[data-ehit-preview]"), N = app.window.Node;
+  assert.ok(apply.compareDocumentPosition(pre) & N.DOCUMENT_POSITION_FOLLOWING, "Apply precedes the preview");
+  assert.ok(app.$("[data-ehit-from]").compareDocumentPosition(apply) & N.DOCUMENT_POSITION_FOLLOWING, "the fields come first");
+  fillHit(app, 12);
+  assert.equal(app.$("[data-ehit-apply]"), apply, "typing didn't recreate Apply");
+  assert.equal(app.$("[data-ehit-preview]"), pre, "the preview is the same node");
+  assert.match(pre.textContent, /through/);
+  const live = pre.closest("[aria-live]");
+  assert.ok(live && live.getAttribute("aria-live") === "polite", "the preview is in a polite live region");
+  type(app, "[data-ehit-damage]", "40");
+  assert.equal(app.$("[data-ehit-apply]"), apply, "a longer preview doesn't move Apply");
+  assert.equal(app.$("[data-ehit-preview]"), pre);
+  assert.deepEqual(app.errors, []);
+});
+
+test("U1: Add to names the encounter", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T");
+  app.window.eval(`Engine.addEncounter(S.table, { name: "Docks" }); Engine.addCastMember(S.table, { name: "Dez" }); S.tsection = "cast"; S.castOpen = S.table.cast[0].id; update();`);
+  const btn = app.$("[data-cenc]");
+  assert.equal(btn.textContent, "Add to encounter: Docks");
+  app.window.eval(`S.table.encounters[0].status = "ended"; update();`);
+  assert.equal(app.$("[data-cenc]").textContent, "Add to a new encounter");
   assert.deepEqual(app.errors, []);
 });

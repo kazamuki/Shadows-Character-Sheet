@@ -110,7 +110,7 @@ test("258: a member's, an entry's and a group's Add to sit in the bar beside Bac
   // Add to goes to the encounter open, else the running one, else the newest planned (211). Dead Air has a fight
   // running, so that's where it goes; with none running it would be Docks.
   const running = app.window.eval('(S.table.encounters.find(e => e.status === "running") || { name: "Docks" }).name');
-  const to = "Add to " + running;
+  const to = "Add to encounter: " + running;
   for (const [go, attr] of [
     [() => { tab(app, "cast"); app.click("[data-copen]"); }, "data-cenc"],
     [() => { tab(app, "threats"); app.click("[data-tentry]"); }, "data-tenc"],
@@ -155,4 +155,19 @@ test("258: a bar's scroll place belongs to its page, not to the next one opened"
   app.click(`[data-copen="${ids[1]}"]`);
   assert.equal(app.$("#main .tbl-bar").scrollLeft, 0, "the second member's bar opens at the start");
   assert.notEqual(app.$("#main .tbl-bar").dataset.row, bar.dataset.row, "each page keys its own row");
+});
+
+test("U1: the encounter bar wraps and scrolls nothing sideways at phone width", () => {
+  const app = open();
+  tab(app, "encounters");
+  app.click("[data-enc-open]");
+  const bar = firstEl(app);
+  assert.ok(bar.classList.contains("enc-bar"));
+  assert.equal(bar.classList.contains("scroll-row"), false, "the bar is not a sideways scroller");
+  assert.equal(bar.getAttribute("data-row"), null, "nothing hands the bar to bindScrollRows");
+  for (const sel of ["[data-enc-back]", ".enc-status", "[data-enext]", "[data-enc-end]"]) assert.ok(bar.querySelector(sel), `${sel} is in the bar`);
+  const css = readFileSync(new URL("../src/styles/shadows.css", import.meta.url), "utf8");
+  const rule = css.split("}").map(r => r.trim()).filter(r => /^\.app\.table-mode \.enc-bar\s*\{/.test(r));
+  assert.deepEqual(rule.filter(r => /overflow-x\s*:\s*auto|flex-wrap\s*:\s*nowrap/.test(r)), [], "no table-mode rule sets the bar to scroll sideways");
+  assert.deepEqual(app.errors, []);
 });

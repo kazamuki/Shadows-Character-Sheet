@@ -53,7 +53,7 @@ test("252: the plan is the worksheet: its headings, labels and lists are the boo
   for (const h of heads) assert.ok(book.includes(h.replace(/ & /g, " & ")) || book.includes(h), `"${h}" isn't a heading of the worksheet`);
   assert.equal(heads.length, 9, "all nine headings; the Type box under Encounter Basics is left out (188)");
   const labelsShown = app.$$(".enc-plan .field > span").map(s => s.textContent);
-  for (const l of labelsShown) assert.ok(book.includes(l), `"${l}" isn't a label of the worksheet`);
+  for (const l of labelsShown) assert.ok(book.toLowerCase().includes(l.toLowerCase()), `"${l}" isn't a label of the worksheet`);
   for (const t of [...app.$$(".enc-plan .enc-prompts li")].map(li => li.textContent)) assert.ok(book.includes(t), `"${t}" isn't printed in the worksheet`);
   assert.equal(app.$$(".enc-plan ul.enc-prompts li").length, 9, "four exits and five stalls");
   assert.equal(app.$$(".enc-plan ol.enc-prompts li").length, 3, "three questions");
@@ -193,7 +193,7 @@ test("253: an Ambush by the crew: Start, then Next passes the other side in roun
   assert.ok(app.$("[data-eopening]"), "the controls stay until someone has acted");
   app.click("[data-enext]");
   assert.equal(app.$("[data-eopening]"), null, "the controls are gone after the first Next");
-  assert.match(app.$(".enc-status").textContent, /Round 1 · Ambush by The crew/);
+  assert.match(app.$(".enc-status").textContent, /Round 1 · B · Ambush by The crew/);
   assert.equal(activeName(app), "B");
   app.click("[data-enext]"); app.click("[data-enext]");
   assert.ok(app.$("[data-efinish]"), "both defenders passed: straight to Reset");
@@ -281,5 +281,28 @@ test("253: a delayed row that goes Out has no Act now", () => {
   app.window.eval(`Engine.editParticipant(S.table, S.table.encounters[0].id, "${id}", { out: true }); renderTable()`);
   assert.equal(app.$(`[data-eacnow="${id}"]`), null);
   assert.match(rowByName(app, "A").textContent, /Waiting: door/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("U1: the plan's long labels are a short label and a hint, and the read-only plan shows the label", () => {
+  const app = encApp();
+  const want = { terrain: ["Terrain", "Cover, elevation, visibility"], threads: ["New threads", "Clues, NPC attitudes"],
+    milestones: ["Character goals", "Links to goals and Milestones"], pivot: ["Quick pivot", "If the encounter goes off-script"] };
+  for (const [key, [label, hint]] of Object.entries(want)) {
+    const field = app.$(`[data-eplan="${key}"]`).closest(".field");
+    assert.equal(field.querySelector(":scope > span").textContent, label, `${key}'s label`);
+    const h = field.querySelector(".field-hint");
+    assert.ok(h, `${key} has a hint`);
+    assert.equal(h.textContent, hint);
+    assert.ok(h.id && app.$(`[data-eplan="${key}"]`).getAttribute("aria-describedby").split(/\s+/).includes(h.id), `${key}'s hint is its description`);
+    assert.equal(app.$(`[data-eplan="${key}"]`).getAttribute("placeholder"), null, "not the placeholder");
+  }
+  assert.equal(app.$$(".field-hint").length, 4, "no other field grew a hint");
+  both(app, '[data-eplan="terrain"]', "Catwalk, one door"); both(app, '[data-eplan="pivot"]', "Fire alarm");
+  addPc(app, "A"); app.click("[data-enc-start]"); app.click("[data-enc-end]"); app.click("[data-ew-end]"); app.click("[data-enc-open]");
+  const read = app.$$(".enc-plan-field");
+  assert.equal(read.find(p => p.textContent.includes("Catwalk")).querySelector("b").textContent, "Terrain");
+  assert.equal(read.find(p => p.textContent.includes("Fire alarm")).querySelector("b").textContent, "Quick pivot");
+  assert.equal(app.$(".field-hint"), null, "the read-only plan shows no hint");
   assert.deepEqual(app.errors, []);
 });

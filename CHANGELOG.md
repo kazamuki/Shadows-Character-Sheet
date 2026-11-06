@@ -23,8 +23,13 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.62.0
+## [Unreleased] — app 0.63.0
 
+- **In a fight, the one acting says Now**, and each row shows its HP over its Health Levels at a glance. Next keeps your place, says who acts, and the bar's status reads "Round 2 · Rook".
+- **Each row keeps Hit and Heal to hand; the rest is under More.** A row that can't be hit shows Take, a waiting row shows Act now, and a row that's down offers Heal and its Conditions, with Hit only while it's Dying.
+- **Two of the same enemy read A and B.** The letters are only on the page, never in the record.
+- **A hit far bigger than its target asks before it lands.** Apply and Cancel now sit above the preview, so they stay put as you type.
+- **The encounter bar wraps on a phone**, so End the encounter is always on screen. The plan's long labels are short, with the worksheet's words as a hint, and Add to names the encounter it goes to.
 - **Sustained powers run.** Start one from its card or the SFR popover and its SFR is spent; each Turn Reset spends it again, and stops it if you can't pay. Iron Hide's Natural Armor counts on a hit while it runs.
 - **A Werewolf's powers run only in Werewolf Form**, and shifting back stops them.
 - **Powers answer a hit.** While Spectral Veil or Red Mist runs, Physical damage does nothing. Null Field soaks up Elemental, Spirit and Aether damage until it's spent, and Odin's Aegis takes its bite out of one such hit for its SFR, right in Take a hit.
