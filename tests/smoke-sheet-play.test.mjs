@@ -42,7 +42,7 @@ test("Resume draft migrates the draft, like every other load path (review #3)", 
   const resumed = stored(app, { locked: false });
   assert.deepEqual([...resumed.archetypeChoices.specialization], ["arcane-fortitude"],
     "the resumed draft lost its specialization");
-  assert.equal(resumed.meta.schemaVersion, "0.33");
+  assert.equal(resumed.meta.schemaVersion, "0.34");
   // And the choice is visibly selected, not merely stored.
   assert.equal(app.$$('[data-spec].toggle').filter(b => /Chosen|Selected/.test(b.textContent)).length, 1);
 });
@@ -1998,4 +1998,108 @@ test("Decision 266 (Ken, 2026-11-05): a refused Start says why under the button,
   press(app, '[data-runtoggle="let-it-loose|start"]');
   assert.match(app.$("#undotoast").textContent, /Started Let It Loose: 4 SFR, more than your RoU of 3\./);
   assert.deepEqual(app.errors, []);
+});
+
+// ── Powers that answer a hit (H2, Decision 267, W132) ────────────────────
+function draugurSheet() {
+  const ch = lockedVampire("draugur");
+  ch.archetypeChoices.basePowers = { "spectral-veil": 1, "odins-aegis": 2 };
+  ch.archetypeChoices.powerCp = {};
+  ch.archetypeChoices.optionPicks = {};
+  ch.trackers.running = [{ id: "spectral-veil" }];
+  ch.trackers.sfr = { spent: 3, turn: 3 };
+  return ch;
+}
+function forgeFangSheet(silver = false) {
+  const ch = lockedCharacter();
+  ch.identity.archetype = "werewolf"; ch.creation.powerLevel = "street";
+  for (const id of Object.keys(ch.stats)) ch.stats[id].base = 6;
+  ch.archetypeChoices.specialization = [silver ? "wildblood" : "forge-fang"];
+  ch.archetypeChoices.basePowers = silver ? {} : { "null-field": 1 };
+  if (silver) ch.progression.milestones.major.push({ id: "silverscar", date: "2026-10-08" });
+  return ch;
+}
+const tick = (app, sel, on) => { const el = app.$(sel); assert.ok(el, `no ${sel}`); el.checked = on; el.dispatchEvent(new app.window.Event("change", { bubbles: true })); };
+
+test("Decision 267: Take a hit's power boxes: immunity and Null Field ticked, Odin's Aegis disabled with its reason, and one undo takes it all back", () => {
+  const app = openSheet(draugurSheet(), "trackers");
+  app.click("[data-hitopen]");
+  assert.equal(app.$('[data-hitpow="spectral-veil"]').checked, true, "immunity starts unticked");
+  setHit(app, "damage", "10");
+  assert.match(app.$("[data-hitpanel] .hitresult").textContent, /Spectral Veil: no damage\./);
+  assert.equal(app.$('[data-hit="protRoll"]'), null, "the PROT field shows for a hit that does nothing");
+  const aegis = () => app.$('[data-hitreact="odins-aegis"]');
+  assert.equal(aegis().disabled, true);
+  assert.equal(app.$("[data-hitreactwhy]").textContent, "Elemental, Spirit or Aether only", "the reason isn't on the page");
+  setHit(app, "damageType", "spirit");
+  assert.equal(aegis().disabled, false);
+  assert.equal(aegis().checked, false, "Odin's Aegis starts ticked");
+  assert.equal(app.$("[data-hitreactwhy]"), null);
+  tick(app, '[data-hitreact="odins-aegis"]', true);
+  assert.match(app.$("[data-hitpanel] .hitresult").textContent, /Odin's Aegis takes off 4: 10 → 6./);
+  app.click("[data-hitapply]");
+  assert.match(app.$("#undotoast").textContent, /Hit: 10 Spirit → 6 through, Odin's Aegis −4 \(2 SFR\)/);
+  let c = activeChar(app);
+  assert.deepEqual([c.trackers.damage, c.trackers.sfr.spent], [6, 5]);
+  app.click("button[data-undolast], [data-toastundo]");
+  c = activeChar(app);
+  assert.deepEqual([c.trackers.damage, c.trackers.sfr.spent], [0, 3], "undo left the damage or the SFR");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 267: a starter row's table has no Id or Run column, and its Start sits under it", () => {
+  const app = openSheet(forgeFangSheet(), "character");
+  const heads = [...app.$$(".power table.ref thead th")].map(th => th.textContent);
+  assert.deepEqual(heads, ["Augmentation", "Cost", "Effect"]);
+  // The columns come from the first row's keys, so a row that carries the keys code reads must not turn them into columns.
+  const html = app.window.eval('powerHtml({ name: "P", description: "d", rows: [{ id: "x", augmentation: "A", run: { each: "start" }, grants: [], cost: "1", effect: "e" }] })');
+  assert.deepEqual([...html.matchAll(/<th>([^<]*)<\/th>/g)].map(m => m[1]), ["Augmentation", "Cost", "Effect"], "powerHtml turned id, run or grants into a column");
+  const btn = app.$('[data-starterrun="adaptive-skeleton"] [data-runtoggle="adaptive-skeleton|start"]');
+  assert.ok(btn, "no Start under the starter table");
+  assert.equal(btn.getAttribute("aria-label"), "Start Adaptive Skeleton");
+  press(app, '[data-runtoggle="adaptive-skeleton|start"]');
+  const stop = app.$('[data-runtoggle="adaptive-skeleton|stop"]');
+  assert.ok(stop);
+  assert.equal(app.doc.activeElement, stop, "focus didn't move to Stop");
+  assert.equal(app.$('[data-starterrun="adaptive-skeleton"] [data-runline]').textContent, "Running");
+  // The popover names a started power and says it runs; "a round" is only for one that pays each round (order §9).
+  const pop = app.window.eval('vitalPopover(S.ch, "sfr").html');
+  assert.match(pop, /Adaptive Skeleton · running/, "the popover's row for a started power doesn't say it runs");
+  app.click('[data-sec="trackers"]'); app.click("[data-hitopen]");
+  assert.equal(app.$('[data-hitnat="adaptive-skeleton"]').checked, true, "Adaptive Skeleton's Natural Armor starts unticked");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 267: a Withering hit asks From silver only with Silverscar", () => {
+  for (const [silver, want] of [[true, true], [false, false]]) {
+    const app = openSheet(forgeFangSheet(silver), "trackers");
+    app.click("[data-hitopen]");
+    assert.equal(!!app.$('[data-hit="silver"]'), false, "asked on a Regular hit");
+    setHit(app, "category", "withering");
+    assert.equal(!!app.$('[data-hit="silver"]'), want, `Silverscar ${silver}`);
+    if (want) {
+      setHit(app, "damage", "9"); setHit(app, "damageType", "blade");
+      tick(app, '[data-hit="silver"]', true);
+      assert.match(app.$("[data-hitpanel] .hitresult").textContent, /Silverscar halves it: 9 → 4\./);
+    }
+    assert.deepEqual(app.errors, []);
+  }
+});
+
+test("Decision 267 (Ken, 2026-11-05): the voice pass: Aegis's label, the commit label's power, and a spent field", () => {
+  const app = openSheet(draugurSheet(), "trackers");
+  app.click("[data-hitopen]");
+  assert.match(app.$("[data-hitpowers]").textContent, /Odin's Aegis: −4 for 2 SFR/);
+  setHit(app, "damage", "10");
+  // An immune hit changes nothing, so it records no action; the label is what an Undo toast would read.
+  const label = app.window.eval('hitLabel(Engine.resolveHit(S.ch, hitInput(S.hit)))');
+  assert.equal(label, "Hit: 10 Ballistic → 0 through, Spectral Veil");
+  const ff = forgeFangSheet();
+  Engine.setToggle(ff, "form", "Werewolf");
+  ff.trackers.running = [{ id: "null-field", used: 4 }];
+  const wolf = openSheet(ff, "trackers");
+  wolf.click("[data-hitopen]");
+  setHit(wolf, "damage", "3"); setHit(wolf, "damageType", "spirit");
+  assert.match(wolf.$("[data-hitpanel] .hitresult").textContent, /Null Field absorbs 1: 3 → 2. The field is spent./);
+  assert.deepEqual([app.errors, wolf.errors], [[], []]);
 });

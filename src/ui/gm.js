@@ -2917,10 +2917,10 @@ function encTraitsHtml(v, running){
 // ── Hit: the panel, its preview and the prompts the hit raises ──
 const hlWords = n => `${n} Health Level${n===1 ? "" : "s"}`;
 const condNames = ids => (ids||[]).map(id=>{ const c=Engine.conditionById(id); return c ? c.name : id; }).join(", ");
-const encHitNew = row => ({ row, damage:"", type:D.damageTypes[0].id, cat:"regular", ap:false, spell:false, melee:false, prot:"", nat:{}, loc:D.armorRules.defaultHitLocation, from:"", shock:"", atZero:"", conds:{}, err:"" });
+const encHitNew = row => ({ row, damage:"", type:D.damageTypes[0].id, cat:"regular", ap:false, spell:false, melee:false, prot:"", nat:{}, pw:{}, silver:false, loc:D.armorRules.defaultHitLocation, from:"", shock:"", atZero:"", conds:{}, err:"" });
 // A claimed row's hit is the sheet's own input (Decision 257): the player's PROT roll, Natural Armor ticks, spell and melee.
 const encHitInput = (d, seat) => Object.assign({ damage:d.damage, gone:d.damage, damageType:d.type, category:d.cat, ap:d.ap, location:d.loc, from:d.from },
-  seat ? { spell:d.spell, melee:d.melee, protRoll:d.prot, natural:Object.keys(d.nat).filter(k=>d.nat[k]) } : {});
+  seat ? { spell:d.spell, melee:d.melee, protRoll:d.prot, natural:Object.keys(d.nat).filter(k=>d.nat[k]), powers:Object.keys(d.pw).filter(k=>d.pw[k]), silver:d.silver===true } : {});
 const encSeatOn = r => { const e=encOpenNow(); return !!(r && r.kind==="pc" && e && Engine.rowCharacter(S.table, e.id, r.id)); };
 function encHitRow(){ const e=encOpenNow(), d=S.encHit; return e && d ? e.rows.find(r=>r.id===d.row) || null : null; }
 function encHitTicked(d, res){ return res.prompts.conditions.filter(id=>id in d.conds ? d.conds[id] : res.prompts.always.includes(id)); }
@@ -2947,6 +2947,7 @@ function encHitPreview(res, pc){
 // A claimed row's preview, in the sheet's own terms (Decision 257).
 function encSeatPreview(res){
   const bits=[], a=res.armor;
+  if (res.immuneBy){ bits.push(`${res.immuneBy}: no damage`); if (res.after.down) bits.push("Down"); return bits.join(" · "); }   // Decision 267: nothing to soak, so no armor line
   if (res.bypassesArmor){
     bits.push(`Massive: ${hlWords(res.levelsLost)} gone`);
     if (res.scrap) bits.push(`${a.name} scrapped`);
@@ -2958,6 +2959,8 @@ function encSeatPreview(res){
       if (res.resSkipped) bits.push(`RES doesn't apply: ${res.resSkipped==="ap" ? "AP" : res.resSkipped==="compromised" ? "Compromised" : `not against ${res.type.name}`}`);
     } else if (a) bits.push(`Not covered: ${(Engine.locationById(res.location)||{}).name || res.location}`);
     if (res.natural.absorbed) bits.push(`Natural Armor stops ${res.natural.absorbed}`);
+    if (res.witherHalved) bits.push(`${res.witherHalved.by} halves it: ${res.witherHalved.from} → ${res.witherHalved.to}`);
+    if (res.silverHalved) bits.push(`${res.silverHalved.by} halves it: ${res.silverHalved.from} → ${res.silverHalved.to}`);
     bits.push(`${res.through} through`, hlWords(res.lostThisHit));
     if (res.integrityLost > 0) bits.push(`INT −${res.integrityLost}`);
   }
@@ -3008,6 +3011,9 @@ function encHitHtml(v){
     <label class="field"><span>From</span><input type="text" data-ehit-from value="${esc(d.from)}" placeholder="Rook's SMG" autocomplete="off"></label>
     ${encHitLiveHtml(d, r)}</div>`;
 }
+// The PROT field: asked when armor could answer. An immune hit (Decision 267) has nothing to soak, so it isn't.
+const encSeatProtHtml = (d, worn, bypass, probe) => worn && !bypass && !(probe.ok && probe.immuneBy) && (!probe.ok || probe.covered)
+  ? `<label class="field"><span>PROT roll</span><input type="text" inputmode="numeric" pattern="[0-9]*" data-ehit-prot value="${esc(d.prot)}"></label>` : "";
 // What the player's own Take a hit also asks (Decision 257): PROT roll, From a spell, melee, Natural Armor ticks.
 function encSeatAsksHtml(d, ch, r){
   const bypass=d.cat==="massive", as=Engine.armorState(ch), worn=as.worn, nat=Engine.naturalArmor(ch, Object.keys(d.nat).filter(k=>d.nat[k]));
@@ -3016,14 +3022,19 @@ function encSeatAsksHtml(d, ch, r){
   const bits=[];
   if (!bypass && d.ap && (nat.base>0 || nat.conditional.length)) bits.push(check("data-ehit-spell", d.spell, "From a spell"));
   if (!bypass && Engine.hitAsks(ch).melee) bits.push(check("data-ehit-melee", d.melee, copy("hitMelee")));
+  // Decision 267 (HQ15): immunity writes nothing, so a seat's hit offers it; Null Field and Odin's Aegis spend or run down, which a seat's clone would lose.
+  const ans=Engine.hitAnswers(ch);
+  ans.immune.forEach(x=>bits.push(check(`data-ehit-pow="${esc(x.id)}"`, d.pw[x.id], `${x.name}: immune to Physical`)));
+  if (d.cat==="withering" && Engine.hitAsks(ch).silver) bits.push(check("data-ehit-silver", d.silver, "From silver"));
+  const own=ans.absorb.concat(ans.react).map(x=>x.name);   // only the powers this copy holds
+  if (own.length) bits.push(`<p class="enc-armor enc-armor-extra" data-ehit-ownsheet>${esc(own.join(" and "))} ${own.length>1 ? "answer" : "answers"} on the player's own sheet.</p>`);
   // The sheet's own armor problems ("2 body pieces are marked worn…") say which piece counts.
   const armor = (worn ? `<p class="enc-armor enc-seat-armor">${seatArmorText(worn.name, worn.prot, worn)}</p>`
     : `<p class="enc-armor enc-seat-armor">No body armor worn</p>`) + as.problems.map(p=>`<p class="enc-armor enc-armor-extra">${esc(p)}</p>`).join("");
-  const prot = worn && !bypass && (!probe.ok || probe.covered)
-    ? `<label class="field"><span>PROT roll</span><input type="text" inputmode="numeric" pattern="[0-9]*" data-ehit-prot value="${esc(d.prot)}"></label>` : "";
+  const prot = encSeatProtHtml(d, worn, bypass, probe);
   const natLine = nat.base>0 || nat.conditional.length
     ? `<p class="enc-armor enc-seat-armor">Natural Armor ${nat.total}</p>${nat.conditional.map(c=>check(`data-ehit-nat="${esc(c.id)}"`, c.active, `${c.name} (${c.amount ? `+${c.amount}` : `answers ${c.resAgainst.join(", ")}`}, ${c.while})`)).join("")}` : "";
-  return `<div class="enc-seat-asks">${bits.join("")}${armor}${prot}${natLine}</div>`;
+  return `<div class="enc-seat-asks">${bits.join("")}${armor}<span data-ehit-protslot>${prot}</span>${natLine}</div>`;
 }
 function encCondFormHtml(v){
   const d=S.encCond, def=Engine.conditionById(d.id);
@@ -3415,7 +3426,12 @@ function bindEncounters(main){
   const openingWrite = f => { const r=Engine.setOpening(S.table, eid(), f); if (!r.ok){ notice(r.why); return false; } tableChange(()=>{}); return true; };
   const pickNextAdd = id => { const ids=[...$("main").querySelectorAll("[data-enc-addcast]")].map(b=>b.dataset.encAddcast); const at=ids.indexOf(id); return ids[at+1] || ids[at-1] || null; };
   // The preview and prompts redraw on their own, so a field keeps its value and its caret.
-  const hitLive = () => { const box=main.querySelector("[data-ehit-live]"), r=encHitRow(); if (box && r) box.outerHTML=encHitLiveHtml(S.encHit, r); };
+  const hitLive = () => { const box=main.querySelector("[data-ehit-live]"), r=encHitRow(); if (box && r) box.outerHTML=encHitLiveHtml(S.encHit, r);
+    // A seat's PROT field comes and goes with an immune hit; it is swapped only when that changes, so typing in it isn't disturbed.
+    const slot=main.querySelector("[data-ehit-protslot]");
+    if (slot && r && encSeatOn(r)){ const ch=Engine.rowCharacter(S.table, S.encOpen, r.id), d=S.encHit,
+        html=encSeatProtHtml(d, Engine.armorState(ch).worn, d.cat==="massive", Engine.resolveEncounterHit(S.table, S.encOpen, r.id, encHitInput(d, true)));
+      if (!!html !== !!slot.querySelector("[data-ehit-prot]")) slot.innerHTML=html; } };
   const act = {
     "data-enc-new": () => { const input=main.querySelector("[data-enc-name]"); let id; change(()=>{ id=Engine.addEncounter(S.table, { name:input.value }).id; }); open(id); },
     "data-enc-open": b => open(b.dataset.encOpen),
@@ -3498,7 +3514,7 @@ function bindEncounters(main){
     "data-edmg": b => { const [row, sign]=b.dataset.edmg.split("|"); S.encDmg={ row, sign:+sign }; S.encHit=null; S.encCond=null; redraw(); focus("[data-edmgn]"); },
     "data-ehit": b => { S.encHit=encHitNew(b.dataset.ehit);
       // Decision 266: a seat's running power starts its Natural Armor box ticked, as on the player's own sheet.
-      const hr=encHitRow(); if (encSeatOn(hr)) S.encHit.nat=runningNatural(Engine.rowCharacter(S.table, S.encOpen, hr.id));
+      const hr=encHitRow(); if (encSeatOn(hr)){ const copyCh=Engine.rowCharacter(S.table, S.encOpen, hr.id); S.encHit.nat=runningNatural(copyCh); S.encHit.pw=Object.fromEntries(Engine.hitAnswers(copyCh).immune.map(x=>[x.id, true])); }
       S.encDmg=null; S.encCond=null; redraw(); focus("[data-ehit-damage]"); },
     "data-ehit-cancel": () => { const row=S.encHit.row; S.encHit=null; redraw(); focus(attrSel("data-ehit", row)); },
     "data-ehit-cat": b => { const d=S.encHit; d.cat=b.dataset.ehitCat; d.conds={}; d.shock=""; d.atZero=""; d.err=""; redraw(); focus(attrSel("data-ehit-cat", d.cat)); },
@@ -3578,6 +3594,8 @@ function bindEncounters(main){
     else if ("ehitLoc" in d){ S.encHit.loc=el.value; S.encHit.err=""; if (encSeatOn(encHitRow())){ redraw(); focus("[data-ehit-loc]"); } else hitLive(); }
     else if ("ehitSpell" in d){ S.encHit.spell=el.checked; S.encHit.err=""; hitLive(); }
     else if ("ehitMelee" in d){ S.encHit.melee=el.checked; S.encHit.err=""; hitLive(); }
+    else if ("ehitPow" in d){ S.encHit.pw[d.ehitPow]=el.checked; S.encHit.err=""; redraw(); focus(attrSel("data-ehit-pow", d.ehitPow)); }
+    else if ("ehitSilver" in d){ S.encHit.silver=el.checked; S.encHit.err=""; hitLive(); }
     else if ("ehitNat" in d){ S.encHit.nat[d.ehitNat]=el.checked; S.encHit.err=""; redraw(); focus(attrSel("data-ehit-nat", d.ehitNat)); }
     else if ("ehitCond" in d){ S.encHit.conds[d.ehitCond]=el.checked; }
     else if ("ewKeep" in d){ encWrapDraft(d.ewKeep).keep=el.checked; redraw(); focus(attrSel("data-ew-keep", d.ewKeep)); }

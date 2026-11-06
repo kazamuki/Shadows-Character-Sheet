@@ -765,7 +765,7 @@ It renders on the Character tab (Decision 158).
 ```js
 {
   meta: {
-    schemaVersion: "0.33",
+    schemaVersion: "0.34",
     // (0.11, Decisions 128 and 133) The character's TAG, its permanent
     // identity: TAG- + 12 Crockford base-32 characters. Issued by
     // newCharacter(), backfilled by migrate(), never reissued. 0.12 renamed
@@ -893,7 +893,7 @@ It renders on the Character tab (Decision 158).
     // tracked value (Decision 93).
     credits: { current: 800, ledger: [ { date, amount, note } ] },
     crank: { rep: 0, ledger: [ { date, amount, note } ] },          // (0.17) CRANK rep (Decision 169); tier is derived
-    running: [ { id: "iron-hide" } ],   // (0.33, Decision 266) the sustained powers the player started: { id } only, each once, at most 20, 120 characters each; migrate drops anything else and keeps an id the character no longer holds. Whether one is running is runningPowers (held, with run, in its archetype's runsIn form), never this list
+    running: [ { id: "iron-hide" }, { id: "null-field", used: 3 } ],   // (0.33, Decision 266; `used` 0.34, Decision 267: what Null Field has absorbed, a whole number 0 to 999, kept only where a number was) the powers the player started: { id } and that `used`, nothing else, each id once, at most 20, 120 characters each; migrate drops any other key and keeps an id the character no longer holds. Whether one is running is runningPowers (held, with run, in its archetype's runsIn form unless it is a starter row), never this list
     heldSpells: [ "fog-shroud" ],    // (0.26, Decision 224) ids of Concentration spells the player is holding. migrate keeps strings, each once, at most 20, 120 characters each; heldSpells() keeps only Grimoire book spells with the tag, the first Evocation-rank of them as held, and deletes nothing
     // (0.8) Active Conditions (Decision 95). One entry per id ("you have it or
     // you don't"), except a location-bearing Condition, which is one per body
@@ -5435,6 +5435,15 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 104 in part (a running power's conditional source starts ticked on a hit). Decision 225's Revisit if happened (costs are numbers); its rule stands. Extends 195 and 224.
      - **Revisit if:** W128 lets the sheet know an encounter; a power counts rounds down; a Vampire gets a form rule; H2 or H3 needs `each: "start"` (data only).
      - **Built:** app 0.62.0, game data 0.53, character schema 0.33, PR #297, log 2026-11-05 (H1).
+
+267. **A running power can answer a hit: Spectral Veil and Red Mist make Physical damage nothing, Null Field absorbs and runs down, Odin's Aegis is a reaction that spends, and Silverscar halves silver's Withering.**
+     *2026-11-05 · Ken + Claude · Touches: hitTaken, immune, absorb, react, magical, running.used, runningPowers, hitAnswers, starterPower rows, runsIn, resolveHit, applyHit, hit.powers, hit.react, hit.silver, hitAsks, withering grant, from, Take a hit, the seat hit, powerHtml, Natural Armor boxes, migrate, character schema 0.34, W132*
+     - **Decided:** A `hitTaken` grant on a power answers a hit while the power runs (`immune`, `absorb`) or when its holder ticks it (`react`, the power's SFR spent in the hit's commit). Immunity covers every type that isn't `magical` and comes before armor; reductions come after Natural Armor, beside `meleeTaken`, Odin's Aegis then Null Field. Null Field's `used` is stored on its `running` entry, and it stops when used up. Red Mist, Null Field, Icebound Resilience and a starter row (Adaptive Skeleton) run as `each: "start"`; a starter row ignores `runsIn`. A `withering` grant with `from` halves only a hit marked from it. A seat's hit offers only what writes nothing.
+     - **Why:** W132; `0413`, `0414` and the rebalancing sheet ("armor stops Physical damage, not Elemental, Spirit, or Aether"); Decision 236's Revisit if ("power reductions to the same stage").
+     - **Rejected:** reductions before armor (Decision 236 rejected it for Giant); an immune hit that still wears armor; Odin's Aegis as a running power ("as a reaction"); Null Field refilling each scene by itself (the sheet knows no scene, W128); a type list in code; Silverscar as Wither Ward; spending from a seat's clone (Decision 257); Battle Hardened and Elemental Blood before the book names their Conditions and elements.
+     - **Replaces:** nothing; extends 236 (the stage) and 266 (`each: "start"`, `used`, starter rows).
+     - **Revisit if:** the book defines Dazed and Sickened or a cold type; W128 knows a scene; a power needs a countdown.
+     - **Built:** app 0.62.0 (unreleased), game data 0.53 (unreleased), character schema 0.34, PR #299, log 2026-11-05 (H2).
 
 ## 5. Open Flags
 

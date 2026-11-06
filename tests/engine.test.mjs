@@ -36,7 +36,7 @@ test("engine loads without a DOM", () => {
 
 test("newCharacter matches the documented character schema", () => {
   const ch = Engine.newCharacter();
-  assert.equal(ch.meta.schemaVersion, "0.33");
+  assert.equal(ch.meta.schemaVersion, "0.34");
   assert.equal(ch.meta.gamedataVersion, D.meta.gamedataVersion);
   for (const k of ["identity", "creation", "archetypeChoices", "stats", "skills",
                    "advantages", "disadvantages", "trackers"]) {
@@ -158,7 +158,7 @@ test("migrate upgrades an older save in place", () => {
   old.meta.schemaVersion = "0.3";
   delete old.audit;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.33");
+  assert.equal(old.meta.schemaVersion, "0.34");
   assert.ok(Array.isArray(old.audit), "audit was not seeded");
 });
 
@@ -170,7 +170,7 @@ test("migrate drops the retired exhaustion tracker (schema 0.7, Decision 93)", (
   old.meta.schemaVersion = "0.6";
   old.trackers.exhaustion = 3;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.33");
+  assert.equal(old.meta.schemaVersion, "0.34");
   assert.equal(old.trackers.exhaustion, undefined);
 });
 
@@ -552,7 +552,7 @@ test("migrate tags a pre-0.6 weapons entry as custom and seeds armor (schema 0.6
   old.weapons = [{ name: "Old Reliable", type: "Pistol", damage: "2d6", notes: "" }];
   delete old.armor;
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.33");
+  assert.equal(old.meta.schemaVersion, "0.34");
   assert.equal(old.weapons[0].custom, true, "a legacy free-typed weapon should be tagged custom, not silently reinterpreted");
   assert.equal(old.weapons[0].name, "Old Reliable", "migrate must not lose what the player already typed");
   assert.ok(Array.isArray(old.armor), "armor was not seeded");
@@ -668,7 +668,7 @@ test("migrate() returns every field newCharacter() has (B6)", () => {
   // version must still surface as an issue rather than silently matching.
   const bare = Engine.migrate({});
   assert.equal(bare.meta.gamedataVersion, undefined);
-  assert.equal(bare.meta.schemaVersion, "0.33");
+  assert.equal(bare.meta.schemaVersion, "0.34");
   assert.ok(Engine.versionCheck(bare).some(i => /game data/.test(i)));
 });
 
@@ -905,7 +905,7 @@ test("migrate folds the three old specialization fields into one array (A3)", ()
     assert.equal(c.archetypeChoices.aberrations, undefined);
     assert.equal(c.archetypeChoices.subtype, undefined);
     assert.equal(c.identity.specialization, undefined);
-    assert.equal(c.meta.schemaVersion, "0.33");
+    assert.equal(c.meta.schemaVersion, "0.34");
   }
   // Idempotent: migrating twice must not empty what the first pass moved.
   assert.deepEqual([...Engine.migrate(arc).archetypeChoices.specialization],
@@ -1179,7 +1179,7 @@ test("migrate brings a 0.7 file to 0.8: conditions, damage inputs, armor fields"
   delete old.trackers.conditions; delete old.trackers.massiveLevels; delete old.trackers.witheringDamage;
   old.armor = [{ id: "kevlar-vest", integrityLoss: 3, notes: "" }, { custom: true, name: "Coat", integrityLoss: 0 }];
   Engine.migrate(old);
-  assert.equal(old.meta.schemaVersion, "0.33");
+  assert.equal(old.meta.schemaVersion, "0.34");
   assert.ok(Array.isArray(old.trackers.conditions));
   assert.equal(old.trackers.massiveLevels, 0);
   assert.equal(old.trackers.witheringDamage, 0);
@@ -1254,7 +1254,7 @@ test("schema 0.13 moves the natural-advantage marker out of notes, undo history 
     { path: ["advantages"], type: "array", op: "set", before: [{ id: "favored-skill", rank: 2, notes: "natural" }] },
     { path: ["advantages"], type: "array", op: "removeAt", index: 0, item: { id: "favored-skill", rank: 1, notes: "natural" } }] }];
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  assert.equal(m.meta.schemaVersion, "0.33");
+  assert.equal(m.meta.schemaVersion, "0.34");
   assert.equal(m.advantages[0].source, "natural");
   assert.equal(m.advantages[0].notes, "", "the marker stayed in the player's notes");
   assert.equal(m.advantages[1].source, undefined);
@@ -2412,7 +2412,7 @@ test("P9b 8: roundsLeft survives migrate and a hostile file, in both passes", ()
   const m = Engine.migrate(JSON.parse(JSON.stringify(ch)));
   same(m.gear.map(g => g.roundsLeft), [0, 0, 2, 0, 18]);
   same(Engine.migrate(JSON.parse(JSON.stringify(m))).gear, m.gear, "a round trip changed the rows");
-  assert.equal(m.meta.schemaVersion, "0.33");
+  assert.equal(m.meta.schemaVersion, "0.34");
   // The second place: undo restores what a file's audit says, and holds it to the same numbers.
   m.audit.push({ seq: 1, date: "x", kind: "edit", label: "crafted", patch: [{ path: ["gear", 4, "roundsLeft"], type: "scalar", before: "<i>9</i>" }] });
   Engine.undoLastAction(m);
@@ -2471,7 +2471,7 @@ test("W16: migrate to 0.10 gives a catalog weapon no mods and a full magazine, k
   old.weapons = [{ id: "ads-lp9-viper", notes: "grip tape" }, { custom: true, name: "Zip gun", capacity: "4", mods: ["Scope"] },
                  { id: "ts7-bulldog", notes: "", mods: ["Laser Sight", 7], roundsSpent: "5" }];
   const m = Engine.migrate(old);
-  assert.equal(m.meta.schemaVersion, "0.33");
+  assert.equal(m.meta.schemaVersion, "0.34");
   assert.deepEqual([[...m.weapons[0].mods], m.weapons[0].roundsSpent, m.weapons[0].notes], [[], 0, "grip tape"]);
   assert.equal(m.weapons[1].mods, undefined, "a custom weapon kept a mods list");
   assert.deepEqual([[...m.weapons[2].mods], m.weapons[2].roundsSpent], [["Laser Sight"], 5]);
@@ -2557,7 +2557,7 @@ test("B18: migrate() gives an older file a TAG, keeps a real one, and replaces a
   delete old.meta.id; old.meta.schemaVersion = "0.10";
   const m = Engine.migrate(old);
   assert.ok(Engine.isIntakeId(m.meta.id), "a file from before 0.11 got no TAG");
-  assert.equal(m.meta.schemaVersion, "0.33");
+  assert.equal(m.meta.schemaVersion, "0.34");
   const kept = Engine.migrate(JSON.parse(JSON.stringify(m)));
   assert.equal(kept.meta.id, m.meta.id, "migrate() reissued a TAG a file already had");
   for (const junk of ["", "NCR-0000-0000-000O", "TAG-0000-0000-000O", "<i>x</i>", 42, null, "ncr-abcd-efgh-jkmn", "tag-abcd-efgh-jkmn"]) {
@@ -2574,7 +2574,7 @@ test("Decision 133: a 0.11 NCR- number becomes a TAG with the same twelve charac
   c.meta.id = "NCR-7K2M-Q9XD-4HNB"; c.meta.schemaVersion = "0.11";
   const m = Engine.migrate(c);
   assert.equal(m.meta.id, "TAG-7K2M-Q9XD-4HNB");
-  assert.equal(m.meta.schemaVersion, "0.33");
+  assert.equal(m.meta.schemaVersion, "0.34");
   assert.equal(Engine.migrate(JSON.parse(JSON.stringify(m))).meta.id, "TAG-7K2M-Q9XD-4HNB", "the carried-over TAG didn't hold");
 });
 
@@ -2620,7 +2620,7 @@ test("W41: migrate() makes every older file TAG'd, and only a real true makes on
   const old = subject();
   delete old.identity.tagless; old.meta.schemaVersion = "0.13";
   const m = Engine.migrate(old);
-  same([m.identity.tagless, m.meta.schemaVersion], [false, "0.33"]);
+  same([m.identity.tagless, m.meta.schemaVersion], [false, "0.34"]);
   for (const junk of ["true", 1, "yes", {}, null])
     assert.equal(Engine.migrate(Object.assign(subject(), { identity: { name: "x", tagless: junk } })).identity.tagless, false, `${JSON.stringify(junk)} made a TAGless character`);
   const t = subject(); t.identity.tagless = true;
@@ -2845,7 +2845,7 @@ test("schema 0.15: an older file keeps rolling if it rolled, and a locked one is
   const a = Engine.migrate(old(true, 15));
   assert.equal(a.creation.statMethod, "rolled");
   assert.equal(a.creation.earlierTable, true);
-  assert.equal(a.meta.schemaVersion, "0.33");
+  assert.equal(a.meta.schemaVersion, "0.34");
   const b = Engine.migrate(old(false, null));
   assert.equal(b.creation.statMethod, "flat");
   assert.equal("earlierTable" in b.creation, false, "a draft was marked as built under the earlier table");
@@ -3312,7 +3312,7 @@ test("CRANK: a schema-0.16 character with no tracker migrates to rep 0", () => {
   delete old.trackers.crank; old.meta.schemaVersion = "0.16";
   const m = Engine.migrate(old);
   assert.deepEqual(JSON.parse(JSON.stringify(m.trackers.crank)), { rep: 0, ledger: [] });
-  assert.equal(m.meta.schemaVersion, "0.33");
+  assert.equal(m.meta.schemaVersion, "0.34");
 });
 
 test("CRANK: crankState reads the tier at every boundary", () => {
@@ -5643,7 +5643,7 @@ test("schema 0.19: newCharacter has basePowers and optionPicks; migrate keeps wh
   delete old.archetypeChoices.basePowers; delete old.archetypeChoices.optionPicks;
   old.trackers.panel = { "blood-pool": { value: 3, max: 20 }, "sfr": { value: 1 } };
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  same([m.meta.schemaVersion, m.archetypeChoices.basePowers, m.archetypeChoices.optionPicks, Object.keys(m.trackers.panel)], ["0.33", {}, {}, ["sfr"]]);
+  same([m.meta.schemaVersion, m.archetypeChoices.basePowers, m.archetypeChoices.optionPicks, Object.keys(m.trackers.panel)], ["0.34", {}, {}, ["sfr"]]);
   const junk = vampire("draugur");
   junk.archetypeChoices.basePowers = { "battleborn-instinct": "2", "hels-dread": -1, "odins-aegis": 1.7, "spectral-veil": "x", "blood-of-valhalla": 1e9, "x": null };
   junk.archetypeChoices.optionPicks = { "ancient-weapon": "blade", "code": { hunt: "the guilty", bond: 7, word: "<b>kept</b>" }, "n": 5, "a": ["blade"] };
@@ -5880,14 +5880,14 @@ test("Decision 215: migrate() 0.20 normalizes powerCp, gives a Vampire's Innate 
   old.archetypeChoices.basePowers = { "bestial-blessings": 2, "shadow-play": 1 };
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
   same(m.archetypeChoices.basePowers, { "shadow-play": 1 });
-  same([m.meta.schemaVersion, Engine.archetypePowers(m).find(p => p.id === "bestial-blessings").rank, Engine.basePowerState(m).left], ["0.33", 1, 2], "Bestial Blessings 1 granted, 2 Base Powers to place");
+  same([m.meta.schemaVersion, Engine.archetypePowers(m).find(p => p.id === "bestial-blessings").rank, Engine.basePowerState(m).left], ["0.34", 1, 2], "Bestial Blessings 1 granted, 2 Base Powers to place");
   // A saved Werewolf: untouched but for the stamp, its IP in an Origin power still on file.
   const w = werewolf("trueborn"); w.meta.schemaVersion = "0.19"; delete w.archetypeChoices.powerCp;
   assert.ok(Engine.placeBasePower(w, "apex-fury", 1).ok);
   assert.ok(Engine.spendIP(w, "power", "apex-fury").ok && Engine.spendIP(w, "power", "apex-fury").ok);
   w.archetypeChoices.basePowers = {};   // a 0.19 Werewolf held the kit with nothing placed
   const wm = Engine.migrate(JSON.parse(JSON.stringify(w)));
-  same([wm.meta.schemaVersion, wm.archetypeChoices.basePowers, wm.archetypeChoices.powerCp, wm.progression.powerIpe], ["0.33", {}, {}, { "apex-fury": 2 }]);
+  same([wm.meta.schemaVersion, wm.archetypeChoices.basePowers, wm.archetypeChoices.powerCp, wm.progression.powerIpe], ["0.34", {}, {}, { "apex-fury": 2 }]);
   // Decision 216 (PQ2): the IP is held again, at the ranks it bought, and versionCheck stops naming it.
   same(Engine.archetypePowers(wm).map(p => p.id), [...WWD().powers.filter(p => !p.origin).map(p => p.id), "apex-fury"]);
   assert.equal(Engine.archetypePowers(wm).find(p => p.id === "apex-fury").rank, 2, "the IP's two ranks");
@@ -7815,7 +7815,7 @@ test("schema 0.21: a 0.20 file's written power gets boughtWithCp false, and only
   old.meta.schemaVersion = "0.20";
   old.powers = [{ id: "pw-AAAAAAAA", custom: true, name: "Fade", uses: "", effect: "", notes: "" }, { id: "pw-BBBBBBBB", name: "Paid", boughtWithCp: true }];
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  same([m.meta.schemaVersion, m.powers.map(p => p.boughtWithCp)], ["0.33", [false, true]]);
+  same([m.meta.schemaVersion, m.powers.map(p => p.boughtWithCp)], ["0.34", [false, true]]);
   for (const v of ["yes", 1, {}, [], null, "true"]) {
     const c = Engine.migrate(Object.assign(JSON.parse(JSON.stringify(old)), { powers: [{ id: "pw-CCCCCCCC", name: "X", boughtWithCp: v }] }));
     assert.equal(c.powers[0].boughtWithCp, false, JSON.stringify(v));
@@ -8003,7 +8003,7 @@ test("Decision 217: a Major can be written in; it uses a slot, Admin needs none,
     assert.equal("custom" in e, false, JSON.stringify(v));
     assert.equal("name" in e, false);
   }
-  assert.equal(m.meta.schemaVersion, "0.33");
+  assert.equal(m.meta.schemaVersion, "0.34");
 });
 
 // ── P6 review fixes (Decision 217) ──────────────────────────────────────
@@ -8325,7 +8325,7 @@ test("P8b 12: house rules survive migrate and a hostile file", () => {
   assert.equal(Engine.newCharacter().houseRules.keepDamagePastZero, false);
   const old = Engine.newCharacter(); delete old.houseRules; old.meta.schemaVersion = "0.22";
   const m = Engine.migrate(old);
-  assert.equal(m.meta.schemaVersion, "0.33");
+  assert.equal(m.meta.schemaVersion, "0.34");
   eq(m.houseRules, { keepDamagePastZero: false, training: false });
   for (const junk of ["yes", 1, [], null, "true", { keepDamagePastZero: "yes" }, { keepDamagePastZero: 1 }]) {
     const c = Engine.newCharacter(); c.houseRules = junk;
@@ -8535,13 +8535,13 @@ test("P17 8: a gained Bloodline doesn't count for a Bloodline's Majors", () => {
 
 test("P17 9: the Major's power and the gained Bloodlines survive migrate and a hostile file", () => {
   same(Engine.newCharacter().progression.specializationsGained, []);
-  assert.equal(Engine.migrate({}).meta.schemaVersion, "0.33");
+  assert.equal(Engine.migrate({}).meta.schemaVersion, "0.34");
   const ch = vMaj();
   Engine.takeMajorChoice(ch, "splice", { power: "iron-hide" });
   Engine.gainSpecialization(ch, "draugur");
   const round = Engine.migrate(clone17(ch));
   eq(round.progression, ch.progression);
-  assert.equal(round.meta.schemaVersion, "0.33");
+  assert.equal(round.meta.schemaVersion, "0.34");
   const junk = clone17(ch);
   junk.progression.milestones.major = [{ id: "splice", power: 7 }, { id: "x", power: { a: 1 } }, { id: "y", power: "" }, { id: "z", power: "<b>x</b>" }];
   junk.progression.specializationsGained = [1, {}, null, "upyr", "upyr", "strigoi", "no-such", "<img src=x>"];
@@ -8823,12 +8823,12 @@ test("P11 7: a Custom pool's max is read by the engine, and it has no Rate of Us
 
 test("P11 8: the round's count survives migrate and a hostile file", () => {
   assert.equal(Engine.newCharacter().trackers.sfr.turn, 0);
-  assert.equal(Engine.newCharacter().meta.schemaVersion, "0.33");
+  assert.equal(Engine.newCharacter().meta.schemaVersion, "0.34");
   for (const [label, sfrVal] of [["a string", "x"], ["turn text", { spent: 2, turn: "x" }], ["negative", { turn: -3 }], ["null", null], ["fraction", { turn: 2.7 }], ["infinite", { turn: 1e999 }]]) {
     const m = Engine.migrate({ identity: { archetype: "vampire" }, trackers: { sfr: sfrVal } });
     assert.equal(typeof m.trackers.sfr.turn, "number", label);
     assert.ok(Number.isInteger(m.trackers.sfr.turn) && m.trackers.sfr.turn >= 0, `${label}: turn is ${m.trackers.sfr.turn}`);
-    same(m.meta.schemaVersion, "0.33");
+    same(m.meta.schemaVersion, "0.34");
   }
   same(Engine.migrate({ trackers: { sfr: { turn: -3 } } }).trackers.sfr.turn, 0);
   const ch = rou11(); Engine.adjustPanelTracker(ch, "sfr", 3);
@@ -9418,7 +9418,7 @@ test("P20b 4b: Scrapper halves before the Wither Ward, and Giant's 4 before Scra
 test("P20b 5b: an NPC stand-in's head hit doubles, and a stand-in holds no trait to ask or answer", () => {
   const stand = Engine.newCharacter();
   stand.stats.BOD.base = 6;
-  same(Engine.hitAsks(stand), { melee: false });
+  same(Engine.hitAsks(stand), { melee: false, silver: false });
   const r = Engine.resolveHit(stand, { damage: 5, damageType: "blade", location: "head" });
   same([r.doubled, r.through], [{ from: 5, to: 10 }, 10]);
 });
@@ -9464,7 +9464,7 @@ test("P20b 8: the readers are total over hostile rows", () => {
     assert.doesNotThrow(() => Engine.hitAsks(junk));
     assert.doesNotThrow(() => Engine.naturalHealing(Engine.newCharacter(), junk));
   }
-  same(Engine.hitAsks(null), { melee: false });
+  same(Engine.hitAsks(null), { melee: false, silver: false });
 });
 
 // ── P21 8: traitRows and skillLine are total over hostile sources (Decision 237) ──
@@ -10488,7 +10488,7 @@ test("L2 6 (engine): migrate to 0.30 keeps a saved type as text, shows it until 
   const old = zipGun({ type: "pistol", name: "Old iron" });
   old.meta.schemaVersion = "0.28";
   const m = Engine.migrate(old);
-  assert.equal(m.meta.schemaVersion, "0.33");
+  assert.equal(m.meta.schemaVersion, "0.34");
   assert.equal(m.weapons[0].type, "pistol");
   for (const k of ["category", "damageType", "range", "acc"]) assert.ok(!Object.hasOwn(m.weapons[0], k), `migrate added ${k}`);
   assert.equal(Engine.weaponLine(m, 0).typeText, "pistol");
@@ -10744,7 +10744,7 @@ test("L3 8 (engine): migrate to 0.30 keeps inUse only where it's true on a catal
   old.gear.push({ custom: true, name: "Rig", type: "tech", notes: "" }, { id: "smart-brace", qty: 1, notes: "" });
   old.meta.schemaVersion = "0.29";
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
-  assert.equal(m.meta.schemaVersion, "0.33");
+  assert.equal(m.meta.schemaVersion, "0.34");
   assert.ok(m.gear.every(r => !Object.hasOwn(r, "inUse")), "migrate added inUse");
   old.gear[0].inUse = true;
   const k = Engine.migrate(JSON.parse(JSON.stringify(old)));
@@ -10907,7 +10907,7 @@ test("L2b 9 (engine): migrate to 0.31 keeps a typed rof, adds nothing, and keeps
     const old = l2bGun({ rof, loaded: "silver-rounds" });
     old.meta.schemaVersion = "0.30";
     const m = Engine.migrate(old);
-    assert.equal(m.meta.schemaVersion, "0.33");
+    assert.equal(m.meta.schemaVersion, "0.34");
     assert.equal(m.weapons[0].rof, rof);
     assert.ok(!Object.hasOwn(m.weapons[0], "rofModes"), "migrate added rofModes");
     assert.equal(m.weapons[0].loaded, "silver-rounds");
@@ -12253,7 +12253,7 @@ test("L5 6 (engine): migrate to 0.32 keeps a well-formed majors list and drops t
     return ch;
   };
   const clean = (w, a) => Engine.migrate(plain(mk(w, a)));
-  assert.equal(clean([]).meta.schemaVersion, "0.33");
+  assert.equal(clean([]).meta.schemaVersion, "0.34");
   const w = clean(["tuned-edge", ["tuned-edge", "tuned-edge"], [5, null, "nope", "custom-fit"], ["iconic-weapon"], ["tuned-edge", "weapon-expert"]]).weapons;
   assert.ok(!Object.hasOwn(w[0], "majors"), "a string");
   assert.deepEqual(w[1].majors, ["tuned-edge"], "once");
@@ -12699,10 +12699,10 @@ test("Decision 266: trackers.running round-trips through migrate(), and junk is 
   old.meta.schemaVersion = "0.32";
   const m = Engine.migrate(JSON.parse(JSON.stringify(old)));
   same(m.trackers.running, []);
-  assert.equal(m.meta.schemaVersion, "0.33");
+  assert.equal(m.meta.schemaVersion, "0.34");
   const junk = Engine.newCharacter();
   junk.trackers.running = ["x", { id: 3 }, { id: "iron-hide", used: 2 }, { id: "iron-hide" }, null, { id: "" }];
-  same(Engine.migrate(JSON.parse(JSON.stringify(junk))).trackers.running, [{ id: "iron-hide" }]);
+  same(Engine.migrate(JSON.parse(JSON.stringify(junk))).trackers.running, [{ id: "iron-hide", used: 2 }]);
   const long = Engine.newCharacter();
   long.trackers.running = Array.from({ length: 30 }, (_, i) => ({ id: "p" + i + "x".repeat(200) }));
   const out = Engine.migrate(JSON.parse(JSON.stringify(long))).trackers.running;
@@ -12752,4 +12752,213 @@ test("Decision 266 (Ken, 2026-11-05): Start is refused when the pool can't pay, 
   assert.equal(Engine.startPower(ch, "iron-hide").ok, true);
   const w = wildblood(0);
   same(Engine.runnablePowers(w).find(p => p.id === "let-it-loose").can.short, "Werewolf Form only");
+});
+
+// ── Powers that answer a hit (H2, Decision 267, W132) ─────────────────
+// A running power can make a hit nothing (immune), soak it (absorb), or be ticked to reduce it (react). hitAnswers is the
+// one reader of the grant; resolveHit does the stages: immune → armor → Natural Armor → Odin's Aegis → Null Field → melee → Wither Ward / silver.
+function draugurAnswers(ranks = { "spectral-veil": 1 }, bod = 6) {
+  const ch = vampire("draugur", { pl: "heroic", bod });
+  ch.archetypeChoices.basePowers = Object.assign({}, ranks);
+  return ch;
+}
+function forgeFang(ranks = { "null-field": 1 }) {
+  const ch = werewolf("forge-fang");
+  ch.creation.powerLevel = "street";
+  ch.archetypeChoices.basePowers = Object.assign({}, ranks);
+  return ch;
+}
+const vestOn = ch => { ch.armor.push({ id: "kevlar-vest", integrityLoss: 0, notes: "", worn: true, scrapped: false, upgrades: [] }); return ch; };
+const H2 = { damageType: "ballistic", category: "regular", location: "torso" };
+const pickKeys = (o, keys) => Object.fromEntries(keys.map(k => [k, o[k]]));
+
+test("Decision 267: a running Spectral Veil makes a Physical hit nothing, and Spirit still lands", () => {
+  const ch = draugurAnswers();
+  assert.equal(Engine.startPower(ch, "spectral-veil").ok, true);
+  same([ch.trackers.sfr.spent, ch.trackers.sfr.turn], [3, 3]);
+  const on = Engine.resolveHit(ch, { ...H2, damage: 10, powers: ["spectral-veil"] });
+  same([on.ok, on.through, on.immuneBy, on.levelsLost, on.prompts.conditions], [true, 0, "Spectral Veil", 0, []]);
+  assert.equal(Engine.resolveHit(ch, { ...H2, damage: 10, powers: [] }).through, 10);
+  assert.equal(Engine.resolveHit(ch, { ...H2, damage: 10, damageType: "spirit", powers: ["spectral-veil"] }).through, 10);
+  const massive = Engine.resolveHit(ch, { ...H2, damage: 10, category: "massive", powers: ["spectral-veil"] });
+  same([massive.through, massive.levelsLost, massive.immuneBy], [0, 0, "Spectral Veil"]);
+  // Not running: ticking it does nothing.
+  const idle = draugurAnswers();
+  assert.equal(Engine.resolveHit(idle, { ...H2, damage: 10, powers: ["spectral-veil"] }).through, 10);
+});
+
+test("Decision 267: immunity asks no PROT and wears no armor (HQ13)", () => {
+  const ch = vestOn(draugurAnswers());
+  Engine.startPower(ch, "spectral-veil");
+  const on = Engine.resolveHit(ch, { ...H2, damage: 10, protRoll: "", powers: ["spectral-veil"] });
+  same([on.ok, on.through, on.patch.armor], [true, 0, null]);
+  const off = Engine.resolveHit(ch, { ...H2, damage: 10, protRoll: "", powers: [] });
+  same([off.ok, off.why], [false, "Enter the PROT die you rolled."]);
+});
+
+test("Decision 267: Red Mist runs from Start and Turn Reset charges nothing for it", () => {
+  const ch = upyrRunning({ "red-mist": 1 });
+  const r = Engine.startPower(ch, "red-mist");
+  assert.equal(r.ok, true, r.why);
+  same(sfrNow(ch), [3, 3]);
+  const a = Engine.applyReset(ch, {}, {});
+  same(sfrNow(ch), [3, 0]);
+  same([Engine.isRunning(ch, "red-mist"), a.charged], [true, []]);
+  assert.equal(Engine.resolveHit(ch, { ...H2, damage: 10, powers: ["red-mist"] }).through, 0);
+});
+
+test("Decision 267: Odin's Aegis takes BOD bonus + 2 × rank off a Spirit hit and spends rank SFR (HQ18)", () => {
+  const ch = draugurAnswers({ "odins-aegis": 2 }, 8);
+  const a = Engine.applyHit(ch, { ...H2, damage: 10, damageType: "spirit", react: ["odins-aegis"] }, {});
+  assert.equal(a.ok, true, a.why);
+  same([a.result.reactBy.from, a.result.reactBy.to, a.result.reactBy.sfr], [10, 4, 2]);
+  same([ch.trackers.damage, sfrNow(ch)], [4, [2, 2]]);
+  const phys = draugurAnswers({ "odins-aegis": 2 }, 8);
+  const p = Engine.applyHit(phys, { ...H2, damage: 10, react: ["odins-aegis"] }, {});
+  same([p.result.through, phys.trackers.sfr.spent], [10, 0]);
+  const low = draugurAnswers({ "odins-aegis": 2 }, 8);
+  low.trackers.sfr.spent = Engine.sfr(low).value - 1;
+  same(pickKeys(Engine.resolveHit(low, { ...H2, damage: 10, damageType: "spirit", react: ["odins-aegis"] }), ["ok", "why"]), { ok: false, why: "Odin's Aegis needs 2 SFR, 1 left." });
+  assert.equal(Engine.applyHit(low, { ...H2, damage: 10, damageType: "spirit", react: ["odins-aegis"] }, {}).ok, false);
+  same([low.trackers.sfr.spent, low.trackers.damage], [Engine.sfr(low).value - 1, 0]);
+});
+
+test("Decision 267: Null Field absorbs across hits and stops when used up (HQ14)", () => {
+  const ch = forgeFang();
+  assert.equal(Engine.setToggle(ch, "form", "Werewolf").ok, true);
+  const spent0 = ch.trackers.sfr.spent;
+  assert.equal(Engine.startPower(ch, "null-field").ok, true);
+  assert.equal(ch.trackers.sfr.spent, spent0 + 1);
+  const first = Engine.applyHit(ch, { ...H2, damage: 3, damageType: "spirit", powers: ["null-field"] }, {});
+  same([first.result.through, first.result.absorbedBy.usedAfter, first.result.absorbedBy.usedUp], [0, 3, false]);
+  same(ch.trackers.running, [{ id: "null-field", used: 3 }]);
+  same(Engine.hitAnswers(ch).absorb.map(x => x.left), [2]);
+  const dmg = ch.trackers.damage;
+  const second = Engine.applyHit(ch, { ...H2, damage: 8, damageType: "spirit", powers: ["null-field"] }, {});
+  same([second.result.through, second.result.absorbedBy.usedUp, Engine.isRunning(ch, "null-field")], [6, true, false]);
+  assert.equal(ch.trackers.damage, dmg + 6);
+  // A Physical hit leaves it alone.
+  const ph = forgeFang(); Engine.setToggle(ph, "form", "Werewolf"); Engine.startPower(ph, "null-field");
+  Engine.applyHit(ph, { ...H2, damage: 8, powers: ["null-field"] }, {});
+  same(ph.trackers.running, [{ id: "null-field" }]);
+});
+
+test("Decision 267: Silverscar halves Withering from silver, never below 1, and nothing else (HQ16)", () => {
+  const ch = werewolf("wildblood"); withMajors(ch, "silverscar");
+  const hit = (damage, extra) => Engine.resolveHit(ch, { ...H2, damage, damageType: "blade", category: "withering", ...extra });
+  same([hit(9, { silver: true }).through, hit(9, { silver: false }).through, hit(1, { silver: true }).through, hit(9, { silver: true, category: "regular" }).through], [4, 9, 1, 9]);
+  same(hit(9, { silver: true }).silverHalved, { by: "Silverscar", from: 9, to: 4 });
+  assert.equal(Engine.grants(ch).witheringHalvedBy, null, "Silverscar was read as Wither Ward");
+  assert.equal(Engine.hitAsks(ch).silver, true);
+  assert.equal(Engine.hitAsks(werewolf("wildblood")).silver, false);
+  const v = vTake(vMaj(), "wither-ward");
+  const w = Engine.resolveHit(v, { ...H2, damage: 9, damageType: "blade", category: "withering" });
+  same([w.through, w.witherHalved.by], [4, "Wither Ward"]);
+  assert.equal(Engine.hitAsks(v).silver, false);
+});
+
+test("Decision 267: Adaptive Skeleton runs in either form and its Natural Armor starts ticked (HQ17, 0414)", () => {
+  const ch = forgeFang({ "null-field": 1 });
+  const r = Engine.startPower(ch, "adaptive-skeleton");
+  assert.equal(r.ok, true, r.why);
+  assert.equal(r.sfr, 2);
+  const n = Engine.naturalArmor(ch, ["adaptive-skeleton"]);
+  same([n.conditional.map(c => [c.id, c.amount]), n.total], [[["adaptive-skeleton", 2]], 2]);
+  assert.equal(Engine.naturalArmor(ch, []).total, 0);
+  Engine.setToggle(ch, "form", "Werewolf"); Engine.startPower(ch, "null-field");
+  assert.equal(Engine.isRunning(ch, "adaptive-skeleton"), true, "stopped on the shift");
+  const back = Engine.setToggle(ch, "form", "Human");
+  assert.equal(Engine.isRunning(ch, "adaptive-skeleton"), true, "stopped on the shift back");
+  assert.equal(Engine.isRunning(ch, "null-field"), false);
+  assert.equal(back.stopped.includes("adaptive-skeleton"), false);
+});
+
+test("Decision 267: Icebound Resilience runs, and its +1 doesn't stack with Iron Hide (HQ17, Decision 215)", () => {
+  const ch = upyrRunning({ "icebound-resilience": 1, "iron-hide": 1 });
+  ch.progression.powerIpe["iron-hide"] = 1;
+  assert.equal(Engine.startPower(ch, "icebound-resilience").ok, true);
+  assert.equal(Engine.startPower(ch, "iron-hide").ok, true);
+  assert.equal(Engine.naturalArmor(ch, ["icebound-resilience", "iron-hide"]).total, 3);
+});
+
+test("Decision 267: a running entry keeps a whole used through migrate(), and junk goes", () => {
+  const ch = Engine.newCharacter();
+  ch.trackers.running = [{ id: "null-field", used: 3.7 }, { id: "a", used: -2 }, { id: "b", used: "x" }, { id: "c", used: 5000 }, { id: "d", used: NaN }];
+  const m = Engine.migrate(JSON.parse(JSON.stringify(ch)));
+  same(m.trackers.running, [{ id: "null-field", used: 3 }, { id: "a", used: 0 }, { id: "b" }, { id: "c", used: 999 }, { id: "d" }]);
+  assert.equal(m.meta.schemaVersion, "0.34");
+});
+
+test("Decision 267: hitAnswers, resolveHit and applyHit are total on junk powers, react and silver", () => {
+  for (const junk of ["x", 5, {}, [null, 4, {}, "nope", "spectral-veil"], null, true]) {
+    for (const ch of [draugurAnswers(), forgeFang(), Engine.newCharacter(), vampire(null)]) {
+      Engine.hitAnswers(ch);
+      const r = Engine.resolveHit(ch, { ...H2, damage: 5, powers: junk, react: junk, silver: junk });
+      assert.equal(r.ok === true && Number.isFinite(r.through), true);
+      Engine.applyHit(ch, { ...H2, damage: 5, powers: junk, react: junk, silver: junk }, {});
+    }
+  }
+  const ch = draugurAnswers({ "odins-aegis": 1 });
+  const aegis = VAD().powers.find(p => p.id === "odins-aegis");
+  withData(aegis, "grants", [{ type: "hitTaken", minus: { stat: "BOD", perRank: "x" }, magical: "y" }], () => {
+    const r = Engine.resolveHit(ch, { ...H2, damage: 5, damageType: "spirit", react: ["odins-aegis"] });
+    assert.equal(Number.isFinite(r.through), true);
+  });
+});
+
+test("Decision 267: a seat's hit drops Odin's Aegis and Null Field, keeps immunity, and writes nothing to the copy (HQ15, Decision 257)", () => {
+  const seatWith = file => {
+    file.meta.updated = "2026-10-01T10:00:00.000Z";
+    const t = Engine.newTable("Fight"), pid = Engine.addPlayer(t, { name: "Brogan" }).id;
+    assert.ok(Engine.importSeat(t, pid, file).ok);
+    const e = Engine.addEncounter(t, { name: "Docks" }).id;
+    return { t, e, id: addPc(t, e, file.identity.name || "Test Subject") };
+  };
+  const dr = draugurAnswers({ "spectral-veil": 1, "odins-aegis": 2 }, 8);
+  dr.trackers.running = [{ id: "spectral-veil" }];
+  dr.trackers.sfr.spent = 3;
+  const a = seatWith(dr);
+  const spirit = { damage: 10, damageType: "spirit", category: "regular", location: "torso", react: ["odins-aegis"], powers: ["spectral-veil"] };
+  assert.equal(Engine.resolveEncounterHit(a.t, a.e, a.id, spirit).through, 10, "a seat's Odin's Aegis reduced the hit");
+  assert.equal(Engine.resolveEncounterHit(a.t, a.e, a.id, { ...spirit, damageType: "ballistic" }).through, 0, "immunity didn't pass");
+  const before = JSON.stringify(Engine.rowCharacter(a.t, a.e, a.id));
+  assert.ok(Engine.applyEncounterHit(a.t, a.e, a.id, spirit, {}).ok);
+  assert.equal(JSON.stringify(Engine.rowCharacter(a.t, a.e, a.id).trackers.sfr), JSON.stringify(JSON.parse(before).trackers.sfr), "the hit spent from the copy");
+  const ff = forgeFang(); Engine.setToggle(ff, "form", "Werewolf"); Engine.startPower(ff, "null-field");
+  const b = seatWith(ff);
+  const nf = { damage: 3, damageType: "spirit", category: "regular", location: "torso", powers: ["null-field"] };
+  assert.equal(Engine.resolveEncounterHit(b.t, b.e, b.id, nf).through, 3, "a seat's Null Field absorbed");
+  assert.ok(Engine.applyEncounterHit(b.t, b.e, b.id, nf, {}).ok);
+  same(Engine.rowCharacter(b.t, b.e, b.id).trackers.running, [{ id: "null-field" }]);
+});
+
+test("Decision 267: a hitTaken row answers magical types only when it says magical (Decision 135)", () => {
+  const nf = forgeFang(); Engine.setToggle(nf, "form", "Werewolf"); Engine.startPower(nf, "null-field");
+  const wolf = D.archetypes.find(a => a.id === "werewolf").powers.find(p => p.id === "null-field");
+  const phys = { ...H2, damage: 3, powers: ["null-field"] };
+  assert.equal(Engine.resolveHit(nf, phys).through, 3, "Null Field absorbed a Physical hit");
+  withData(wolf.grants[0], "magical", false, () => {
+    assert.equal(Engine.resolveHit(nf, phys).through, 0, "a row that isn't magical should answer any type");
+    assert.equal(Engine.hitAnswers(nf).absorb[0].magical, false);
+  });
+  const dr = draugurAnswers({ "odins-aegis": 2 });
+  const aegis = VAD().powers.find(p => p.id === "odins-aegis");
+  const hit = { ...H2, damage: 10, react: ["odins-aegis"] };
+  assert.equal(Engine.resolveHit(dr, hit).through, 10);
+  withData(aegis.grants[0], "magical", false, () => same([Engine.resolveHit(dr, hit).through, Engine.resolveHit(dr, hit).reactBy.sfr], [6, 2]));
+});
+
+test("Decision 267 (Ken, 2026-11-05): an Odin's Aegis tick that cuts nothing costs nothing, and the pool refusal is only for a spend", () => {
+  const ch = vestOn(draugurAnswers({ "odins-aegis": 2 }, 8));
+  ch.trackers.sfr.spent = Engine.sfr(ch).value - 1;           // 1 SFR left; the Aegis costs 2
+  const soaked = { ...H2, damage: 2, damageType: "spirit", protRoll: 6, react: ["odins-aegis"] };
+  const r = Engine.resolveHit(ch, soaked);
+  assert.equal(r.ok, true, r.why);
+  same([r.through, r.reactBy, r.patch.sfrSpend], [0, null, 0]);
+  const a = Engine.applyHit(ch, soaked, {});
+  assert.equal(a.ok, true);
+  assert.equal(ch.trackers.sfr.spent, Engine.sfr(ch).value - 1, "a tick that cut nothing was charged");
+  // The refusal still holds where the Aegis would cut something.
+  const cuts = Engine.resolveHit(ch, { ...soaked, damage: 10, protRoll: 1 });
+  same([cuts.ok, cuts.why], [false, "Odin's Aegis needs 2 SFR, 1 left."]);
 });
