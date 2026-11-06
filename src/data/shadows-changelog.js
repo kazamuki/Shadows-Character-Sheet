@@ -2,10 +2,15 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
-    "version": "0.63.1",
+    "version": "0.64.0",
     "date": null,
     "intro": [],
     "items": [
+      "**Tonight, on every tab.** While a fight runs or a session is open, a line under the header says who's acting, who's down, the current thread, the clock closest to full, and whether the table needs exporting. Tap any of it to go there.",
+      "**Jot files to the session you're playing**, even after midnight or on a second night, and says which one before you save.",
+      "**Closing out a session ends on what everyone got**, with **Export the table** and **Done** under it. The Debrief folds away while the session is still on, and a table opens at the top.",
+      "**Clocks show where they stand**, \"Ibarra's patience 4 of 6\", with − and + on the faction, place and encounter cards. Next session leads with **Close to full**, the clocks within two of filling, including ones no page owns.",
+      "**A running fight reads as play.** The title is a heading with **Rename**, Combat Sense is plain text on the row, More is sorted into Play, Setup and Remove, and the Hit panel puts damage, Apply and the preview first.",
       "**A seat's card reads as a readout.** Health is a big green figure (magenta when Down), Awareness and Conditions have their labels and values, and nothing is italic. The same lines lead the seat's page.",
       "**Section heads are labels, and names stay names.** \"Clocks\", \"Threads\" and \"Stat block\" are small capitals over a rule; a player, a crew or a site keeps its own title face.",
       "**Activity says what happened.** \"Hit Reclaim drone: 9 through · 1 Health Level\", \"Reclaim drone took 5\", \"Healed Reclaim drone 3\" and \"The tide at Wharf 17: 4 of 6\", so Undo is easy to trust.",

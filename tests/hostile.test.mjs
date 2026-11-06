@@ -924,6 +924,15 @@ test("a hostile award log and the close-out sheet render as text, with no error"
     assert.ok(app.$("[data-co-write]"), "the close-out sheet didn't open");
     found.push(...injected(app, "the close-out sheet"));
     assert.ok(!app.$("#main").innerHTML.includes("[object Object]"));
+    // U2: Write ends on a page of its own (the award log as markup again), and Done returns to the session page.
+    app.$("[data-co-write]").click();
+    if (app.$("[data-coend-h]")) {
+      found.push(...injected(app, "the close-out's end"));
+      assert.ok(!app.$("#main").innerHTML.includes("[object Object]"));
+      app.$("[data-coend-done]").click();
+      app.$("[data-sback]").click();
+      continue;
+    }
     app.$("[data-co-back]").click();
     app.$("[data-sback]").click();
   }

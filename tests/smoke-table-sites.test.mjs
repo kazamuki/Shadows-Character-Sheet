@@ -224,10 +224,11 @@ test("251: a place's card says its profile and its clocks", () => {
   const app = setup();
   pickSite(app, "long-stretch");
   app.click("[data-pback]");
-  assert.match(app.$(".place-card .roster-meta").textContent, /Thin Places · The Long Stretch · 1 clock$/);
+  assert.match(app.$(".place-card .roster-meta").textContent, /Thin Places · The Long Stretch$/);
+  assert.match(app.$(".place-card .clock-line").textContent, /of [0-9]+/, "U2: the clock is a line on the card");
   // A file's link may carry no name: the card leaves the profile out rather than an empty part.
   app.window.eval("delete S.table.places[0].site.name; renderTable()");
-  assert.match(app.$(".place-card .roster-meta").textContent, /Thin Places · 1 clock$/);
+  assert.match(app.$(".place-card .roster-meta").textContent, /Thin Places$/);
 });
 
 test("251: deleting a place asks with its clock count, and Undo from Activity restores both", () => {
@@ -305,7 +306,7 @@ test("251: a faction's clocks behave as before the lift", () => {
   app.click("[data-clkadd]"); app.click("[data-clkdone]");
   app.click("[data-fback]");
   cityView(app, "factions");
-  assert.match(app.$("[data-fcard] .roster-meta").textContent, /1 clock$/, "the faction card says its clock count the same way");
+  assert.match(app.$("[data-fcard] .clock-line").textContent, /of [0-9]+/, "the faction card lists its clock the same way");
   assert.deepEqual(app.errors, []);
 });
 

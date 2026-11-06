@@ -168,12 +168,14 @@ test("252: the encounter card counts its clocks and leaves out an empty part", (
   const app = encApp("Dock fight");
   app.click("[data-clkadd]"); both(app, '[data-kf="name"]', "Alarm"); app.click("[data-clkdone]");
   app.click("[data-enc-back]");
-  assert.equal(app.$(".roster-meta").textContent, "Nobody yet · 1 clock");
+  assert.equal(app.$(".roster-meta").textContent, "Nobody yet");
+  assert.match(app.$(".roster-card .clock-line").textContent, /^Alarm 0 of [0-9]+/, "U2: a card lists its clocks, not a count");
   app.click("[data-enc-open]");
   app.click("[data-clkedit]");
   app.click("[data-clkdel]");
   app.click("[data-enc-back]");
   assert.equal(app.$(".roster-meta").textContent, "Nobody yet", "no clocks, no part");
+  assert.equal(app.$(".roster-card .clock-line"), null, "no clocks, no lines");
   assert.ok(!/·\s*·/.test(app.$(".roster-meta").textContent));
 });
 

@@ -52,7 +52,7 @@ function markTableExported(id){
   const e=savedTable(id); if (!e) return;
   e.exported=e.changed;
   try{ localStorage.setItem(tableKey(id), JSON.stringify(e)); }catch(err){}
-  if (lastTableSaved && lastTableSaved.id===id) lastTableSaved.exported=e.exported;
+  if (lastTableSaved && lastTableSaved.id===id){ lastTableSaved.exported=e.exported; paintTonight(); }   // the file holds what's saved, so Unexported goes at once (Decision N)
 }
 function removeTable(id){
   try{ localStorage.removeItem(tableKey(id)); }catch(e){}
@@ -129,7 +129,10 @@ function openTable(t, section){
   lastTableSaved=null; untouched=null;
   S={ screen:"table", ch:null, step:0, maxReached:0, section:"main", admin:false, table:t, tsection:TABLE_SECTIONS.some(s=>s.id===section) ? section : TABLE_SECTIONS[0].id };
   rebaseTable();
+  // A table opens at the top of its tab with its heading focused, whatever Home was scrolled to (Decision N).
+  window.scrollTo(0,0);
   update();
+  const h=$("main") && $("main").querySelector("h1"); if (h) takeFocus(h, true);
 }
 function exportTable(t){
   const c=Engine.migrateTable(clone(t));
@@ -216,10 +219,10 @@ function gmTableEntries(){ return featureOn("gm") ? tableEntries() : []; }
 
 // One field, one primary button: Run a table and Rename share it. Enter does
 // what the button does; Esc and Cancel change nothing.
-function openNameModal({ title, value, yes, then }){
+function openNameModal({ title, value, yes, then, label="Table name", placeholder="Tuesday nights" }){
   openModal({ title,
-    html:`<label class="field"><span>Table name</span>
-      <input type="text" id="tbl-name" value="${esc(value||"")}" placeholder="Tuesday nights" autocomplete="off"></label>`,
+    html:`<label class="field"><span>${esc(label)}</span>
+      <input type="text" id="tbl-name" value="${esc(value||"")}" placeholder="${esc(placeholder)}" autocomplete="off"></label>`,
     foot:`<button class="btn" data-modalclose>Cancel</button><button class="btn primary" data-nameyes>${esc(yes)}</button>`,
     bind(body, foot){
       const input=body.querySelector("#tbl-name"), go=()=>{ const v=input.value; closeModal(); then(v); };
@@ -271,6 +274,15 @@ function tableTabButtonsHtml(){
     return `<button class="${cls}" data-tsec="${sec.id}">${ico}${esc(sec.label)}</button>`;
   }).join("");
 }
+// A tab press's reset, shared with the Tonight strip's jumps: the tab you're on also takes you back from a member's page to the list.
+function pickTableTab(id){
+  S.tsection=id; S.backFromLine=null; S.backEnc=null; S.placeRoute=null; S.factionRoute=null; S.clockEdit=null; S.backCity=null;
+  if (S.tsection==="city"){ S.placeOpen=null; S.factionOpen=null; }
+  if (S.tsection==="sessions"){ S.sessOpen=null; S.coEnd=null; }
+  if (S.tsection==="players"){ S.seatOpen=null; S.seatSheet=null; }
+  if (S.tsection==="cast"){ S.castOpen=null; S.backEnc=null; S.backSess=false; S.backClose=false; S.backCity=null; }
+  if (S.tsection==="threats"){ S.threatOpen=null; S.threatGroup=null; S.threatMember=null; S.threatEnc=null; }
+}
 function renderTableChrome(){
   const ctx=$("brandctx"), nav=$("topnav"), act=$("hdractions"), t=S.table;
   document.title = `${tableName(t)} — Shadows`;
@@ -278,7 +290,7 @@ function renderTableChrome(){
   ctx.textContent = tableName(t);
   nav.innerHTML = tableTabButtonsHtml();
   // The tab you're on also takes you back from a member's page to the list.
-  nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>{ S.tsection=b.dataset.tsec; S.backFromLine=null; S.backEnc=null; S.placeRoute=null; S.factionRoute=null; S.clockEdit=null; S.backCity=null; if (S.tsection==="city"){ S.placeOpen=null; S.factionOpen=null; } if (S.tsection==="sessions") S.sessOpen=null; if (S.tsection==="players"){ S.seatOpen=null; S.seatSheet=null; } if (S.tsection==="cast"){ S.castOpen=null; S.backEnc=null; S.backSess=false; S.backClose=false; S.backCity=null; } if (S.tsection==="threats"){ S.threatOpen=null; S.threatGroup=null; S.threatMember=null; S.threatEnc=null; } window.scrollTo(0,0); update(); });
+  nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>{ pickTableTab(b.dataset.tsec); window.scrollTo(0,0); update(); });
   showActiveTab(nav);
   if (!act) return;
   act.innerHTML = `<button type="button" class="hdr-act" data-tfind>Find</button><button type="button" class="hdr-act" data-tjot>Jot</button>
@@ -367,6 +379,85 @@ function notesTabHtml(t){
     ${t.notes.length ? t.notes.map(noteCardHtml).join("")
       : `<p class="step-note">Nothing on file yet. What you write here stays with the table and goes wherever its file goes.</p>`}`;
 }
+// ── Tonight (Decision N) ───────────────────────────────────────────────
+// One line of the night in the tables bar, on every tab and page while a fight runs or a session is open: who acts,
+// who is down, the thread, the clock about to fill, and whether the table needs exporting. Each item is a jump and
+// none changes the table (Unexported runs Export, which writes a file and nothing else). It is read from the engine
+// on every update() and stored nowhere (constraint 7). update(false) skips renderTable, so update() paints it
+// (paintTonight); its node persists across redraws, so focus kept on an item survives a repaint (Decision 164).
+let tonightEl = null, tonightGo = {};
+const clockName = c => String(c.name||"").trim() || "A clock";
+function tonightShows(){ const t=S.table; return !!(t && (Engine.runningEncounter(t) || Engine.openSession(t))); }
+function tonightItems(){
+  const t=S.table, items=[], enc=Engine.runningEncounter(t);
+  if (enc){
+    const v=Engine.encounterView(t, enc.id, packsMemo), actor=v.rows.find(r=>r.active), title=Engine.encounterTitle(enc);
+    items.push({ key:"fight", html:`<span class="tn-h">Round <b class="tn-n">${esc(enc.round)}</b>${actor ? " ·" : ""}</span>${actor ? `<span class="tn-t tn-actor">${esc(actor.label)}</span>` : ""}`,
+      name:actor ? `Go to ${actor.label}, acting in ${title}` : `Go to ${title}, round ${enc.round}`, go:()=>goFight(enc.id) });
+    const down=v.rows.filter(r=>r.health && r.health.down && !r.row.out);
+    if (down.length) items.push({ key:"down", cls:" tn-down",
+      html:down.length===1 ? `<span class="tn-h">Down:</span><span class="tn-t">${esc(down[0].label)}</span>` : `<span class="tn-h"><b class="tn-n">${down.length}</b> down</span>`,
+      name:down.length===1 ? `Go to ${down[0].label}, down in ${title}` : `Go to the ${down.length} who are down in ${title}`, go:()=>goFight(enc.id, down[0].row.id) });
+  }
+  const cur=Engine.nextSession(t).current;
+  if (cur) items.push({ key:"thread", html:`<span class="tn-t">${esc(threadTitle(cur))}</span>`, name:`Go to the thread ${threadTitle(cur)}`, go:()=>goThread(cur.id) });
+  const near=Array.from(Engine.clocksNearFull(t))[0];
+  if (near) items.push({ key:"clock", html:`<span class="tn-t">${esc(clockName(near.clock))}</span><span class="tn-h"><b class="tn-n">${near.clock.filled} of ${near.clock.segments}</b></span>`,
+    name:`Go to ${clockName(near.clock)} on Next session`, go:()=>goClock(near.clock.id) });
+  if (lastTableSaved && tableUnexported(lastTableSaved)) items.push({ key:"unx", cls:" tn-unx", html:"Unexported", name:"Export the table", go:exportFromStrip });
+  const lead=items.find(i=>i.key!=="unx"); if (lead) lead.cls=(lead.cls||"") + " tn-lead";
+  return items;
+}
+// The strip's node lives in the page's bar if it has one; a tab with none gets a bar of its own (.tn-bar), made and
+// taken away here with no redraw, so a typed field keeps its caret.
+function paintTonight(){
+  if (S.screen!=="table" || !S.table) return;
+  const main=$("main"); if (!main) return;
+  const own=main.querySelector(":scope > .tn-bar"), items=!main.querySelector(":scope > .enc-bar") && tonightShows() ? tonightItems() : [];
+  if (!items.length){ if (tonightEl && tonightEl.parentNode) tonightEl.remove(); if (own) own.remove(); return; }
+  if (!tonightEl){
+    tonightEl=document.createElement("div"); tonightEl.className="tn"; tonightEl.setAttribute("role","region"); tonightEl.setAttribute("aria-label","Tonight");
+    tonightEl.addEventListener("click", ev=>{ const b=ev.target.closest("[data-tn]"); if (b && tonightGo[b.dataset.tn]) tonightGo[b.dataset.tn](); });
+  }
+  let bar=main.querySelector(":scope > .tbl-bar");
+  if (!bar){
+    bar=document.createElement("div"); bar.className="tbl-bar tn-bar";
+    const first=main.firstElementChild;
+    main.insertBefore(bar, first && first.classList.contains("import-issues") ? first.nextSibling : first);
+  }
+  if (tonightEl.parentNode!==bar) bar.appendChild(tonightEl);
+  tonightGo=Object.fromEntries(items.map(i=>[i.key, i.go]));
+  const html=items.map(i=>`<button type="button" class="tn-item${i.cls||""}" data-tn="${i.key}" aria-label="${esc(i.name)}">${i.html}</button>`).join("");
+  if (tonightEl._html===html) return;
+  const af=document.activeElement, key=af && tonightEl.contains(af) ? dataKey(af) : null;
+  tonightEl.innerHTML=html; tonightEl._html=html;
+  const back=key && tonightEl.querySelector(key); if (back) back.focus({ preventScroll:true });
+}
+// A jump resets nothing a tab press doesn't, and keeps a draft when it lands where the GM already is.
+function goFight(eid, rowId){
+  const here=S.tsection==="encounters" && S.encOpen===eid;
+  pickTableTab("encounters"); S.encOpen=eid;
+  if (!here){ S.backFromLine=null; S.encWrap=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; S.encDelay=null; S.encPick=false; S.encQ=""; S.encCodex=false; S.encCodexQ=""; }
+  window.scrollTo(0,0); update();
+  const main=$("main"), row=rowId && main.querySelector(attrSel("data-erow", rowId));
+  if (row){ takeFocus(row, true); if (row.scrollIntoView) row.scrollIntoView({ block:"nearest" }); return; }
+  const next=main.querySelector("[data-esrc], [data-efinish]:not([disabled]), [data-enext]"); if (next) next.focus({ preventScroll:true });
+  const act=main.querySelector(".enc-row.active"); if (act && act.scrollIntoView) act.scrollIntoView({ block:"nearest" });
+}
+function goThread(id){ pickTableTab("sessions"); window.scrollTo(0,0); renderTableChrome(); showThread(id); }
+function goClock(cid){
+  pickTableTab("sessions"); window.scrollTo(0,0); update();
+  const row=$("main").querySelector(attrSel("data-cline", cid)), plus=row && row.querySelector("[data-clkplus]:not([disabled])");
+  if (plus){ plus.focus({ preventScroll:true }); if (row.scrollIntoView) row.scrollIntoView({ block:"center" }); }
+}
+// Export from the strip: the file, a notice naming it, and focus on what is left of the strip (the marker is gone).
+function exportFromStrip(){
+  const name=exportTable(S.table);
+  notice(`Exported ${name}.`);
+  const first=tonightEl && tonightEl.querySelector("[data-tn]");
+  if (first) first.focus({ preventScroll:true }); else if (tonightEl){ tonightEl.tabIndex=-1; tonightEl.focus({ preventScroll:true }); }
+}
+
 function renderTable(){
   // Only reachable with the switch on: with it off, Home draws instead.
   if (!featureOn("gm") || !S.table){ S=homeState(); return renderHome(); }
@@ -388,18 +479,18 @@ function renderTable(){
   const head = onPage ? "" :
     `<h1 class="step-title tbl-title">${esc(tableName(t))}</h1>
     <p class="step-note">Table${Number.isFinite(made)?` · created ${esc(new Date(made).toLocaleDateString())}`:""}</p>`;
-  const body = S.tsection==="sessions" ? (sessPage ? (closeSheetNow(sessPage) ? closeSheetHtml(sessPage) : sessionPageHtml(sessPage)) : sessionsTabHtml(t))
+  const body = S.tsection==="sessions" ? (sessPage ? (closeEndNow(sessPage) ? closeEndHtml(sessPage) : closeSheetNow(sessPage) ? closeSheetHtml(sessPage) : sessionPageHtml(sessPage)) : sessionsTabHtml(t))
     : S.tsection==="players" ? (seatSheet ? readOnlySheetHtml(seatSheet) : seatPage ? seatPageHtml(seatPage) : playersTabHtml(t))
     : S.tsection==="cast" ? (onPage ? castPageHtml(onPage) : castTabHtml(t))
     : S.tsection==="city" ? (placePage ? placePageHtml(placePage) : factionPage ? factionPageHtml(factionPage) : cityTabHtml(t))
     : S.tsection==="threats" ? (threatPage ? threatPage.html : threatsTabHtml(t)) : S.tsection==="encounters" ? encountersTabHtml(t) : S.tsection==="reference" ? referenceTabHtml() : notesTabHtml(t);
   // A redraw a press causes keeps the keyboard's place (Decision 164).
-  keepPlace(main, ()=>{ main.innerHTML = failed + head + body; bindTable(); }, ["[data-cadd-name]", "[data-pyadd-name]", "[data-padd-name]", "[data-fadd-name]", "[data-tnew]", "[data-tsearch]", "[data-pslot]", "[data-enc-new]", "[data-thadd]", "[data-snew]", "[data-jumpfilter]"]);
+  keepPlace(main, ()=>{ main.innerHTML = failed + head + body; paintTonight(); bindTable(); }, ["[data-cadd-name]", "[data-pyadd-name]", "[data-padd-name]", "[data-fadd-name]", "[data-tnew]", "[data-tsearch]", "[data-pslot]", "[data-enc-new]", "[data-thadd]", "[data-snew]", "[data-jumpfilter]"]);
 }
 function bindTable(){
   // The page's bar is a sideways row like the sheet's tabs: fades, a kept place and the wheel (Decision 165). An encounter's
   // bar is not: it wraps (U1), so End the encounter is never scrolled out of reach.
-  const bar=$("main").querySelector(":scope > .tbl-bar"); if (bar){
+  const bar=$("main").querySelector(":scope > .tbl-bar:not(.tn-bar)"); if (bar){
     // A row's place is kept by its key, and S.section is "main" on a table, so each page names its own: the next page's bar opens at the start.
     bar.dataset.row += ":" + [S.tsection, S.castOpen, S.placeOpen, S.factionOpen, S.sessOpen, S.closeOut && S.closeOut.id, S.seatOpen, S.seatSheet, S.threatOpen, S.threatGroup, S.encOpen].filter(x=>typeof x==="string" && x).join(":");
     bindScrollRows(bar);
@@ -493,7 +584,7 @@ function findResultsHtml(q){
   return FIND_KINDS.map(([kind, label])=>{
     const of=hits.filter(h=>h.kind===kind);
     return of.length ? `<h3 class="find-h">${esc(label)} <span class="find-n">${of.length}</span></h3><ul class="find-list">${of.map(h=>
-      `<li><button type="button" class="find-hit" data-fkind="${esc(h.kind)}" data-fid="${esc(h.id)}"><span class="find-title">${esc(h.title)}</span>
+      `<li><button type="button" class="find-hit" data-fkind="${esc(h.kind)}" data-fid="${esc(h.id)}" data-ffield="${esc(h.field)}"><span class="find-title">${esc(h.title)}</span>
         <span class="find-field">${esc(findFieldLabel(h.field))}</span> <span class="find-snip">${findSnipHtml(h.snip)}</span></button></li>`).join("")}</ul>` : "";
   }).join("");
 }
@@ -508,19 +599,24 @@ function openFind({ viaKey }={}){
       const redraw=()=>{ res.innerHTML=findResultsHtml(q.value); const n=res.querySelectorAll("[data-fkind]").length;
         count.textContent = q.value.trim().length<2 ? "" : n ? `${n} found` : "Nothing on the table matches."; };
       q.oninput=()=>{ S.findQ=q.value; redraw(); };
-      res.onclick=ev=>{ const b=ev.target.closest("[data-fkind]"); if (!b) return; const kind=b.dataset.fkind, id=b.dataset.fid; closeModal(); openFound(kind, id); };
+      res.onclick=ev=>{ const b=ev.target.closest("[data-fkind]"); if (!b) return; const kind=b.dataset.fkind, id=b.dataset.fid; closeModal(); openFound(kind, id, b.dataset.ffield); };
     } });
 }
 // A hit opens its record and lands on its title (Decision 164: focus never falls to <body>).
-function openFound(kind, id){
+function openFound(kind, id, field){
   S.backFromLine=null; S.placeRoute=null; S.factionRoute=null; S.backCity=null;
   const t=S.table, main=()=>$("main");
   const land=sel=>{ const el=main().querySelector(sel); if (el){ takeFocus(el, true); if (el.scrollIntoView) el.scrollIntoView({ block:"center" }); } return el; };
   const toMember=cid=>{ S.tsection="cast"; S.castOpen=cid; S.castView="cast"; S.backEnc=null; S.backSess=false; S.backClose=false; S.backCity=null; S.castFrom=null; S.intAdd=null; };
-  const toSession=sid=>{ S.tsection="sessions"; S.sessOpen=sid; if (S.closeOut) S.closeOut.view=false; };
+  const toSession=sid=>{ S.tsection="sessions"; S.sessOpen=sid; S.coEnd=null; if (S.closeOut) S.closeOut.view=false; };
   window.scrollTo(0,0);
   if (kind==="cast"){ toMember(id); update(); land("[data-ctitle]"); }
-  else if (kind==="session"){ toSession(id); update(); land("h1"); }
+  else if (kind==="session"){
+    // A hit in a journal part lands on the part, and opens the Debrief fold it sits in (Decision N).
+    const part=typeof field==="string" && field.startsWith("journal.") ? field.slice(8) : null;
+    if (part) (S.debriefOpen || (S.debriefOpen={}))[id]=true;
+    toSession(id); update(); (part && land(attrSel("data-sj", part))) || land("h1");
+  }
   else if (kind==="seat"){ S.tsection="players"; openSeat(id); land("[data-seath]") || land("h1"); }
   else if (kind==="interaction"){
     const x=(t.interactions||[]).find(i=>i.id===id); if (!x) return;
@@ -555,12 +651,10 @@ function openNote(id){
   S.tsection="notes"; window.scrollTo(0,0); update();
   const el=$("main").querySelector(attrSel("data-ntext", id)); if (el){ el.focus(); if (el.scrollIntoView) el.scrollIntoView({ block:"center" }); }
 }
-// Where a jot would go today, said before it is saved (Decision 203's rule, read for the line).
+// Where a jot would go, said before it is saved: the session being played, whatever day it is dated (Decision N).
 function jotWhere(){
-  const today=Engine.sessionList(S.table).filter(s=>s.date===localDay());
-  return today.length===1 ? `Goes with ${Engine.sessionTitle(today[0])}.`
-    : today.length ? "Goes on the table's notes. More than one session is dated today."
-    : "Goes on the table's notes. No session is dated today.";
+  const open=Engine.openSession(S.table);
+  return open ? `Goes with ${Engine.sessionTitle(open)}.` : "Goes on the table's notes. No session is open.";
 }
 function openJot({ viaKey }={}){
   const opener=document.activeElement;
@@ -1221,10 +1315,10 @@ const gazName = id => { const e=Engine.gazetteerEntry(id); return e ? String(e.n
 function placeCardHtml(t, p){
   const n=Engine.placeLines(t, p.id).length;
   const bits=[[gazName(p.zone), gazName(p.territory)].filter(Boolean).join(" · "), p.district, p.neighborhood, gazName(p.environment),
-    p.site && typeof p.site.name==="string" ? p.site.name : "", clockCountText(Engine.clocksOn(t, { kind:"place", id:p.id })),
+    p.site && typeof p.site.name==="string" ? p.site.name : "",
     n ? `${n} ${n===1 ? "line" : "lines"}` : ""].filter(s=>String(s).trim()).map(esc).join(" · ");
   return `<li class="roster-card cast-card place-card" data-pcard="${esc(p.id)}"><button class="cast-open" data-popen="${esc(p.id)}">${esc(Engine.placeTitle(t, p))}</button>
-    ${bits ? `<div class="roster-meta cast-meta">${bits}</div>` : ""}</li>`;
+    ${bits ? `<div class="roster-meta cast-meta">${bits}</div>` : ""}${clockLinesHtml(Engine.clocksOn(t, { kind:"place", id:p.id }))}</li>`;
 }
 function placeListHtml(t){
   if (!placeRecords().length) return `<p class="step-note">No places yet. Add one, or find it in The city.</p>`;
@@ -1512,6 +1606,7 @@ function bindPlaceList(main){
 function bindPlaceCards(main){
   main.querySelectorAll("[data-popen]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation(); openPlacePage(b.dataset.popen, null); });
   main.querySelectorAll("[data-pcard]").forEach(li=>li.onclick=ev=>{ if (!ev.target.closest("button")) openPlacePage(li.dataset.pcard, null); });
+  bindClockLines(main);
 }
 function redrawCity(main){
   const g=Engine.gazetteer({ q:S.cityQ||"" });
@@ -1601,9 +1696,9 @@ const factionRecords = () => Array.isArray(S.table.factions) ? S.table.factions.
 const factionPageNow = () => S.tsection==="city" && S.factionOpen ? factionRecords().find(f=>f.id===S.factionOpen) || null : null;
 const factionClocks = f => Engine.clocksOn(S.table, { kind:"faction", id:f.id });
 function factionCardHtml(t, f){
-  const bits=[Engine.FACTION_TYPE_LABELS[f.type], gazName(f.territory), stanceWord(f.stance), clockCountText(factionClocks(f))].filter(Boolean).map(esc).join(" · ");
+  const bits=[Engine.FACTION_TYPE_LABELS[f.type], gazName(f.territory), stanceWord(f.stance)].filter(Boolean).map(esc).join(" · ");
   return `<li class="roster-card cast-card place-card" data-fcard="${esc(f.id)}"><button class="cast-open" data-fcardopen="${esc(f.id)}">${esc(Engine.factionTitle(t, f))}</button>
-    ${bits ? `<div class="roster-meta cast-meta">${bits}</div>` : ""}</li>`;
+    ${bits ? `<div class="roster-meta cast-meta">${bits}</div>` : ""}${clockLinesHtml(factionClocks(f))}</li>`;
 }
 function factionListHtml(t){
   if (!factionRecords().length) return `<p class="step-note">No factions yet. Add one, or find it in The city.</p>`;
@@ -1661,10 +1756,40 @@ function clockHtml(c){
     ${fields}</div>`;
 }
 const clockBoxesHtml = c => Array.from({ length:c.segments }, (_, i)=>`<span class="clock-box${i<c.filled ? " on" : ""}"></span>`).join("");
-// What a card says of an owner's clocks: "2 clocks · 1 full", or nothing. The faction's card and the place's are one rule.
-function clockCountText(clocks){
-  const full=clocks.filter(c=>c.filled>=c.segments).length;
-  return clocks.length ? `${clocks.length} ${clocks.length===1 ? "clock" : "clocks"}${full ? ` · ${full} full` : ""}` : "";
+// One clock as a line, "Ibarra's patience 4 of 6" with − and +, a full one reading Full (Decision N). A card lists its clocks
+// this way, and so does Next session's Close to full, where `owner` adds a link to whose it is. An ended encounter's are
+// text with no buttons (252). The same words as a clock's own block and the Activity label, one number five times over.
+function clockLineHtml(c, o={}){
+  const nm=clockName(c), full=c.filled>=c.segments, id=esc(c.id);
+  const link=o.owner ? ` · <button type="button" class="cast-open clock-owner" data-cown="${esc(o.owner.kind)}|${esc(o.owner.id)}">${esc(o.owner.name)}</button>` : "";
+  return `<li class="clock-line${full ? " full" : ""}" data-cline="${id}"><span class="clock-line-t">${esc(nm)} <b class="clock-line-n" data-cline-n>${full ? "Full" : `${c.filled} of ${c.segments}`}</b>${link}</span>${o.readOnly ? "" :
+    `<span class="clock-btns"><button type="button" class="btn sm clock-step" data-clkminus aria-label="Take one off ${esc(nm)}"${c.filled<=0 ? " disabled" : ""}>−</button><button type="button" class="btn sm clock-step" data-clkplus aria-label="Add one to ${esc(nm)}"${full ? " disabled" : ""}>+</button></span>`}</li>`;
+}
+const clockLinesHtml = (clocks, o) => clocks.length ? `<ul class="int-list clock-lines">${clocks.map(c=>clockLineHtml(c, o)).join("")}</ul>` : "";
+function bindClockLines(main){
+  const clockById = id => (S.table.clocks||[]).find(x=>x && x.id===id);
+  const paint = row => {
+    const c=clockById(row.dataset.cline); if (!c) return;
+    const full=c.filled>=c.segments;
+    row.querySelector("[data-cline-n]").textContent = full ? "Full" : `${c.filled} of ${c.segments}`;
+    row.classList.toggle("full", full);
+    row.querySelector("[data-clkminus]").disabled=c.filled<=0; row.querySelector("[data-clkplus]").disabled=full;
+  };
+  const step = (row, by) => {
+    const c=clockById(row.dataset.cline); if (!c) return;
+    const now=Math.max(0, Math.min(c.segments, c.filled+by)); let r;
+    tableChange(()=>{ r=Engine.editClock(S.table, c.id, { filled:now }); }, false, `${clockName(c)}: ${now} of ${c.segments}`);
+    if (!r.ok){ notice(r.why); return; }
+    paint(row);
+    const plus=row.querySelector("[data-clkplus]"), minus=row.querySelector("[data-clkminus]");
+    if (plus.disabled && by>0) minus.focus(); else if (minus.disabled && by<0) plus.focus();
+  };
+  main.querySelectorAll("[data-cline]").forEach(row=>{
+    const plus=row.querySelector("[data-clkplus]"), minus=row.querySelector("[data-clkminus]");
+    if (plus) plus.onclick=()=>step(row, 1);
+    if (minus) minus.onclick=()=>step(row, -1);
+  });
+  main.querySelectorAll("[data-cown]").forEach(b=>b.onclick=()=>{ const [kind, id]=b.dataset.cown.split("|"); openFound(kind, id); });
 }
 // The clocks an owner has, `owner` being { kind, id }, and the press that adds one. One piece on every page that owns clocks.
 // An ended encounter's clocks (252): the stored values as text, with no buttons, so it is never bound.
@@ -1818,6 +1943,7 @@ function bindFactionList(main){
 function bindFactionCards(main){
   main.querySelectorAll("[data-fcardopen]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation(); openFactionPage(b.dataset.fcardopen, null); });
   main.querySelectorAll("[data-fcard]").forEach(li=>li.onclick=ev=>{ if (!ev.target.closest("button")) openFactionPage(li.dataset.fcard, null); });
+  bindClockLines(main);
 }
 function bindFactionPage(main, f){
   const id=f.id, own=()=>factionRecords().find(x=>x.id===id) || f;
@@ -1973,14 +2099,23 @@ function sessionCrewNames(t){
   const byName=(a, b)=>a.toLowerCase().localeCompare(b.toLowerCase()), lead=namesSeatsFirst(t, []), led=new Set(lead.map(n=>n.toLowerCase()));
   return [...lead.sort(byName), ...[...seen.values()].filter(n=>!led.has(n.toLowerCase())).sort(byName)];
 }
+// Close to full (Decision N): every clock within two of full, any owner or none, nearest first, with − and +. The clocks no page
+// shows (an ownerless one) live here. Read from the engine on every draw.
+function nearFullHtml(t){
+  const near=Array.from(Engine.clocksNearFull(t));
+  return near.length ? `<h3 class="next-h" tabindex="-1" data-near-h>Close to full</h3><ul class="int-list clock-lines near-list">${near.map(e=>clockLineHtml(e.clock, { owner:e.owner })).join("")}</ul>` : "";
+}
 function nextSessionHtml(t){
-  const n=Engine.nextSession(t);
+  const n=Engine.nextSession(t), near=nearFullHtml(t);
   if (!(t.sessions||[]).length && !(t.threads||[]).length)
-    return `<p class="step-note">Nothing yet. Start a session when you sit down to play, or add a thread you want to follow.</p>`;
+    return near ? `<div class="next-session">${near}</div>`
+      : `<p class="step-note">Nothing yet. Start a session when you sit down to play, or add a thread you want to follow.</p>`;
   const open = h => `<button type="button" class="cast-open" data-thopen="${esc(h.id)}">${esc(threadTitle(h))}</button>`;
   if (!n.current && !n.open.length && !n.seed && !n.unbuilt.length)
-    return `<p class="step-note">${n.last ? "Nothing open, and last session set nothing up." : "Nothing open yet."}</p>`;
+    return near ? `<div class="next-session">${near}</div>`
+      : `<p class="step-note">${n.last ? "Nothing open, and last session set nothing up." : "Nothing open yet."}</p>`;
   return `<div class="next-session">
+    ${near}
     ${n.current ? `<p class="next-current"><span class="next-tag">Current</span> ${open(n.current)}</p>` : ""}
     ${n.open.length ? `<h3 class="next-h">Still open</h3><ul class="int-list next-list">${n.open.map(h=>`<li>${open(h)}</li>`).join("")}</ul>` : ""}
     ${n.seed ? `<h3 class="next-h">Last session set up</h3>
@@ -2035,6 +2170,16 @@ function jottedHtml(s){
     const text=n.text.trim(), title=n.title.trim();
     return `<li class="int-line"><button type="button" class="cast-open" data-jotopen="${esc(n.id)}">${esc(text || title || "Untitled note")}${text && title ? ` <span class="int-kind">${esc(title)}</span>` : ""}</button></li>`; }).join("")}</ul>` : "";
 }
+// The Campaign Journal's six parts, folded while the session is being played and open once it is closed out (Decision N).
+// Opening it keeps it open for that session until the table closes: S.debriefOpen[id].
+const debriefOpen = s => { const live = Engine.openSession(S.table); return !(live && live.id === s.id) || !!(S.debriefOpen && S.debriefOpen[s.id]); };
+const debriefText = s => `Debrief · ${JOURNAL.length} parts, ${JOURNAL.filter(([k])=>String((s.journal||{})[k]||"").trim()).length} written`;
+function debriefHtml(s){
+  const j=s.journal||{};
+  return `<details class="sess-debrief" data-debrief="${esc(s.id)}"${debriefOpen(s) ? " open" : ""}><summary data-debrief-sum>${esc(debriefText(s))}</summary>
+    ${JOURNAL.map(([k, label, hint])=>`<label class="field sess-part"><span>${esc(label)}</span><small class="field-hint">${esc(hint)}</small>
+      <textarea data-sj="${k}">${esc(j[k]||"")}</textarea></label>`).join("")}</details>`;
+}
 function sessionPageHtml(s){
   const t=S.table, id=esc(s.id), j=s.journal||{};
   const opened=(t.threads||[]).filter(h=>h.opened===s.id), closed=(t.threads||[]).filter(h=>h.closed===s.id && h.status!=="open");
@@ -2052,8 +2197,8 @@ function sessionPageHtml(s){
       ${whoHtml(s, `s|${s.id}`)}
       <label class="field"><span>Hours</span><input type="number" step="0.5" min="0" max="24" inputmode="decimal" data-sf="hours" value="${numAttr(s.hours)}"></label>
     </div>
-    ${JOURNAL.map(([k, label, hint])=>`<label class="field sess-part"><span>${esc(label)}</span><small class="field-hint">${esc(hint)}</small>
-      <textarea data-sj="${k}">${esc(j[k]||"")}</textarea></label>${k==="threads" ? threadsBlock : ""}`).join("")}
+    ${threadsBlock}
+    ${debriefHtml(s)}
     <h2 class="cast-h sec-h" tabindex="-1" data-sint-h>What passed between the crew and the cast</h2>
     ${lines.length ? `<ul class="int-list">${lines.map(x=>sessionInteractionHtml(t, x, false)).join("")}</ul>` : `<p class="step-note">Nothing yet.</p>`}
     ${offered.length ? `<h3 class="next-h">Also that day</h3><ul class="int-list" data-soffered>${offered.map(x=>sessionInteractionHtml(t, x, true)).join("")}</ul>` : ""}
@@ -2064,7 +2209,8 @@ function sessionPageHtml(s){
 function bindSessions(main){
   main.querySelectorAll("[data-jotopen]").forEach(b=>b.onclick=()=>openNote(b.dataset.jotopen));
   const s=sessOpenNow();
-  if (s && closeSheetNow(s)) bindCloseOut(main, s);
+  if (s && closeEndNow(s)) bindCloseEnd(main, s);
+  else if (s && closeSheetNow(s)) bindCloseOut(main, s);
   else if (s) bindSessionPage(main, s);
   else bindSessionsTab(main);
 }
@@ -2072,7 +2218,7 @@ function bindSessions(main){
 function bindSessionOpeners(main){
   bindFightLinks(main);
   main.querySelectorAll("[data-sopen]").forEach(b=>b.onclick=()=>{
-    S.sessOpen=b.dataset.sopen; if (S.closeOut) S.closeOut.view=false; window.scrollTo(0,0); update();
+    S.sessOpen=b.dataset.sopen; S.coEnd=null; if (S.closeOut) S.closeOut.view=false; window.scrollTo(0,0); update();
     const el=$("main").querySelector("[data-sback]"); if (el) el.focus(); });
   main.querySelectorAll("[data-copen]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation();
     S.tsection="cast"; S.castOpen=b.dataset.copen; S.backEnc=null; S.backSess=true; S.backClose=false; S.backCity=null; S.castFrom=b.dataset.cwhere ? attrSel("data-cwhere", b.dataset.cwhere) : null; S.intAdd=null;
@@ -2089,6 +2235,7 @@ function showThread(id){
 function bindSessionsTab(main){
   const focus = sel => { const el=$("main").querySelector(sel); if (el) el.focus(); return !!el; };
   bindSessionOpeners(main);
+  bindClockLines(main);
   main.querySelectorAll("[data-thopen]").forEach(b=>b.onclick=()=>showThread(b.dataset.thopen));
   main.querySelector("[data-snew]").onclick=()=>{
     let r; tableChange(()=>{ r=Engine.addSession(S.table, {}); }, false);
@@ -2155,7 +2302,12 @@ function bindSessionPage(main, s){
   // The journal's boxes grow with what's written, so a long part reads without a scroll inside it.
   const grow = el => { el.style.height="auto"; el.style.height=(el.scrollHeight+el.offsetHeight-el.clientHeight)+"px"; };
   bindWho(main, id, `s|${id}`);
-  main.querySelectorAll("[data-sj]").forEach(el=>{ grow(el); el.addEventListener("input", ()=>{ edit({ journal:{ [el.dataset.sj]:el.value } }); grow(el); }); });
+  const deb=main.querySelector("[data-debrief]"), debSum=main.querySelector("[data-debrief-sum]");
+  const debrief = () => { const cur=own(); if (cur && debSum) debSum.textContent=debriefText(cur); };
+  main.querySelectorAll("[data-sj]").forEach(el=>{ grow(el); el.addEventListener("input", ()=>{ edit({ journal:{ [el.dataset.sj]:el.value } }); grow(el); debrief(); }); });
+  // A fold opened is a fold kept; its boxes size themselves when it opens, since a closed one has no height to measure.
+  debSum.addEventListener("click", ()=>{ (S.debriefOpen || (S.debriefOpen={}))[id]=!deb.open; });   // the state before the press flips it
+  deb.addEventListener("toggle", ()=>{ (S.debriefOpen || (S.debriefOpen={}))[id]=deb.open; if (deb.open) deb.querySelectorAll("[data-sj]").forEach(grow); });
   main.querySelector("[data-sback]").onclick=()=>{
     S.sessOpen=null; window.scrollTo(0,0); update(); focus(".sess-open" + attrSel("data-sopen", id));
   };
@@ -2350,6 +2502,23 @@ function closeSheetHtml(s){
     <div data-co-lists>${coListsHtml(s)}</div>
     <p class="co-write"><button type="button" class="btn primary" data-co-write>Write the award log</button></p>`;
 }
+// Writing the award log ends here, not back on the session page (Decision N): what everyone got, then Export the table
+// as the one primary press, and Done. View state only (S.coEnd = the session's id); nothing is stored. No Delete is in reach.
+const closeEndNow = s => S.coEnd===s.id && !!s.close;
+function closeEndHtml(s){
+  const title=Engine.sessionTitle(s), lines=(s.close && s.close.lines) || [];
+  return `<div class="tbl-bar scroll-row" data-row="tblbar"><button type="button" class="btn sm" data-coend-back>Back to ${esc(title)}</button></div>
+    <h1 class="step-title tbl-title" tabindex="-1" data-coend-h>${esc(title)} is closed out</h1>
+    ${lines.length ? `<ul class="int-list co-log">${lines.map(l=>`<li class="int-line">${coLogLine(l)}</li>`).join("")}</ul>` : `<p class="step-note">It said nothing.</p>`}
+    <p class="co-end-btns"><button type="button" class="btn primary" data-coend-export>Export the table</button> <button type="button" class="btn" data-coend-done>Done</button></p>`;
+}
+function bindCloseEnd(main, s){
+  const focus = sel => { const el=$("main").querySelector(sel); if (el) el.focus(); return !!el; };
+  const leave = () => { S.coEnd=null; window.scrollTo(0,0); update(); focus("[data-sco-h]"); };
+  main.querySelector("[data-coend-back]").onclick=leave;
+  main.querySelector("[data-coend-done]").onclick=leave;
+  main.querySelector("[data-coend-export]").onclick=()=>{ const name=exportTable(S.table); notice(`Exported ${name}.`); focus("[data-coend-done]"); };
+}
 function bindCloseOut(main, s){
   const id=s.id, c=S.closeOut;
   const focus = sel => { const el=$("main").querySelector(sel); if (el) el.focus(); return !!el; };
@@ -2387,7 +2556,7 @@ function bindCloseOut(main, s){
       if (el) el.focus(); else focus('[data-crew-seat], [data-crew-name], [data-crew-add]');
       return;
     }
-    S.closeOut=null; window.scrollTo(0,0); update(); focus("[data-sco-h]");
+    S.closeOut=null; S.coEnd=id; window.scrollTo(0,0); update(); focus("[data-coend-h]");
   };
   function bindLists(){
     box.querySelectorAll("[data-co]").forEach(el=>{
@@ -2868,19 +3037,19 @@ const encCount = n => n ? `${n} in it` : "Nobody yet";
 
 function encListHtml(t){
   const all=encList(), by=s=>all.filter(e=>e.status===s);
-  const clocksOf = e => clockCountText(Engine.clocksOn(t, { kind:"encounter", id:e.id }));
+  const clocksOf = e => clockLinesHtml(Engine.clocksOn(t, { kind:"encounter", id:e.id }), { readOnly:e.status==="ended" });
   const day = e => { const d=Date.parse(e.updated || e.created); return Number.isFinite(d) ? new Date(d).toLocaleDateString() : ""; };
-  const card = (e, meta) => `<li class="roster-card cast-card" data-ecard="${esc(e.id)}">
+  const card = (e, meta) => { const clocks=clocksOf(e); return `<li class="roster-card cast-card" data-ecard="${esc(e.id)}">
     <button class="cast-open" data-enc-open="${esc(e.id)}">${esc(Engine.encounterTitle(e))}</button>
-    <div class="roster-meta cast-meta">${esc(meta)}</div></li>`;
+    <div class="roster-meta cast-meta">${esc(meta)}</div>${clocks}</li>`; };
   const sect = (h, items) => items.length ? `<h2 class="cast-h sec-h">${h}</h2><ul class="roster-list">${items.join("")}</ul>` : "";
   return `<div class="cast-add">
       <label class="field"><span>Name</span><input type="text" data-enc-name placeholder="Warehouse job (optional)" autocomplete="off"></label>
       <button class="btn primary" data-enc-new>New encounter</button></div>
     ${all.length ? "" : `<p class="step-note">Nothing on the books.</p>`}
-    ${sect("Running", by("running").map(e=>card(e, [`Round ${e.round}`, encCount(e.rows.length), clocksOf(e)].filter(Boolean).join(" · "))))}
-    ${sect("Planned", by("planned").map(e=>card(e, [encCount(e.rows.length), clocksOf(e)].filter(Boolean).join(" · "))))}
-    ${sect("Past encounters", by("ended").map(e=>card(e, [e.round ? encRounds(e.round) : "Not run", day(e), clocksOf(e)].filter(Boolean).join(" · "))))}`;
+    ${sect("Running", by("running").map(e=>card(e, [`Round ${e.round}`, encCount(e.rows.length)].filter(Boolean).join(" · "))))}
+    ${sect("Planned", by("planned").map(e=>card(e, [encCount(e.rows.length)].filter(Boolean).join(" · "))))}
+    ${sect("Past encounters", by("ended").map(e=>card(e, [e.round ? encRounds(e.round) : "Not run", day(e)].filter(Boolean).join(" · "))))}`;
 }
 
 // ── A row ──
@@ -3027,15 +3196,18 @@ function encHitHtml(v){
   const ch = seat ? Engine.rowCharacter(S.table, S.encOpen, r.id) : null, st = encHitState(d, r);
   const toggle = (attr, label, items) => `<span class="form-toggle" role="group" aria-label="${esc(label)}">${items.map(([val, label, on])=>
     `<button type="button" ${attr}="${esc(val)}" class="${on ? "on" : ""}" aria-pressed="${on}">${esc(label)}</button>`).join("")}</span>`;
+  // The damage, Apply · Cancel and the preview come first, and stay where they are while the fields under them change (Decision N, U1's rule).
   return `<div class="enc-hit" data-ehitpanel="${esc(r.id)}">
     <label class="field"><span>${pc ? (massive ? "Health Levels gone" : "Got through") : "Damage"}</span><input type="number" min="0" step="1" inputmode="numeric" data-ehit-damage value="${esc(d.damage)}"></label>
+    ${encHitBtnsHtml(st)}${encHitLiveHtml(d, st)}
+    <div class="enc-hit-fields">
     <label class="field"><span>Type</span><select data-ehit-type>${D.damageTypes.map(t=>`<option value="${esc(t.id)}"${t.id===d.type ? " selected" : ""}>${esc(t.name)}</option>`).join("")}</select></label>
     <div class="field"><span>Kind</span>${toggle("data-ehit-cat", "Kind", D.damageCategories.map(c=>[c.id, c.name, c.id===d.cat]))}</div>
     ${pc || (seat && massive) ? "" : `<div class="field"><span>Armor-piercing</span>${toggle("data-ehit-ap", "Armor-piercing", [["1", "AP", d.ap]])}</div>`}
     <label class="field"><span>Where</span><select data-ehit-loc>${D.bodyLocations.map(l=>`<option value="${esc(l.id)}"${l.id===d.loc ? " selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
     ${seat ? encSeatAsksHtml(d, ch, r) : ""}
     <label class="field"><span>From</span><input type="text" data-ehit-from value="${esc(d.from)}" placeholder="Rook's SMG" autocomplete="off"></label>
-    ${encHitBtnsHtml(st)}${encHitLiveHtml(d, st)}</div>`;
+    </div></div>`;
 }
 // The PROT field: asked when armor could answer. An immune hit (Decision 267) has nothing to soak, so it isn't.
 const encSeatProtHtml = (d, worn, bypass, probe) => worn && !bypass && !(probe.ok && probe.immuneBy) && (!probe.ok || probe.covered)
@@ -3087,6 +3259,8 @@ function encRowHtml(v, e, sides){
     : `<label class="enc-num"><span>${esc(label)}</span><input type="number" step="1" inputmode="numeric" ${attr}="${id}" value="${numAttr(val)}"></label>`;
   const aware = pc && !seat ? num("data-eaware", v.awareness, "Awareness") : v.awareness!==null ? `<span class="enc-num">Awareness ${esc(v.awareness)}</span>` : "";
   const waiting = running && r.delay ? r.delay : null;
+  // Running, Combat Sense is a fact about the row, read as text in its head; the field to fix it is under More (Decision N).
+  const csText = running && e.by!=="wave";
   // Hit and Heal are the row's own (U1); Take stands in where a row can't be hit, and a waiting row leads with Act now.
   // A Down row offers no Hit unless it's Dying, when a hit is a Death Mark. The rest is under More.
   const dying = v.conditions.some(c=>c.id==="dying"), hitOn = v.canHit && (!v.health.down || dying);
@@ -3094,13 +3268,16 @@ function encRowHtml(v, e, sides){
   const acts = ended ? "" : `<div class="enc-acts">
       ${waiting && !r.out ? `<button class="btn sm" data-eacnow="${id}">Act now</button>` : ""}${!v.canHit ? take(true) : hitOn ? `<button class="btn sm primary" data-ehit="${id}">Hit</button>` : ""}<button class="btn sm" data-edmg="${id}|-1">Heal</button>
       <details class="enc-more" data-emore="${id}"${S.encMore && S.encMore[r.id] ? " open" : ""}><summary>More</summary>
-        <div class="enc-more-acts">${v.canHit ? take(false) : ""}<button class="btn sm" data-econdopen="${id}">Add a Condition</button>${running && v.active ? `<button class="btn sm" data-edelay-open="${id}">Delay</button>` : ""}</div>
-        ${r.kind==="cast" ? "" : `<label class="field"><span>Name</span><input type="text" data-ename="${id}" value="${esc(r.name)}" autocomplete="off"></label>`}
-        <div class="form-toggle" role="group" aria-label="${esc(v.label)}">
-          <button type="button" data-elast="${id}" class="${r.last?"on":""}" aria-pressed="${r.last}">Goes last</button>
-          <button type="button" data-eout="${id}" class="${r.out?"on":""}" aria-pressed="${r.out}">Out</button></div>
-        ${sides ? `<label class="field"><span>Side</span><select data-eside="${id}">${sides.map(s=>`<option value="${esc(s.id)}"${s.id===v.side ? " selected" : ""}>${esc(s.title)}</option>`).join("")}</select></label>` : ""}
-        <button class="btn sm danger" data-erm="${id}">Remove</button></details></div>
+        <div class="enc-more-grp" data-emore-grp="play" role="group" aria-labelledby="emg-play-${id}"><p class="enc-more-h" id="emg-play-${id}">Play</p>
+          <div class="enc-more-acts">${v.canHit ? take(false) : ""}<button class="btn sm" data-econdopen="${id}">Add a Condition</button>${running && v.active ? `<button class="btn sm" data-edelay-open="${id}">Delay</button>` : ""}</div></div>
+        <div class="enc-more-grp" data-emore-grp="setup" role="group" aria-labelledby="emg-setup-${id}"><p class="enc-more-h" id="emg-setup-${id}">Setup</p>
+          ${r.kind==="cast" ? "" : `<label class="field"><span>Name</span><input type="text" data-ename="${id}" value="${esc(r.name)}" autocomplete="off"></label>`}
+          ${csText ? num("data-eorder", r.order, "Combat Sense") : ""}
+          <div class="form-toggle" role="group" aria-label="${esc(v.label)}">
+            <button type="button" data-elast="${id}" class="${r.last?"on":""}" aria-pressed="${r.last}">Goes last</button>
+            <button type="button" data-eout="${id}" class="${r.out?"on":""}" aria-pressed="${r.out}">Out</button></div>
+          ${sides ? `<label class="field"><span>Side</span><select data-eside="${id}">${sides.map(s=>`<option value="${esc(s.id)}"${s.id===v.side ? " selected" : ""}>${esc(s.title)}</option>`).join("")}</select></label>` : ""}</div>
+        <div class="enc-more-grp enc-more-rm" data-emore-grp="remove" role="group" aria-label="Remove"><button class="btn sm danger" data-erm="${id}">Remove</button></div></details></div>
     ${S.encDmg && S.encDmg.row===r.id ? `<form class="enc-dmg" data-edmgform="${id}">
         <input type="number" min="0" step="1" inputmode="numeric" data-edmgn aria-label="${S.encDmg.sign>0?"HP taken":"HP healed"}">
         <button class="btn sm primary" type="submit">OK</button><button class="btn sm" type="button" data-edmgcancel>Cancel</button></form>` : ""}
@@ -3123,7 +3300,7 @@ function encRowHtml(v, e, sides){
     : `<button type="button" class="cast-open enc-name" data-eopencast="${esc(r.kept.id)}">${esc(v.kept.name)}</button>`}</p>` : "";
   return `<li class="enc-row${v.active?" active":""}${r.out?" out":""}" data-erow="${id}" tabindex="-1"${v.active ? ` aria-current="step"` : ""}>
     <div class="enc-head"${running && !r.out ? ` data-eturn="${id}"` : ""}>${name} ${mark}${v.active ? ` <span class="tag plain enc-now">Now</span>` : ""}${r.out ? ` <span class="tag plain">Out</span>` : ""}${v.acted && !waiting ? ` <span class="tag plain">Done</span>` : ""}${openTag ? ` <span class="tag plain enc-open-tag">${esc(openTag)}</span>` : ""}${r.last ? ` <span class="tag plain">Goes last</span>` : ""}
-      ${e.by==="wave" ? "" : num("data-eorder", r.order, "Combat Sense")}${v.ties ? `<span class="tag enc-tied">Tied: reroll</span>` : ""}${aware ? ` ${aware}` : ""}</div>
+      ${e.by==="wave" ? "" : csText ? `<span class="enc-cs"><span class="enc-cs-k">CS</span> <span class="enc-cs-v">${r.order===null ? "—" : esc(r.order)}</span></span>` : num("data-eorder", r.order, "Combat Sense")}${v.ties ? `<span class="tag enc-tied">Tied: reroll</span>` : ""}${aware ? ` ${aware}` : ""}</div>
     ${waiting ? `<p class="enc-wait">Waiting${waiting.until.trim() ? `: ${esc(waiting.until)}` : ""}</p>` : ""}${kept}${seatLine}${encHealthHtml(v)}${encSegsHtml(v)}${encArmorHtml(v)}${pcFields}${encTraitsHtml(v, running)}
     ${v.conditions.length ? `<ul class="enc-conds">${v.conditions.map(c=>encCondHtml(v, c, ended)).join("")}</ul>` : ""}
     ${acts}</li>`;
@@ -3409,6 +3586,7 @@ function encPageHtml(e){
   const plan = ended ? encPlanReadHtml(v) : encPlanEditHtml(e, v);
   return `${bar}
     ${ended ? `<h1 class="step-title tbl-title cast-title" data-enc-h tabindex="-1">${esc(title)}</h1>`
+      : running ? `<div class="enc-title-row"><h1 class="step-title tbl-title cast-title" data-enc-h tabindex="-1">${esc(title)}</h1><button type="button" class="btn sm" data-enc-rename>Rename</button></div>`
       : `<label class="field"><span>Name</span><input type="text" data-enc-title value="${esc(e.name)}" placeholder="${esc(title)}" autocomplete="off"></label>`}
     ${turns}
     ${canOpen ? encOpeningHtml(v) : ""}
@@ -3600,6 +3778,9 @@ function bindEncounters(main){
       if (c) change(()=>Engine.participantConditionMarks(S.table, eid(), row, +i, (c.marks||0) + (+d))); },
     "data-elast": b => { const id=b.dataset.elast, r=encOpenNow().rows.find(x=>x.id===id); S.encMore=Object.assign(S.encMore||{}, { [id]:true }); edit(id, { last:!r.last }); focus(attrSel("data-elast", id)); },
     "data-eout": b => { const id=b.dataset.eout, r=encOpenNow().rows.find(x=>x.id===id); S.encMore=Object.assign(S.encMore||{}, { [id]:true }); edit(id, { out:!r.out }); focus(attrSel("data-eout", id)); },
+    "data-enc-rename": b => { const e=encOpenNow(); if (!e) return;
+      openNameModal({ title:"Rename encounter", label:"Encounter name", placeholder:Engine.encounterTitle(e), value:e.name, yes:"Save",
+        then:name=>{ const r=Engine.editEncounter(S.table, eid(), { name }); if (!r.ok){ notice(r.why); return; } tableChange(()=>{}); focus("[data-enc-rename]"); } }); },
     "data-erm": b => { const id=b.dataset.erm, e=encOpenNow(), at=e.rows.findIndex(x=>x.id===id), r=e.rows[at];
       askFirst({ title:`Remove ${r.name.trim() || "this row"}?`, text:"Their damage and Conditions in this encounter go with them.", yes:"Remove", then(){
         const ids=Engine.encounterView(S.table, eid(), packsMemo).rows.map(x=>x.row.id), pos=ids.indexOf(id), after=ids[pos+1] || ids[pos-1];
@@ -3621,6 +3802,7 @@ function bindEncounters(main){
     tableChange(()=>{}); focus("[data-enc-pname]");
   }
   if (!encOpenNow()){
+    bindClockLines(main);
     main.onclick = ev => { const b=ev.target.closest("[data-enc-new], [data-enc-open], [data-ecard]"); if (!b) return;
       if (b.matches("[data-enc-new]")) act["data-enc-new"](); else if (b.matches("[data-enc-open]")) act["data-enc-open"](b);
       else if (!ev.target.closest("button")) open(b.dataset.ecard); };
@@ -3637,6 +3819,7 @@ function bindEncounters(main){
   // Typed fields save on change; a number field that can't be a whole number shows what was stored (the redraw).
   main.onchange = ev => {
     const el=ev.target, d=el.dataset;
+    keepMore(el);   // a field changed inside More leaves it open through the redraw
     const row = (key, f) => { edit(el.dataset[key], f(el.value)); focus(attrSel(`data-${key.replace(/[A-Z]/g, c=>"-"+c.toLowerCase())}`, el.dataset[key])); };
     if ("eplan" in d || "eadv" in d) planKey(el);
     else if ("eorder" in d) row("eorder", v=>({ order:v })); else if ("ehp" in d) row("ehp", v=>({ hp:v }));

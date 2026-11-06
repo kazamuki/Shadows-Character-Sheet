@@ -7,6 +7,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { boot } from "./harness.mjs";
 import { Engine, D, GM_ON, type, runTable, keyIn, castAdd } from "./smokekit.mjs";
 
@@ -275,7 +276,7 @@ test("245: + and − move a clock in place, keep focus, and a full clock says wh
   assert.equal(focusedKey(app), "data-clkadd=");
   app.click("[data-fback]");
   cityView(app, "factions");
-  assert.match(app.$(".place-card").textContent, /1 clock/);
+  assert.match(app.$(".place-card .clock-line").textContent, /of [0-9]+/, "U2: the card lists the clock");
   assert.deepEqual(app.errors, []);
 });
 
@@ -360,5 +361,28 @@ test("244: a faction's own Back survives a Key to round trip", () => {
   assert.equal(app.$("[data-fback]").textContent, "Back to The city", "the route it was opened by is kept");
   app.click("[data-fback]");
   assert.equal(focusedKey(app), "data-gfopen=eclipse", "and lands on its Open");
+  assert.deepEqual(app.errors, []);
+});
+
+test("U2: a card lists its clocks as 4 of 6, with − and +, and the Activity log says it the same way", () => {
+  const t = Engine.migrateTable(JSON.parse(readFileSync(new URL("../samples/dead-air.shadows-table.json", import.meta.url), "utf8")));
+  const app = boot({ storage: { ...GM_ON, ["shadows.table.v1." + t.meta.id]: { table: t, section: "city", changed: "2026-10-05T10:00:00.000Z", exported: null } } });
+  app.click("[data-topen]");
+  cityView(app, "factions");
+  const card = app.$$("[data-fcard]").find(c => /Ibarra/.test(c.textContent));
+  const line = card.querySelector(".clock-line");
+  assert.match(line.textContent, /^Ibarra's patience 4 of 6/);
+  assert.equal(card.querySelector("[data-clkplus]").getAttribute("aria-label"), "Add one to Ibarra's patience");
+  assert.equal(card.querySelector("button.cast-open").closest("li"), card, "the + sits beside the opener, not inside it");
+  assert.equal(card.querySelector(".cast-open [data-clkplus]"), null);
+  const h1 = app.$("#main h1");
+  card.querySelector("[data-clkplus]").click();
+  assert.match(card.querySelector(".clock-line").textContent, /^Ibarra's patience 5 of 6/);
+  assert.equal(app.$("#main h1"), h1, "no redraw");
+  assert.equal(app.window.eval("S.table.audit[S.table.audit.length - 1].label"), "Ibarra's patience: 5 of 6");
+  assert.ok(!app.window.eval("S.factionOpen"), "pressing + doesn't open the card");
+  card.querySelector("[data-clkplus]").click();
+  assert.match(card.querySelector(".clock-line").textContent, /^Ibarra's patience Full/, "a full clock reads Full");
+  assert.equal(card.querySelector("[data-clkplus]").disabled, true);
   assert.deepEqual(app.errors, []);
 });

@@ -1164,6 +1164,29 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
   .app.table-mode:has(#main :is(input:not([type=checkbox],[type=radio]),textarea,select):focus) .tbl-bar{position:static}
 }
 @media (max-height:540px){ .app.table-mode .tbl-bar{position:static} }
+/* Tonight (Decision N): the night in one line, inside the bar. A tab with no Back gets a bar of its own (.tn-bar) for it. Its items are
+   jump chips: they shrink and cut with an ellipsis rather than scroll, and below 768px only the lead item and Unexported are drawn.
+   A hidden item is display:none, so it is neither focusable nor read out. Numerals are Oxanium; the actor is cyan (where you are),
+   a downed row magenta (harm). Unexported is the plain tag's colour and edge: Mono Caps, --dim, a 1px --frame line. */
+.app.table-mode .tn{display:flex; align-items:center; justify-content:flex-end; gap:8px; flex:1 1 0; min-width:7rem}
+.app.table-mode .tn-bar .tn{justify-content:flex-start}
+.tn-item{display:inline-flex; align-items:baseline; gap:.4em; min-width:0; flex:0 1 auto; white-space:nowrap; overflow:hidden; line-height:1.4;
+  background:none; border:1px solid var(--frame); border-radius:14px; color:var(--text); font:inherit; font-size:.74rem; padding:4px 11px; cursor:pointer}
+.tn-item:hover, .tn-item:focus-visible{border-color:var(--violet-hi)}
+@media (pointer:coarse){ .tn-item{min-height:44px; align-items:center} }
+.tn-h{flex:none}
+.tn-t{min-width:0; overflow:hidden; text-overflow:ellipsis}
+.tn-n{font-family:var(--numeric); font-weight:600}
+.tn-actor{color:var(--cyan)}
+.tn-down{color:var(--magenta-text)}
+.tn-unx{flex:none; font-family:var(--mono); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--dim); cursor:pointer}
+.tn-unx:hover, .tn-unx:focus-visible{border-color:var(--violet-hi); color:var(--text)}
+@media (max-width:767px){ .tn-item:not(.tn-lead):not(.tn-unx){display:none}
+  /* On a page the strip follows Back and keeps room for its lead item and Unexported; Add to goes after it, where the bar's own sideways scroll reaches it. */
+  .app.table-mode .tn{order:1; min-width:12.5rem}
+  .tn-lead{min-width:6.5rem}
+  .tn-unx{letter-spacing:.06em; padding-inline:8px}
+  .app.table-mode .tbl-bar > :not(.tn):not(:first-child){order:2} }
 .jump{background:none; border:1px solid var(--frame); border-radius:14px; color:var(--text); font:inherit;
   font-size:.74rem; padding:4px 11px; cursor:pointer}
 .jump:hover, .jump:focus-visible{border-color:var(--violet-hi)}
@@ -1379,6 +1402,16 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .tag.enc-now, .tag.enc-now:hover{color:var(--cyan)}
 .enc-now{font-family:var(--mono); font-size:.78rem; letter-spacing:.14em; text-transform:uppercase; color:var(--cyan); border-color:var(--cyan)}
 .enc-more-acts{display:flex; flex-wrap:wrap; gap:8px; margin:2px 0 10px}
+/* More is Play, Setup and Remove (Decision N): each group has a Mono Caps item label in --dim, and Remove is set apart by a rule. */
+.enc-more-grp{margin:0 0 6px}
+.enc-more-h{margin:8px 0 4px; font-family:var(--mono); font-size:.72rem; font-weight:500; letter-spacing:.12em; text-transform:uppercase; color:var(--dim)}
+.enc-more-rm{margin-top:10px; padding-top:10px; border-top:1px solid var(--frame)}
+.enc-title-row{display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; margin-bottom:6px}
+.enc-title-row .step-title{margin-bottom:0; overflow-wrap:anywhere; min-width:0}
+.enc-cs{display:inline-flex; align-items:baseline; gap:6px; font-size:.85rem}
+.enc-cs-k{font-family:var(--mono); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--dim)}
+.enc-cs-v{font-family:var(--numeric); font-weight:600}
+.enc-hit-fields{display:contents}
 .enc-hit .enc-hit-btns{grid-column:1 / -1; margin-bottom:6px}
 .enc-hit [data-ehit-extra]{min-width:0}
 .enc-tied{border-color:var(--magenta)}
@@ -1573,6 +1606,16 @@ h2.city-name{font-size:1.15rem}
 .clock-box{width:22px; height:22px; border:2px solid var(--dim); border-radius:3px; background:transparent}
 .clock-box.on{background:var(--cyan); border-color:var(--cyan); color:var(--ink)}
 .clock-count{font-family:var(--mono); font-size:.85rem}
+/* A clock as a line (Decision N): on a card and in Close to full. */
+.clock-lines{margin:8px 0 0}
+.clock-line{display:flex; flex-wrap:nowrap; align-items:center; justify-content:space-between; gap:4px 12px; padding:3px 0; scroll-margin-top:calc(var(--hdr-off) + 72px)}
+.clock-line-t{min-width:0; overflow-wrap:anywhere}
+.clock-line-n{font-family:var(--numeric); font-weight:600}
+.clock-line .clock-btns{flex:none}
+.near-list{margin-bottom:6px}
+.sess-debrief{margin:10px 0 14px}
+.sess-debrief > summary{cursor:pointer; color:var(--dim); font-size:.85rem; padding:6px 0}
+.co-end-btns{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px}
 .clock-btns{display:inline-flex; flex-wrap:wrap; gap:6px; align-items:center}
 .clock-step{min-width:44px}
 .clock-full{margin:8px 0 0; overflow-wrap:anywhere}

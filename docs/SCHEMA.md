@@ -4725,6 +4725,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 176 in part: a new table opens on Sessions, not Cast.
      - **Revisit if:** GQ1's tab order says otherwise, S7's clocks join Next session, or a GM wants a thread linked to the cast.
      - **Built:** as 203.
+    → **Superseded in part by Decision 270** — Next session leads with Close to full, and an open session counts as being played.
 
 205. **A session keeps its award log: what each character got at the close-out, written once, read out to the players.**
      *2026-10-09 · Ken + Claude · Touches: close-out, award log, session close, close.lines, writeCloseOut, awardTotals, IP so far, Milestone Point, Çredits, Log a session, table schema 0.9, migrateTable, Decision 203, GQ8, GQ20, W29*
@@ -4789,6 +4790,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      → **Superseded in part by Decision 251** — Find searches a place's site and Exposure, and its clocks.
      → **Superseded in part by Decision 252** — Find searches an encounter's plan, and finds its clocks.
      → **Superseded in part by Decision 255** — Find finds a seat.
+    → **Superseded in part by Decision 270** — a jot's session is the open session, not the one dated today.
 
 209. **The Reference's jump bar shows every chip, wrapped: it sticks from 640px, and on a phone it stays at the top of the page.**
      *2026-10-09 · Ken + Claude · Touches: Reference tab, jump bar, jumpBarHtml wrap, jump-wrap, jumpbar.sticky, jumpTo, scroll-row, wheelSideways, phone, Decision 165, Decision 207, SQ8*
@@ -5348,6 +5350,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 211 in part (on a page Add to sits in the bar). Extends 35 (a table escapes the frame), 140, 188–189.
      - **Revisit if:** Home gets its own layout (W80's rest), or a tab needs a column the measures lack.
      - **Built:** switched off (173); PR #276; log 2026-10-30 (S18).
+    → **Superseded in part by Decision 270** — while the Tonight strip shows, the bar is on every tab, not only on a page.
 
 259. **On a table, F opens Find and J opens Jot, never while typing, and ⋮ → Keys lists them and turns them off.**
      *2026-10-31 · Ken + Claude · Touches: keyboard shortcuts, keydown, F, J, Find, Jot, openFind, openJot, openModal, closeModal, aria-keyshortcuts, ⋮ menu, Keys, shadows.ui.keys, focus, W139, Decision 111, Decision 140, Decision 161, Decision 164, Decision 166, Decision 208*
@@ -5469,6 +5472,20 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 211 in part and Decision 190 in part (the button's words; where it goes stands).
      - **Revisit if:** a GM wants a button back on the row, a table runs fights too big for a row each, or the sheet's Health readout changes.
      - **Built:** app 0.63.0, no data or schema move, PR #304, log 2026-11-05 (U1).
+    → **Superseded in part by Decision 270** — More is grouped as Play, Setup and Remove, and a running row's Combat Sense is under it.
+
+270. **A table at play shows one Tonight strip; the open session is the latest not closed out, and Jot files to it; Close out ends on its awards and an Export; a running encounter reads as play.**
+     *2026-11-06 · Ken + Claude · Touches: Tonight strip, tbl-bar, openSession, nextSession, Jot, Unexported, close-out's end, Debrief, Close to full, Combat Sense, More, Decision 203, Decision 204, Decision 208, Decision 258, Decision 269*
+     - **Decided:** The open session is the latest session not dated after today, while it isn't closed out (`Engine.openSession`). A jot files to it; an interaction keeps 203's day rule. While a fight runs or a session is open, the tables bar holds a Tonight strip, on every tab and page but the running encounter's own: round and actor, who's down, the thread, the nearest clock and Unexported, each a jump. Next session leads with Close to full; a card lists clocks as "4 of 6" with − and +. Write the award log ends on Export the table and Done. The open session's debrief folds. A running encounter's title is a heading with Rename, Combat Sense is text on its row, and More is Play, Setup and Remove.
+     - **Why:** a running table was spread over five tabs and jots were lost after midnight; Ken ruled GM mode play-first and each strip item a jump, never an action.
+     - **Rejected:**
+       - Actions on the strip: a mis-tap mid-scene changes the table.
+       - A second sticky band: it costs a phone a third of its screen.
+       - Jot to the session dated today only: a game past midnight has none.
+       - The latest session even when closed out: it would keep collecting jots.
+     - **Replaces:** Decision 208 in part (a jot's session), 258 in part (the bar on a tab), 204 in part (Close to full) and 269 in part (More). Extends 205, 245.
+     - **Revisit if:** a GM runs two sessions at once, or the strip can't hold its first item at 375px.
+     - **Built:** app 0.64.0, no data or schema move, PR #…, log 2026-11-06 (U2).
 
 ## 5. Open Flags
 

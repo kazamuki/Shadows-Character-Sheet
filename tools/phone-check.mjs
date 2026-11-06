@@ -266,6 +266,7 @@ const tableMeasure = () => {
     enc: widest(rows), encCols: new Set(rows.map(r => Math.round(box(r).left))).size,
     barCut: !!bar && bar.scrollWidth > bar.clientWidth + 1 && !bar.classList.contains("more-r"),
     bar: bar ? Math.round(box(bar).height) : 0, barKind: bar ? bar.className.split(" ")[0] : "",
+    tn: [...main.querySelectorAll(".tn-item")].filter(shown).length, tnCut: [...main.querySelectorAll(".tn")].some(e => e.scrollWidth > e.clientWidth + 1),
     header: Math.round(hdr.getBoundingClientRect().height), scrollW: de.scrollWidth - de.clientWidth,
     rail: on("nav.ledger"), vitals: on("aside.vitals") };
 };
@@ -339,6 +340,14 @@ async function tableScreens(browser, file, rows, numbers) {
       if (s.enc && (m.enc > ENC_MAX + 1 || m.encCols !== 1)) bad.push(`rows ${m.enc}px in ${m.encCols} columns`);
       if (s.bar && !m.bar) bad.push("no bar");
       if (m.barCut) bad.push("the bar scrolls sideways with no fade (no more-r)");
+      // The Tonight strip (U2): Dead Air has a fight running and a session open, so every tab and page but an encounter's has it.
+      if (s.list && !m.bar) bad.push("a tab shows no strip");
+      if (m.barKind === "tbl-bar") {
+        if (!m.tn) bad.push("the Tonight strip shows nothing");
+        else if (z.width < 768 && m.tn > 2) bad.push(`${m.tn} strip items at ${z.width}px, 2 wanted (the lead and Unexported)`);
+        else if (z.width >= 768 && m.tn < 4) bad.push(`${m.tn} strip items at ${z.width}px, 4 wanted`);
+        if (m.tnCut) bad.push("the strip scrolls sideways");
+      }
       if (m.barKind === "tbl-bar" && m.bar > (z.touch ? 56 : BAR_MAX)) bad.push(`the bar is ${m.bar}px`);
       if (m.bar && z.width <= 390 && (m.header + m.bar) / z.height > (m.barKind === "enc-bar" ? ENC_BAR_MAX_SHARE : HEADER_MAX_SHARE)) bad.push(`header + bar ${Math.round((m.header + m.bar) / z.height * 100)}%`);
       numbers.push({ w: z.width + (z.touch ? " touch" : ""), screen: s.name, main: `${m.x}+${m.w}`, over: m.over, field: m.field, area: m.area, prose: `${m.prose}/${m.ch75}`,

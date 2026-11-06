@@ -6084,6 +6084,9 @@ test("204: blockHasNumber agrees with the old UI test on blocks, and is false fo
   for (const j of ["x", 5, [], { stats: 5 }, { skills: "x" }, { skills: [null] }]) assert.equal(Engine.blockHasNumber(j), false);
 });
 
+// A session not closed out is the one being played (U2), so the older "last is the highest number" cases close the top one out.
+const shut204 = (t, ...ids) => ids.forEach(id => Engine.writeCloseOut(t, id, { lines: [{ name: "Mara", present: true }] }));
+
 test("204: nextSession is empty on an empty table, orders its threads, and reads the highest-numbered session", () => {
   const none = { current: null, open: [], last: null, seed: "", unbuilt: [] };
   eq(Engine.nextSession(Engine.newTable("x")), none);
@@ -6097,6 +6100,7 @@ test("204: nextSession is empty on an empty table, orders its threads, and reads
   const hi = Engine.addSession(t, { number: 5, date: "2026-01-05" }).id;
   Engine.addSession(t, { number: 4, date: "2026-01-04" });   // made later, numbered lower
   Engine.editSession(t, hi, { journal: { seed: "  The heist.  " } });
+  shut204(t, hi);
   const m = Engine.nextSession(t);
   eq([m.last.id, m.seed], [hi, "The heist."]);
 });
@@ -6111,6 +6115,7 @@ test("204: unbuilt is last session's members with no number, once each, in the c
   put([d], s1);                       // met two sessions ago: not listed
   put([b, a], s2); put([a, c], s2);   // a twice
   put([gone], s2);
+  shut204(t, s2);
   Engine.removeCastMember(t, gone);
   const order = t.cast.map(n => n.name).filter(n => n === "A" || n === "B");
   eq(Engine.nextSession(t).unbuilt.map(n => n.name), order);
@@ -6131,6 +6136,7 @@ test("204 (review): last session is the highest number not dated today; tonight'
   const m2 = (number, date) => Engine.addSession(t2, { number, date }).id;
   const s5 = m2(5, "2026-09-01"), s6 = m2(6, "2026-09-08");
   Engine.editSession(t2, s6, { journal: { seed: "last week's seed" } });
+  shut204(t2, s6);
   eq(Engine.nextSession(t2).last.id, s6);
   // Tonight's session is made: last is still Session 6, and its seed still shows.
   const s7 = m2(7, TODAY);
@@ -6144,6 +6150,7 @@ test("204 (review): last session is the highest number not dated today; tonight'
   // No dates at all: the highest number.
   const t4 = Engine.newTable("w");
   Engine.addSession(t4, { number: 1, date: "" }); const two = Engine.addSession(t4, { number: 2, date: "nope" }).id;
+  shut204(t4, two);
   eq(Engine.nextSession(t4).last.id, two);
   assert.ok(s7 && a && c);
 });
@@ -6166,7 +6173,7 @@ test("204 (review): Resolved to Dropped keeps the Closed in the GM set; only ope
 
 test("204 (round 2): a session dated after today is never last session; undated ones still count", () => {
   const tomorrow = (() => { const d = new Date(); d.setDate(d.getDate() + 7); const p = n => String(n).padStart(2, "0"); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; })();
-  const last = (...rows) => { const t = Engine.newTable("x"); const ids = rows.map(([n, d]) => Engine.addSession(t, { number: n, date: d }).id); const l = Engine.nextSession(t).last; return l ? ids[rows.findIndex((_, i) => ids[i] === l.id)] && rows[ids.indexOf(l.id)][0] : null; };
+  const last = (...rows) => { const t = Engine.newTable("x"); const ids = rows.map(([n, d]) => Engine.addSession(t, { number: n, date: d }).id); for (const id of ids) { const s = t.sessions.find(x => x.id === id); if (!s.date || s.date < TODAY) shut204(t, id); } const l = Engine.nextSession(t).last; return l ? ids[rows.findIndex((_, i) => ids[i] === l.id)] && rows[ids.indexOf(l.id)][0] : null; };
   assert.equal(last([7, tomorrow], [6, "2026-01-01"]), 6, "next week's is skipped");
   assert.equal(last([8, tomorrow], [7, TODAY], [6, "2026-01-01"]), 6, "then today's is the one being played");
   assert.equal(last([6, TODAY], [5, TODAY], [4, "2026-01-01"]), 5, "unchanged");
@@ -6175,6 +6182,7 @@ test("204 (round 2): a session dated after today is never last session; undated 
   const t = Engine.newTable("y");
   const six = Engine.addSession(t, { number: 6, date: "2026-10-01" }).id;
   Engine.editSession(t, six, { journal: { seed: "the seed" } });
+  shut204(t, six);
   Engine.addSession(t, { number: 7, date: tomorrow });
   eq(Engine.nextSession(t).seed, "the seed");
 });
@@ -6581,21 +6589,86 @@ test("208: table schema 0.10; a note's session is null for an old table, kept wh
   assert.equal(Engine.migrateTable(later).notes[0].session, "SE-BBBBBBB2");
 });
 
-test("208: a jot takes the one session on its day; two or none, null; an explicit session wins; blank is refused", () => {
+test("208 (U2): a jot files to the open session, however long ago it was dated; an explicit session wins; blank is refused", () => {
   const t = Engine.newTable("x");
-  const a = Engine.addSession(t, { date: "2026-10-05" }).id;
+  const a = Engine.addSession(t, { number: 1, date: "2026-10-05" }).id;
   const sess = id => t.notes.find(n => n.id === id).session;
   assert.equal(sess(Engine.addTableNote(t, { text: "Ike", date: "2026-10-05", jot: true }).id), a);
-  assert.equal(sess(Engine.addTableNote(t, { text: "Ike", date: "2026-10-06", jot: true }).id), null);
-  assert.equal(sess(Engine.addTableNote(t, { text: "Ike", jot: true }).id), null);
-  const b = Engine.addSession(t, { date: "2026-10-05" }).id;
-  assert.equal(sess(Engine.addTableNote(t, { text: "Ike", date: "2026-10-05", jot: true }).id), null, "two that day");
-  assert.equal(sess(Engine.addTableNote(t, { text: "Ike", date: "2026-10-05", session: b }).id), b);
-  assert.equal(sess(Engine.addTableNote(t, { text: "Ike", session: "S-NOPE0000" }).id), null);
+  assert.equal(sess(Engine.addTableNote(t, { text: "Ike", date: "2026-10-06", jot: true }).id), a, "a jot's own day no longer decides it");
+  assert.equal(sess(Engine.addTableNote(t, { text: "Ike", jot: true }).id), a);
+  const b = Engine.addSession(t, { number: 2, date: "2026-10-05" }).id;
+  assert.equal(sess(Engine.addTableNote(t, { text: "Ike", jot: true }).id), b, "the latest one is open");
+  assert.equal(sess(Engine.addTableNote(t, { text: "Ike", date: "2026-10-05", session: a }).id), a);
+  assert.equal(sess(Engine.addTableNote(t, { text: "Ike", session: "S-NOPE0000" }).id), null, "no jot, no session: the Notes tab's New note");
+  Engine.writeCloseOut(t, b, { lines: [{ name: "Mara", present: true }] });
+  assert.equal(sess(Engine.addTableNote(t, { text: "Ike", jot: true }).id), null, "the latest is closed out: nothing is open");
   const n = t.notes.length;
   for (const text of ["", "  \n ", undefined, 5]) eq208(Engine.addTableNote(t, { text, jot: true }), { ok: false, why: "Write something first." });
   assert.equal(t.notes.length, n, "nothing added");
   assert.ok(Engine.addTableNote(t, {}).ok, "the Notes tab's New note may be empty");
+});
+
+const nextWeek = (() => { const d = new Date(); d.setDate(d.getDate() + 7); const p = n => String(n).padStart(2, "0"); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; })();
+
+test("U2: the open session is the latest not after today, while not closed out", () => {
+  const t = Engine.newTable("x");
+  assert.equal(Engine.openSession(t), null);
+  const six = Engine.addSession(t, { number: 6, date: "2026-10-24" }).id;
+  const seven = Engine.addSession(t, { number: 7, date: "2026-10-31" }).id;
+  const eight = Engine.addSession(t, { number: 8, date: nextWeek }).id;
+  assert.equal(Engine.openSession(t).id, seven, "next week's is planned, not open (mutation: drop the date rule and this is 8)");
+  Engine.writeCloseOut(t, seven, { lines: [{ name: "Mara", present: true }] });
+  assert.equal(Engine.openSession(t), null, "closed out: none is open, and 6 does not take over (mutation: drop the close rule)");
+  Engine.editSession(t, eight, { date: TODAY });
+  assert.equal(Engine.openSession(t).id, eight, "dated today and not closed out");
+  assert.ok(six);
+  // Total over junk: a session or null, never a throw.
+  for (const junk of [null, undefined, 5, "x", {}, { sessions: "no" }, { sessions: [null, 3, { number: "x", date: 7, close: "yes" }, { id: "a", number: 2, date: "nope", close: null }] }]) {
+    const r = Engine.openSession(junk);
+    assert.ok(r === null || typeof r === "object", "junk gives a session or null");
+  }
+});
+
+test("U2: a jot files to the open session; an interaction keeps its day", () => {
+  const t = Engine.newTable("x");
+  const seven = Engine.addSession(t, { number: 7, date: "2026-10-31" }).id;
+  const jot = Engine.addTableNote(t, { text: "Ike", date: TODAY, jot: true });
+  assert.equal(t.notes.find(n => n.id === jot.id).session, seven, "today is not 10/31, and the jot still goes to Session 7");
+  const line = Engine.addInteraction(t, { text: "Met Ike", date: TODAY });
+  assert.equal(t.interactions.find(x => x.id === line.id).session, null, "an interaction takes only the session dated its day (203)");
+  const old = Engine.addInteraction(t, { text: "Met Ike", date: "2026-10-31" });
+  assert.equal(t.interactions.find(x => x.id === old.id).session, seven);
+});
+
+test("U2: Next session counts an open session as being played", () => {
+  const t = Engine.newTable("x");
+  const six = Engine.addSession(t, { number: 6, date: "2026-10-24" }).id;
+  const seven = Engine.addSession(t, { number: 7, date: "2026-10-31" }).id;
+  Engine.editSession(t, six, { journal: { seed: "six's seed" } });
+  Engine.editSession(t, seven, { journal: { seed: "seven's seed" } });
+  let n = Engine.nextSession(t);
+  assert.deepEqual([n.last.id, n.seed], [six, "six's seed"], "7, resumed on another night, is being played: last is 6");
+  Engine.writeCloseOut(t, seven, { lines: [{ name: "Mara", present: true }] });
+  n = Engine.nextSession(t);
+  assert.deepEqual([n.last.id, n.seed], [seven, "seven's seed"], "closed out, 7 is behind us");
+});
+
+test("U2: clocks near full, nearest first, ownerless included", () => {
+  const t = deadAir();
+  const near = Array.from(Engine.clocksNearFull(t));
+  assert.deepEqual(near.map(e => e.clock.name), ["Dex before the full moon", "Joss's network", "Ibarra's patience", "Rook's contract on Mara"], "the order named three; Rook's 2 of 4 is two from full too");
+  assert.equal(near[0].owner, null, "no owner");
+  assert.equal(near[2].owner.kind, "faction");
+  assert.ok(near[2].owner.name && near[2].owner.id);
+  const full = t.clocks.find(c => c.name === "Ibarra's patience");
+  full.filled = full.segments;
+  assert.ok(!Engine.clocksNearFull(t).some(e => e.clock === full), "a full clock isn't near");
+  assert.equal(Engine.clocksNearFull(t, 0).length, 0);
+  for (const junk of [null, 5, {}, { clocks: "no" }, { clocks: [null, 3, { segments: "x", filled: 2 }, { segments: 4, filled: NaN }, { segments: 0, filled: 0 }, { segments: 4, filled: 3, on: 7 }] }]) {
+    const r = Array.from(Engine.clocksNearFull(junk));
+    assert.ok(r.every(e => e.clock && typeof e.clock === "object"));
+  }
+  assert.equal(Array.from(Engine.clocksNearFull({ clocks: [{ segments: 4, filled: 3, on: 7 }] })).length, 1, "a junk owner is no owner");
 });
 
 test("208: editTableNote sets and clears session; removeSession nulls its notes; sessionNotes newest first", () => {
