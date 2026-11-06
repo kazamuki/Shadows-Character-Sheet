@@ -189,7 +189,7 @@ encounter starts and ends.
 uses counters as P18-shaped data on the effect. Its own plan, probably two orders.
 
 **W132 — Powers that answer a hit, or heal while they run.** *Ken, from re-running P21's pre-flight · 💡 · Rule or shape · raised 2026-10-21*\
-**Plan:** [powers that run](plans/powers-that-run.md), H2 (the hit; [order](plans/powers-that-run/H2-powers-answer-a-hit.md), built, Decision 267; Elemental Blood and Battle Hardened wait on the book, plan §6) and H3 (healing)
+**Plan:** [powers that run](plans/powers-that-run.md), H2 (the hit; [order](plans/powers-that-run/H2-powers-answer-a-hit.md), built, Decision 267; Elemental Blood and Battle Hardened wait on the book, plan §6) and H3 (healing; [order](plans/powers-that-run/H3-powers-that-heal.md), drafted)
 
 P20b taught Take a hit and Rest what a held **trait** does (Scrapper, Giant, Thick Skull, Rapid Healing). The same jobs done by a **power, Aberration or Major** are still table rules, and the player does the arithmetic. The P21 inventory listed them for P20 (c44–c53). P20b's order passed them to "P21", and P21 leaves them to later orders, so nothing in the sheet-wishlist plan builds them. Ken parked them here so that plan can close (2026-10-21).
 - **The hit:** Odin's Aegis ("Reduce the damage of one Elemental, Spirit, or Aether attack by your BOD bonus + 2 × rank"), Null Field ("Absorbs up to 5 Elemental, Spirit, or Aether damage", +5 a rank), Red Mist and Spectral Veil ("immune to Physical damage" while running), Elemental Blood ("Halve damage you take from that element", rolled 1d3), Silverscar ("Withering damage from silver is halved (never below 1)"), Battle Hardened's immunity to one combat condition (a second and third in place of a Major).

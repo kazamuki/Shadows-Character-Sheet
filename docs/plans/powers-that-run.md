@@ -134,7 +134,7 @@ decides "running"**, in the same way that `isHeld` is the one test for held (Dec
 |---|---|---|---|
 | **H1** — W110 (**built 2026-11-05**, Decision 266) | §2 whole: `trackers.running` (schema N), `run` on the seven sustained powers, Start and Stop, Turn Reset charges, the Form ends a Werewolf's, Natural Armor starts ticked. [Order](powers-that-run/H1-sustained-powers.md) | Rule or shape | Ken: this plan, HQ1–HQ4, and the order's questions |
 | **H2** — W132, the hit (**built 2026-11-05**, Decision 267) | Odin's Aegis, Null Field, Red Mist, Spectral Veil, Elemental Blood, Silverscar, Battle Hardened; Adaptive Skeleton's Natural Armor 2 (b21). Elemental Blood and Battle Hardened save a pick (schema), Silverscar needs the hit to know silver. The order holds Elemental Blood and Battle Hardened out by default (its HQ11: the book's Conditions and elements aren't the sheet's), and adds Icebound Resilience. [Order](powers-that-run/H2-powers-answer-a-hit.md) | Rule or shape | H1 |
-| **H3** — W132, healing | Regeneration and Bone and Sinew (the Form), Vitality Surge, Blood of Valhalla, Quick Clot | Rule or shape | H1 |
+| **H3** — W132, healing (**order drafted 2026-11-05**) | Regeneration and Bone and Sinew (the Form), Vitality Surge, Blood of Valhalla, Quick Clot. Each heals at Turn Reset, or on a press (Vitality Surge), and none restores Withering. [Order](powers-that-run/H3-powers-that-heal.md) | Rule or shape | H1 |
 
 H2 and H3 don't wait on each other. Each row's book sentence is in `plans/archive/sheet-wishlist/P21-inventory.md`
 (c44–c53, b21).
