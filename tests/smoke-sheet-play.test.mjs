@@ -2154,6 +2154,10 @@ test("Decision 268: Vitality Surge on the card and the HP popover, disabled with
   assert.deepEqual([t.damage, t.witheringDamage, t.sfr.spent, t.sfr.turn], [10, 4, 4, 4]);
   assert.match(app.$("#undotoast").textContent, /Vitality Surge: \+10 HP, 4 SFR/);
   assert.equal(focused(app), go(), "focus left the Surge button");
+  // A pool that can pay only 1 HL offers only 1 (a refusal belongs on the page, not in a toast).
+  const poor = surgeSheet(); poor.trackers.damage = 20; poor.trackers.sfr = { spent: Engine.sfr(poor).value - 3, turn: 0 };
+  const app3 = openSheet(poor, "character");
+  assert.equal(app3.window.document.querySelectorAll('[data-surgehl="vitality-surge"] option').length, 1);
   // Blood of Valhalla running: the popover's button is disabled and the reason is on the page.
   app.click("button[data-undolast], [data-toastundo]");
   const run = surgeSheet(); run.archetypeChoices.basePowers = { "blood-of-valhalla": 1 };

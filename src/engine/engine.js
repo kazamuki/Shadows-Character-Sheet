@@ -4371,7 +4371,7 @@ const Engine = (() => {
   function surgeable(ch){
     if (!ch || typeof ch!=="object" || !isPlainObj(ch.trackers)) return [];
     return surgeDefs(ch).map(p=>{ const c = surgeCheck(ch, p);
-      return { id:p.id, name:txt(p.name), rank:p.rank, maxHl:surgeMax(ch, p), sfrPerHl:surgePerHl(p),
+      return { id:p.id, name:txt(p.name), rank:p.rank, maxHl:surgeMax(ch, p), sfrPerHl:surgePerHl(p), payHl: surgePerHl(p)>0 && Number.isFinite(sfrLeft(ch)) ? Math.floor(sfrLeft(ch) / surgePerHl(p)) : surgeMax(ch, p),
                can:{ ok:c.ok, why:c.ok ? "" : c.why, short:c.ok ? "" : c.short } }; });
   }
   function surgePower(ch, id, hl){
@@ -9492,7 +9492,7 @@ const Engine = (() => {
       // Decision 268 (HQ24): a claimed row keeps no Withering (Decision 257), so it can't honour "never Withering" and is healed by nothing here.
       // The line names only what its copy would regenerate on the player's own sheet.
       const stand = r.kind==="pc" ? _seatStandIn(t, r) : null;
-      const heals = stand ? roundHeals(stand).filter(h=>!h.why).map(h=>h.name) : [];
+      const heals = stand ? roundHeals(stand, { damage: nonNegInt(r.damage) + ticks.reduce((n, x)=>n + (x.hp||0), 0) }).filter(h=>!h.why).map(h=>h.name) : [];
       rows.push({ rowId:r.id, name:r.name, heals, missed:_isObj(r.delay) ? _str(r.delay.until) : null, ticks, expiring, recovery, dying, dyingMarks, dyingText, dyingIndex,
                   total:ticks.reduce((n, x)=>n + (x.hp||0), 0) });
     }

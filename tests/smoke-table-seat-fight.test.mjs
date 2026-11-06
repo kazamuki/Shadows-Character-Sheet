@@ -216,6 +216,11 @@ test("Decision 268: a GM's Reset writes nothing to a regenerating seat and says 
   assert.equal(row.damage, 11, "the row took the tick and nothing was healed");
   assert.equal(copiesOf(app), was, "the copy was written");
   assert.deepEqual(app.errors, []);
+  // A seat at 0 damage with Bleeding still ticks, then heals, on its own sheet (HQ19): the line names it.
+  const fresh = wolfDez(); fresh.trackers.damage = 0;
+  const f = open(fresh), fid = withDez(f);
+  f.click("[data-enc-start]"); f.click("[data-enext]");
+  assert.equal(f.$(`[data-eheals="${fid}"]`).textContent, "Regeneration heals on the player's own sheet.");
   const human = open(wolfDez("Human"));
   const hid = withDez(human);
   human.click("[data-enc-start]"); human.click("[data-enext]");

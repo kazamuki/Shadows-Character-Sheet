@@ -1020,7 +1020,7 @@ const surgeLabel = (s, n) => `Surge: heal ${n} HL for ${n*s.sfrPerHl} SFR`;
 function surgeHtml(ch, id){
   const s = Engine.surgeable(ch).find(x=>x.id===id);
   if (!s) return "";
-  const picker = s.maxHl>0 ? `<select class="sm" data-surgehl="${esc(s.id)}" aria-label="HL to heal with ${esc(s.name)}">${Array.from({ length:s.maxHl }, (_, i)=>`<option value="${i+1}">${i+1} HL</option>`).join("")}</select>` : "";
+  const pick = Math.min(s.maxHl, s.payHl), picker = pick>0 ? `<select class="sm" data-surgehl="${esc(s.id)}" aria-label="HL to heal with ${esc(s.name)}">${Array.from({ length:pick }, (_, i)=>`<option value="${i+1}">${i+1} HL</option>`).join("")}</select>` : "";
   return `<div class="run-row" data-surge="${esc(s.id)}">${picker}<button type="button" class="btn sm" data-surgego="${esc(s.id)}" data-surgeper="${s.sfrPerHl}"${s.can.ok ? "" : ` disabled title="${esc(s.can.why)}"`}>${esc(surgeLabel(s, 1))}</button>${s.can.ok ? "" : `<span class="sub" data-runwhy>${esc(s.can.short)}</span>`}</div>`;
 }
 // What a running power says it is doing (Decision 267): "a round" is only for a power that pays each round; one that paid
