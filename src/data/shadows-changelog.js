@@ -2,10 +2,17 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
-    "version": "0.63.0",
+    "version": "0.63.1",
     "date": null,
     "intro": [],
     "items": [
+      "**A seat's card reads as a readout.** Health is a big green figure (magenta when Down), Awareness and Conditions have their labels and values, and nothing is italic. The same lines lead the seat's page.",
+      "**Section heads are labels, and names stay names.** \"Clocks\", \"Threads\" and \"Stat block\" are small capitals over a rule; a player, a crew or a site keeps its own title face.",
+      "**Activity says what happened.** \"Hit Reclaim drone: 9 through · 1 Health Level\", \"Reclaim drone took 5\", \"Healed Reclaim drone 3\" and \"The tide at Wharf 17: 4 of 6\", so Undo is easy to trust.",
+      "**Deleting says Undo brings it back**, from the toast or ⋮ → Activity, instead of saying it's gone.",
+      "**Plainer words in GM mode**: \"book: 2\" for a formula, \"not a piece the book lists\" for gear, and empty Threats and site lists say what to do next.",
+      "**Home's table card reads \"7 sessions · 14 cast · changed yesterday\"**, or \"Empty\".",
+      "**A seat's read-only sheet shows the name once**, labels its tabs \"Sheet\" in a quieter row, and its disabled buttons look disabled.",
       "**In a fight, the one acting says Now**, and each row shows its HP over its Health Levels at a glance. Next keeps your place, says who acts, and the bar's status reads \"Round 2 · Rook\".",
       "**Each row keeps Hit and Heal to hand; the rest is under More.** A row that can't be hit shows Take, a waiting row shows Act now, and a row that's down offers Heal and its Conditions, with Hit only while it's Dying.",
       "**Two of the same enemy read A and B.** The letters are only on the page, never in the record.",

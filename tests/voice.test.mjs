@@ -15,6 +15,7 @@
  * you have shipped a maintainer note to a player. See docs/VOICE-APP.md.
  */
 import { test } from "node:test";
+import { readFileSync, readdirSync } from "node:fs";
 import assert from "node:assert/strict";
 import { boot, loadEngine } from "./harness.mjs";
 
@@ -281,4 +282,14 @@ test("P18 7: the effect tags and their templates are player copy (Decision 231)"
   // (Its Sanity cut is a computed row since P20a; the first rule row left is the Sanity Check.)
   const rule = (D.disadvantages.find(d => d.id === "blood-lust").grants.find(g => g.type === "rule") || {}).ruleText;
   assert.ok(rule && CORPUS.includes(rule.slice(0, 40)), "the CP step doesn't show Blood Lust's rule");
+});
+
+// U4 (findings 30, 37): the table's words, not the software's. None of these is back in src/.
+test("U4: the software words are gone", () => {
+  const src = readdirSync(new URL("../src/ui/", import.meta.url)).filter(n => n.endsWith(".js"))
+    .map(n => readFileSync(new URL("../src/ui/" + n, import.meta.url), "utf8")).join("\n");
+  for (const old of ["not in the Gear tables", "formula ${", "Slot in a pack with site profiles to use one here.",
+    "No pack slotted in. A pack is a file of threats your GM material came with.", "isn't kept anywhere else unless you've exported the table",
+    "aren't kept anywhere else unless you've exported the table"])
+    assert.equal(src.includes(old), false, "\"" + old + "\" is back in src/ui");
 });

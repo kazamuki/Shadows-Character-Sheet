@@ -9,7 +9,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { boot } from "./harness.mjs";
-import { Engine, GM_ON, type, runTable } from "./smokekit.mjs";
+import { Engine, GM_ON, type, runTable, keyIn } from "./smokekit.mjs";
 
 const book = readFileSync(new URL("../private/crb/2642_Encounter_Design_Worksheet.md", import.meta.url), "utf8");
 const encTab = app => app.click('[data-tsec="encounters"]');
@@ -131,7 +131,7 @@ test("252: deleting an encounter asks with its clock count, and Undo from Activi
   app.window.eval("rebaseTable()");
   app.click("[data-enc-del]");
   assert.match(app.$("#modal").textContent, /Delete Dock fight\?/);
-  assert.match(app.$("#modal").textContent, /It and its 1 clock aren't kept anywhere else unless you've exported the table\./);
+  assert.match(app.$("#modal").textContent, /It and its 1 clock go\. Undo brings it back, from the toast or ⋮ → Activity\./);
   app.click("#modal [data-askyes]");
   assert.equal(app.window.eval("S.table.encounters.length + S.table.clocks.length"), 0);
   assert.match(app.$("#undotoast").textContent, /Removed Dock fight/);
@@ -140,7 +140,7 @@ test("252: deleting an encounter asks with its clock count, and Undo from Activi
   // With no clocks it asks as before.
   app.window.eval("S.table.clocks = []; S.encOpen = S.table.encounters[0].id; renderTable()");
   app.click("[data-enc-del]");
-  assert.match(app.$("#modal").textContent, /It isn't kept anywhere else unless you've exported the table\./);
+  assert.match(app.$("#modal").textContent, /Undo brings it back, from the toast or ⋮ → Activity\./);
   app.click("#modal [data-modalclose]");
   assert.deepEqual(app.errors, []);
 });
@@ -304,5 +304,47 @@ test("U1: the plan's long labels are a short label and a hint, and the read-only
   assert.equal(read.find(p => p.textContent.includes("Catwalk")).querySelector("b").textContent, "Terrain");
   assert.equal(read.find(p => p.textContent.includes("Fire alarm")).querySelector("b").textContent, "Quick pivot");
   assert.equal(app.$(".field-hint"), null, "the read-only plan shows no hint");
+  assert.deepEqual(app.errors, []);
+});
+
+// U4 (finding 31): every delete is in the activity log with Undo, so the ask says so and not that the thing is gone.
+test("U4: a delete says Undo brings it back", () => {
+  const UNDO = /Undo brings it back, from the toast or ⋮ → Activity\./;
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Asks");
+  // A note.
+  app.click('[data-tsec="notes"]'); app.click("[data-tnew]");
+  const nid = app.doc.activeElement.dataset.ntitle;
+  type(app, `[data-ntitle="${nid}"]`, "The fixer");
+  app.window.eval("rebaseTable()");
+  app.click(`[data-ndel="${nid}"]`);
+  assert.match(app.$("#modal").textContent, UNDO);
+  assert.doesNotMatch(app.$("#modal").textContent, /isn't kept|aren't kept|exported/);
+  app.click("#modal [data-askyes]");
+  assert.equal(app.window.eval("S.table.notes.length"), 0);
+  app.click("#undotoast [data-toastundo]");
+  assert.equal(app.window.eval("S.table.notes.length"), 1, "Undo didn't bring the note back");
+  assert.equal(app.window.eval("S.table.notes[0].title"), "The fixer");
+  // A thread.
+  app.click('[data-tsec="sessions"]');
+  type(app, "[data-thadd]", "Find Wren"); keyIn(app, "[data-thadd]", "Enter");
+  const tid = app.$("[data-thdel]").dataset.thdel;
+  app.window.eval("rebaseTable()");
+  app.click(`[data-thdel="${tid}"]`);
+  assert.match(app.$("#modal").textContent, UNDO);
+  assert.doesNotMatch(app.$("#modal").textContent, /isn't kept|aren't kept|exported/);
+  app.click("#modal [data-modalclose]");
+  // An encounter, with and without clocks.
+  app.click('[data-tsec="encounters"]');
+  type(app, "[data-enc-name]", "Dock fight"); app.click("[data-enc-new]");
+  app.click("[data-enc-del]");
+  assert.match(app.$("#modal").textContent, UNDO);
+  app.click("#modal [data-modalclose]");
+  app.click("[data-clkadd]"); type(app, '[data-kf="name"]', "Alarm"); app.click("[data-clkdone]");
+  app.click("[data-clkadd]"); type(app, '[data-kf="name"]', "Fuse"); app.click("[data-clkdone]");
+  app.window.eval("rebaseTable()");
+  app.click("[data-enc-del]");
+  assert.match(app.$("#modal").textContent, /It and its 2 clocks go\. Undo brings them back, from the toast or ⋮ → Activity\./);
+  app.click("#modal [data-modalclose]");
   assert.deepEqual(app.errors, []);
 });

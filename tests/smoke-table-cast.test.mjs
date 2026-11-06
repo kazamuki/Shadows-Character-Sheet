@@ -88,7 +88,7 @@ test("Decision 171: Run a table asks for a name, opens the table, and Home lists
   tableHome(app);
   assert.equal(app.window.eval("S.screen"), "home");
   assert.ok(tableCard(app, "Tuesday nights"));
-  assert.match(tableCard(app, "Tuesday nights").textContent, /Table · 0 notes/);
+  assert.match(tableCard(app, "Tuesday nights").querySelector(".roster-meta").textContent, /^Empty · changed /);
   assert.match(tableCard(app, "Tuesday nights").textContent, /Changes not exported yet/);
   assert.deepEqual(app.errors, []);
 });
@@ -351,7 +351,7 @@ test("Decision 175: BOD 6 shows Health as it's typed without the field being red
   type(app, '[data-cstat="COOL"]', "5");
   const want = Engine.npc({ stats: { BOD: 6, INT: 5, COOL: 5 } }).authored.TOL.formula;
   type(app, '[data-cauth="TOL"]', "1");
-  assert.equal(app.$('[data-cformula="TOL"]').textContent, `formula ${want}`);
+  assert.equal(app.$('[data-cformula="TOL"]').textContent, `book: ${want}`);
   assert.equal(app.window.eval("S.table.cast[0].block.authored.TOL"), 1);
   assert.deepEqual(app.errors, []);
 });
@@ -1097,7 +1097,7 @@ test("Decision 182: a table has a Threats tab, second; with no pack it says so a
   runTable(app, "Bare");
   assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Sessions", "Players", "Cast", "City", "Threats", "Encounters", "Reference", "Notes"]);
   threatsTab(app);
-  assert.match(app.$("#main").textContent, /No pack slotted in\./);
+  assert.match(app.$("#main").textContent, /No threats yet\. Slot in the pack that came with your GM material to see its threats here\./);
   assert.ok(app.$("[data-pslot]"));
   await pickPack(app, { meta: { kind: "shadows-table" } });
   assert.match(app.$("#undotoast").textContent, /That file isn't a pack\./);
@@ -1360,7 +1360,7 @@ test("Decision 182: removing the pack leaves every copy whole; From reads as tex
   assert.equal(app.$('[data-cf="name"]').value, "Vinnie"); assert.equal(app.$('[data-cstat="BOD"]').value, "8");
   assert.equal(app.window.eval("S.table.cast[0].from.name"), "Gull");
   threatsTab(app);
-  assert.match(app.$("#main").textContent, /No pack slotted in\./);
+  assert.match(app.$("#main").textContent, /No threats yet\. Slot in the pack that came with your GM material to see its threats here\./);
   assert.deepEqual(app.errors, []);
 });
 
@@ -1713,4 +1713,55 @@ test("241: the open line's fields are Crew, the kinds, What, When, Where, then D
   app.click(`[data-ikind="${xid}|helped"]`);
   assert.ok(app.$(`[data-icrew="${xid}"]`), "a kind change closed the line");
   assert.match(app.$(`[data-isent="${xid}"]`).textContent, /^Nyx helped Dez on \S+: for the van/);
+});
+
+// U4 (findings 28, 34): a heading that names a section is Mono Caps; one that is a name keeps the Title voice.
+test("U4: a section head is Mono Caps and a name isn't", () => {
+  // Every cast-h heading in gm.js is one or the other, checked over the source and not from a list of what was seen.
+  const NAMES = /\brec-name\b/;   // a crew, a site, a player, a Reset row, "Wrap up <title>"
+  const src = readFileSync(new URL("../src/ui/gm.js", import.meta.url), "utf8");
+  const heads = src.split("\n").flatMap(l => l.match(/<h[1-6] class="cast-h[^"]*"[^>]*>/g) || []);
+  assert.ok(heads.length >= 40, "found the headings");
+  const stray = heads.filter(h => !/\bsec-h\b/.test(h) && !NAMES.test(h));
+  assert.deepEqual(stray, [], "a cast-h heading is neither a section nor a known name");
+  const named = heads.filter(h => /\bsec-h\b/.test(h) && NAMES.test(h));
+  assert.deepEqual(named, [], "a name is in Mono Caps");
+  const css = wizCss();
+  assert.match(css, /\.sec-h, \.ref-sub, \.next-h\{[^}]*font-family:var\(--mono\)[^}]*text-transform:uppercase/);
+  assert.match(css, /\.sec-h\{[^}]*border-bottom:1px solid var\(--frame\)/);
+  assert.match(css, /\.cast-h\{[^}]*font-family:var\(--display\)/);
+  // And the page agrees: a cast member's Stat block is a section; a player's name on Players is not.
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Heads");
+  castAdd(app, "Dez");
+  app.click("[data-copen]");
+  const stat = [...app.$$("h2.cast-h")].find(h => h.textContent === "Stat block");
+  assert.ok(stat && stat.classList.contains("sec-h"), "Stat block isn't a section head");
+  app.click("[data-tsec=\"players\"]");
+  type(app, "[data-pyadd-name]", "Brogan"); app.click("[data-pyadd]");
+  const player = app.$("h2[data-pyh]");
+  assert.equal(player.textContent, "Brogan");
+  assert.equal(player.classList.contains("sec-h"), false, "a player's name is in Mono Caps");
+  assert.deepEqual(app.errors, []);
+});
+
+// U4 (finding 35): Home's card says what the table holds, not how many notes it has.
+test("U4: Home's card leads with sessions and cast", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Empty one", { stay: true });
+  tableHome(app);
+  assert.match(tableCard(app, "Empty one").querySelector(".roster-meta").textContent, /^Empty( · changed .+)?$/);
+  const [t, storage] = seedTable("Lived in");
+  const base = Object.keys(storage)[0];
+  for (let i = 0; i < 7; i++) Engine.addSession(t, { date: `2026-09-${10 + i}` });
+  for (let i = 0; i < 14; i++) Engine.addCastMember(t, { name: "C" + i });
+  storage[base].changed = "2026-10-05T10:00:00.000Z";
+  const app2 = boot({ storage: { ...storage, ...GM_ON } });
+  assert.match(tableCard(app2, "Lived in").querySelector(".roster-meta").textContent, /^7 sessions · 14 cast · changed /);
+  assert.doesNotMatch(tableCard(app2, "Lived in").textContent, /notes?\b/);
+  // A count of none is left out.
+  const [t3, s3] = seedTable("Cast only");
+  for (let i = 0; i < 3; i++) Engine.addCastMember(t3, { name: "C" + i });
+  const app3 = boot({ storage: { ...s3, ...GM_ON } });
+  assert.match(tableCard(app3, "Cast only").querySelector(".roster-meta").textContent, /^3 cast · changed /);
 });

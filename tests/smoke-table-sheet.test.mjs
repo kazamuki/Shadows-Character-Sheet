@@ -7,7 +7,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { boot } from "./harness.mjs";
-import { Engine, D, GM_ON, lockedCharacter, tableCard, clickIn, tipShown, charKeys } from "./smokekit.mjs";
+import { Engine, D, GM_ON, lockedCharacter, tableCard, clickIn, tipShown, charKeys, wizCss } from "./smokekit.mjs";
 
 const CY_TAG = "TAG-CCCC-CCCC-CCCC", AR_TAG = "TAG-DDDD-DDDD-DDDD";
 const SECTIONS = ["main", "skills", "character", "trackers", "progression", "sessions", "loadout", "notes"];
@@ -274,5 +274,30 @@ test("256: the player's own sheet keeps its readers", () => {
   app.click('[data-sec="trackers"]');
   const dd = app.$("[data-derivdesc]");
   if (dd) { const r = app.$(`[data-derivrow="${dd.dataset.derivdesc}"]`), w = r.hidden; app.click(`[data-derivdesc="${dd.dataset.derivdesc}"]`); assert.equal(r.hidden, !w, "a derivation toggles"); }
+  assert.deepEqual(app.errors, []);
+});
+
+// U4 (finding 36): the copy is the page's, not a second one stacked on it.
+test("U4: the seat copy names its seat once, and its disabled controls read as disabled", () => {
+  const app = open();
+  openSheet(app);
+  const main = app.$("#main");
+  const named = [...main.querySelectorAll("h1, h2, h3, .step-title")].filter(h => h.textContent.trim() === "Chrome");
+  assert.equal(named.length, 1, "the name is drawn more than once");
+  assert.equal(named[0].matches("h1[data-seath]"), true, "the page's own h1 is the one that stays");
+  assert.match(wizCss(), /h1\.step-title\{font-family:var\(--display\)/, "the page's h1 is the display face");
+  // Every tab keeps it to one, and the sheet's own tabs are the quiet row: a label, no icons.
+  for (const id of SECTIONS) { goTab(app, id); assert.equal([...app.$("#main").querySelectorAll("h1")].filter(h => h.textContent.trim() === "Chrome").length, 1, id); }
+  assert.equal(app.$(".ro-label").textContent, "Sheet");
+  assert.equal(app.$(".ro-tabs .tico"), null, "the copy's tabs still carry icons");
+  assert.equal(app.$(".ro-tabs").getAttribute("aria-labelledby"), "ro-tabs-l");
+  // A disabled control looks disabled: dimmed, with a dashed edge.
+  goTab(app, "main");
+  const off = app.$(".ro-sheet button:disabled");
+  assert.ok(off, "no disabled control on Main");
+  const cs = app.window.getComputedStyle(off);
+  assert.ok(Number(cs.opacity) < 1, "a disabled control isn't dimmed (opacity " + cs.opacity + ")");
+  assert.equal(cs.borderStyle, "dashed");
+  assert.match(app.$("#main").textContent, /Read only/);
   assert.deepEqual(app.errors, []);
 });
