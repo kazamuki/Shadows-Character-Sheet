@@ -1056,7 +1056,7 @@ function hitLabel(r){
   const kind = r.cat.bypassesArmor || r.cat.recordsWithering ? " "+r.cat.name : "";
   // Decision 267: what a power did goes on the one commit label, so the Undo toast says it.
   const bits = [];
-  if (r.immuneBy) bits.push(`immune (${r.immuneBy})`);
+  if (r.immuneBy) bits.push(r.immuneBy);
   if (r.reactBy) bits.push(`${r.reactBy.name} −${r.reactBy.from - r.reactBy.to} (${r.reactBy.sfr} SFR)`);
   if (r.absorbedBy) bits.push(`${r.absorbedBy.name} absorbed ${r.absorbedBy.absorbed}${r.absorbedBy.usedUp ? ", used up" : ""}`);
   return `Hit: ${r.damage} ${r.type.name}${kind} → ` +
@@ -1143,7 +1143,7 @@ function hitPanelHtml(ch, r){
       ans.immune.map(x=>box("data-hitpow", x.id, st.pw[x.id], `${x.name}: immune to Physical`)).join("") +
       ans.absorb.map(x=>box("data-hitpow", x.id, st.pw[x.id], `${x.name}: absorbs up to ${x.left} Elemental, Spirit or Aether`)).join("") +
       ans.react.map(x=>{ const why = x.magical && !magical ? "Elemental, Spirit or Aether only" : x.can.ok ? "" : x.can.short;
-        return `<span class="hit-react">${box("data-hitreact", x.id, st.react[x.id], `${x.name}: −${x.minus}, ${x.sfr} SFR`, !!why)}${why?`<span class="sub" data-hitreactwhy>${esc(why)}</span>`:""}</span>`; }).join("") + `</div>`;
+        return `<span class="hit-react">${box("data-hitreact", x.id, st.react[x.id], `${x.name}: −${x.minus} for ${x.sfr} SFR`, !!why)}${why?`<span class="sub" data-hitreactwhy>${esc(why)}</span>`:""}</span>`; }).join("") + `</div>`;
   }
 
   if (r.ok && r.immuneBy){
@@ -1171,7 +1171,7 @@ function hitPanelHtml(ch, r){
       : N.skipped==="type" ? `Natural Armor doesn't answer ${r.type.name} damage.` : "";
     if (natLine) lines.push(natLine);
     if (r.reactBy) lines.push(`${r.reactBy.name} takes off ${r.reactBy.from - r.reactBy.to}: ${r.reactBy.from} → ${r.reactBy.to}.`);
-    if (r.absorbedBy) lines.push(`${r.absorbedBy.name} absorbs ${r.absorbedBy.absorbed}: ${r.absorbedBy.from} → ${r.absorbedBy.to}.${r.absorbedBy.usedUp ? " It's used up." : ""}`);
+    if (r.absorbedBy) lines.push(`${r.absorbedBy.name} absorbs ${r.absorbedBy.absorbed}: ${r.absorbedBy.from} → ${r.absorbedBy.to}.${r.absorbedBy.usedUp ? " The field is spent." : ""}`);
     r.taken.forEach(t=>lines.push(`${t.name}: ${t.from} → ${t.to}.`));
     if (r.witherHalved) lines.push(`${r.witherHalved.by} halves it: ${r.witherHalved.from} → ${r.witherHalved.to}.`);
     if (r.silverHalved) lines.push(`${r.silverHalved.by} halves it: ${r.silverHalved.from} → ${r.silverHalved.to}.`);

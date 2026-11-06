@@ -2085,3 +2085,21 @@ test("Decision 267: a Withering hit asks From silver only with Silverscar", () =
     assert.deepEqual(app.errors, []);
   }
 });
+
+test("Decision 267 (Ken, 2026-11-05): the voice pass: Aegis's label, the commit label's power, and a spent field", () => {
+  const app = openSheet(draugurSheet(), "trackers");
+  app.click("[data-hitopen]");
+  assert.match(app.$("[data-hitpowers]").textContent, /Odin's Aegis: −4 for 2 SFR/);
+  setHit(app, "damage", "10");
+  // An immune hit changes nothing, so it records no action; the label is what an Undo toast would read.
+  const label = app.window.eval('hitLabel(Engine.resolveHit(S.ch, hitInput(S.hit)))');
+  assert.equal(label, "Hit: 10 Ballistic → 0 through, Spectral Veil");
+  const ff = forgeFangSheet();
+  Engine.setToggle(ff, "form", "Werewolf");
+  ff.trackers.running = [{ id: "null-field", used: 4 }];
+  const wolf = openSheet(ff, "trackers");
+  wolf.click("[data-hitopen]");
+  setHit(wolf, "damage", "3"); setHit(wolf, "damageType", "spirit");
+  assert.match(wolf.$("[data-hitpanel] .hitresult").textContent, /Null Field absorbs 1: 3 → 2. The field is spent./);
+  assert.deepEqual([app.errors, wolf.errors], [[], []]);
+});

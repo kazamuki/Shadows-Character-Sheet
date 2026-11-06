@@ -176,7 +176,7 @@ test("Decision 267: the seat hit offers immunity and silver, and spends nothing 
   app.click(`[data-ehit="${id}"]`);
   assert.equal(app.$('[data-ehit-pow="spectral-veil"]').checked, true, "the seat's immunity box starts unticked");
   assert.equal(app.$('[data-ehit-pow="odins-aegis"]'), null);
-  assert.match(app.$("[data-ehit-ownsheet]").textContent, /Null Field and Odin's Aegis answer on the player's own sheet\./);
+  assert.match(app.$("[data-ehit-ownsheet]").textContent, /^Odin's Aegis answers on the player's own sheet\.$/);
   const before = copiesOf(app);
   type(app, "[data-ehit-damage]", "10");
   assert.equal(app.$("[data-ehit-prot]"), null, "the seat asked for a PROT roll on a hit that does nothing");

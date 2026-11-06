@@ -3026,7 +3026,8 @@ function encSeatAsksHtml(d, ch, r){
   const ans=Engine.hitAnswers(ch);
   ans.immune.forEach(x=>bits.push(check(`data-ehit-pow="${esc(x.id)}"`, d.pw[x.id], `${x.name}: immune to Physical`)));
   if (d.cat==="withering" && Engine.hitAsks(ch).silver) bits.push(check("data-ehit-silver", d.silver, "From silver"));
-  if (ans.absorb.length || ans.react.length) bits.push(`<p class="enc-armor enc-armor-extra" data-ehit-ownsheet>Null Field and Odin's Aegis answer on the player's own sheet.</p>`);
+  const own=ans.absorb.concat(ans.react).map(x=>x.name);   // only the powers this copy holds
+  if (own.length) bits.push(`<p class="enc-armor enc-armor-extra" data-ehit-ownsheet>${esc(own.join(" and "))} ${own.length>1 ? "answer" : "answers"} on the player's own sheet.</p>`);
   // The sheet's own armor problems ("2 body pieces are marked worn…") say which piece counts.
   const armor = (worn ? `<p class="enc-armor enc-seat-armor">${seatArmorText(worn.name, worn.prot, worn)}</p>`
     : `<p class="enc-armor enc-seat-armor">No body armor worn</p>`) + as.problems.map(p=>`<p class="enc-armor enc-armor-extra">${esc(p)}</p>`).join("");

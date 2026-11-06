@@ -1746,10 +1746,10 @@ const Engine = (() => {
     const applies = x => !x.magical || type.magical===true;
     if (!immune){
       const reacts = answers.react.filter(x=>applies(x) && ids(hit.react).includes(x.id));
-      const bad = reacts.find(x=>!x.can.ok);
-      if (bad) return { ok:false, why:bad.can.why };
+      // Ken, 2026-11-05: a tick that cuts nothing costs nothing, so the pool refuses only a react that would spend.
       for (const x of reacts){
         if (!(left>0)) break;
+        if (!x.can.ok) return { ok:false, why:x.can.why };
         const to = Math.max(0, left - x.minus);
         reactBy = { id:x.id, name:x.name, from:left, to, sfr:x.sfr }; sfrSpend += x.sfr; left = to;
       }

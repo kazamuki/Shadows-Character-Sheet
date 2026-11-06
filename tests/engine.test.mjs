@@ -12947,3 +12947,18 @@ test("Decision 267: a hitTaken row answers magical types only when it says magic
   assert.equal(Engine.resolveHit(dr, hit).through, 10);
   withData(aegis.grants[0], "magical", false, () => same([Engine.resolveHit(dr, hit).through, Engine.resolveHit(dr, hit).reactBy.sfr], [6, 2]));
 });
+
+test("Decision 267 (Ken, 2026-11-05): an Odin's Aegis tick that cuts nothing costs nothing, and the pool refusal is only for a spend", () => {
+  const ch = vestOn(draugurAnswers({ "odins-aegis": 2 }, 8));
+  ch.trackers.sfr.spent = Engine.sfr(ch).value - 1;           // 1 SFR left; the Aegis costs 2
+  const soaked = { ...H2, damage: 2, damageType: "spirit", protRoll: 6, react: ["odins-aegis"] };
+  const r = Engine.resolveHit(ch, soaked);
+  assert.equal(r.ok, true, r.why);
+  same([r.through, r.reactBy, r.patch.sfrSpend], [0, null, 0]);
+  const a = Engine.applyHit(ch, soaked, {});
+  assert.equal(a.ok, true);
+  assert.equal(ch.trackers.sfr.spent, Engine.sfr(ch).value - 1, "a tick that cut nothing was charged");
+  // The refusal still holds where the Aegis would cut something.
+  const cuts = Engine.resolveHit(ch, { ...soaked, damage: 10, protRoll: 1 });
+  same([cuts.ok, cuts.why], [false, "Odin's Aegis needs 2 SFR, 1 left."]);
+});
