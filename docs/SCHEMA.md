@@ -5468,7 +5468,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - Moving focus to the actor on Next: a keyboard GM presses Next again and again.
      - **Replaces:** Decision 211 in part and Decision 190 in part (the button's words; where it goes stands).
      - **Revisit if:** a GM wants a button back on the row, a table runs fights too big for a row each, or the sheet's Health readout changes.
-     - **Built:** app 0.63.0, no data or schema move, PR #…, log 2026-11-05 (U1).
+     - **Built:** app 0.63.0, no data or schema move, PR #304, log 2026-11-05 (U1).
 
 ## 5. Open Flags
 
