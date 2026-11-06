@@ -2411,3 +2411,15 @@ test("U1: Add to names the encounter", () => {
   assert.equal(app.$("[data-cenc]").textContent, "Add to a new encounter");
   assert.deepEqual(app.errors, []);
 });
+
+test("U1: opening a running encounter scrolls the acting row into view", () => {
+  const app = hitApp();
+  const seen = [];
+  app.window.HTMLElement.prototype.scrollIntoView = function () { seen.push(this.dataset.erow || this.className); };
+  app.click("[data-enc-back]");
+  app.click("[data-enc-open]");
+  const active = app.$(".enc-row.active");
+  assert.ok(active, "a row is acting");
+  assert.ok(seen.includes(active.dataset.erow), "scrollIntoView ran on the acting row when the page opened");
+  assert.deepEqual(app.errors, []);
+});

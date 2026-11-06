@@ -3432,7 +3432,7 @@ function bindEncounters(main){
     window.scrollTo(0,0); redraw();
     const e=encOpenNow(); if (!e) return;
     if (e.status==="planned") focus("[data-enc-title]");
-    else if (e.status==="running") focus("[data-esrc], [data-efinish]:not([disabled]), [data-enext]") || focus("[data-efinish]");
+    else if (e.status==="running"){ focus("[data-esrc], [data-efinish]:not([disabled]), [data-enext]") || focus("[data-efinish]"); toActive(); }   // the acting row is on screen when the page opens
     else focus("[data-enc-h]");
   };
   const eid = () => S.encOpen;
