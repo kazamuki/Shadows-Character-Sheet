@@ -2917,10 +2917,10 @@ function encTraitsHtml(v, running){
 // ── Hit: the panel, its preview and the prompts the hit raises ──
 const hlWords = n => `${n} Health Level${n===1 ? "" : "s"}`;
 const condNames = ids => (ids||[]).map(id=>{ const c=Engine.conditionById(id); return c ? c.name : id; }).join(", ");
-const encHitNew = row => ({ row, damage:"", type:D.damageTypes[0].id, cat:"regular", ap:false, spell:false, melee:false, prot:"", nat:{}, loc:D.armorRules.defaultHitLocation, from:"", shock:"", atZero:"", conds:{}, err:"" });
+const encHitNew = row => ({ row, damage:"", type:D.damageTypes[0].id, cat:"regular", ap:false, spell:false, melee:false, prot:"", nat:{}, pw:{}, silver:false, loc:D.armorRules.defaultHitLocation, from:"", shock:"", atZero:"", conds:{}, err:"" });
 // A claimed row's hit is the sheet's own input (Decision 257): the player's PROT roll, Natural Armor ticks, spell and melee.
 const encHitInput = (d, seat) => Object.assign({ damage:d.damage, gone:d.damage, damageType:d.type, category:d.cat, ap:d.ap, location:d.loc, from:d.from },
-  seat ? { spell:d.spell, melee:d.melee, protRoll:d.prot, natural:Object.keys(d.nat).filter(k=>d.nat[k]) } : {});
+  seat ? { spell:d.spell, melee:d.melee, protRoll:d.prot, natural:Object.keys(d.nat).filter(k=>d.nat[k]), powers:Object.keys(d.pw).filter(k=>d.pw[k]), silver:d.silver===true } : {});
 const encSeatOn = r => { const e=encOpenNow(); return !!(r && r.kind==="pc" && e && Engine.rowCharacter(S.table, e.id, r.id)); };
 function encHitRow(){ const e=encOpenNow(), d=S.encHit; return e && d ? e.rows.find(r=>r.id===d.row) || null : null; }
 function encHitTicked(d, res){ return res.prompts.conditions.filter(id=>id in d.conds ? d.conds[id] : res.prompts.always.includes(id)); }
@@ -3016,6 +3016,11 @@ function encSeatAsksHtml(d, ch, r){
   const bits=[];
   if (!bypass && d.ap && (nat.base>0 || nat.conditional.length)) bits.push(check("data-ehit-spell", d.spell, "From a spell"));
   if (!bypass && Engine.hitAsks(ch).melee) bits.push(check("data-ehit-melee", d.melee, copy("hitMelee")));
+  // Decision 267 (HQ15): immunity writes nothing, so a seat's hit offers it; Null Field and Odin's Aegis spend or run down, which a seat's clone would lose.
+  const ans=Engine.hitAnswers(ch);
+  ans.immune.forEach(x=>bits.push(check(`data-ehit-pow="${esc(x.id)}"`, d.pw[x.id], `${x.name}: immune to Physical`)));
+  if (d.cat==="withering" && Engine.hitAsks(ch).silver) bits.push(check("data-ehit-silver", d.silver, "From silver"));
+  if (ans.absorb.length || ans.react.length) bits.push(`<p class="enc-armor enc-armor-extra" data-ehit-ownsheet>Null Field and Odin's Aegis answer on the player's own sheet.</p>`);
   // The sheet's own armor problems ("2 body pieces are marked worn…") say which piece counts.
   const armor = (worn ? `<p class="enc-armor enc-seat-armor">${seatArmorText(worn.name, worn.prot, worn)}</p>`
     : `<p class="enc-armor enc-seat-armor">No body armor worn</p>`) + as.problems.map(p=>`<p class="enc-armor enc-armor-extra">${esc(p)}</p>`).join("");
@@ -3498,7 +3503,7 @@ function bindEncounters(main){
     "data-edmg": b => { const [row, sign]=b.dataset.edmg.split("|"); S.encDmg={ row, sign:+sign }; S.encHit=null; S.encCond=null; redraw(); focus("[data-edmgn]"); },
     "data-ehit": b => { S.encHit=encHitNew(b.dataset.ehit);
       // Decision 266: a seat's running power starts its Natural Armor box ticked, as on the player's own sheet.
-      const hr=encHitRow(); if (encSeatOn(hr)) S.encHit.nat=runningNatural(Engine.rowCharacter(S.table, S.encOpen, hr.id));
+      const hr=encHitRow(); if (encSeatOn(hr)){ const copyCh=Engine.rowCharacter(S.table, S.encOpen, hr.id); S.encHit.nat=runningNatural(copyCh); S.encHit.pw=Object.fromEntries(Engine.hitAnswers(copyCh).immune.map(x=>[x.id, true])); }
       S.encDmg=null; S.encCond=null; redraw(); focus("[data-ehit-damage]"); },
     "data-ehit-cancel": () => { const row=S.encHit.row; S.encHit=null; redraw(); focus(attrSel("data-ehit", row)); },
     "data-ehit-cat": b => { const d=S.encHit; d.cat=b.dataset.ehitCat; d.conds={}; d.shock=""; d.atZero=""; d.err=""; redraw(); focus(attrSel("data-ehit-cat", d.cat)); },
@@ -3578,6 +3583,8 @@ function bindEncounters(main){
     else if ("ehitLoc" in d){ S.encHit.loc=el.value; S.encHit.err=""; if (encSeatOn(encHitRow())){ redraw(); focus("[data-ehit-loc]"); } else hitLive(); }
     else if ("ehitSpell" in d){ S.encHit.spell=el.checked; S.encHit.err=""; hitLive(); }
     else if ("ehitMelee" in d){ S.encHit.melee=el.checked; S.encHit.err=""; hitLive(); }
+    else if ("ehitPow" in d){ S.encHit.pw[d.ehitPow]=el.checked; S.encHit.err=""; hitLive(); }
+    else if ("ehitSilver" in d){ S.encHit.silver=el.checked; S.encHit.err=""; hitLive(); }
     else if ("ehitNat" in d){ S.encHit.nat[d.ehitNat]=el.checked; S.encHit.err=""; redraw(); focus(attrSel("data-ehit-nat", d.ehitNat)); }
     else if ("ehitCond" in d){ S.encHit.conds[d.ehitCond]=el.checked; }
     else if ("ewKeep" in d){ encWrapDraft(d.ewKeep).keep=el.checked; redraw(); focus(attrSel("data-ew-keep", d.ewKeep)); }

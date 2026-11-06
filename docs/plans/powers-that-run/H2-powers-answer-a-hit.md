@@ -2,7 +2,7 @@
 
 **Plan:** [`powers-that-run.md`](../powers-that-run.md), session H2. **Wish:** **W132** (Ken, from re-running P21's pre-flight), its "hit" half.
 Decisions 104, 135, 219, 223, 225, 236, 256, 257, 266.
-**Status:** **drafted 2026-11-05 by Claude (Opus)**, the H1 reviewer acting as orchestrator. Pre-flighted against `main` at `93c1a99` (PR #297
+**Status:** **built 2026-11-05 (Decision 267)**; drafted 2026-11-05 by Claude (Opus), the H1 reviewer acting as orchestrator. Pre-flighted against `main` at `93c1a99` (PR #297
 merged: app 0.62.0 under `[Unreleased]`, game data 0.53, character schema 0.33, table 0.19, pack 0.3; the last decision is 266).
 **Approved by Ken 2026-11-05** ("All defaults", in the H1 conductor session): HQ11–HQ18.
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.

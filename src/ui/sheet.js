@@ -612,7 +612,7 @@ function renderShCharacter(){
       parts.push(secs.sect(label, `${esc(label)}${chosen.length?"":" <span class='chip'>none chosen</span>"}`)
         + cardsOf(chosen.map(o=>`<div class="pick selected"><div class="head"><h2>${esc(o.name)}</h2>
         ${o.missing?`<span class="cost">no longer in the game data</span>`:""}</div>
-        <div class="desc">${esc(o.description||"")}${o.benefit?"\n— "+esc(o.benefit):""}${o.tweak?"\nTweak — "+esc(o.tweak.name)+": "+esc(o.tweak.description):""}${optionFeaturesText(o)}</div>${optionPowersHtml(o)}${chosenChoicesHtml(ch, o)}</div>`)));
+        <div class="desc">${esc(o.description||"")}${o.benefit?"\n— "+esc(o.benefit):""}${o.tweak?"\nTweak — "+esc(o.tweak.name)+": "+esc(o.tweak.description):""}${optionFeaturesText(o)}</div>${optionPowersHtml(o)}${starterRunHtml(ch, o)}${chosenChoicesHtml(ch, o)}</div>`)));
     }
 
     // Permanent Aberrations a Cascade left (Decision 110), read-only here; the
@@ -1012,16 +1012,38 @@ function runCardHtml(r){
   const btn = r.running
     ? `<button type="button" class="btn sm" data-runtoggle="${esc(r.id)}|stop" aria-label="Stop ${esc(r.name)}">Stop</button>`
     : `<button type="button" class="btn sm" data-runtoggle="${esc(r.id)}|start" aria-label="Start ${esc(r.name)}"${r.can.ok ? "" : ` disabled title="${esc(r.can.why)}"`}>Start</button>`;
-  return `<div class="run-row">${r.running ? `<span class="sub" data-runline>Running · ${r.sfr} SFR a round</span>` : ""}${btn}${runWhyHtml(r)}</div>`;
+  return `<div class="run-row">${r.running ? `<span class="sub" data-runline>${esc(runWords(r, "Running"))}</span>` : ""}${btn}${runWhyHtml(r)}</div>`;
+}
+// What a running power says it is doing (Decision 267): "a round" is only for a power that pays each round; one that paid
+// once at Start just runs, and Null Field says how much it can still soak. `lead` is "Running" on a card or the power's name.
+function runWords(r, lead){
+  const left = r.left!=null ? r.left : r.absorbLeft;
+  if (r.each==="round") return `${lead} · ${r.sfr} SFR a round`;
+  return left!=null ? `${lead} · ${left} left` : lead;
+}
+// A starter-power row that runs (Adaptive Skeleton) is not a card of its own: its Start sits under the starter table.
+function starterRunHtml(ch, o){
+  const rows = o && o.starterPower && Array.isArray(o.starterPower.rows) ? o.starterPower.rows.filter(r=>r && typeof r.id==="string" && r.run) : [];
+  if (!rows.length) return "";
+  const runnable = new Map(Engine.runnablePowers(ch).map(r=>[r.id, r]));
+  return rows.map(row=>{ const r = runnable.get(row.id);
+    return r ? `<div class="run-card" data-starterrun="${esc(r.id)}"><span class="sub">${esc(r.name)}</span>${runCardHtml(r)}</div>` : ""; }).join("");
 }
 function newHitForm(){
   return { damage:"", damageType:"ballistic", category:"regular", ap:false, spell:false, melee:false, location:"",
-           protRoll:"", shock:"", atZero:"", conds:{}, nat:{} };
+           protRoll:"", shock:"", atZero:"", conds:{}, nat:{}, pw:{}, react:{}, silver:false };
 }
+const tickedIds = m => Object.keys(m||{}).filter(k=>m[k]);
 function hitInput(st){
   return { damage: st.damage, damageType: st.damageType, category: st.category, ap: !!st.ap, spell: !!st.ap && !!st.spell, melee: st.melee===true,
            location: st.location || undefined, protRoll: st.protRoll,
-           natural: Object.keys(st.nat||{}).filter(k=>st.nat[k]) };
+           natural: tickedIds(st.nat), powers: tickedIds(st.pw), react: tickedIds(st.react), silver: st.silver===true };
+}
+// Decision 267: the boxes a running power opens a hit with ticked (immunity, Null Field). Odin's Aegis costs SFR, so it starts unticked.
+function runningHitBoxes(ch){
+  const a = Engine.hitAnswers(ch), pw = {};
+  a.immune.concat(a.absorb).forEach(x=>{ pw[x.id] = true; });
+  return pw;
 }
 // Condition ids only: the engine puts a body-part Condition where the hit
 // landed (after any Headshot Defense redirect), not where it was aimed.
@@ -1031,8 +1053,13 @@ function hitChoices(st, r){
 }
 function hitLabel(r){
   const kind = r.cat.bypassesArmor || r.cat.recordsWithering ? " "+r.cat.name : "";
+  // Decision 267: what a power did goes on the one commit label, so the Undo toast says it.
+  const bits = [];
+  if (r.immuneBy) bits.push(`immune (${r.immuneBy})`);
+  if (r.reactBy) bits.push(`${r.reactBy.name} −${r.reactBy.from - r.reactBy.to} (${r.reactBy.sfr} SFR)`);
+  if (r.absorbedBy) bits.push(`${r.absorbedBy.name} absorbed ${r.absorbedBy.absorbed}${r.absorbedBy.usedUp ? ", used up" : ""}`);
   return `Hit: ${r.damage} ${r.type.name}${kind} → ` +
-    (r.bypassesArmor ? `${r.levelsLost} Health Level${r.levelsLost===1?"":"s"} removed` : `${r.through} through`);
+    (r.bypassesArmor ? `${r.levelsLost} Health Level${r.levelsLost===1?"":"s"} removed` : `${r.through} through`) + (bits.length ? `, ${bits.join(", ")}` : "");
 }
 // What still stands between the form and Apply, in words. The footer shows
 // it next to the disabled button (W6), so the reason is never a guess.
@@ -1084,6 +1111,7 @@ function hitPanelHtml(ch, r){
       ${bypass?"":`<label class="check"><input type="checkbox" data-hit="ap" ${st.ap?"checked":""}> Armor-piercing</label>`}
       ${!bypass && st.ap && hasNat?`<label class="check"><input type="checkbox" data-hit="spell" ${st.spell?"checked":""}> From a spell</label>`:""}
       ${!bypass && Engine.hitAsks(ch).melee?`<label class="check"><input type="checkbox" data-hit="melee" ${st.melee?"checked":""}> ${esc(copy("hitMelee"))}</label>`:""}
+      ${cat.recordsWithering && Engine.hitAsks(ch).silver?`<label class="check"><input type="checkbox" data-hit="silver" ${st.silver?"checked":""}> From silver</label>`:""}
     </div>
     <p class="hitnote">${esc(cat.text||"")}</p>`;
 
@@ -1092,7 +1120,7 @@ function hitPanelHtml(ch, r){
   if (as.worn){
     const w=as.worn;
     h+=`<div class="hitrow"><span class="hitarmor">${esc(w.name)} · PROT ${esc(w.prot||"—")} · RES +${w.res} · Integrity ${w.integrity}/${w.integrityMax}${w.scrapped?" · scrap":w.compromised?" · Compromised":""}</span>
-      ${!bypass && (!r.ok || r.covered) ? num("protRoll","PROT roll") : ""}</div>`;
+      ${!bypass && !(r.ok && r.immuneBy) && (!r.ok || r.covered) ? num("protRoll","PROT roll") : ""}</div>`;
   } else {
     h+=`<div class="hitrow"><span class="hitnote">No body armor worn${skin?"":", so nothing answers the hit"}. Armor goes on under Loadout.</span></div>`;
   }
@@ -1105,7 +1133,21 @@ function hitPanelHtml(ch, r){
       `<label class="check"><input type="checkbox" data-hitnat="${esc(c.id)}" ${c.active?"checked":""}> ${esc(c.name)} (${
         c.amount?`+${c.amount}`:`answers ${esc(c.resAgainst.map(titleCase).join(", "))}`}, ${esc(c.while)})</label>`).join("")}</div>`;
 
-  if (r.ok){
+  // Decision 267: the powers that answer a hit. Immunity and Null Field start ticked; Odin's Aegis costs SFR and doesn't.
+  // The reason an unavailable one is off is on the page, not only in a title.
+  const ans=Engine.hitAnswers(ch), magical=(Engine.damageTypeById(st.damageType)||{}).magical===true;
+  if (ans.immune.length || ans.absorb.length || ans.react.length){
+    const box=(attr, id, on, label, off)=>`<label class="check"><input type="checkbox" ${attr}="${esc(id)}" ${on?"checked":""} ${off?"disabled":""}> ${esc(label)}</label>`;
+    h+=`<div class="hitrow" data-hitpowers>` +
+      ans.immune.map(x=>box("data-hitpow", x.id, st.pw[x.id], `${x.name}: immune to Physical`)).join("") +
+      ans.absorb.map(x=>box("data-hitpow", x.id, st.pw[x.id], `${x.name}: absorbs up to ${x.left} Elemental, Spirit or Aether`)).join("") +
+      ans.react.map(x=>{ const why = !magical ? "Elemental, Spirit or Aether only" : x.can.ok ? "" : x.can.short;
+        return `<span class="hit-react">${box("data-hitreact", x.id, st.react[x.id], `${x.name}: −${x.minus}, ${x.sfr} SFR`, !!why)}${why?`<span class="sub" data-hitreactwhy>${esc(why)}</span>`:""}</span>`; }).join("") + `</div>`;
+  }
+
+  if (r.ok && r.immuneBy){
+    h+=`<div class="hitresult"><p>${esc(r.immuneBy)}: no damage.</p></div>`;
+  } else if (r.ok){
     const lines=[];
     if (r.redirectedBy) lines.push(`${r.redirectedBy.feature} (${r.redirectedBy.by}): the head shot lands as a torso hit.`);
     if (r.armor && !r.covered) lines.push(`${r.armor.name} doesn't cover the ${locName(r.location)}.${skin?"":" Nothing answers the hit."}`);
@@ -1127,8 +1169,11 @@ function hitPanelHtml(ch, r){
       : N.skipped==="ap" ? "Armor-piercing magic goes straight past Natural Armor."
       : N.skipped==="type" ? `Natural Armor doesn't answer ${r.type.name} damage.` : "";
     if (natLine) lines.push(natLine);
+    if (r.reactBy) lines.push(`${r.reactBy.name} takes off ${r.reactBy.from - r.reactBy.to}: ${r.reactBy.from} → ${r.reactBy.to}.`);
+    if (r.absorbedBy) lines.push(`${r.absorbedBy.name} absorbs ${r.absorbedBy.absorbed}: ${r.absorbedBy.from} → ${r.absorbedBy.to}.${r.absorbedBy.usedUp ? " It's used up." : ""}`);
     r.taken.forEach(t=>lines.push(`${t.name}: ${t.from} → ${t.to}.`));
     if (r.witherHalved) lines.push(`${r.witherHalved.by} halves it: ${r.witherHalved.from} → ${r.witherHalved.to}.`);
+    if (r.silverHalved) lines.push(`${r.silverHalved.by} halves it: ${r.silverHalved.from} → ${r.silverHalved.to}.`);
     if (!r.bypassesArmor && !r.soaked) lines.push(r.through ? `${r.through} gets through.` : "Nothing gets through.");
     if (r.tookDamage) lines.push(`Health Levels lost: ${r.before.lost} → ${r.after.lost}. HP left: ${r.before.hpLeft} → ${r.after.hpLeft}.`);
     h+=`<div class="hitresult">${lines.map(l=>`<p>${esc(l)}</p>`).join("")}</div>`;
@@ -1425,7 +1470,7 @@ function vitalPopover(ch, key){
     // Decision 266 (HQ6): what is running, with Stop, and Start for each sustained power held and not running.
     const runs=Engine.runningPowers(ch), starts=Engine.runnablePowers(ch).filter(r=>!r.running);
     const runHtml = runs.length || starts.length ? `<div class="pop-runs" data-poprun>` +
-      runs.map(r=>`<div class="run-row"><span class="sub">${esc(r.name)} · ${r.sfr} SFR a round</span><button type="button" class="btn sm" data-runtoggle="${esc(r.id)}|stop" aria-label="Stop ${esc(r.name)}">Stop</button></div>`).join("") +
+      runs.map(r=>`<div class="run-row"><span class="sub">${esc(runWords(r, r.name))}</span><button type="button" class="btn sm" data-runtoggle="${esc(r.id)}|stop" aria-label="Stop ${esc(r.name)}">Stop</button></div>`).join("") +
       starts.map(r=>`<div class="run-row"><button type="button" class="btn sm" data-runtoggle="${esc(r.id)}|start" aria-label="Start ${esc(r.name)}"${r.can.ok ? "" : ` disabled title="${esc(r.can.why)}"`}>Start ${esc(r.name)}</button>${runWhyHtml(r)}</div>`).join("") + `</div>` : "";
     return { title:"SFR",
       html: now(`${left} / ${sf.value}`, turn && (turn.at||turn.past) ? "bad" : "", sf.rou!=null ? `RoU ${sf.rou}` : "") +
@@ -3454,7 +3499,7 @@ function openHitModal(returnTo){
   const ch=S.ch; if (!ch) return;
   if (S.act){ S.act=null; renderMain(); }
   // Decision 266: a Natural Armor source whose power is running starts ticked; unticking it is for this hit only.
-  S.hit=Object.assign(newHitForm(), { owner: ch, nat: runningNatural(ch) });
+  S.hit=Object.assign(newHitForm(), { owner: ch, nat: runningNatural(ch), pw: runningHitBoxes(ch) });
   const p=hitModalParts(ch);
   openModal({ title: "Take a hit", html: p.body, foot: p.foot, returnTo: typeof returnTo==="string" ? returnTo : "[data-hitopen]",
     onClose: ()=>{ S.hit=null; }, bind: bindHitModal });
@@ -3482,6 +3527,12 @@ function bindHitModal(body, foot){
   });
   body.querySelectorAll("[data-hitnat]").forEach(el=>el.onchange=()=>{
     if (!S.hit) return; S.hit.nat[el.dataset.hitnat]=el.checked; redraw(sel(el, "data-hitnat"));
+  });
+  body.querySelectorAll("[data-hitpow]").forEach(el=>el.onchange=()=>{
+    if (!S.hit) return; S.hit.pw[el.dataset.hitpow]=el.checked; redraw(sel(el, "data-hitpow"));
+  });
+  body.querySelectorAll("[data-hitreact]").forEach(el=>el.onchange=()=>{
+    if (!S.hit) return; S.hit.react[el.dataset.hitreact]=el.checked; redraw(sel(el, "data-hitreact"));
   });
   // Decision 224 (Q19): Let go is its own commit, before or after Apply; the hit itself is untouched.
   body.querySelectorAll("[data-letgo]").forEach(b=>b.onclick=()=>{

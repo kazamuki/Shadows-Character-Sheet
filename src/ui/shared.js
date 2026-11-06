@@ -1001,7 +1001,8 @@ function powerHtml(p){
   if (!p) return "";
   if (typeof p==="string") p = { name: p };
   const rows = Object.values(p).find(v=>Array.isArray(v) && v.length && v.every(r=>r && typeof r==="object" && !Array.isArray(r)));
-  const cols = rows ? Object.keys(rows[0]) : [];
+  // Decision 267: a row's keys are its columns, except the ones code reads (a starter row that runs has an id, a run and grants).
+  const cols = rows ? Object.keys(rows[0]).filter(k=>!["id", "run", "grants"].includes(k)) : [];
   const head = c => esc(String(c).replace(/^./, x=>x.toUpperCase()));
   return `<div class="power"><h3>${esc(p.name||"")}${p.description?"":` <span class="chip">${esc(statusLabel("tbd"))}</span>`}</h3>`
     + (p.description?`<p>${esc(p.description)}</p>`:"")

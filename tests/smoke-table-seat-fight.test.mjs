@@ -163,3 +163,23 @@ test("Decision 266: a GM's seat hit starts a running power's box ticked, and the
   assert.ok(stop && stop.disabled, "Stop is live on a read-only sheet");
   assert.deepEqual(app.errors, []);
 });
+
+test("Decision 267: the seat hit offers immunity and silver, and spends nothing (HQ15)", () => {
+  const ch = lockedVampire("draugur");
+  Object.assign(ch.archetypeChoices, { basePowers: { "spectral-veil": 1, "odins-aegis": 2 }, powerCp: {}, optionPicks: {} });
+  ch.identity.name = "Dez"; ch.meta.id = DEZ_TAG; ch.meta.updated = "2026-10-02T10:00:00.000Z";
+  ch.trackers.running = [{ id: "spectral-veil" }];
+  ch.trackers.sfr = { spent: 3, turn: 3 };
+  const app = open(ch);
+  const id = withDez(app);
+  app.click(`[data-ehit="${id}"]`);
+  assert.equal(app.$('[data-ehit-pow="spectral-veil"]').checked, true, "the seat's immunity box starts unticked");
+  assert.equal(app.$('[data-ehit-pow="odins-aegis"]'), null);
+  assert.match(app.$("[data-ehit-ownsheet]").textContent, /Null Field and Odin's Aegis answer on the player's own sheet\./);
+  const before = copiesOf(app);
+  type(app, "[data-ehit-damage]", "10");
+  assert.match(app.$("[data-ehit-preview]").textContent, /0 through/);
+  app.click("[data-ehit-apply]");
+  assert.equal(copiesOf(app), before, "the seat's hit wrote the copy");
+  assert.deepEqual(app.errors, []);
+});

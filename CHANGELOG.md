@@ -27,6 +27,8 @@ own in the footer.
 
 - **Sustained powers run.** Start one from its card or the SFR popover and its SFR is spent; each Turn Reset spends it again, and stops it if you can't pay. Iron Hide's Natural Armor counts on a hit while it runs.
 - **A Werewolf's powers run only in Werewolf Form**, and shifting back stops them.
+- **Powers answer a hit.** While Spectral Veil or Red Mist runs, Physical damage does nothing. Null Field soaks up Elemental, Spirit and Aether damage until it's spent, and Odin's Aegis takes its bite out of one such hit for its SFR, right in Take a hit.
+- **Silverscar halves silver's Withering**, and Adaptive Skeleton's and Icebound Resilience's Natural Armor counts while they run.
 
 ## v0.61.0 — 2026-11-05
 

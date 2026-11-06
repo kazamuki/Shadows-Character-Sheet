@@ -22,7 +22,7 @@ const Engine = (() => {
   const INTAKE_RE = new RegExp(`^TAG-${INTAKE_BODY}$`);
   const OLD_INTAKE_RE = new RegExp(`^NCR-(${INTAKE_BODY})$`);
   // The character file's shape. A bump needs a migrate() step in the same change.
-  const SCHEMA_VERSION = "0.33";
+  const SCHEMA_VERSION = "0.34";
   const isIntakeId = v => typeof v==="string" && INTAKE_RE.test(v);
   function randomChars(n){
     const c = typeof globalThis!=="undefined" && globalThis.crypto && typeof globalThis.crypto.getRandomValues==="function" ? globalThis.crypto : null;
@@ -86,7 +86,7 @@ const Engine = (() => {
                  credits:{current:0, ledger:[]},
                  crank:{rep:0, ledger:[]},     // schema 0.17 (Decision 169); the tier is derived, never stored
                  heldSpells:[],                // schema 0.26 (Decision 224): ids of the Concentration spells being held
-                 running:[],                   // schema 0.33 (Decision 266): { id } of each sustained power the player has started
+                 running:[],                   // schema 0.33 (Decision 266): { id, used? } of each power the player has started; schema 0.34 (Decision 267): `used` is what Null Field has absorbed
                  adjustments:[],               // manual adjustments ledger
                  panel:{} },                   // generic archetype tracker panels
       panelData:{},                            // archetype table/toggle panel content
@@ -165,7 +165,7 @@ const Engine = (() => {
   // this returns next render.
   function grants(ch){
     const out = { skillPoints:0, hpPerLevel:0, luckCost:{}, minorMilestones:0, majorMilestones:0, rou:0, sfrMax:0, painLevel:0, painLevelFrom:[], painLevelAlways:0, painLevelAlwaysFrom:[], painIgnore:0, painIgnoreFrom:[],
-                  healTimes:[], meleeTaken:[], headIgnoredBy:null, feed:{}, witheringHalvedBy:null };
+                  healTimes:[], meleeTaken:[], headIgnoredBy:null, feed:{}, witheringHalvedBy:null, witheringHalvedFrom:{} };
     // Decision 236: a trait on two rows counts once for the rows that read a rank, its ranks summed.
     const counted = new Set();
     const scan = (list, lookup) => (list||[]).forEach(entry=>{
@@ -181,7 +181,14 @@ const Engine = (() => {
           continue;
         }
         // Decision 223: Withering through a hit is halved, never below 1 (resolveHit does it).
-        if (g.type==="withering"){ if (g.halve===true && out.witheringHalvedBy==null) out.witheringHalvedBy = txt(def.name); continue; }
+        // Decision 267: a row with `from` (Silverscar) halves only a hit marked from that source, and is never Wither Ward.
+        if (g.type==="withering"){
+          if (g.halve!==true) continue;
+          if (typeof g.from==="string" && g.from){
+            if (g.from!=="__proto__" && !Object.prototype.hasOwnProperty.call(out.witheringHalvedFrom, g.from)) out.witheringHalvedFrom[g.from] = txt(def.name);
+          } else if (out.witheringHalvedBy==null) out.witheringHalvedBy = txt(def.name);
+          continue;
+        }
         // Decision 213: a shift to the Pain Level, once per entry. "Only when hurt" (Pain Sensitive) is one kind;
         // Decision 236: `onlyIfHurt: false` (Terminal Disease) is the other, and counts as hurt for the first.
         if (g.type==="painLevel"){
@@ -1507,6 +1514,8 @@ const Engine = (() => {
     // A held archetype power's grants count at its rank (Iron Hide's rank + 1,
     // Decision 200); every one so far is `while` it's running.
     archetypePowers(ch).forEach(p=>(Array.isArray(p.grants) ? p.grants : []).forEach(g=>add(g, p, p.rank)));
+    // Decision 267: a starter-power row that runs (Adaptive Skeleton) counts at rank 1.
+    starterDefs(ch).forEach(p=>(Array.isArray(p.grants) ? p.grants : []).forEach(g=>add(g, p, 1)));
     const counted = [...always, ...conditional.filter(c=>c.active)];
     // Grants that share a `noStack` group count once, the highest (Decision
     // 215: Iron Hide and Icebound Resilience). Only the sum reads it.
@@ -1638,8 +1647,10 @@ const Engine = (() => {
     return out;
   }
   // Does Take a hit have a question only a held trait asks? (Decision 236, PQ10)
+  // Decision 267 (HQ16): "From silver" is asked on a Withering hit only, and only of a character whose trait reads it.
   function hitAsks(ch){
-    return { melee: !!ch && typeof ch==="object" && grants(ch).meleeTaken.length>0 };
+    const ok = !!ch && typeof ch==="object";
+    return { melee: ok && grants(ch).meleeTaken.length>0, silver: ok && Object.keys(grants(ch).witheringHalvedFrom).includes("silver") };
   }
 
   // Natural Armor (Decision 104): after worn armor, on any body part, when
@@ -1719,16 +1730,45 @@ const Engine = (() => {
     // Decision 236: Regular only, and only a head that was not turned aside; Thick Skull answers it.
     const headHit = where.location==="head" && !where.redirectedBy && !cat.bypassesArmor && !cat.recordsWithering;
     const skull = headHit ? grants(ch).headIgnoredBy : null;
-    const m = cat.bypassesArmor ? mitigateBypass(damage, armor, covered)
-                                : mitigateArmor(damage, type, hit, armor, covered, headHit && !skull);
+    // Decision 267: a ticked running power that makes Physical damage (not `magical`) nothing answers first. Nothing gets
+    // through, so there is no PROT to ask for and no armor to wear: the hit is the zero hit.
+    const ids = x => Array.isArray(x) ? x.filter(v=>typeof v==="string") : [];
+    const answers = hitAnswers(ch), ticked = new Set(ids(hit.powers));
+    const immune = type.magical!==true ? answers.immune.find(x=>ticked.has(x.id)) || null : null;
+    const m = immune ? { ok:true, prot:0, res:0, resSkipped:null, halved:null, absorbed:0, through:0, soaked:false, integrityLost:0, levelsLost:0, scrap:false, doubled:null }
+      : cat.bypassesArmor ? mitigateBypass(damage, armor, covered)
+                          : mitigateArmor(damage, type, hit, armor, covered, headHit && !skull);
     if (!m.ok) return m;
-    const nat = mitigateNatural(ch, m.through, type, hit, cat);
-    const mel = mitigateMelee(ch, m.through - nat.absorbed, hit, cat);
+    const nat = immune ? { total:0, absorbed:0, skipped:null, sources:[] } : mitigateNatural(ch, m.through, type, hit, cat);
+    // Decision 267 (HQ12): after armor and Natural Armor, on magical damage that got through: Odin's Aegis, then Null Field.
+    let left = m.through - nat.absorbed, reactBy = null, absorbedBy = null, sfrSpend = 0, running = null;
+    if (type.magical===true && !immune){
+      const reacts = answers.react.filter(x=>ids(hit.react).includes(x.id));
+      const bad = reacts.find(x=>!x.can.ok);
+      if (bad) return { ok:false, why:bad.can.why };
+      for (const x of reacts){
+        if (!(left>0)) break;
+        const to = Math.max(0, left - x.minus);
+        reactBy = { id:x.id, name:x.name, from:left, to, sfr:x.sfr }; sfrSpend += x.sfr; left = to;
+      }
+      for (const x of answers.absorb.filter(y=>ticked.has(y.id))){
+        if (!(left>0)) break;
+        const take = Math.min(left, x.left), usedAfter = x.used + take;
+        if (!absorbedBy) absorbedBy = { id:x.id, name:x.name, from:left, to:left - take, absorbed:take, usedAfter, usedUp: usedAfter>=x.cap };
+        running = (running || runEntries(ch)).map(e=>e.id===x.id ? Object.assign(keepEntry(e), { used:usedAfter }) : keepEntry(e)).filter(e=>!(e.id===x.id && usedAfter>=x.cap));
+        left -= take;
+      }
+    }
+    const mel = mitigateMelee(ch, left, hit, cat);
     let through = mel.through;
     // Decision 223: Wither Ward halves Withering last, after armor and Natural Armor, never below 1.
     const ward = cat.recordsWithering && through > 0 ? grants(ch).witheringHalvedBy : null;
     let witherHalved = null;
     if (ward){ const to = Math.max(1, Math.floor(through / 2)); witherHalved = { by:ward, from:through, to }; through = to; }
+    // Decision 267 (HQ16): Silverscar halves Withering from silver, after Wither Ward if both hold, never below 1.
+    const silverBy = cat.recordsWithering && hit.silver===true && through > 0 ? grants(ch).witheringHalvedFrom.silver : null;
+    let silverHalved = null;
+    if (silverBy){ const to = Math.max(1, Math.floor(through / 2)); silverHalved = { by:silverBy, from:through, to }; through = to; }
 
     const before = hlState(ch);
     const after = hlState(ch, { damage: before.damage + through,
@@ -1752,6 +1792,7 @@ const Engine = (() => {
                        integrityMax: armor.integrityMax ?? null, compromised: !!armor.compromised } : null,
       prot: m.prot, res: m.res, resSkipped: m.resSkipped, halved: m.halved, absorbed: m.absorbed, through, witherHalved,
       doubled: m.doubled || null, headIgnoredBy: skull || null, taken: mel.taken,
+      immuneBy: immune ? immune.name : null, reactBy, absorbedBy, silverHalved,
       natural: { total: nat.total, absorbed: nat.absorbed, skipped: nat.skipped, sources: nat.sources },
       soaked: m.soaked, integrityLost: m.integrityLost, levelsLost: m.levelsLost, scrap: m.scrap,
       before, after, lostThisHit: c.lostThisHit, tookDamage: c.tookDamage,
@@ -1761,7 +1802,8 @@ const Engine = (() => {
         armor: covered && (m.integrityLost>0 || m.scrap)
           ? { index: armor.index, integrityLoss: armor.integrityLoss + m.integrityLost, scrapped: armor.scrapped || m.scrap }
           : null,
-        deathMark: c.tookDamage && c.dying
+        deathMark: c.tookDamage && c.dying,
+        running, sfrSpend
       },
       prompts: c.prompts,
       notes
@@ -1778,6 +1820,10 @@ const Engine = (() => {
     choices = choices || {};
     const t = ch.trackers, p = r.patch;
     t.damage = p.damage; t.massiveLevels = p.massiveLevels; t.witheringDamage = p.witheringDamage;
+    if (p.running) t.running = p.running;
+    // Odin's Aegis's cost goes through the one writer that counts a round (Decision 225, 267).
+    const panel = p.sfrSpend>0 ? sfrTrackerPanel(ch) : null;
+    if (panel) adjustPanelTracker(ch, panel.id, p.sfrSpend);
     if (p.armor && ch.armor[p.armor.index]){
       ch.armor[p.armor.index].integrityLoss = p.armor.integrityLoss;
       if (p.armor.scrapped) ch.armor[p.armor.index].scrapped = true;
@@ -4129,22 +4175,42 @@ const Engine = (() => {
     const cur = toggleCurrent(ch, p);
     return { panel:r.panel, option:r.option, title:txt(p.title), on: !!cur && cur.name===r.option };
   }
-  const runnableDefs = ch => archetypePowers(ch).filter(p=>isPlainObj(p.run));
+  // Decision 267: the chosen options' starter-power rows that carry an `id` and a `run` (Adaptive Skeleton) or `grants`
+  // are powers too, at rank 1. A row is a power only if it has an `id`: the rest of the table is text. Total: a
+  // starterPower that isn't an object, or a row that isn't, is skipped.
+  function starterDefs(ch){
+    let chosen = [];
+    try { chosen = specializationChosen(ch); } catch (e) { return []; }
+    const out = [];
+    for (const o of chosen){
+      const rows = isPlainObj(o) && isPlainObj(o.starterPower) && Array.isArray(o.starterPower.rows) ? o.starterPower.rows : [];
+      for (const r of rows) if (isPlainObj(r) && typeof r.id==="string" && r.id) out.push({ id:r.id, name:r.augmentation, rank:1, run:r.run, grants:r.grants, starter:true });
+    }
+    return out;
+  }
+  // A starter row isn't under `runsIn` (that reads `powers` only): CyberWolf Protocol works in both forms (0414).
+  const runnableDefs = ch => archetypePowers(ch).concat(starterDefs(ch)).filter(p=>isPlainObj(p.run));
+  const inForm = (form, p) => !form || form.on || p.starter===true;
+  const hitRows = p => (p && Array.isArray(p.grants) ? p.grants : []).filter(g=>isPlainObj(g) && g.type==="hitTaken");
+  // What Null Field can absorb in all: perRank × rank, a number the data wrote.
+  const absorbCap = p => { const g = hitRows(p).find(x=>isPlainObj(x.absorb)); return g ? Math.max(0, Math.floor(finiteOr0(g.absorb.perRank) * (Number(p.rank) || 1) + finiteOr0(g.absorb.plus))) : null; };
+  // A stored entry keeps its `used` where it has one (migrate() made it a whole number).
+  const keepEntry = e => typeof e.used==="number" && Number.isFinite(e.used) ? { id:e.id, used:nonNegInt(e.used) } : { id:e.id };
   // Each stored entry that is a held power with `run`, in the form it needs. The one place running is decided.
   function runningPowers(ch){
     const form = runForm(ch);
-    if (form && !form.on) return [];
-    const defs = runnableDefs(ch), seen = new Set(), out = [];
+    const defs = runnableDefs(ch).filter(p=>inForm(form, p)), seen = new Set(), out = [];
     for (const e of runEntries(ch)){
       const p = defs.find(x=>x.id===e.id);
       if (!p || seen.has(e.id)) continue;
       seen.add(e.id);
-      out.push({ id:p.id, name:txt(p.name), rank:p.rank, sfr:runCost(ch, p), each: p.run.each==="start" ? "start" : "round", def:p });
+      const cap = absorbCap(p), used = cap==null ? 0 : Math.min(cap, nonNegInt(e.used));
+      out.push({ id:p.id, name:txt(p.name), rank:p.rank, sfr:runCost(ch, p), each: p.run.each==="start" ? "start" : "round", cap, used, absorbLeft: cap==null ? null : cap - used, def:p });
     }
     return out;
   }
   const isRunning = (ch, id) => runningPowers(ch).some(r=>r.id===id);
-  const nameOfRunnable = (ch, id) => { const p = archetypePowers(ch).find(x=>x.id===id); return p ? txt(p.name) : "That power"; };
+  const nameOfRunnable = (ch, id) => { const p = archetypePowers(ch).concat(starterDefs(ch)).find(x=>x.id===id); return p ? txt(p.name) : "That power"; };
   // Why Start would refuse, in words the engine writes.
   function startCheck(ch, id){
     if (!ch || !ch.creation || ch.creation.locked!==true) return { ok:false, why:"Powers run once the character is locked.", short:"Locked sheets only" };
@@ -4153,7 +4219,7 @@ const Engine = (() => {
     const name = txt(p.name);
     if (isRunning(ch, id)) return { ok:false, why:`${name} is already running.`, short:"Already running" };
     const form = runForm(ch);
-    if (form && !form.on) return { ok:false, why:`${name} works only in ${form.option} Form.`, short:`${form.option} Form only` };
+    if (!inForm(form, p)) return { ok:false, why:`${name} works only in ${form.option} Form.`, short:`${form.option} Form only` };
     // Ken, 2026-11-05: Start refuses what the pool can't pay, as Turn Reset stops it (Decision 266).
     const cost = runCost(ch, p), sf = sfr(ch), s = ch.trackers && ch.trackers.sfr;
     const left = sf && sf.value!=null ? Math.max(0, sf.value - nonNegInt(isPlainObj(s) ? s.spent : 0)) : Infinity;
@@ -4164,7 +4230,8 @@ const Engine = (() => {
   function runnablePowers(ch){
     if (!ch || typeof ch!=="object") return [];
     return runnableDefs(ch).map(p=>{ const c = startCheck(ch, p.id);
-      return { id:p.id, name:txt(p.name), rank:p.rank, sfr:runCost(ch, p), running:isRunning(ch, p.id), can:{ ok:c.ok, why:c.ok ? "" : c.why, short:c.ok ? "" : c.short } }; });
+      const run = runningPowers(ch).find(r=>r.id===p.id);
+      return { id:p.id, name:txt(p.name), rank:p.rank, sfr:runCost(ch, p), each: p.run.each==="start" ? "start" : "round", left: run ? run.absorbLeft : null, running:!!run, can:{ ok:c.ok, why:c.ok ? "" : c.why, short:c.ok ? "" : c.short } }; });
   }
   // The most one power may cost in a round, where the archetype says so (`powerCostCap`, as a panel's `turnCap`).
   const powerCostCap = ch => { const a = archetype(ch), c = a && a.powerCostCap==="rou" ? (sfr(ch)||{}).rou : a && a.powerCostCap;
@@ -4173,7 +4240,7 @@ const Engine = (() => {
     const c = startCheck(ch, id);
     if (!c.ok) return c;
     const cost = runCost(ch, c.p), t = ch.trackers;
-    t.running = runEntries(ch).filter(e=>e.id!==id).map(e=>({ id:e.id })).concat([{ id }]);
+    t.running = runEntries(ch).filter(e=>e.id!==id).map(keepEntry).concat([{ id }]);   // starting it again starts it empty
     const panel = sfrTrackerPanel(ch), w = panel && cost>0 ? adjustPanelTracker(ch, panel.id, cost) : null;
     const cap = powerCostCap(ch);
     return { ok:true, name:txt(c.p.name), sfr:cost, turn: w ? w.turn : null, cap: w ? w.cap : null,
@@ -4183,7 +4250,7 @@ const Engine = (() => {
   function stopPower(ch, id){
     const had = runEntries(ch).some(e=>e.id===id);
     if (!had) return { ok:false, why:`${nameOfRunnable(ch, id)} isn't running.` };
-    ch.trackers.running = runEntries(ch).filter(e=>e.id!==id).map(e=>({ id:e.id }));
+    ch.trackers.running = runEntries(ch).filter(e=>e.id!==id).map(keepEntry);
     return { ok:true, name:nameOfRunnable(ch, id) };
   }
   // Changing the form a power needs clears every held sustained power's entry, whether or not it read as running:
@@ -4192,9 +4259,9 @@ const Engine = (() => {
   function stopRunningOutsideForm(ch, panelId, option, was, same){
     const a = archetype(ch), r = a && a.runsIn;
     if (!isPlainObj(r) || r.panel!==panelId || same || !isPlainObj(ch.trackers)) return [];
-    const defs = new Set(runnableDefs(ch).map(p=>p.id));
-    ch.trackers.running = runEntries(ch).filter(e=>!defs.has(e.id)).map(e=>({ id:e.id }));
-    return r.option===option ? [] : was;
+    const defs = new Set(runnableDefs(ch).filter(p=>!p.starter).map(p=>p.id));   // a starter row runs in either form (Decision 267)
+    ch.trackers.running = runEntries(ch).filter(e=>!defs.has(e.id)).map(keepEntry);
+    return r.option===option ? [] : was.filter(id=>defs.has(id));
   }
   // What a Turn Reset would do to each running power that pays each round, in order: whether the pool covers it,
   // and what the pool had left when its turn came (`left`, null when the sheet knows no pool).
@@ -4218,8 +4285,39 @@ const Engine = (() => {
       else { if (panel && r.sfr>0) adjustPanelTracker(ch, panel.id, r.sfr); charged.push({ id:r.id, sfr:r.sfr }); }
     }
     for (const id of stop) if (!drop.has(id) && runEntries(ch).some(e=>e.id===id)){ drop.add(id); stopped.push({ id, why:"stop" }); }
-    if (drop.size) ch.trackers.running = runEntries(ch).filter(e=>!drop.has(e.id)).map(e=>({ id:e.id }));
+    if (drop.size) ch.trackers.running = runEntries(ch).filter(e=>!drop.has(e.id)).map(keepEntry);
     return { charged, stopped };
+  }
+  // ── What a power answers a hit with (Decision 267, W132) ──
+  // The one reader of a `hitTaken` grant. `immune`: running powers whose grant makes a hit that isn't `magical` nothing.
+  // `absorb`: running powers that soak up to a cap of magical damage, with what they have used. `react`: held powers that
+  // cost SFR when ticked and take `minus` off a magical hit (a stat's modifier + perRank × rank), with whether the pool
+  // can pay now. Nothing else reads the grant; the panels and resolveHit ask here.
+  function hitAnswers(ch){
+    const out = { immune:[], absorb:[], react:[] };
+    if (!ch || typeof ch!=="object") return out;
+    for (const r of runningPowers(ch)){
+      const rows = hitRows(r.def);
+      if (rows.some(g=>g.immune===true)) out.immune.push({ id:r.id, name:r.name });
+      if (r.cap!=null && r.absorbLeft>0) out.absorb.push({ id:r.id, name:r.name, cap:r.cap, used:r.used, left:r.absorbLeft });
+    }
+    const locked = !!ch.creation && ch.creation.locked===true, form = runForm(ch);
+    const sf = sfr(ch), s = ch.trackers && ch.trackers.sfr;
+    const left = sf && sf.value!=null ? Math.max(0, sf.value - nonNegInt(isPlainObj(s) ? s.spent : 0)) : Infinity;
+    const t = statTable(ch);
+    for (const p of archetypePowers(ch)){
+      const g = isPlainObj(p.react) ? hitRows(p).find(x=>isPlainObj(x.minus)) : null;
+      if (!g || !inForm(form, p)) continue;
+      const sid = typeof g.minus.stat==="string" ? normStat(g.minus.stat) : null, rank = Number(p.rank) || 1;
+      const minus = Math.max(0, Math.floor((sid && t[sid] ? t[sid].mod : 0) + finiteOr0(g.minus.perRank) * rank + finiteOr0(g.minus.plus)));
+      const sp = isPlainObj(p.react.sfr) ? p.react.sfr : {};
+      const cost = Math.max(0, Math.floor(finiteOr0(sp.perRank) * rank + finiteOr0(sp.plus))), name = txt(p.name);
+      const can = !locked ? { ok:false, why:"Powers run once the character is locked.", short:"Locked sheets only" }
+        : left < cost ? { ok:false, why:`${name} needs ${cost} SFR, ${left} left.`, short:"Not enough SFR" }
+        : { ok:true, why:"", short:"" };
+      out.react.push({ id:p.id, name, minus, sfr:cost, can });
+    }
+    return out;
   }
   // A Discipline's bought ranks, normalized: an undo or a hand edit can put anything in the map.
   const disciplinesOf = ch => { const m = (((ch||{}).archetypeChoices)||{}).disciplines; return isPlainObj(m) ? m : {}; };
@@ -5171,12 +5269,15 @@ const Engine = (() => {
     // Schema 0.26 (Decision 224): the ids of held spells. Strings only, each once, at most 20, 120 characters
     // each. Which of them is a held Concentration spell is read every time (heldSpells), never trusted.
     t.heldSpells = [...new Set((Array.isArray(t.heldSpells) ? t.heldSpells : []).filter(x=>typeof x==="string" && x).map(x=>x.slice(0, 120)))].slice(0, 20);
-    // Schema 0.33 (Decision 266): the sustained powers the player started, as { id }. Plain entries with a string id,
-    // each id once, at most 20, 120 characters each, and no other key. Whether the power is held, and in the form it
-    // needs, is read every time (runningPowers), never trusted: an id the character no longer holds is kept, and not running.
+    // Schema 0.33 (Decision 266): the powers the player started, as { id }. Plain entries with a string id, each id
+    // once, at most 20, 120 characters each. Schema 0.34 (Decision 267): `used`, what Null Field has absorbed, is kept
+    // when it is a finite number, as a whole number from 0 to 999, and dropped otherwise; no other key survives. Whether
+    // the power is held, and in the form it needs, is read every time (runningPowers), never trusted: an id the
+    // character no longer holds is kept, and not running.
     { const seenRun = new Set();
       t.running = (Array.isArray(t.running) ? t.running : []).filter(e=>isPlainObj(e) && typeof e.id==="string" && e.id)
-        .map(e=>e.id.slice(0, 120)).filter(id=>!seenRun.has(id) && seenRun.add(id)).slice(0, 20).map(id=>({ id })); }
+        .filter(e=>!seenRun.has(e.id.slice(0, 120)) && seenRun.add(e.id.slice(0, 120))).slice(0, 20)
+        .map(e=>typeof e.used==="number" && Number.isFinite(e.used) ? { id:e.id.slice(0, 120), used:Math.min(999, Math.max(0, Math.floor(e.used))) } : { id:e.id.slice(0, 120) }); }
     if (!t.panel || typeof t.panel!=="object") t.panel={};
     // Schema 0.8 (Decision 95): Conditions, plus the two damage inputs the hit
     // resolver writes. A hand-edited file can hold junk or a duplicate; keep
@@ -9565,6 +9666,13 @@ const Engine = (() => {
   }
   // Pure: what a hit WOULD do to a row. An NPC row's `hit` is resolveHit's, plus `from`, and the
   // GM's protRoll is ignored. A PC row's is { damage | gone, damageType, category, location, from }.
+  // Decision 267 (HQ15): a seat's hit runs on a clone and is never written back, so a power that spends or runs down
+  // (Odin's Aegis, Null Field) would spend on the clone and be lost. Only immunity, which writes nothing, passes.
+  function _seatHit(copy, hit){
+    if (!_isObj(hit)) return hit;
+    const imm = new Set(hitAnswers(copy).immune.map(x=>x.id));
+    return Object.assign({}, hit, { react:undefined, powers:(Array.isArray(hit.powers) ? hit.powers : []).filter(id=>imm.has(id)) });
+  }
   function resolveEncounterHit(t, encId, rowId, hit){
     const l = _liveRow(t, encId, rowId);
     if (l.why) return { ok:false, why:l.why };
@@ -9573,13 +9681,13 @@ const Engine = (() => {
       // A claimed row takes the whole hit, as the player's sheet would, with their PROT roll (Decision 257).
       const mine = _seatStandIn(t, r);
       if (!mine) return _resolvePcHit(r, hit);
-      const res = resolveHit(mine, hit);
+      const res = resolveHit(mine, _seatHit(mine, hit));
       return res.ok ? Object.assign(res, { seat:true, from:_str(_isObj(hit) ? hit.from : "").trim() }) : res;
     }
     const s = _standIn(t, r);
     if (!s) return { ok:false, why:NO_BOD };
     const arm = encounterArmor(_rowBlock(t, r));
-    const res = resolveHit(s, Object.assign({}, hit, { protRoll:arm.stops ? arm.stops.prot : undefined, natural:undefined }));
+    const res = resolveHit(s, Object.assign({}, hit, { protRoll:arm.stops ? arm.stops.prot : undefined, natural:undefined, powers:undefined, react:undefined, silver:undefined }));
     if (!res.ok) return res;
     return Object.assign(res, { armor:Object.assign({}, res.armor, arm), from:_str(_isObj(hit) ? hit.from : "").trim() });
   }
@@ -9596,7 +9704,7 @@ const Engine = (() => {
       // The same pipeline on a fresh clone; the row keeps the fight and the clone is dropped, Withering,
       // held-spell prompts and Natural Armor ticks with it. Nothing reaches the copy (Decision 257).
       const s = _seatStandIn(t, r), old = r.conditions.length;
-      const ap = applyHit(s, hit, choices);
+      const ap = applyHit(s, _seatHit(s, hit), choices);
       if (!ap.ok) return ap;
       r.struck = true;
       r.damage = nonNegInt(s.trackers.damage);
@@ -9759,7 +9867,7 @@ const Engine = (() => {
     // Magic: the Cascade, Aberrations, the Grimoire, starting spells
     cascade, aberrationState, recordAberration, removeAberration,
     spellForms, spellForm, grimoire, spellPower, spAmounts, spellAttack, addSpell, linkSpell, removeGrimoireRow, heldSpells, holdSpell, releaseSpell,
-    runCost, runningPowers, isRunning, runnablePowers, startPower, stopPower,
+    runCost, runningPowers, isRunning, runnablePowers, startPower, stopPower, hitAnswers,
     castingPool, startingSpells, canAddStartingSpell, addStartingSpell,
     // Progression and play: IP, Milestones, sessions, Çredits, panels
     ipState, ipCost, spendIP, grantIP, advantageOffer,

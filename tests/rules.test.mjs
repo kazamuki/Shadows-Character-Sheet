@@ -2833,9 +2833,9 @@ test("P20b 4: Giant and Scrapper answer Melee and Martial Arts, after Natural Ar
   assert.equal(n.natural.absorbed, 3);
   // Withering: halved by Scrapper, and the Wither Ward comes after it (Decision 223).
   assert.equal(th(w20b("scrapper"), { melee: true, category: "withering" }), 6);
-  assert.equal(JSON.stringify(Engine.hitAsks(w20b("giant"))), JSON.stringify({ melee: true }));
-  assert.equal(JSON.stringify(Engine.hitAsks(w20b("scrapper"))), JSON.stringify({ melee: true }));
-  assert.equal(JSON.stringify(Engine.hitAsks(sub20b())), JSON.stringify({ melee: false }));
+  assert.equal(JSON.stringify(Engine.hitAsks(w20b("giant"))), JSON.stringify({ melee: true, silver: false }));
+  assert.equal(JSON.stringify(Engine.hitAsks(w20b("scrapper"))), JSON.stringify({ melee: true, silver: false }));
+  assert.equal(JSON.stringify(Engine.hitAsks(sub20b())), JSON.stringify({ melee: false, silver: false }));
 });
 
 test("P20b 5: a head hit doubles unless a helmet or Thick Skull says otherwise", () => {
@@ -3113,7 +3113,7 @@ test("P21 4: a power's mark grows with its rank, and nothing else moves", () => 
 // What the sources hold none of P21's rows leave alone (Natural Armor, movement, SFR), pinned from `main` before P21.
 const MAIN21 = {
   ww: { na: [0, 0, [], []], mv: [[6, 18, 36], 9, []], sfr: [8, 3] },
-  wf: { na: [0, 0, [], []], mv: [[6, 18, 36], 9, []], sfr: [8, 3] },
+  wf: { na: [0, 0, [], [{ id: "adaptive-skeleton", name: "Adaptive Skeleton", amount: 2, resAgainst: [], while: "while Adaptive Skeleton is running", noStack: null, active: false }]], mv: [[6, 18, 36], 9, []], sfr: [8, 3] },
   va: { na: [0, 0, [], []], mv: [[6, 18, 36], 9, []], sfr: [11, 4] },
   ar: { na: [0, 0, [], []], mv: [[6, 18, 36], 9, []], sfr: null },
 };
@@ -3466,24 +3466,48 @@ test("CRB 0433, 0434: 5 CP raises a Power a rank or gives a new one at rank 1, u
 
 // ── Sustained powers run (H1, Decision 266) ──────────────────────────────
 
-test("Decision 266: every run cost agrees with the power's cost text, and every sustained cost has one", () => {
-  const sustained = [];
-  for (const a of D.archetypes) for (const p of a.powers || []) {
-    const text = String(p.cost || "");
-    if (/sustained/i.test(text)) {
-      sustained.push(`${a.id}/${p.id}`);
-      assert.ok(p.run, `${p.id}: "${text}" is sustained and has no run`);
-    }
-    if (!p.run) continue;
-    assert.ok(/sustained/i.test(text), `${p.id} has a run and a cost that isn't sustained: "${text}"`);
-    assert.equal(p.run.each, "round", `${p.id}: "sustained" pays each round`);
-    const s = p.run.sfr;
-    if (/^Rank \+ (\d+)\b/.test(text)) assert.equal(JSON.stringify(s), JSON.stringify({ perRank: 1, plus: Number(/^Rank \+ (\d+)/.exec(text)[1]) }), p.id);
-    else if (/^Rank\b/.test(text)) assert.equal(JSON.stringify(s), JSON.stringify({ perRank: 1 }), p.id);
-    else if (/^(\d+) SFR\b/.test(text)) assert.equal(JSON.stringify(s), JSON.stringify({ plus: Number(/^(\d+) SFR/.exec(text)[1]) }), p.id);
-    else assert.fail(`${p.id}: "${text}" fits none of Rank + N, Rank and N SFR`);
+test("Decision 267: every run and react agrees with the power's cost text", () => {
+  const sustained = [], started = [];
+  const rows = [];
+  for (const a of D.archetypes) {
+    for (const p of a.powers || []) rows.push({ key: `${a.id}/${p.id}`, id: p.id, text: String(p.cost || ""), run: p.run, react: p.react });
+    for (const o of (a.specialization && a.specialization.options) || [])
+      for (const r of (o.starterPower && o.starterPower.rows) || []) rows.push({ key: `${a.id}/${o.id}/${r.id || r.augmentation}`, id: r.id || r.augmentation, text: String(r.cost || ""), run: r.run, react: r.react });
+  }
+  const sfrOf = (id, text, s) => {
+    if (/^Rank \+ (\d+)\b/.test(text)) assert.equal(JSON.stringify(s), JSON.stringify({ perRank: 1, plus: Number(/^Rank \+ (\d+)/.exec(text)[1]) }), id);
+    else if (/^Rank\b/.test(text)) assert.equal(JSON.stringify(s), JSON.stringify({ perRank: 1 }), id);
+    else if (/^(\d+) SFR\b/.test(text)) assert.equal(JSON.stringify(s), JSON.stringify({ plus: Number(/^(\d+) SFR/.exec(text)[1]) }), id);
+    else assert.fail(`${id}: "${text}" fits none of Rank + N, Rank and N SFR`);
+  };
+  for (const r of rows) {
+    if (/sustained/i.test(r.text)) { sustained.push(r.key); assert.ok(r.run, `${r.id}: "${r.text}" is sustained and has no run`); }
+    if (r.react) { assert.ok(/as a reaction/i.test(r.text), `${r.id} has a react and a cost that isn't a reaction: "${r.text}"`); sfrOf(r.id, r.text, r.react.sfr); }
+    if (!r.run) continue;
+    if (/sustained/i.test(r.text)) assert.equal(r.run.each, "round", `${r.id}: "sustained" pays each round`);
+    else { assert.equal(r.run.each, "start", `${r.id}: pays once, when it starts`); started.push(r.key); }
+    sfrOf(r.id, r.text, r.run.sfr);
   }
   assert.equal(sustained.length, 7, `the book's sustained powers: ${sustained.join(", ")}`);
+  same(started.sort(), ["vampire/icebound-resilience", "vampire/red-mist", "werewolf/forge-fang/adaptive-skeleton", "werewolf/null-field"], "the powers that run once");
+  assert.equal(started.length, 4);
+});
+
+test("CRB 0413/0414: the hit's powers say what the data does", () => {
+  const v = crb("0413_Vampire.md").replace(/\s+/g, " "), w = crb("0414_Werewolf.md").replace(/\s+/g, " ");
+  assert.match(v, /you become mist: immune to Physical damage/);
+  assert.match(v, /Semi-ethereal: immune to Physical damage/);
+  assert.match(v, /Reduce the damage of one Elemental, Spirit, or Aether attack by your BOD bonus \+ 2 × rank/);
+  assert.match(w, /Absorbs up to 5 Elemental, Spirit, or Aether damage, until used up or the scene ends/);
+  assert.match(w, /Adaptive Skeleton \| 2 SFR \| \+2 BOD, \+2 REF, and Natural Armor 2 until end of scene/);
+  assert.match(w, /Withering damage from silver is halved \(never below 1\)/);
+  assert.match(crb("APPROVED_Vampire_and_Werewolf_rebalancing.md").replace(/\s+/g, " "), /armor stops Physical damage, not Elemental, Spirit, or Aether/);
+  // The data: Physical is every type that isn't magical, the three magical ones are the three the book names.
+  same(D.damageTypes.filter(t => t.magical === true).map(t => t.name).sort(), ["Aether", "Elemental", "Spirit"]);
+  const vamp = D.archetypes.find(a => a.id === "vampire").powers, wolf = D.archetypes.find(a => a.id === "werewolf").powers;
+  for (const id of ["red-mist", "spectral-veil"]) same(vamp.find(p => p.id === id).grants.filter(g => g.type === "hitTaken"), [{ type: "hitTaken", immune: true }]);
+  same(wolf.find(p => p.id === "null-field").grants[0].absorb, { perRank: 5 });
+  same(vamp.find(p => p.id === "odins-aegis").grants[0].minus, { stat: "BOD", perRank: 2 });
 });
 
 test("CRB 0414: sustained powers pay again each round, and a Werewolf's work only in Werewolf Form", () => {
