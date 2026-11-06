@@ -184,7 +184,7 @@ test("U1: at phone width a row scrolled to the actor clears the wrapped bar", ()
   assert.ok(css.includes(".tag.enc-now, .tag.enc-now:hover{color:var(--cyan)}"), "Now keeps its cyan on hover");
 });
 
-// ── Tonight (Decision N) ─────────────────────────────────────────────────
+// ── Tonight (Decision 270) ─────────────────────────────────────────────────
 
 const tnKeys = app => app.$$("#main .tn [data-tn]").map(b => b.dataset.tn);
 const tnItem = (app, key) => app.$(`#main .tn [data-tn="${key}"]`);

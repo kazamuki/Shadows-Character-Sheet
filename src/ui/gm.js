@@ -52,7 +52,7 @@ function markTableExported(id){
   const e=savedTable(id); if (!e) return;
   e.exported=e.changed;
   try{ localStorage.setItem(tableKey(id), JSON.stringify(e)); }catch(err){}
-  if (lastTableSaved && lastTableSaved.id===id){ lastTableSaved.exported=e.exported; paintTonight(); }   // the file holds what's saved, so Unexported goes at once (Decision N)
+  if (lastTableSaved && lastTableSaved.id===id){ lastTableSaved.exported=e.exported; paintTonight(); }   // the file holds what's saved, so Unexported goes at once (Decision 270)
 }
 function removeTable(id){
   try{ localStorage.removeItem(tableKey(id)); }catch(e){}
@@ -129,7 +129,7 @@ function openTable(t, section){
   lastTableSaved=null; untouched=null;
   S={ screen:"table", ch:null, step:0, maxReached:0, section:"main", admin:false, table:t, tsection:TABLE_SECTIONS.some(s=>s.id===section) ? section : TABLE_SECTIONS[0].id };
   rebaseTable();
-  // A table opens at the top of its tab with its heading focused, whatever Home was scrolled to (Decision N).
+  // A table opens at the top of its tab with its heading focused, whatever Home was scrolled to (Decision 270).
   window.scrollTo(0,0);
   update();
   const h=$("main") && $("main").querySelector("h1"); if (h) takeFocus(h, true);
@@ -379,7 +379,7 @@ function notesTabHtml(t){
     ${t.notes.length ? t.notes.map(noteCardHtml).join("")
       : `<p class="step-note">Nothing on file yet. What you write here stays with the table and goes wherever its file goes.</p>`}`;
 }
-// ── Tonight (Decision N) ───────────────────────────────────────────────
+// ── Tonight (Decision 270) ───────────────────────────────────────────────
 // One line of the night in the tables bar, on every tab and page while a fight runs or a session is open: who acts,
 // who is down, the thread, the clock about to fill, and whether the table needs exporting. Each item is a jump and
 // none changes the table (Unexported runs Export, which writes a file and nothing else). It is read from the engine
@@ -612,7 +612,7 @@ function openFound(kind, id, field){
   window.scrollTo(0,0);
   if (kind==="cast"){ toMember(id); update(); land("[data-ctitle]"); }
   else if (kind==="session"){
-    // A hit in a journal part lands on the part, and opens the Debrief fold it sits in (Decision N).
+    // A hit in a journal part lands on the part, and opens the Debrief fold it sits in (Decision 270).
     const part=typeof field==="string" && field.startsWith("journal.") ? field.slice(8) : null;
     if (part) (S.debriefOpen || (S.debriefOpen={}))[id]=true;
     toSession(id); update(); (part && land(attrSel("data-sj", part))) || land("h1");
@@ -651,7 +651,7 @@ function openNote(id){
   S.tsection="notes"; window.scrollTo(0,0); update();
   const el=$("main").querySelector(attrSel("data-ntext", id)); if (el){ el.focus(); if (el.scrollIntoView) el.scrollIntoView({ block:"center" }); }
 }
-// Where a jot would go, said before it is saved: the session being played, whatever day it is dated (Decision N).
+// Where a jot would go, said before it is saved: the session being played, whatever day it is dated (Decision 270).
 function jotWhere(){
   const open=Engine.openSession(S.table);
   return open ? `Goes with ${Engine.sessionTitle(open)}.` : "Goes on the table's notes. No session is open.";
@@ -1756,7 +1756,7 @@ function clockHtml(c){
     ${fields}</div>`;
 }
 const clockBoxesHtml = c => Array.from({ length:c.segments }, (_, i)=>`<span class="clock-box${i<c.filled ? " on" : ""}"></span>`).join("");
-// One clock as a line, "Ibarra's patience 4 of 6" with − and +, a full one reading Full (Decision N). A card lists its clocks
+// One clock as a line, "Ibarra's patience 4 of 6" with − and +, a full one reading Full (Decision 270). A card lists its clocks
 // this way, and so does Next session's Close to full, where `owner` adds a link to whose it is. An ended encounter's are
 // text with no buttons (252). The same words as a clock's own block and the Activity label, one number five times over.
 function clockLineHtml(c, o={}){
@@ -2099,7 +2099,7 @@ function sessionCrewNames(t){
   const byName=(a, b)=>a.toLowerCase().localeCompare(b.toLowerCase()), lead=namesSeatsFirst(t, []), led=new Set(lead.map(n=>n.toLowerCase()));
   return [...lead.sort(byName), ...[...seen.values()].filter(n=>!led.has(n.toLowerCase())).sort(byName)];
 }
-// Close to full (Decision N): every clock within two of full, any owner or none, nearest first, with − and +. The clocks no page
+// Close to full (Decision 270): every clock within two of full, any owner or none, nearest first, with − and +. The clocks no page
 // shows (an ownerless one) live here. Read from the engine on every draw.
 function nearFullHtml(t){
   const near=Array.from(Engine.clocksNearFull(t));
@@ -2170,7 +2170,7 @@ function jottedHtml(s){
     const text=n.text.trim(), title=n.title.trim();
     return `<li class="int-line"><button type="button" class="cast-open" data-jotopen="${esc(n.id)}">${esc(text || title || "Untitled note")}${text && title ? ` <span class="int-kind">${esc(title)}</span>` : ""}</button></li>`; }).join("")}</ul>` : "";
 }
-// The Campaign Journal's six parts, folded while the session is being played and open once it is closed out (Decision N).
+// The Campaign Journal's six parts, folded while the session is being played and open once it is closed out (Decision 270).
 // Opening it keeps it open for that session until the table closes: S.debriefOpen[id].
 const debriefOpen = s => { const live = Engine.openSession(S.table); return !(live && live.id === s.id) || !!(S.debriefOpen && S.debriefOpen[s.id]); };
 const debriefText = s => `Debrief · ${JOURNAL.length} parts, ${JOURNAL.filter(([k])=>String((s.journal||{})[k]||"").trim()).length} written`;
@@ -2502,7 +2502,7 @@ function closeSheetHtml(s){
     <div data-co-lists>${coListsHtml(s)}</div>
     <p class="co-write"><button type="button" class="btn primary" data-co-write>Write the award log</button></p>`;
 }
-// Writing the award log ends here, not back on the session page (Decision N): what everyone got, then Export the table
+// Writing the award log ends here, not back on the session page (Decision 270): what everyone got, then Export the table
 // as the one primary press, and Done. View state only (S.coEnd = the session's id); nothing is stored. No Delete is in reach.
 const closeEndNow = s => S.coEnd===s.id && !!s.close;
 function closeEndHtml(s){
@@ -3196,7 +3196,7 @@ function encHitHtml(v){
   const ch = seat ? Engine.rowCharacter(S.table, S.encOpen, r.id) : null, st = encHitState(d, r);
   const toggle = (attr, label, items) => `<span class="form-toggle" role="group" aria-label="${esc(label)}">${items.map(([val, label, on])=>
     `<button type="button" ${attr}="${esc(val)}" class="${on ? "on" : ""}" aria-pressed="${on}">${esc(label)}</button>`).join("")}</span>`;
-  // The damage, Apply · Cancel and the preview come first, and stay where they are while the fields under them change (Decision N, U1's rule).
+  // The damage, Apply · Cancel and the preview come first, and stay where they are while the fields under them change (Decision 270, U1's rule).
   return `<div class="enc-hit" data-ehitpanel="${esc(r.id)}">
     <label class="field"><span>${pc ? (massive ? "Health Levels gone" : "Got through") : "Damage"}</span><input type="number" min="0" step="1" inputmode="numeric" data-ehit-damage value="${esc(d.damage)}"></label>
     ${encHitBtnsHtml(st)}${encHitLiveHtml(d, st)}
@@ -3259,7 +3259,7 @@ function encRowHtml(v, e, sides){
     : `<label class="enc-num"><span>${esc(label)}</span><input type="number" step="1" inputmode="numeric" ${attr}="${id}" value="${numAttr(val)}"></label>`;
   const aware = pc && !seat ? num("data-eaware", v.awareness, "Awareness") : v.awareness!==null ? `<span class="enc-num">Awareness ${esc(v.awareness)}</span>` : "";
   const waiting = running && r.delay ? r.delay : null;
-  // Running, Combat Sense is a fact about the row, read as text in its head; the field to fix it is under More (Decision N).
+  // Running, Combat Sense is a fact about the row, read as text in its head; the field to fix it is under More (Decision 270).
   const csText = running && e.by!=="wave";
   // Hit and Heal are the row's own (U1); Take stands in where a row can't be hit, and a waiting row leads with Act now.
   // A Down row offers no Hit unless it's Dying, when a hit is a Death Mark. The rest is under More.

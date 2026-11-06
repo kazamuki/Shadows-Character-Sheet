@@ -7056,7 +7056,7 @@ const Engine = (() => {
     if (f.jot===true && !_str(f.text).trim()) return { ok:false, why:"Write something first." };
     const now = new Date().toISOString();
     const used = new Set(t.notes.map(n=>n.id));
-    // A jot files to the session being played (Decision N); the Notes tab's New note, with no jot, keeps the day's one.
+    // A jot files to the session being played (Decision 270); the Notes tab's New note, with no jot, keeps the day's one.
     const session = _sessions(t).some(e=>e.id===f.session) ? f.session
       : f.jot===true ? (openSession(t) || {}).id ?? null : _sessionOnDay(t, f.date);
     const n = { id:newTableNoteId(used), title:_str(f.title), text:_str(f.text), session, created:now, updated:now };
@@ -7986,7 +7986,7 @@ const Engine = (() => {
     return _isObj(b) && Object.values(_isObj(b.stats) ? b.stats : {}).concat(Object.values(_isObj(b.authored) ? b.authored : {}),
       (Array.isArray(b.skills) ? b.skills : []).map(k=>_isObj(k) ? k.total : null)).some(v=>typeof v==="number");
   }
-  // The session being played: the latest not dated after today, while it isn't closed out. Read, never stored (Decision N).
+  // The session being played: the latest not dated after today, while it isn't closed out. Read, never stored (Decision 270).
   // A game past midnight, or a night resumed later, stays open; one dated next week is planned, not open.
   function openSession(t){
     try {
@@ -7995,7 +7995,7 @@ const Engine = (() => {
       return s && !s.close ? s : null;
     } catch (e) { return null; }
   }
-  // Every clock one or two segments from full, nearest first then by name, owner or none (Decision N). A full clock isn't near:
+  // Every clock one or two segments from full, nearest first then by name, owner or none (Decision 270). A full clock isn't near:
   // it shows on its owner as Full. An ended encounter's clocks are left out, as they cannot be ticked (252).
   function clocksNearFull(t, within = 2){
     try {
@@ -8024,7 +8024,7 @@ const Engine = (() => {
   function nextSession(t){
     const open = threadList(t).filter(h=>h.status==="open");
     const current = open.find(h=>h.current) || null;
-    // Last session is the highest number, unless that one is dated today (and never one dated after it): it's the session being played, so last is the next in the list.
+    // Last session is the highest number, unless that one is the open session (Decision 270; a session dated today counted, under 204), and never one dated after today: the open one is being played, so last is the next in the list.
     // A session dated after today is planned, not behind us: it is never last.
     const today = _today(), list = sessionList(t).filter(x=>!x.date || x.date<=today);
     const playing = openSession(t);

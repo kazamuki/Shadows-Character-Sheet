@@ -35,6 +35,10 @@ const whoBtns = app => app.$$("[data-crew-box] .crew-btns button:not([data-crew-
 const whoNames = app => whoBtns(app).map(b => b.textContent.replace("✓", "").trim());
 const whoPress = (app, name) => whoBtns(app).find(b => b.textContent.replace("✓", "").trim() === name).click();
 const whoAdd = (app, name) => { if (!app.$("[data-crew-input]")) app.click("[data-crew-add]"); type(app, "[data-crew-input]", name); app.click("[data-crew-go]"); };
+// A closed <details> hides its controls in a browser and not in jsdom, so a test that presses inside one opens it and says so.
+const openFold = (app, el) => { if (!el.open) el.querySelector("summary").click(); assert.ok(el.open, "the fold is open"); return el; };
+// The open session folds its Campaign Journal (Decision 270): open the Debrief before typing in a part.
+const debrief = app => openFold(app, app.$("details.sess-debrief"));
 const statesOf = app => JSON.parse(app.window.eval("JSON.stringify(S.table.encounters)"));
 
 test("Decision 188: switched off there is no Encounters tab; switched on it sits between Threats and Notes (Reference follows it)", () => {
@@ -651,6 +655,7 @@ test("Decision 203: every field on a session saves as it's typed with no redraw,
   whoAdd(app, "Wren"); whoAdd(app, "  Rook ");
   type(app, '[data-sf="hours"]', "4.5");
   const parts = ["happened", "fallout", "threads", "impact", "reflection", "seed"];
+  debrief(app);
   for (const k of parts) type(app, `[data-sj="${k}"]`, `text ${k}`);
   const s = app.window.eval("S.table.sessions[0]");
   assert.deepEqual([s.number, s.date, s.hours, s.present.join("|")], [21, "2026-09-30", 4.5, "Wren|Rook"]);
@@ -820,7 +825,7 @@ test("Decision 204: Next session reads last session's seed under its title, a ta
   runTable(app, "Seed", { stay: true });
   app.click("[data-snew]");
   type(app, '[data-sf="date"]', "2026-09-30");
-  app.click("[data-debrief] summary"); type(app, '[data-sj="seed"]', "The heist goes wrong.");
+  debrief(app); type(app, '[data-sj="seed"]', "The heist goes wrong.");
   app.click("[data-sback]");
   assert.doesNotMatch(nextText(app), /Last session set up/, "U2: Session 1 is the one being played, so its seed is not last session's");
   shutSessions(app);
@@ -833,7 +838,7 @@ test("Decision 204: Next session reads last session's seed under its title, a ta
   app.click(".next-session [data-sopen]");
   assert.equal(app.$("h1.step-title").textContent, "Session 1");
   assert.equal(app.doc.activeElement, app.$("[data-sback]"));
-  type(app, '[data-sj="seed"]', "   ");
+  debrief(app); type(app, '[data-sj="seed"]', "   ");
   app.click("[data-sback]");
   assert.doesNotMatch(nextText(app), /Last session set up/, "a blank seed shows nothing");
   assert.match(nextText(app), /Nothing open, and last session set nothing up\./, "sessions but nothing to say still says so");
@@ -876,7 +881,7 @@ test("Decisions 203–204: export and import keep sessions and threads, and a 0.
   const app = boot({ storage: GM_ON });
   const downloads = withDownloads(app);
   runTable(app, "Round", { stay: true });
-  app.click("[data-snew]"); type(app, '[data-sj="happened"]', "Things."); whoAdd(app, "Wren");
+  app.click("[data-snew]"); debrief(app); type(app, '[data-sj="happened"]', "Things."); whoAdd(app, "Wren");
   type(app, "[data-sthadd]", "T1"); keyIn(app, "[data-sthadd]", "Enter");
   const before = JSON.parse(JSON.stringify(app.window.eval("({ s: S.table.sessions, t: S.table.threads })")));
   app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
@@ -2475,10 +2480,8 @@ test("U4: Activity says what a hit, a Take, a Heal and a clock did", () => {
   assert.deepEqual(app.errors, []);
 });
 
-// ── U2: Tonight's neighbours (Decision N) ────────────────────────────────
+// ── U2: Tonight's neighbours (Decision 270) ────────────────────────────────
 
-// A closed <details> hides its controls in a browser and not in jsdom, so a test that presses inside one opens it and says so.
-const openFold = (app, el) => { if (!el.open) el.querySelector("summary").click(); assert.ok(el.open, "the fold is open"); return el; };
 
 test("U2: Write the award log ends on Export and Done", async () => {
   const { app, ids } = closeApp(t => mkSession(t, 4, "2026-09-08", ["Wren", "Rook"], 2));

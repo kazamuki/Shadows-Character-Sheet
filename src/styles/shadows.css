@@ -1164,7 +1164,7 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
   .app.table-mode:has(#main :is(input:not([type=checkbox],[type=radio]),textarea,select):focus) .tbl-bar{position:static}
 }
 @media (max-height:540px){ .app.table-mode .tbl-bar{position:static} }
-/* Tonight (Decision N): the night in one line, inside the bar. A tab with no Back gets a bar of its own (.tn-bar) for it. Its items are
+/* Tonight (Decision 270): the night in one line, inside the bar. A tab with no Back gets a bar of its own (.tn-bar) for it. Its items are
    jump chips: they shrink and cut with an ellipsis rather than scroll, and below 768px only the lead item and Unexported are drawn.
    A hidden item is display:none, so it is neither focusable nor read out. Numerals are Oxanium; the actor is cyan (where you are),
    a downed row magenta (harm). Unexported is the plain tag's colour and edge: Mono Caps, --dim, a 1px --frame line. */
@@ -1402,7 +1402,7 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .tag.enc-now, .tag.enc-now:hover{color:var(--cyan)}
 .enc-now{font-family:var(--mono); font-size:.78rem; letter-spacing:.14em; text-transform:uppercase; color:var(--cyan); border-color:var(--cyan)}
 .enc-more-acts{display:flex; flex-wrap:wrap; gap:8px; margin:2px 0 10px}
-/* More is Play, Setup and Remove (Decision N): each group has a Mono Caps item label in --dim, and Remove is set apart by a rule. */
+/* More is Play, Setup and Remove (Decision 270): each group has a Mono Caps item label in --dim, and Remove is set apart by a rule. */
 .enc-more-grp{margin:0 0 6px}
 .enc-more-h{margin:8px 0 4px; font-family:var(--mono); font-size:.72rem; font-weight:500; letter-spacing:.12em; text-transform:uppercase; color:var(--dim)}
 .enc-more-rm{margin-top:10px; padding-top:10px; border-top:1px solid var(--frame)}
@@ -1606,7 +1606,7 @@ h2.city-name{font-size:1.15rem}
 .clock-box{width:22px; height:22px; border:2px solid var(--dim); border-radius:3px; background:transparent}
 .clock-box.on{background:var(--cyan); border-color:var(--cyan); color:var(--ink)}
 .clock-count{font-family:var(--mono); font-size:.85rem}
-/* A clock as a line (Decision N): on a card and in Close to full. */
+/* A clock as a line (Decision 270): on a card and in Close to full. */
 .clock-lines{margin:8px 0 0}
 .clock-line{display:flex; flex-wrap:nowrap; align-items:center; justify-content:space-between; gap:4px 12px; padding:3px 0; scroll-margin-top:calc(var(--hdr-off) + 72px)}
 .clock-line-t{min-width:0; overflow-wrap:anywhere}
