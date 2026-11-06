@@ -51,6 +51,9 @@ import { syntheticPack } from "../tests/packfixture.mjs";
 
 // The share of the screen's height the pinned header may take, once scrolled.
 const HEADER_MAX_SHARE = 0.2;
+// U1: an encounter's bar wraps to two lines on a phone (Back and the status, then Next and End) rather than scroll sideways, each button a
+// finger tall, so header + bar is allowed this share. The Tables bar stays on one line and on HEADER_MAX_SHARE.
+const ENC_BAR_MAX_SHARE = 0.27;
 // W45: on a phone, how far down Main's Health card may start, as a share of the screen's
 // height, so HP is read without scrolling past a heading block.
 const HP_MAX_SHARE = 0.3;
@@ -331,7 +334,7 @@ async function tableScreens(browser, file, rows, numbers) {
       if (s.bar && !m.bar) bad.push("no bar");
       if (m.barCut) bad.push("the bar scrolls sideways with no fade (no more-r)");
       if (m.barKind === "tbl-bar" && m.bar > (z.touch ? 56 : BAR_MAX)) bad.push(`the bar is ${m.bar}px`);
-      if (m.bar && z.width <= 390 && (m.header + m.bar) / z.height > HEADER_MAX_SHARE) bad.push(`header + bar ${Math.round((m.header + m.bar) / z.height * 100)}%`);
+      if (m.bar && z.width <= 390 && (m.header + m.bar) / z.height > (m.barKind === "enc-bar" ? ENC_BAR_MAX_SHARE : HEADER_MAX_SHARE)) bad.push(`header + bar ${Math.round((m.header + m.bar) / z.height * 100)}%`);
       numbers.push({ w: z.width + (z.touch ? " touch" : ""), screen: s.name, main: `${m.x}+${m.w}`, over: m.over, field: m.field, area: m.area, prose: `${m.prose}/${m.ch75}`,
         cards: m.cards ? `${m.perRow}/row ${m.cardMin}-${m.cardMax}` : "", enc: m.enc ? `${m.enc}px` : "", bar: m.bar ? `${m.barKind} ${m.bar}px` : "", header: m.header });
       rows.push({ width: `table ${z.width}${z.touch ? " touch" : ""}`, screen: s.name, layout: bad.length ? bad.join("; ") : "ok", ok: !bad.length });

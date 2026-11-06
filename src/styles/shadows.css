@@ -1160,11 +1160,6 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
   background:var(--ground); padding:4px 0; margin:0 0 12px; border-bottom:1px solid var(--frame); overflow-x:auto; scrollbar-width:none}
 .app.table-mode .tbl-bar::-webkit-scrollbar{display:none}
 .app.table-mode .tbl-bar .btn{flex:none; white-space:nowrap}
-/* Back joins the encounter's status bar, so on a phone the row is Back, the status, Next and End: it scrolls sideways rather
-   than wrap to a second line and take a fifth of the screen with the header. */
-.app.table-mode .enc-bar{flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none}
-.app.table-mode .enc-bar::-webkit-scrollbar{display:none}
-.app.table-mode .enc-bar > *{flex:none; white-space:nowrap}
 @media (max-width:1060px){
   .app.table-mode:has(#main :is(input:not([type=checkbox],[type=radio]),textarea,select):focus) .tbl-bar{position:static}
 }
@@ -1370,6 +1365,16 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .enc-pcnums{display:flex; flex-wrap:wrap; gap:6px 16px; margin:4px 0}
 .enc-health{margin:6px 0 4px; overflow-wrap:anywhere; font-family:var(--mono); font-size:.85rem}
 .enc-down{color:var(--magenta-text)}
+/* U1: the row reads like the sheet's Health readout. The HP figure is the one big number (Oxanium, the data face); the
+   sentence around it stays in the row's mono. Now is a Mono Caps tag. The hint under a plan label is Inter, dim. */
+.enc-hp{font-family:var(--numeric); font-size:1.3rem; font-weight:600; line-height:1.1; letter-spacing:.01em; font-variant-numeric:tabular-nums; color:var(--green)}
+.enc-hp.down, .enc-hp .enc-down{color:var(--magenta-text)}
+.enc-segs{margin:2px 0 6px; max-width:26rem}
+.tag.enc-now, .tag.enc-now:hover{color:var(--cyan)}
+.enc-now{font-family:var(--mono); font-size:.78rem; letter-spacing:.14em; text-transform:uppercase; color:var(--cyan); border-color:var(--cyan)}
+.enc-more-acts{display:flex; flex-wrap:wrap; gap:8px; margin:2px 0 10px}
+.enc-hit .enc-hit-btns{grid-column:1 / -1; margin-bottom:6px}
+.enc-hit [data-ehit-extra]{min-width:0}
 .enc-tied{border-color:var(--magenta)}
 /* Wave Initiative (Decision 210): the mode toggle wraps under the status, a side is a heading with its best and its tie, and everything a GM typed wraps. */
 .enc-turns{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:0 0 10px}
@@ -1635,3 +1640,13 @@ h2.city-name{font-size:1.15rem}
 .ro-sheet button:disabled, .ro-sheet select:disabled, .ro-sheet input:disabled{cursor:default; pointer-events:none}
 /* A read-only field keeps its edge (still --frame, so the same contrast) and takes a different fill and a dashed line: it reads as shown, not as typed. */
 .ro-sheet input[readonly], .ro-sheet textarea[readonly]{background:var(--panel-2); border-style:dashed; cursor:default}
+
+/* U1: the encounter's bar wraps rather than scrolls, so End the encounter is never out of reach. Back and the status share the
+   first line on a phone; Next and End take the second. Every button keeps a finger's height. */
+@media (max-width:640px){
+  .enc-bar .enc-status{flex:1 1 8rem; min-width:0; margin-right:0; overflow-wrap:anywhere}
+  .enc-bar .btn{min-height:44px}
+  .enc-bar [data-enext]{flex:1 1 7rem}
+  /* the wrapped bar is two lines (113px), so a row scrolled to the actor clears it */
+  .enc-row{scroll-margin-top:calc(var(--hdr-off) + 128px)}
+}

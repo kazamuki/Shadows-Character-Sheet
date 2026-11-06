@@ -4548,6 +4548,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** a third place to copy an entry appears (a session's prep).
      - **Built:** as 188.
     → **Superseded in part by Decision 211** — Add to <encounter> shows always; with none open it goes to the running encounter, then the newest planned, or makes one.
+    → **Superseded in part by Decision 269** — the button reads "Add to encounter: <title>".
 
 191. **An encounter row takes a hit: an NPC's through the sheet's own pipeline, standing in as a character, its armor the Gear catalog's piece by name and static (053); a PC's after their armor.**
      *2026-10-07 · Ken + Claude · Touches: hit, NPC adapter, stand-in, resolveHit, applyHit, encounter row, armor, Gear catalog, PROT, RES, static armor, Integrity, scrap, Massive, Withering, PC row, table schema 0.6, massive, armorLoss, scrapped, GQ18, Decision 99, Decision 100, Decision 175, Decision 189*
@@ -4830,6 +4831,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** a GM adds to the wrong encounter through the fallback, or W80's action rail gives these buttons one home.
      - **Built:** switched off (173); log 2026-10-10.
     → **Superseded in part by Decision 258** — on a page, Add to <encounter> sits in the bar under the header.
+    → **Superseded in part by Decision 269** — the button reads "Add to encounter: <title>".
 
 212. **A table keeps an activity log as a character does: every change one entry, undone last first, with a toast on each press and an Activity list in the menu.**
      *2026-10-10 · Ken + Claude · Touches: table audit, audit, undo, Undo, Activity, Clear activity, tableChange, diffTable, recordTableAction, undoTableAction, insertAt, migrateTable, table schema 0.12, undo toast, notice, Decision 48, Decision 49, Decision 50, Decision 107, Decision 124, Decision 171, Decision 176, W83, GQ9*
@@ -5453,6 +5455,20 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing; extends 195 (the form carries Regeneration), 220 (who heals at Reset) and 266 (what a running power does at Reset).
      - **Revisit if:** W128 knows a round or a scene; the book says the form ends at Unconscious on the sheet's side; a table asks for Vitality Surge's per-round cap.
      - **Built:** app 0.62.0 (unreleased), game data 0.53 (unreleased), character schema 0.34, PR #…, log 2026-11-05 (H3).
+
+269. **An encounter row reads like the sheet's Health readout: one row acts at a time, two buttons are its own, and a hit past twice what it holds asks first.**
+     *2026-11-05 · Ken + Claude · Touches: encounter row, encRowHtml, encounterView, health.hpPer, label, hlCellsOf, More, Hit, Heal, Take, Down, Dying, Act now, Now badge, Hit panel, Apply, enc-bar, plan labels, Add to <encounter>, Decision 190, Decision 211, Decision 258*
+     - **Decided:** A row's HP is a health-coloured readout over one segment per Health Level (the sheet's `hl-mini`), its health sentence unchanged as text. The acting row says **Now**; Next announces it and keeps focus. A row's own buttons are Hit and Heal (Take where it can't be hit, Act now while it waits); the rest is under More. A Down row offers no Hit unless it's Dying. Duplicate names get A, B on the page by the order added, never stored. The Hit panel's Apply sits above its preview, and a hit over twice the row's HP (Massive: its Health Levels) asks first. The bar wraps; Add to reads "Add to encounter: <title>".
+     - **Why:** the critique of 2026-11-05 found the fight the weakest readout in the app, and Ken ruled GM mode play-first.
+     - **Rejected:**
+       - Full Health Level boxes on every row: three times taller; seven rows stop fitting a laptop.
+       - Every button kept and re-weighted: six equal choices per row was the finding.
+       - Blocking a big hit: a GM sometimes means it.
+       - Asking the GM to rename duplicates: work they didn't ask for mid-fight.
+       - Moving focus to the actor on Next: a keyboard GM presses Next again and again.
+     - **Replaces:** Decision 211 in part and Decision 190 in part (the button's words; where it goes stands).
+     - **Revisit if:** a GM wants a button back on the row, a table runs fights too big for a row each, or the sheet's Health readout changes.
+     - **Built:** app 0.63.0, no data or schema move, PR #304, log 2026-11-05 (U1).
 
 ## 5. Open Flags
 

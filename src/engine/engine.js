@@ -9911,6 +9911,23 @@ const Engine = (() => {
     const m = (Array.isArray(t.cast) ? t.cast : []).find(n=>_isObj(n) && _isObj(r.cast) && n.id===r.cast.id);
     return m ? m.block : null;
   }
+  // A Health Level's HP as the row draws it: a positive number, or null when there is none to draw.
+  function _wholePer(n){ return typeof n==="number" && isFinite(n) && n>0 ? n : null; }
+  // Two rows named alike read A and B on the page (U1). The letter is drawn, never stored, and goes by the
+  // order rows were added (e.rows), not the turn order, so it never shifts mid-fight. Past Z: 27, 28, …
+  function _rowLabels(e, names){
+    const key = n=>String(n).trim().toLowerCase(), seen = new Map(), used = new Map(), out = new Map();
+    for (const r of e.rows) if (names.has(r.id)) seen.set(key(names.get(r.id)), (seen.get(key(names.get(r.id)))||0) + 1);
+    for (const r of e.rows){
+      if (!names.has(r.id)) continue;
+      const n = names.get(r.id), k = key(n);
+      if (seen.get(k) < 2){ out.set(r.id, n); continue; }
+      const i = (used.get(k)||0) + 1;
+      used.set(k, i);
+      out.set(r.id, n + " " + (i <= 26 ? String.fromCharCode(64 + i) : String(i)));
+    }
+    return out;
+  }
   // The encounter as the screen reads it: the rows in order, each with its figures. Total.
   function encounterView(t, encId, packs){
     const e = _enc(t, encId);
@@ -9931,17 +9948,17 @@ const Engine = (() => {
       let health;
       if (stand){
         const hs = hlState(stand), ps = painState(stand);
-        health = { taken, total:hs.total, left:hs.hpLeft, pastZero:hs.pastZero, down:hs.down, levels:hs.levels, levelsLeft:hs.levels - hs.lost, gone:hs.massive,
+        health = { taken, total:hs.total, left:hs.hpLeft, pastZero:hs.pastZero, down:hs.down, levels:hs.levels, levelsLeft:hs.levels - hs.lost, gone:hs.massive, hpPer:_wholePer(hs.hpPer),
                    pain:{ level:ps.level, label:ps.label, description:ps.description, fromConditions:ps.fromConditions } };
       } else {
-        const ph = r.kind==="pc" ? _pcHealth(r) : { total:null, left:null, down:false, levels:null, lost:null, levelsLeft:null, massive:0 };
+        const ph = r.kind==="pc" ? _pcHealth(r) : { total:null, left:null, down:false, levels:null, lost:null, levelsLeft:null, massive:0, hpPer:null };
         let pain = null;
         if (ph.lost!==null || condPain!==0){
           const p = painFor(ph.lost || 0, condPain);
           pain = { level:p.level, label:p.label, description:p.description, fromConditions:condPain };
         }
         health = { taken, total:ph.total, left:ph.left, pastZero:ph.pastZero||0, down:ph.down, levels:ph.levels, levelsLeft:ph.levelsLeft,
-                   gone:ph.levels!==null ? ph.massive : r.massive, pain };
+                   gone:ph.levels!==null ? ph.massive : r.massive, hpPer:_wholePer(ph.hpPer), pain };
       }
       const wear = r.kind==="pc" ? null : encounterArmor(block);
       // A claimed row's armor is the copy's worn piece, as the sheet draws it (Decision 257).
@@ -9969,6 +9986,8 @@ const Engine = (() => {
                from:r.kind==="entry" ? entryLink(packs, r.from) : null,
                kept:r.kind==="entry" && r.kept ? linkName(t, r.kept) : null, conditions, armor, traits, canHit:r.kind==="pc" || !!stand };
     });
+    const labels = _rowLabels(e, new Map(rows.map(v=>[v.row.id, v.name])));
+    for (const v of rows) v.label = labels.get(v.row.id) || v.name;
     const opening = _isObj(e.opening) && (e.opening.kind==="surprise" || e.opening.kind==="ambush") ? { kind:e.opening.kind, side:e.opening.side, title:sideTitle(e, e.opening.side) } : null;
     return { encounter:e, design:_designRead(e.design), opening, title:encounterTitle(e), by:e.by==="wave" ? "wave" : "person", sides:ord.sides, rows, atReset:e.status==="running" && e.turn===null };
   }
