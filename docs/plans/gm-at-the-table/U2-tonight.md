@@ -5,7 +5,9 @@
 **Status:** **drafted 2026-11-06 by Claude (Opus)**, U4's reviewer acting as orchestrator, for Ken's approval.
 **Ken's shape answers** are in §9's head. They came from `/impeccable shape` on the strip and close-out's end, run
 by the conductor with Ken (2026-11-06; plan §3.1). UQ18–UQ25 (§4) are this order's own questions, from the shape
-brief's open items and the pre-flight.
+brief's open items and the pre-flight. **Approved by Ken 2026-11-06** ("for U2, lets take all the defaults", in
+the conductor session): UQ18–UQ25 are each their default, and the strip's *Unexported* runs Export when tapped
+(the order's reading of "Each item jumps": nothing on the strip changes the table).
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 **Runs beside:** nothing. A separate *Fix* session (local_f2c60d31) is fixing `npm run phone-check` on `main`
 (five OVER rows that predate U4) and the `tick(80)` flake in `smoke-table-seats`. **U2's phone-check gate depends on
