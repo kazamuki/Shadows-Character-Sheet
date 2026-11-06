@@ -316,7 +316,9 @@ The builder writes these first and shows each failing on `main`, or says why one
 - the sheet's `hlMiniHtml` or `hlTrackHtml` output changes at all;
 - a Decision outside 190 and 211 needs a supersession mark;
 - the live announcement can't persist across `renderTable()` without restructuring how the table redraws;
-- the overlay finds something outside the Encounters tab that this order's changes caused.
+- the overlay finds something outside the Encounters tab that this order's changes caused;
+- an Impeccable command wants to change something outside §9 (a colour role, a component, another tab). Report what
+  it proposed, and don't apply it.
 
 **Not stops** (expected, and updated in place):
 
@@ -340,7 +342,10 @@ The builder writes these first and shows each failing on `main`, or says why one
   - "Two of the same enemy read A and B."
   - "A hit far bigger than its target asks before it lands."
 - **The PR:** title `U1: the encounter as an instrument (gm-at-the-table; Decision N)`, using the template's
-  sections. *Where the order didn't fit* is required, and "Nothing" is an acceptable answer.
+  sections. *Where the order didn't fit* is required, and "Nothing" is an acceptable answer. So is an
+  **Impeccable** section (plan §3.8): typeset, colorize, harden, adapt and polish, each with the screen it ran
+  on and what it changed, or "nothing", plus the overlay's findings on Encounters (list, running, ended) at
+  1024px and 375px.
 - **The re-critique** (plan §3.6): the reviewer runs `/impeccable critique` on GM mode with Dead Air seeded,
   commits the snapshot, and puts the heuristic table beside the baseline's in the review.
 
@@ -357,10 +362,23 @@ The builder writes these first and shows each failing on `main`, or says why one
 - [ ] The overlay is clean on Encounters, or each finding is named.
 - [ ] The re-critique is in the review, and H1, H5 and H8 are each above 2, or the review says why not.
 - [ ] Every new string is in the PR for the voice pass.
+- [ ] The PR's **Impeccable** section lists all five commands (§12's steps 5–7 and 9) with what each changed.
+      A missing one is a must-fix. Spot-check one claimed change against the diff.
 
 ## 15. Handing it over
 
 The two prompts in `WORK-ORDERS.md`, with this order's path `docs/plans/gm-at-the-table/U1-encounter-instrument.md`.
+Both sessions are **local** (on Ken's machine), where the Impeccable skill is installed. A cloud session can't
+run it. The conductor adds to each prompt:
+
+- **Builder:** "Run the Impeccable commands at the steps §12 names, through the Skill tool (`impeccable`, with the
+  command as its argument), and nothing else from it. Report each in the PR's Impeccable section. If one wants to
+  change something outside §9, that's a stop: tell me what it proposed."
+- **Reviewer:** "Run `/impeccable critique` on GM mode with Dead Air seeded, after your own review. Its two
+  assessments are your subagents. Answer its closing questions with `Questions skipped: this is a review`. Commit
+  the snapshot on the PR branch, and put its heuristic table beside the baseline's in your review. Check the PR's
+  Impeccable section against the diff."
+
 This order's traps:
 
 - **The health sentence is pinned by about ten tests.** Restyle it, but don't reword it. Keep its

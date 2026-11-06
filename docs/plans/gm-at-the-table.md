@@ -106,7 +106,8 @@ so that one area isn't fixed while it drifts somewhere else:
    Where the order would add or move a visual pattern, the shape brief says which DESIGN.md rule it follows.
 2. **While building.** The builder runs the Impeccable commands that the session's row names (§4) on its
    screens, with `craft-floor.md` read before the first UI edit. It runs no other commands, so the build
-   doesn't drift into a redesign.
+   doesn't drift into a redesign. **A command that wants to change something outside the order's §9 is a
+   stop**, put to the conductor, never a judgement call.
 3. **The detector gate.** `impeccable detect` can't read markup written in `gm.js` template strings (the CLI
    returned 0 on 4,000 lines). So the gate is the **browser overlay**, injected over the dev preview on every
    section the session touched, at desktop width and at 375px. A content finding is either fixed or named in
@@ -116,9 +117,15 @@ so that one area isn't fixed while it drifts somewhere else:
 5. **The voice pass.** Every new string goes into the PR as it renders (`WORK-ORDERS.md`).
 6. **The reviewer re-runs `/impeccable critique` on GM mode** with Dead Air seeded (`samples/`, `CLAUDE.md`
    explains how), and puts the score and the session's findings in the review. A session that lowers any
-   heuristic score explains why. The snapshot is committed beside this one, so the trend accumulates.
+   heuristic score explains why. The snapshot is committed beside this one, so the trend accumulates. The
+   critique's two assessments run as the reviewer's own subagents. Its closing questions are answered with
+   `Questions skipped: this is a review`, and anything in them that needs Ken goes to the conductor.
 7. **Close.** **`/impeccable polish`** runs on the session's screens before *Ready to merge*, reading the
    latest snapshot's priority issues.
+8. **The PR says what ran.** Its body has an **Impeccable** section: each command run, on which screen, and what
+   it changed (or "nothing"), plus the overlay's findings per section and width. A command the order names that
+   didn't run is a must-fix in review, and so is a missing section. Nothing else enforces these steps, so the
+   review does.
 
 ## 4. Sessions
 
