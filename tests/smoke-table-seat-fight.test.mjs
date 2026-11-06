@@ -242,12 +242,14 @@ test("U1 (257): a claimed row draws the copy's Health Levels, and the Down rule 
   const row = () => app.$(`[data-erow="${id}"]`);
   assert.equal(row().querySelectorAll(".enc-segs .seg").length, 6, "the copy's six Health Levels");
   assert.ok(row().querySelector(`[data-ehit="${id}"]`), "up: Hit");
-  app.click(`[data-edmg="${id}|1"]`); app.$("[data-edmgn]").value = "30"; submit(app, "[data-edmgform]");
+  // Take and Add a Condition sit under More: open it, as a browser would need (a closed <details> hides them there, not in jsdom).
+  const more = () => { const m=row().querySelector("[data-emore]"); m.open = true; return m; };
+  more().querySelector(`[data-edmg="${id}|1"]`).click(); app.$("[data-edmgn]").value = "30"; submit(app, "[data-edmgform]");
   assert.match(row().querySelector(".enc-health .enc-hp.down").textContent, /^Down/);
   assert.equal(row().querySelectorAll(".enc-segs .seg.gone").length, 6);
   assert.equal(row().querySelector("[data-ehit]"), null, "Down: no Hit");
   assert.ok(row().querySelector(`[data-edmg="${id}|-1"]`), "Down: Heal");
-  app.click(`[data-econdopen="${id}"]`); changeTo(app, "[data-econd-id]", "dying"); app.click("[data-econd-add]");
+  more().querySelector(`[data-econdopen="${id}"]`).click(); changeTo(app, "[data-econd-id]", "dying"); app.click("[data-econd-add]");
   assert.ok(row().querySelector("[data-ehit]"), "Dying: Hit is back");
   assert.deepEqual(app.errors, []);
 });
