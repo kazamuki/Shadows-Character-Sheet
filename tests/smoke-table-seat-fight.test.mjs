@@ -187,5 +187,9 @@ test("Decision 267: the seat hit offers immunity and silver, and spends nothing 
   const again = app.$('[data-ehit-pow="spectral-veil"]'); again.checked = true; again.dispatchEvent(new app.window.Event("change", { bubbles: true }));
   app.click("[data-ehit-apply]");
   assert.equal(copiesOf(app), before, "the seat's hit wrote the copy");
+  // The seat's preview says what halved a Withering hit, as the player's own panel does (H2 review).
+  const halved = app.window.eval(`encSeatPreview({ armor:null, covered:false, natural:{ absorbed:0 }, through:2, lostThisHit:0, integrityLost:0, after:{ down:false },
+    witherHalved:{ by:"Wither Ward", from:9, to:4 }, silverHalved:{ by:"Silverscar", from:4, to:2 } })`);
+  assert.match(halved, /Wither Ward halves it: 9 → 4 · Silverscar halves it: 4 → 2 · 2 through/, "the seat's preview hides a halving");
   assert.deepEqual(app.errors, []);
 });
