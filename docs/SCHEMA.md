@@ -5443,7 +5443,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** reductions before armor (Decision 236 rejected it for Giant); an immune hit that still wears armor; Odin's Aegis as a running power ("as a reaction"); Null Field refilling each scene by itself (the sheet knows no scene, W128); a type list in code; Silverscar as Wither Ward; spending from a seat's clone (Decision 257); Battle Hardened and Elemental Blood before the book names their Conditions and elements.
      - **Replaces:** nothing; extends 236 (the stage) and 266 (`each: "start"`, `used`, starter rows).
      - **Revisit if:** the book defines Dazed and Sickened or a cold type; W128 knows a scene; a power needs a countdown.
-     - **Built:** app 0.62.0 (unreleased), game data 0.53 (unreleased), character schema 0.34, PR #…, log 2026-11-05 (H2).
+     - **Built:** app 0.62.0 (unreleased), game data 0.53 (unreleased), character schema 0.34, PR #299, log 2026-11-05 (H2).
 
 ## 5. Open Flags
 
