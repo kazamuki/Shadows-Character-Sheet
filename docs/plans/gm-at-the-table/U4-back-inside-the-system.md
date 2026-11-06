@@ -3,6 +3,8 @@
 **Plan:** [`../gm-at-the-table.md`](../gm-at-the-table.md), session U4. It owns findings #27–#37 (plan §2).
 **Status:** **drafted 2026-11-06 by Claude (Opus)**, U1's reviewer, for Ken's approval. *Fix* tier, so this is the
 one-page order the plan promised (`WORK-ORDERS.md`, *How exact to be*). Its questions are UQ13–UQ17 (§4).
+**Approved by Ken 2026-11-06** ("Approve, all defaults", in the conductor session): UQ13–UQ17 are each their
+default.
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 **Pre-flight:** against `main` at `7dfbad5` (PR #304, U1, merged: app 0.63.0, game data 0.53, character schema 0.34,
 table schema 0.19, pack schema 0.3). Findings:
