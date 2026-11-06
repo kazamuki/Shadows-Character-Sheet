@@ -5485,7 +5485,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - The latest session even when closed out: it would keep collecting jots.
      - **Replaces:** Decision 208 in part (a jot's session), 258 in part (the bar on a tab), 204 in part (Close to full) and 269 in part (More). Extends 205, 245.
      - **Revisit if:** a GM runs two sessions at once, or the strip can't hold its first item at 375px.
-     - **Built:** app 0.64.0, no data or schema move, PR #…, log 2026-11-06 (U2).
+     - **Built:** app 0.64.0, no data or schema move, PR #309, log 2026-11-06 (U2).
 
 ## 5. Open Flags
 
