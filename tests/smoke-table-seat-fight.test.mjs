@@ -193,3 +193,45 @@ test("Decision 267: the seat hit offers immunity and silver, and spends nothing 
   assert.match(halved, /Wither Ward halves it: 9 → 4 · Silverscar halves it: 4 → 2 · 2 through/, "the seat's preview hides a halving");
   assert.deepEqual(app.errors, []);
 });
+
+// ── Decision 268 (H3, HQ24): a round's heals are the player's own sheet's ──
+function wolfDez(form = "Werewolf") {
+  const ch = dez();
+  ch.identity.archetype = "werewolf"; ch.creation.powerLevel = "street";
+  ch.archetypeChoices.specialization = ["wildblood"]; ch.archetypeChoices.basePowers = {};
+  ch.trackers.damage = 10;
+  Engine.setToggle(ch, "form", form);
+  return ch;
+}
+test("Decision 268: a GM's Reset writes nothing to a regenerating seat and says so (HQ24)", () => {
+  const app = open(wolfDez());
+  const id = withDez(app);
+  const was = copiesOf(app);
+  app.click("[data-enc-start]"); app.click("[data-enext]");
+  const line = app.$(`[data-eheals="${id}"]`);
+  assert.ok(line, "no heals line on the row");
+  assert.equal(line.textContent, "Regeneration heals on the player's own sheet.");
+  app.click("[data-efinish]");
+  const row = JSON.parse(ev(app, "JSON.stringify(S.table.encounters[0].rows.find(r => r.id === '" + id + "'))"));
+  assert.equal(row.damage, 11, "the row took the tick and nothing was healed");
+  assert.equal(copiesOf(app), was, "the copy was written");
+  assert.deepEqual(app.errors, []);
+  // A seat at 0 damage with Bleeding still ticks, then heals, on its own sheet (HQ19): the line names it.
+  const fresh = wolfDez(); fresh.trackers.damage = 0;
+  const f = open(fresh), fid = withDez(f);
+  f.click("[data-enc-start]"); f.click("[data-enext]");
+  assert.equal(f.$(`[data-eheals="${fid}"]`).textContent, "Regeneration heals on the player's own sheet.");
+  // Quick Clot ends Bleeding on the copy's own sheet too (Ken, PR 301): a second line, nothing written to the row.
+  const qc = wolfDez(); qc.trackers.aberrations = [{ id: "quick-clot", permanence: "permanent" }];
+  const q = open(qc), qid = withDez(q);
+  q.click("[data-enc-start]"); q.click("[data-enext]");
+  assert.equal(q.$(`[data-eends="${qid}"]`).textContent, "Quick Clot ends Bleeding on the player's own sheet.");
+  q.click("[data-efinish]");
+  assert.ok(JSON.parse(ev(q, "JSON.stringify(S.table.encounters[0].rows[0].conditions)")).some(c => c.id === "bleeding"), "the row's Bleeding was ended");
+  const human = open(wolfDez("Human"));
+  const hid = withDez(human);
+  human.click("[data-enc-start]"); human.click("[data-enext]");
+  assert.equal(human.$(`[data-eheals="${hid}"]`), null, "a seat in human form gets a heals line");
+  assert.equal(human.$(`[data-eends="${hid}"]`), null, "a seat without Quick Clot gets an ends line");
+  assert.deepEqual(human.errors, []);
+});

@@ -3030,7 +3030,9 @@ window.SHADOWS_DATA = {
       },
       "powers": [
         { "id": "bestial-blessings", "name": "Bestial Blessings", "cost": "1 SFR, until dismissed or the encounter ends", "effect": "Retractable claws: BOD+3 melee damage, AP, and +2 MOB for climbing. Claws retract if you are stunned or knocked unconscious.", "perRank": "+1 damage (max 5)", "maxRank": 5 },
-        { "id": "vitality-surge", "name": "Vitality Surge", "cost": "2 SFR per HL healed", "effect": "Fast Action: heal up to your rank in HL per round. Can't restore Withering damage. At Rank 5, severed limbs regenerate.", "perRank": "+1 HL per round (max 5)", "maxRank": 5 },
+        { "id": "vitality-surge", "name": "Vitality Surge", "cost": "2 SFR per HL healed", "effect": "Fast Action: heal up to your rank in HL per round. Can't restore Withering damage. At Rank 5, severed limbs regenerate.", "perRank": "+1 HL per round (max 5)", "maxRank": 5,
+          /* Decision 268: a press that heals 1 to rank HL and spends `sfr.perHl` an HL, never Withering. Engine.surgeable and surgePower read it; the cost text above agrees (checked by script). */
+          "surge": { "hl": { "perRank": 1 }, "sfr": { "perHl": 2 } } },
         { "id": "preternatural-speed", "name": "Preternatural Speed", "cost": "2 SFR per round, sustained", /* Decision 266: `run` is what a sustained cost means to the sheet. `sfr` is perRank × rank + plus; `each: "round"` pays on Start and at every Turn Reset ("start" is the activated kind a later power adds). It agrees with `cost`, checked by script. */ "run": { "sfr": { "plus": 2 }, "each": "round" }, "effect": "+2 MOB, +2 to defensive actions (Dodge and Parry), and one extra movement action each turn. Doesn't stack with other speed powers.", "perRank": "None", "ranked": false, "grants": [{"type": "checkMod", "amount": 2, "skills": ["dodge", "melee"], "whenText": "on defensive actions (Dodge and Parry), while Preternatural Speed runs"}] },
         { "id": "cursed-evolution", "name": "Cursed Evolution", "cost": "None", "effect": "Drink at least 1 HL of another Vampire's blood and win an opposed WILL Essence check to gain access to the bloodline it was made with. Bloodline powers are bought with IP; one bloodline per Vampire. Not available with Pure Blooded.", "perRank": "+1 Hit (max 3)", "maxRank": 3, "gainsSpecialization": 1,
           "gainsSpecializationText": "You drank at least 1 HL of a Vampire of that Bloodline and won the opposed WILL Essence check. Your table settles that; the sheet rolls nothing." },
@@ -3059,7 +3061,9 @@ window.SHADOWS_DATA = {
 
         { "id": "battleborn-instinct", "origin": "draugur", "name": "Battleborn Instinct", "cost": "Rank + 2", "effect": "With an Ancient Weapon: +2 to all combat checks and one extra attack per round for WILL rounds. Ends if you are immobilized or incapacitated.", "perRank": "+1 to combat checks (max 5)", "maxRank": 5, "grants": [{"type": "checkMod", "perRank": 1, "plus": 1, "skills": ["melee"], "whenText": "with an Ancient Weapon, while Battleborn Instinct runs"}] },
         { "id": "deathless-resilience", "origin": "draugur", "name": "Deathless Resilience", "cost": "3 SFR, once per encounter", "effect": "Always: you don't bleed, need no air, and are immune to fear. As a reaction, when reduced to 0 Health by anything but Withering, rise with 1 HL.", "perRank": "None", "ranked": false },
-        { "id": "blood-of-valhalla", "origin": "draugur", "name": "Blood of Valhalla", "cost": "Rank + 2 per round, sustained", "run": { "sfr": { "perRank": 1, "plus": 2 }, "each": "round" }, "effect": "+2 melee damage and regenerate HL equal to rank each round (never Withering). Vitality Surge can't be used while active. When it ends, −4 to all combat actions for 1d4 rounds, and it can't restart until then.", "perRank": "+1 HL and −1 to the crash penalty (max 4)", "maxRank": 4 },
+        { "id": "blood-of-valhalla", "origin": "draugur", "name": "Blood of Valhalla", "cost": "Rank + 2 per round, sustained", "run": { "sfr": { "perRank": 1, "plus": 2 }, "each": "round" }, "effect": "+2 melee damage and regenerate HL equal to rank each round (never Withering). Vitality Surge can't be used while active. When it ends, −4 to all combat actions for 1d4 rounds, and it can't restart until then.", "perRank": "+1 HL and −1 to the crash penalty (max 4)", "maxRank": 4,
+          /* Decision 268: `roundHeal` heals perRank × rank HL at Turn Reset while it runs, never Withering (Engine.roundHeals); `blocks` names the powers that can't be used while it runs (Engine.surgePower). */
+          "grants": [{ "type": "roundHeal", "perRank": 1 }], "blocks": ["vitality-surge"] },
         { "id": "odins-aegis", "origin": "draugur", "name": "Odin's Aegis", "cost": "Rank, as a reaction", "react": { "sfr": { "perRank": 1 } }, "effect": "Reduce the damage of one Elemental, Spirit, or Aether attack by your BOD bonus + 2 × rank. No effect on physical attacks.", "perRank": "+2 reduction (max 5)", "maxRank": 5,
           "grants": [{ "type": "hitTaken", "minus": { "stat": "BOD", "perRank": 2 }, "magical": true }] },
         { "id": "spectral-veil", "origin": "draugur", "name": "Spectral Veil", "cost": "Rank + 2 per round, sustained", "run": { "sfr": { "perRank": 1, "plus": 2 }, "each": "round" }, "effect": "Semi-ethereal: immune to Physical damage, able to pass through walls, +2 Stealth. You can attack only with your Ancient Weapon, and can't handle any other object. Sunlight still burns you, and Elemental, Spirit, and Aether damage still affect you.", "perRank": "+1 Stealth (max 3)", "maxRank": 3, "grants": [{"type": "checkMod", "perRank": 1, "plus": 1, "skills": ["stealth"], "whenText": "while Spectral Veil runs"}, { "type": "hitTaken", "immune": true }] },
@@ -3199,7 +3203,7 @@ window.SHADOWS_DATA = {
           "id": "regeneration",
           "name": "Regeneration",
           "description": "In Werewolf form, flesh and bone knit back together almost as fast as they tear.",
-          "benefit": "While transformed, regenerate 1 HL per round. Regeneration never restores Withering damage, and in human form you heal like anyone else."
+          "benefit": "While shifted, regenerate 1 HL per round. Regeneration never restores Withering damage, and in human form you heal like anyone else."
         },
         {
           "id": "pack-mentality",
@@ -3330,7 +3334,11 @@ window.SHADOWS_DATA = {
                 "bars": { "stat": "TECH", "name": "Feral Mind" },
                 "costFrom": "shiftCost",
                 "endsAtWithering": 0.5,
-                "summaryText": "+2 REF, +2 MOB and +4 BOD, in your skills, speed and Health Levels. Claws and Fangs. No TECH-based skills (Feral Mind).",
+                /* Decision 268: the form regenerates `hl` Health Levels at Turn Reset, never Withering, unless Withering has ended it. `trait` names the baseline trait whose name the sheet shows. Engine.formState reads both; roundHeals applies them. */
+                "regenerates": { "hl": 1, "trait": "regeneration" },
+                "flagged": true, "flagNote": "F51: does Regeneration stop when the Werewolf is knocked unconscious (the book ends the form there)? Built as: it stops only when Withering ends the form (formView.ended), because the sheet leaves the toggle to the player (Decision 268, HQ23). Deighton.",
+                "playerNote": "Whether Regeneration stops when you're knocked out isn't settled. The sheet stops it only when Withering ends the form.",
+                "summaryText": "+2 REF, +2 MOB and +4 BOD, in your skills, speed and Health Levels. Claws and Fangs. No TECH-based skills (Feral Mind). Regenerates 1 HL a round.",
                 "endsText": "Withering damage has reached half your HL: the form ends."
               }
             ]
@@ -3416,7 +3424,7 @@ window.SHADOWS_DATA = {
           { "id": "clear-head", "name": "Clear Head", "prerequisites": {"majorCount": 1}, "benefit": "In Werewolf form, you can use TECH-based skills at −2.", "grants": [{"type": "form", "barsPenalty": -2}] },
           { "id": "iron-jaw", "name": "Iron Jaw", "prerequisites": {"majorCount": 1}, "benefit": "Your claws and fangs gain AP.", "grants": [{"type": "form", "weaponTags": ["AP"]}] },
           { "id": "silverscar", "name": "Silverscar", "prerequisites": {"majorCount": 2}, "benefit": "Withering damage from silver is halved (never below 1).", "grants": [{ "type": "withering", "halve": true, "from": "silver" }] },
-          { "id": "bone-and-sinew", "name": "Bone and Sinew", "prerequisites": {"majorCount": 2}, "benefit": "Regeneration restores 2 HL per round, and shifting into Werewolf form ends Maimed." },
+          { "id": "bone-and-sinew", "name": "Bone and Sinew", "prerequisites": {"majorCount": 2}, "benefit": "Regeneration restores 2 HL per round, and shifting into Werewolf form ends Maimed.", "grants": [{"type": "form", "regenerates": 2, "ends": ["maimed"]}] },
           { "id": "the-calling", "name": "The Calling", "prerequisites": {"specialization": ["trueborn", "wildblood"], "majorCount": 3}, "benefit": "You can pass the wolf on. Bite someone brought to 0 HL and let the spirit follow. They make a WILL Essence check (TN 9, TH 3). On a success, they rise Wildblood. With fewer than 3 Hits, the spirit doesn't take and the wound heals as a wound. On a botch, the spirit takes them completely, and what gets up is no longer a person." },
           { "id": "off-the-leash", "name": "Off the Leash", "prerequisites": {"specialization": ["forge-fang"], "majorCount": 3}, "benefit": "You can cook your own Seta-16. Given a night of downtime, a working lab, and a batch of precursors, make a Medical check against Difficulty 15. On a success, the batch yields 5 doses, plus 1 more for every 5 points you beat the difficulty by. On a failure, the precursors are wasted. On a botch, the batch is tainted: a tainted dose counts as a missed day, and you won't know which ones they are until you take one." }
         ]
@@ -5249,7 +5257,9 @@ window.SHADOWS_DATA = {
     {"id": "inactive-camouflage", "name": "Inactive Camouflage", "category": "good", "description": "Photoreceptors have developed across your skin. While completely still, a REF Essence check, TN 8 TH 2, renders you visually transparent. Clothing and equipment are unaffected. Any movement ends the effect."},
     {"id": "magnetic-grip", "name": "Magnetic Grip", "category": "good", "description": "Your hands and feet cling to metal. You climb metal surfaces at full movement, and metal objects in your grip cannot be Disarmed."},
     {"id": "night-eyes", "name": "Night Eyes", "category": "good", "description": "Treat Dark visibility as Dim, and Blind as Dark.", "grants": [{"type": "visibility", "shift": {"dark": "dim", "blind": "dark"}, "on": ["attacks", "awareness"]}]},
-    {"id": "quick-clot", "name": "Quick Clot", "category": "good", "description": "Your blood closes wounds almost as fast as they open. Bleeding ends on its own at the next Reset."},
+    {"id": "quick-clot", "name": "Quick Clot", "category": "good", "description": "Your blood closes wounds almost as fast as they open. Bleeding ends on its own at the next Reset.", "resetEnds": ["bleeding"],
+     "flagged": true, "flagNote": "F50: does Bleeding tick once more at the Reset Quick Clot ends it? Built as: it ticks once, then ends (Decision 268, HQ22). Deighton.",
+     "playerNote": "Whether Bleeding ticks once more before Quick Clot ends it isn't settled. The sheet ticks it once."},
     {"id": "steady-heart", "name": "Steady Heart", "category": "good", "description": "Mundane sources cannot make you Frightened."},
     {"id": "sure-step", "name": "Sure Step", "category": "good", "description": "Difficult Terrain costs you no extra movement, and does not hinder your Scramble."},
     {"id": "warded-flesh", "name": "Warded Flesh", "category": "good", "description": "+1 die on any defender check against a spell."},
