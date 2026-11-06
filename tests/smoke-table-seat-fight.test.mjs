@@ -235,3 +235,19 @@ test("Decision 268: a GM's Reset writes nothing to a regenerating seat and says 
   assert.equal(human.$(`[data-eends="${hid}"]`), null, "a seat without Quick Clot gets an ends line");
   assert.deepEqual(human.errors, []);
 });
+
+test("U1 (257): a claimed row draws the copy's Health Levels, and the Down rule applies to it: no Hit until it's Dying", () => {
+  const app = open();
+  const id = withDez(app);
+  const row = () => app.$(`[data-erow="${id}"]`);
+  assert.equal(row().querySelectorAll(".enc-segs .seg").length, 6, "the copy's six Health Levels");
+  assert.ok(row().querySelector(`[data-ehit="${id}"]`), "up: Hit");
+  app.click(`[data-edmg="${id}|1"]`); app.$("[data-edmgn]").value = "30"; submit(app, "[data-edmgform]");
+  assert.match(row().querySelector(".enc-health .enc-hp.down").textContent, /^Down/);
+  assert.equal(row().querySelectorAll(".enc-segs .seg.gone").length, 6);
+  assert.equal(row().querySelector("[data-ehit]"), null, "Down: no Hit");
+  assert.ok(row().querySelector(`[data-edmg="${id}|-1"]`), "Down: Heal");
+  app.click(`[data-econdopen="${id}"]`); changeTo(app, "[data-econd-id]", "dying"); app.click("[data-econd-add]");
+  assert.ok(row().querySelector("[data-ehit]"), "Dying: Hit is back");
+  assert.deepEqual(app.errors, []);
+});

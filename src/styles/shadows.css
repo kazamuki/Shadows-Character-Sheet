@@ -1370,6 +1370,7 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .enc-hp{font-family:var(--numeric); font-size:1.3rem; font-weight:600; line-height:1.1; letter-spacing:.01em; font-variant-numeric:tabular-nums; color:var(--green)}
 .enc-hp.down, .enc-hp .enc-down{color:var(--magenta-text)}
 .enc-segs{margin:2px 0 6px; max-width:26rem}
+.tag.enc-now, .tag.enc-now:hover{color:var(--cyan)}
 .enc-now{font-family:var(--mono); font-size:.78rem; letter-spacing:.14em; text-transform:uppercase; color:var(--cyan); border-color:var(--cyan)}
 .enc-more-acts{display:flex; flex-wrap:wrap; gap:8px; margin:2px 0 10px}
 .enc-hit .enc-hit-btns{grid-column:1 / -1; margin-bottom:6px}
@@ -1646,4 +1647,6 @@ h2.city-name{font-size:1.15rem}
   .enc-bar .enc-status{flex:1 1 8rem; min-width:0; margin-right:0; overflow-wrap:anywhere}
   .enc-bar .btn{min-height:44px}
   .enc-bar [data-enext]{flex:1 1 7rem}
+  /* the wrapped bar is two lines (113px), so a row scrolled to the actor clears it */
+  .enc-row{scroll-margin-top:calc(var(--hdr-off) + 128px)}
 }

@@ -171,3 +171,15 @@ test("U1: the encounter bar wraps and scrolls nothing sideways at phone width", 
   assert.deepEqual(rule.filter(r => /overflow-x\s*:\s*auto|flex-wrap\s*:\s*nowrap/.test(r)), [], "no table-mode rule sets the bar to scroll sideways");
   assert.deepEqual(app.errors, []);
 });
+
+
+test("U1: at phone width a row scrolled to the actor clears the wrapped bar", () => {
+  const css = readFileSync(new URL("../src/styles/shadows.css", import.meta.url), "utf8");
+  const at = css.indexOf("@media (max-width:640px){\n  .enc-bar .enc-status");
+  assert.ok(at >= 0, "the encounter bar's phone block exists");
+  const block = css.slice(at, css.indexOf("\n}\n", at));
+  const hit = block.match(/\.enc-row\{scroll-margin-top:calc\(var\(--hdr-off\) \+ ([0-9]+)px\)\}/);
+  assert.ok(hit, "the phone block sets .enc-row's scroll-margin-top");
+  assert.ok(Number(hit[1]) >= 113 + 8, "the margin clears the bar's two lines (113px) with room");
+  assert.ok(css.includes(".tag.enc-now, .tag.enc-now:hover{color:var(--cyan)}"), "Now keeps its cyan on hover");
+});
