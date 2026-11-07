@@ -2,7 +2,7 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
-    "version": "0.65.0",
+    "version": "0.66.0",
     "date": null,
     "intro": [],
     "items": [
@@ -31,7 +31,9 @@ window.SHADOWS_CHANGELOG = [
       "**Powers answer a hit.** While Spectral Veil or Red Mist runs, Physical damage does nothing. Null Field soaks up Elemental, Spirit and Aether damage until it's spent, and Odin's Aegis takes its bite out of one such hit for its SFR, right in Take a hit.",
       "**Silverscar halves silver's Withering**, and Adaptive Skeleton's and Icebound Resilience's Natural Armor counts while they run.",
       "**Powers heal.** A Werewolf in Werewolf form regenerates at each Turn Reset (twice as fast with Bone and Sinew), and Blood of Valhalla heals while it runs. Neither touches Withering.",
-      "**Vitality Surge heals on a press**, spending its SFR as it goes. **Quick Clot** ends Bleeding at the next Reset, and **Bone and Sinew** ends Maimed when you shift."
+      "**Vitality Surge heals on a press**, spending its SFR as it goes. **Quick Clot** ends Bleeding at the next Reset, and **Bone and Sinew** ends Maimed when you shift.",
+      "**Keys for a table.** **1**–**8** go to the sections, **N** runs the next turn on a fight's page, **Ctrl/⌘+Z** takes back the last change (and says what it took back, or that there was nothing to undo), **A** opens Activity and **?** lists them all. They never fire while you're typing, and ⋮ → **Keys** turns them all off.",
+      "**A screen reader says which section is open**, and which key each section, Next and Activity answer to."
     ]
   },
   {

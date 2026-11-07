@@ -271,7 +271,9 @@ const tableMeasure = () => {
     lead: Math.round(Math.max(0, ...[...main.querySelectorAll(".tn-lead")].filter(shown).map(e => box(e).width))),
     tn: [...main.querySelectorAll(".tn-item")].filter(shown).length, tnCut: [...main.querySelectorAll(".tn")].some(e => e.scrollWidth > e.clientWidth + 1),
     header: Math.round(hdr.getBoundingClientRect().height), scrollW: de.scrollWidth - de.clientWidth,
-    rail: on("nav.ledger"), vitals: on("aside.vitals") };
+    rail: on("nav.ledger"), vitals: on("aside.vitals"),
+    // U5, #39: the open section's tab lies inside the tab row, so a route never leaves it scrolled out of sight (0 = inside, in px past an edge).
+    tabOut: (() => { const t = document.querySelector("#topnav [data-tsec].active"), n = document.querySelector("#topnav"); if (!t || !n) return -1; const a = t.getBoundingClientRect(), b = n.getBoundingClientRect(); return Math.round(Math.max(0, b.left - a.left, a.right - b.right, a.top < b.top ? b.top - a.top : 0)); })() };
 };
 
 async function tableScreens(browser, file, rows, numbers) {
@@ -334,10 +336,14 @@ async function tableScreens(browser, file, rows, numbers) {
       click("[data-enc-player]"), () => page.fill("[data-enc-pname]", "Dez"), click("[data-enc-addplayer]"), click("[data-ehit]")), { bar: true, enc: true });
     await walk("reference", tab("reference"));
     await walk("notes", tab("notes"));
+    // U5 (#39): a route that never presses the tab. Playwright scrolls a clicked tab into view itself, so the key is what shows whether the row follows the open section.
+    await walk("notes, by the 8 key", async () => { await page.click('[data-tsec="sessions"]'); await page.evaluate(() => document.activeElement && document.activeElement.blur()); await page.keyboard.press("8"); });
+    await walk("sessions, by the 1 key", () => page.keyboard.press("1"));
     for (const s of screens) {
       const m = s.m, bad = [];
       if (m.rail || m.vitals) bad.push("a rail or vitals column is drawn");
       if (m.over) bad.push(`${m.over} elements past the right edge`);
+      if (m.tabOut !== 0) bad.push(m.tabOut < 0 ? "no open tab in the tab row" : `the open tab is ${m.tabOut}px outside the tab row`);
       if (m.scrollW > 0) bad.push(`the page scrolls sideways by ${m.scrollW}px`);
       if (m.field > FIELD_MAX + 0.5) bad.push(`a field ${m.field}px`);
       if (m.area > AREA_MAX + 0.5) bad.push(`a textarea ${m.area}px`);

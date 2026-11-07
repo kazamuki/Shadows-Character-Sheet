@@ -417,9 +417,11 @@ function paintTableToast(msg, table, entry, fresh){
   };
   el.querySelector("[data-toastclose]").onclick=hideUndoToast;
 }
-function showTableDone(label){
+function showTableDone(label){ showTableNote("Undone: "+label); }
+// A line in the toast, without an Undo: it says a key was heard (Decision 272).
+function showTableNote(msg){
   const el=undoToastEl();
-  el.innerHTML=`<span class="toast-msg">Undone: ${esc(label)}</span>`;
+  el.innerHTML=`<span class="toast-msg">${esc(msg)}</span>`;
   el.hidden=false; tableToast=null;
   clearTimeout(toastTimer); toastTimer=setTimeout(hideUndoToast, 2500);
 }

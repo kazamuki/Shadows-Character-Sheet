@@ -269,9 +269,10 @@ const TABLE_SECTIONS = [{ id:"sessions", label:"Sessions", ui:"tab_sessions" }, 
 // sheet's [data-sec] binder never sees these.
 function tableTabButtonsHtml(){
   return TABLE_SECTIONS.map(sec=>{
-    const cls=["tab", sec.id===S.tsection?"active":""].join(" ");
+    const on=sec.id===S.tsection, cls=["tab", on?"active":""].join(" ");
     const ico=sec.ui ? `<span class="tico">${uiIcon(sec.ui)}</span>` : "";
-    return `<button class="${cls}" data-tsec="${sec.id}">${ico}${esc(sec.label)}</button>`;
+    // The open section is where the GM is, whatever page of it is showing (Decision 272); keyHints adds the digit while the keys are on.
+    return `<button class="${cls}" data-tsec="${sec.id}"${on ? ' aria-current="page"' : ""}>${ico}${esc(sec.label)}</button>`;
   }).join("");
 }
 // A tab press's reset, shared with the Tonight strip's jumps: the tab you're on also takes you back from a member's page to the list.
@@ -283,6 +284,11 @@ function pickTableTab(id){
   if (S.tsection==="cast"){ S.castOpen=null; S.backEnc=null; S.backSess=false; S.backClose=false; S.backCity=null; }
   if (S.tsection==="threats"){ S.threatOpen=null; S.threatGroup=null; S.threatMember=null; S.threatEnc=null; }
 }
+// A tab press, and the digit keys, which are the same press (Decision 272).
+function pressTableTab(id){
+  pickTableTab(id); window.scrollTo(0,0); update();
+  const now=$("topnav") && $("topnav").querySelector(attrSel("data-tsec", id)); if (now) now.focus({ preventScroll:true });
+}
 function renderTableChrome(){
   const ctx=$("brandctx"), nav=$("topnav"), act=$("hdractions"), t=S.table;
   document.title = `${tableName(t)} — Shadows`;
@@ -291,8 +297,7 @@ function renderTableChrome(){
   nav.innerHTML = tableTabButtonsHtml();
   // The tab you're on also takes you back from a member's page to the list.
   // The keyboard stays in the tab row (Decision 271): the press rebuilt the buttons, so the pressed one is focused again.
-  nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>{ const id=b.dataset.tsec; pickTableTab(id); window.scrollTo(0,0); update();
-    const now=$("topnav") && $("topnav").querySelector(attrSel("data-tsec", id)); if (now) now.focus({ preventScroll:true }); });
+  nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>pressTableTab(b.dataset.tsec));
   showActiveTab(nav);
   if (!act) return;
   act.innerHTML = `<button type="button" class="hdr-act" data-tfind>Find</button><button type="button" class="hdr-act" data-tjot>Jot</button>
@@ -324,26 +329,30 @@ function renderTableChrome(){
 const KEYS_PREF="shadows.ui.keys";
 function keysOn(){ try{ return localStorage.getItem(KEYS_PREF)!=="off"; }catch(e){ return true; } }
 function setKeys(on){ try{ if (on) localStorage.removeItem(KEYS_PREF); else localStorage.setItem(KEYS_PREF, "off"); }catch(e){} keyHints(); }
-// The header's buttons say their key to a screen reader while the keys are on.
+// The header's buttons, the tabs, Next turn and Activity say their key to a screen reader while the keys are on.
 function keyHints(){
   const on=keysOn();
-  for (const [sel, key] of [["[data-tfind]","F"],["[data-tjot]","J"]]){
-    const b=document.querySelector(sel); if (!b) continue;
-    if (on) b.setAttribute("aria-keyshortcuts", key); else b.removeAttribute("aria-keyshortcuts");
-  }
+  const hint=(b, key)=>{ if (!b) return; if (on) b.setAttribute("aria-keyshortcuts", key); else b.removeAttribute("aria-keyshortcuts"); };
+  for (const [sel, key] of [["[data-tfind]","F"],["[data-tjot]","J"],["[data-tactivity]","A"],["#main [data-enext]","N"]]) hint(document.querySelector(sel), key);
+  TABLE_SECTIONS.forEach((sec, i)=>hint(document.querySelector(attrSel("data-tsec", sec.id)), String(i+1)));
 }
-function openKeys(){
-  const draw=()=>{ const on=keysOn(); return `<div class="form-toggle" role="group" aria-label="F and J">
+function openKeys({ viaKey }={}){
+  const draw=()=>{ const on=keysOn(); return `<div class="form-toggle" role="group" aria-label="Keys">
       <button type="button" data-keyon class="${on?"on":""}" aria-pressed="${on}"${on?" autofocus":""}>On</button>
       <button type="button" data-keyoff class="${on?"":"on"}" aria-pressed="${!on}"${on?"":" autofocus"}>Off</button></div>`; };
-  openModal({ title:"Keys", returnTo:"[data-menu-toggle]",
+  openModal({ title:"Keys", returnTo:"[data-menu-toggle]", viaKey,
     html:`<ul class="step-note keys-list">
-        <li><b>F</b> · Find on this table</li>
-        <li><b>J</b> · Jot it down</li>
+        <li><b>1–8</b> · Go to a section</li>
+        <li><b>N</b> · Next turn, on a running fight's page</li>
+        <li><b>Ctrl/⌘+Z</b> · Undo the last change</li>
+        <li><b>A</b> · Activity</li>
+        <li><b>?</b> · These keys</li>
+        <li><b>F</b> · Find</li>
+        <li><b>J</b> · Jot</li>
         <li><b>Esc</b> · Close a box</li>
         <li><b>Ctrl/⌘+Enter</b> · Save a jot</li></ul>
-      <p class="step-note">F and J do nothing while you're typing in a field.</p>
-      <div class="field tag-choice"><span>F and J</span><div data-keyswitch>${draw()}</div></div>`,
+      <p class="step-note">None of these work while you're typing in a field.</p>
+      <div class="field tag-choice"><span>Keys</span><div data-keyswitch>${draw()}</div></div>`,
     foot:`<button type="button" class="btn" data-modalclose>Close</button>`,
     bind(body){
       const sw=body.querySelector("[data-keyswitch]");
@@ -356,17 +365,38 @@ function openKeys(){
 }
 // A field is typingNow's list plus select, contenteditable and an IME mid-word.
 const inField = el => !!el && (isTextField(el) || el.tagName==="SELECT" || !!(el.closest && el.closest('[contenteditable]:not([contenteditable="false"])')));
+// What a key does, if it is one of ours (Decisions 259, 272). Each carries its own modifier rule; a key that is
+// none of these, or whose rule the press breaks, returns null and is the browser's.
+function keyAction(e){
+  const k=e.key.toLowerCase(), bare=!e.ctrlKey && !e.metaKey && !e.altKey;
+  // The digits match the physical key and may carry Shift (AZERTY's top row needs it); no other key but ? gets that.
+  const m=bare && /^(?:Digit|Numpad)([1-8])$/.exec(typeof e.code==="string" ? e.code : "");
+  if (m) return { run:()=>pressTableTab(TABLE_SECTIONS[Number(m[1])-1].id) };
+  if (bare && e.key==="?") return { run:()=>openKeys({ viaKey:true }) };
+  if (bare && !e.shiftKey){
+    if (k==="f") return { run:()=>openFind({ viaKey:true }) };
+    if (k==="j") return { run:()=>openJot({ viaKey:true }) };
+    if (k==="a") return { run:()=>openActivity({ viaKey:true }) };
+    // Next turn, only where the page draws it: the button's own press carries the reset, the focus and the announcement.
+    if (k==="n"){ const b=document.querySelector("#main [data-enext]:not([disabled])"); return b ? { run:()=>b.click() } : null; }
+  }
+  // Exactly one of Ctrl and ⌘, and no Shift: Ctrl+Shift+Z is Redo in a browser.
+  if (k==="z" && (e.ctrlKey!==e.metaKey) && !e.altKey && !e.shiftKey)
+    return { run:()=>{ const log=S.table.audit||[], label=undoTableEntry(S.table, log[log.length-1]); if (label===null) showTableNote("Nothing to undo."); else showTableDone(label); } };
+  return null;
+}
 document.addEventListener("keydown", e=>{
-  if (typeof e.key!=="string" || (e.key.toLowerCase()!=="f" && e.key.toLowerCase()!=="j")) return;
-  if (!featureOn("gm") || S.screen!=="table" || !S.table || !keysOn()) return;
-  if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey || e.repeat || e.isComposing) return;
+  if (typeof e.key!=="string" || !featureOn("gm") || S.screen!=="table" || !S.table || !keysOn()) return;
+  if (e.repeat || e.isComposing) return;
+  // A field first: Ctrl+Z there is the browser's own text undo.
   if (inField(e.target) || inField(document.activeElement)) return;
   if (document.querySelector("dialog.modal[open]")) return;
   // The ⋮ menu is a layer: a box opened over it would hand focus back to a menu item the same Esc hides.
   const menu=$("hdrmenu"); if (menu && !menu.hidden) return;
+  const a=keyAction(e); if (!a) return;
   // Held back before the box opens: focus moves during this keydown, and the letter would be typed into it.
   e.preventDefault();
-  if (e.key.toLowerCase()==="f") openFind({ viaKey:true }); else openJot({ viaKey:true });
+  a.run();
 });
 // ── Read first (Decision 271) ──────────────────────────────────────────────
 // A record opens to read; Edit swaps in today's form and Done swaps back. S.editing = { kind, id } is view state: nothing
@@ -602,8 +632,8 @@ function activityHtml(){
     <p class="step-note">${log.length} action${log.length===1 ? "" : "s"} kept; the oldest go after 500.</p>
     <p><button type="button" class="btn danger" data-act-clear>Clear activity</button></p>`;
 }
-function openActivity(){
-  openModal({ title:"Activity", returnTo:"[data-menu-toggle]", html:`<div data-act>${activityHtml()}</div>`,
+function openActivity({ viaKey }={}){
+  openModal({ title:"Activity", returnTo:"[data-menu-toggle]", viaKey, html:`<div data-act>${activityHtml()}</div>`,
     bind(body){
       const draw=()=>{
         body.querySelector("[data-act]").innerHTML=activityHtml();
@@ -3783,7 +3813,7 @@ function encPageHtml(e){
   // Back is the bar's first button, and the bar is the page's first thing (Decision 258).
   const bar = `<div class="enc-bar"><button class="btn sm" data-enc-back>${from ? `Back to ${esc(from)}` : "Back to encounters"}</button><b class="enc-status">${esc(status)}</b>
     ${e.status==="planned" ? `<button class="btn primary" data-enc-start>Start</button><button class="btn" data-enc-end>End</button>` : ""}
-    ${running && !wrapping ? `${v.atReset ? "" : `<button class="btn primary" data-enext>Next</button>`}<button class="btn" data-enc-end>End the encounter</button>` : ""}</div>`;
+    ${running && !wrapping ? `${v.atReset ? "" : `<button class="btn primary" data-enext${keysOn() ? ' aria-keyshortcuts="N"' : ""}>Next</button>`}<button class="btn" data-enc-end>End the encounter</button>` : ""}</div>`;
   const turns = `${!ended && !wrapping ? `<div class="enc-turns"><div class="form-toggle" role="group" aria-label="Turns">
         <button type="button" data-eby="person" class="${v.by==="person"?"on":""}" aria-pressed="${v.by==="person"}">One at a time</button>
         <button type="button" data-eby="wave" class="${v.by==="wave"?"on":""}" aria-pressed="${v.by==="wave"}">Wave Initiative</button></div>

@@ -312,3 +312,37 @@ test("U3: a tab press keeps focus on its tab, never in an Add field", () => {
   }
   assert.deepEqual(app.errors, []);
 });
+
+test("U5: the open section's tab is aria-current on every route", () => {
+  const app = deadAirApp("players");
+  const one = why => {
+    const cur = app.$$("#topnav [data-tsec][aria-current]");
+    assert.equal(cur.length, 1, why + ": " + cur.length + " tabs are current");
+    assert.equal(cur[0].getAttribute("aria-current"), "page", why);
+    assert.equal(cur[0].dataset.tsec, app.window.eval("S.tsection"), why + ": not the open section's");
+  };
+  one("opening the table");
+  app.click('[data-tsec="notes"]');
+  one("a tab press");
+  app.doc.body.dispatchEvent(new app.window.KeyboardEvent("keydown", { key: "3", code: "Digit3", bubbles: true, cancelable: true }));
+  one("a digit");
+  for (const t of app.$$("[data-tn]").map(b => b.dataset.tn)) {
+    const b = app.$(`[data-tn="${t}"]`);
+    if (b) { b.click(); one("the strip's " + t); }
+  }
+  app.click('[data-tsec="sessions"]');
+  app.click("[data-tfind]");
+  const q = app.$("[data-findq]");
+  q.value = "Ibarra";
+  q.dispatchEvent(new app.window.Event("input", { bubbles: true }));
+  const hit = app.$("#modal [data-fkind=cast]");
+  assert.ok(hit, "Find has no cast hit");
+  hit.click();
+  assert.equal(app.window.eval("S.tsection"), "cast");
+  one("Find's member hit");
+  const back = app.$("[data-cback]");
+  assert.ok(back, "no Back on the member's page");
+  back.click();
+  one("Back");
+  assert.deepEqual(app.errors, []);
+});

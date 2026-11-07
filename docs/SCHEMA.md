@@ -5371,6 +5371,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. Extends 208 (Find and Jot open by key) and 164 (a key's box gives focus back without scrolling).
      - **Revisit if:** a GM asks for another key, a browser takes F or J, or players get a sheet-wide search.
      - **Built:** app 0.56.1; switched off (173); no schema move; PR #278; log 2026-10-31 (S19).
+    → **Superseded in part by Decision 272** — more keys under the same rules (1–8, N, Ctrl/⌘+Z, A, ?), and the one Keys switch covers them all.
 
 260. **GM mode is launched: `FEATURES.gm` is true, so every player sees Run a table, and the switch stays, on.**
      *2026-10-31 · Ken + Claude · Touches: GM mode, FEATURES, featureOn, applyFeatureQuery, ?gm=on, ?gm=off, shadows.feature.gm, Home, Run a table, Import a file, launch line, changelog-pending, CHANGELOG, boot features option, GM_OFF, Decision 173, Decision 239*
@@ -5507,6 +5508,19 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** 176, 204, 208, 243, 244, 258, each in part; cites 179, 245, 270.
      - **Revisit if:** a GM edits mid-scene more than reads, or W140 reshapes Notes.
      - **Built:** app 0.65.0, no schema move, PR #311, log 2026-11-06 (U3).
+
+272. **On a table, 1–8 open the sections, N runs Next turn on a running encounter's page, Ctrl/⌘+Z takes back the last change, A opens Activity and ? lists every key; the open section's tab is aria-current.**
+     *2026-11-07 · Ken + Claude · Touches: keyboard shortcuts, keydown, inField, keysOn, shadows.ui.keys, Keys, openKeys, keyHints, aria-keyshortcuts, 1–8, section tabs, tableTabButtonsHtml, pickTableTab, aria-current, showActiveTab, N, Next turn, data-enext, Ctrl+Z, Cmd+Z, undoTableEntry, showTableDone, nothing to undo, A, Activity, openActivity, ?, phone-check, Decision 259, Decision 271*
+     - **Decided:** On a table's screen, under 259's rules (never in a field, a box or the ⋮ menu, never on repeat, and off with the rest in ⋮ → Keys), **1–8** press the section tabs in order and **N** presses Next turn while a running encounter's page is open, elsewhere nothing. **Ctrl+Z or ⌘+Z** takes back the newest table change and the toast names it; with nothing to undo, it says so. **A** opens Activity, **?** opens Keys, which lists every key with where it works. The open section's tab is `aria-current="page"` and kept in view.
+     - **Why:** finding #40 asked for the keys 259 held back; a GM mid-fight reaches for the mouse to change section, run a turn or take back a slip, and a screen-reader user wasn't told which section was open.
+     - **Rejected:**
+       - `U` for Undo: no Redo behind it, and Ctrl/⌘+Z is the key everyone knows.
+       - N on every tab: a turn would run from a page that doesn't show it.
+       - A header button for Activity: the phone header's 20%.
+       - Alt+digit: Windows' menus and the browser's own tabs.
+     - **Replaces:** Decision 259 in part: more keys under the same rules, and the Keys switch covers them all.
+     - **Revisit if:** a GM wants keys on the player's sheet, a browser takes a digit, or Redo arrives.
+     - **Built:** app 0.66.0, no schema move, PR #313, log 2026-11-07 (U5).
 
 ## 5. Open Flags
 
