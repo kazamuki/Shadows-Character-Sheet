@@ -54,6 +54,7 @@ const HEADER_MAX_SHARE = 0.2;
 // U1: an encounter's bar wraps to two lines on a phone (Back and the status, then Next and End) rather than scroll sideways, each button a
 // finger tall, so header + bar is allowed this share. The Tables bar stays on one line and on HEADER_MAX_SHARE.
 const ENC_BAR_MAX_SHARE = 0.27;
+const LEAD_MIN = 120;   // px: "Round 2 · Reclai…" (U2)
 // W45: on a phone, how far down Main's Health card may start, as a share of the screen's
 // height, so HP is read without scrolling past a heading block.
 const HP_MAX_SHARE = 0.3;
@@ -266,7 +267,7 @@ const tableMeasure = () => {
     enc: widest(rows), encCols: new Set(rows.map(r => Math.round(box(r).left))).size,
     barCut: !!bar && bar.scrollWidth > bar.clientWidth + 1 && !bar.classList.contains("more-r"),
     bar: bar ? Math.round(box(bar).height) : 0, barKind: bar ? bar.className.split(" ")[0] : "",
-    barOut: bar ? [...bar.children].filter(c => !c.classList.contains("tn") && c.getBoundingClientRect().left > de.clientWidth - 40).length : 0,
+    lead: Math.round(Math.max(0, ...[...main.querySelectorAll(".tn-lead")].filter(shown).map(e => box(e).width))),
     tn: [...main.querySelectorAll(".tn-item")].filter(shown).length, tnCut: [...main.querySelectorAll(".tn")].some(e => e.scrollWidth > e.clientWidth + 1),
     header: Math.round(hdr.getBoundingClientRect().height), scrollW: de.scrollWidth - de.clientWidth,
     rail: on("nav.ledger"), vitals: on("aside.vitals") };
@@ -348,7 +349,8 @@ async function tableScreens(browser, file, rows, numbers) {
         else if (z.width < 768 && m.tn > 2) bad.push(`${m.tn} strip items at ${z.width}px, 2 wanted (the lead and Unexported)`);
         else if (z.width >= 768 && m.tn < 4) bad.push(`${m.tn} strip items at ${z.width}px, 4 wanted`);
         if (m.tnCut) bad.push("the strip scrolls sideways");
-        if (z.width <= 390 && m.barOut) bad.push(`${m.barOut} bar button(s) start outside the viewport; the strip must leave room for Add to to show`);
+        // Fight first (Ken): on a phone the lead item must be wide enough to read the round and the start of the actor, and a bar the strip pushes Add to out of scrolls with its fade (barCut).
+        if (z.width <= 390 && m.lead < LEAD_MIN) bad.push(`the strip's lead item is ${m.lead}px, ${LEAD_MIN} wanted to read round and actor`);
       }
       if (m.barKind === "tbl-bar" && m.bar > (z.touch ? 56 : BAR_MAX)) bad.push(`the bar is ${m.bar}px`);
       if (m.bar && z.width <= 390 && (m.header + m.bar) / z.height > (m.barKind === "enc-bar" ? ENC_BAR_MAX_SHARE : HEADER_MAX_SHARE)) bad.push(`header + bar ${Math.round((m.header + m.bar) / z.height * 100)}%`);
