@@ -1809,6 +1809,11 @@ test("U3: a member opens to read, and Edit opens today's form", () => {
   assert.ok(after(wants, first), "Wants comes before any control but the bar's and Edit");
   assert.equal(app.$$("#main .dos-l").map(l => l.textContent).slice(0, 3).join("|"), "Wants|If pushed|Their line");
   assert.ok(app.$("#main blockquote.dos-quote"), "their line is a quote");
+  // The stat block is sixth: after Clocks, before Got and the GM note, at every width (review).
+  const panel = app.$("#main .cast-panel"), clocksH = app.$$("#main .cast-h").find(h => h.textContent === "Clocks"), gmNote = app.$$("#main .dos-l").find(l => l.textContent === "GM note");
+  assert.ok(panel && clocksH, "the panel and Clocks are drawn");
+  assert.ok(after(clocksH, panel), "the panel follows Clocks");
+  if (gmNote) assert.ok(after(panel, gmNote), "the panel comes before the GM note");
   edit(app);
   assert.ok(app.$('[data-cf="motivation"]'), "Edit opens today's form");
   assert.equal(app.$("[data-cback]"), null, "Back is hidden while editing");

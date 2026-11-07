@@ -2696,6 +2696,17 @@ test("U3: a session opens to read with the night's controls live, and Edit opens
   // The harness presses a page's one Edit when a selector isn't there, so the play rows are pinned here, in the read view, with $.
   assert.ok(app.$("[data-co-open]"), "Close out stays live");
   assert.equal(app.$("[data-sdel]"), null);
+  // The summary line repaints when Who or Hours saves (review).
+  const sumEl = app.$("#main [data-sum]"), before = sumEl.textContent;
+  const pressed = app.$("[data-crew-box] .crew-btns button[data-crew-name], [data-crew-box] button[data-crew-seat][aria-pressed='true']");
+  assert.ok(pressed, "a name to un-press");
+  const who = pressed.dataset.crewName || pressed.textContent.trim();
+  pressed.click();
+  const hrs = app.$('[data-sf="hours"]'); hrs.value = "7"; hrs.dispatchEvent(new app.window.Event("input", { bubbles: true })); hrs.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  const now = app.$("#main [data-sum]").textContent;
+  assert.notEqual(now, before, "the summary changed");
+  assert.match(now, /7/, "hours show in the summary");
+  assert.doesNotMatch(now.split("·").slice(1, -1).join("·"), new RegExp(who.replace(/[^\w ]/g, "")), "the un-pressed name is gone");
   edit(app);
   assert.ok(app.$('[data-sf="number"]') && app.$("[data-sdel]"));
   done(app);

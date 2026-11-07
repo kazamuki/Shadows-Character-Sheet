@@ -5496,14 +5496,16 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
 
 271. **A record opens to read: a dossier with Edit one press away; Notes lists titles that open one at a time; Add sits below what it adds to.**
      *2026-11-06 · Ken + Claude · Touches: read view, dossier, Edit, Done, S.editing, member page, castPageHtml, place page, placePageHtml, faction page, factionPageHtml, session page, sessionPageHtml, threadRowHtml, Current, Make current, readBlockHtml, stat block, summary line, Wants, If pushed, Their line, Key NPCs, factionsKeyFor, member's clocks, Notes tab, noteCardHtml, openNote, S.noteOpen, Delete this note, quick-add, Add, keepPlace, tab focus, placeCardHtml, breadcrumb, placeLines, N lines, roster-list, card grid, sess-list, Sessions order, Slot in a pack, phone-check, Decision 176, Decision 179, Decision 204, Decision 208, Decision 243, Decision 244, Decision 258, Decision 270*
-     - **Decided:** A member, place, faction or session opens on a read view: name, one summary line, wants, their line, clocks, stat block; empty fields aren't drawn. **Edit** swaps in today's form and **Done** returns with focus on Edit. A member shows their Key NPC factions' clocks. Notes lists titles, one open at a time. Add sits below each list; Cast's quick-add stays. Nothing is stored.
+     - **Decided:** A member, place, faction or session opens on a read view: name, one summary line, wants, their line, clocks, stat block; empty fields aren't drawn. **Edit** swaps in today's form, **Done** returns with focus on Edit; Delete is in Edit only. A member shows their Key NPC factions' clocks. A thread reads as its title with Make current / Current. Notes lists titles, one open at a time. Add sits below each list; Cast's quick-add stays. A tab press keeps focus on its tab. A place card names each place once and says "N things happened here". Card grids are 1 / 2 / 3 columns by width; Sessions is one column, newest first. Nothing is stored.
      - **Why:** the 2026-11-05 critique found every record opening as a form; Ken ruled GM mode play-first.
      - **Rejected:**
-       - Click a passage to edit it: it hides what's editable.
-       - A read view only in play: two modes for one page.
+       - Click a passage to edit it: hides what's editable.
+       - A read view only in play: two modes.
        - A clock owner kind for members: a schema bump.
-     - **Replaces:** Decisions 176, 204, 208, 243, 244 and 258, each in part; cites 179, 245 and 270.
-     - **Revisit if:** a GM edits mid-scene more than they read, or W140 reshapes Notes.
+       - Notes as a page each: the list is the point.
+       - Add at the top (176): the form leads.
+     - **Replaces:** 176, 204, 208, 243, 244, 258, each in part; cites 179, 245, 270.
+     - **Revisit if:** a GM edits mid-scene more than reads, or W140 reshapes Notes.
      - **Built:** app 0.65.0, no schema move, PR #311, log 2026-11-06 (U3).
 
 ## 5. Open Flags
