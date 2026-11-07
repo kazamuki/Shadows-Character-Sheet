@@ -310,6 +310,12 @@ test("U5: 1–8 open the sections in tab order, as a tab press does", () => {
   assert.equal(tabNow(app), "encounters", "Numpad6");
   press(app, app.doc.body, "&", { code: "Digit1", shiftKey: true });
   assert.equal(tabNow(app), "sessions", "Shift+Digit1");
+  // With NumLock off the numpad's keys are End, ArrowDown, Home: they scroll the page, so they are the browser's.
+  for (const [code, key] of [["Numpad1", "End"], ["Numpad2", "ArrowDown"], ["Numpad7", "Home"], ["Numpad3", "PageDown"]]) {
+    const r = press(app, app.doc.body, key, { code });
+    assert.equal(tabNow(app), "sessions", code + " with NumLock off changed section");
+    assert.equal(r.prevented, false, code + " with NumLock off was cancelled");
+  }
   // A held Ctrl or Alt or Meta is the browser's.
   for (const init of [{ ctrlKey: true }, { altKey: true }, { metaKey: true }]) {
     const r = digit(app, app.doc.body, 3, init);

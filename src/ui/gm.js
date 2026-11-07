@@ -370,7 +370,9 @@ const inField = el => !!el && (isTextField(el) || el.tagName==="SELECT" || !!(el
 function keyAction(e){
   const k=e.key.toLowerCase(), bare=!e.ctrlKey && !e.metaKey && !e.altKey;
   // The digits match the physical key and may carry Shift (AZERTY's top row needs it); no other key but ? gets that.
+  // With NumLock off the numpad's 1–8 are End, the arrows, Home and PageDown, which scroll the page: only a numpad key that types a digit is ours.
   const m=bare && /^(?:Digit|Numpad)([1-8])$/.exec(typeof e.code==="string" ? e.code : "");
+  if (m && e.code.indexOf("Numpad")===0 && !/^[1-8]$/.test(e.key)) return null;
   if (m) return { run:()=>pressTableTab(TABLE_SECTIONS[Number(m[1])-1].id) };
   if (bare && e.key==="?") return { run:()=>openKeys({ viaKey:true }) };
   if (bare && !e.shiftKey){
