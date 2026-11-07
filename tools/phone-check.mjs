@@ -222,7 +222,7 @@ async function recordFrames(browser, file, seed) {
 // prose block and card, the cards a row, the encounter's rows, and the header and the bar together.
 const TABLE_WIDTHS = [{ width: 390, height: 844 }, { width: 768, height: 1024 }, { width: 1300, height: 900 }, { width: 1980, height: 1080 }, { width: 390, height: 844, touch: true }];
 const FIELD_MAX = 36 * 16, AREA_MAX = 48 * 16, CARD_MIN = 20 * 16, CARD_MAX = 36 * 16, ENC_MAX = 64 * 16, BAR_MAX = 48;
-// Card grids hold one column count per width band (Decision 271): one below 640px, two to 1279px, three from 1280px; Sessions is always one.
+// Card grids hold one column count per width band (Decision 271): one below 700px, two to 1279px, three from 1280px; Sessions is always one.
 const CARDS_A_ROW = { 390: 1, 768: 2, 1300: 3, 1980: 3 };
 const DEZ_TAG = "TAG-EEEE-EEEE-EEEE";
 

@@ -1009,11 +1009,11 @@ function castReadHtml(n){
     ${castFromHtml(n)}
     ${String(n.flavor||"").trim() ? `<p class="dos-sum">${esc(n.flavor)}</p>` : ""}
     ${quiet ? `<p class="step-note">Nothing on file yet. Edit to add who they are and what they want.</p>` : ""}
-    ${proseHtml("Wants", n.motivation)}${proseHtml("If pushed", n.ifPushed)}
+    ${proseHtml("What they want", n.motivation)}${proseHtml("If pushed", n.ifPushed)}
     ${String(n.line||"").trim() ? `<h2 class="ref-sub dos-l">Their line</h2><blockquote class="dos-quote">${esc(n.line)}</blockquote>` : ""}
     ${clocks}
     </div>${panel ? `<div class="cast-panel">${panel}</div><div class="cast-col cast-rest">` : `<div class="cast-col cast-rest">`}
-    ${proseHtml("Got", n.resources)}${proseHtml("Description", n.description)}
+    ${proseHtml("What they've got", n.resources)}${proseHtml("Description", n.description)}
     ${codex ? `<p class="dos-meta">${codex}</p>` : ""}
     ${n.ally ? `<p class="dos-tags"><span class="tag plain">Fights with the crew</span></p>` : ""}
     ${aff}${keyTo}
@@ -2019,7 +2019,7 @@ function factionReadHtml(f){
   return `${factionBarHtml(f, false)}
     ${recHeadHtml(`<h1 class="step-title tbl-title cast-title" data-ftitle tabindex="-1">${esc(title)}</h1>`, "faction", f.id, title)}
     ${summary ? `<p class="dos-sum">${esc(summary)}</p>` : ""}
-    ${proseHtml("Wants", f.wants)}
+    ${proseHtml("What they want", f.wants)}
     ${clocks.length ? `<h2 class="cast-h sec-h">Clocks</h2>${clockLinesHtml(clocks)}` : ""}
     ${keys.length ? `<h2 class="cast-h sec-h">Key NPCs</h2><div data-fkeys><ul class="int-list">${keys.map(l=>{ const r=Engine.linkName(t, l);
       return `<li class="int-line fac-key">${r.gone ? goneHtml(r.name) : `<button class="cast-open int-who" data-copen="${esc(l.id)}" data-cwhere="key|${esc(l.id)}">${esc(r.name)}</button>`}</li>`; }).join("")}</ul></div>` : ""}
@@ -2386,12 +2386,12 @@ function debriefReadHtml(s){
   return `<details class="sess-debrief" data-debrief="${esc(s.id)}"${debriefOpen(s) ? " open" : ""}><summary data-debrief-sum>${esc(debriefText(s))}</summary>
     ${written.length ? written.map(([k, label])=>`<h3 class="ref-sub dos-l">${esc(label)}</h3><p class="dos-p">${esc(j[k])}</p>`).join("") : `<p class="step-note">Nothing written yet.</p>`}</details>`;
 }
-const sessionSummary = s => [s.date ? dayText(s.date) : "", (s.present||[]).join(", "), typeof s.hours==="number" ? hoursText(s.hours) : ""].filter(Boolean).join(" · ");
+const sessionSummary = s => s.date ? dayText(s.date) : "";   // the day alone: who and hours are the live row beneath
 function sessionReadHtml(s){
   const title=Engine.sessionTitle(s), body=sessionBodyHtml(s), summary=sessionSummary(s);
   return `${sessionBarHtml(s, false)}
     ${recHeadHtml(`<h1 class="step-title tbl-title">${esc(title)}</h1>`, "session", s.id, title)}
-    <p class="dos-sum" data-sum${summary ? "" : " hidden"}>${esc(summary)}</p>
+    <p class="dos-sum"${summary ? "" : " hidden"}>${esc(summary)}</p>
     <div class="sess-head">${whoHtml(s, `s|${s.id}`)}${hoursFieldHtml(s)}</div>
     ${body.threadsBlock}
     ${body.rest}
@@ -2496,22 +2496,20 @@ function bindSessionPage(main, s){
   const focus = sel => { const el=$("main").querySelector(sel); if (el) el.focus(); return !!el; };
   const edit = f => { let r; tableChange(()=>{ r=Engine.editSession(S.table, id, f); }, false); return r; };
   const title = () => { const h=main.querySelector(".tbl-title"); if (h && own()) h.textContent=Engine.sessionTitle(own()); };
-  // The read view's summary line (day · who · hours) repaints when any of them saves.
-  const summary = () => { const el=main.querySelector("[data-sum]"), cur=own(); if (!el || !cur) return; const t=sessionSummary(cur); el.textContent=t; el.hidden=!t; };
   // Saved as typed. A refused number or hours changes nothing; on blur the field shows what's stored.
   main.querySelectorAll("[data-sf]").forEach(el=>{
     const key=el.dataset.sf, val = () => el.value;
-    el.addEventListener("input", ()=>{ const r=edit({ [key]:val() }); if (r.ok && key==="number") title(); if (r.ok) summary(); });
+    el.addEventListener("input", ()=>{ const r=edit({ [key]:val() }); if (r.ok && key==="number") title(); });
     el.addEventListener("change", ()=>{
       const r=edit({ [key]:val() }); if (!r.ok) notice(r.why);
       const cur=own(); if (!cur) return;
       el.value = key==="number" || key==="hours" ? numAttr(cur[key]) : (cur[key]||"");
-      title(); summary();
+      title();
     });
   });
   // The journal's boxes grow with what's written, so a long part reads without a scroll inside it.
   const grow = el => { el.style.height="auto"; el.style.height=(el.scrollHeight+el.offsetHeight-el.clientHeight)+"px"; };
-  bindWho(main, id, `s|${id}`, summary);
+  bindWho(main, id, `s|${id}`);
   const deb=main.querySelector("[data-debrief]"), debSum=main.querySelector("[data-debrief-sum]");
   const debrief = () => { const cur=own(); if (cur && debSum) debSum.textContent=debriefText(cur); };
   main.querySelectorAll("[data-sj]").forEach(el=>{ grow(el); el.addEventListener("input", ()=>{ edit({ journal:{ [el.dataset.sj]:el.value } }); grow(el); debrief(); }); });

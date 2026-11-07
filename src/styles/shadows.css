@@ -1140,10 +1140,10 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
 .app.table-mode main textarea:not(.ro-sheet *){max-width:min(100%, var(--table-area))}
 :where(.app.table-mode main :is(p,dd):not(.ro-sheet *,.enc-row *,.enc-bar *)){max-width:var(--table-measure)}
 .app.table-mode .ref-body:not(.ro-sheet *) > p{max-width:var(--table-measure)}
-/* Card grids hold one column count per width band, the same on every tab (Decision 271): one below 640px, two to 1279px,
+/* Card grids hold one column count per width band, the same on every tab (Decision 271): one below 700px, two to 1279px,
    three from 1280px. Sessions is a list read down, so it is one column at every width. The trait picker keeps its fill. */
 .app.table-mode .roster-list{grid-template-columns:minmax(0, 1fr)}
-@media (min-width:640px){ .app.table-mode .roster-list{grid-template-columns:repeat(2, minmax(0, 1fr))} }
+@media (min-width:700px){ .app.table-mode .roster-list{grid-template-columns:repeat(2, minmax(0, 1fr))} }
 @media (min-width:1280px){ .app.table-mode .roster-list{grid-template-columns:repeat(3, minmax(0, 1fr))} }
 .app.table-mode .roster-list.sess-list{grid-template-columns:minmax(0, 1fr)}
 .app.table-mode .roster-list.trait-picks{grid-template-columns:repeat(auto-fill, minmax(min(100%, var(--table-card)), 1fr))}

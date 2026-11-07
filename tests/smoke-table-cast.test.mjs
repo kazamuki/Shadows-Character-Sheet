@@ -1801,15 +1801,15 @@ test("U3: a member opens to read, and Edit opens today's form", () => {
   assert.deepEqual(fields.map(f => f.outerHTML.slice(0, 60)), [], "a field is in the read view");
   assert.equal(app.$("[data-cf]"), null, "a member's field is in the read view");
   assert.equal(app.$("[data-cdel]"), null, "Delete is outside Edit");
-  const h1 = app.$("#main h1"), sum = app.$("#main .dos-sum"), wants = app.$$("#main .dos-l").find(l => l.textContent === "Wants");
-  assert.ok(sum && wants, "the summary line and Wants are drawn");
+  const h1 = app.$("#main h1"), sum = app.$("#main .dos-sum"), wants = app.$$("#main .dos-l").find(l => l.textContent === "What they want");
+  assert.ok(sum && wants, "the summary line and What they want are drawn");
   const after = (a, b) => !!(a.compareDocumentPosition(b) & app.window.Node.DOCUMENT_POSITION_FOLLOWING);
-  assert.ok(after(h1, sum) && after(sum, wants), "name, summary, then Wants");
+  assert.ok(after(h1, sum) && after(sum, wants), "name, summary, then What they want");
   const first = pageControls(app).filter(el => !el.matches("[data-edit]"))[0];
-  assert.ok(after(wants, first), "Wants comes before any control but the bar's and Edit");
-  assert.equal(app.$$("#main .dos-l").map(l => l.textContent).slice(0, 3).join("|"), "Wants|If pushed|Their line");
+  assert.ok(after(wants, first), "What they want comes before any control but the bar's and Edit");
+  assert.equal(app.$$("#main .dos-l").map(l => l.textContent).slice(0, 3).join("|"), "What they want|If pushed|Their line");
   assert.ok(app.$("#main blockquote.dos-quote"), "their line is a quote");
-  // The stat block is sixth: after Clocks, before Got and the GM note, at every width (review).
+  // The stat block is sixth: after Clocks, before What they've got and the GM note, at every width (review).
   const panel = app.$("#main .cast-panel"), clocksH = app.$$("#main .cast-h").find(h => h.textContent === "Clocks"), gmNote = app.$$("#main .dos-l").find(l => l.textContent === "GM note");
   assert.ok(panel && clocksH, "the panel and Clocks are drawn");
   assert.ok(after(clocksH, panel), "the panel follows Clocks");
@@ -1831,12 +1831,12 @@ test("U3: the dossier leaves out what's empty", () => {
   openFirst(app);
   const text = app.$("#main").textContent;
   assert.match(text, /Nothing on file yet\. Edit to add who they are and what they want\./);
-  assert.doesNotMatch(text, /Wants|If pushed|Their line|GM note|Got|—/);
+  assert.doesNotMatch(text, /What they want|What they.ve got|If pushed|Their line|GM note|Got|—/);
   assert.equal(app.$$("#main .dos-l").length, 0);
   assert.ok(app.$("[data-edit]"));
   edit(app); type(app, '[data-cf="motivation"]', "Out of the city."); done(app);
   assert.doesNotMatch(app.$("#main").textContent, /Nothing on file yet/);
-  assert.match(app.$("#main").textContent, /Wants[\s\S]*Out of the city\./);
+  assert.match(app.$("#main").textContent, /What they want[\s\S]*Out of the city\./);
   assert.deepEqual(app.errors, []);
 });
 
