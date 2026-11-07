@@ -320,6 +320,7 @@ test("U5: the open section's tab is aria-current on every route", () => {
     assert.equal(cur.length, 1, why + ": " + cur.length + " tabs are current");
     assert.equal(cur[0].getAttribute("aria-current"), "page", why);
     assert.equal(cur[0].dataset.tsec, app.window.eval("S.tsection"), why + ": not the open section's");
+    assert.equal(app.$("#topnav").getAttribute("aria-label"), "Table sections", why + ": the tab row's landmark name");
   };
   one("opening the table");
   app.click('[data-tsec="notes"]');
@@ -344,5 +345,19 @@ test("U5: the open section's tab is aria-current on every route", () => {
   assert.ok(back, "no Back on the member's page");
   back.click();
   one("Back");
+  assert.deepEqual(app.errors, []);
+});
+
+test("U5: the tab row is 'Table sections' on a table and 'Character sheet sections' on the sheet, in the same page", () => {
+  const app = boot({ storage: { ...GM_ON, "shadows.active.v1": { ch: lockedCharacter(), section: "main" } } });
+  const name = () => app.$("#topnav").getAttribute("aria-label");
+  runTable(app, "Frame", { stay: true });
+  assert.equal(name(), "Table sections");
+  tableHome(app);
+  app.click("[data-open]");
+  assert.equal(name(), "Character sheet sections", "the sheet kept the table's name");
+  app.click("[data-menu-toggle]"); app.click("[data-home]");
+  tableCard(app, "Frame").querySelector("[data-topen]").click();
+  assert.equal(name(), "Table sections");
   assert.deepEqual(app.errors, []);
 });

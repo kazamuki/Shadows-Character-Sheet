@@ -24,6 +24,7 @@ function renderTopChrome(){
   // file name a browser suggests when the sheet is printed to PDF.
   document.title = S.screen==="sheet" ? `${charName(S.ch, "Unnamed")} — Shadows` : "Shadows — Character Intake";
   if (!ctx || !nav) return;
+  nav.setAttribute("aria-label", "Character sheet sections");   // a table's chrome renames it (Decision 272)
   if (S.screen==="sheet"){
     ctx.textContent = charName(S.ch, "Unnamed");
     nav.innerHTML = tabButtonsHtml();

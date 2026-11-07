@@ -293,6 +293,7 @@ function renderTableChrome(){
   const ctx=$("brandctx"), nav=$("topnav"), act=$("hdractions"), t=S.table;
   document.title = `${tableName(t)} — Shadows`;
   if (!ctx || !nav) return;
+  nav.setAttribute("aria-label", "Table sections");   // the sheet's chrome puts its own back
   ctx.textContent = tableName(t);
   nav.innerHTML = tableTabButtonsHtml();
   // The tab you're on also takes you back from a member's page to the list.
@@ -342,9 +343,9 @@ function openKeys({ viaKey }={}){
       <button type="button" data-keyoff class="${on?"":"on"}" aria-pressed="${!on}"${on?"":" autofocus"}>Off</button></div>`; };
   openModal({ title:"Keys", returnTo:"[data-menu-toggle]", viaKey,
     html:`<ul class="step-note keys-list">
-        <li><b>1–8</b> · Go to a section</li>
+        <li><b>1–8</b> · The sections, in order: Sessions to Notes</li>
         <li><b>N</b> · Next turn, on a running fight's page</li>
-        <li><b>Ctrl/⌘+Z</b> · Undo the last change</li>
+        <li><b>Ctrl/⌘+Z</b> · Take back the last change, on any page</li>
         <li><b>A</b> · Activity</li>
         <li><b>?</b> · These keys</li>
         <li><b>F</b> · Find</li>
