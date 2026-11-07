@@ -137,7 +137,7 @@ rev 9's `C1`–`C3` are still forward notes.
 
 ## 5. Where to start
 
-**The live site is v0.61.0** (data 0.52, schema 0.32), released 2026-11-05.
+**The live site is v0.66.0** (data 0.53, schema 0.34), released 2026-11-07.
 
 **Next is Ken's pick**, each built through a work order (`WORK-ORDERS.md`):
 - **Another of `plans/gm-mode.md`'s *Still to build*** (GM mode is launched, so each now ships visible; more keys are on W139; Home's own layout is W80's rest).

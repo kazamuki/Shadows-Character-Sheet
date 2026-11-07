@@ -23,7 +23,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.66.0
+## v0.66.0 — 2026-11-07
 
 - **Cast members, places, factions, sessions and threads open to read.** Who they are, what they want, their line and their clocks come first, with no fields to tab through. **Edit** opens the fields, and **Done** brings you back to where you were. A member shows the clocks of the factions they're key to, with − and +.
 - **Notes is a list of titles you open one at a time.** A thread reads as its title with **Make current**.

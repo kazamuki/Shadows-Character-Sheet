@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.66.0",
-    "date": null,
+    "date": "2026-11-07",
     "intro": [],
     "items": [
       "**Cast members, places, factions, sessions and threads open to read.** Who they are, what they want, their line and their clocks come first, with no fields to tab through. **Edit** opens the fields, and **Done** brings you back to where you were. A member shows the clocks of the factions they're key to, with − and +.",
