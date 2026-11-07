@@ -266,6 +266,7 @@ const tableMeasure = () => {
     enc: widest(rows), encCols: new Set(rows.map(r => Math.round(box(r).left))).size,
     barCut: !!bar && bar.scrollWidth > bar.clientWidth + 1 && !bar.classList.contains("more-r"),
     bar: bar ? Math.round(box(bar).height) : 0, barKind: bar ? bar.className.split(" ")[0] : "",
+    barOut: bar ? [...bar.children].filter(c => !c.classList.contains("tn") && c.getBoundingClientRect().left > de.clientWidth - 56).length : 0,
     tn: [...main.querySelectorAll(".tn-item")].filter(shown).length, tnCut: [...main.querySelectorAll(".tn")].some(e => e.scrollWidth > e.clientWidth + 1),
     header: Math.round(hdr.getBoundingClientRect().height), scrollW: de.scrollWidth - de.clientWidth,
     rail: on("nav.ledger"), vitals: on("aside.vitals") };
@@ -347,6 +348,7 @@ async function tableScreens(browser, file, rows, numbers) {
         else if (z.width < 768 && m.tn > 2) bad.push(`${m.tn} strip items at ${z.width}px, 2 wanted (the lead and Unexported)`);
         else if (z.width >= 768 && m.tn < 4) bad.push(`${m.tn} strip items at ${z.width}px, 4 wanted`);
         if (m.tnCut) bad.push("the strip scrolls sideways");
+        if (z.width <= 390 && m.barOut) bad.push(`${m.barOut} bar button(s) start outside the viewport; the strip must leave room for Add to to show`);
       }
       if (m.barKind === "tbl-bar" && m.bar > (z.touch ? 56 : BAR_MAX)) bad.push(`the bar is ${m.bar}px`);
       if (m.bar && z.width <= 390 && (m.header + m.bar) / z.height > (m.barKind === "enc-bar" ? ENC_BAR_MAX_SHARE : HEADER_MAX_SHARE)) bad.push(`header + bar ${Math.round((m.header + m.bar) / z.height * 100)}%`);

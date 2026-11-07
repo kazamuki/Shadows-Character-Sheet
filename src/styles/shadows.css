@@ -1182,10 +1182,12 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
 .tn-unx{flex:none; font-family:var(--mono); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--dim); cursor:pointer}
 .tn-unx:hover, .tn-unx:focus-visible{border-color:var(--violet-hi); color:var(--text)}
 @media (max-width:767px){ .tn-item:not(.tn-lead):not(.tn-unx){display:none}
-  /* On a page the strip follows Back and keeps room for its lead item and Unexported; Add to goes after it, where the bar's own sideways scroll reaches it. */
-  .app.table-mode .tn{order:1; min-width:12.5rem}
-  .tn-lead{min-width:6.5rem}
-  .tn-unx{letter-spacing:.06em; padding-inline:8px}
+  /* On a page the strip follows Back and holds a fixed share, its lead item and Unexported; Add to goes after it and starts inside the
+     bar, so its edge shows and the bar's own sideways scroll reaches the rest. A tab's own bar (.tn-bar) has only the strip and fills it. */
+  .app.table-mode .tn{order:1; min-width:0}
+  .app.table-mode .tbl-bar:not(.tn-bar) .tn{flex:0 0 10.5rem}
+  .tn-lead{min-width:5rem}
+  .tn-unx{letter-spacing:.04em; padding-inline:6px}
   .app.table-mode .tbl-bar > :not(.tn):not(:first-child){order:2} }
 .jump{background:none; border:1px solid var(--frame); border-radius:14px; color:var(--text); font:inherit;
   font-size:.74rem; padding:4px 11px; cursor:pointer}
