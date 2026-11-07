@@ -23,7 +23,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.65.0
+## [Unreleased] — app 0.66.0
 
 - **Cast members, places, factions, sessions and threads open to read.** Who they are, what they want, their line and their clocks come first, with no fields to tab through. **Edit** opens the fields, and **Done** brings you back to where you were. A member shows the clocks of the factions they're key to, with − and +.
 - **Notes is a list of titles you open one at a time.** A thread reads as its title with **Make current**.
@@ -52,6 +52,8 @@ own in the footer.
 - **Silverscar halves silver's Withering**, and Adaptive Skeleton's and Icebound Resilience's Natural Armor counts while they run.
 - **Powers heal.** A Werewolf in Werewolf form regenerates at each Turn Reset (twice as fast with Bone and Sinew), and Blood of Valhalla heals while it runs. Neither touches Withering.
 - **Vitality Surge heals on a press**, spending its SFR as it goes. **Quick Clot** ends Bleeding at the next Reset, and **Bone and Sinew** ends Maimed when you shift.
+- **Keys for a table.** **1**–**8** go to the sections, **N** runs the next turn on a fight's page, **Ctrl/⌘+Z** takes back the last change (and says what it took back, or that there was nothing to undo), **A** opens Activity and **?** lists them all. They never fire while you're typing, and ⋮ → **Keys** turns them all off.
+- **A screen reader says which section is open**, and which key each section, Next and Activity answer to.
 
 ## v0.61.0 — 2026-11-05
 

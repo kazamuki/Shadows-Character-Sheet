@@ -12,7 +12,7 @@
 //   minor — a capability a player can use that wasn't there before
 //   major — existing character files or the workflow break
 // The other three versions have their own triggers; see CLAUDE.md.
-const APP_VERSION = "0.65.0";
+const APP_VERSION = "0.66.0";
 
 // ── Main render + events ─────────────────────────────────────────────
 // Header chrome: brand context + the section tabs (which now live in the
@@ -24,6 +24,7 @@ function renderTopChrome(){
   // file name a browser suggests when the sheet is printed to PDF.
   document.title = S.screen==="sheet" ? `${charName(S.ch, "Unnamed")} — Shadows` : "Shadows — Character Intake";
   if (!ctx || !nav) return;
+  nav.setAttribute("aria-label", "Character sheet sections");   // a table's chrome renames it (Decision 272)
   if (S.screen==="sheet"){
     ctx.textContent = charName(S.ch, "Unnamed");
     nav.innerHTML = tabButtonsHtml();
