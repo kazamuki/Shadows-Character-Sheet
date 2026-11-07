@@ -894,7 +894,7 @@ with no keyboard loses nothing; and the keys are discoverable (a hint on the
 buttons, or a list on Reference), in tool voice.
 
 **W140 — Notes that organise themselves: tags, categories, and the session they came from.** *Ken · 🔎 · Rule or shape · raised 2026-10-30*\
-**Plan:** [gm-mode's Notes](plans/gm-mode.md) (no order yet) · **Goes with:** W86, W139
+**Plan:** [gm-mode's Notes](plans/gm-mode.md) (no order yet); [gm-at-the-table's U3](plans/gm-at-the-table/U3-read-first.md) (**drafted** 2026-11-06) makes Notes a list of titles, the screen this will fill, and doesn't take it up · **Goes with:** W86, W139
 
 A GM takes notes for many reasons: a name to remember, a rule to look up, a
 hook for later, what a player promised. Today a table note is a dated line
