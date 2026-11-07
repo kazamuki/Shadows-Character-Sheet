@@ -54,6 +54,7 @@ const HEADER_MAX_SHARE = 0.2;
 // U1: an encounter's bar wraps to two lines on a phone (Back and the status, then Next and End) rather than scroll sideways, each button a
 // finger tall, so header + bar is allowed this share. The Tables bar stays on one line and on HEADER_MAX_SHARE.
 const ENC_BAR_MAX_SHARE = 0.27;
+const LEAD_MIN = 120;   // px: "Round 2 · Reclai…" (U2)
 // W45: on a phone, how far down Main's Health card may start, as a share of the screen's
 // height, so HP is read without scrolling past a heading block.
 const HP_MAX_SHARE = 0.3;
@@ -266,6 +267,8 @@ const tableMeasure = () => {
     enc: widest(rows), encCols: new Set(rows.map(r => Math.round(box(r).left))).size,
     barCut: !!bar && bar.scrollWidth > bar.clientWidth + 1 && !bar.classList.contains("more-r"),
     bar: bar ? Math.round(box(bar).height) : 0, barKind: bar ? bar.className.split(" ")[0] : "",
+    lead: Math.round(Math.max(0, ...[...main.querySelectorAll(".tn-lead")].filter(shown).map(e => box(e).width))),
+    tn: [...main.querySelectorAll(".tn-item")].filter(shown).length, tnCut: [...main.querySelectorAll(".tn")].some(e => e.scrollWidth > e.clientWidth + 1),
     header: Math.round(hdr.getBoundingClientRect().height), scrollW: de.scrollWidth - de.clientWidth,
     rail: on("nav.ledger"), vitals: on("aside.vitals") };
 };
@@ -339,6 +342,16 @@ async function tableScreens(browser, file, rows, numbers) {
       if (s.enc && (m.enc > ENC_MAX + 1 || m.encCols !== 1)) bad.push(`rows ${m.enc}px in ${m.encCols} columns`);
       if (s.bar && !m.bar) bad.push("no bar");
       if (m.barCut) bad.push("the bar scrolls sideways with no fade (no more-r)");
+      // The Tonight strip (U2): Dead Air has a fight running and a session open, so every tab and page but an encounter's has it.
+      if (s.list && !m.bar) bad.push("a tab shows no strip");
+      if (m.barKind === "tbl-bar") {
+        if (!m.tn) bad.push("the Tonight strip shows nothing");
+        else if (z.width < 768 && m.tn > 2) bad.push(`${m.tn} strip items at ${z.width}px, 2 wanted (the lead and Unexported)`);
+        else if (z.width >= 768 && m.tn < 4) bad.push(`${m.tn} strip items at ${z.width}px, 4 wanted`);
+        if (m.tnCut) bad.push("the strip scrolls sideways");
+        // Fight first (Ken): on a phone the lead item must be wide enough to read the round and the start of the actor, and a bar the strip pushes Add to out of scrolls with its fade (barCut).
+        if (z.width <= 390 && m.lead < LEAD_MIN) bad.push(`the strip's lead item is ${m.lead}px, ${LEAD_MIN} wanted to read round and actor`);
+      }
       if (m.barKind === "tbl-bar" && m.bar > (z.touch ? 56 : BAR_MAX)) bad.push(`the bar is ${m.bar}px`);
       if (m.bar && z.width <= 390 && (m.header + m.bar) / z.height > (m.barKind === "enc-bar" ? ENC_BAR_MAX_SHARE : HEADER_MAX_SHARE)) bad.push(`header + bar ${Math.round((m.header + m.bar) / z.height * 100)}%`);
       numbers.push({ w: z.width + (z.touch ? " touch" : ""), screen: s.name, main: `${m.x}+${m.w}`, over: m.over, field: m.field, area: m.area, prose: `${m.prose}/${m.ch75}`,

@@ -7056,7 +7056,9 @@ const Engine = (() => {
     if (f.jot===true && !_str(f.text).trim()) return { ok:false, why:"Write something first." };
     const now = new Date().toISOString();
     const used = new Set(t.notes.map(n=>n.id));
-    const session = _sessions(t).some(e=>e.id===f.session) ? f.session : _sessionOnDay(t, f.date);
+    // A jot files to the session being played (Decision 270); the Notes tab's New note, with no jot, keeps the day's one.
+    const session = _sessions(t).some(e=>e.id===f.session) ? f.session
+      : f.jot===true ? (openSession(t) || {}).id ?? null : _sessionOnDay(t, f.date);
     const n = { id:newTableNoteId(used), title:_str(f.title), text:_str(f.text), session, created:now, updated:now };
     t.notes.unshift(n);
     _tableStamp(t);
@@ -7984,14 +7986,49 @@ const Engine = (() => {
     return _isObj(b) && Object.values(_isObj(b.stats) ? b.stats : {}).concat(Object.values(_isObj(b.authored) ? b.authored : {}),
       (Array.isArray(b.skills) ? b.skills : []).map(k=>_isObj(k) ? k.total : null)).some(v=>typeof v==="number");
   }
+  // The session being played: the latest not dated after today, while it isn't closed out. Read, never stored (Decision 270).
+  // A game past midnight, or a night resumed later, stays open; one dated next week is planned, not open.
+  function openSession(t){
+    try {
+      const today = _today();
+      const s = sessionList(t).find(x=>!x.date || x.date<=today) || null;
+      return s && !s.close ? s : null;
+    } catch (e) { return null; }
+  }
+  // Every clock one or two segments from full, nearest first then by name, owner or none (Decision 270). A full clock isn't near:
+  // it shows on its owner as Full. An ended encounter's clocks are left out, as they cannot be ticked (252).
+  function clocksNearFull(t, within = 2){
+    try {
+      const reach = Number.isFinite(within) ? within : 2;
+      const ownerOf = c => {
+        const on = c.on;
+        if (!_isObj(on) || typeof on.id!=="string") return null;
+        if (on.kind==="faction"){ const f = _factionRecords(t).find(x=>x.id===on.id); return f ? { kind:"faction", id:f.id, name:factionTitle(t, f) } : null; }
+        if (on.kind==="place"){ const p = _placeRecords(t).find(x=>x.id===on.id); return p ? { kind:"place", id:p.id, name:placeTitle(t, p) } : null; }
+        if (on.kind==="encounter"){ const e = _encList(t).find(x=>x.id===on.id); return e ? { kind:"encounter", id:e.id, name:encounterTitle(e), ended:e.status==="ended" } : null; }
+        return null;
+      };
+      const out = [];
+      for (const c of _clockRecords(t)){
+        if (!Number.isFinite(c.segments) || !Number.isFinite(c.filled) || c.segments<1 || c.filled>=c.segments || c.segments - c.filled > reach) continue;
+        const owner = ownerOf(c);
+        if (owner && owner.ended) continue;
+        if (owner) delete owner.ended;
+        out.push({ clock:c, owner, k:_fold(c.name), left:c.segments - c.filled });
+      }
+      return out.map((e, i)=>({ e, i })).sort((a, b)=>a.e.left - b.e.left || (a.e.k < b.e.k ? -1 : a.e.k > b.e.k ? 1 : 0) || a.i - b.i)
+        .map(x=>({ clock:x.e.clock, owner:x.e.owner }));
+    } catch (e) { return []; }
+  }
   // The Sessions tab's top, read every time and never stored (Decision 204).
   function nextSession(t){
     const open = threadList(t).filter(h=>h.status==="open");
     const current = open.find(h=>h.current) || null;
-    // Last session is the highest number, unless that one is dated today (and never one dated after it): it's the session being played, so last is the next in the list.
+    // Last session is the highest number, unless that one is the open session (Decision 270; a session dated today counted, under 204), and never one dated after today: the open one is being played, so last is the next in the list.
     // A session dated after today is planned, not behind us: it is never last.
     const today = _today(), list = sessionList(t).filter(x=>!x.date || x.date<=today);
-    const last = (list[0] && list[0].date===today ? list[1] : list[0]) || null;
+    const playing = openSession(t);
+    const last = (playing && list[0] && list[0].id===playing.id ? list[1] : list[0]) || null;
     const met = new Set();
     if (last) for (const x of sessionInteractions(t, last.id)) for (const l of (Array.isArray(x.cast) ? x.cast : [])) if (_isObj(l)) met.add(l.id);
     const unbuilt = (Array.isArray(t && t.cast) ? t.cast : []).filter(n=>_isObj(n) && met.has(n.id) && !blockHasNumber(n.block));
@@ -10047,14 +10084,14 @@ const Engine = (() => {
     npc, addCastMember, editCastMember, setCastBlock, removeCastMember, castFilter, castAffiliations,
     // Interactions: what passed between the crew and the cast, and who knows it
     addSession, editSession, removeSession, sessionList, sessionTitle, sessionInteractions, sessionOffered,
-    addThread, editThread, removeThread, threadList, nextSession, blockHasNumber, JOURNAL_PARTS,
+    addThread, editThread, removeThread, threadList, nextSession, openSession, blockHasNumber, JOURNAL_PARTS,
     offScreenPay, arcDue, closeOutDraft, writeCloseOut, awardTotals,
     addInteraction, editInteraction, removeInteraction, interactionsFor, interactionSentence, crewView, linkName,
     // Places: the gazetteer the book names, and the crew's own places
     gazetteer, gazetteerEntry, PLACE_FROM_KINDS, addPlace, editPlace, removePlace, setPlaceSite, placeSite, placeTitle, placeList, placeLines, placeMet,
     // Factions and clocks: the Faction Tracker as a record, and the counters a faction owns
     FACTION_TYPES, FACTION_TYPE_LABELS, FACTION_ATTENTION, FACTION_STANCES, FACTION_FROM_KINDS, addFaction, editFaction, removeFaction, factionTitle, factionList,
-    factionsKeyFor, factionAffiliated, addClock, editClock, removeClock, clocksOn,
+    factionsKeyFor, factionAffiliated, addClock, editClock, removeClock, clocksOn, clocksNearFull,
     // Encounters: who is in one, whose turn it is, and what is still on them
     ENCOUNTER_OBJECTIVES, ENCOUNTER_PROMPTS, addEncounter, editEncounter, addSide, renameSide, setSideRoll, removeSide, sideTitle, removeEncounter, runningEncounter, encounterFor, addToEncounter, encounterTitle, addParticipant, participantFromEntry,
     participantsFromGroup, editParticipant, removeParticipant, participantDamage, participantAddCondition,

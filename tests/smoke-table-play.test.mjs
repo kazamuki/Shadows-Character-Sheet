@@ -35,6 +35,10 @@ const whoBtns = app => app.$$("[data-crew-box] .crew-btns button:not([data-crew-
 const whoNames = app => whoBtns(app).map(b => b.textContent.replace("✓", "").trim());
 const whoPress = (app, name) => whoBtns(app).find(b => b.textContent.replace("✓", "").trim() === name).click();
 const whoAdd = (app, name) => { if (!app.$("[data-crew-input]")) app.click("[data-crew-add]"); type(app, "[data-crew-input]", name); app.click("[data-crew-go]"); };
+// A closed <details> hides its controls in a browser and not in jsdom, so a test that presses inside one opens it and says so.
+const openFold = (app, el) => { if (!el.open) el.querySelector("summary").click(); assert.ok(el.open, "the fold is open"); return el; };
+// The open session folds its Campaign Journal (Decision 270): open the Debrief before typing in a part.
+const debrief = app => openFold(app, app.$("details.sess-debrief"));
 const statesOf = app => JSON.parse(app.window.eval("JSON.stringify(S.table.encounters)"));
 
 test("Decision 188: switched off there is no Encounters tab; switched on it sits between Threats and Notes (Reference follows it)", () => {
@@ -598,6 +602,10 @@ const sessTab = app => app.click('[data-tsec="sessions"]');
 const sessionRows = app => app.$$(".sess-open").map(b => b.textContent);
 const typeChange = (app, sel, value) => { const el = app.$(sel); el.value = value; el.dispatchEvent(new app.window.Event("change", { bubbles: true })); };
 const addThreadHere = (app, title) => { type(app, "[data-thadd]", title); keyIn(app, "[data-thadd]", "Enter"); };
+// U2: a session not closed out is the one being played, so a test that wants one behind it closes it out.
+const shutSessions = app => app.window.eval("S.table.sessions.forEach(x => Engine.writeCloseOut(S.table, x.id, { lines: [{ name: 'Mara', present: true }] })); renderTable()");
+// U2: Write the award log ends on a page of its own, and Done goes back to the session page where Write used to land.
+const writeLog = app => { app.click("[data-co-write]"); assert.ok(app.$("[data-coend-h]"), "Write ends on the close-out page"); app.click("[data-coend-done]"); };
 const nextText = app => app.$(".next-session") ? app.$(".next-session").textContent : app.$("#main").textContent;
 
 test("Decision 204: a new table opens on Sessions, in this tab order, and a table reopens on the tab it was left on", () => {
@@ -647,6 +655,7 @@ test("Decision 203: every field on a session saves as it's typed with no redraw,
   whoAdd(app, "Wren"); whoAdd(app, "  Rook ");
   type(app, '[data-sf="hours"]', "4.5");
   const parts = ["happened", "fallout", "threads", "impact", "reflection", "seed"];
+  debrief(app);
   for (const k of parts) type(app, `[data-sj="${k}"]`, `text ${k}`);
   const s = app.window.eval("S.table.sessions[0]");
   assert.deepEqual([s.number, s.date, s.hours, s.present.join("|")], [21, "2026-09-30", 4.5, "Wren|Rook"]);
@@ -789,6 +798,8 @@ test("Decision 204: Met last session lists a quick-added member last session nam
   sessTab(app);
   assert.doesNotMatch(nextText(app), /Met last session/, "the session being played today isn't last session");
   app.click(".sess-open"); type(app, '[data-sf="date"]', "2026-09-30"); app.click("[data-sback]");
+  assert.doesNotMatch(nextText(app), /Met last session/, "U2: a past session that is not closed out is still the one being played");
+  shutSessions(app);
   assert.match(nextText(app), /Met last session, no stat block yet\s*Dez/);
   app.click(".next-session [data-copen]");
   assert.equal(app.window.eval("S.tsection"), "cast");
@@ -814,8 +825,10 @@ test("Decision 204: Next session reads last session's seed under its title, a ta
   runTable(app, "Seed", { stay: true });
   app.click("[data-snew]");
   type(app, '[data-sf="date"]', "2026-09-30");
-  type(app, '[data-sj="seed"]', "The heist goes wrong.");
+  debrief(app); type(app, '[data-sj="seed"]', "The heist goes wrong.");
   app.click("[data-sback]");
+  assert.doesNotMatch(nextText(app), /Last session set up/, "U2: Session 1 is the one being played, so its seed is not last session's");
+  shutSessions(app);
   assert.match(nextText(app), /Last session set up\s*Session 1[\s\S]*The heist goes wrong\./);
   // Tonight's session is made: Session 1's seed is still what Next session shows, and tonight isn't last session.
   app.click("[data-snew]");
@@ -825,7 +838,7 @@ test("Decision 204: Next session reads last session's seed under its title, a ta
   app.click(".next-session [data-sopen]");
   assert.equal(app.$("h1.step-title").textContent, "Session 1");
   assert.equal(app.doc.activeElement, app.$("[data-sback]"));
-  type(app, '[data-sj="seed"]', "   ");
+  debrief(app); type(app, '[data-sj="seed"]', "   ");
   app.click("[data-sback]");
   assert.doesNotMatch(nextText(app), /Last session set up/, "a blank seed shows nothing");
   assert.match(nextText(app), /Nothing open, and last session set nothing up\./, "sessions but nothing to say still says so");
@@ -868,7 +881,7 @@ test("Decisions 203–204: export and import keep sessions and threads, and a 0.
   const app = boot({ storage: GM_ON });
   const downloads = withDownloads(app);
   runTable(app, "Round", { stay: true });
-  app.click("[data-snew]"); type(app, '[data-sj="happened"]', "Things."); whoAdd(app, "Wren");
+  app.click("[data-snew]"); debrief(app); type(app, '[data-sj="happened"]', "Things."); whoAdd(app, "Wren");
   type(app, "[data-sthadd]", "T1"); keyIn(app, "[data-sthadd]", "Enter");
   const before = JSON.parse(JSON.stringify(app.window.eval("({ s: S.table.sessions, t: S.table.threads })")));
   app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
@@ -963,7 +976,7 @@ test("206: the absent are the earlier names; a tier is picked, its range shows, 
   assert.match(coRow(app, "Dez").textContent, /Pays 300–550/);
   assert.equal(app.doc.activeElement, coField(app, "Dez", "tier"));
   coType(app, "Dez", "credits", "400");
-  app.click("[data-co-write]");
+  writeLog(app);
   assert.equal(app.doc.activeElement, app.$("[data-sco-h]"));
   assert.match(app.$(".co-log").textContent, /Dez \(away\): no session to log; an off-screen job, Competent; \+400 Çredits\./);
   app.click("[data-sback]");
@@ -1074,8 +1087,11 @@ test("205: Write stores the log in the player's words; IP so far shows; reload, 
   app.click(`[data-co-row="${coRow(app, "Blank").dataset.coRow}"] [data-co="milestone"]`);
   app.click(`[data-co-row="${coRow(app, "Dez").dataset.coRow}"] [data-co="took"]`);
   app.click("[data-co-write]");
+  assert.equal(app.$("[data-coend-h]").textContent, "Session 4 is closed out");
+  assert.equal(app.doc.activeElement, app.$("[data-coend-h]"));
   const log = app.$$(".co-log li").map(l => l.textContent);
   assert.deepEqual(log, ["Wren: log a session with 18 IP and the Milestone Point; +250 Çredits. Kept the gun.", "Rook: nothing this time.", "Blank: nothing this time."]);
+  app.click("[data-coend-done]");
   assert.match(app.$("#main").textContent, /Written \S+/);
   assert.equal(app.doc.activeElement, app.$("[data-sco-h]"));
   assert.equal(app.window.eval("S.closeOut"), null);
@@ -1107,7 +1123,7 @@ test("205: Write stores the log in the player's words; IP so far shows; reload, 
   assert.equal(coField(app, "Rook", "milestone").checked, false);
   assert.equal(coField(app, "Dez", "took").checked, false, "who was left out is still on offer");
   coType(app, "Wren", "ip", "20");
-  app.click("[data-co-write]");
+  writeLog(app);
   assert.equal(app.window.eval("S.table.sessions.find(s => s.number === 4).close.lines.length"), 3, "replaced, not appended");
   assert.match(app.$(".co-log").textContent, /Wren: log a session with 20 IP/);
   assert.deepEqual([...app.errors, ...fresh.errors], []);
@@ -1163,7 +1179,7 @@ test("206 (review): Redo leaves an IP that still matches the hours to the app, s
   const { app, ids } = closeApp(t => mkSession(t, 4, "2026-09-08", ["Wren", "Rook"], 3.5));
   closeSheet(app, ids);
   coType(app, "Rook", "ip", "20");
-  app.click("[data-co-write]");
+  writeLog(app);
   app.click("[data-co-redo]"); app.click("#modal [data-askyes]");
   type(app, '[data-cosf="hours"]', "5");
   assert.equal(coField(app, "Wren", "ip").value, "25");
@@ -1305,7 +1321,7 @@ test("Decision 207: a running encounter is kept across a trip to the Reference a
   assert.ok(app.$("#gr-conditions"));
   encTab(app);
   assert.match(app.$(".enc-status").textContent, /Round 1/);
-  assert.equal(app.$("[data-enc-title]").value, "Warehouse job");
+  assert.equal(app.$("[data-enc-h]").textContent, "Warehouse job", "U2: a running encounter's title is a heading");
   assert.deepEqual(app.errors, []);
 });
 
@@ -1384,7 +1400,9 @@ test("Decision 208: a session hit opens its page; an interaction hit opens its s
   findHits(app)[0].click();
   assert.equal(app.window.eval("S.tsection"), "sessions");
   assert.equal(app.$("#main h1").textContent, "Session 3");
-  assert.equal(app.doc.activeElement, app.$("#main h1"));
+  // U2: the hit is in a journal part, so it opens the Debrief fold and lands on the part.
+  assert.ok(app.doc.activeElement.matches("[data-sj]"), "lands on the journal part");
+  assert.ok(app.doc.activeElement.closest("details.sess-debrief").open, "the fold it sits in is open");
   findOpen(app); typeKeys(app, "[data-findq]", "gossip");
   const line = findHits(app).find(b => b.dataset.fkind === "interaction");
   line.click();
@@ -1488,14 +1506,15 @@ test("Decision 208: a jot on the Notes tab or that session's page appears there;
   assert.equal(app.window.eval(`S.table.notes.find(n => n.id === "${id}").session`), three);
   changeTo(app, `[data-nsess="${id}"]`, "");
   assert.equal(app.window.eval(`S.table.notes.find(n => n.id === "${id}").session`), null);
-  // No session today, or two: the line says so and the jot has none.
+  // U2: a session that isn't dated today is still the one being played (Session 6 is open, dated long ago).
   app.window.eval(`S.table.sessions.find(s => s.number === 6).date = "2026-01-02"; update()`);
   app.click("[data-tjot]");
-  assert.match(app.$("#modal").textContent, /No session is dated today\./);
+  assert.match(app.$("#modal").textContent, /Goes with Session 6\./);
   pressEsc(app);
-  app.window.eval(`S.table.sessions.forEach(s => { s.date = localDay(); }); update()`);
+  // With every session closed out, none is open: the line says so and the jot has none.
+  shutSessions(app);
   app.click("[data-tjot]");
-  assert.match(app.$("#modal").textContent, /More than one session is dated today\./);
+  assert.match(app.$("#modal").textContent, /Goes on the table's notes\. No session is open\./);
   assert.deepEqual(app.errors, []);
 });
 
@@ -2388,7 +2407,7 @@ test("U1: Apply sits above the preview and the preview updates in place", () => 
   app.click(`[data-ehit="${dez}"]`);
   const apply = app.$("[data-ehit-apply]"), pre = app.$("[data-ehit-preview]"), N = app.window.Node;
   assert.ok(apply.compareDocumentPosition(pre) & N.DOCUMENT_POSITION_FOLLOWING, "Apply precedes the preview");
-  assert.ok(app.$("[data-ehit-from]").compareDocumentPosition(apply) & N.DOCUMENT_POSITION_FOLLOWING, "the fields come first");
+  assert.ok(apply.compareDocumentPosition(app.$("[data-ehit-from]")) & N.DOCUMENT_POSITION_FOLLOWING, "U2: the fields come after Apply");
   fillHit(app, 12);
   assert.equal(app.$("[data-ehit-apply]"), apply, "typing didn't recreate Apply");
   assert.equal(app.$("[data-ehit-preview]"), pre, "the preview is the same node");
@@ -2458,5 +2477,134 @@ test("U4: Activity says what a hit, a Take, a Heal and a clock did", () => {
   assert.equal(labels().at(-1), `Alarm: ${of()}`);
   app.click("[data-clkminus]");
   assert.equal(labels().at(-1), `Alarm: ${of()}`);
+  assert.deepEqual(app.errors, []);
+});
+
+// ── U2: Tonight's neighbours (Decision 270) ────────────────────────────────
+
+
+test("U2: Write the award log ends on Export and Done", async () => {
+  const { app, ids } = closeApp(t => mkSession(t, 4, "2026-09-08", ["Wren", "Rook"], 2));
+  const downloads = withDownloads(app);
+  closeSheet(app, ids);
+  app.click("[data-co-write]");
+  assert.equal(app.$("#main h1").textContent, "Session 4 is closed out");
+  assert.equal(app.doc.activeElement, app.$("#main h1"), "focus is on the heading");
+  assert.equal(app.$$(".co-log li").length, 2, "a line per name");
+  assert.match(app.$(".co-log").textContent, /Wren: log a session with 10 IP/);
+  const primary = app.$$("#main .btn.primary");
+  assert.deepEqual(primary.map(b => b.textContent), ["Export the table"], "one primary button");
+  assert.equal(app.$("[data-sdel]"), null, "no Delete in reach of the end");
+  assert.ok(app.$("[data-coend-done]"), "Done is beside it");
+  assert.equal(app.$("#main > .tbl-bar [data-coend-back]").textContent, "Back to Session 4");
+  const id = app.window.eval("S.table.meta.id");
+  assert.notEqual(app.window.eval(`savedTable("${id}").exported`), app.window.eval(`savedTable("${id}").changed`), "not exported yet");
+  app.click("[data-coend-export]");
+  assert.equal(downloads.length, 1);
+  assert.equal(app.window.eval(`savedTable("${id}").exported`), app.window.eval(`savedTable("${id}").changed`), "Export marks the entry exported");
+  assert.match(app.$("#undotoast").textContent, /Exported Close\.shadows-table\.json/);
+  assert.equal(app.doc.activeElement, app.$("[data-coend-done]"), "focus goes to Done");
+  app.click("[data-coend-done]");
+  assert.equal(app.$("#main h1").textContent, "Session 4");
+  assert.equal(app.doc.activeElement, app.$("[data-sco-h]"), "Done returns to the Close-out heading");
+  assert.ok(app.$("[data-sdel]"), "the session page is back");
+  app.click("[data-co-redo]"); app.click("#modal [data-askyes]"); app.click("[data-co-write]");
+  app.click("[data-coend-back]");
+  assert.equal(app.$("#main h1").textContent, "Session 4", "Back is Done by another name");
+  assert.deepEqual(app.errors, []);
+});
+
+test("U2: the open session folds its debrief; a closed-out one is open", () => {
+  const { app, ids } = closeApp(t => { mkSession(t, 3, "2026-09-01", ["Wren"], 2); return mkSession(t, 4, "2026-09-08", ["Wren"], 2); });
+  openSess(app, ids);
+  const fold = app.$("details.sess-debrief");
+  assert.equal(fold.open, false, "closed on the open session");
+  assert.equal(fold.querySelectorAll("[data-sj]").length, 6, "the six parts are in it");
+  assert.match(fold.querySelector("summary").textContent, /^Debrief · 6 parts, 0 written$/);
+  for (const sel of ['[data-sf="number"]', '[data-sf="date"]', "[data-crew-box]", '[data-sf="hours"]', "[data-sthadd]", "[data-sint-h]"])
+    assert.equal(app.$(sel).closest("details.sess-debrief"), null, `${sel} stays open`);
+  openFold(app, fold);
+  type(app, '[data-sj="seed"]', "The Listener again.");
+  assert.match(fold.querySelector("summary").textContent, /^Debrief · 6 parts, 1 written$/, "the count follows what is typed");
+  app.click("[data-sback]"); openSess(app, ids);
+  assert.ok(app.$("details.sess-debrief").open, "opened once, it stays open for that session");
+  app.click("[data-sback]");
+  openSess(app, app.window.eval("S.table.sessions.find(s => s.number === 3).id"));
+  assert.ok(app.$("details.sess-debrief").open, "every session but the open one is open");
+  app.window.eval(`Engine.writeCloseOut(S.table, "${ids}", { lines: [{ name: "Wren", present: true }] }); S.debriefOpen = null; renderTable()`);
+  app.click("[data-sback]"); openSess(app, ids);
+  assert.ok(app.$("details.sess-debrief").open, "a closed-out session's is open");
+  assert.deepEqual(app.errors, []);
+});
+
+test("U2: a running encounter's title is a heading with Rename, Combat Sense is text, More is grouped", () => {
+  const app = hitApp();
+  const h = app.$("h1[data-enc-h]");
+  assert.equal(h.textContent, "Job");
+  assert.equal(app.$("[data-enc-title]"), null, "no Name field while it runs");
+  assert.equal(app.$("[data-enc-rename]").textContent, "Rename");
+  const li = encRowByName(app, "Dez");
+  assert.equal(u1Outside(li, "[data-eorder]").length, 0, "no Combat Sense field in the row's head");
+  assert.match(li.querySelector(".enc-head").textContent, /CS\s*9/, "it reads as text");
+  const more = openFold(app, li.querySelector("[data-emore]"));
+  const groups = [...more.querySelectorAll("[data-emore-grp]")];
+  assert.deepEqual(groups.map(g => g.dataset.emoreGrp), ["play", "setup", "remove"]);
+  assert.deepEqual(groups.slice(0, 2).map(g => g.querySelector(".enc-more-h").textContent), ["Play", "Setup"]);
+  assert.ok(groups[0].querySelector("[data-econdopen]"), "Add a Condition is Play");
+  assert.ok(groups[1].querySelector(`[data-eorder="${rowId(li)}"]`), "Combat Sense is Setup");
+  assert.ok(groups[1].querySelector("[data-elast]") && groups[1].querySelector("[data-eout]"), "Goes last and Out are Setup");
+  assert.ok(groups[2].querySelector("[data-erm]"), "Remove stands apart");
+  changeTo(app, `[data-eorder="${rowId(li)}"]`, "12");
+  assert.match(encRowByName(app, "Dez").querySelector(".enc-head").textContent, /CS\s*12/, "the head follows the field");
+  assert.ok(encRowByName(app, "Dez").querySelector("[data-emore]").open, "More stayed open");
+  // Rename
+  app.click("[data-enc-rename]");
+  type(app, "#tbl-name", "The Job"); app.click("[data-nameyes]");
+  assert.equal(app.$("h1[data-enc-h]").textContent, "The Job");
+  assert.equal(app.doc.activeElement, app.$("[data-enc-rename]"), "focus returns to Rename");
+  // A planned one keeps its Name field and its Combat Sense field in the head.
+  app.window.eval(`S.encOpen = null; Engine.addEncounter(S.table, { name: "Later" }); update()`);
+  app.click("[data-enc-open]");
+  assert.ok(app.$("[data-enc-title]") || app.$("h1[data-enc-h]"), "an encounter page");
+  assert.deepEqual(app.errors, []);
+});
+
+test("U2: a planned encounter keeps its Name field and its Combat Sense field", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T"); encTab(app);
+  newEncounter(app, "Prep"); addPcRow(app, "Wren");
+  assert.ok(app.$("[data-enc-title]"), "planned: a Name field");
+  assert.equal(app.$("h1[data-enc-h]"), null);
+  assert.equal(u1Outside(encRowByName(app, "Wren"), "[data-eorder]").length, 1, "planned: Combat Sense is a field in the head");
+  assert.deepEqual(app.errors, []);
+});
+
+test("U2: the Hit panel puts damage, Apply and the preview first", () => {
+  const app = hitApp();
+  app.click(`[data-ehit="${rowId(encRowByName(app, "Dez"))}"]`);
+  const order = ["[data-ehit-damage]", "[data-ehit-apply]", "[data-ehit-preview]", "[data-ehit-type]", "[data-ehit-cat]", "[data-ehit-ap]", "[data-ehit-loc]", "[data-ehit-from]"].map(s => app.$(s));
+  assert.ok(order.every(Boolean), "every part is drawn");
+  for (let i = 1; i < order.length; i++)
+    assert.ok(order[i - 1].compareDocumentPosition(order[i]) & app.window.Node.DOCUMENT_POSITION_FOLLOWING, `part ${i} follows part ${i - 1}`);
+  assert.deepEqual(app.errors, []);
+});
+
+test("U2: after Write, with no fight running, the strip keeps Unexported alone until the table is exported", () => {
+  const { app, ids } = closeApp(t => mkSession(t, 4, "2026-09-08", ["Wren"], 2));
+  const downloads = withDownloads(app);
+  const keys = () => app.$$("#main .tn [data-tn]").map(b => b.dataset.tn);
+  closeSheet(app, ids);
+  assert.deepEqual(keys(), ["unx"], "an open session, never exported: Unexported");
+  app.click("[data-co-write]");
+  assert.deepEqual(keys(), ["unx"], "the session is closed out, and Unexported alone stays");
+  app.click("[data-coend-done]");
+  assert.deepEqual(keys(), ["unx"], "Done doesn't clear it");
+  app.click('#main .tn [data-tn="unx"]');
+  assert.equal(downloads.length, 1);
+  assert.equal(app.$("#main .tn"), null, "Export clears it, and the strip with it");
+  assert.equal(app.$("#main > .tn-bar"), null);
+  // The hold ends with the export: a later change, with no session open and no fight, brings no strip back (Decision 270).
+  app.window.eval(`tableChange(() => { S.table.meta.name = "Later"; })`);
+  assert.equal(app.$("#main .tn"), null, "an edit after the export shows no strip");
   assert.deepEqual(app.errors, []);
 });

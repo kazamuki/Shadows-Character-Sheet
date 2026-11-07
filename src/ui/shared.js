@@ -284,6 +284,7 @@ function update(rerenderMain=true){
   if (S.screen==="table") saveTable();   // gm.js (Decision 172)
   if (rerenderMain){ renderMain(); sweepTip(); }
   renderLedger(); renderVitals();
+  if (S.screen==="table") paintTonight();   // gm.js: update(false) skips renderTable, and the strip reports exactly those changes (Decision 270)
 }
 
 // Every state-changing sheet action runs through commit(): snapshot
