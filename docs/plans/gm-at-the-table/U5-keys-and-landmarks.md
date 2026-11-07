@@ -12,6 +12,8 @@ They are in §9's head:
 - **Activity is the key `A`**, with no new header button.
 
 UQ35–UQ42 (§4) are this order's own questions, from the shape brief's open items and the pre-flight.
+**Approved by Ken 2026-11-07** ("Approve, all defaults", in the conductor session): UQ35–UQ42 are each their
+default, the Keys window's draft copy (UQ35) included.
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 **Runs beside:** nothing (plan §4: every U session shares `gm.js`).
 
