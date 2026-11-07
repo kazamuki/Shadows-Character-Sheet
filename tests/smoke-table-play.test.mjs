@@ -2693,6 +2693,8 @@ test("U3: a session opens to read with the night's controls live, and Edit opens
   assert.equal(app.$('[data-sf="number"]'), null, "Number is under Edit");
   assert.equal(app.$("[data-sj]"), null, "the journal is text until Edit");
   assert.ok(app.$("[data-crew-box]") && app.$('[data-sf="hours"]') && app.$("[data-sthadd]"), "Who, Hours and Open a thread stay live");
+  // The harness presses a page's one Edit when a selector isn't there, so the play rows are pinned here, in the read view, with $.
+  assert.ok(app.$("[data-co-open]"), "Close out stays live");
   assert.equal(app.$("[data-sdel]"), null);
   edit(app);
   assert.ok(app.$('[data-sf="number"]') && app.$("[data-sdel]"));
