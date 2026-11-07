@@ -5504,7 +5504,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - A clock owner kind for members: a schema bump.
      - **Replaces:** Decisions 176, 204, 208, 243, 244 and 258, each in part; cites 179, 245 and 270.
      - **Revisit if:** a GM edits mid-scene more than they read, or W140 reshapes Notes.
-     - **Built:** app 0.65.0, no schema move, PR #TBD, log 2026-11-06 (U3).
+     - **Built:** app 0.65.0, no schema move, PR #311, log 2026-11-06 (U3).
 
 ## 5. Open Flags
 
