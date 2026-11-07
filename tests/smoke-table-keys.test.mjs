@@ -9,7 +9,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { boot } from "./harness.mjs";
-import { GM_ON, runTable, castAdd, type, notesTab, openSheet, lockedCharacter } from "./smokekit.mjs";
+import { GM_ON, runTable, castAdd, type, notesTab, openSheet, lockedCharacter, edit } from "./smokekit.mjs";
 
 const KEYS = "shadows.ui.keys";
 const tableApp = (storage = GM_ON) => {
@@ -68,7 +68,7 @@ test("Decision 259: F and J do nothing in a field, with a modifier, on repeat, o
     if (target) assert.equal(app.doc.activeElement, target, why + ": focus moved");
   };
   // A cast member's page has a Name input, a Description textarea and a Status select.
-  app.click("[data-copen]");
+  app.click("[data-copen]"); edit(app);
   const input = app.$("main input[type=text], main input:not([type])"), area = app.$("main textarea"), sel = app.$("main select");
   assert.ok(input && area && sel, "the member's page lacks a field to test");
   nothing(input, "f", {}, "an input");

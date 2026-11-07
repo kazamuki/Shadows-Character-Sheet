@@ -10,7 +10,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { boot } from "./harness.mjs";
-import { Engine, GM_ON, type, runTable, keyIn, castAdd, pick, packStored } from "./smokekit.mjs";
+import { Engine, GM_ON, type, runTable, keyIn, castAdd, pick, packStored, edit, done, editNote } from "./smokekit.mjs";
 import { ROOT } from "../tools/build.mjs";
 import { join } from "node:path";
 
@@ -57,6 +57,7 @@ const rowsOf = app => app.$$("[data-erow]");
 
 test("251: a place's Site profile lists the slotted sites, and picking one draws it and its clock", () => {
   const app = setup();
+  edit(app);
   const sel = app.$("[data-psite]");
   assert.ok(sel, "the select is there");
   assert.equal(sel.options[0].textContent, "None");
@@ -87,6 +88,7 @@ test("251: a place's own kind of ground comes first in the select, and None clea
   const app = setup();
   app.click('[data-pground="gates"]');
   app.click("[data-pback]"); app.click("[data-popen]");
+  edit(app);
   assert.equal(app.$("[data-psite] optgroup").label, "Gates", "read when the page is drawn");
   pickSite(app, "dead-block");
   assert.equal(app.$$("[data-clock]").length, 1, "Attention is copied");
@@ -104,7 +106,8 @@ test("251: with no pack slotted the select is replaced by the line that says why
   runTable(app, "None");
   cityTab(app); cityView(app, "city"); app.click('[data-gadd="old-pike"]'); cityView(app, "places"); app.click("[data-popen]");
   assert.equal(app.$("[data-psite]"), null);
-  assert.match(app.$("[data-psite-none]").textContent, /^No site profiles yet\. Slot in a pack that has them, on Threats\.$/);
+  edit(app);
+  assert.match(app.$("[data-psite-none]").textContent, /^No site profiles on file\. A pack from the Threats tab can bring some\.$/);
   assert.deepEqual(app.errors, []);
 });
 
@@ -245,6 +248,7 @@ test("251: deleting a place asks with its clock count, and Undo from Activity re
   app.click("#modal [data-act-undo]");
   app.click("#modal [data-modalclose]");
   app.click("[data-popen]");
+  edit(app);
   assert.equal(app.$$("[data-clock]").length, 1, "the clock came back");
   assert.ok(app.$("[data-psite-profile]"), "and the profile reads again");
   // a place with no clocks keeps today's text
@@ -264,8 +268,9 @@ test("251: Find opens a place's clock on its name, and a place by its profile", 
   find(app, "drift", "clock");
   assert.equal(app.$("#topnav .tab.active").textContent.trim(), "City");
   assert.equal(app.$("[data-ptitle]").textContent, "The Old Pike");
-  assert.equal(app.doc.activeElement, app.$("[data-clockname]"));
-  assert.equal(app.doc.activeElement.textContent, "Drift");
+  // A clock on a dossier is a line (Decision 271): Find lands on it.
+  assert.equal(app.doc.activeElement, app.$("[data-cline]"));
+  assert.match(app.doc.activeElement.textContent, /^Drift /);
   app.click("[data-pback]");
   castTab(app);
   find(app, "stretch", "place");
@@ -317,6 +322,7 @@ test("251: Met here → member → Back, and Key to → Back, still return", () 
   const bob = app.window.eval(`S.table.cast.find(n => n.name === "Bob").id`);
   // Key to: a faction names Bob as a key NPC; the member's page links the faction and Back returns.
   cityView(app, "city"); app.click('[data-gfadd="eclipse"]'); app.click('[data-gfopen="eclipse"]');
+  edit(app);
   both(app, "[data-fkeyadd]", bob);
   app.click(`[data-copen="${bob}"]`);
   app.click("[data-fopen]");
@@ -344,6 +350,7 @@ test("251: the select only chooses, and Use commits once", () => {
   const app = setup();
   const n = auditLen(app), stored = () => app.window.eval("JSON.stringify([S.table.places[0].site, S.table.clocks.length])");
   const before = stored();
+  edit(app);
   assert.equal(app.$("[data-psite-use]").disabled, true, "Use waits for a different choice");
   // Arrow keys walk the options, one change each: nothing is written.
   for (const id of ["burn", "dead-block", "long-stretch"]) { if (!app.$(`[data-psite] option[value="${PK}|${id}"]`)) continue; pick(app, "[data-psite]", `${PK}|${id}`); }

@@ -10,7 +10,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { boot } from "./harness.mjs";
-import { Engine, GM_ON, lockedCharacter, runTable, tableHome, tableCard, packStored, type, withDownloads } from "./smokekit.mjs";
+import { Engine, GM_ON, lockedCharacter, runTable, tableHome, tableCard, packStored, type, withDownloads, edit, done, editNote, deadAirApp } from "./smokekit.mjs";
 
 const cls = app => [...app.$("#app").classList].filter(c => c === "table-mode" || c === "sheet-mode").sort().join(" ");
 
@@ -131,6 +131,7 @@ test("258: a member's, an entry's and a group's Add to sit in the bar beside Bac
 test("258: a member's status is under their name, and the stat block is the last block before Delete", () => {
   const app = open();
   tab(app, "cast"); app.click("[data-copen]");
+  edit(app);
   const h1 = app.$("#main [data-ctitle]");
   const status = h1.nextElementSibling;
   assert.ok(status.matches("label.cast-status") && status.querySelector('select[data-cf="status"]'), "the status field follows the name");
@@ -227,6 +228,7 @@ test("U2: the strip reads the night, in order, on every tab and page, and each i
   // Thread: Sessions, the thread's row in view with its title focused.
   app.click('#main .tn [data-tn="thread"]');
   assert.equal(app.window.eval("S.tsection"), "sessions");
+  edit(app);
   assert.ok(app.doc.activeElement.matches("[data-thtitle]"), "the thread's title is focused");
   assert.match(app.doc.activeElement.value, /What spoke in the dead air/);
   tab(app, "players");
@@ -300,4 +302,13 @@ test("U2: the strip shows one item and Unexported below 768px, every item from t
   assert.ok(rule.every(Boolean) && rule.every(r => !/overflow-x\s*:\s*(auto|scroll)/.test(r[0])), "the strip and its items shrink and cut, they don't scroll");
   assert.ok(/\.tn-item\s*\{[^}]*overflow\s*:\s*hidden/.test(css), "items cut with an ellipsis");
   assert.ok(/\.tn-t\s*\{[^}]*text-overflow\s*:\s*ellipsis/.test(css));
+});
+
+test("U3: a tab press keeps focus on its tab, never in an Add field", () => {
+  const app = deadAirApp("players");
+  for (const id of ["cast", "sessions", "notes", "city", "encounters"]) {
+    app.click(`[data-tsec="${id}"]`);
+    assert.equal(app.doc.activeElement, app.$(`#topnav [data-tsec="${id}"]`), `${id}: focus is on the tab`);
+  }
+  assert.deepEqual(app.errors, []);
 });

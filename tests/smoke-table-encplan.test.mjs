@@ -9,7 +9,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { boot } from "./harness.mjs";
-import { Engine, GM_ON, type, runTable, keyIn } from "./smokekit.mjs";
+import { Engine, GM_ON, type, runTable, keyIn, edit, done, editNote } from "./smokekit.mjs";
 
 const book = readFileSync(new URL("../private/crb/2642_Encounter_Design_Worksheet.md", import.meta.url), "utf8");
 const encTab = app => app.click('[data-tsec="encounters"]');
@@ -330,6 +330,7 @@ test("U4: a delete says Undo brings it back", () => {
   // A thread.
   app.click('[data-tsec="sessions"]');
   type(app, "[data-thadd]", "Find Wren"); keyIn(app, "[data-thadd]", "Enter");
+  edit(app);
   const tid = app.$("[data-thdel]").dataset.thdel;
   app.window.eval("rebaseTable()");
   app.click(`[data-thdel="${tid}"]`);

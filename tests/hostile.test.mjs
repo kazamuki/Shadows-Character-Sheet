@@ -16,6 +16,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { boot, loadEngine } from "./harness.mjs";
+import { edit } from "./smokekit.mjs";
 
 const { Engine, D } = loadEngine();
 
@@ -315,12 +316,22 @@ test("a hostile table file renders as text on Home, the table screen and both mo
   assert.equal(app.doc.title, `${P("tbl.name")} — Shadows`, "the window's title isn't the name as text");
   assert.equal(app.$("#brandctx").textContent, P("tbl.name"));
   assert.ok(app.$$("[data-note]").length >= 3, "the notes weren't drawn");
-  // A note whose text was an object or a number reads as empty text, not as its String().
+  // A note whose text was an object or a number reads as empty text, not as its String(): opened to read, then in Edit (Decision 271).
+  for (const row of app.$$("[data-nopen]")) {
+    row.click();
+    found.push(...injected(app, "a note, open"));
+    assert.ok(!app.$("#main").innerHTML.includes("[object Object]"), "a note drew an object as text");
+  }
+  app.$("[data-nopen]").click();
+  if (app.$("[data-nopen]").getAttribute("aria-expanded") !== "true") app.$("[data-nopen]").click();
+  edit(app);
+  found.push(...injected(app, "a note, in Edit"));
   assert.ok(app.$$("[data-ntext]").every(el => el.value !== "[object Object]" && el.value !== "7"), "a non-string note field wasn't read as text");
   assert.ok(!app.$("#main").innerHTML.includes("[object Object]"), "a note field drew an object as text");
   app.click("[data-menu-toggle]"); app.click("[data-trename]");
   found.push(...injected(app, "the Rename modal"));
   app.click("#modal [data-modalclose]");
+  edit(app);
   app.$("[data-ndel]").click();
   found.push(...injected(app, "the Delete modal"));
   app.click("#modal [data-modalclose]");
@@ -369,6 +380,7 @@ test("a hostile cast renders as text in the list, a member's page and the Delete
   assert.ok(!app.$("#main").innerHTML.includes("[object Object]"), "the list drew an object as text");
   app.$("[data-copen]").click();
   found.push(...injected(app, "a member's page"));
+  edit(app);
   assert.ok(app.$$("[data-cstat]").length > 0);
   for (const el of app.$$("#main input[type=number]")) assert.ok(el.value === "" || Number.isFinite(Number(el.value)), `a number field read ${el.value}`);
   assert.ok(app.$$("[data-cstat]").every(el => el.value === ""), "a payload string became a stat");
@@ -860,6 +872,8 @@ test("a table opens on Sessions when its session, thread or interaction links na
   const app = boot({ storage: { "shadows.feature.gm": "on", [key]: { table: t, section: "sessions", changed: "2026-10-05T10:00:00.000Z", exported: null } } });
   app.$("[data-topen]").click();
   app.$(".sess-open").click();
+  assert.deepEqual(injected(app, "the page, read"), []);
+  edit(app);
   assert.ok(app.$("[data-sj=happened]"));
   assert.deepEqual(injected(app, "the page"), []);
   assert.deepEqual(app.errors, []);
@@ -1391,6 +1405,7 @@ test("a pack's sites and a place's site, level, rows and clock owner of markup r
   assert.equal(app.$$("[data-erow]").length, 2, "a row that isn't an object was drawn");
   assert.equal(app.$("[data-ecount=\"0\"]").textContent, "0", "n of {} is 0");
   assert.equal(app.$("[data-ecount=\"1\"]").textContent, "4", "n of \"4\" is 4");
+  edit(app);
   assert.equal(app.$("[data-ename=\"0\"]").value, P("a.vex"), "a row's name is a value, not markup");
   assert.equal(app.window.eval("S.table.places[0].siteLevel"), null, "a level of markup is no level");
   app.click("[data-pback]");

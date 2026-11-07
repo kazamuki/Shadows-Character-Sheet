@@ -15,7 +15,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { boot } from "./harness.mjs";
 import { syntheticPack, PACK_ID } from "./packfixture.mjs";
-import { Engine, lockedCharacter, openSheet, clickIn, withDownloads, importFile, card, tipShown, GM_ON, GM_OFF, tableKeys, tableCard, type, runTable, notesTab, tableHome, tableFile, keyIn, castAdd, pick, threatsTab, tableWithPack, entryButton } from "./smokekit.mjs";
+import { Engine, lockedCharacter, openSheet, clickIn, withDownloads, importFile, card, tipShown, GM_ON, GM_OFF, tableKeys, tableCard, type, runTable, notesTab, tableHome, tableFile, keyIn, castAdd, pick, threatsTab, tableWithPack, entryButton, edit, done, editNote, deadAirApp } from "./smokekit.mjs";
 
 // ── The Encounters tab (Decisions 188–190) ─────────────────────────────
 const encTab = app => app.click('[data-tsec="encounters"]');
@@ -630,6 +630,7 @@ test("Decision 203: empty, Next session says so in one line; New session opens S
   assert.match(app.$("#main").textContent, /No sessions yet\./);
   app.click("[data-snew]");
   assert.equal(app.$("h1.step-title").textContent, "Session 1");
+  edit(app);
   assert.equal(app.$('[data-sf="number"]').value, "1");
   assert.equal(app.$('[data-sf="date"]').value, dayToday());
   assert.equal(app.doc.activeElement, app.$('[data-sf="number"]'));
@@ -647,6 +648,8 @@ test("Decision 203: every field on a session saves as it's typed with no redraw,
   const app = boot({ storage: GM_ON });
   runTable(app, "Fields", { stay: true });
   app.click("[data-snew]");
+  assert.equal(app.$('[data-sf="number"]'), null, "a new session opens to read");
+  edit(app);
   const num = app.$('[data-sf="number"]');
   type(app, '[data-sf="number"]', "21");
   assert.equal(app.$("h1.step-title").textContent, "Session 21");
@@ -665,6 +668,8 @@ test("Decision 203: every field on a session saves as it's typed with no redraw,
   assert.match(sessionRows(app)[0], /^Session 21 · .* · Wren, Rook · 4\.5 hours$/);
   app.$(".sess-open").click();
   assert.deepEqual(whoNames(app), ["Wren", "Rook"]);
+  assert.match(app.$("details.sess-debrief").textContent, /text seed/, "the journal reads as prose");
+  edit(app);
   for (const k of parts) assert.equal(app.$(`[data-sj="${k}"]`).value, `text ${k}`);
   // A refused number or hours changes nothing and reads what's stored once it loses focus.
   typeChange(app, '[data-sf="hours"]', "25");
@@ -690,12 +695,17 @@ test("Decision 204: threads: open one from a session, make it current, add anoth
   app.click("[data-sback]");
   addThreadHere(app, "Pay the fixer");
   assert.equal(app.doc.activeElement, app.$("[data-thadd]"));
-  assert.equal(app.$$("[data-thtitle]").length, 2);
+  assert.equal(app.$$("[data-thname]").length, 2);
+  assert.equal(app.$$("[data-thtitle]").length, 0, "a thread reads as its title until Edit");
   assert.match(nextText(app), /Still open[\s\S]*Find Wren[\s\S]*Pay the fixer/, "oldest first");
   assert.doesNotMatch(nextText(app), /Current/);
   // Current: pressed on one clears the others.
-  const cur = title => app.$$("[data-thtitle]").find(e => e.value === title).dataset.thtitle;
+  const cur = title => app.$$("[data-thname]").find(e => e.textContent === title).dataset.thname;
+  assert.equal(app.$(`[data-thcur="${cur("Pay the fixer")}"]`).textContent, "Make current");
+  assert.equal(app.$(`[data-thcur="${cur("Pay the fixer")}"]`).getAttribute("aria-pressed"), "false");
   app.click(`[data-thcur="${cur("Pay the fixer")}"]`);
+  assert.equal(app.$(`[data-thcur="${cur("Pay the fixer")}"]`).textContent, "Current");
+  assert.equal(app.$(`[data-thcur="${cur("Pay the fixer")}"]`).getAttribute("aria-pressed"), "true");
   assert.equal(app.doc.activeElement.dataset.thcur, cur("Pay the fixer"));
   assert.match(app.$(".next-current").textContent, /Current\s*Pay the fixer/);
   assert.match(nextText(app), /Still open\s*Find Wren/);
@@ -704,6 +714,7 @@ test("Decision 204: threads: open one from a session, make it current, add anoth
   assert.equal(app.window.eval("S.table.threads.filter(h => h.current).length"), 1);
   // Resolve the current one: it moves into Closed in Session 1, and no thread is current.
   const id = cur("Find Wren");
+  edit(app, `thread|${id}`);
   pick(app, `[data-thstatus="${id}"]`, "resolved");
   assert.equal(app.$(".next-current"), null);
   assert.ok(app.$("[data-thshut]").open, "the fold opens");
@@ -723,9 +734,11 @@ test("Decision 204: threads: open one from a session, make it current, add anoth
   const next = app.$$("[data-thopen]")[0];
   assert.ok(next);
   next.click();
-  assert.ok(app.$(`[data-thmore="${next.dataset.thopen}"]`).open);
-  assert.equal(app.doc.activeElement.dataset.thtitle, next.dataset.thopen);
-  // Delete asks.
+  assert.equal(app.window.eval(`S.editing`), null, "a jump to a thread reads it");
+  assert.equal(app.doc.activeElement.dataset.thname, next.dataset.thopen);
+  // Delete is under Edit, and asks.
+  assert.equal(app.$(`[data-thdel="${next.dataset.thopen}"]`), null);
+  edit(app, `thread|${next.dataset.thopen}`);
   app.click(`[data-thdel="${next.dataset.thopen}"]`);
   assert.ok(app.$("#modal[open]"), "Delete didn't ask");
   app.click("#modal [data-modalclose]");
@@ -870,6 +883,7 @@ test("Decision 203: Delete a session asks, and afterwards its thread's Closed in
   app.click("#modal [data-askyes]");
   assert.equal(app.window.eval("S.table.sessions.length"), 0);
   assert.equal(app.doc.activeElement, app.$("[data-snew]"));
+  edit(app);
   assert.equal(app.$(`[data-thclosed="${id}"]`).value, "", "the thread no longer says where it closed");
   assert.equal(app.window.eval("S.table.threads[0].opened"), null);
   app.click('[data-tsec="cast"]'); app.click("[data-copen]");
@@ -1429,12 +1443,13 @@ test("Decision 208: a thread, a note and an encounter hit each open their record
   findOpen(app); typeKeys(app, "[data-findq]", "courier");
   findHits(app).find(b => b.dataset.fkind === "thread").click();
   assert.equal(app.window.eval("S.tsection"), "sessions");
-  assert.equal(app.doc.activeElement.dataset.thtitle, app.window.eval("S.table.threads[0].id"));
+  assert.equal(app.doc.activeElement.dataset.thname, app.window.eval("S.table.threads[0].id"));
   findOpen(app); typeKeys(app, "[data-findq]", "bartender");
   const n = findHits(app).find(b => b.dataset.fkind === "note");
   n.click();
   assert.equal(app.window.eval("S.tsection"), "notes");
-  assert.equal(app.doc.activeElement, app.$(`[data-ntext="${n.dataset.fid}"]`));
+  assert.equal(app.doc.activeElement, app.$(`[data-nopen="${n.dataset.fid}"]`));
+  assert.equal(app.window.eval("S.noteOpen"), n.dataset.fid);
   findOpen(app); typeKeys(app, "[data-findq]", "harbour");
   findHits(app).find(b => b.dataset.fkind === "encounter").click();
   assert.equal(app.window.eval("S.tsection"), "encounters");
@@ -1480,13 +1495,15 @@ test("Decision 208: Jot from a running encounter saves a note with today's sessi
   assert.equal(note.text, "Bartender at the Lantern: Ike");
   assert.equal(note.session, app.window.eval("S.table.sessions.find(s => s.number === 6).id"));
   notesTab(app);
+  editNote(app, note.id);
   assert.equal(app.$(`[data-nsess="${note.id}"]`).value, note.session);
   sessTab(app); app.window.eval(`S.sessOpen = S.table.sessions.find(s => s.number === 6).id; update()`);
   assert.match(app.$("#main").textContent, /Jotted/);
   assert.match(app.$("[data-jotopen]").textContent, /Bartender at the Lantern/);
   app.click("[data-jotopen]");
   assert.equal(app.window.eval("S.tsection"), "notes");
-  assert.equal(app.doc.activeElement, app.$(`[data-ntext="${note.id}"]`));
+  assert.equal(app.doc.activeElement, app.$(`[data-nopen="${note.id}"]`));
+  assert.match(app.$(`[data-note="${note.id}"]`).textContent, /Bartender at the Lantern: Ike/);
   assert.deepEqual(app.errors, []);
 });
 
@@ -1497,8 +1514,11 @@ test("Decision 208: a jot on the Notes tab or that session's page appears there;
   type(app, "[data-jottext]", "Owes Rook");
   app.$("[data-jottext]").dispatchEvent(new app.window.KeyboardEvent("keydown", { key: "Enter", ctrlKey: true, bubbles: true }));
   assert.equal(app.$("#modal").open, false);
-  assert.equal(app.$$("[data-ntext]")[0].value, "Owes Rook", "the Notes tab redrew in place");
-  const id = app.$$("[data-ntext]")[0].dataset.ntext;
+  assert.equal(app.$$("[data-note]").length, 1, "the Notes tab redrew in place");
+  assert.equal(app.$$("[data-ntext]").length, 0, "a note reads until it's opened");
+  const id = app.$("[data-nopen]").dataset.nopen;
+  editNote(app, id);
+  assert.equal(app.$$("[data-ntext]")[0].value, "Owes Rook");
   const sel = app.$(`[data-nsess="${id}"]`);
   assert.deepEqual([...sel.options].map(o => o.textContent.split(" · ")[0]), ["None", "Session 6", "Session 3"]);
   const three = app.window.eval("S.table.sessions.find(s => s.number === 3).id");
@@ -1667,6 +1687,7 @@ test("210: a cast member who fights with the crew lands under The crew when adde
   app.$('[data-eby="wave"]').click();
   app.click('[data-tsec="cast"]');
   app.click("[data-copen]");
+  edit(app);
   const tog = app.$("[data-cally]");
   assert.equal(tog.getAttribute("aria-pressed"), "false");
   tog.click();
@@ -2507,6 +2528,7 @@ test("U2: Write the award log ends on Export and Done", async () => {
   app.click("[data-coend-done]");
   assert.equal(app.$("#main h1").textContent, "Session 4");
   assert.equal(app.doc.activeElement, app.$("[data-sco-h]"), "Done returns to the Close-out heading");
+  edit(app);
   assert.ok(app.$("[data-sdel]"), "the session page is back");
   app.click("[data-co-redo]"); app.click("#modal [data-askyes]"); app.click("[data-co-write]");
   app.click("[data-coend-back]");
@@ -2517,8 +2539,11 @@ test("U2: Write the award log ends on Export and Done", async () => {
 test("U2: the open session folds its debrief; a closed-out one is open", () => {
   const { app, ids } = closeApp(t => { mkSession(t, 3, "2026-09-01", ["Wren"], 2); return mkSession(t, 4, "2026-09-08", ["Wren"], 2); });
   openSess(app, ids);
+  assert.equal(app.$("details.sess-debrief").open, false, "closed on the open session");
+  assert.equal(app.$$("[data-sj]").length, 0, "the parts are text until Edit");
+  edit(app);
   const fold = app.$("details.sess-debrief");
-  assert.equal(fold.open, false, "closed on the open session");
+  assert.equal(fold.open, false, "closed in Edit too");
   assert.equal(fold.querySelectorAll("[data-sj]").length, 6, "the six parts are in it");
   assert.match(fold.querySelector("summary").textContent, /^Debrief · 6 parts, 0 written$/);
   for (const sel of ['[data-sf="number"]', '[data-sf="date"]', "[data-crew-box]", '[data-sf="hours"]', "[data-sthadd]", "[data-sint-h]"])
@@ -2606,5 +2631,81 @@ test("U2: after Write, with no fight running, the strip keeps Unexported alone u
   // The hold ends with the export: a later change, with no session open and no fight, brings no strip back (Decision 270).
   app.window.eval(`tableChange(() => { S.table.meta.name = "Later"; })`);
   assert.equal(app.$("#main .tn"), null, "an edit after the export shows no strip");
+  assert.deepEqual(app.errors, []);
+});
+
+// ── U3: read first (Decision 271) ─────────────────────────────────────────
+test("U3: Notes lists titles and opens one at a time", () => {
+  const app = deadAirApp("notes");
+  assert.equal(app.$$("[data-nopen]").length, 8);
+  assert.equal(app.$$("#main textarea").length, 0, "no textarea until Edit");
+  assert.equal(app.$$("#main .tbl-note.open").length, 0);
+  const rows = app.$$("[data-nopen]");
+  rows[2].click();
+  assert.equal(app.$$("#main .tbl-note.open").length, 1);
+  assert.equal(app.doc.activeElement, app.$(`[data-nopen="${rows[2].dataset.nopen}"]`), "focus stays on the row");
+  app.$$("[data-nopen]")[4].click();
+  assert.equal(app.$$("#main .tbl-note.open").length, 1, "opening another closes the first");
+  assert.equal(app.$$("#main .tbl-note.open [data-nopen]")[0].dataset.nopen, rows[4].dataset.nopen);
+  assert.equal(app.$$("#main textarea").length, 0);
+  assert.ok(app.$("[data-tnew]").compareDocumentPosition(app.$$("[data-nopen]").pop()) & app.window.Node.DOCUMENT_POSITION_PRECEDING, "New note sits below the list");
+  const id = rows[4].dataset.nopen, name = rows[4].textContent;
+  edit(app);
+  assert.equal(app.$$("#main .tbl-note textarea, #main .tbl-note input, #main .tbl-note select").length, 3);
+  app.click(`[data-ndel="${id}"]`);
+  assert.match(app.$("#modal").textContent, new RegExp("Delete \u201c?\"" + name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  app.click("#modal [data-modalclose]");
+  assert.deepEqual(app.errors, []);
+});
+
+test("U3: Sessions is one column, newest first; Add sits below its list", () => {
+  const app = deadAirApp("sessions");
+  const items = app.$$(".sess-item");
+  assert.deepEqual(items.map(i => /^Session (\d+)/.exec(i.textContent)[1]), ["7", "6", "5", "4", "3", "2", "1"]);
+  assert.ok(items[items.length - 1].compareDocumentPosition(app.$("[data-snew]")) & app.window.Node.DOCUMENT_POSITION_FOLLOWING, "New session is after the last session");
+  const thr = app.$$("#main .thread-row"), add = app.$("[data-thadd]");
+  assert.ok(thr[thr.length - 1].compareDocumentPosition(add) & app.window.Node.DOCUMENT_POSITION_FOLLOWING, "New thread is after the threads");
+  assert.deepEqual(app.errors, []);
+});
+
+test("U3: a thread reads as a title with Make current, and Edit opens its fields", () => {
+  const app = deadAirApp("sessions");
+  assert.equal(app.$$("[data-thtitle]").length, 0, "no field until Edit");
+  const price = app.$$("[data-thname]").find(b => /Ibarra's price/.test(b.textContent)), id = price.dataset.thname;
+  const cur = () => app.$(`[data-thcur="${id}"]`);
+  assert.equal(cur().textContent, "Make current");
+  assert.equal(cur().getAttribute("aria-pressed"), "false");
+  cur().click();
+  assert.equal(cur().textContent, "Current");
+  assert.equal(cur().getAttribute("aria-pressed"), "true");
+  assert.equal(app.$$("[data-thcur][aria-pressed=true]").length, 1, "one thread is current");
+  assert.equal(app.$(`[data-thdel="${id}"]`), null, "Delete is under Edit");
+  edit(app, "thread|" + id);
+  assert.ok(app.$(`[data-thtitle="${id}"]`) && app.$(`[data-thnotes="${id}"]`) && app.$(`[data-thdel="${id}"]`));
+  app.click(`[data-edit-done="thread|${id}"]`);
+  assert.equal(app.doc.activeElement, app.$(`[data-edit="thread|${id}"]`), "Done puts focus on the thread's Edit");
+  assert.deepEqual(app.errors, []);
+});
+
+test("U3: a session opens to read with the night's controls live, and Edit opens the form", () => {
+  const app = deadAirApp("sessions");
+  app.$$(".sess-open").find(b => /^Session 7/.test(b.textContent)).click();
+  assert.equal(app.$('[data-sf="number"]'), null, "Number is under Edit");
+  assert.equal(app.$("[data-sj]"), null, "the journal is text until Edit");
+  assert.ok(app.$("[data-crew-box]") && app.$('[data-sf="hours"]') && app.$("[data-sthadd]"), "Who, Hours and Open a thread stay live");
+  // The harness presses a page's one Edit when a selector isn't there, so the play rows are pinned here, in the read view, with $.
+  assert.ok(app.$("[data-co-open]"), "Close out stays live");
+  assert.equal(app.$("[data-sdel]"), null);
+  // The summary is the day alone; who and hours are the live row beneath, so changing them leaves it as it was (review).
+  const sumEl = app.$("#main .dos-sum"), before = sumEl.textContent;
+  assert.ok(before && !before.includes("·"), "the summary is the day alone");
+  const pressed = app.$("[data-crew-box] .crew-btns button[data-crew-name]");
+  if (pressed) pressed.click();
+  const hrs = app.$('[data-sf="hours"]'); hrs.value = "7"; hrs.dispatchEvent(new app.window.Event("input", { bubbles: true })); hrs.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  assert.equal(app.$("#main .dos-sum").textContent, before, "who and hours stay out of the summary");
+  edit(app);
+  assert.ok(app.$('[data-sf="number"]') && app.$("[data-sdel]"));
+  done(app);
+  assert.equal(app.doc.activeElement, app.$("[data-edit]"));
   assert.deepEqual(app.errors, []);
 });

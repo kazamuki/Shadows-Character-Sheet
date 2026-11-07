@@ -8,7 +8,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { boot } from "./harness.mjs";
-import { Engine, D, GM_ON, type, runTable, keyIn, castAdd, pick } from "./smokekit.mjs";
+import { Engine, D, GM_ON, type, runTable, keyIn, castAdd, pick, edit, done, editNote, deadAirApp } from "./smokekit.mjs";
 
 const cityTab = app => app.click('[data-tsec="city"]');
 const castTab = app => app.click('[data-tsec="cast"]');
@@ -100,6 +100,7 @@ test("243: a place's page saves as typed; a Territory change clears a zone it do
   assert.equal(app.doc.activeElement, app.$("[data-ptitle]"), "focus lands on the heading");
   hideToast(app);
   let n = auditLen(app);
+  edit(app);
   both(app, '[data-pf="name"]', "The Ramble");
   assert.equal(app.$("[data-ptitle]").textContent, "The Ramble", "the heading follows the typing");
   assert.equal(auditLen(app), n + 1, "input and change make one entry");
@@ -131,7 +132,7 @@ test("243: a place's page saves as typed; a Territory change clears a zone it do
   assert.equal(focusedKey(app).startsWith("data-popen="), true, "Back lands on the card");
   assert.match(app.$(".place-card").textContent, /Daedalus Belt · Upper West · Strawberry Fields/);
   addPlace(app, "Another");
-  openPlace(app, "Another");
+  openPlace(app, "Another"); edit(app);
   assert.deepEqual([...app.$$("#place-districts option")].map(o => o.value), ["Upper West"]);
   assert.deepEqual(app.errors, []);
 });
@@ -310,5 +311,27 @@ test("243: Find opens a place on its heading, and Back goes to the crew's places
   assert.equal(app.$("[data-pback]").textContent, "Back to the crew's places");
   app.click("[data-pback]");
   assert.equal(focusedKey(app), `data-popen=${placeIdOf(app, "Central Park")}`, "Back lands on the card");
+  assert.deepEqual(app.errors, []);
+});
+
+test("U3: a place card names each place once and says what happened", () => {
+  const app = deadAirApp("city");
+  const card = name => app.$$(".place-card").find(c => c.querySelector(".cast-open").textContent === name);
+  assert.equal(card("Achterberg's Clinic").querySelector(".cast-meta").textContent, "Techtopia · Central City · The Annex · 3 things happened here");
+  const gate = card("NeuroNet Gateway Hub").querySelector(".cast-meta").textContent;
+  assert.equal(gate.split(" · ").filter(x => /^Gateway$/i.test(x)).length <= 1, true, "Gateway is named once: " + gate);
+  assert.doesNotMatch(app.$("#main").textContent, /\d lines?\b/, "no card says lines");
+  const names = card("Achterberg's Clinic").querySelector(".cast-meta").textContent.split(" · ");
+  assert.equal(new Set(names.map(x => x.toLowerCase())).size, names.length, "no name twice");
+  // A place opens to read, and its card agrees with its page.
+  card("Achterberg's Clinic").querySelector("[data-popen]").click();
+  assert.equal(app.$("[data-pf]"), null, "a place opens to read");
+  assert.match(app.$("#main").textContent, /What happened here/);
+  assert.ok(app.$("[data-edit]"));
+  assert.equal(app.$("[data-pdel]"), null, "Delete is under Edit");
+  edit(app);
+  assert.ok(app.$("[data-pdel]"));
+  done(app);
+  assert.equal(app.doc.activeElement, app.$("[data-edit]"));
   assert.deepEqual(app.errors, []);
 });
