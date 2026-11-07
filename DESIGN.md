@@ -139,6 +139,28 @@ components:
     textColor: "{colors.neutral-zone}"
     rounded: "{rounded.md}"
     width: "min(920px, calc(100vw - 32px))"
+  encounter-row:
+    backgroundColor: "{colors.underpass-panel}"
+    textColor: "{colors.neutral-zone}"
+    rounded: "{rounded.md}"
+    padding: "10px 14px 12px"
+  encounter-row-active:
+    backgroundColor: "{colors.raised-panel}"
+    textColor: "{colors.neutral-zone}"
+  encounter-hp:
+    textColor: "{colors.ghostly-green}"
+    typography: "{typography.readout}"
+  tonight-chip:
+    backgroundColor: "transparent"
+    textColor: "{colors.neutral-zone}"
+    rounded: "{rounded.pill}"
+    padding: "4px 11px"
+  section-head:
+    textColor: "{colors.aether-pulse-read}"
+    typography: "{typography.label}"
+  dossier-summary:
+    textColor: "{colors.neutral-zone}"
+    typography: "{typography.body}"
 ---
 
 # Design System: Shadows Character Sheet
@@ -258,6 +280,13 @@ Breakpoints, as the stylesheet has them:
 - **≤540px** — stat groups go two across.
 - **≤480px** — the brand drops its `Shadows //` prefix so the name gets the room.
 
+**A GM table** (`table-mode`, Decision 258) is one column with no rails and a measure per kind of thing:
+- fields stop at 36rem and textareas at 48rem;
+- prose stops at 75ch;
+- an encounter's rows are one 64rem column.
+
+Each page's way out (Back, or Done while editing) sits in a bar that sticks under the header. Below 1060px the bar lets go while a field has focus, and on a screen shorter than 540px it never sticks. Card grids (cast, places, factions, encounters, Threats) hold one count per width band, the same on every tab: **one column below 700px, two to 1279px, three from 1280px** (Decision 271). That keeps a card between 20rem and 36rem in every band. Sessions is a list read down: one column at every width. From 1280px a member's stat block is a sticky panel in a right-hand column; below that it sits in the page after Clocks.
+
 Spacing isn't tokenized in CSS; the rhythm in use is 4 / 8 / 12 / 18 / 30px — 8–12px between sibling controls, 12–18px inside a card, 24px above a section rule, 30px before the wizard's nav. Density is deliberately high: a sheet, not a landing page.
 
 ## Elevation & Depth
@@ -335,6 +364,46 @@ The Night-Shift Readout itself: the numbers a player comes back for.
 - **Undo toast:** bottom-centre, a 3px violet left edge, one line with an Undo action; slides up 8px over .18s.
 - **Modal:** a native dialog; Underpass Panel, a 3px violet top edge, the head and foot fixed, only the body scrolls; rises 8px over .16s. Full-screen at ≤640px.
 
+### GM mode (a table)
+The same instrument, read across the table instead of down one character. Every part below reuses the player's voices and colours; none adds a colour role. Built across U1–U4 and U3 (Decisions 258, 269, 270, 271).
+
+**Headings:**
+- **Section heads:** Mono Caps (.74rem, .14em, 500) in Aether Pulse, read, over a 1px Deep Circuit rule. This is the sheet's `.sect`, per the Mono Caps Rule.
+- **Sub-heads:** the same label in Overcast Steel with no rule.
+- **A record's name** inside a page (a player, a crew, a site) is the Title voice (display face, 1.15rem, 600). The page's own name is the step title.
+
+**The bar and Tonight:**
+- **The bar** is a sticky row under the header on the ground colour, with a 1px Deep Circuit rule beneath it. It holds the page's way out first (Back, or Done in Edit), then Add to <encounter>. It scrolls sideways and never wraps.
+- **Tonight** shares the bar while a fight runs or a session is open. It's one line of jump chips (14px radius, 1px Deep Circuit line, .74rem): round and actor, the current thread, a clock near full, who's down.
+  - Numerals in a chip are Oxanium, the actor is cyan, and a downed row is magenta (read).
+  - *Unexported* is a Mono Caps chip in Overcast Steel.
+  - A chip shrinks and cuts with an ellipsis rather than scroll. Below 768px only the lead chip and Unexported are drawn.
+  - Hover or focus turns a chip's line Aether Pulse, lit.
+
+**The encounter:**
+- **The encounter row** is an Underpass Panel card (6px radius, 1px line) with a 4px left edge in the frame colour.
+  - **The acting row:** its edge turns cyan, its fill steps up to Raised Panel, and it carries a **Now** tag in cyan Mono Caps.
+  - **A row that's out** fades to 65%.
+  - **HP** is the row's one big number: Oxanium 1.3rem, 600, tabular, green, magenta (read) when down. Under it sits the sheet's Health Level track in miniature (`hl-mini`: 8px segments, 2px radius, magenta wash for damage, dashed and hatched where Massive damage took a level). It's read-only.
+  - **Hit and Heal** are the row's pair of buttons. Everything else is under More, grouped Play, Setup and Remove, with Mono Caps group labels; Remove is set apart by a rule.
+- **The encounter's Hit panel** opens inside the row. The damage field, Apply · Cancel and the live preview come first and hold still while Type, Kind, AP, Where and From change under them. Kind and AP are form toggles.
+
+**The dossier (Decision 271):** a record opens to read. It is a member, a place, a faction or a session; a thread or a note reads the same way in place.
+- **The name and Edit:** the name, with a small **Edit** button on its row. Under it, one summary line in Inter at full text colour.
+- **Prose fields:** labelled in Mono Caps (Overcast Steel) with Inter prose under each label. An empty field isn't drawn at all, not even as a dash.
+- **Their line:** a quote set off by a 2px Aether Pulse rule at the left. It has no quote marks and no italic.
+- **Clocks:** clock lines. Each is a name, an Oxanium "4 of 6" (or *Full*), and − / + steppers (44px wide).
+- **The stat block:** readouts.
+- **The rest:** anything else is labelled lines and `.tag.plain` tags, plain words with no tip underline.
+- **Edit and Done:** **Edit** swaps the page for its form, and the bar's way out becomes **Done** (a small primary button). Delete exists only in the form.
+
+**Lists and records:**
+- **Notes and threads:** a list of titles. A note opens in place, one at a time, and its card's line turns Aether Pulse while open. A thread's **Make current** is a small toggle that reads **Current**, pressed, when on.
+- **Seat readouts (Players):** a Mono Caps key in Overcast Steel over a mono value. A seat's HP is Oxanium (1.1rem, green, magenta (read) when down). SAN, Luck and Çredits are still one dim line: a known gap, and a lead for the order after U5.
+- **Add sits below what it adds to**, except Cast's quick-add, which leads its tab.
+
+**The Read-First Rule.** A GM record is read before it's edited. The page a GM lands on has no field except the night's own controls: a clock's − and +, Make current, a session's Who, Hours, Open a thread and Close out. Everything else is one **Edit** away. A new record page reads first too.
+
 ## Do's and Don'ts
 
 ### Do:
@@ -345,6 +414,8 @@ The Night-Shift Readout itself: the numbers a player comes back for.
 - **Do** keep motion short (.15–.35s, ease-out) and state-driven, and turn every animation off under `prefers-reduced-motion`.
 - **Do** focus every control with the 2px Static Cyan outline.
 - **Do** keep text on a violet or Deep Circuit fill `--on-accent` (white) in both themes.
+- **Do** open a GM record to read and keep its fields behind **Edit**. A dossier draws only what's filled in.
+- **Do** give a GM card grid its band's column count (1 / 2 / 3 at <700 / 700–1279 / ≥1280px), never an auto-fill count that jumps with the width.
 
 ### Don't:
 - **Don't** use neon as decoration: no glowing headers, gradient text, neon borders on resting surfaces, or colour that means nothing.

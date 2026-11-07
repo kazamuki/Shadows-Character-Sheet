@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-29T02:44:50.223Z",
+  "generatedAt": "2026-11-07T06:05:49.311Z",
   "title": "Design System: Shadows Character Sheet",
   "extensions": {
     "colorMeta": {
@@ -422,6 +422,14 @@
       {
         "name": "one-column",
         "value": "max-width: 1060px"
+      },
+      {
+        "name": "table-two-columns",
+        "value": "700px"
+      },
+      {
+        "name": "table-three-columns",
+        "value": "1280px"
       }
     ]
   },
@@ -505,6 +513,30 @@
       "description": "A rule a hover or tap away: raised panel, cyan left edge, floating shadow.",
       "html": "<div class=\"ds-tip\"><span class=\"ds-tip-t\">Pain Level</span>Each level past the first costs you on every check until you heal.</div>",
       "css": ".ds-tip{max-width:340px;background:var(--panel-2,#16264C);color:var(--text,#E7E7E7);border:1px solid var(--frame,#203F7B);border-left:3px solid var(--cyan,#1BBBC4);border-radius:4px;box-shadow:0 6px 24px rgba(5,10,22,.45);padding:8px 12px;font-size:.82rem;line-height:1.45;font-family:var(--body,Inter,system-ui,sans-serif)}.ds-tip-t{display:block;font-family:var(--mono,'Roboto Mono',monospace);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--cyan,#1BBBC4);margin-bottom:2px}"
+    },
+    {
+      "name": "Encounter Row",
+      "kind": "card",
+      "refersTo": "encounter-row",
+      "description": "A combatant in a running fight: Now tag on the acting row, HP as the one big Oxanium number over the sheet's Health Level track in miniature, Hit and Heal as its pair.",
+      "html": "<div class=\"ds-enc ds-enc-on\"><div class=\"ds-enc-head\"><b>Reclaim cleaner B</b> <span class=\"ds-now\">Now</span></div><div class=\"ds-hp\">14 <small>of 25</small></div><div class=\"ds-segs\"><i class=\"d\"></i><i class=\"d\"></i><i></i><i></i><i></i></div><div class=\"ds-acts\"><button class=\"ds-b\">Hit</button><button class=\"ds-b\">Heal</button></div></div>",
+      "css": ".ds-enc{background:var(--panel,#111E3D);border:1px solid var(--frame,#203F7B);border-left:4px solid var(--frame,#203F7B);border-radius:6px;padding:10px 14px 12px;color:var(--text,#E7E7E7);font-family:Inter,system-ui,sans-serif;max-width:26rem}.ds-enc-on{border-left-color:var(--cyan,#1BBBC4);background:var(--panel-2,#16264C)}.ds-enc-head{display:flex;gap:10px;align-items:center}.ds-now{font-family:'Roboto Mono',monospace;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan,#1BBBC4);border:1px solid var(--cyan,#1BBBC4);border-radius:3px;padding:0 6px}.ds-hp{font-family:Oxanium,'Roboto Mono',monospace;font-size:1.3rem;font-weight:600;color:var(--green,#71C388);margin-top:6px;font-variant-numeric:tabular-nums}.ds-hp small{font-size:.8rem;color:var(--dim,#8C97B5)}.ds-segs{display:flex;gap:3px;margin:4px 0 8px}.ds-segs i{flex:1;height:8px;border:1px solid var(--frame,#203F7B);border-radius:2px}.ds-segs i.d{background:rgba(188,72,154,.55)}.ds-acts{display:flex;gap:8px}.ds-b{border-radius:4px;padding:5px 12px;border:1px solid var(--frame,#203F7B);background:var(--panel-2,#16264C);color:inherit;font:inherit;font-size:.85rem}.ds-b:hover{border-color:var(--violet-hi,#9B4DBA)}.ds-b:focus-visible{outline:2px solid var(--cyan,#1BBBC4);outline-offset:1px}"
+    },
+    {
+      "name": "Tonight Chip",
+      "kind": "chip",
+      "refersTo": "tonight-chip",
+      "description": "One jump in the Tonight strip, in the page bar while a fight runs or a session is open: Oxanium numerals, the actor in cyan, Unexported in Mono Caps.",
+      "html": "<div class=\"ds-tn\"><button class=\"ds-tn-i\">Round <b>2</b> · <span class=\"ds-tn-a\">Reclaim drone</span></button><button class=\"ds-tn-i\">Ibarra's patience <b>4 of 6</b></button><button class=\"ds-tn-i ds-tn-u\">Unexported</button></div>",
+      "css": ".ds-tn{display:flex;gap:8px;flex-wrap:wrap}.ds-tn-i{background:none;border:1px solid var(--frame,#203F7B);border-radius:14px;color:var(--text,#E7E7E7);font-family:Inter,system-ui,sans-serif;font-size:.74rem;padding:4px 11px;cursor:pointer;white-space:nowrap}.ds-tn-i b{font-family:Oxanium,'Roboto Mono',monospace;font-weight:600}.ds-tn-a{color:var(--cyan,#1BBBC4)}.ds-tn-u{font-family:'Roboto Mono',monospace;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--dim,#8C97B5)}.ds-tn-i:hover,.ds-tn-i:focus-visible{border-color:var(--violet-hi,#9B4DBA);outline:none}"
+    },
+    {
+      "name": "Dossier",
+      "kind": "custom",
+      "refersTo": "dossier-summary",
+      "description": "A GM record read first: the name with Edit beside it, one summary line, Mono Caps labels over Inter prose, their line set off by a 2px violet rule, and clocks with steppers.",
+      "html": "<div class=\"ds-dos\"><div class=\"ds-dos-h\"><h1>Lt. Caz Ibarra</h1><button class=\"ds-b\">Edit</button></div><p class=\"ds-sum\">Eclipse's man in Metro Core who prefers a deal to a fight.</p><h2 class=\"ds-l\">What they want</h2><p>A clean quarter and a cut of every job in it.</p><h2 class=\"ds-l\">Their line</h2><blockquote>Will not kill a child or a priest.</blockquote><h2 class=\"ds-sec\">Clocks</h2><div class=\"ds-clk\"><span>Ibarra's patience <b>4 of 6</b></span><span><button class=\"ds-b\">−</button> <button class=\"ds-b\">+</button></span></div></div>",
+      "css": ".ds-dos{color:var(--text,#E7E7E7);font-family:Inter,system-ui,sans-serif;max-width:40rem}.ds-dos-h{display:flex;gap:12px;align-items:center}.ds-dos h1{font-family:'Chakra Petch',sans-serif;font-size:1.7rem;font-weight:600;letter-spacing:.04em;margin:0}.ds-sum{margin:6px 0 14px}.ds-l{font-family:'Roboto Mono',monospace;font-size:.74rem;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--dim,#8C97B5);margin:16px 0 4px}.ds-sec{font-family:'Roboto Mono',monospace;font-size:.74rem;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--violet-text,#B47AD0);border-bottom:1px solid var(--frame,#203F7B);padding-bottom:6px;margin:22px 0 8px}.ds-dos p{margin:0 0 10px;max-width:75ch}.ds-dos blockquote{margin:0 0 12px;padding:2px 0 2px 12px;border-left:2px solid var(--violet,#712B8C)}.ds-clk{display:flex;justify-content:space-between;align-items:center}.ds-clk b{font-family:Oxanium,'Roboto Mono',monospace;font-weight:600}.ds-b{border-radius:4px;padding:5px 12px;min-width:44px;border:1px solid var(--frame,#203F7B);background:var(--panel-2,#16264C);color:inherit;font:inherit;font-size:.85rem}.ds-b:hover{border-color:var(--violet-hi,#9B4DBA)}.ds-b:focus-visible{outline:2px solid var(--cyan,#1BBBC4);outline-offset:1px}"
     }
   ],
   "narrative": {
@@ -553,6 +585,11 @@
         "name": "The One-Line Frame Rule",
         "body": "A surface is a tonal step plus one 1px Deep Circuit line. State recolours the line (cyan selected or worn, green picked, magenta danger, violet on hover); it doesn't thicken it, except on the Pain bands, where weight *is* the meaning.",
         "section": "shapes"
+      },
+      {
+        "name": "The Read-First Rule",
+        "section": "components",
+        "body": "A GM record is read before it's edited. The page a GM lands on has no field except the night's own controls: a clock's − and +, Make current, a session's Who, Hours, Open a thread and Close out. Everything else is one **Edit** away. A new record page reads first too."
       }
     ],
     "dos": [
@@ -562,7 +599,9 @@
       "**Do** frame every surface with one 1px Deep Circuit line and change the line's colour for state.",
       "**Do** keep motion short (.15–.35s, ease-out) and state-driven, and turn every animation off under `prefers-reduced-motion`.",
       "**Do** focus every control with the 2px Static Cyan outline.",
-      "**Do** keep text on a violet or Deep Circuit fill `--on-accent` (white) in both themes."
+      "**Do** keep text on a violet or Deep Circuit fill `--on-accent` (white) in both themes.",
+      "**Do** open a GM record to read and keep its fields behind **Edit**. A dossier draws only what's filled in.",
+      "**Do** give a GM card grid its band's column count (1 / 2 / 3 at <700 / 700–1279 / ≥1280px), never an auto-fill count that jumps with the width."
     ],
     "donts": [
       "**Don't** use neon as decoration: no glowing headers, gradient text, neon borders on resting surfaces, or colour that means nothing.",
