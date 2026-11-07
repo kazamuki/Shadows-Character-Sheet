@@ -1185,9 +1185,9 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
   /* On a page the strip follows Back and holds a fixed share, its lead item and Unexported; Add to goes after it and starts inside the
      bar, so its edge shows and the bar's own sideways scroll reaches the rest. A tab's own bar (.tn-bar) has only the strip and fills it. */
   .app.table-mode .tn{order:1; min-width:0}
-  .app.table-mode .tbl-bar:not(.tn-bar) .tn{flex:0 0 10.5rem}
-  .tn-lead{min-width:5rem}
-  .tn-unx{letter-spacing:.04em; padding-inline:6px}
+  .app.table-mode .tbl-bar:not(.tn-bar) .tn{flex:0 0 11.5rem; gap:4px}
+  .tn-lead{min-width:6rem}
+  .tn-unx{letter-spacing:.02em; padding-inline:5px}
   .app.table-mode .tbl-bar > :not(.tn):not(:first-child){order:2} }
 .jump{background:none; border:1px solid var(--frame); border-radius:14px; color:var(--text); font:inherit;
   font-size:.74rem; padding:4px 11px; cursor:pointer}

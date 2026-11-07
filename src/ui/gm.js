@@ -387,7 +387,9 @@ function notesTabHtml(t){
 // (paintTonight); its node persists across redraws, so focus kept on an item survives a repaint (Decision 164).
 let tonightEl = null, tonightGo = {};
 const clockName = c => String(c.name||"").trim() || "A clock";
-function tonightShows(){ const t=S.table; return !!(t && (Engine.runningEncounter(t) || Engine.openSession(t))); }
+// Shown while a fight runs or a session is open; and after Write closes the session out, Unexported alone stays until the table is
+// exported or closed (S.keepUnx, view state only: nothing is stored).
+function tonightShows(){ const t=S.table; return !!(t && (Engine.runningEncounter(t) || Engine.openSession(t) || S.keepUnx)); }
 function tonightItems(){
   const t=S.table, items=[], enc=Engine.runningEncounter(t);
   if (enc){
@@ -2556,7 +2558,7 @@ function bindCloseOut(main, s){
       if (el) el.focus(); else focus('[data-crew-seat], [data-crew-name], [data-crew-add]');
       return;
     }
-    S.closeOut=null; S.coEnd=id; window.scrollTo(0,0); update(); focus("[data-coend-h]");
+    S.closeOut=null; S.coEnd=id; S.keepUnx=true; window.scrollTo(0,0); update(); focus("[data-coend-h]");
   };
   function bindLists(){
     box.querySelectorAll("[data-co]").forEach(el=>{

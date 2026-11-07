@@ -266,7 +266,7 @@ const tableMeasure = () => {
     enc: widest(rows), encCols: new Set(rows.map(r => Math.round(box(r).left))).size,
     barCut: !!bar && bar.scrollWidth > bar.clientWidth + 1 && !bar.classList.contains("more-r"),
     bar: bar ? Math.round(box(bar).height) : 0, barKind: bar ? bar.className.split(" ")[0] : "",
-    barOut: bar ? [...bar.children].filter(c => !c.classList.contains("tn") && c.getBoundingClientRect().left > de.clientWidth - 56).length : 0,
+    barOut: bar ? [...bar.children].filter(c => !c.classList.contains("tn") && c.getBoundingClientRect().left > de.clientWidth - 40).length : 0,
     tn: [...main.querySelectorAll(".tn-item")].filter(shown).length, tnCut: [...main.querySelectorAll(".tn")].some(e => e.scrollWidth > e.clientWidth + 1),
     header: Math.round(hdr.getBoundingClientRect().height), scrollW: de.scrollWidth - de.clientWidth,
     rail: on("nav.ledger"), vitals: on("aside.vitals") };

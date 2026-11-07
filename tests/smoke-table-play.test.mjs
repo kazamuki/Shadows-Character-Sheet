@@ -2588,3 +2588,20 @@ test("U2: the Hit panel puts damage, Apply and the preview first", () => {
     assert.ok(order[i - 1].compareDocumentPosition(order[i]) & app.window.Node.DOCUMENT_POSITION_FOLLOWING, `part ${i} follows part ${i - 1}`);
   assert.deepEqual(app.errors, []);
 });
+
+test("U2: after Write, with no fight running, the strip keeps Unexported alone until the table is exported", () => {
+  const { app, ids } = closeApp(t => mkSession(t, 4, "2026-09-08", ["Wren"], 2));
+  const downloads = withDownloads(app);
+  const keys = () => app.$$("#main .tn [data-tn]").map(b => b.dataset.tn);
+  closeSheet(app, ids);
+  assert.deepEqual(keys(), ["unx"], "an open session, never exported: Unexported");
+  app.click("[data-co-write]");
+  assert.deepEqual(keys(), ["unx"], "the session is closed out, and Unexported alone stays");
+  app.click("[data-coend-done]");
+  assert.deepEqual(keys(), ["unx"], "Done doesn't clear it");
+  app.click('#main .tn [data-tn="unx"]');
+  assert.equal(downloads.length, 1);
+  assert.equal(app.$("#main .tn"), null, "Export clears it, and the strip with it");
+  assert.equal(app.$("#main > .tn-bar"), null);
+  assert.deepEqual(app.errors, []);
+});

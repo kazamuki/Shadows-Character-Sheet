@@ -5476,16 +5476,16 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
 
 270. **A table at play shows one Tonight strip; the open session is the latest one not closed out, and Jot files to it; Close out ends on its awards and an Export; a running encounter reads as play.**
      *2026-11-06 · Ken + Claude · Touches: Tonight strip, tbl-bar, enc-bar, openSession, nextSession, last session, Jot, jotWhere, addTableNote, _sessionOnDay, Unexported, tableUnexported, exportTable, markTableExported, openTable, scroll, h1 focus, close-out's end, writeCloseOut, Debrief, JOURNAL, Close to full, clocksNearFull, clocks, clockCountText, clock +/−, encounter title, Rename, data-enc-title, Combat Sense, data-eorder, More, Play, Setup, Remove, Hit panel order, encHitHtml, phone-check, Decision 203, Decision 204, Decision 205, Decision 208, Decision 245, Decision 258, Decision 269*
-     - **Decided:** The open session is the latest not dated after today, while it isn't closed out; Jot files to it, an interaction keeps 203's rule. While a fight runs or a session is open, a Tonight strip in the tables bar shows round and actor, who's down, the thread, the nearest clock and Unexported, each a jump. Next session leads with Close to full; a card lists clocks as "4 of 6". Write ends on Export and Done; the debrief folds. A running encounter's More is Play, Setup and Remove, and its Hit panel leads with Apply. A table opens at the top.
-     - **Why:** a running table was spread over five tabs; Ken ruled each strip item a jump, never an action.
+     - **Decided:** The open session is the latest not after today, while not closed out; Jot files to it, an interaction keeps 203's rule. While a fight runs or a session is open, a Tonight strip in the tables bar, on every tab and page but an encounter's own, shows round and actor, who's down, the thread, the nearest clock, Unexported: each a jump. Next session leads with Close to full; cards say "4 of 6". Write ends on Export and Done, and Unexported stays until exported; the debrief folds; a closed-out session is last session, whatever its date. A running encounter's More is Play, Setup and Remove; its Hit panel leads with Apply. A table opens at the top.
+     - **Why:** Ken ruled each strip item a jump, never an action.
      - **Rejected:**
        - A live block at the top of Sessions (UQ7): it repeats the tab-hunting.
-       - Actions on the strip: a mis-tap changes the table.
-       - Jot to today's session only: a game past midnight has none.
+       - Actions on the strip: a mis-tap edits the table.
+       - Jot to today's session only: past midnight it has none.
        - The latest session once closed out: it keeps collecting jots.
        - Exporting by itself at the close-out: a download nobody asked for.
-     - **Replaces:** Decisions 208 (a jot's session), 258 (the bar on a tab), 204 (Close to full; an open session counts as being played) and 269 (More), each in part. Extends 205.
-     - **Revisit if:** a GM runs two sessions at once.
+     - **Replaces:** Decisions 208 (a jot's session), 258 (the bar on a tab), 204 (an open session counts as being played) and 269 (More), each in part.
+     - **Revisit if:** two sessions run at once.
      - **Built:** app 0.64.0, no data or schema move, PR #309, log 2026-11-06 (U2).
 
 ## 5. Open Flags

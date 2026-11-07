@@ -13250,3 +13250,12 @@ test("U1: past Z the letters are numbers, and a removed cast member still counts
   const after = Engine.encounterView(t, e, []).rows;
   assert.equal(after.find(r => r.row.id === r2).label, "Dez B", "a letter never shifts when the other is struck through");
 });
+
+test("U2: a session dated today and closed out is last session", () => {
+  const t = Engine.newTable("x");
+  const six = Engine.addSession(t, { number: 6, date: "2026-10-24" }).id;
+  const seven = Engine.addSession(t, { number: 7, date: TODAY }).id;
+  assert.equal(Engine.nextSession(t).last.id, six, "being played today: last is 6");
+  Engine.writeCloseOut(t, seven, { lines: [{ name: "Mara", present: true }] });
+  assert.equal(Engine.nextSession(t).last.id, seven, "closed out, 7 is last whatever its date");
+});
