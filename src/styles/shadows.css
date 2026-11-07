@@ -1157,6 +1157,8 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
   .app.table-mode .cast-panel{position:sticky; top:calc(var(--hdr-off) + 3.25rem); max-height:calc(100vh - var(--hdr-off) - 3.75rem); overflow-y:auto; min-width:0}
   .app.table-mode .cast-panel > .cast-h:first-child{margin-top:0}
   /* The dossier: the stat block sits sixth in the DOM (after Clocks) and in the right column across both rows. */
+  /* A tall block and a short top: the second row takes the slack, so nothing opens up under Clocks. */
+  .app.table-mode .cast-layout.read{grid-template-rows:auto 1fr}
   .app.table-mode .cast-layout.read .cast-col{grid-column:1; min-width:0}
   .app.table-mode .cast-layout.read .cast-panel{grid-column:2; grid-row:1 / span 2}
 }
