@@ -2603,5 +2603,8 @@ test("U2: after Write, with no fight running, the strip keeps Unexported alone u
   assert.equal(downloads.length, 1);
   assert.equal(app.$("#main .tn"), null, "Export clears it, and the strip with it");
   assert.equal(app.$("#main > .tn-bar"), null);
+  // The hold ends with the export: a later change, with no session open and no fight, brings no strip back (Decision 270).
+  app.window.eval(`tableChange(() => { S.table.meta.name = "Later"; })`);
+  assert.equal(app.$("#main .tn"), null, "an edit after the export shows no strip");
   assert.deepEqual(app.errors, []);
 });

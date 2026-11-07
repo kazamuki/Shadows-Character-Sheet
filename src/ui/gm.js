@@ -52,7 +52,7 @@ function markTableExported(id){
   const e=savedTable(id); if (!e) return;
   e.exported=e.changed;
   try{ localStorage.setItem(tableKey(id), JSON.stringify(e)); }catch(err){}
-  if (lastTableSaved && lastTableSaved.id===id){ lastTableSaved.exported=e.exported; paintTonight(); }   // the file holds what's saved, so Unexported goes at once (Decision 270)
+  if (lastTableSaved && lastTableSaved.id===id){ lastTableSaved.exported=e.exported; if (S.screen==="table") S.keepUnx=false; paintTonight(); }   // the file holds what's saved, so Unexported goes at once, and the close-out's hold on it ends (Decision 270)
 }
 function removeTable(id){
   try{ localStorage.removeItem(tableKey(id)); }catch(e){}
