@@ -1,5 +1,7 @@
 # Plan — GM mode at the table
 
+**Closed 2026-11-07, kept as history** (Ken). U1–U5 are built (Decisions 269–272, apps 0.63.0–0.66.0; U4 a Fix). Its *Leads after U5* went to the next GM plan, [`../gm-mode-next.md`](../gm-mode-next.md), as its first Fix session (S23).
+
 **Status:** **proposed 2026-11-05 by Claude (Opus)**, from an Impeccable critique of GM mode on the Dead Air
 sample table (24/40; the snapshot is `.impeccable/critique/2026-11-06T04-35-27Z__src-ui-gm-js.md`). Ken's
 answers to the critique: **GM mode is a play-first product** (it's designed for the GM running a session, and

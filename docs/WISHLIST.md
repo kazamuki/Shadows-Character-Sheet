@@ -184,7 +184,7 @@ encounter starts and ends.
 uses counters as P18-shaped data on the effect. Its own plan, probably two orders.
 
 **W132 — Powers that answer a hit, or heal while they run.** *Ken, from re-running P21's pre-flight · 💡 · Rule or shape · raised 2026-10-21*\
-**Plan:** [powers that run](plans/powers-that-run.md), H2 (the hit; [order](plans/powers-that-run/H2-powers-answer-a-hit.md), built, Decision 267; Elemental Blood and Battle Hardened wait on the book, plan §6) and H3 (healing; [order](plans/powers-that-run/H3-powers-that-heal.md), built, Decision 268; the healing half is done)
+**Plan:** set aside by [crb-catch-up](plans/crb-catch-up.md) (0410–0414): H2 and H3 built the rest (Decisions 267 and 268; `plans/archive/powers-that-run.md`); Battle Hardened and Elemental Blood wait on the book naming their Conditions and elements
 
 P20b taught Take a hit and Rest what a held **trait** does (Scrapper, Giant, Thick Skull, Rapid Healing). The same jobs done by a **power, Aberration or Major** are still table rules, and the player does the arithmetic. The P21 inventory listed them for P20 (c44–c53). P20b's order passed them to "P21", and P21 leaves them to later orders, so nothing in the sheet-wishlist plan builds them. Ken parked them here so that plan can close (2026-10-21).
 - **The hit:** Odin's Aegis ("Reduce the damage of one Elemental, Spirit, or Aether attack by your BOD bonus + 2 × rank"), Null Field ("Absorbs up to 5 Elemental, Spirit, or Aether damage", +5 a rank), Red Mist and Spectral Veil ("immune to Physical damage" while running), Elemental Blood ("Halve damage you take from that element", rolled 1d3), Silverscar ("Withering damage from silver is halved (never below 1)"), Battle Hardened's immunity to one combat condition (a second and third in place of a Major).
@@ -662,7 +662,7 @@ ship in every build, and a pack supplies the content.
 - **Voice.** The demo's framing ("you're seeing a slice of NYTE City") is
   player copy and gets a voice pass (`VOICE-APP.md`). It is data in
   `appCopy`, and it never narrates build state (constraint 9).
-- **The pack's gate is shared work.** S9 of `plans/gm-mode.md` builds the
+- **The pack's gate is shared work.** S9 of `plans/archive/gm-mode.md` built the
   pack shape, gate, storage key and import. Build the demo after that, or
   with it, so there is one pack mechanism.
 *Open for whoever picks it up:* the slice (which archetypes, which catalogs);
@@ -690,7 +690,7 @@ build (switched off) and from its work orders. Each sits alongside W29's plan,
 not inside it, until a work order picks it up.
 
 **W29 — A GM mode: link to the table's characters, read them, leave notes.** *Ken · 🔎 · raised 2026-09-24*\
-**Plan:** [gm-mode](plans/gm-mode.md): the file-based stage and the GM toolkit; live sync (stages 2–3) is [accounts-and-sync](plans/accounts-and-sync.md)'s N4–N5
+**Plan:** [gm-mode-next](plans/gm-mode-next.md): what's left of the file-based stage and the GM toolkit (the first plan, S1–S21, is `plans/archive/gm-mode.md`); live sync (stages 2–3) is [accounts-and-sync](plans/accounts-and-sync.md)'s N4–N5
 
 Raised 2026-09-24, at the end of the whole-app audit. Today a GM who wants a
 player's HP, Conditions or loadout asks for it, or collects exported files by
@@ -753,7 +753,7 @@ own; how long player data is kept; and whether this is the character sheet's
 job or the GM toolkit's.
 
 **W68 — How well a cast member knows each of the crew: a face, a regular, a name.** *Ken · 💡 · Rule or shape · raised 2026-10-07 in W29 S10c's order*\
-**Plan:** none yet
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S28, as its question GQ31 (a new stored field)
 
 A GM's hint for the scene: does Dez half-recognise Rook ("you look familiar"),
 know them by sight ("I know you"), or know their name ("hey there, Rook")?
@@ -775,7 +775,7 @@ them, so ask Deighton and Scott how they meet before choosing levels. Crew are
 typed names, read as the seat that answers to them (Decision 254).
 
 **W73 — A session can have a name.** *Ken · ⏭ · Rule or shape · raised 2026-10-08 in S5a's review*\
-**Plan:** none yet · **Goes with:** W84, W86
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S26 (no order yet) · **Goes with:** W84, W86
 
 A table refers to its past by session: *"when did we learn that? Session 2,
 The Ledger."* S5a (Decisions 203–204) gives a session a number the GM sets and
@@ -787,7 +787,7 @@ session already there); the number stays the identity and the sort (Ken,
 S5a's review: "last session" is by number), and the title is text only.
 
 **W77 — A cast member's page, laid out for the table.** *Ken · 🔎 · Fix (UI) · raised 2026-10-08*\
-**Plan:** [gm-mode's Layout pass](plans/gm-mode.md), order [S18](plans/gm-mode/S18-layout-pass.md) (**built 2026-10-30**, Decision 258, switched off: Back and Add to in a bar, status under the name, the stat block docked from 1280px) · **Goes with:** W78, W80, W81
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S28 takes what's left; the first plan's S18 built the bar, the status under the name and the docked stat block (Decision 258) · **Goes with:** W78, W80, W81
 
 Three things about the page a GM opens mid-scene:
 - **Back and Add to <encounter> always in reach.** They sit at the top today
@@ -807,7 +807,7 @@ a preference of this browser as 160's is, not of the table.
 <encounter> live there, and stay put while the page scrolls.
 
 **W78 — The cast list shows each member's stat block, to read.** *Ken · 🔎 · Fix (UI) · raised 2026-10-08*\
-**Plan:** none yet · **Goes with:** W77
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S28 (no order yet) · **Goes with:** W77
 
 A GM scanning the cast for who to throw at the crew opens each member to
 see their numbers. The wish: each card on the Cast tab shows the block as it
@@ -819,7 +819,7 @@ cast still has to scroll well on a tablet, so the shape (every card, a fold,
 or a toggle like *Who knows what*) needs a look.
 
 **W80 — The left column: the page's actions, or gone.** *Ken · 🔎 · Fix (UI) · raised 2026-10-08*\
-**Plan:** [gm-mode's Layout pass](plans/gm-mode.md), order [S18](plans/gm-mode/S18-layout-pass.md) (**built 2026-10-30** for a table's screens, Decision 258, switched off: no rail, Back in a bar. **Home's empty rail is still open**, left so by SQ5) · **Goes with:** W77
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S29: Home's empty rail (a table's screens lost theirs in S18, Decision 258) · **Goes with:** W77
 
 Outside the wizard the left column is empty on **every** screen: Home, every
 GM table tab, and the pages under them (Ken's screenshot, 2026-10-08: a
@@ -845,7 +845,7 @@ is the place; no new markup in `index.html` beyond what's there); Decision 164
 pinned stat block (W77) and the rail leaves the page the middle.
 
 **W81 — Origin and Enemy role look like what they do.** *Ken · ⏭ · Fix (UI) · raised 2026-10-08*\
-**Plan:** none yet · **Goes with:** W77
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S28 (no order yet) · **Goes with:** W77
 
 On a cast member's page, **Origin** and **Enemy role** are text fields with a
 list of suggestions from the slotted packs (a `datalist`). They behave like a
@@ -857,7 +857,7 @@ no slotted pack lists); the browser's own datalist styling varies, so check it
 on a tablet.
 
 **W84 — Print a cast member, an encounter, a session's journal.** *Ken · 🔎 · Fix (UI) · raised 2026-10-09 in S13a's order (SQ4)*\
-**Plan:** [gm-mode S13b](plans/gm-mode.md) (no order yet) · **Goes with:** W73, W86
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S26 (no order yet; was the first plan's S13b) · **Goes with:** W73, W86
 
 The plan's S13 lists printing beside the GM screen: a cast member's page
 (the stat block, If Pushed, their line), an encounter (its rows, Conditions
@@ -869,7 +869,7 @@ markup in `index.html` (constraint 3); and the award log prints in the
 player's words, as the page reads it (205).
 
 **W86 — A session copied out as Markdown.** *Ken, from Deighton · 🔎 · Fix (UI) · raised 2026-10-09 in S14's order*\
-**Plan:** none yet · **Goes with:** W73, W84, W140
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S26 (no order yet) · **Goes with:** W73, W84, W140
 
 Deighton keeps his notes in Obsidian, as an outline of bulleted lists. A
 session's journal, its interaction lines and its jotted notes (Decision 208)
@@ -880,21 +880,8 @@ without retyping.
 file is the player's words as the page reads them; it is the session's page's
 action, not a new tab. Out of S14's scope (§6).
 
-**W139 — Keyboard shortcuts on a table: Find and Jot a key away.** *Ken · 🔎 · Rule or shape · raised 2026-10-30*\
-**Plan:** [gm-mode's Shortcuts](plans/gm-mode.md), order [S19](plans/gm-mode/S19-shortcuts.md) (**built 2026-10-31**, Decision 259, switched off: F and J, an off switch in ⋮ → Keys; *more keys* (Next in a fight, the tabs, `?` for the list) stay open here; taken up by [gm-at-the-table's](plans/gm-at-the-table.md) U5, order [U5](plans/gm-at-the-table/U5-keys-and-landmarks.md) (**drafted** 2026-11-07: 1–8, N, Ctrl/⌘+Z, A and ?)) · **Goes with:** W140, W141
-
-Find and Jot sit in the header on every table screen (Decision 208), but a
-GM at a laptop mid-session still has to reach for the mouse. The wish: a key
-opens Find with its field focused, and another opens Jot. Then whatever else
-earns a key once those two prove the pattern (Next in a fight, a tab).
-*To respect:* a key never fires while the GM is typing in a field; the
-browser's own keys aren't taken (Ctrl/⌘+F is the browser's find); focus
-returns where it was when the box closes (Decision 164); a phone or tablet
-with no keyboard loses nothing; and the keys are discoverable (a hint on the
-buttons, or a list on Reference), in tool voice.
-
 **W140 — Notes that organise themselves: tags, categories, and the session they came from.** *Ken · 🔎 · Rule or shape · raised 2026-10-30*\
-**Plan:** [gm-mode's Notes](plans/gm-mode.md) (no order yet); [gm-at-the-table's U3](plans/gm-at-the-table/U3-read-first.md) (**drafted** 2026-11-06) makes Notes a list of titles, the screen this will fill, and doesn't take it up · **Goes with:** W86, W139
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S30 (no order yet); U3 (Decision 271) made Notes a list of titles, the screen this will fill · **Goes with:** W86
 
 A GM takes notes for many reasons: a name to remember, a rule to look up, a
 hook for later, what a player promised. Today a table note is a dated line
@@ -911,7 +898,7 @@ Look first at how much of this the cast's and threads' links already give
 before inventing a new kind of link.
 
 **W141 — Fix `.form-toggle`'s dark-mode frame, app-wide.** *Ken · 🔎 · Fix · raised 2026-10-31*\
-**Plan:** none yet · **Goes with:** W139
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S23 (no order yet)
 
 The shared `.form-toggle` (`shadows.css`) frames its buttons with `--frame`. Measured in Chromium on the
 Keys box (S19): in the dark theme the ring against the box is **1.61:1**, and the pressed On button against the
@@ -922,7 +909,7 @@ one box at a time. *To respect:* the contrast guards in `build.test.mjs` parse t
 sizes; every screen that uses `.form-toggle` in both themes.
 
 **W142 — The cast's crew lines as buttons too.** *Ken · 🔎 · Rule or shape · raised 2026-10-31*\
-**Plan:** set aside by [S21](plans/gm-mode/S21-crew-buttons.md) §7, for after it lands
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S28 (no order yet); set aside by S21 §7 until it landed
 
 S21 turns an encounter's Add a PC and a session's Who was there into a row of buttons, one per active
 seat, with Add a player for anyone else. A line between the crew and the cast (**Between them and the
@@ -930,6 +917,15 @@ crew**, on a member's page and its quick add) still takes its crew as a typed li
 wish: the same buttons there, if a GM using S21 finds the typed list the odd one out. *To respect:* a line's
 `crew` stays typed names, read as seats (254); the quick add saves as it's typed today; one rule for
 "answers to a seat", the engine's (`seatPicks`, `seatFor`).
+
+**W146 — The dispatch: a GM sends a player changes to accept.** *Ken, from re-vetting GM mode's plan · 💡 · Rule or shape · raised 2026-11-06*\
+**Plan:** none yet
+
+The first GM-mode plan's S2 (a dispatch file, and the player's inbox where each item is Accepted or Declined, as an undoable
+change), S4 (GM writes: a note to a player, the composer, reconciliation on re-import) and S13's handouts. They are drafted in
+`plans/archive/gm-mode.md` §4d and §6, and were shelved when GQ20 found hand entry works at Scott's and Deighton's tables.
+Build it only if hand entry drifts, or when live sync starts: [accounts-and-sync](plans/accounts-and-sync.md)'s N5 carries
+dispatches to a player's inbox, posted instead of saved, and builds on this. Its open question is GQ3 (one file per table).
 
 ### For the designers
 
@@ -1097,7 +1093,7 @@ scripts would give each session a smaller file to hold.
 with no DOM, so both halves have to load that way.
 
 **W145 — GM tabs with their own icons.** *Ken · 🔎 · Fix · raised 2026-11-06*\
-**Plan:** none yet
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S23 (no order yet)
 
 U4 (UQ16) kept the borrowed icons until Scott's set arrives. The GM's section tabs borrow the player sheet's icons (`TABLE_SECTIONS[].ui` → `uiIcon()`, `gm.js`): Players has
 Main's, Encounters has Trackers'. Scott is to draw six of the GM's own; when they come they go into `src/data/`
@@ -1106,7 +1102,7 @@ and the `ui` keys change, with no layout change since the slots are the same siz
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W146.** Everything above is open. What was built is in
+- **Next free number: W147.** Everything above is open. What was built is in
   [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)

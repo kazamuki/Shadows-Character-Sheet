@@ -1,5 +1,7 @@
 # Work order W143: powers bought with Character Points
 
+**Closed 2026-11-07, kept as history** (Ken). Built in #292 (Decisions 264 and 265, app 0.61.0).
+
 **Wish:** **W143** (`WISHLIST.md`), Ken's, raised 2026-11-04. No multi-session plan: this order is its own plan, one session.
 Decisions 3, 135, 157, 162, 194, 215, 216, 218 and 240.
 **Status:** **drafted 2026-11-04 by Claude (Opus)**, pre-flighted against `main` at `47824b2` (PR #290 merged, app 0.60.0

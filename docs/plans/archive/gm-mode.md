@@ -1,5 +1,7 @@
 # Plan — GM mode: the table, its cast and its city (W29)
 
+**Closed 2026-11-07, kept as history** (Ken). Built through S21 and launched in 0.57.0 (Decision 260). What was left was re-vetted with Ken and moved to a short plan of its own, [`../gm-mode-next.md`](../gm-mode-next.md): its sessions, Scott's to-dos and the open GQs (GQ5, GQ7, GQ22). The dispatch (S2, S4, handouts) is W146, built only if it's needed. The orders table and the built orders stay in [`gm-mode/`](gm-mode/README.md).
+
 **Status:** proposed 2026-10-02 and taken to Scott and Deighton first, since
 they are the GMs who'd use it; **approved a session at a time** since S1's
 order (2026-10-02). What's built and what's next is the orders table in

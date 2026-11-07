@@ -1183,6 +1183,17 @@ Disadvantage's buy-off follows it.
 
 ### GM mode
 
+**W139 — Keyboard shortcuts on a table: Find and Jot a key away.** *Ken · → Decisions 259 and 272, app 0.66.0: F and J, then 1–8, N, Ctrl/⌘+Z, A and ? on a table*
+Find and Jot sit in the header on every table screen (Decision 208), but a
+GM at a laptop mid-session still has to reach for the mouse. The wish: a key
+opens Find with its field focused, and another opens Jot. Then whatever else
+earns a key once those two prove the pattern (Next in a fight, a tab).
+*To respect:* a key never fires while the GM is typing in a field; the
+browser's own keys aren't taken (Ctrl/⌘+F is the browser's find); focus
+returns where it was when the box closes (Decision 164); a phone or tablet
+with no keyboard loses nothing; and the keys are discoverable (a hint on the
+buttons, or a list on Reference), in tool voice.
+
 **W74 — Search the Codex from inside an encounter.** *Ken · → Decision 211 (switched off)*
 An encounter's **Add** section searches the cast, but for the Codex it says
 "open an entry or a group on Threats". Mid-fight that's three taps out of the

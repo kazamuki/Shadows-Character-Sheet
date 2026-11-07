@@ -6,7 +6,7 @@ first, then a **builder** session and a fresh **reviewer** session, run by a
 together*, says which work goes through it; this file says how. The
 conductor's steps, as a runbook, are the `run-a-work-order` skill.
 
-It started as GM mode's cadence (`plans/gm-mode/README.md`, 2026-10-05) and
+It started as GM mode's cadence (`plans/archive/gm-mode/README.md`, 2026-10-05) and
 was adopted for every plan on 2026-10-23 (Ken): no reviewed session had come
 back clean, building on Sonnet saves tokens, and with a conductor Ken still
 makes every decision without the sessions waiting on him to relay.
