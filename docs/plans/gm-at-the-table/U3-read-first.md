@@ -7,6 +7,8 @@ U4 re-critique leads the plan's U3 row carries, where they fall on U3's pages.
 **Always read**, **Summary, then want**, **Inline, one at a time**. The plan's UQ2 already settled that **Edit** turns
 the page into today's form. UQ26–UQ34 (§4) are this order's own questions, from the shape brief's open items and the
 pre-flight.
+**Approved by Ken 2026-11-06** ("Approve, all defaults", in the conductor session): UQ26–UQ34 are each their
+default, including UQ29's pushback (Cast's quick-add keeps its place); Edit stays on the `h1`'s row while a fight runs.
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 **Runs beside:** nothing (plan §4: every U session shares `gm.js` and `shadows.css`).
 
