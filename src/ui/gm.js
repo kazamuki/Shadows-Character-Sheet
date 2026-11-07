@@ -384,7 +384,14 @@ function keyAction(e){
   }
   // Exactly one of Ctrl and ⌘, and no Shift: Ctrl+Shift+Z is Redo in a browser.
   if (k==="z" && (e.ctrlKey!==e.metaKey) && !e.altKey && !e.shiftKey)
-    return { run:()=>{ const log=S.table.audit||[], label=undoTableEntry(S.table, log[log.length-1]); if (label===null) showTableNote("Nothing to undo."); else showTableDone(label); } };
+    return { run:()=>{
+      const toast=document.getElementById("undotoast"), inToast=!!toast && toast.contains(document.activeElement);
+      const log=S.table.audit||[], label=undoTableEntry(S.table, log[log.length-1]);
+      if (label===null) showTableNote("Nothing to undo."); else showTableDone(label);
+      // The undo redrew the page: focus that was on the toast's own button, or on a control the undo took away, lands on the page, as the toast's Undo does.
+      const af=document.activeElement;
+      if (inToast || !af || af===document.body || !af.isConnected) toastLanding();
+    } };
   return null;
 }
 document.addEventListener("keydown", e=>{

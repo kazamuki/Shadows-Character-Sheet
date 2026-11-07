@@ -391,6 +391,19 @@ test("U5: Ctrl+Z and ⌘+Z take back the newest change and say so", () => {
     assert.equal(press(app, app.doc.body, "z", init).prevented, false, JSON.stringify(init));
     assert.equal(auditLen(app), a1, JSON.stringify(init) + " undid");
   }
+  // Focus never drops to <body>: not from the toast's own Undo, and not from a control the undo took away.
+  plus().click();
+  app.$("#undotoast [data-toastundo]").focus();
+  press(app, app.$("#undotoast [data-toastundo]"), "z", { ctrlKey: true });
+  assert.notEqual(app.doc.activeElement, app.doc.body, "Ctrl+Z from the toast's Undo left focus on <body>");
+  assert.ok(app.doc.activeElement && app.doc.activeElement.isConnected);
+  openFight(app);
+  while (!app.$("[data-efinish]")) { press(app, app.doc.body, "n"); assert.ok(app.window.eval("S.table.audit.length") < 99); }
+  const fin = app.$("[data-efinish]"); fin.focus();
+  press(app, fin, "z", { ctrlKey: true });
+  assert.equal(fin.isConnected, false, "the undo kept Finish the round, so this tests nothing");
+  assert.notEqual(app.doc.activeElement, app.doc.body, "Ctrl+Z from a control the undo took away left focus on <body>");
+  app.click('[data-tsec="sessions"]');
   // An emptied log says so.
   app.window.eval("Engine.clearTableActivity(S.table); rebaseTable(); update()");
   assert.equal(auditLen(app), 0);
