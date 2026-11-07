@@ -23,8 +23,11 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.64.0
+## [Unreleased] — app 0.65.0
 
+- **Cast members, places, factions, sessions and threads open to read.** Who they are, what they want, their line and their clocks come first, with no fields to tab through. **Edit** opens the fields, and **Done** brings you back to where you were. A member shows the clocks of the factions they're key to, with − and +.
+- **Notes is a list of titles you open one at a time.** A thread reads as its title with **Make current**.
+- **Add sits under each list** (Cast's quick-add stays on top), a tab press keeps your place on the tab, Sessions reads newest first in one column, cards sit in one, two or three columns by width, and a place's card names each place once.
 - **Tonight, on every tab.** While a fight runs or a session is open, a line under the header says who's acting, who's down, the current thread, the clock closest to full, and whether the table needs exporting. Tap any of it to go there.
 - **Jot files to the session you're playing**, even after midnight or on a second night, and says which one before you save.
 - **Closing out a session ends on what everyone got**, with **Export the table** and **Done** under it. The Debrief folds away while the session is still on, and a table opens at the top.

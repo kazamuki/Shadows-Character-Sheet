@@ -4352,6 +4352,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
     → **Superseded in part by Decision 179** — the list also filters by affiliation, and the tab has a second view.
     → **Superseded in part by Decision 212** — the table's trail is 212's; Delete still asks.
     → **Superseded in part by Decision 204** — a new table opens on Sessions, not Cast; Cast is second.
+    → **Superseded in part by Decision 271** — a member's page reads first and edits under Edit; quick-add sits below the list, except Cast's, which keeps its place.
 
 177. **A table keeps the crew's interactions with its cast: dated records of what was shared, learned, done or owed, with the crew as typed names until seats exist.**
      *2026-10-05 · Ken + Claude · Touches: interactions, table.interactions, I- id, interaction kind, shared, learned, helped, wronged, killed, owes, owed, crew names, date, cast status, history, table schema 0.3, migrateTable, Decision 174, W29, GQ19*
@@ -4726,6 +4727,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** GQ1's tab order says otherwise, S7's clocks join Next session, or a GM wants a thread linked to the cast.
      - **Built:** as 203.
     → **Superseded in part by Decision 270** — Next session leads with Close to full, and an open session counts as being played.
+    → **Superseded in part by Decision 271** — a thread's fields are under Edit, and Sessions is one column.
 
 205. **A session keeps its award log: what each character got at the close-out, written once, read out to the players.**
      *2026-10-09 · Ken + Claude · Touches: close-out, award log, session close, close.lines, writeCloseOut, awardTotals, IP so far, Milestone Point, Çredits, Log a session, table schema 0.9, migrateTable, Decision 203, GQ8, GQ20, W29*
@@ -4791,6 +4793,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      → **Superseded in part by Decision 252** — Find searches an encounter's plan, and finds its clocks.
      → **Superseded in part by Decision 255** — Find finds a seat.
     → **Superseded in part by Decision 270** — a jot's session is the open session, not the one dated today.
+    → **Superseded in part by Decision 271** — Notes lists titles, and one note opens at a time.
 
 209. **The Reference's jump bar shows every chip, wrapped: it sticks from 640px, and on a phone it stays at the top of the page.**
      *2026-10-09 · Ken + Claude · Touches: Reference tab, jump bar, jumpBarHtml wrap, jump-wrap, jumpbar.sticky, jumpTo, scroll-row, wheelSideways, phone, Decision 165, Decision 207, SQ8*
@@ -5162,6 +5165,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** S7's factions or S12b's Site Profiles want a place's own track, or an encounter wants a place.
      - **Built:** table schema 0.14, switched off (173); PR #236; log 2026-10-23.
      → **Superseded in part by Decision 251** — a place takes a Site Profile and owns clocks; removing it removes them.
+    → **Superseded in part by Decision 271** — a place's page reads first and edits under Edit.
 
 244. **A table keeps the crew's factions as the book's Faction Tracker: its fields, a stance and an attention, and nothing derived.**
      *2026-10-23 · Ken + Claude · Touches: factions, FA- id, from, type, territory, base, keyNpcs, wants, reach, tippingFor, tippingAgainst, stance, attention, notes, addFaction, editFaction, removeFaction, factionTitle, factionList, factionsKeyFor, factionAffiliated, FACTION_TYPES, Factions view, City tab, CITY_VIEWS, The city, removeCastMember, tableSearch, TABLE_RECORDS, table schema 0.15, Decision 177, Decision 179, Decision 208, Decision 212, Decision 242*
@@ -5175,6 +5179,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 208 in part (Find searches factions), 212 in part (factions are a record the log covers).
      - **Revisit if:** a GM wants affiliations as links (179's own trigger), or S11's jobs want a faction's reaction.
      - **Built:** table schema 0.15, switched off (173); log 2026-10-23.
+    → **Superseded in part by Decision 271** — a faction's page reads first and edits under Edit.
 
 245. **A clock is one record on the table: a name, segments, how many are filled, what advances it and what happens when it fills; S7 hangs clocks on factions.**
      *2026-10-23 · Ken + Claude · Touches: clocks, CK- id, segments, filled, advances, whenFull, on, owner link, addClock, editClock, removeClock, clocksOn, clock segments, faction page, removeFaction, tableSearch, TABLE_RECORDS, table schema 0.15, Decision 178, Decision 204, Decision 208, Decision 212*
@@ -5351,6 +5356,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** Home gets its own layout (W80's rest), or a tab needs a column the measures lack.
      - **Built:** switched off (173); PR #276; log 2026-10-30 (S18).
     → **Superseded in part by Decision 270** — while the Tonight strip shows, the bar is on every tab, not only on a page.
+    → **Superseded in part by Decision 271** — card grids are one, two or three columns by width, not auto-fill.
 
 259. **On a table, F opens Find and J opens Jot, never while typing, and ⋮ → Keys lists them and turns them off.**
      *2026-10-31 · Ken + Claude · Touches: keyboard shortcuts, keydown, F, J, Find, Jot, openFind, openJot, openModal, closeModal, aria-keyshortcuts, ⋮ menu, Keys, shadows.ui.keys, focus, W139, Decision 111, Decision 140, Decision 161, Decision 164, Decision 166, Decision 208*
@@ -5487,6 +5493,18 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decisions 208 (a jot's session), 258 (the bar on a tab), 204 (an open session counts as being played) and 269 (More), each in part.
      - **Revisit if:** two sessions run at once.
      - **Built:** app 0.64.0, no data or schema move, PR #309, log 2026-11-06 (U2).
+
+271. **A record opens to read: a dossier with Edit one press away; Notes lists titles that open one at a time; Add sits below what it adds to.**
+     *2026-11-06 · Ken + Claude · Touches: read view, dossier, Edit, Done, S.editing, member page, castPageHtml, place page, placePageHtml, faction page, factionPageHtml, session page, sessionPageHtml, threadRowHtml, Current, Make current, readBlockHtml, stat block, summary line, Wants, If pushed, Their line, Key NPCs, factionsKeyFor, member's clocks, Notes tab, noteCardHtml, openNote, S.noteOpen, Delete this note, quick-add, Add, keepPlace, tab focus, placeCardHtml, breadcrumb, placeLines, N lines, roster-list, card grid, sess-list, Sessions order, Slot in a pack, phone-check, Decision 176, Decision 179, Decision 204, Decision 208, Decision 243, Decision 244, Decision 258, Decision 270*
+     - **Decided:** A member, place, faction or session opens on a read view: name, one summary line, wants, their line, clocks, stat block; empty fields aren't drawn. **Edit** swaps in today's form and **Done** returns with focus on Edit. A member shows their Key NPC factions' clocks. Notes lists titles, one open at a time. Add sits below each list; Cast's quick-add stays. Nothing is stored.
+     - **Why:** the 2026-11-05 critique found every record opening as a form; Ken ruled GM mode play-first.
+     - **Rejected:**
+       - Click a passage to edit it: it hides what's editable.
+       - A read view only in play: two modes for one page.
+       - A clock owner kind for members: a schema bump.
+     - **Replaces:** Decisions 176, 204, 208, 243, 244 and 258, each in part; cites 179, 245 and 270.
+     - **Revisit if:** a GM edits mid-scene more than they read, or W140 reshapes Notes.
+     - **Built:** app 0.65.0, no schema move, PR #TBD, log 2026-11-06 (U3).
 
 ## 5. Open Flags
 

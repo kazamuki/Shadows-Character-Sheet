@@ -9,7 +9,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { boot } from "./harness.mjs";
-import { Engine, D, GM_ON, type, runTable, keyIn, castAdd } from "./smokekit.mjs";
+import { Engine, D, GM_ON, type, runTable, keyIn, castAdd, edit, done, editNote, deadAirApp } from "./smokekit.mjs";
 
 const cityTab = app => app.click('[data-tsec="city"]');
 const castTab = app => app.click('[data-tsec="cast"]');
@@ -85,6 +85,7 @@ test("244: The city's Eclipse adds to the crew's factions and turns to Open; a p
   assert.equal(app.$("[data-ftitle]").textContent, "Eclipse");
   assert.equal(app.$("[data-fback]").textContent, "Back to The city");
   assert.match(app.$(".city-sum").textContent, /\S/, "the book's line");
+  edit(app);
   assert.equal(app.$('[data-ff="territory"]').selectedOptions[0].textContent, "Central City");
   assert.deepEqual(pressed(app, "data-ftype"), [], "nothing is guessed from the entry");
   assert.deepEqual(pressed(app, "data-fstance"), []);
@@ -98,6 +99,7 @@ test("244: a faction's page saves as typed: input and change make one entry each
   const app = setup();
   hideToast(app);
   let n = auditLen(app);
+  edit(app);
   both(app, '[data-ff="name"]', "The Eclipse Gang");
   assert.equal(app.$("[data-ftitle]").textContent, "The Eclipse Gang", "the heading follows the typing");
   assert.equal(auditLen(app), n + 1);
@@ -131,6 +133,7 @@ test("244: a faction's page saves as typed: input and change make one entry each
 
 test("244: Type, Stance and Attention toggle one or none, and the five stance buttons are named", () => {
   const app = setup();
+  edit(app);
   assert.deepEqual(app.$$("[data-ftype]").map(b => b.textContent.trim()), ["Gang", "Corp", "Government", "Cult", "Collective", "Other"]);
   app.click('[data-ftype="gang"]');
   assert.deepEqual(pressed(app, "data-ftype"), ["gang"]);
@@ -163,6 +166,7 @@ test("244: Type, Stance and Attention toggle one or none, and the five stance bu
 test("244: a key NPC opens the member, and their Back returns to the faction on the link; Key to opens the faction and Back returns to the member", () => {
   const app = setup();
   const bob = bobId(app);
+  edit(app);
   const sel = app.$("[data-fkeyadd]");
   assert.ok([...sel.options].some(o => o.textContent === "Bob") && [...sel.options].some(o => o.textContent === "Dez"));
   both(app, "[data-fkeyadd]", bob);
@@ -198,6 +202,7 @@ test("244: Tied by affiliation lists the cast whose affiliation matches, and lin
   const app = setup();
   castTab(app);
   app.click(`[data-copen="${bobId(app)}"]`);
+  edit(app);
   both(app, '[data-cf="affiliations"]', "ECLIPSE");
   app.click("[data-cback]");
   cityTab(app);
@@ -213,6 +218,7 @@ test("244: Tied by affiliation lists the cast whose affiliation matches, and lin
 test("244: removing a key NPC's member strikes their name on the faction's page, and Undo brings the link back", () => {
   const app = setup();
   const bob = bobId(app);
+  edit(app);
   both(app, "[data-fkeyadd]", bob);
   app.click(`[data-copen="${bob}"]`);
   app.click("[data-cdel]"); app.click("#modal [data-askyes]");
@@ -295,6 +301,7 @@ test("245: deleting a faction asks with its clock count, and Undo from Activity 
   app.click("#modal [data-act-undo]");
   app.click("#modal [data-modalclose]");
   app.click("[data-fcardopen]");
+  edit(app);
   assert.equal(app.$$("[data-clock]").length, 2, "both clocks came back");
   assert.deepEqual(app.errors, []);
 });
@@ -319,8 +326,9 @@ test("244: Find opens a faction on its heading, and a clock on its name", () => 
   castTab(app);
   find(app, "send someone", "clock");
   assert.equal(app.$("[data-ftitle]").textContent, "Eclipse");
-  assert.equal(app.doc.activeElement, app.$("[data-clockname]"));
-  assert.equal(app.$("[data-clockname]").textContent, "Heat");
+  // A clock on a dossier is a line (Decision 271): Find lands on it.
+  assert.equal(app.doc.activeElement, app.$("[data-cline]"));
+  assert.match(app.doc.activeElement.textContent, /^Heat /);
   assert.deepEqual(app.errors, []);
 });
 
@@ -351,6 +359,7 @@ test("244: a place's Back still works after backPlace became backCity", () => {
 test("244: a faction's own Back survives a Key to round trip", () => {
   const app = setup();
   const bob = bobId(app);
+  edit(app);
   both(app, "[data-fkeyadd]", bob);
   app.click(`[data-copen="${bob}"]`);
   app.click("[data-fopen]");
@@ -384,5 +393,25 @@ test("U2: a card lists its clocks as 4 of 6, with − and +, and the Activity lo
   card.querySelector("[data-clkplus]").click();
   assert.match(card.querySelector(".clock-line").textContent, /^Ibarra's patience Full/, "a full clock reads Full");
   assert.equal(card.querySelector("[data-clkplus]").disabled, true);
+  assert.deepEqual(app.errors, []);
+});
+
+test("U3: a member's dossier shows the clocks of the factions they're key to", () => {
+  const app = deadAirApp("cast");
+  app.click('[data-copen="C-8FGP6RCT"]');
+  const line = app.$$("#main .clock-line").find(l => /Ibarra's patience/.test(l.textContent));
+  assert.ok(line, "Ibarra's patience is on his dossier");
+  assert.match(line.textContent, /^Ibarra's patience 4 of 6/);
+  assert.match(line.textContent, /Eclipse/, "it names the faction it belongs to");
+  assert.ok(line.querySelector("[data-clkminus]") && line.querySelector("[data-clkplus]"), "− and +");
+  assert.ok(app.$$("#main h2").some(h => h.textContent === "Clocks"));
+  line.querySelector("[data-clkplus]").click();
+  assert.match(app.$$("#main .clock-line").find(l => /Ibarra/.test(l.textContent)).textContent, /^Ibarra's patience 5 of 6/);
+  app.click('[data-tsec="city"]'); cityView(app, "factions");
+  assert.match(app.$$("[data-fcard]").find(c => /Ibarra|Eclipse/.test(c.textContent) && /patience/.test(c.textContent)).textContent, /Ibarra's patience 5 of 6/, "the faction's card agrees");
+  // Someone who is key to nothing has no Clocks block.
+  const lone = app.window.eval(`S.table.cast.find(n => !Engine.factionsKeyFor(S.table, n.id).length).id`);
+  app.click('[data-tsec="cast"]'); app.click(`[data-copen="${lone}"]`);
+  assert.ok(!app.$$("#main h2").some(h => h.textContent === "Clocks"), "a member key to no faction has no Clocks block");
   assert.deepEqual(app.errors, []);
 });

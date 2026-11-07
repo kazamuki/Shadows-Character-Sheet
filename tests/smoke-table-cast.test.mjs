@@ -14,7 +14,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { boot } from "./harness.mjs";
 import { syntheticPack, PACK_ID } from "./packfixture.mjs";
-import { Engine, search, clickIn, withDownloads, importFile, named, charKeys, sheetHome, tipShown, wizCss, GM_ON, GM_OFF, tableKeys, tableCard, seedTable, type, runTable, notesTab, tableHome, tableFile, keyIn, castAdd, pick, threatsTab, tableWithPack, entryButton, packStored } from "./smokekit.mjs";
+import { Engine, search, clickIn, withDownloads, importFile, named, charKeys, sheetHome, tipShown, wizCss, GM_ON, GM_OFF, tableKeys, tableCard, seedTable, type, runTable, notesTab, tableHome, tableFile, keyIn, castAdd, pick, threatsTab, tableWithPack, entryButton, packStored, edit, done, editNote, deadAirApp, pageControls } from "./smokekit.mjs";
 
 // ── Tables and the feature switch (Decisions 171, 173) ──────────────────
 const tableEntryOf = (app, id) => JSON.parse(app.window.localStorage.getItem("shadows.table.v1." + id));
@@ -123,12 +123,14 @@ test("Decision 171: notes save as they're typed and survive a reload; Delete ask
   const again = boot({ storage: { ["shadows.table.v1." + tid]: tableEntryOf(app, tid), ...GM_ON } });
   tableCard(again, "Notes table").querySelector("[data-topen]").click();
   notesTab(again);
+  editNote(again, id);
   assert.equal(again.$(`[data-ntitle="${id}"]`).value, "The fixer");
   assert.equal(again.$(`[data-ntext="${id}"]`).value, "Owes us a favour.");
   // two more notes, then Delete the middle one
   again.click("[data-tnew]"); again.click("[data-tnew]");
   const ids = again.$$("[data-note]").map(n => n.dataset.note);
   assert.equal(ids.length, 3);
+  editNote(again, ids[1]);
   again.click(`[data-ndel="${ids[1]}"]`);
   assert.ok(again.$("#modal[open]"), "Delete didn't ask");
   again.click("#modal [data-modalclose]");
@@ -136,9 +138,9 @@ test("Decision 171: notes save as they're typed and survive a reload; Delete ask
   again.click(`[data-ndel="${ids[1]}"]`);
   again.click("#modal [data-askyes]");
   assert.deepEqual(again.$$("[data-note]").map(n => n.dataset.note), [ids[0], ids[2]]);
-  assert.equal(again.doc.activeElement.dataset.ntitle, ids[2], "after Delete focus isn't on the next note");
-  again.click(`[data-ndel="${ids[2]}"]`); again.click("#modal [data-askyes]");
-  again.click(`[data-ndel="${ids[0]}"]`); again.click("#modal [data-askyes]");
+  assert.equal(again.doc.activeElement.dataset.nopen, ids[2], "after Delete focus isn't on the next note's row");
+  editNote(again, ids[2]); again.click(`[data-ndel="${ids[2]}"]`); again.click("#modal [data-askyes]");
+  editNote(again, ids[0]); again.click(`[data-ndel="${ids[0]}"]`); again.click("#modal [data-askyes]");
   assert.ok(again.doc.activeElement.hasAttribute("data-tnew"), "with no notes left focus isn't on New note");
   assert.deepEqual([...app.errors, ...again.errors], []);
 });
@@ -183,6 +185,7 @@ test("Decision 171: importing a file opens a table, a character its sheet, and a
   await importFile(app, t);
   assert.equal(app.window.eval("S.screen"), "table");
   notesTab(app);
+  editNote(app);
   assert.equal(app.$("[data-ntitle]").value, "Hello");
   assert.equal(charKeys(app).length, 0, "a table file wrote a character");
   tableHome(app);
@@ -336,6 +339,7 @@ test("Decision 175: BOD 6 shows Health as it's typed without the field being red
   runTable(app, "Block");
   castAdd(app, "Dez");
   app.click("[data-copen]");
+  edit(app);
   assert.ok(app.$("[data-chealth-row]").hidden, "Health shows with BOD blank");
   const bod = app.$('[data-cstat="BOD"]'); bod.focus();
   type(app, '[data-cstat="BOD"]', "6");
@@ -372,6 +376,7 @@ test("Decision 176: a field typed in, then Home at once, is there when the table
   const again = boot({ storage: { ["shadows.table.v1." + tid]: tableEntryOf(app, tid), ...GM_ON } });
   tableCard(again, "Home now").querySelector("[data-topen]").click();
   again.click(`[data-copen="${id}"]`);
+  edit(again);
   assert.equal(again.$('[data-cf="motivation"]').value, "Out of the city.");
   assert.equal(again.$('[data-cf="npcRoles"]').value, "Fixer / Courier / Snitch");
   assert.equal(again.$('[data-cf="tier"]').value, "3");
@@ -543,6 +548,7 @@ test("Decision 174: a saved 0.1 table opens as the current schema with its notes
   tableCard(app, "Old one").querySelector("[data-topen]").click();
   assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.19");
   assert.equal(app.window.eval("S.table.cast.length"), 0);
+  editNote(app);
   assert.equal(app.$("[data-ntitle]").value, "Kept");
   app.click('[data-tsec="cast"]');
   castAdd(app, "Dez");
@@ -568,6 +574,7 @@ test("a long unbroken name wraps wherever the cast shows a GM's words (the pixel
   assert.ok(app.$(".cast-open")); assert.ok(app.$(".cast-line"));
   app.click("[data-copen]");
   assert.ok(app.$("h1.cast-title.tbl-title"));
+  edit(app);
   assert.ok(app.$(".cast-stats"));
 });
 
@@ -617,7 +624,8 @@ test("a number field shows what was stored once it loses focus: a refused value 
 
 // ── Interactions and affiliations (Decisions 177–179) ───────────────────
 // Synthetic only: Dez, Moth and Orla at the cast; Nyx and Rook as the crew.
-const openFirst = app => app.click("[data-copen]");
+const openFirst = app => app.click("[data-copen]");   // opens to read (Decision 271)
+const editFirst = app => { openFirst(app); edit(app); };
 const tableOf = app => JSON.parse(app.window.eval("JSON.stringify(S.table)"));
 // A member's lines read as sentences; one opens at a time with Edit (Decision 241), so the words are read off the drawn sentences.
 // What the page draws, in the order it draws it: each line's words, read back off its sentence.
@@ -671,11 +679,12 @@ test("Decision 177: Killed them on the add row sets the member Dead, no kind sta
   openFirst(app);
   app.click('[data-iakind="killed"]'); type(app, "[data-iacrew]", "Rook");
   addLine(app, "shot in the warehouse");
-  assert.equal(app.$('[data-cf="status"]').value, "dead", "the status select doesn't read Dead");
   assert.equal(app.$$("[data-iakind]").filter(b => b.getAttribute("aria-pressed") === "true").length, 0, "the add row kept Killed them");
   assert.equal(app.$$("[data-iakind=\"killed\"]").length, 1);
   assert.equal(app.doc.activeElement.hasAttribute("data-iwhat"), true);
   assert.equal(app.$("[data-iacrew]").value, "Rook", "the crew didn't stay");
+  edit(app);
+  assert.equal(app.$('[data-cf="status"]').value, "dead", "the status select doesn't read Dead");
   app.click("[data-cback]");
   assert.deepEqual(castNames(app), ["Orla"], "a dead member is still under In play");
   assert.ok(app.doc.activeElement.hasAttribute("data-cadd-name"), "focus isn't on quick-add's name");
@@ -691,6 +700,7 @@ test("Decision 177: Killed them chosen on an existing line sets Dead and keeps f
   app.click('[data-iakind="shared"]'); addLine(app, "x");
   const xid = app.$("[data-int]").dataset.int;
   editLine(app);
+  edit(app);
   assert.equal(app.$('[data-cf="status"]').value, "alive");
   app.click(`[data-ikind="${xid}|killed"]`);
   assert.equal(app.$('[data-cf="status"]').value, "dead");
@@ -911,6 +921,7 @@ test("Decisions 177–179: export and import keep every interaction and affiliat
   tableCard(app2, "Saved 0.2").querySelector("[data-topen]").click();
   assert.equal(app2.window.eval("S.table.meta.tableSchemaVersion"), "0.19");
   assert.equal(app2.window.eval("S.table.interactions.length"), 0);
+  editNote(app2);
   assert.equal(app2.$("[data-ntitle]").value, "Kept");
   app2.click('[data-tsec="cast"]');
   assert.equal(app2.window.eval("S.table.cast[0].name"), "Dez");
@@ -1262,7 +1273,9 @@ test("Decision 182: Use copies the entry into the cast and opens it, name select
   entryButton(app, "gull").click();
   app.click("[data-tuse]");
   assert.equal(app.window.eval("S.tsection"), "cast");
+  // A copy only just made is the GM's to name: it opens in Edit (Decision 271), the keyboard in its selected name.
   const name = app.$('[data-cf="name"]');
+  assert.ok(name, "Use didn't open the copy in Edit");
   assert.equal(app.doc.activeElement, name, "Use didn't put the keyboard in the name");
   assert.equal(name.value, "Gull"); assert.equal(name.selectionStart, 0); assert.equal(name.selectionEnd, 4, "the name isn't selected");
   assert.equal(app.$('[data-cf="origin"]').value, "Dock"); assert.equal(app.$('[data-cf="enemyRole"]').value, "Bruiser");
@@ -1296,7 +1309,8 @@ test("Decision 182: From on a member's page opens the entry; Back goes to the Th
   assert.equal(app.$("[data-tback]").textContent, "Back to Wren");
   app.click("[data-tback]");
   assert.equal(app.window.eval("S.tsection"), "cast");
-  assert.equal(app.$('[data-cf="name"]').value, "Wren", "Back didn't return to the member's page");
+  assert.equal(app.$("[data-ctitle]").textContent, "Wren", "Back didn't return to the member's page");
+  assert.ok(!app.$("[data-edit-done]"), "Back returned to the form, not the dossier");
   assert.equal(app.doc.activeElement, app.$("[data-tfrom]"), "Back didn't land on the From button");
   app.click('[data-tsec="threats"]');
   assert.deepEqual(threatNames(app), ["Wren", "Gull"]);
@@ -1328,6 +1342,7 @@ test("Decision 182 (review): Back from an entry opened by From returns to that m
   // Opening the entry any other way clears it: through the tab's list.
   app2.click("[data-tback]");
   assert.equal(app2.window.eval("S.tsection"), "cast", "Back didn't return to the member's page");
+  edit(app2);
   assert.equal(app2.$('[data-cf="name"]').value, "   ");
   app2.click('[data-tsec="threats"]');
   entryButton(app2, "gull").click();
@@ -1357,6 +1372,7 @@ test("Decision 182: removing the pack leaves every copy whole; From reads as tex
   app.$("[data-copen]").click();
   assert.match(app.$(".cast-from").textContent, /^From Gull/);
   assert.equal(app.$("[data-tfrom]"), null, "From is still a button with the pack gone");
+  edit(app);
   assert.equal(app.$('[data-cf="name"]').value, "Vinnie"); assert.equal(app.$('[data-cstat="BOD"]').value, "8");
   assert.equal(app.window.eval("S.table.cast[0].from.name"), "Gull");
   threatsTab(app);
@@ -1410,6 +1426,7 @@ test("Decision 184: with no pack slotted in, a member's page has no lists, toggl
 test("Decision 184: a pack offers its origins and enemy roles as lists that still take anything, and roles as toggles", () => {
   const app = memberFromGull();
   const opts = id => app.$$(`#${id} option`).map(o => o.value);
+  edit(app);
   assert.deepEqual(opts("cast-origins"), ["Dock", "Spire"]);
   assert.deepEqual(opts("cast-enemies"), ["Bruiser"]);
   assert.equal(app.$('[data-cf="origin"]').getAttribute("list"), "cast-origins");
@@ -1422,6 +1439,7 @@ test("Decision 184: a pack offers its origins and enemy roles as lists that stil
 
 test("Decision 184: a typed origin (any case) shows its modifiers beside the stats, keeps the caret, and stores nothing new", () => {
   const app = memberFromGull();
+  edit(app);
   assert.equal(modOf(app, "BOD"), "Dock +1"); assert.equal(modOf(app, "REF"), "Dock −1"); assert.equal(modOf(app, "MOB"), "");
   const shape = () => JSON.stringify(Object.keys(castSel(app)).sort()) + JSON.stringify(Object.keys(castSel(app).block).sort());
   const before = shape();
@@ -1444,6 +1462,7 @@ test("Decision 184: a role toggle writes the field and the member, and typing pr
   const app = memberFromGull();
   const on = () => app.$$("[data-crole]").filter(b => b.getAttribute("aria-pressed") === "true").map(b => b.textContent).join();
   assert.equal(on(), "");
+  edit(app);
   const look = app.$('[data-crole="Lookout"]'); look.focus(); look.click();
   assert.equal(app.$('[data-cf="npcRoles"]').value, "Lookout"); assert.deepEqual(castSel(app).npcRoles, ["Lookout"]);
   assert.equal(look.getAttribute("aria-pressed"), "true"); assert.equal(app.doc.activeElement, look, "the toggle lost focus");
@@ -1461,6 +1480,7 @@ test("Decision 184: a role toggle writes the field and the member, and typing pr
 test("Decision 184: the tier's name is a tip, its guides show, and an enemy role of another tier says so", () => {
   const app = memberFromGull();
   const note = () => app.$("[data-ctier]").textContent.replace(/\s+/g, " ");
+  edit(app);
   assert.match(note(), /^Slight$/, "Gull is Tier 1, a Bruiser's tier");
   type(app, '[data-cf="tier"]', "2");
   assert.match(note(), /^Middling · A Bruiser is usually Tier 1$/);
@@ -1493,6 +1513,7 @@ test("Decision 184: a page with every guide matched shows no warning anywhere", 
 test("Decision 185: Add from a pack opens the glossary: pack order, filters narrow, the search keeps its caret", () => {
   const app = memberFromGull();
   const rows = () => app.$$("#modal [data-tpadd]").map(b => b.getAttribute("aria-label").replace("Add ", ""));
+  edit(app);
   const open = app.$("[data-ctpick]"); open.focus(); open.click();
   assert.match(app.$("#modal .modal-head").textContent, /Add a trait/);
   assert.equal(app.doc.activeElement, app.$("[data-tpsearch]"), "the search isn't focused");
@@ -1515,6 +1536,7 @@ test("Decision 185: Add from a pack opens the glossary: pack order, filters narr
 test("Decision 185: Add copies the name and text only, closes, focuses the new name, and the count follows a rename", () => {
   const app = memberFromGull();
   const countText = () => app.$("[data-ctcount]").textContent;
+  edit(app);
   assert.equal(app.$("[data-ctcount]").hidden, true, "a count with no traits");
   app.click("[data-ctpick]");
   app.click(`[data-tpadd="${PACK_ID}|gulls-cry"]`);
@@ -1534,6 +1556,7 @@ test("Decision 185: Add copies the name and text only, closes, focuses the new n
 
 test("Decision 185: Cancel and Escape return to Add from a pack, and the search is there next time", () => {
   const app = memberFromGull();
+  edit(app);
   app.$("[data-ctpick]").focus(); app.click("[data-ctpick]");
   type(app, "[data-tpsearch]", "rope"); pick(app, "[data-tpkind]", "origin");
   app.click("#modal .modal-foot [data-modalclose]");
@@ -1567,6 +1590,7 @@ test("Decision 184: removing the pack leaves every member as typed, with no guid
   for (const k of packKeys(app)) app.window.localStorage.removeItem(k);
   app.click("[data-cback]"); app.click("[data-copen]");
   assert.equal(JSON.stringify(castSel(app)), before);
+  edit(app);
   assert.equal(app.$('[data-cf="origin"]').value, "Dock"); assert.equal(app.$('[data-ctname="0"]').value, "Gull's Cry");
   for (const s of ["#cast-origins", "#cast-enemies", "[list=cast-origins]", "[data-crole]", ".cast-guide", "[data-cmod]", "[data-ctpick]"]) assert.equal(app.$(`#main ${s}`), null, s);
   assert.deepEqual(app.errors, []);
@@ -1601,6 +1625,7 @@ test("Decision 185 (review): a blank trait row isn't counted", () => {
 test("Decision 184 (review): a Use copy says the book's stats already include its origin, while the origin is still its entry's", () => {
   const app = memberFromGull();
   const note = () => app.$("[data-cmodnote]");
+  edit(app);
   assert.equal(note().hidden, false);
   assert.equal(note().textContent, "The book's stats for Gull already include Dock's modifiers.");
   assert.equal(modOf(app, "BOD"), "Dock +1");
@@ -1625,6 +1650,7 @@ test("Decision 184 (review): a quick-added member gets modifiers and no note; a 
   assert.equal(modOf(app, "BOD"), "Dock +1");
   app.click("[data-cback]");
   app.click('[data-tsec="threats"]'); app.$$("[data-tentry]").find(b => b.textContent === "Gull").click(); app.click("[data-tuse]");
+  edit(app);
   assert.equal(app.$("[data-cmodnote]").hidden, false);
   // The gate admits only kind "entry" today; the page checks it itself, so a future kind says nothing until it's decided.
   app.window.eval('S.table.cast[0].from.kind = "other"');
@@ -1735,6 +1761,7 @@ test("U4: a section head is Mono Caps and a name isn't", () => {
   runTable(app, "Heads");
   castAdd(app, "Dez");
   app.click("[data-copen]");
+  edit(app);
   const stat = [...app.$$("h2.cast-h")].find(h => h.textContent === "Stat block");
   assert.ok(stat && stat.classList.contains("sec-h"), "Stat block isn't a section head");
   app.click("[data-tsec=\"players\"]");
@@ -1764,4 +1791,76 @@ test("U4: Home's card leads with sessions and cast", () => {
   for (let i = 0; i < 3; i++) Engine.addCastMember(t3, { name: "C" + i });
   const app3 = boot({ storage: { ...s3, ...GM_ON } });
   assert.match(tableCard(app3, "Cast only").querySelector(".roster-meta").textContent, /^3 cast · changed /);
+});
+
+// ── U3: read first (Decision 271) ─────────────────────────────────────────
+test("U3: a member opens to read, and Edit opens today's form", () => {
+  const app = deadAirApp("cast");
+  app.click('[data-copen="C-8FGP6RCT"]');
+  const fields = app.$$("#main input, #main select, #main textarea").filter(el => !el.closest(".tbl-bar, .clock-lines, .int-add, .int-list"));
+  assert.deepEqual(fields.map(f => f.outerHTML.slice(0, 60)), [], "a field is in the read view");
+  assert.equal(app.$("[data-cf]"), null, "a member's field is in the read view");
+  assert.equal(app.$("[data-cdel]"), null, "Delete is outside Edit");
+  const h1 = app.$("#main h1"), sum = app.$("#main .dos-sum"), wants = app.$$("#main .dos-l").find(l => l.textContent === "Wants");
+  assert.ok(sum && wants, "the summary line and Wants are drawn");
+  const after = (a, b) => !!(a.compareDocumentPosition(b) & app.window.Node.DOCUMENT_POSITION_FOLLOWING);
+  assert.ok(after(h1, sum) && after(sum, wants), "name, summary, then Wants");
+  const first = pageControls(app).filter(el => !el.matches("[data-edit]"))[0];
+  assert.ok(after(wants, first), "Wants comes before any control but the bar's and Edit");
+  assert.equal(app.$$("#main .dos-l").map(l => l.textContent).slice(0, 3).join("|"), "Wants|If pushed|Their line");
+  assert.ok(app.$("#main blockquote.dos-quote"), "their line is a quote");
+  edit(app);
+  assert.ok(app.$('[data-cf="motivation"]'), "Edit opens today's form");
+  assert.equal(app.$("[data-cback]"), null, "Back is hidden while editing");
+  assert.ok(app.$("[data-cdel]"), "Delete is in Edit");
+  done(app);
+  assert.equal(app.doc.activeElement, app.$("[data-edit]"), "Done puts focus on Edit");
+  assert.equal(app.$("[data-cf]"), null);
+  assert.deepEqual(app.errors, []);
+});
+
+test("U3: the dossier leaves out what's empty", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Empty");
+  castAdd(app, "Nobody");
+  openFirst(app);
+  const text = app.$("#main").textContent;
+  assert.match(text, /Nothing on file yet\. Edit to add who they are and what they want\./);
+  assert.doesNotMatch(text, /Wants|If pushed|Their line|GM note|Got|—/);
+  assert.equal(app.$$("#main .dos-l").length, 0);
+  assert.ok(app.$("[data-edit]"));
+  edit(app); type(app, '[data-cf="motivation"]', "Out of the city."); done(app);
+  assert.doesNotMatch(app.$("#main").textContent, /Nothing on file yet/);
+  assert.match(app.$("#main").textContent, /Wants[\s\S]*Out of the city\./);
+  assert.deepEqual(app.errors, []);
+});
+
+test("U3: Edit doesn't outlive its record: leave a member in Edit, come back, and it reads", () => {
+  const app = deadAirApp("cast");
+  app.click('[data-copen="C-8FGP6RCT"]'); edit(app);
+  assert.equal(app.window.eval("JSON.stringify(S.editing)"), JSON.stringify({ kind: "member", id: "C-8FGP6RCT" }));
+  app.click('[data-tsec="sessions"]');
+  assert.equal(app.window.eval("S.editing"), null, "a tab press cleared Edit");
+  app.click('[data-tsec="cast"]'); app.click('[data-copen="C-8FGP6RCT"]');
+  assert.equal(app.$("[data-cf]"), null, "the member opened in Edit");
+  // Edit, then open another member through a link: the next one reads as well.
+  edit(app);
+  app.window.eval(`openFound("cast", "C-1DYS6JFW")`);
+  assert.equal(app.window.eval("S.editing"), null);
+  assert.equal(app.$("[data-cf]"), null);
+  assert.deepEqual(app.errors, []);
+});
+
+test("U3: Find on a member's GM note opens Edit and lands on the field", () => {
+  const app = deadAirApp("cast");
+  const note = app.window.eval(`S.table.cast.find(n => n.id === "C-8FGP6RCT").gmNote`).trim();
+  assert.ok(note.length > 20, "Ibarra has a GM note");
+  app.click("[data-tfind]");
+  type(app, "[data-findq]", note.slice(-30));
+  const hit = app.$$("[data-fkind=cast]").find(b => b.dataset.fid === "C-8FGP6RCT" && b.dataset.ffield === "GM note");
+  assert.ok(hit, "Find offers the GM note: " + app.$$("[data-fkind]").map(b => b.dataset.fkind + "|" + b.dataset.ffield).join(","));
+  hit.click();
+  assert.ok(app.$("[data-edit-done]"), "the form is open");
+  assert.equal(app.doc.activeElement, app.$('[data-cf="gmNote"]'));
+  assert.deepEqual(app.errors, []);
 });

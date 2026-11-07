@@ -222,7 +222,8 @@ async function recordFrames(browser, file, seed) {
 // prose block and card, the cards a row, the encounter's rows, and the header and the bar together.
 const TABLE_WIDTHS = [{ width: 390, height: 844 }, { width: 768, height: 1024 }, { width: 1300, height: 900 }, { width: 1980, height: 1080 }, { width: 390, height: 844, touch: true }];
 const FIELD_MAX = 36 * 16, AREA_MAX = 48 * 16, CARD_MIN = 20 * 16, CARD_MAX = 36 * 16, ENC_MAX = 64 * 16, BAR_MAX = 48;
-const CARDS_A_ROW = { 390: 1, 768: 2, 1300: 3, 1980: 4 };
+// Card grids hold one column count per width band (Decision 271): one below 640px, two to 1279px, three from 1280px; Sessions is always one.
+const CARDS_A_ROW = { 390: 1, 768: 2, 1300: 3, 1980: 3 };
 const DEZ_TAG = "TAG-EEEE-EEEE-EEEE";
 
 function tableSeed() {
@@ -301,6 +302,7 @@ async function tableScreens(browser, file, rows, numbers) {
     const then = (...fs) => async () => { for (const f of fs) await f(); };
     await walk("sessions", tab("sessions"), { list: true });
     await walk("a session", click("[data-sopen]"), { bar: true });
+    await walk("a session in Edit", click("[data-edit]"), { bar: true });
     // The first sessions are closed already; the close-out's page is a session that isn't.
     await walk("the close-out", async () => {
       await page.click('[data-tsec="sessions"]');
@@ -317,9 +319,12 @@ async function tableScreens(browser, file, rows, numbers) {
     await walk("a seat's page", click("[data-roseat]"), { bar: true });
     await walk("cast", tab("cast"), { list: true });
     await walk("a member", click("[data-copen]"), { bar: true });
+    await walk("a member in Edit", click("[data-edit]"), { bar: true });
     await walk("city", tab("city"), { list: true });
     await walk("a place", click("[data-popen]"), { bar: true });
+    await walk("a place in Edit", click("[data-edit]"), { bar: true });
     await walk("a faction", then(tab("city"), click('[data-cityview="factions"]'), click("[data-fcardopen]")), { bar: true });
+    await walk("a faction in Edit", click("[data-edit]"), { bar: true });
     await walk("threats", tab("threats"), { list: true });
     await walk("a threat", click("[data-tentry]"), { bar: true });
     await walk("a threat group", then(tab("threats"), click('[data-tview="group"]'), click("[data-tgroup]")), { bar: true });
@@ -337,7 +342,8 @@ async function tableScreens(browser, file, rows, numbers) {
       if (m.field > FIELD_MAX + 0.5) bad.push(`a field ${m.field}px`);
       if (m.area > AREA_MAX + 0.5) bad.push(`a textarea ${m.area}px`);
       if (m.prose > m.ch75 + 1) bad.push(`prose ${m.prose}px, 75ch is ${m.ch75}px`);
-      if (s.list && m.cards >= CARDS_A_ROW[z.width] && m.perRow < CARDS_A_ROW[z.width]) bad.push(`${m.perRow} cards a row, ${CARDS_A_ROW[z.width]} wanted`);
+      const want = s.name === "sessions" ? 1 : CARDS_A_ROW[z.width];
+      if (s.list && m.cards >= want && m.perRow !== want) bad.push(`${m.perRow} cards a row, ${want} wanted`);
       if (m.cards && z.width > 390 && (m.cardMin < CARD_MIN - 1 || m.cardMax > CARD_MAX + 1)) bad.push(`cards ${m.cardMin}-${m.cardMax}px`);
       if (s.enc && (m.enc > ENC_MAX + 1 || m.encCols !== 1)) bad.push(`rows ${m.enc}px in ${m.encCols} columns`);
       if (s.bar && !m.bar) bad.push("no bar");
@@ -407,11 +413,11 @@ async function tableExtras(browser, file, rows, numbers) {
     await c.addInitScript(([s, pk, pack]) => { try { localStorage.setItem("shadows.feature.gm", "on");
       localStorage.setItem("shadows.table.v1." + s.table.meta.id, JSON.stringify(s)); localStorage.setItem(pk, JSON.stringify(pack)); } catch (e) {} }, [seed.table, seed.packKey, seed.pack]);
     const page = await c.newPage();
-    await page.goto(pathToFileURL(file).href); await page.click("[data-topen]"); await page.click('[data-tsec="cast"]'); await page.click("[data-copen]");
+    await page.goto(pathToFileURL(file).href); await page.click("[data-topen]"); await page.click('[data-tsec="cast"]'); await page.click('[data-copen="C-8FGP6RCT"]');
     const at = () => page.evaluate(() => { const pn = document.querySelector(".cast-panel"), bar = document.querySelector(".tbl-bar"), r = pn.getBoundingClientRect(), b = bar.getBoundingClientRect(), t = document.querySelector("[data-ctitle]").getBoundingClientRect();
-      return { x: Math.round(r.x), w: Math.round(r.width), top: Math.round(r.top), barBottom: Math.round(b.bottom), titleTop: Math.round(t.top), statusUnderName: document.querySelector("[data-ctitle]").nextElementSibling.matches(".cast-status") }; });
+      return { x: Math.round(r.x), w: Math.round(r.width), top: Math.round(r.top), barBottom: Math.round(b.bottom), titleTop: Math.round(t.top), statusUnderName: !document.querySelector("[data-edit-done]") || document.querySelector("[data-ctitle]").nextElementSibling.matches(".cast-status") }; });
     const before = await at();
-    await page.evaluate(() => window.scrollTo(0, 1000));
+    await page.evaluate(() => window.scrollTo(0, Math.min(1000, Math.floor((document.documentElement.scrollHeight - innerHeight) / 3))));
     const after = await at();
     const docked = z.width >= 1280;
     const bad = [];

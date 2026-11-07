@@ -188,7 +188,7 @@ export const seedTable = (name, extra = {}) => {
 };
 
 export const type = (app, sel, value) => {
-  const el = app.$(sel);
+  const el = app.reach(sel);
   el.value = value;
   el.dispatchEvent(new app.window.Event("input", { bubbles: true }));
 };
@@ -209,14 +209,14 @@ export const tableHome = app => { app.click("[data-menu-toggle]"); app.click("[d
 export const tableFile = async blob => JSON.parse(await blob.text());
 
 // A synthetic NPC only: Dez, a courier. Nothing here is the Codex's.
-export const keyIn = (app, sel, k) => app.$(sel).dispatchEvent(new app.window.KeyboardEvent("keydown", { key: k, bubbles: true, cancelable: true }));
+export const keyIn = (app, sel, k) => app.reach(sel).dispatchEvent(new app.window.KeyboardEvent("keydown", { key: k, bubbles: true, cancelable: true }));
 
 export const castAdd = (app, name, line = "") => {
   type(app, "[data-cadd-name]", name); type(app, "[data-cadd-line]", line);
   keyIn(app, "[data-cadd-name]", "Enter");
 };
 
-export const pick = (app, sel, value) => { const el = app.$(sel); el.value = value; el.dispatchEvent(new app.window.Event("change", { bubbles: true })); };
+export const pick = (app, sel, value) => { const el = app.reach(sel); el.value = value; el.dispatchEvent(new app.window.Event("change", { bubbles: true })); };
 
 export const packStored = (pack = syntheticPack(), imported = "2026-10-05T10:00:00.000Z") =>
   ({ ["shadows.pack.v1." + pack.meta.id]: { pack: Engine.migratePack(pack), imported } });
@@ -245,4 +245,34 @@ export function lockedVampire(bloodline = "draugur") {
   return ch;
 }
 
-export const fill = (app, sel, v) => { const el = app.$(sel); assert.ok(el, `no ${sel}`); el.value = v; el.dispatchEvent(new app.window.Event("input", { bubbles: true })); };
+export const fill = (app, sel, v) => { const el = app.reach(sel); assert.ok(el, `no ${sel}`); el.value = v; el.dispatchEvent(new app.window.Event("input", { bubbles: true })); };
+
+// Decision 271: a record opens to read. Edit swaps in the form; this presses it and asserts the form is there, so a test never
+// types into a field a reader of the page wouldn't have. `which` picks one Edit button by its kind (and id) when a page has several.
+export const edit = (app, which = "") => {
+  if (!which && app.$("#main [data-edit-done]")) return app;   // already in the form (a Use copy opens in Edit)
+  const sel = which ? `#main [data-edit^="${which}"]` : "#main [data-edit]";
+  assert.ok(app.$(sel), `no Edit button${which ? ` for ${which}` : ""}`);
+  app.click(sel);
+  assert.ok(app.$("#main [data-edit-done]"), "Edit didn't open the form (no Done)");
+  return app;
+};
+export const done = app => { app.click("#main [data-edit-done]"); assert.ok(!app.$("#main [data-edit-done]"), "Done left the form open"); return app; };
+
+// A note opens to read, one at a time; this opens the one named (or the only one) and presses its Edit.
+export const editNote = (app, id) => {
+  const row = id ? `#main [data-nopen="${id}"]` : "#main [data-nopen]";
+  assert.ok(app.$(row), `no note row${id ? ` for ${id}` : ""}`);
+  if (app.$(row).getAttribute("aria-expanded") !== "true") app.click(row);
+  return edit(app, "note|" + (id || ""));
+};
+
+// Dead Air, the lived-in sample table (samples/), opened on `section`. The U3 tests read it as a GM would.
+export const deadAirApp = (section = "sessions") => {
+  const t = Engine.migrateTable(JSON.parse(readFileSync(new URL("../samples/dead-air.shadows-table.json", import.meta.url), "utf8")));
+  const app = boot({ storage: { ...GM_ON, ["shadows.table.v1." + t.meta.id]: { table: t, section, changed: "2026-10-05T10:00:00.000Z", exported: null } } });
+  app.click("[data-topen]");
+  return app;
+};
+// The focusable things a page has outside its bar, in document order: what a reader tabs through.
+export const pageControls = app => app.$$("#main button, #main input, #main select, #main textarea, #main a[href]").filter(el => !el.closest(".tbl-bar") && !el.disabled);

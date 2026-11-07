@@ -276,7 +276,7 @@ function tableTabButtonsHtml(){
 }
 // A tab press's reset, shared with the Tonight strip's jumps: the tab you're on also takes you back from a member's page to the list.
 function pickTableTab(id){
-  S.tsection=id; S.backFromLine=null; S.backEnc=null; S.placeRoute=null; S.factionRoute=null; S.clockEdit=null; S.backCity=null;
+  S.tsection=id; S.editing=null; S.noteOpen=null; S.backFromLine=null; S.backEnc=null; S.placeRoute=null; S.factionRoute=null; S.clockEdit=null; S.backCity=null;
   if (S.tsection==="city"){ S.placeOpen=null; S.factionOpen=null; }
   if (S.tsection==="sessions"){ S.sessOpen=null; S.coEnd=null; }
   if (S.tsection==="players"){ S.seatOpen=null; S.seatSheet=null; }
@@ -290,7 +290,9 @@ function renderTableChrome(){
   ctx.textContent = tableName(t);
   nav.innerHTML = tableTabButtonsHtml();
   // The tab you're on also takes you back from a member's page to the list.
-  nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>{ pickTableTab(b.dataset.tsec); window.scrollTo(0,0); update(); });
+  // The keyboard stays in the tab row (Decision 271): the press rebuilt the buttons, so the pressed one is focused again.
+  nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>{ const id=b.dataset.tsec; pickTableTab(id); window.scrollTo(0,0); update();
+    const now=$("topnav") && $("topnav").querySelector(attrSel("data-tsec", id)); if (now) now.focus({ preventScroll:true }); });
   showActiveTab(nav);
   if (!act) return;
   act.innerHTML = `<button type="button" class="hdr-act" data-tfind>Find</button><button type="button" class="hdr-act" data-tjot>Jot</button>
@@ -366,18 +368,48 @@ document.addEventListener("keydown", e=>{
   e.preventDefault();
   if (e.key.toLowerCase()==="f") openFind({ viaKey:true }); else openJot({ viaKey:true });
 });
+// ── Read first (Decision 271) ──────────────────────────────────────────────
+// A record opens to read; Edit swaps in today's form and Done swaps back. S.editing = { kind, id } is view state: nothing
+// is stored. renderTable drops it the moment the record it names is no longer the one on the page, so a route away (a tab, Back,
+// Find, a link) never carries it to the next time the record opens. S.noteOpen is the one note open in Notes, cleared the same way.
+const editingNow = (kind, id) => !!S.editing && S.editing.kind===kind && S.editing.id===id;
+const editBtnHtml = (kind, id, name) => `<button type="button" class="btn sm" data-edit="${kind}|${esc(id)}" aria-label="Edit ${esc(name)}">Edit</button>`;
+const doneBtnHtml = (kind, id, name) => `<button type="button" class="btn sm primary" data-edit-done="${kind}|${esc(id)}" aria-label="Done editing ${esc(name)}">Done</button>`;
+// A page's name with Edit beside it (and no Edit while it is being edited: the bar's Done is the way out).
+const recHeadHtml = (h1, kind, id, name) => `<div class="rec-head">${h1}${editingNow(kind, id) ? "" : editBtnHtml(kind, id, name)}</div>`;
+// Prose under a Mono Caps label; nothing at all when there is nothing to say.
+const proseHtml = (label, text) => String(text||"").trim() ? `<h2 class="ref-sub dos-l">${esc(label)}</h2><p class="dos-p">${esc(text)}</p>` : "";
+// Edit puts the keyboard in the form's first field; Done puts it back on Edit.
+function bindEdit(main, kind, id){
+  main.querySelectorAll(`[data-edit="${kind}|${id}"]`).forEach(b=>b.onclick=()=>{
+    S.editing={ kind, id }; renderTable();
+    const first=Array.from($("main").querySelectorAll("input, select, textarea")).find(el=>!el.closest(".tbl-bar") && el.type!=="hidden");
+    if (first) first.focus();
+  });
+  main.querySelectorAll(`[data-edit-done="${kind}|${id}"]`).forEach(b=>b.onclick=()=>{
+    S.editing=null; renderTable();
+    const e=$("main").querySelector(`[data-edit="${kind}|${id}"]`); if (e) e.focus();
+  });
+}
+// A note's title, or its first line when it has none.
+const noteName = n => String(n.title||"").trim() || String(n.text||"").split(/\r?\n/).map(x=>x.trim()).find(Boolean) || "Untitled note";
 function noteCardHtml(n){
-  const id=esc(n.id);
-  return `<div class="tbl-note" data-note="${id}">
+  const id=esc(n.id), open=S.noteOpen===n.id, editing=open && editingNow("note", n.id), sess=sessionById(n.session);
+  const row=`<button type="button" class="cast-open note-open" data-nopen="${id}" aria-expanded="${open}">${esc(noteName(n))}</button>${sess ? ` <span class="tag plain">${esc(Engine.sessionTitle(sess))}</span>` : ""}`;
+  if (!open) return `<li class="tbl-note" data-note="${id}"><div class="note-head">${row}</div></li>`;
+  if (!editing) return `<li class="tbl-note open" data-note="${id}"><div class="note-head">${row}</div>
+    ${String(n.text||"").trim() ? `<p class="dos-p note-text">${esc(n.text)}</p>` : ""}
+    <p class="note-acts">${editBtnHtml("note", n.id, noteName(n))}</p></li>`;
+  return `<li class="tbl-note open editing" data-note="${id}"><div class="note-head">${row}</div>
     <label class="field"><span>Title</span><input type="text" data-ntitle="${id}" value="${esc(n.title)}" placeholder="Untitled note" autocomplete="off"></label>
     <label class="field"><span>Note</span><textarea data-ntext="${id}" placeholder="Leads, debts, names to remember.">${esc(n.text)}</textarea></label>
     <label class="field"><span>Session</span><select data-nsess="${id}"><option value="">None</option>${Engine.sessionList(S.table).map(s=>`<option value="${esc(s.id)}"${s.id===n.session ? " selected" : ""}>${esc(Engine.sessionTitle(s))}${s.date ? ` · ${esc(dayText(s.date))}` : ""}</option>`).join("")}</select></label>
-    <button class="btn sm danger" data-ndel="${id}">Delete</button></div>`;
+    <p class="note-acts">${doneBtnHtml("note", n.id, noteName(n))} <button class="btn sm danger" data-ndel="${id}">Delete</button></p></li>`;
 }
 function notesTabHtml(t){
-  return `<p><button class="btn primary" data-tnew>New note</button></p>
-    ${t.notes.length ? t.notes.map(noteCardHtml).join("")
-      : `<p class="step-note">Nothing on file yet. What you write here stays with the table and goes wherever its file goes.</p>`}`;
+  return `${t.notes.length ? `<ul class="int-list note-list">${t.notes.map(noteCardHtml).join("")}</ul>`
+      : `<p class="step-note">Nothing on file yet. What you write here stays with the table and goes wherever its file goes.</p>`}
+    <p><button class="btn primary" data-tnew>New note</button></p>`;
 }
 // ── Tonight (Decision 270) ───────────────────────────────────────────────
 // One line of the night in the tables bar, on every tab and page while a fight runs or a session is open: who acts,
@@ -478,6 +510,17 @@ function renderTable(){
   if (!seatSheet) S.seatSheet=null;
   const placePage = cityPageNow(), factionPage = placePage ? null : factionPageNow();
   const onPage = (S.tsection==="cast" && castOpenMember()) || threatPage || encPage || sessPage || placePage || factionPage || seatPage;
+  // Edit and an open note belong to the record on the page now (Decision 271): any route away leaves the next opening to read.
+  const ed=S.editing;
+  if (ed){
+    const here = ed.kind==="member" ? S.tsection==="cast" && !!onPage && onPage.id===ed.id
+      : ed.kind==="place" ? !!placePage && placePage.id===ed.id : ed.kind==="faction" ? !!factionPage && factionPage.id===ed.id
+      : ed.kind==="session" ? !!sessPage && sessPage.id===ed.id
+      : ed.kind==="thread" ? S.tsection==="sessions" && !sessPage && (t.threads||[]).some(h=>h.id===ed.id)
+      : ed.kind==="note" ? S.tsection==="notes" && S.noteOpen===ed.id : false;
+    if (!here) S.editing=null;
+  }
+  if (S.tsection!=="notes") S.noteOpen=null;
   const head = onPage ? "" :
     `<h1 class="step-title tbl-title">${esc(tableName(t))}</h1>
     <p class="step-note">Table${Number.isFinite(made)?` · created ${esc(new Date(made).toLocaleDateString())}`:""}</p>`;
@@ -518,16 +561,25 @@ function bindNotes(main){
     tableChange(()=>Engine.editTableNote(S.table, el.dataset.ntext, { text:el.value }), false); });
   main.querySelectorAll("[data-nsess]").forEach(el=>el.onchange=()=>{
     tableChange(()=>Engine.editTableNote(S.table, el.dataset.nsess, { session:el.value || null }), false); });
+  // One note open at a time: a press opens that note and shuts the other; pressing the open one shuts it. Focus stays on the row.
+  main.querySelectorAll("[data-nopen]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.nopen; S.noteOpen = S.noteOpen===id ? null : id; S.editing=null; renderTable();
+    const el=$("main").querySelector(attrSel("data-nopen", id)); if (el) el.focus();
+  });
+  main.querySelectorAll("[data-edit^='note|']").forEach(b=>bindEdit(main, "note", b.dataset.edit.split("|")[1]));
+  main.querySelectorAll("[data-edit-done^='note|']").forEach(b=>bindEdit(main, "note", b.dataset.editDone.split("|")[1]));
   main.querySelector("[data-tnew]").onclick=()=>{
     let id; tableChange(()=>{ id=Engine.addTableNote(S.table, { title:"", text:"" }).id; });
+    S.noteOpen=id; S.editing={ kind:"note", id }; renderTable();
     const el=titleOf(id); if (el) el.focus();
   };
   main.querySelectorAll("[data-ndel]").forEach(b=>b.onclick=()=>{
-    const id=b.dataset.ndel, at=S.table.notes.findIndex(n=>n.id===id);
-    askFirst({ title:"Delete this note?", text:UNDO_ASK, yes:"Delete",
+    const id=b.dataset.ndel, at=S.table.notes.findIndex(n=>n.id===id), n=S.table.notes[at];
+    askFirst({ title:`Delete "${noteName(n)}"?`, text:UNDO_ASK, yes:"Delete",
       then(){
+        S.noteOpen=null; S.editing=null;
         tableChange(()=>Engine.removeTableNote(S.table, id));
-        const next=S.table.notes[at], el=next && $("main").querySelector(`[data-ntitle="${next.id}"]`) || $("main").querySelector("[data-tnew]");
+        const next=S.table.notes[at], el=next && $("main").querySelector(attrSel("data-nopen", next.id)) || $("main").querySelector("[data-tnew]");
         if (el) el.focus();
       } });
   });
@@ -609,15 +661,21 @@ function openFound(kind, id, field){
   S.backFromLine=null; S.placeRoute=null; S.factionRoute=null; S.backCity=null;
   const t=S.table, main=()=>$("main");
   const land=sel=>{ const el=main().querySelector(sel); if (el){ takeFocus(el, true); if (el.scrollIntoView) el.scrollIntoView({ block:"center" }); } return el; };
+  S.editing=null;
   const toMember=cid=>{ S.tsection="cast"; S.castOpen=cid; S.castView="cast"; S.backEnc=null; S.backSess=false; S.backClose=false; S.backCity=null; S.castFrom=null; S.intAdd=null; };
   const toSession=sid=>{ S.tsection="sessions"; S.sessOpen=sid; S.coEnd=null; if (S.closeOut) S.closeOut.view=false; };
   window.scrollTo(0,0);
-  if (kind==="cast"){ toMember(id); update(); land("[data-ctitle]"); }
+  if (kind==="cast"){
+    // A hit in the GM note lands on its field, which is under Edit (Decision 271); anything else lands on the dossier's name.
+    toMember(id); if (field==="GM note") S.editing={ kind:"member", id };
+    update(); (field==="GM note" && land('[data-cf="gmNote"]')) || land("[data-ctitle]");
+  }
   else if (kind==="session"){
     // A hit in a journal part lands on the part, and opens the Debrief fold it sits in (Decision 270).
     const part=typeof field==="string" && field.startsWith("journal.") ? field.slice(8) : null;
     if (part) (S.debriefOpen || (S.debriefOpen={}))[id]=true;
-    toSession(id); update(); (part && land(attrSel("data-sj", part))) || land("h1");
+    toSession(id); if (part) S.editing={ kind:"session", id };
+    update(); (part && land(attrSel("data-sj", part))) || land("h1");
   }
   else if (kind==="seat"){ S.tsection="players"; openSeat(id); land("[data-seath]") || land("h1"); }
   else if (kind==="interaction"){
@@ -641,17 +699,17 @@ function openFound(kind, id, field){
     }
     S.tsection="city"; S.cityView=on.kind==="place" ? "places" : "factions";
     S.factionOpen=on.kind==="faction" ? owner : null; S.placeOpen=on.kind==="place" ? owner : null; update();
-    land(attrSel("data-clock", id) + " [data-clockname]") || land(on.kind==="place" ? "[data-ptitle]" : "[data-ftitle]");
+    land(attrSel("data-clock", id) + " [data-clockname]") || land(attrSel("data-cline", id)) || land(on.kind==="place" ? "[data-ptitle]" : "[data-ftitle]");
   }
   else if (kind==="encounter"){
     S.tsection="encounters"; S.encOpen=id; S.encWrap=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; S.encPick=false; S.encQ=""; S.encCodex=false; S.encCodexQ="";
     update(); land("[data-enc-h]") || land("[data-esrc], [data-efinish]:not([disabled]), [data-enext]") || land("[data-enc-title]") || land("h1");
   }
 }
-// The Notes tab with one note's card in view and its Note field focused.
+// The Notes tab with that note open to read and its row focused (Decision 271).
 function openNote(id){
-  S.tsection="notes"; window.scrollTo(0,0); update();
-  const el=$("main").querySelector(attrSel("data-ntext", id)); if (el){ el.focus(); if (el.scrollIntoView) el.scrollIntoView({ block:"center" }); }
+  S.tsection="notes"; S.noteOpen=id; S.editing=null; window.scrollTo(0,0); update();
+  const el=$("main").querySelector(attrSel("data-nopen", id)); if (el){ el.focus(); if (el.scrollIntoView) el.scrollIntoView({ block:"center" }); }
 }
 // Where a jot would go, said before it is saved: the session being played, whatever day it is dated (Decision 270).
 function jotWhere(){
@@ -920,9 +978,51 @@ function castRolesHtml(n){
     `<button type="button" data-crole="${esc(r)}" aria-pressed="false">${esc(r)}</button>`).join("")}</div>` : "";
 }
 const datalistHtml = (id, names) => names.length ? `<datalist id="${id}">${names.map(x=>`<option value="${esc(x)}"></option>`).join("")}</datalist>` : "";
+// A member opens to read (Decision 271); Edit is today's form.
 function castPageHtml(n){
-  const c=Engine.packChoices(packsMemo), packs=packsMemo.length, back=encBackTitle() || (S.backClose && S.closeOut ? "the close-out" : S.backSess ? (sessOpenNow() ? Engine.sessionTitle(sessOpenNow()) : "sessions") : cityBackTitle());
-  return `<div class="tbl-bar scroll-row" data-row="tblbar"><button class="btn sm" data-cback>${back ? `Back to ${esc(back)}` : "Back to the cast"}</button>${encAddBtnHtml("data-cenc", "")}</div>
+  return editingNow("member", n.id) ? castFormHtml(n) : castReadHtml(n);
+}
+const castBarHtml = (n, editing) => {
+  const back=encBackTitle() || (S.backClose && S.closeOut ? "the close-out" : S.backSess ? (sessOpenNow() ? Engine.sessionTitle(sessOpenNow()) : "sessions") : cityBackTitle());
+  return `<div class="tbl-bar scroll-row" data-row="tblbar">${editing ? doneBtnHtml("member", n.id, n.name.trim() || "Unnamed")
+    : `<button class="btn sm" data-cback>${back ? `Back to ${esc(back)}` : "Back to the cast"}</button>`}${encAddBtnHtml("data-cenc", "")}</div>`;
+};
+// Who they are, what they want, their line, their clocks, then the rest. A field with nothing in it is not drawn.
+function castClocksHtml(n){
+  const rows=[];
+  for (const f of Engine.factionsKeyFor(S.table, n.id)){
+    const owner={ kind:"faction", id:f.id, name:Engine.factionTitle(S.table, f) };
+    for (const c of Engine.clocksOn(S.table, { kind:"faction", id:f.id })) rows.push(clockLineHtml(c, { owner }));
+  }
+  return rows.length ? `<h2 class="cast-h sec-h">Clocks</h2><ul class="int-list clock-lines">${rows.join("")}</ul>` : "";
+}
+function castReadHtml(n){
+  const name=n.name.trim() || "Unnamed", b=n.block, panel=b ? readBlockHtml(b) : "";
+  const keyTo=castKeyToHtml(n), clocks=castClocksHtml(n);
+  const codex=[n.origin, n.npcRoles.length ? n.npcRoles.join(" / ") : "", n.enemyRole ? `Enemy: ${n.enemyRole}` : "", n.tier!==null ? `Tier ${n.tier}` : ""].filter(x=>String(x).trim()).map(esc).join(" · ");
+  const quiet = ![n.flavor, n.motivation, n.ifPushed, n.line, n.resources, n.description, n.gmNote, codex].some(x=>String(x||"").trim()) && !n.ally && !n.affiliations.length && !clocks && !keyTo && !panel;
+  const aff=n.affiliations.length ? `<h2 class="ref-sub dos-l">Affiliations</h2><p class="dos-p">${n.affiliations.map(esc).join(" / ")}</p>` : "";
+  return `${castBarHtml(n, false)}
+    <div class="cast-layout${panel ? "" : " solo"}"><div class="cast-col">
+    ${recHeadHtml(`<h1 class="step-title tbl-title cast-title" data-ctitle>${esc(name)}</h1>`, "member", n.id, name)}
+    ${n.status!=="alive" ? `<p class="dos-tags"><span class="tag plain">${esc(castStatusLabel(n.status))}</span></p>` : ""}
+    ${castFromHtml(n)}
+    ${String(n.flavor||"").trim() ? `<p class="dos-sum">${esc(n.flavor)}</p>` : ""}
+    ${quiet ? `<p class="step-note">Nothing on file yet. Edit to add who they are and what they want.</p>` : ""}
+    ${proseHtml("Wants", n.motivation)}${proseHtml("If pushed", n.ifPushed)}
+    ${String(n.line||"").trim() ? `<h2 class="ref-sub dos-l">Their line</h2><blockquote class="dos-quote">${esc(n.line)}</blockquote>` : ""}
+    ${clocks}
+    ${proseHtml("Got", n.resources)}${proseHtml("Description", n.description)}
+    ${codex ? `<p class="dos-meta">${codex}</p>` : ""}
+    ${n.ally ? `<p class="dos-tags"><span class="tag plain">Fights with the crew</span></p>` : ""}
+    ${aff}${keyTo}
+    ${castInteractionsHtml(n)}
+    ${proseHtml("GM note", n.gmNote)}
+    </div>${panel ? `<div class="cast-panel">${panel}</div>` : ""}</div>`;
+}
+function castFormHtml(n){
+  const c=Engine.packChoices(packsMemo), packs=packsMemo.length;
+  return `${castBarHtml(n, true)}
     <div class="cast-layout"><div class="cast-col">
     <h1 class="step-title tbl-title cast-title" data-ctitle>${esc(n.name.trim() || "Unnamed")}</h1>
     <label class="field cast-status"><span>Status</span><select data-cf="status">${["alive","dead","missing","gone"].map(s=>`<option value="${s}"${s===n.status?" selected":""}>${esc(castStatusLabel(s))}</option>`).join("")}</select></label>
@@ -953,6 +1053,7 @@ function castPageHtml(n){
 function bindCast(main){
   const m=castOpenMember();
   if (m) bindCastPage(main, m); else bindCastList(main);
+  if (m) bindEdit(main, "member", m.id);
 }
 function redrawCastList(){
   const box=$("main").querySelector("[data-castlist]"); if (!box) return;
@@ -1214,13 +1315,16 @@ function bindCastPage(main, n){
     add.onclick=()=>{ let at; block(b=>{ b[list].push(fresh()); at=b[list].length-1; }, true); focus(firstSel(at)); };
     main.querySelectorAll(`[${delAttr}]`).forEach(btn=>btn.onclick=()=>{ block(b=>{ b[list].splice(+btn.getAttribute(delAttr), 1); }, true); focus(addFocus); });
   };
-  rows("[data-cskadd]", "data-cskdel", "skills", ()=>({ skill:null, name:"", total:null }), i=>`[data-cskname="${i}"]`, "[data-cskadd]");
-  rows("[data-ctadd]", "data-ctdel", "traits", ()=>({ name:"", text:"" }), i=>`[data-ctname="${i}"]`, "[data-ctadd]");
-  for (const key of ["armor","gear"]){
-    main.querySelector(`[data-clineadd="${key}"]`).onclick=()=>{ let at; block(b=>{ b[key].push(""); at=b[key].length-1; }, true); focus(`[data-clinev="${key}|${at}"]`); };
-    main.querySelectorAll(`[data-clinedel^="${key}|"]`).forEach(btn=>btn.onclick=()=>{
-      const i=+btn.dataset.clinedel.split("|")[1]; block(b=>{ b[key].splice(i, 1); }, true); focus(`[data-clineadd="${key}"]`); });
+  if (main.querySelector("[data-cskadd]")){
+    rows("[data-cskadd]", "data-cskdel", "skills", ()=>({ skill:null, name:"", total:null }), i=>`[data-cskname="${i}"]`, "[data-cskadd]");
+    rows("[data-ctadd]", "data-ctdel", "traits", ()=>({ name:"", text:"" }), i=>`[data-ctname="${i}"]`, "[data-ctadd]");
+    for (const key of ["armor","gear"]){
+      main.querySelector(`[data-clineadd="${key}"]`).onclick=()=>{ let at; block(b=>{ b[key].push(""); at=b[key].length-1; }, true); focus(`[data-clinev="${key}|${at}"]`); };
+      main.querySelectorAll(`[data-clinedel^="${key}|"]`).forEach(btn=>btn.onclick=()=>{
+        const i=+btn.dataset.clinedel.split("|")[1]; block(b=>{ b[key].splice(i, 1); }, true); focus(`[data-clineadd="${key}"]`); });
+    }
   }
+  bindClockLines(main);
   // On blur or Enter a number field shows what was stored: blank if it was refused.
   const stored = el => { const m=own(), b=m.block||{};
     if (el.dataset.cf==="tier") return m.tier;
@@ -1252,7 +1356,8 @@ function bindCastPage(main, n){
   if (addEnc) addEnc.onclick=()=>{
     encAddPress({ kind:"cast", id }, own().name.trim() || "Unnamed");
   };
-  main.querySelector("[data-cback]").onclick=()=>{
+  const backBtn=main.querySelector("[data-cback]");
+  if (backBtn) backBtn.onclick=()=>{
     if (S.backEnc && encList().some(e=>e.id===S.backEnc)){
       S.encOpen=S.backEnc; S.backEnc=null; S.castOpen=null; S.tsection="encounters"; window.scrollTo(0,0); update();
       focus(attrSel("data-eopencast", id)) || focus("[data-enext]"); return;
@@ -1283,7 +1388,8 @@ function bindCastPage(main, n){
     if (document.activeElement===document.body) focus("[data-cadd-name]");
     if (document.activeElement===document.body) focus(`[data-cview="${S.castView==="crew"?"crew":"cast"}"]`);
   };
-  main.querySelector("[data-cdel]").onclick=()=>{
+  const delBtn=main.querySelector("[data-cdel]");
+  if (delBtn) delBtn.onclick=()=>{
     const order=Engine.castFilter(S.table, castFilterNow()), at=order.findIndex(x=>x.id===id);
     askFirst({ title:`Delete ${n.name.trim() || "Unnamed"}?`, text:"Their page goes with them. What they had to do with the crew stays, under their name.", yes:"Delete",
       then(){
@@ -1314,11 +1420,15 @@ function cityBackNow(){
 }
 const cityBackTitle = () => { const b=cityBackNow(); return b ? b.title : ""; };
 const gazName = id => { const e=Engine.gazetteerEntry(id); return e ? String(e.name||"") : ""; };
+// Where a place is, each name once: the gazetteer's zone often reads the same as the typed district (Decision 271).
+function placeNames(p){
+  const seen=new Set();
+  return [gazName(p.zone), gazName(p.territory), p.district, p.neighborhood, gazName(p.environment)].map(x=>String(x||"").trim()).filter(x=>{
+    const k=x.toLowerCase(); if (!x || seen.has(k)) return false; seen.add(k); return true; });
+}
 function placeCardHtml(t, p){
   const n=Engine.placeLines(t, p.id).length;
-  const bits=[[gazName(p.zone), gazName(p.territory)].filter(Boolean).join(" · "), p.district, p.neighborhood, gazName(p.environment),
-    p.site && typeof p.site.name==="string" ? p.site.name : "",
-    n ? `${n} ${n===1 ? "line" : "lines"}` : ""].filter(s=>String(s).trim()).map(esc).join(" · ");
+  const bits=[...placeNames(p), p.site && typeof p.site.name==="string" ? p.site.name : "", n ? `${n} ${n===1 ? "thing" : "things"} happened here` : ""].filter(s=>String(s).trim()).map(esc).join(" · ");
   return `<li class="roster-card cast-card place-card" data-pcard="${esc(p.id)}"><button class="cast-open" data-popen="${esc(p.id)}">${esc(Engine.placeTitle(t, p))}</button>
     ${bits ? `<div class="roster-meta cast-meta">${bits}</div>` : ""}${clockLinesHtml(Engine.clocksOn(t, { kind:"place", id:p.id }))}</li>`;
 }
@@ -1367,11 +1477,11 @@ function cityTabHtml(t){
       <div data-citypanels>${cityPanelsHtml(g)}</div>`;
   }
   if (view==="factions") return `${toggle}${factionsViewHtml(t)}`;
-  return `${toggle}<div class="cast-add">
+  return `${toggle}<div class="cast-filters"><label class="field"><span>Search</span><input type="search" data-psearch placeholder="Search the crew's places" autocomplete="off" value="${esc(S.placeQ||"")}"></label></div>
+    <div data-placelist>${placeListHtml(t)}</div>
+    <div class="cast-add">
       <label class="field"><span>Name</span><input type="text" data-padd-name placeholder="Where did they go?" autocomplete="off"></label>
-      <button class="btn primary" data-padd>Add</button></div>
-    <div class="cast-filters"><label class="field"><span>Search</span><input type="search" data-psearch placeholder="Search the crew's places" autocomplete="off" value="${esc(S.placeQ||"")}"></label></div>
-    <div data-placelist>${placeListHtml(t)}</div>`;
+      <button class="btn primary" data-padd>Add</button></div>`;
 }
 const uniqueTyped = key => { const seen=new Map(); for (const p of placeRecords()){ const s=String(p[key]||"").trim(); if (s && !seen.has(s.toLowerCase())) seen.set(s.toLowerCase(), s); } return [...seen.values()]; };
 function placeBackTitle(){
@@ -1386,7 +1496,7 @@ const siteValue = e => `${e.pack.meta.id}|${e.site.id}`;
 // The select of every slotted pack's profiles, the place's own kind of ground first.
 function siteSelectHtml(p, info){
   const list=Engine.siteProfiles(packsMemo);
-  if (!list.length && !info.link) return `<p class="step-note" data-psite-none>No site profiles yet. Slot in a pack that has them, on Threats.</p>`;
+  if (!list.length && !info.link) return `<p class="step-note" data-psite-none>No site profiles on file. A pack from the Threats tab can bring some.</p>`;
   const groups=[];
   for (const e of list){
     let g=groups.find(x=>x.cat===e.site.category);
@@ -1414,18 +1524,18 @@ function siteLevelsHtml(track, info){
 }
 // A row's buttons say whose they are, the typed name or the row's number; typing a name renames them.
 const exposureLabels = (name, i) => { const nm=String(name||"").trim() || `row ${i+1}`; return { eminus:`Take one off ${nm}`, eplus:`Add one to ${nm}`, edel:`Remove ${nm}` }; };
-function exposureRowHtml(r, i){
+function exposureRowHtml(r, i, read){
   const L=exposureLabels(r.name, i);
   return `<li class="int-line exposure-row" data-erow="${i}">
-    <input type="text" data-ename="${i}" list="exposure-names" value="${esc(r.name)}" placeholder="Who?" aria-label="Who, row ${i+1}" autocomplete="off">
+    ${read ? `<span class="exp-name">${esc(r.name.trim() || `Row ${i+1}`)}</span>` : `<input type="text" data-ename="${i}" list="exposure-names" value="${esc(r.name)}" placeholder="Who?" aria-label="Who, row ${i+1}" autocomplete="off">`}
     <span class="clock-btns"><button type="button" class="btn sm clock-step" data-eminus="${i}" aria-label="${esc(L.eminus)}"${r.n<=0 ? " disabled" : ""}>−</button>
       <span class="clock-count" data-ecount="${i}" role="status">${r.n}</span>
       <button type="button" class="btn sm clock-step" data-eplus="${i}" aria-label="${esc(L.eplus)}"${r.n>=99 ? " disabled" : ""}>+</button></span>
-    <button type="button" class="btn sm" data-edel="${i}" aria-label="${esc(L.edel)}">Remove</button>
+    ${read ? "" : `<button type="button" class="btn sm" data-edel="${i}" aria-label="${esc(L.edel)}">Remove</button>`}
     <span class="exposure-step" data-estep="${i}">${r.step ? esc(r.step.text) : ""}</span></li>`;
 }
-function exposureRowsHtml(info){ return info.exposure.map(exposureRowHtml).join(""); }
-function siteTrackHtml(p, site, info){
+function exposureRowsHtml(info, read){ return info.exposure.map((r, i)=>exposureRowHtml(r, i, read)).join(""); }
+function siteTrackHtml(p, site, info, read){
   const track=site.track && typeof site.track==="object" ? site.track : null;
   if (!track) return String(site.trackText||"").trim() ? `<h3 class="site-h3">Track</h3><p class="site-text">${esc(site.trackText)}</p>` : "";
   const head=`<h3 class="site-h3">${esc(track.name)}</h3>`;
@@ -1434,14 +1544,14 @@ function siteTrackHtml(p, site, info){
     `<li><strong>${esc(r.roll)}</strong> ${esc(r.text)}</li>`).join("")}</ul>`;
   const names=crewNameChoices(S.table);
   return head + (String(track.triggers||"").trim() ? `<p class="site-text">${esc(track.triggers)}</p>` : "")
-    + datalistHtml("exposure-names", names)
-    + `<ul class="int-list" data-erows>${exposureRowsHtml(info)}</ul>
-    <p><button type="button" class="btn sm" data-eadd>Add someone</button></p>
+    + (read ? "" : datalistHtml("exposure-names", names))
+    + `<ul class="int-list" data-erows>${exposureRowsHtml(info, read)}</ul>
+    ${read ? "" : `<p><button type="button" class="btn sm" data-eadd>Add someone</button></p>`}
     <ul class="site-list">${(track.steps||[]).map(s=>`<li><strong>${esc(s.at)}</strong> ${esc(s.text)}</li>`).join("")}</ul>`
     + siteText("Marks here", track.marks, "h4");
 }
 // The profile under the select, or the line that says its pack isn't slotted in.
-function siteProfileHtml(p, info){
+function siteProfileHtml(p, info, read){
   if (!info.link) return "";
   const s=info.site;
   if (!s) return `<p class="step-note" data-psite-gone>${esc(String(info.link.name||"").trim() || "This site profile")} isn't in any pack slotted in.</p>`;
@@ -1452,7 +1562,7 @@ function siteProfileHtml(p, info){
     ${siteText("Presence", s.presence)}${siteText("Rules", s.rules)}
     ${(s.waysIn||[]).length ? `<h3 class="site-h">Ways in</h3><ul class="site-list">${s.waysIn.map(w=>`<li>${esc(w)}</li>`).join("")}</ul>` : ""}
     ${siteText("Layering", s.layering)}
-    ${siteTrackHtml(p, s, info)}
+    ${siteTrackHtml(p, s, info, read)}
     ${siteText("Who's already here", s.here)}${siteText("Resolution", s.resolution)}${siteText("GM note", s.gmNote)}</div>`;
 }
 function bindSiteProfile(main, id, own, focus){
@@ -1491,7 +1601,8 @@ function bindSiteProfile(main, id, own, focus){
     li.querySelector("[data-eminus]").disabled=r.n<=0;
     li.querySelector("[data-eplus]").disabled=r.n>=99;
   };
-  const redraw=()=>{ box.innerHTML=exposureRowsHtml(info()); bindRows(); };
+  const reading=!main.querySelector("[data-eadd]");
+  const redraw=()=>{ box.innerHTML=exposureRowsHtml(info(), reading); bindRows(); };
   const bindRows=()=>box.querySelectorAll("[data-erow]").forEach(li=>{
     const i=Number(li.dataset.erow), q=sel=>li.querySelector(sel);
     const step=d=>{ const list=rows(); if (!list[i]) return; list[i].n=Math.max(0, Math.min(99, list[i].n+d)); save(list); paintRow(i);
@@ -1500,27 +1611,58 @@ function bindSiteProfile(main, id, own, focus){
     q("[data-eminus]").onclick=()=>step(-1);
     const name=q("[data-ename]"), fn=()=>{ const list=rows(); if (!list[i]) return; list[i].name=name.value; save(list);
       for (const [k, label] of Object.entries(exposureLabels(name.value, i))) q(`[data-${k}]`).setAttribute("aria-label", label); };
-    name.addEventListener("input", fn); name.addEventListener("change", fn);
-    q("[data-edel]").onclick=()=>{
+    if (name){ name.addEventListener("input", fn); name.addEventListener("change", fn); }
+    const del=q("[data-edel]"); if (del) del.onclick=()=>{
       const list=rows(); list.splice(i, 1); save(list); redraw();
       const next=box.querySelector(`[data-erow="${Math.min(i, list.length-1)}"] [data-ename]`);
       if (list.length && next) next.focus(); else focus("[data-eadd]");
     };
   });
   bindRows();
-  main.querySelector("[data-eadd]").onclick=()=>{
+  const addSomeone=main.querySelector("[data-eadd]");
+  if (addSomeone) addSomeone.onclick=()=>{
     const list=[...rows(), { name:"", n:0 }]; save(list); redraw();
     const el=box.querySelector(`[data-erow="${list.length-1}"] [data-ename]`); if (el) el.focus();
   };
 }
+// A place opens to read (Decision 271); Edit is today's form.
 function placePageHtml(p){
+  return editingNow("place", p.id) ? placeFormHtml(p) : placeReadHtml(p);
+}
+const placeBarHtml = (p, editing) => `<div class="tbl-bar scroll-row" data-row="tblbar">${editing ? doneBtnHtml("place", p.id, Engine.placeTitle(S.table, p)) : `<button class="btn sm" data-pback>Back to ${esc(placeBackTitle())}</button>`}</div>`;
+function placeLinesHtml(t, p, lines){
+  return `<h2 class="cast-h sec-h">What happened here</h2>
+    ${lines.length ? `<ul class="int-list">${lines.map(x=>`<li class="int-line">${sentenceHtml(t, x, { where:`place|${x.id}`, ownPlace:p.id })}</li>`).join("")}</ul>`
+      : `<p class="step-note">Nothing yet. Name this place as Where on a line.</p>`}`;
+}
+function placeMetHtml(met){
+  return `<h2 class="cast-h sec-h">Met here</h2>
+    ${met.length ? `<ul class="int-list">${met.map(m=>`<li class="int-line">${m.gone ? goneHtml(m.name)
+      : `<button class="cast-open int-who" data-copen="${esc(m.id)}" data-cwhere="met|${esc(m.id)}">${esc(m.name)}</button>`}</li>`).join("")}</ul>`
+      : `<p class="step-note">No one yet.</p>`}`;
+}
+function placeReadHtml(p){
+  const t=S.table, entry=Engine.gazetteerEntry(p.from && p.from.id), lines=Engine.placeLines(t, p.id), met=Engine.placeMet(t, p.id), info=Engine.placeSite(t, packsMemo, p);
+  const title=Engine.placeTitle(t, p), clocks=Engine.clocksOn(t, siteOwner(p)), summary=placeNames(p).join(" · ");
+  const clockText=info.here && !info.site.clock && String(info.site.clockText||"").trim() ? `<p class="site-text">${esc(info.site.clockText)}</p>` : "";
+  return `${placeBarHtml(p, false)}
+    ${recHeadHtml(`<h1 class="step-title tbl-title cast-title" data-ptitle tabindex="-1">${esc(title)}</h1>`, "place", p.id, title)}
+    ${summary ? `<p class="dos-sum">${esc(summary)}</p>` : ""}
+    ${clocks.length || clockText ? `<h2 class="cast-h sec-h">Clocks</h2>${clockText}${clockLinesHtml(clocks)}` : ""}
+    ${proseHtml("Notes", p.notes)}
+    ${siteProfileHtml(p, info, true)}
+    ${placeLinesHtml(t, p, lines)}
+    ${placeMetHtml(met)}
+    ${entry && entry.summary ? `<h2 class="cast-h sec-h">From the book</h2><p class="city-sum">${esc(entry.summary)}</p>` : ""}`;
+}
+function placeFormHtml(p){
   const t=S.table, id=esc(p.id), entry=Engine.gazetteerEntry(p.from && p.from.id), g=Engine.gazetteer({});
   const terr=g.territories.find(r=>r.entry.id===p.territory), zones=terr ? terr.zones : [];
   const opt=(value, name, on) => `<option value="${esc(value)}"${on ? " selected" : ""}>${esc(name)}</option>`;
   const unknownT=p.territory && !terr ? opt(p.territory, p.territory, true) : "";
   const unknownZ=p.zone && !zones.some(z=>z.id===p.zone) ? opt(p.zone, p.zone, true) : "";
   const lines=Engine.placeLines(t, p.id), met=Engine.placeMet(t, p.id), info=Engine.placeSite(t, packsMemo, p);
-  return `<div class="tbl-bar scroll-row" data-row="tblbar"><button class="btn sm" data-pback>Back to ${esc(placeBackTitle())}</button></div>
+  return `${placeBarHtml(p, true)}
     <h1 class="step-title tbl-title cast-title" data-ptitle tabindex="-1">${esc(Engine.placeTitle(t, p))}</h1>
     <label class="field"><span>Name</span><input type="text" data-pf="name" value="${esc(p.name)}" placeholder="${esc(entry ? entry.name : p.from && p.from.name || "Where is it?")}" autocomplete="off"></label>
     <div class="cast-codex">
@@ -1539,13 +1681,8 @@ function placePageHtml(p){
     ${clocksHtml(siteOwner(p))}
     <label class="field"><span>Notes</span><textarea data-pf="notes" placeholder="What the crew should remember about it.">${esc(p.notes)}</textarea></label>
     ${entry && entry.summary ? `<h2 class="cast-h sec-h">From the book</h2><p class="city-sum">${esc(entry.summary)}</p>` : ""}
-    <h2 class="cast-h sec-h">What happened here</h2>
-    ${lines.length ? `<ul class="int-list">${lines.map(x=>`<li class="int-line">${sentenceHtml(t, x, { where:`place|${x.id}`, ownPlace:p.id })}</li>`).join("")}</ul>`
-      : `<p class="step-note">Nothing yet. Name this place as Where on a line.</p>`}
-    <h2 class="cast-h sec-h">Met here</h2>
-    ${met.length ? `<ul class="int-list">${met.map(m=>`<li class="int-line">${m.gone ? goneHtml(m.name)
-      : `<button class="cast-open int-who" data-copen="${esc(m.id)}" data-cwhere="met|${esc(m.id)}">${esc(m.name)}</button>`}</li>`).join("")}</ul>`
-      : `<p class="step-note">No one yet.</p>`}
+    ${placeLinesHtml(t, p, lines)}
+    ${placeMetHtml(met)}
     <p class="cast-delete"><button class="btn danger" data-pdel>Delete</button></p>`;
 }
 // A place in a sentence opens its page and remembers where it was pressed, so Back returns there, on the link (Decision 243).
@@ -1666,14 +1803,16 @@ function bindPlacePage(main, p){
     main.querySelectorAll("[data-pground]").forEach(x=>{ const pressed=x.dataset.pground===on; x.classList.toggle("on", pressed); x.setAttribute("aria-pressed", String(pressed)); });
   });
   bindSiteProfile(main, id, own, focus);
-  bindClocks(main, siteOwner(p));
+  if (main.querySelector("[data-clkadd]")) bindClocks(main, siteOwner(p));
   bindFightLinks(main);
   main.querySelectorAll("[data-copen]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation();
     S.tsection="cast"; S.castOpen=b.dataset.copen; S.backEnc=null; S.backSess=false; S.backClose=false; S.backCity={ kind:"place", id };
     S.castFrom=b.dataset.cwhere ? attrSel("data-cwhere", b.dataset.cwhere) : null; S.intAdd=null;
     window.scrollTo(0,0); update(); focus("[data-cback]"); });
-  main.querySelector("[data-pback]").onclick=placeBack;
-  main.querySelector("[data-pdel]").onclick=()=>{
+  bindClockLines(main);
+  bindEdit(main, "place", id);
+  const pback=main.querySelector("[data-pback]"); if (pback) pback.onclick=placeBack;
+  const pdel=main.querySelector("[data-pdel]"); if (pdel) pdel.onclick=()=>{
     const title=Engine.placeTitle(S.table, own()), n=Engine.clocksOn(S.table, siteOwner(p)).length;
     askFirst({ title:`Delete ${title}?`, text:`Its page goes with it${n ? `, and its ${n} ${n===1 ? "clock" : "clocks"}` : ""}. Lines that named it keep its name, struck through.`, yes:"Delete",
       then(){
@@ -1708,11 +1847,11 @@ function factionListHtml(t){
   return list.length ? `<ul class="roster-list">${list.map(f=>factionCardHtml(t, f)).join("")}</ul>` : `<p class="step-note">No faction matches.</p>`;
 }
 function factionsViewHtml(t){
-  return `<div class="cast-add">
+  return `<div class="cast-filters"><label class="field"><span>Search</span><input type="search" data-fsearch placeholder="Search the crew's factions" autocomplete="off" value="${esc(S.factionQ||"")}"></label></div>
+    <div data-factionlist>${factionListHtml(t)}</div>
+    <div class="cast-add">
       <label class="field"><span>Name</span><input type="text" data-fadd-name placeholder="Who are they?" autocomplete="off"></label>
-      <button class="btn primary" data-fadd>Add</button></div>
-    <div class="cast-filters"><label class="field"><span>Search</span><input type="search" data-fsearch placeholder="Search the crew's factions" autocomplete="off" value="${esc(S.factionQ||"")}"></label></div>
-    <div data-factionlist>${factionListHtml(t)}</div>`;
+      <button class="btn primary" data-fadd>Add</button></div>`;
 }
 function factionBackTitle(){
   const r=S.factionRoute;
@@ -1864,13 +2003,40 @@ function bindClocks(main, owner){
     const el=$("main").querySelector(`${attrSel("data-clock", cid)} [data-kf="name"]`); if (el){ el.focus(); el.select(); }
   };
 }
+// A faction opens to read (Decision 271); Edit is today's form.
 function factionPageHtml(f){
+  return editingNow("faction", f.id) ? factionFormHtml(f) : factionReadHtml(f);
+}
+const factionBarHtml = (f, editing) => `<div class="tbl-bar scroll-row" data-row="tblbar">${editing ? doneBtnHtml("faction", f.id, Engine.factionTitle(S.table, f)) : `<button class="btn sm" data-fback>Back to ${esc(factionBackTitle())}</button>`}</div>`;
+function factionReadHtml(f){
+  const t=S.table, entry=Engine.gazetteerEntry(f.from && f.from.id), title=Engine.factionTitle(t, f), tied=Engine.factionAffiliated(t, f.id);
+  const summary=[Engine.FACTION_TYPE_LABELS[f.type], gazName(f.territory), stanceWord(f.stance)].filter(Boolean).join(" · ");
+  const keys=(Array.isArray(f.keyNpcs) ? f.keyNpcs : []).filter(l=>l && typeof l==="object");
+  const tips = (label, list) => { const rows=(Array.isArray(list) ? list : []).filter(x=>String(x||"").trim()); return rows.length ? `<h3 class="ref-sub">${label}</h3><ul class="int-list">${rows.map(x=>`<li class="int-line">${esc(x)}</li>`).join("")}</ul>` : ""; };
+  const tipping=tips("For the crew", f.tippingFor) + tips("Against the crew", f.tippingAgainst);
+  const clocks=factionClocks(f);
+  return `${factionBarHtml(f, false)}
+    ${recHeadHtml(`<h1 class="step-title tbl-title cast-title" data-ftitle tabindex="-1">${esc(title)}</h1>`, "faction", f.id, title)}
+    ${summary ? `<p class="dos-sum">${esc(summary)}</p>` : ""}
+    ${proseHtml("Wants", f.wants)}
+    ${clocks.length ? `<h2 class="cast-h sec-h">Clocks</h2>${clockLinesHtml(clocks)}` : ""}
+    ${keys.length ? `<h2 class="cast-h sec-h">Key NPCs</h2><div data-fkeys><ul class="int-list">${keys.map(l=>{ const r=Engine.linkName(t, l);
+      return `<li class="int-line fac-key">${r.gone ? goneHtml(r.name) : `<button class="cast-open int-who" data-copen="${esc(l.id)}" data-cwhere="key|${esc(l.id)}">${esc(r.name)}</button>`}</li>`; }).join("")}</ul></div>` : ""}
+    ${proseHtml("Resources & reach", f.reach)}${proseHtml("Base", f.base)}
+    ${tipping ? `<h2 class="cast-h sec-h">Tipping points</h2>${tipping}` : ""}
+    ${f.attention ? `<p class="dos-tags"><span class="tag plain">Attention: ${esc(FACTION_ATTENTION_LABELS[f.attention] || f.attention)}</span></p>` : ""}
+    ${proseHtml("Notes", f.notes)}
+    ${tied.length ? `<h2 class="cast-h sec-h">Tied by affiliation</h2><ul class="int-list">${tied.map(n=>
+      `<li class="int-line"><button class="cast-open int-who" data-copen="${esc(n.id)}" data-cwhere="aff|${esc(n.id)}">${esc(String(n.name||"").trim() || "Unnamed")}</button></li>`).join("")}</ul>` : ""}
+    ${entry && entry.summary ? `<h2 class="cast-h sec-h">From the book</h2><p class="city-sum">${esc(entry.summary)}</p>` : ""}`;
+}
+function factionFormHtml(f){
   const t=S.table, entry=Engine.gazetteerEntry(f.from && f.from.id), g=Engine.gazetteer({});
   const opt=(value, name, on) => `<option value="${esc(value)}"${on ? " selected" : ""}>${esc(name)}</option>`;
   const terr=g.territories.find(r=>r.entry.id===f.territory);
   const unknownT=f.territory && !terr ? opt(f.territory, f.territory, true) : "";
   const tied=Engine.factionAffiliated(t, f.id), title=Engine.factionTitle(t, f);
-  return `<div class="tbl-bar scroll-row" data-row="tblbar"><button class="btn sm" data-fback>Back to ${esc(factionBackTitle())}</button></div>
+  return `${factionBarHtml(f, true)}
     <h1 class="step-title tbl-title cast-title" data-ftitle tabindex="-1">${esc(title)}</h1>
     <label class="field"><span>Name</span><input type="text" data-ff="name" value="${esc(f.name)}" placeholder="${esc(entry ? entry.name : f.from && f.from.name || "Who are they?")}" autocomplete="off"></label>
     <div class="tag-choice"><span>Type</span><div data-ftypes>${factionToggleHtml("data-ftype", "Type", Engine.FACTION_TYPES.map(k=>[k, Engine.FACTION_TYPE_LABELS[k], ""]), f.type)}</div></div>
@@ -1969,11 +2135,11 @@ function bindFactionPage(main, f){
   toggles("data-fattn", "attention", v=>v);
   bindFightLinks(main);
   const bindKeys = () => {
-    const box=main.querySelector("[data-fkeys]");
+    const box=main.querySelector("[data-fkeys]"); if (!box) return;
     box.querySelectorAll("[data-copen]").forEach(b=>b.onclick=ev=>openMember(ev, b));
     box.querySelectorAll("[data-fkeydel]").forEach(b=>b.onclick=()=>{ edit({ removeKey:b.dataset.fkeydel }); redrawKeys(); focus("[data-fkeyadd]"); });
     const sel=box.querySelector("[data-fkeyadd]");
-    sel.addEventListener("change", ()=>{ if (!sel.value) return; edit({ addKey:sel.value }); redrawKeys(); focus("[data-fkeyadd]"); });
+    if (sel) sel.addEventListener("change", ()=>{ if (!sel.value) return; edit({ addKey:sel.value }); redrawKeys(); focus("[data-fkeyadd]"); });
   };
   const redrawKeys = () => { main.querySelector("[data-fkeys]").innerHTML=factionKeysHtml(S.table, own()); bindKeys(); };
   const openMember = (ev, b) => { ev.stopPropagation();
@@ -1985,7 +2151,7 @@ function bindFactionPage(main, f){
   // Tipping points: typed lines, added and removed one at a time.
   const tipKey = which => which==="for" ? "tippingFor" : "tippingAgainst";
   const bindTips = which => {
-    const box=main.querySelector(`[data-ftipgroup="${which}"]`);
+    const box=main.querySelector(`[data-ftipgroup="${which}"]`); if (!box) return;
     box.querySelectorAll("[data-ftip]").forEach(el=>{
       const i=+el.dataset.ftip.split("|")[1], fn=()=>{ const list=[...own()[tipKey(which)]]; list[i]=el.value; edit({ [tipKey(which)]:list }); };
       el.addEventListener("input", fn); el.addEventListener("change", fn);
@@ -2001,9 +2167,11 @@ function bindFactionPage(main, f){
   };
   const redrawTips = which => { main.querySelector(`[data-ftipgroup="${which}"]`).innerHTML=factionTipHtml(own(), which); bindTips(which); };
   bindTips("for"); bindTips("against");
-  bindClocks(main, { kind:"faction", id });
-  main.querySelector("[data-fback]").onclick=factionBack;
-  main.querySelector("[data-fdel]").onclick=()=>{
+  if (main.querySelector("[data-clkadd]")) bindClocks(main, { kind:"faction", id });
+  bindClockLines(main);
+  bindEdit(main, "faction", id);
+  const fback=main.querySelector("[data-fback]"); if (fback) fback.onclick=factionBack;
+  const fdel=main.querySelector("[data-fdel]"); if (fdel) fdel.onclick=()=>{
     const title=Engine.factionTitle(S.table, own()), n=factionClocks(own()).length;
     askFirst({ title:`Delete ${title}?`, text:`Its page goes with it${n ? `, and its ${n} ${n===1 ? "clock" : "clocks"}` : ""}. Key NPCs stay in the cast.`, yes:"Delete",
       then(){
@@ -2127,29 +2295,37 @@ function nextSessionHtml(t){
       `<li><button type="button" class="cast-open int-who" data-copen="${esc(m.id)}" data-cwhere="met|${esc(m.id)}">${esc(m.name.trim() || "Unnamed")}</button></li>`).join("")}</ul>` : ""}
   </div>`;
 }
+// A thread reads as its title with Make current or Current; Edit turns the row into its fields (Decision 271).
 function threadRowHtml(h){
   const id=esc(h.id), open=h.status==="open", sessions=Engine.sessionList(S.table);
-  const more=!!(S.threadMore && S.threadMore[h.id]);
-  return `<li class="thread-row" data-thread="${id}">
+  if (editingNow("thread", h.id)) return `<li class="thread-row editing" data-thread="${id}">
     <div class="thread-main">
       <input type="text" data-thtitle="${id}" value="${esc(h.title)}" placeholder="Name the thread" aria-label="Thread title" autocomplete="off">
-      ${open ? `<button type="button" class="btn sm thread-cur${h.current?" on":""}" data-thcur="${id}" aria-pressed="${h.current}">Current</button>` : ""}
       <select data-thstatus="${id}" aria-label="Status">${Object.keys(THREAD_STATUS_LABELS).map(k=>`<option value="${k}"${k===h.status?" selected":""}>${THREAD_STATUS_LABELS[k]}</option>`).join("")}</select>
       ${open ? "" : `<select data-thclosed="${id}" aria-label="Closed in"><option value="">Closed in…</option>${sessions.map(s=>
         `<option value="${esc(s.id)}"${s.id===h.closed?" selected":""}>${esc(sessionLine(s))}</option>`).join("")}</select>`}
     </div>
-    <details class="thread-more" data-thmore="${id}"${more?" open":""}><summary>More</summary>
-      <label class="field"><span>Notes</span><textarea data-thnotes="${id}" placeholder="What's known, who's involved.">${esc(h.notes)}</textarea></label>
-      <button type="button" class="btn sm danger" data-thdel="${id}">Delete</button></details></li>`;
+    <label class="field"><span>Notes</span><textarea data-thnotes="${id}" placeholder="What's known, who's involved.">${esc(h.notes)}</textarea></label>
+    <p class="note-acts">${doneBtnHtml("thread", h.id, threadTitle(h))} <button type="button" class="btn sm danger" data-thdel="${id}">Delete</button></p></li>`;
+  const notes=String(h.notes||"").trim(), more=!!notes && !!(S.threadMore && S.threadMore[h.id]);
+  const name = notes ? `<button type="button" class="cast-open thread-name" data-thname="${id}" aria-expanded="${more}">${esc(threadTitle(h))}</button>`
+    : `<b class="thread-name" data-thname="${id}" tabindex="-1">${esc(threadTitle(h))}</b>`;
+  return `<li class="thread-row" data-thread="${id}">
+    <div class="thread-main">${name}
+      ${open ? "" : `<span class="tag plain">${esc(THREAD_STATUS_LABELS[h.status] || h.status)}</span>`}
+      ${open ? `<button type="button" class="btn sm thread-cur${h.current?" on":""}" data-thcur="${id}" aria-pressed="${h.current}">${h.current ? "Current" : "Make current"}</button>` : ""}
+      ${editBtnHtml("thread", h.id, threadTitle(h))}
+    </div>
+    ${more ? `<p class="dos-p thread-notes">${esc(h.notes)}</p>` : ""}</li>`;
 }
 function threadsHtml(t){
   const all=Engine.threadList(t), open=all.filter(h=>h.status==="open"), shut=all.filter(h=>h.status!=="open");
   return `<h2 class="cast-h sec-h" tabindex="-1" data-threads-h>Threads</h2>
+    ${open.length ? `<ul class="int-list">${open.map(threadRowHtml).join("")}</ul>` : all.length ? "" : `<p class="step-note">No threads yet.</p>`}
+    ${shut.length ? `<details class="thread-shut" data-thshut${S.threadsShut?" open":""}><summary>Closed (${shut.length})</summary><ul class="int-list">${shut.map(threadRowHtml).join("")}</ul></details>` : ""}
     <div class="cast-add thread-add">
       <label class="field"><span>New thread</span><input type="text" data-thadd value="${esc(S.threadAdd||"")}" placeholder="What's still open?" autocomplete="off"></label>
-      <button type="button" class="btn primary" data-thadd-btn>Add</button></div>
-    ${open.length ? `<ul class="int-list">${open.map(threadRowHtml).join("")}</ul>` : all.length ? "" : `<p class="step-note">No threads yet.</p>`}
-    ${shut.length ? `<details class="thread-shut" data-thshut${S.threadsShut?" open":""}><summary>Closed (${shut.length})</summary><ul class="int-list">${shut.map(threadRowHtml).join("")}</ul></details>` : ""}`;
+      <button type="button" class="btn primary" data-thadd-btn>Add</button></div>`;
 }
 function sessionsTabHtml(t){
   const list=Engine.sessionList(t);
@@ -2157,10 +2333,10 @@ function sessionsTabHtml(t){
     ${threadsHtml(t)}
     <h2 class="cast-h sec-h" tabindex="-1">Sessions</h2>
     ${coTotalsHtml(t)}
-    <p><button type="button" class="btn primary" data-snew>New session</button></p>
     ${list.length ? `<ul class="roster-list sess-list">${list.map(s=>
       `<li class="sess-item"><button type="button" class="cast-open sess-open" data-sopen="${esc(s.id)}">${esc(sessionLine(s))}</button></li>`).join("")}</ul>`
-      : `<p class="step-note">No sessions yet.</p>`}`;
+      : `<p class="step-note">No sessions yet.</p>`}
+    <p><button type="button" class="btn primary" data-snew>New session</button></p>`;
 }
 function sessionInteractionHtml(t, x, offered){
   return `<li class="int-line" data-sline="${esc(x.id)}">${sentenceHtml(t, x, { where:`sess|${x.id}` })}${offered ? ` <button type="button" class="btn sm" data-sadd="${esc(x.id)}">Add to this session</button>` : ""}</li>`;
@@ -2182,30 +2358,57 @@ function debriefHtml(s){
     ${JOURNAL.map(([k, label, hint])=>`<label class="field sess-part"><span>${esc(label)}</span><small class="field-hint">${esc(hint)}</small>
       <textarea data-sj="${k}">${esc(j[k]||"")}</textarea></label>`).join("")}</details>`;
 }
+// A session opens to read, with the night's own controls live (Decision 271); Edit is today's form.
 function sessionPageHtml(s){
-  const t=S.table, id=esc(s.id), j=s.journal||{};
-  const opened=(t.threads||[]).filter(h=>h.opened===s.id), closed=(t.threads||[]).filter(h=>h.closed===s.id && h.status!=="open");
+  return editingNow("session", s.id) ? sessionFormHtml(s) : sessionReadHtml(s);
+}
+const sessionBarHtml = (s, editing) => `<div class="tbl-bar scroll-row" data-row="tblbar">${editing ? doneBtnHtml("session", s.id, Engine.sessionTitle(s))
+  : `<button type="button" class="btn sm" data-sback>Back to sessions</button>`}</div>`;
+// Who was there, the hours, the threads it left open, the lines, the jots and the close-out: shared by the read view and the form.
+function sessionBodyHtml(s){
+  const t=S.table, opened=(t.threads||[]).filter(h=>h.opened===s.id), closed=(t.threads||[]).filter(h=>h.closed===s.id && h.status!=="open");
   const lines=Engine.sessionInteractions(t, s.id), offered=Engine.sessionOffered(t, s.id);
   const threadsBlock = `<div class="sess-threads">
       ${opened.length ? `<ul class="int-list">${opened.map(h=>`<li><button type="button" class="cast-open" data-thopen="${esc(h.id)}">${esc(threadTitle(h))}</button></li>`).join("")}</ul>` : ""}
       <div class="cast-add"><label class="field"><span>Open a thread</span><input type="text" data-sthadd placeholder="What did this session leave open?" autocomplete="off"></label>
         <button type="button" class="btn" data-sthadd-btn>Open a thread</button></div>
       ${closed.length ? `<ul class="int-list">${closed.map(h=>`<li><span class="int-kind">${h.status==="dropped" ? "Dropped" : "Resolved"}</span> ${esc(threadTitle(h))}</li>`).join("")}</ul>` : ""}</div>`;
-  return `<div class="tbl-bar scroll-row" data-row="tblbar"><button type="button" class="btn sm" data-sback>Back to sessions</button></div>
+  return { threadsBlock, rest:`<h2 class="cast-h sec-h" tabindex="-1" data-sint-h>What passed between the crew and the cast</h2>
+    ${lines.length ? `<ul class="int-list">${lines.map(x=>sessionInteractionHtml(t, x, false)).join("")}</ul>` : `<p class="step-note">Nothing yet.</p>`}
+    ${offered.length ? `<h3 class="next-h">Also that day</h3><ul class="int-list" data-soffered>${offered.map(x=>sessionInteractionHtml(t, x, true)).join("")}</ul>` : ""}
+    ${jottedHtml(s)}
+    ${closeOutSectionHtml(s)}` };
+}
+const hoursFieldHtml = s => `<label class="field"><span>Hours</span><input type="number" step="0.5" min="0" max="24" inputmode="decimal" data-sf="hours" value="${numAttr(s.hours)}"></label>`;
+function debriefReadHtml(s){
+  const j=s.journal||{}, written=JOURNAL.filter(([k])=>String(j[k]||"").trim());
+  return `<details class="sess-debrief" data-debrief="${esc(s.id)}"${debriefOpen(s) ? " open" : ""}><summary data-debrief-sum>${esc(debriefText(s))}</summary>
+    ${written.length ? written.map(([k, label])=>`<h3 class="ref-sub dos-l">${esc(label)}</h3><p class="dos-p">${esc(j[k])}</p>`).join("") : `<p class="step-note">Nothing written yet.</p>`}</details>`;
+}
+function sessionReadHtml(s){
+  const title=Engine.sessionTitle(s), body=sessionBodyHtml(s);
+  const summary=[s.date ? dayText(s.date) : "", (s.present||[]).join(", "), typeof s.hours==="number" ? hoursText(s.hours) : ""].filter(Boolean).join(" · ");
+  return `${sessionBarHtml(s, false)}
+    ${recHeadHtml(`<h1 class="step-title tbl-title">${esc(title)}</h1>`, "session", s.id, title)}
+    ${summary ? `<p class="dos-sum">${esc(summary)}</p>` : ""}
+    <div class="sess-head">${whoHtml(s, `s|${s.id}`)}${hoursFieldHtml(s)}</div>
+    ${body.threadsBlock}
+    ${body.rest}
+    ${debriefReadHtml(s)}`;
+}
+function sessionFormHtml(s){
+  const j=s.journal||{}, body=sessionBodyHtml(s);
+  return `${sessionBarHtml(s, true)}
     <h1 class="step-title tbl-title">${esc(Engine.sessionTitle(s))}</h1>
     <div class="sess-head">
       <label class="field"><span>Number</span><input type="number" step="1" min="0" inputmode="numeric" data-sf="number" value="${numAttr(s.number)}"></label>
       <label class="field"><span>Day</span><input type="date" data-sf="date" value="${esc(s.date||"")}"></label>
       ${whoHtml(s, `s|${s.id}`)}
-      <label class="field"><span>Hours</span><input type="number" step="0.5" min="0" max="24" inputmode="decimal" data-sf="hours" value="${numAttr(s.hours)}"></label>
+      ${hoursFieldHtml(s)}
     </div>
-    ${threadsBlock}
+    ${body.threadsBlock}
     ${debriefHtml(s)}
-    <h2 class="cast-h sec-h" tabindex="-1" data-sint-h>What passed between the crew and the cast</h2>
-    ${lines.length ? `<ul class="int-list">${lines.map(x=>sessionInteractionHtml(t, x, false)).join("")}</ul>` : `<p class="step-note">Nothing yet.</p>`}
-    ${offered.length ? `<h3 class="next-h">Also that day</h3><ul class="int-list" data-soffered>${offered.map(x=>sessionInteractionHtml(t, x, true)).join("")}</ul>` : ""}
-    ${jottedHtml(s)}
-    ${closeOutSectionHtml(s)}
+    ${body.rest}
     <p class="cast-delete"><button type="button" class="btn danger" data-sdel>Delete</button></p>`;
 }
 function bindSessions(main){
@@ -2231,8 +2434,8 @@ function showThread(id){
   const h=(S.table.threads||[]).find(x=>x.id===id); if (!h) return;
   (S.threadMore || (S.threadMore={}))[id]=true;
   if (h.status!=="open") S.threadsShut=true;
-  S.sessOpen=null; window.scrollTo(0,0); renderTable();
-  const el=$("main").querySelector(attrSel("data-thtitle", id)); if (el){ el.focus(); if (el.scrollIntoView) el.scrollIntoView({ block:"center" }); }
+  S.sessOpen=null; S.editing=null; window.scrollTo(0,0); renderTable();
+  const el=$("main").querySelector(attrSel("data-thname", id)); if (el){ el.focus(); if (el.scrollIntoView) el.scrollIntoView({ block:"center" }); }
 }
 function bindSessionsTab(main){
   const focus = sel => { const el=$("main").querySelector(sel); if (el) el.focus(); return !!el; };
@@ -2242,7 +2445,7 @@ function bindSessionsTab(main){
   main.querySelector("[data-snew]").onclick=()=>{
     let r; tableChange(()=>{ r=Engine.addSession(S.table, {}); }, false);
     if (!r.ok){ notice(r.why); return; }
-    S.sessOpen=r.id; window.scrollTo(0,0); update(); focus('[data-sf="number"]');
+    S.sessOpen=r.id; window.scrollTo(0,0); update(); const h=$("main").querySelector("h1"); if (h) takeFocus(h, true);
   };
   const addEl=main.querySelector("[data-thadd]");
   const add=()=>{
@@ -2262,7 +2465,9 @@ function bindSessionsTab(main){
     el.addEventListener("change", ()=>{ const r=edit(id, { title:el.value }); if (!r.ok) notice(r.why); const h=found(id); if (h) el.value=h.title; });
   });
   main.querySelectorAll("[data-thnotes]").forEach(el=>el.addEventListener("input", ()=>edit(el.dataset.thnotes, { notes:el.value })));
-  main.querySelectorAll("[data-thmore]").forEach(d=>d.addEventListener("toggle", ()=>{ (S.threadMore || (S.threadMore={}))[d.dataset.thmore]=d.open; }));
+  main.querySelectorAll("[data-thname]").forEach(b=>{ if (b.tagName==="BUTTON") b.onclick=()=>{
+    const id=b.dataset.thname; (S.threadMore || (S.threadMore={}))[id]=!(S.threadMore && S.threadMore[id]); renderTable(); focus(attrSel("data-thname", id)); }; });
+  main.querySelectorAll("[data-thread]").forEach(li=>bindEdit(main, "thread", li.dataset.thread));
   const shut=main.querySelector("[data-thshut]");
   if (shut) shut.addEventListener("toggle", ()=>{ S.threadsShut=shut.open; });
   main.querySelectorAll("[data-thcur]").forEach(b=>b.onclick=()=>{
@@ -2282,7 +2487,7 @@ function bindSessionsTab(main){
   main.querySelectorAll("[data-thdel]").forEach(b=>b.onclick=()=>{
     const id=b.dataset.thdel, h=found(id); if (!h) return;
     askFirst({ title:`Delete ${threadTitle(h)}?`, text:UNDO_ASK, yes:"Delete",
-      then(){ tableChange(()=>Engine.removeThread(S.table, id)); focus("[data-thadd]"); } });
+      then(){ S.editing=null; tableChange(()=>Engine.removeThread(S.table, id)); focus("[data-thadd]"); } });
   });
 }
 function bindSessionPage(main, s){
@@ -2310,9 +2515,11 @@ function bindSessionPage(main, s){
   // A fold opened is a fold kept; its boxes size themselves when it opens, since a closed one has no height to measure.
   debSum.addEventListener("click", ()=>{ (S.debriefOpen || (S.debriefOpen={}))[id]=!deb.open; });   // the state before the press flips it
   deb.addEventListener("toggle", ()=>{ (S.debriefOpen || (S.debriefOpen={}))[id]=deb.open; if (deb.open) deb.querySelectorAll("[data-sj]").forEach(grow); });
-  main.querySelector("[data-sback]").onclick=()=>{
+  const sback=main.querySelector("[data-sback]");
+  if (sback) sback.onclick=()=>{
     S.sessOpen=null; window.scrollTo(0,0); update(); focus(".sess-open" + attrSel("data-sopen", id));
   };
+  bindEdit(main, "session", id);
   main.querySelectorAll("[data-thopen]").forEach(b=>b.onclick=()=>showThread(b.dataset.thopen));
   bindSessionOpeners(main);
   const thEl=main.querySelector("[data-sthadd]");
@@ -2332,7 +2539,8 @@ function bindSessionPage(main, s){
     const btns=$("main").querySelectorAll("[data-sadd]");
     if (btns.length) btns[Math.min(at, btns.length-1)].focus(); else focus("[data-sint-h]");
   });
-  main.querySelector("[data-sdel]").onclick=()=>{
+  const sdel=main.querySelector("[data-sdel]");
+  if (sdel) sdel.onclick=()=>{
     askFirst({ title:`Delete ${Engine.sessionTitle(s)}?`, text:"Its threads and interactions stay; they just won't say which session they were in.", yes:"Delete",
       then(){ S.sessOpen=null; if (S.closeOut && S.closeOut.id===id) S.closeOut=null; tableChange(()=>Engine.removeSession(S.table, id)); focus("[data-snew]"); } });
   };
@@ -2968,8 +3176,8 @@ function bindThreatPage(main, back, focusFirst){
     const found=Engine.packEntry(packsMemo, entry.pack, entry.id); if (!found){ notice("No such entry."); return; }
     const r=Engine.castFromEntry(S.table, found.pack, entry.id); if (!r.ok){ notice(r.why); return; }
     tableChange(()=>{}, false);
-    // The copy opens, in the cast, with its name selected: a Street Tough is Vinnie from here. A filter that would hide it is cleared.
-    S.tsection="cast"; S.castOpen=r.id; S.castFrom=null; S.intAdd=null; S.castView="cast"; S.threatMember=null;
+    // The copy opens, in the cast, in Edit with its name selected: a Street Tough is Vinnie from here (Decision 271). A filter that would hide it is cleared.
+    S.tsection="cast"; S.castOpen=r.id; S.castFrom=null; S.intAdd=null; S.castView="cast"; S.threatMember=null; S.editing={ kind:"member", id:r.id };
     if (!Engine.castFilter(S.table, castFilterNow()).some(n=>n.id===r.id)){ S.castQ=""; S.castStatus="inplay"; S.castAff=""; }
     window.scrollTo(0,0); update();
     const el=$("main").querySelector('[data-cf="name"]'); if (el){ el.focus(); el.select(); }
@@ -3045,13 +3253,13 @@ function encListHtml(t){
     <button class="cast-open" data-enc-open="${esc(e.id)}">${esc(Engine.encounterTitle(e))}</button>
     <div class="roster-meta cast-meta">${esc(meta)}</div>${clocks}</li>`; };
   const sect = (h, items) => items.length ? `<h2 class="cast-h sec-h">${h}</h2><ul class="roster-list">${items.join("")}</ul>` : "";
-  return `<div class="cast-add">
-      <label class="field"><span>Name</span><input type="text" data-enc-name placeholder="Warehouse job (optional)" autocomplete="off"></label>
-      <button class="btn primary" data-enc-new>New encounter</button></div>
-    ${all.length ? "" : `<p class="step-note">Nothing on the books.</p>`}
+  return `${all.length ? "" : `<p class="step-note">Nothing on the books.</p>`}
     ${sect("Running", by("running").map(e=>card(e, [`Round ${e.round}`, encCount(e.rows.length)].filter(Boolean).join(" · "))))}
     ${sect("Planned", by("planned").map(e=>card(e, [encCount(e.rows.length)].filter(Boolean).join(" · "))))}
-    ${sect("Past encounters", by("ended").map(e=>card(e, [e.round ? encRounds(e.round) : "Not run", day(e)].filter(Boolean).join(" · "))))}`;
+    ${sect("Past encounters", by("ended").map(e=>card(e, [e.round ? encRounds(e.round) : "Not run", day(e)].filter(Boolean).join(" · "))))}
+    <div class="cast-add">
+      <label class="field"><span>Name</span><input type="text" data-enc-name placeholder="Warehouse job (optional)" autocomplete="off"></label>
+      <button class="btn primary" data-enc-new>New encounter</button></div>`;
 }
 
 // ── A row ──

@@ -76,8 +76,20 @@ export function boot({ storage = null, width = null, features = null } = {}) {
     errors, skipped,
     $: sel => window.document.querySelector(sel),
     $$: sel => [...window.document.querySelectorAll(sel)],
+    // Decision 271: a record opens to read, and its form is behind Edit. A test that reaches for a field the read view doesn't
+    // have presses the page's one Edit first (a Back selector that isn't there while editing presses Done first), as a GM would.
+    // Anything else, including a missing button on a page with no Edit, still throws, and the tests of the read view itself look
+    // with $ and assert what is and isn't there.
+    reach(sel) {
+      const d = window.document, press = s => d.querySelector(s).dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+      let el = d.querySelector(sel);
+      if (el) return el;
+      if (/^\[data-(cback|pback|fback|sback)\]/.test(sel) && d.querySelector("#main [data-edit-done]")) press("#main [data-edit-done]");
+      else if (d.querySelectorAll("#main [data-edit]").length === 1) press("#main [data-edit]");
+      return d.querySelector(sel);
+    },
     click(sel) {
-      const el = window.document.querySelector(sel);
+      const el = this.reach(sel);
       if (!el) throw new Error(`click: no element for ${sel}`);
       el.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
       return el;
