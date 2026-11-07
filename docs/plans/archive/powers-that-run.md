@@ -1,5 +1,7 @@
 # Plan — Powers that run
 
+**Closed 2026-11-07, kept as history** (Ken). H1–H3 are built (Decisions 266–268). §6's book items moved to [`../crb-catch-up.md`](../crb-catch-up.md) (0410–0414); W132's last two powers wait there on the book.
+
 **Status:** **drafted 2026-11-05 by Claude (Opus)**, from W110 and W132. Ken approved the idea in the W143
 conductor session ("I like the idea, so lets draft the plan"). Pre-flighted against `main` at `377c2ce` (PR #292
 merged: app 0.61.0, released 2026-11-05 in #294, game data 0.52, character schema 0.32). **Approved by Ken 2026-11-04** ("All defaults", in the W143 conductor session): HQ1–HQ4 here and

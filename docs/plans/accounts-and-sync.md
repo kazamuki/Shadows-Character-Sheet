@@ -1,8 +1,8 @@
 # Plan — Shadows accounts: sign in, your sheets anywhere, join a table
 
 **Status:** proposed 2026-10-28 by Claude (Opus), from a planning talk with
-Ken. **Not to be built until GM mode's plan ([`gm-mode.md`](gm-mode.md)) is
-done** (Ken, 2026-10-28). Ken answered the first eight questions that day (§5,
+Ken. **Not to be built until GM mode's plan ([`gm-mode-next.md`](gm-mode-next.md), which carries what was left of
+[`archive/gm-mode.md`](archive/gm-mode.md)) is done** (Ken, 2026-10-28). Ken answered the first eight questions that day (§5,
 NQ1–NQ8). The rest have defaults. The next step is approving the plan, and
 after that comes N0's setup, which is Ken's work and needs no work order.
 **Tier of this document:** *Docs*. Each session names its own tier, and every
@@ -141,7 +141,7 @@ built from files first and the network layer comes after.
 | **N2** | Your characters online: save on change (debounced), the list on Home, open from another device, pick one on a clash | Rule or shape | N1 |
 | **N3** | The GM's tables online, the same way | Rule or shape | N2; GM mode done |
 | **N4** | Join a table: invite link or QR, the GM approves, either side leaves | Rule or shape | N3; S3b |
-| **N5** | Seat an online character: the GM reads its latest copy, leaving removes it, dispatches arrive in the player's inbox | Rule or shape | N4; the dispatch |
+| **N5** | Seat an online character: the GM reads its latest copy, leaving removes it, dispatches arrive in the player's inbox | Rule or shape | N4; the dispatch (**W146**: shelved in GM mode, so not built; N5 builds it, posted instead of saved, or it's built first) |
 | **N6** | The Codex delivered to GMs (NQ8) | Rule or shape | Ken: NQ8 |
 | later | Live push over a Durable Object, if a table asks for it (GQ19 says not yet) | — | A table asking |
 

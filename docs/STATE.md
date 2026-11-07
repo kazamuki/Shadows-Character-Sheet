@@ -39,8 +39,8 @@ decision; that's how this section reached 1,500 words (`log/archive.md` §4).
   are built end to end, and both plans are closed.
 - **GM mode** is **launched** in app 0.57.0 (260), on for everyone: a
   table file with its cast, players and their characters as copies, packs and the Codex, encounters, sessions and the
-  close-out, the Reference, Find and Jot with F and J, and undo. The switch stays, on; tests reach its
-  switched-off path through the harness's `GM_OFF`. `plans/gm-mode.md` §6 lists what's built and what's left.
+  close-out, the Reference, Find and Jot, undo, and keys; U1–U5 (269–272) made it work in play. The switch stays, on; tests reach its
+  switched-off path through the harness's `GM_OFF`. What's left is `plans/gm-mode-next.md`.
 - **CRANK** reputation is on for everyone (239).
 - The engine reproduces the CRB's worked examples (`tests/rules.test.mjs`),
   and a hostile file renders safely everywhere (`tests/hostile.test.mjs`).
@@ -109,7 +109,7 @@ is the authority on a flag's full text.
 | **Vampire** — `0413` | ✅ built (Decisions 200–202, 215, 223, 240, 264, 266): Bloodlines, the Thirst, 22 Majors; Base Powers and CP as the 2026-10-22 book prints; sustained powers run (Start/Stop, Turn Reset charges them) | Nobody. Whether it leaves `draft` is Ken's (the chapter dropped "Under Construction") |
 | **Werewolf** — `0414` | ✅ built (Decisions 195–197, 199, 215, 240, 264, 266): Origins, Form, Call of the Wild, its own Majors; Base Powers and CP as the book prints; its powers run only in Werewolf Form | Nobody. As the Vampire: `draft` is Ken's call |
 | **Arcanist / Magic** | 🔶 spells, Cascade, Aberrations, magic on the sheet, holding a spell (Decision 224), Disciplines as Boosts with their prerequisites (Decision 265) all built · Origins still `draft` | Deighton: **F43** (the held spell's check). Deighton + Scott + Bill + Ken: Origins and spheres/implements, after the four-way comparison; not blocking |
-| **GM mode** — `plans/gm-mode.md` | 🔶 **launched in 0.57.0** (260): built through S3d (players, seats, the card spread, the read-only sheet and a PC row that takes the whole hit on its seat's copy), S7, S10f, S12b, S18 (a table's own frame), S19 (F and J), S20 (Wave Initiative by one roll a side, 261, in 0.58.0) and S21 (the crew as buttons in an encounter and in Who was there, 262, in 0.59.0) and U1 (the encounter as an instrument, 269, in 0.63.0). From here a GM session ships visible, with changelog lines and an app bump | Scott answered his questions 2026-11-03; what's left for him is to-dos (§9's table: Codex v2 for S12a and S17, the Site Profiles, the print files). Next: Ken's pick from `plans/gm-mode.md`'s *Still to build*, where his answers added WILL, Wounds, Off-screen pay, CRANK rep and Reference+ |
+| **GM mode** — `plans/gm-mode-next.md` | 🔶 **launched in 0.57.0** (260); its first plan (S1–S21) and GM-at-the-table (U1–U5: the encounter row, the Tonight strip, records that open to read, keys; 269–272, in 0.63.0–0.66.0) are built and archived. A GM session ships visible, with changelog lines and an app bump | Scott: a session on the live version first (S22), then his to-dos (the plan's §4: Codex v2 for S12a and S17, the Site Profiles, the print files). Then Ken's pick from S23–S30 |
 | **The book** — `plans/crb-catch-up.md` | 📋 what the CRB still needs from the sheet, by chapter | Ken. The sheet-from-book syncs are closed (`plans/archive/`); the next mirror refresh gets a new one |
 | **Print sheet — visual system** — `plans/print-sheet-scotts-look.md` | 📋 Scott's export landed 2026-09-23 (landscape) · front-page restyle proposed and mocked up · one known cosmetic defect | Ken: approve the plan. Scott said yes to PQ1 (embed Cerulean Nights) and PQ2 (all his artwork) and answered PQ4, 2026-11-03; he still has to send the files. Deighton: PQ3 (do the stat groups mean anything). The frame/texture print defect blocks on no one |
 
@@ -140,29 +140,28 @@ rev 9's `C1`–`C3` are still forward notes.
 **The live site is v0.66.0** (data 0.53, schema 0.34), released 2026-11-07.
 
 **Next is Ken's pick**, each built through a work order (`WORK-ORDERS.md`):
-- **Another of `plans/gm-mode.md`'s *Still to build*** (GM mode is launched, so each now ships visible; more keys are on W139; Home's own layout is W80's rest).
+- **GM mode, what's next** (`plans/gm-mode-next.md`): Scott's play report first (S22), then S23 (the leftover fixes) is suggested.
 - **The vehicles-and-gear plan** (`plans/loadout-and-gear.md`) is approved (Ken, 2026-10-24, LQ1–LQ10 on their defaults); L1 (weapon damage types), L2 (written-in weapons read like the catalog's), L2b (they tick their fire modes and reload from carried ammo) and L3 (worn armor and gear in use carry modifiers) and L5 (a Major on one weapon or armor row, Decision 263) are built.
   L4 (natural attacks and the unarmed strike) waits on the 2026-10-29 meeting's notes. L5b, the powers half of W136, follows L4 (Ken, 2026-11-01); L6 (vehicles, was P14) and L7
   (Powered Armor) wait on Deighton. The 2026-10-23 meeting's natural attacks (two a
   round) are in `reference/meeting-2026-10-23.md`, with five details for Deighton.
   The player sheet's plan (`plans/archive/sheet-wishlist.md`) closed 2026-10-24, P1–P21 built.
-- **The powers-that-run plan** (`plans/powers-that-run.md`, approved by Ken 2026-11-04): H1 (sustained powers run, Decision 266), H2 (powers that answer a hit, Decision 267) and H3 (powers that heal, Decision 268) are built. What's left of W132 is Battle Hardened and Elemental Blood, which wait on the book (its Conditions and elements aren't the sheet's: plan §6).
-- **The GM-at-the-table plan** (`plans/gm-at-the-table.md`, approved by Ken 2026-11-05, UQ1–UQ8 on their defaults) **is done**: U1 (the encounter row, 269, app 0.63.0), U4 (0.63.1, no decision; the tab icons stay borrowed until Scott's set, W145), U2 (the Tonight strip, 270, 0.64.0), U3 (read first, 271, 0.65.0) and U5 (keys and landmarks, 272, 0.66.0) are built, each from its order in `plans/gm-at-the-table/` on its UQ defaults. The plan moves to `plans/archive/` in the conductor's cleanup PR.
+- **Closed 2026-11-07** (`plans/archive/`): powers-that-run (H1–H3, 266–268; W132's last two powers wait on the book, `plans/crb-catch-up.md`) and GM-at-the-table (U1–U5).
 - **W90**, cybernetics: six questions before a plan.
 
 **Ken alone:** F12 and F32, W38's plan (`plans/two-tabs-one-character.md`,
 TQ1–TQ3), and the print plan (`plans/print-sheet-scotts-look.md`). GM mode's
-WILL session (TOL and WILL, 175 reopened) is unblocked: Scott says WILL is a floor (GQ6).
+S24 (TOL and WILL, 175 reopened) is unblocked: Scott says WILL is a floor (GQ6).
 GM mode is launched (260): a GM session is an ordinary batch now, with its changelog lines and an app bump.
 
 **Waiting on others:**
-- **Deighton** answered every open rules question on 2026-10-10 (`reference/rulings-2026-10-10.md`). Still his: what a rank of Educated bought in play gives (F44: the IP buy refuses it until then), the TN and TH of the WILL check that keeps a held spell (F43), and whether a Supernatural's Skills and Powers share its stats' headroom past 10 (Ken asked). **One ruling on kickers may clear F46 and F47 together:** do dice stack, and which one is "your Kicker Die"; F45 is Concierge's appraising Skill. **F48** is which damage type the book's ten untyped weapons deal (bows, damaging grenades, the HRL-1 and HXC-1). **CRANK** is kept and back on for everyone (239, 2026-10-23); Scott answered GQ7, F37 and GQ28 on 2026-11-03, and each is now a build (`plans/gm-mode.md`, *Still to build*).
+- **Deighton** answered every open rules question on 2026-10-10 (`reference/rulings-2026-10-10.md`). Still his: what a rank of Educated bought in play gives (F44: the IP buy refuses it until then), the TN and TH of the WILL check that keeps a held spell (F43), and whether a Supernatural's Skills and Powers share its stats' headroom past 10 (Ken asked). **One ruling on kickers may clear F46 and F47 together:** do dice stack, and which one is "your Kicker Die"; F45 is Concierge's appraising Skill. **F48** is which damage type the book's ten untyped weapons deal (bows, damaging grenades, the HRL-1 and HXC-1). **CRANK** is kept and back on for everyone (239, 2026-10-23); Scott answered GQ7, F37 and GQ28 on 2026-11-03, and each is now a build (`plans/gm-mode-next.md`, S25).
 - **Deighton, on vehicles:** 17 of the 28 follow-up questions
   (`reference/rulings-2026-10-23.md`). L6 waits on SH3 (a typed vehicle),
   VK1b (the Mods number), and his in-person talk on vehicles without PROT and RES.
   The plan's §6 lists everything else it asks him.
-- **GM mode's open questions** (`GQ`_n_) and who holds each: `plans/gm-mode.md` §9.
-- **Scott:** no questions left. He answered his page on 2026-11-03 (the Cantrips keep TN 7; he fixes the Book of Known Spells). What's his now is to-dos, listed in `plans/gm-mode.md` §9: he tells Ken when one is done, and nobody asks him to reopen the page. His TOL rewrite is in 0200 and 0400.
+- **GM mode's open questions** (`GQ`_n_) and who holds each: `plans/gm-mode-next.md` §5.
+- **Scott:** no questions left. He answered his page on 2026-11-03 (the Cantrips keep TN 7; he fixes the Book of Known Spells). What's his now is to-dos, listed in `plans/gm-mode-next.md` §4, a session on the live version first: he tells Ken when one is done, and nobody asks him to reopen the page. His TOL rewrite is in 0200 and 0400.
 
 **Don't invest in** the Arcanist's creation-time Unique Aberrations: they
 follow `0411` (Decision 110), and Ken expects the Origins subtypes to replace

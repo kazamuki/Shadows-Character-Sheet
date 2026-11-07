@@ -422,7 +422,7 @@ Suggested CHANGELOG lines, in player voice and marked for the voice pass:
 
 ## 15. Handing it over
 
-The README's two prompts (`gm-mode/README.md`, *How exact to be*), with `<order>` = `loadout-and-gear/L6-vehicles.md` and `<id>` = **P14**, and these traps under the builder's:
+The two prompts in `WORK-ORDERS.md` (*The prompts*), with `<order>` = `loadout-and-gear/L6-vehicles.md` and `<id>` = **P14**, and these traps under the builder's:
 
 > 1. **Every kind switch has a default, and the default is armor or weapons.** `addLoadout` saves an unknown kind as a weapon row; `catalogGroups`, `catalogCellsHtml`, `catalogResultsHtml` and `loName` read it as armor. Give vehicles their own branch in each (§5), and grep for any switch §5 missed.
 > 2. **The book is the source of every number and every line.** P14 1 parses `0460` and compares. Don't type a number from §8.

@@ -72,6 +72,13 @@ This chapter carries most of the creation economy, and almost none of it is writ
 - ☐ ⚖ **0414 Werewolf › Powers** *(11-01: rewritten, with the same Max Starting Rank question as 0413)* (F38, the same ruling). "Doesn't choose its powers; it carries the whole kit" should say the Innate powers are granted at rank 1, the Origin's **starter power** is held (it has no rank), and **Base Powers buy ranks in the Origin's other powers**, none above Max Starting Rank. Character Points raise any held ranked power, up to Max Power Rank. The sheet follows (Decision 215).
 - ✅ *(11-01)* **0413 Vampire › the heading still says "(under construction)".** The sheet carries all of it but the Majors (Decisions 200–202). Drop the tag when you agree.
 
+*From the powers-that-run plan (closed 2026-11-07, `archive/powers-that-run.md` §6):*
+
+- ☐ **0412 › Battle Hardened and Elemental Blood** (W132's last two; held out of H2, HQ11). Battle Hardened is immune to "Dazed, Knocked Down, Agony, or Sickened" (`0412:224`), and the sheet has no Dazed or Sickened Condition (Agony and Knocked Down are near Agonized and Prone, not those words). Elemental Blood halves "Fire, Cold, or Lightning", and the sheet's damage types have no fire or cold (Burning and Electric are Energy, Decision 219; spells deal Elemental). Once the book names the Conditions and elements, a small order builds both.
+- ❓ **0413 Vampire › the per-power RoU limit.** `0414:180` prints "no single power can cost more than your RoU" for Werewolves; `0413` prints nothing like it, so the sheet warns only the Werewolf (`powerCostCap`). If the book means both, it's one data key on the Vampire. Likely meant for both (the rebalancing sheet gives the two one cost logic), but that's the book's to say.
+- ❓ **0413 Vampire › does a power need any state to run?** `0414` ties a Werewolf's to Werewolf Form; `0413` ties nothing. The sheet assumes no (HQ4).
+- Quick Clot's last tick and Regeneration's end are open flags for Deighton (H3's HQ22, HQ23; `SCHEMA.md` §5), not CRB edits.
+
 ## 0420–0423: Skills
 
 - ✅ ⚖ **Skills › Campaign Power Level table.** *(11-01: done, World Coming Down included.)* *(10-07: Skill Points and Shadows are in; **World Coming Down still prints Max Skill Rank 6**, where Decision 150 has 7; Ken confirmed 7, VQ6.)* This whole table moved in Decision 150:
