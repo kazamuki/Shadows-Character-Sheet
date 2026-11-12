@@ -153,3 +153,14 @@ Each question has a recommendation; one that's left blank is answered with it.
 - **EQ21 — Undo, mid-scene.** The toast already gives one-tap Undo right after an action. Once it's gone, Undo is two taps on a between-sessions tab either way. Should E2 also put Undo in the ⋮ menu, so it's always one tap from every tab?
   - *Recommended:* no. The toast covers the mid-scene case, and the Activity Log is where an older action gets found and undone. Make it a wish if it's ever missed.
 - **EQ22 — W133.** Its own session E8 after E5 (recommended), or in E2?
+
+### Ken's answers, 2026-11-12
+
+Ken took the recommendation on all six. He answered EQ17, EQ19, EQ20 and EQ22 in the conductor's session; EQ18 is part of the seven tabs he took, and EQ21 was left blank, so it takes the default.
+
+- **EQ17:** seven tabs, built as E2a (the moves), then E2b (the distill).
+- **EQ18:** Session Log merges into Progression.
+- **EQ19:** "what can I do" lives on Character.
+- **EQ20:** Conditions live on Main, and Trackers' copy goes.
+- **EQ21:** no Undo in the ⋮ menu. The toast covers the mid-scene case.
+- **EQ22:** W133 becomes its own session, E8, after E5.
