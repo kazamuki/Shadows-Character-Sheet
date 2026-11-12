@@ -97,8 +97,9 @@ test("C4: what the load check found stays on every page until it's dismissed; a 
   stale.meta.gamedataVersion = "0.0-ancient";
   const v = boot({ storage: { "shadows.active.v1": { ch: stale, section: "main" } } });
   v.$$("#main button").find(b => /Open sheet/.test(b.textContent)).click();
-  const said = () => /saved against game data 0\.0-ancient/.test(v.$("#main").textContent);
+  const said = () => /saved under an earlier version of the rules\. It opens under the current ones; export it to keep this copy\./.test(v.$("#main").textContent);
   assert.ok(said(), "a version difference wasn't mentioned at all");
+  assert.doesNotMatch(v.$("#main .import-issues").textContent, /0\.0-ancient|game data|\d+\.\d+/, "the notice names a version");
   assert.equal(v.$("[data-importdismiss]"), null, "a bare version difference asks to be dismissed");
   v.click('[data-sec="skills"]');
   assert.ok(!said(), "a bare version difference stuck to every page");

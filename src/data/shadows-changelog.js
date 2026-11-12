@@ -2,6 +2,15 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.66.1",
+    "date": null,
+    "intro": [],
+    "items": [
+      "**A character that owes a choice since the rules changed now asks in one line at the top of each tab.** **Choose** opens the picker, so the sheet's Health and name stay on the first screen.",
+      "**Opening an older file says it was saved under earlier rules and opens under the current ones**, without version numbers."
+    ]
+  },
+  {
     "version": "0.66.0",
     "date": "2026-11-07",
     "intro": [],

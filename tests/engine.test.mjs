@@ -669,7 +669,18 @@ test("migrate() returns every field newCharacter() has (B6)", () => {
   const bare = Engine.migrate({});
   assert.equal(bare.meta.gamedataVersion, undefined);
   assert.equal(bare.meta.schemaVersion, "0.34");
-  assert.ok(Engine.versionCheck(bare).some(i => /game data/.test(i)));
+  assert.ok(Engine.versionCheck(bare).some(i => /earlier version of the rules/.test(i)));
+});
+
+test("Decision 273: versionCheck's game-data line is player copy: no version numbers, no 'game data'", () => {
+  for (const v of [undefined, "0.0-ancient", "0.9"]) {
+    const c = Engine.migrate({}); c.meta.gamedataVersion = v;
+    const line = Engine.versionCheck(c)[0];
+    assert.equal(line, "This character was saved under an earlier version of the rules. It opens under the current ones; export it to keep this copy.");
+    assert.doesNotMatch(line, /game data|\d/);
+  }
+  const same = Engine.migrate({}); same.meta.gamedataVersion = D.meta.gamedataVersion;
+  assert.equal(Engine.versionCheck(same).length, 0);
 });
 
 test("no exported reader throws on any character migrate() can return", () => {

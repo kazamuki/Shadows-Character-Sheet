@@ -1070,17 +1070,18 @@ function focusedOwedLines(fp, away){
   if (!fp || fp.complete) return [];
   const more = fp.need - fp.have, cat = Engine.focusedCategoryName(fp.category), out = [];
   if (more>0) out.push(`Choose ${more} more ${cat} Skill${more===1?"":"s"} to Focus${away?" at the top of this tab":""}.`);
-  if (fp.invalid.length) out.push(away ? "A pick at the top of this tab can't be a Focused Skill any more. Remove it there."
-    : "A pick below can't be a Focused Skill any more. Remove it.");
+  if (fp.invalid.length) out.push(away ? "A pick at the top of this tab can't be a Focused Skill any more. Fix it there."
+    : "A pick can't be a Focused Skill any more.");
   return out;
 }
-// The ask at the top of every sheet tab: "" unless a locked character is short a pick.
+// The ask at the top of every sheet tab (Decision 273): one line and a button. ""
+// unless a locked character is short a pick. The picker is in the dialog the button opens.
 function focusedOwedHtml(ch){
   if (!ch || !ch.creation || ch.creation.locked!==true) return "";
-  const lines = focusedOwedLines(Engine.focusedPicks(ch));
+  const fp = Engine.focusedPicks(ch), lines = focusedOwedLines(fp);
   if (!lines.length) return "";
-  return `<div class="focused-owed" role="group" aria-label="Focused Skills" data-focused-owed><div class="sect">Focused Skills</div>${
-    lines.map(l=>`<p class="step-note">${esc(l)}</p>`).join("")}${focusedPickHtml(ch, "data-fpick")}</div>`;
+  return `<div class="focused-owed" role="group" aria-label="Focused Skills" data-focused-owed><span class="focused-owed-text"><b>Focused Skills</b> · ${
+    lines.map(esc).join(" ")}</span><button class="btn sm" data-fowedopen>${fp.invalid.length?"Fix":"Choose"}</button></div>`;
 }
 function flagHtml(entry){
   return noticeHtml(copy("unsettledLabel"), (entry && entry.playerNote) || copy("unsettledRule"));
