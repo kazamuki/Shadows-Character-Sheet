@@ -61,8 +61,9 @@ all correct, but it takes knowing the sheet to find it:
 
 | Session | What | Impeccable | Tier | After |
 |---|---|---|---|---|
-| E1a | Opening an older file: an owed choice as one line, the load notice in plain words ([order](finding-things-on-the-sheet/E1a-opening-an-older-file.md), approved) | `onboard`, then `clarify` | Rule or shape | — |
-| E1b | Making a character, for everyone: the wizard's first-timer path | `onboard` | Rule or shape | E1a |
+| E1a | Opening an older file: an owed choice as one line, the load notice in plain words ([order](finding-things-on-the-sheet/E1a-opening-an-older-file.md), built: PR #317, app 0.66.1, Decision 273) | `onboard`, then `clarify` | Rule or shape | — |
+| E1b | Making a character, for everyone: the wizard's first-timer path ([order](finding-things-on-the-sheet/E1b-making-a-character.md), approved) | `onboard` | Rule or shape | E1a |
+| E1c | Character Points for a first-timer: how Disadvantages and Advantages fold (EQ9) | `distill` | Rule or shape | E1b |
 | E2 | Where everything lives: the tabs, shaped and distilled | `shape`, then `distill` | Rule or shape | — |
 | E3 | Main's columns and the Grimoire's read mode | `layout` | Rule or shape | E2 |
 | E4 | Colour that keeps its one meaning | `colorize` | Fix | — |
@@ -130,7 +131,17 @@ normal and Expert, at 1280px) gives it to start from:
   character to Lock & Export; the Custom archetype's path.
 
 **Weighs:** W131 (Expert mode as one long page) and W121 (type a number
-into a stepper), both on the wishlist, as part of the proposal.
+into a stepper), both on the wishlist, as part of the proposal. **Set aside**
+by E1b's order (EQ10, Ken 2026-11-11): both are the veteran's, E1b the
+first-timer's.
+
+#### E1c — Character Points for a first-timer
+
+Split from E1b by EQ9 (Ken, 2026-11-11). The step is about 24,000px at
+1280px (11,800px in Expert mode), with every Disadvantage open. How the
+lists fold for someone reading them for the first time, against Decisions
+232 and 234 (Expert mode's folds), measured before it's shaped. Its order
+is drafted once E1b merges.
 
 ### E2 — Where everything lives: the tabs, shaped and distilled
 
