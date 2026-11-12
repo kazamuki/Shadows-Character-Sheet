@@ -954,11 +954,11 @@ test("P4 (W64): the sheet's menu Home and the table's Home both land on homeStat
 test("P4 (W96): a Vampire's CP step lists the 15 Universal Advantages it can buy, plus a held one it can only give back", () => {
   const universal = D.advantages.filter(a => a.universal === true);
   assert.equal(universal.length, 15);
-  const advBlock = app => app.$$("#main details[data-filterable]").find(d => /open to Supernaturals/.test(d.querySelector("summary").textContent));
+  const advBlock = app => app.$$("#main [data-filterable]").find(d => /open to Supernaturals/.test((d.querySelector(".cp-count") || {}).textContent || ""));
   const picks = app => [...advBlock(app).querySelectorAll(".pick")];
   let app = onStep("vampire", "street", "character-points");
   assert.equal(picks(app).length, 15);
-  assert.equal(advBlock(app).querySelector("summary").textContent.trim(), "15 open to Supernaturals");
+  assert.equal(advBlock(app).querySelector(".cp-count").textContent.trim(), "15 open to Supernaturals");
   assert.deepEqual([...picks(app).map(p => p.querySelector("h2").textContent).sort()], [...universal.map(a => a.name).sort()]);
   // The search box counts within what is drawn.
   type(app, "[data-jumpfilter]", "sense");
@@ -972,15 +972,15 @@ test("P4 (W96): a Vampire's CP step lists the 15 Universal Advantages it can buy
   const held = D.advantages.find(a => !a.universal);
   app = onStep("vampire", "street", "character-points", ch => { ch.advantages = [{ id: held.id, rank: 1, notes: "" }]; });
   assert.equal(picks(app).length, 16);
-  assert.equal(advBlock(app).querySelector("summary").textContent.trim(), "15 open to Supernaturals · 1 held that aren't");
+  assert.equal(advBlock(app).querySelector(".cp-count").textContent.trim(), "15 open to Supernaturals · 1 held that aren't");
   const row = picks(app).find(p => p.querySelector("h2").textContent === held.name);
   assert.equal(row.querySelector('[data-step$="|1"]').disabled, true, "a held, barred Advantage can go up");
   app.click(`[data-step="adv|${held.id}|-1"]`);
   assert.equal(picks(app).length, 15, "taking it back left it on the list");
   // A Mortal still sees all of them.
   app = onStep("professional", "street", "character-points");
-  const mortal = app.$$("#main details[data-filterable]").find(d => d.querySelector("summary").textContent.trim() === `${D.advantages.length} available`);
-  assert.ok(mortal, "a Mortal's summary changed");
+  const mortal = app.$('[data-cp-list="advantages"]');
+  assert.equal(mortal.querySelector(".cp-count"), null, "a Mortal's list carries a gated line");
   assert.equal(mortal.querySelectorAll(".pick").length, D.advantages.length);
   assert.deepEqual(app.errors, []);
 });
@@ -1122,7 +1122,7 @@ test("P9a 8: the write-in offers four classifications, and Magical being opens t
   assert.equal(words.getAttribute("placeholder"), "In a word or two");
   assert.match(words.closest("label").textContent, /Magical being: in your words/);
   const mb = onStep(custom.id, D.powerLevels[0].id, "character-points", ch => Object.assign(ch.archetypeChoices.writeIn, { name: "Fae", classification: "magical-being", classificationText: "Fae" }));
-  const adv = [...mb.$$("#main details.group summary")].map(s => s.textContent).find(t => /open to/.test(t));
+  const adv = [...mb.$$("#main .cp-count")].map(s => s.textContent).find(t => /open to/.test(t));
   assert.match(adv || "", /^15 open to Magical beings/, "the Advantage list doesn't open the Universal ones first");
   assert.deepEqual(app.errors, []);
 });

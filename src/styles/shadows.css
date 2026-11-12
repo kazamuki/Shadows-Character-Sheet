@@ -237,6 +237,7 @@ textarea{min-height:150px; resize:vertical; line-height:1.6}
 .pick.selected{border-color:var(--green)}
 .pick.folded{padding:8px 14px; margin-bottom:6px}
 .spec-fold{margin-bottom:10px}
+.cp-count{font-family:var(--mono); font-size:.74rem; color:var(--dim); margin:4px 0}
 .cp-fold{display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; margin:8px 0 10px}
 .cp-fold-note{font-size:.85rem; color:var(--dim)}
 .demands{margin:18px 0 6px; font-size:.82rem}

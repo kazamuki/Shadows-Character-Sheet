@@ -109,9 +109,9 @@ No data, save-file or engine change. Browser state only: `S.cpAll` and `S.natAll
 ## 9. The UI
 
 **Each list, folded** (the top of the list, under its section heading):
-> **None taken.** *Disadvantages give you Character Points to spend.* **[Show all 30 Disadvantages]**
+> **None taken.** **[Show all 30 Disadvantages]**
 
-and, once one is taken, the held picks in full, then **[Show all 30 Disadvantages]**. For Advantages: *"Advantages cost Character Points."* *(Voice pass.)* Once open, the button reads **Show fewer** and sits in the same place, so pressing it twice in a row toggles.
+and, once one is taken, the held picks in full, with the button above them (the row sits at the top of the list, so the button stays in one place as the list toggles). Advantages read the same: **None taken.** **[Show all 57 Advantages]**. *(Ken's voice pass, 2026-11-12: no sentence on what each list is for.)* Once open, the button reads **Show fewer** and sits in the same place, so pressing it twice in a row toggles.
 
 **The filter:** unchanged. With text, matches show from both lists whether folded or not, and "N of M" counts them.
 

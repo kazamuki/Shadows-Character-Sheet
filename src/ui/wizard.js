@@ -599,8 +599,7 @@ function renderSkills(){
 // applyPickFilter's to decide (S.cpAll is passed to it), so a redraw and a cleared filter agree.
 function cpFoldRow(key, n, anyHeld){
   const open = !!(S.cpAll && S.cpAll[key]), singular = key==="advantages" ? "Advantage" : "Disadvantage";
-  const why = copy(key==="advantages" ? "cpAdvantagesNote" : "cpDisadvantagesNote");
-  return `<div class="cp-fold">${open ? "" : `<span class="cp-fold-note">${anyHeld ? "" : `<b>${esc(copy("cpNoneTaken"))}</b> `}<em>${esc(why)}</em></span>`}`
+  return `<div class="cp-fold">${open || anyHeld ? "" : `<span class="cp-fold-note"><b>${esc(copy("cpNoneTaken"))}</b></span>`}`
     + `<button class="btn sm" type="button" data-cp-all="${key}" aria-expanded="${open}">${esc(open ? copy("showFewerOptions") : copy("showAllOptions").replace("{n}", n).replace("{label}", singular))}</button></div>`;
 }
 
@@ -616,7 +615,7 @@ function renderCP(){
 
   // Disadvantages
   let h = secs.sect("Disadvantages", "Disadvantages — grant Character Points (no cap)");
-  h += `<details class="group" open data-filterable data-cp-list="disadvantages"><summary>${D.disadvantages.length} available</summary>` +
+  h += `<div class="group" data-filterable data-cp-list="disadvantages">` +
     cpFoldRow("disadvantages", D.disadvantages.length, D.disadvantages.some(dd=>ch.disadvantages.some(x=>x.id===dd.id && x.rank>0))) +
     D.disadvantages.map(dd=>{
       const cur = (ch.disadvantages.find(x=>x.id===dd.id)||{rank:0}).rank;
@@ -629,7 +628,7 @@ function renderCP(){
         ${effectsHtml(ch,"disadvantage",dd.id)}
         <div class="desc"${foldAttr("disadvantage|"+dd.id)}>${esc(dd.description)}</div>
         ${cur>0?picksHtml("disadvantage",dd.id):""}</div>`;
-    }).join("") + `</details>`;
+    }).join("") + `</div>`;
 
   // Advantages
   h += secs.sect("Advantages", "Advantages — cost Character Points");
@@ -639,7 +638,7 @@ function renderCP(){
   const advList = gated ? D.advantages.filter(ad=>Engine.canBuyAdvantage(ch, ad)).concat(D.advantages.filter(ad=>!Engine.canBuyAdvantage(ch, ad) && heldAdv(ad))) : D.advantages;
   const openCount = gated ? D.advantages.filter(ad=>Engine.canBuyAdvantage(ch, ad)).length : D.advantages.length;
   const heldClosed = gated ? advList.length-openCount : 0;
-  h += `<details class="group" open data-filterable data-cp-list="advantages"><summary>${gated?`${openCount} open to ${esc(cls.name)}s${heldClosed?` · ${heldClosed} held that aren't`:""}`:`${openCount} available`}</summary>` +
+  h += `<div class="group" data-filterable data-cp-list="advantages">${gated?`<p class="cp-count">${openCount} open to ${esc(cls.name)}s${heldClosed?` · ${heldClosed} held that aren't`:""}</p>`:""}` +
     cpFoldRow("advantages", advList.length, advList.some(heldAdv) || D.advantages.some(ad=>ch.advantages.some(x=>x.id===ad.id && x.rank>0))) +
     advList.map(ad=>{
       const cur = (ch.advantages.find(x=>x.id===ad.id && x.source!=="natural")||{rank:0}).rank;
@@ -657,7 +656,7 @@ function renderCP(){
         ${effectsHtml(ch,"advantage",ad.id)}
         <div class="desc"${foldAttr("advantage|"+ad.id)}>${esc(ad.description)}</div>
         ${(cur>0||(natural&&natural.rank>0))?picksHtml("advantage",ad.id):""}</div>`;
-    }).join("") + `</details>`;
+    }).join("") + `</div>`;
 
   // LUCK
   const luck = D.resources.luck;
