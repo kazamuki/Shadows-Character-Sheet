@@ -1304,7 +1304,7 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
   .skill-q::after, .deriv-q::after, .wn-x::after, .vdrawer .dclose::after, .footer .ftoggle::after,
   .theme-toggle::after, .kebab::after, .hdr-btn::after{width:max(100%, 44px); height:max(100%, 44px)}
   .btn, .pick .toggle, .jump, .cond-chip, .tab, .hdr-menu button, .form-toggle button, .step-row, .vrow.act{min-height:44px}
-  .btn{min-width:44px}
+  .btn, .jump{min-width:44px}
   .vpill.toggle{min-height:44px}
   button.x{min-width:44px; min-height:44px}
   .stepper button{width:44px; height:44px}
