@@ -427,7 +427,7 @@ function renderArchetype(){
       const have = ac.naturalAdvantages.reduce((s,n)=>s+n.rank,0);
       h += `<div class="sect">Natural Advantages — allocate ${rowP.naturalAdvantageRanks} ranks (free)</div>
         <p class="step-note">${esc(nat.description)} <em>${have}/${rowP.naturalAdvantageRanks} allocated.</em></p>`;
-      // Decision 279: once every rank is allocated, what has none folds to a line each (S.natAll opens it again).
+      // Decision 280: once every rank is allocated, what has none folds to a line each (S.natAll opens it again).
       const natDone = have>=rowP.naturalAdvantageRanks, natFold = natDone && !S.natAll;
       if (natDone && nat.pool.some(p=>!((ac.naturalAdvantages.find(n=>n.id===p.advantageId)||{rank:0}).rank>0)))
         h += `<div class="spec-fold"><button class="btn sm" type="button" data-nat-all aria-expanded="${!natFold}">${esc(natFold ? copy("showAllOptions").replace("{n}", nat.pool.length).replace("{label}", "Natural Advantage") : copy("showFewerOptions"))}</button></div>`;
@@ -595,7 +595,7 @@ function renderSkills(){
   return h.replace("@@BAR@@BAR", ()=>bar);
 }
 
-// Decision 278: the fold row at the top of a Character Points list. Which picks it hides is
+// Decision 279: the fold row at the top of a Character Points list. Which picks it hides is
 // applyPickFilter's to decide (S.cpAll is passed to it), so a redraw and a cleared filter agree.
 function cpFoldRow(key, n, anyHeld){
   const open = !!(S.cpAll && S.cpAll[key]), singular = key==="advantages" ? "Advantage" : "Disadvantage";
@@ -893,6 +893,7 @@ function askRemove(e){
 function renderHome(){
   const app=$("app"); if (app) app.classList.remove("sheet-mode", "table-mode");
   renderTopChrome(); closeVitals(); renderDrawer();   // a pinned panel goes with the sheet
+  syncHelp();   // and a table's Help goes with the table (gm.js, Decision 278)
   releaseMain();
   readOnlyChar=null;   // a seat's copy the GM read goes with the table (Decision 256)
   const roster = rosterEntries(), tables = gmTableEntries();
@@ -1016,7 +1017,7 @@ function bindMain(){
     // natural advantages mirror into ch.advantages, which the old
     // single-select handler cleared on one side only.
     if (ac.specialization[0]!==before){
-      S.natAll=false;   // Decision 279: Show all was for the last subtype's pool
+      S.natAll=false;   // Decision 280: Show all was for the last subtype's pool
       ac.focusedSkillPicks=[]; ac.naturalAdvantages=[];
       ch.advantages=ch.advantages.filter(x=>x.source!=="natural");
       // Decision 200: the choices were the old Bloodline's, and so were the
@@ -1061,7 +1062,7 @@ function bindMain(){
   main.querySelectorAll("[data-step]").forEach(b=>b.onclick=()=>{
     const [key,delta]=b.dataset.step.split("|").reduce((acc,part,i,arr)=>{
       if(i===arr.length-1) acc[1]=Number(part); else acc[0]=(acc[0]?acc[0]+"|":"")+part; return acc; },[null,0]);
-    // Decision 278: a − that folds the pick away takes the stepper with it; the list's fold button stands in.
+    // Decision 279: a − that folds the pick away takes the stepper with it; the list's fold button stands in.
     const list = b.closest("[data-cp-list]"), listKey = list && list.dataset.cpList, had = document.activeElement===b;
     applyStep(key, delta); update(); announceStep(b.dataset.step);
     const now = document.activeElement;   // keepPlace may have put it on the pick before the filter hid it

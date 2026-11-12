@@ -35,7 +35,7 @@
 
 - **Tier:** *Rule or shape*: where a creation list's entries show is a player-facing behaviour someone could have chosen otherwise.
 - **Versions:** app **patch** (EQ16). Game data, character, table and pack schemas unchanged: the fold is browser state, and the new `appCopy` keys are words (Decision 68). No `migrate()` step.
-- **Numbers:** two decisions, **N** and **N+1**, the next free numbers on `origin/main` when built (278–279 if nothing lands first). No flags.
+- **Numbers:** two decisions, **N** and **N+1**, the next free numbers on `origin/main` when built (278–279 if nothing lands first; S31 took 278 first, so E1c was built as **279–280**). No flags.
 
 ## 3. Decisions, drafted in full
 

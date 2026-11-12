@@ -1170,7 +1170,7 @@ const cpExpert = (mut, store = EXPERT) => onStep("professional", "street", "char
 const pickOf13 = (app, name) => app.$$("#main .pick").find(p => p.querySelector("h2") && p.querySelector("h2").textContent === name);
 const hiddenIn = el => !!el.closest("[hidden]");
 const shownNames = app => app.$$("#main [data-filterable] .pick").filter(p => !p.hidden).map(p => p.querySelector("h2").textContent);
-// Decision 278: the lists open folded; a test that counts all 87 asks for them open first.
+// Decision 279: the lists open folded; a test that counts all 87 asks for them open first.
 const openLists = app => { for (const k of ["disadvantages", "advantages"]) app.click(`[data-cp-all="${k}"]`); return app; };
 const typeFilter = (app, v) => { const f = app.$("#main [data-jumpfilter]"); f.value = v; f.dispatchEvent(new app.window.Event("input")); };
 const holdThree = ch => {
@@ -1860,7 +1860,7 @@ const cpList = (app, key) => app.$(`[data-cp-list="${key}"]`);
 const cpVisible = (app, key) => [...cpList(app, key).querySelectorAll(".pick")].filter(p => !p.hidden);
 const cpAllBtn = (app, key) => cpList(app, key).querySelector(`[data-cp-all="${key}"]`);
 
-test("Decision 278: Character Points opens with both lists folded, and Show all opens one", () => {
+test("Decision 279: Character Points opens with both lists folded, and Show all opens one", () => {
   const app = cpBlank();
   assert.equal(cpVisible(app, "disadvantages").length, 0, "a Disadvantage shows on a new character");
   assert.equal(cpVisible(app, "advantages").length, 0, "an Advantage shows on a new character");
@@ -1873,7 +1873,7 @@ test("Decision 278: Character Points opens with both lists folded, and Show all 
   assert.deepEqual(app.errors, []);
 });
 
-test("Decision 278: a held pick shows in a folded list, and taking it to 0 folds it away", () => {
+test("Decision 279: a held pick shows in a folded list, and taking it to 0 folds it away", () => {
   const app = cpBlank();
   const id = D.disadvantages[0].id;
   app.click('[data-cp-all="disadvantages"]');
@@ -1890,7 +1890,7 @@ test("Decision 278: a held pick shows in a folded list, and taking it to 0 folds
   assert.deepEqual(app.errors, []);
 });
 
-test("Decision 278: the filter reaches into folded lists, and clearing it folds them again", () => {
+test("Decision 279: the filter reaches into folded lists, and clearing it folds them again", () => {
   const app = cpBlank();
   const adv = D.advantages[0], box = app.$("[data-jumpfilter]");
   const type = v => { box.value = v; box.dispatchEvent(new app.window.Event("input")); };
@@ -1907,7 +1907,7 @@ test("Decision 278: the filter reaches into folded lists, and clearing it folds 
   assert.deepEqual(app.errors, []);
 });
 
-test("Decision 278: the fold resets with the step", () => {
+test("Decision 279: the fold resets with the step", () => {
   const app = cpBlank();
   app.click('[data-cp-all="advantages"]');
   assert.equal(cpVisible(app, "advantages").length, D.advantages.length);
@@ -1919,7 +1919,7 @@ test("Decision 278: the fold resets with the step", () => {
   assert.deepEqual(app.errors, []);
 });
 
-test("Decision 278: with Expert mode on, the lists fold the same way", () => {
+test("Decision 279: with Expert mode on, the lists fold the same way", () => {
   const app = cpBlank(true);
   assert.equal(cpVisible(app, "disadvantages").length + cpVisible(app, "advantages").length, 0);
   app.click('[data-cp-all="advantages"]');
@@ -1927,7 +1927,7 @@ test("Decision 278: with Expert mode on, the lists fold the same way", () => {
   assert.deepEqual(app.errors, []);
 });
 
-test("Decision 278: Show all and the filter leave the character as it was", () => {
+test("Decision 279: Show all and the filter leave the character as it was", () => {
   const app = cpBlank();
   const before = JSON.stringify(stored(app, { locked: false }));
   app.click('[data-cp-all="advantages"]'); app.click('[data-cp-all="advantages"]'); app.click('[data-cp-all="disadvantages"]');
@@ -1943,7 +1943,7 @@ function enforcerPool() {
   return { app, need: Engine.scalingRow(ch).naturalAdvantageRanks, pool: Engine.naturalAdvantagePool(Engine.archetype(ch)).pool };
 }
 
-test("Decision 279: Natural Advantages fold once every rank is allocated", () => {
+test("Decision 280: Natural Advantages fold once every rank is allocated", () => {
   const { app, need, pool } = enforcerPool();
   assert.equal(natCards(app).length, pool.length);
   assert.ok(natCards(app).every(p => p.querySelector(".desc")), "a card is folded before the ranks are allocated");
@@ -1962,7 +1962,7 @@ test("Decision 279: Natural Advantages fold once every rank is allocated", () =>
   assert.deepEqual(app.errors, []);
 });
 
-test("Decision 279: Show all on Natural Advantages resets when the subtype changes", () => {
+test("Decision 280: Show all on Natural Advantages resets when the subtype changes", () => {
   const { app, need, pool } = enforcerPool();
   const first = pool[0].advantageId;
   for (let i = 0; i < need; i++) app.click(`[data-step="natadv|${first}|1"]`);

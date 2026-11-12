@@ -8,6 +8,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { boot } from "./harness.mjs";
 import { GM_ON, runTable, castAdd, type, notesTab, openSheet, lockedCharacter, edit, deadAirApp } from "./smokekit.mjs";
 
@@ -415,7 +416,7 @@ test("U5: Ctrl+Z and ⌘+Z take back the newest change and say so", () => {
   assert.deepEqual(app.errors, []);
 });
 
-test("U5: A opens Activity and ? opens Keys, and each closes back where it was pressed", () => {
+test("U5: A opens Activity and ⋮ → Keys opens Keys, and each closes back where it was pressed (? is Help now, S31)", () => {
   const app = deadAirApp("cast");
   const calls = spyFocus(app);
   const target = card(app);
@@ -427,16 +428,30 @@ test("U5: A opens Activity and ? opens Keys, and each closes back where it was p
   pressEsc(app);
   assert.equal(app.doc.activeElement, target, "Activity returns to where A was pressed");
   assert.equal(calls[calls.length - 1].opts && calls[calls.length - 1].opts.preventScroll, true, "a key's return scrolls");
+  // S31: ? is Help, not a box. It closes back where it was pressed, too.
   r = press(app, target, "?", { shiftKey: true, code: "Slash" });
-  assert.ok(modalOpen(app), "? opened nothing");
+  assert.equal(modalOpen(app), false, "? opened a box");
   assert.equal(r.prevented, true);
+  assert.equal(app.$("#ghelp").hasAttribute("inert"), false, "? didn't open Help");
+  pressEsc(app);
+  assert.equal(app.$("#ghelp").hasAttribute("inert"), true);
+  assert.equal(app.doc.activeElement, target, "Help returns to where ? was pressed");
+  // Keys is one press further: ⋮ → Keys.
+  const kb0 = app.$("[data-menu-toggle]");
+  kb0.focus();
+  app.click("[data-menu-toggle]");
+  app.click("[data-tkeys]");
+  assert.ok(modalOpen(app), "Keys opened nothing");
   const text = app.$("#modal").textContent;
   for (const k of ["1–8", "N", "Ctrl/⌘+Z", "A", "?", "F", "J", "Esc"]) assert.ok(text.includes(k), k + " isn't in the list");
+  assert.ok(text.includes("? · Help"), "Keys' list doesn't say ? is Help");
+  assert.equal(text.includes("These keys"), false, "Keys' list still says ? opens the keys");
   calls.length = 0;
   pressEsc(app);
-  assert.equal(app.doc.activeElement, target, "Keys returns to where ? was pressed");
+  assert.equal(app.doc.activeElement, kb0, "Keys returns to ⋮");
   // The one switch turns all of them off, F and J included.
-  press(app, target, "?", { shiftKey: true });
+  app.click("[data-menu-toggle]");
+  app.click("[data-tkeys]");
   app.click("#modal [data-keyoff]");
   app.click("#modal [data-modalclose]");
   assert.equal(digit(app, app.doc.body, 1).prevented, false);
@@ -445,6 +460,7 @@ test("U5: A opens Activity and ? opens Keys, and each closes back where it was p
   assert.equal(modalOpen(app), false);
   assert.equal(press(app, app.doc.body, "?", { shiftKey: true }).prevented, false, "? acted while the keys are off");
   assert.equal(modalOpen(app), false);
+  assert.equal(app.$("#ghelp").hasAttribute("inert"), true, "? opened Help while the keys are off");
   // ⋮ → Activity is unchanged: it still returns to ⋮.
   const kb = app.$("[data-menu-toggle]");
   kb.focus();
@@ -461,7 +477,7 @@ test("U5: no new key fires in a field, a box, the ⋮ menu, on repeat or with th
   // Something to undo, so a Ctrl+Z that fired would show.
   app.$$("[data-clkplus]:not([disabled])")[0].click();
   const keys = [["3", { code: "Digit3" }, "3"], ["n", {}, "N"], ["a", {}, "A"], ["?", { shiftKey: true }, "?"], ["z", { ctrlKey: true }, "Ctrl+Z"]];
-  const snap = () => JSON.stringify([tabNow(app), app.$("#modal") ? app.$("#modal").innerHTML : "", auditLen(app), toastText(app), app.$("[aria-current=step]") ? app.$("[aria-current=step]").textContent : ""]);
+  const snap = () => JSON.stringify([tabNow(app), app.$("#modal") ? app.$("#modal").innerHTML : "", auditLen(app), toastText(app), app.$("[aria-current=step]") ? app.$("[aria-current=step]").textContent : "", app.$("#ghelp") ? app.$("#ghelp").hasAttribute("inert") : null]);
   const nothing = (target, why, init = {}) => {
     for (const [key, base, name] of keys) {
       const s0 = snap();
@@ -533,5 +549,31 @@ test("U5: the tabs, Next and Activity carry their keys while the keys are on", (
   // A tab press rebuilds the tabs and they still say it.
   app.click('[data-tsec="notes"]');
   assert.equal(app.$('#topnav [data-tsec="notes"]').getAttribute("aria-keyshortcuts"), "8");
+  assert.deepEqual(app.errors, []);
+});
+
+test("S31: ? is Help now, and Keys says so", () => {
+  const app = deadAirApp("cast");
+  const target = card(app);
+  const help = () => app.$("#ghelp");
+  assert.equal(help().hasAttribute("inert"), true);
+  let r = press(app, target, "?", { shiftKey: true, code: "Slash" });
+  assert.equal(r.prevented, true);
+  assert.equal(help().hasAttribute("inert"), false, "? didn't open Help");
+  assert.equal(modalOpen(app), false, "? still opens the Keys box");
+  assert.equal(app.doc.activeElement, help().querySelector("[data-help-close]"));
+  // The same key closes it, and focus goes back to where the key was pressed.
+  r = press(app, help().querySelector("[data-help-close]"), "?", { shiftKey: true, code: "Slash" });
+  assert.equal(r.prevented, true);
+  assert.equal(help().hasAttribute("inert"), true, "? didn't close Help");
+  // Help's foot opens Keys; its list says ? is Help.
+  app.click("[data-thelp]");
+  app.click("#ghelp [data-hkeys]");
+  assert.ok(modalOpen(app));
+  assert.ok(app.$("#modal").textContent.includes("? · Help"));
+  pressEsc(app);
+  // Only one listener answers ?: a second binding would toggle it twice and leave it where it was.
+  const src = readFileSync(new URL("../src/ui/gm.js", import.meta.url), "utf8");
+  assert.equal((src.match(/e.key===s*"?"/g) || []).length, 1, "? is bound in more than one place");
   assert.deepEqual(app.errors, []);
 });

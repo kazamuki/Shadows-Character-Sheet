@@ -851,7 +851,7 @@ function jumpTo(id){
 // every .desc, folded or not, since textContent reads text that's hidden. A
 // skill row (.alloc-row) filters the same way, and takes its picks with it.
 // `held` (Held only) hides whatever the character doesn't hold.
-// `fold` (Decision 278) names the lists ([data-cp-list]) that are open; one that isn't shows only what's held,
+// `fold` (Decision 279) names the lists ([data-cp-list]) that are open; one that isn't shows only what's held,
 // until the filter has text. This is the one place a pick's `hidden` is decided, so a redraw and a cleared
 // filter can't disagree about it.
 function applyPickFilter(root, q, { held=false, fold=null }={}){

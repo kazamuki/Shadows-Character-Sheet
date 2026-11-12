@@ -2,12 +2,17 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
-    "version": "0.66.3",
+    "version": "0.67.1",
     "date": null,
     "intro": [],
     "items": [
       "**Character Points opens with its Disadvantages and Advantages folded away.** What you've taken stays in view, and Show all opens a list. The filter still finds anything.",
       "**Once you've allocated your Natural Advantages, the ones you didn't take fold away, and Show all brings them back.**",
+      "**Every table page has Help.** Press **?** (the button in the header, or the key) for what the page is for, when you'd use it, and what its words mean.",
+      "**A night at the table** walks through what to use before, during and after a session, and **Every word** lists every word GM mode uses, A to Z.",
+      "**Each section has a one-line guide**, and Help's **Guide lines** switch turns them off.",
+      "**On a wide screen, Help stays open beside the page and follows you.** On a narrower one it opens over the page and closes when you move.",
+      "**Empty sections say what they're for.** A new table's Sessions, Cast, Notes and the rest tell you what to do first. **?** no longer opens Keys: Keys is one link down in Help, and still in ⋮.",
       "**A character that owes a choice since the rules changed now asks in one line at the top of each tab.** **Choose** opens the picker, so the sheet's Health and name stay on the first screen.",
       "**Opening an older file says it was saved under older rules and opens under the current ones**, without version numbers.",
       "**Making a character no longer greets you with errors.** What's still to choose reads as what's left to do, and only a real mistake shows as one.",

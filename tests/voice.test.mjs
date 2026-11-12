@@ -99,7 +99,9 @@ function renderedCorpus() {
   return parts.join("\n");
 }
 
-const CORPUS = renderedCorpus();
+// S31 (Decision 278): GM mode's Help is data a GM reads, not rendered in any screen this corpus boots, so its strings go in as they are.
+const gmGuideText = () => { const out = []; (function walk(v) { if (typeof v === "string") out.push(v); else if (v && typeof v === "object") Object.values(v).forEach(walk); })(D.gmGuide); return out.join("\n"); };
+const CORPUS = renderedCorpus() + "\n" + gmGuideText();
 
 test("the corpus actually rendered something", () => {
   // Guards the guard: if boot silently failed, every assertion below passes.
