@@ -76,9 +76,10 @@ function conditionAddHtml(st){
 // bindVitalControls binds the note in both.
 function conditionInfoHtml(st){
   const a = st.active.find(x=>x.index===S.condInfo);
-  if (!a || !a.def) return "";
-  const R = D.conditionRules||{}, penalised = typeof a.def.rollPenalty==="number";
-  return `<div class="cond-info"><b>${esc(a.label)}.</b> ${esc(a.def.effect)} <b>Recovery:</b> ${esc(a.def.recovery)}
+  if (!a) return "";
+  const R = D.conditionRules||{}, penalised = !!a.def && typeof a.def.rollPenalty==="number";
+  // A Condition the game data no longer has still shows its note (Trackers' card used to).
+  return `<div class="cond-info"><b>${esc(a.label)}.</b> ${a.def ? `${esc(a.def.effect)} <b>Recovery:</b> ${esc(a.def.recovery)}` : "This Condition isn't in the game data any more."}
     <input type="text" class="cond-note" data-condnote="${a.index}" value="${esc(a.note)}" placeholder="note — source, poison, who did it" aria-label="${esc(a.label)} note">${
     penalised ? ruleHtml([(R.rollPenalty||{}).text, (R.penaltyStacking||{}).text].filter(Boolean).join(" ")) : ""}</div>`;
 }
@@ -3682,9 +3683,10 @@ function bindVitalControls(root){
   root.querySelectorAll("[data-condrm]").forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.condrm), e=ch.trackers.conditions[i];
     S.condInfo=null;                                   // indexes shift once one goes
+    // The host is found before commit(): a popover's body is replaced by it (Decision 283).
+    const host = root.closest("#vpop") || document.getElementById("main");
     commit("condition", `Cleared: ${condLabel(e)}`, ()=>{ Engine.removeCondition(ch, i); });
-    // The ✕ pressed is gone with its chip: keyboard focus goes to the next chip, or to the palette when none is left (Decision 283).
-    const host = document.getElementById("vpop") && document.getElementById("vpop").contains(root) ? document.getElementById("vpop") : document.getElementById("main");
+    // The ✕ pressed is gone with its chip: keyboard focus goes to the next chip, or to the palette when none is left.
     const next = host && (host.querySelector("[data-condinfo]") || host.querySelector("[data-condpalette] > summary"));
     if (next) next.focus();
   });

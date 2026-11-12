@@ -2259,6 +2259,29 @@ test("Decision 282: a spell held from Character is let go from Main", () => {
   assert.deepEqual(app.errors, []);
 });
 
+test("Decision 283: Clear in the popover keeps focus inside the popover", () => {
+  const app = openSheet(lockedCharacter(), "main");
+  app.click('#main [data-condquick="stunned"]'); app.click('#main [data-condquick="prone"]');
+  app.click('#main [data-vpop="pain"]');
+  app.click('#vpop [data-condinfo="0"]');
+  app.click('#vpop [data-condrm="0"]');
+  assert.equal(activeChar(app).trackers.conditions.length, 1);
+  assert.ok(app.$("#vpop").contains(focused(app)), "focus left the popover for the page behind it");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 283: a Condition the game data no longer has still opens, and shows its note", () => {
+  const ch = lockedCharacter();
+  ch.trackers.conditions = [{ id: "gone-condition", note: "kept from an old file" }];
+  const app = openSheet(ch, "main");
+  app.click('#main [data-condinfo="0"]');
+  const info = app.$("#main .cond-info");
+  assert.ok(info, "the chip opened to nothing");
+  assert.match(info.textContent, /isn't in the game data any more/);
+  assert.equal(app.$('#main [data-condnote="0"]').value, "kept from an old file");
+  assert.deepEqual(app.errors, []);
+});
+
 test("Decision 283: Clear on an open chip hands focus to the next chip, then to the palette", () => {
   const app = openSheet(lockedCharacter(), "main");
   app.click('#main [data-condquick="stunned"]'); app.click('#main [data-condquick="prone"]');
