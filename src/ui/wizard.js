@@ -281,7 +281,7 @@ function demandsHtml(ch){
   const line = ({a, o}) => {
     const parts = Object.entries(o.requires.stats).map(([sid, need])=>{
       const have = Engine.statValue(ch, sid), ok = have>=need;
-      return `<span class="${ok?"met":"short"}">${esc(sid)} ${need} ${ok?"✓":`(${have})`}</span>`;
+      return `<span class="${ok?"met":"short"}">${esc(sid)} ${need} ${ok?"✓":`(you have ${have})`}</span>`;
     });
     return `<li><b>${esc(sel ? o.name : a.name+" · "+o.name)}</b> — ${parts.join(", ")}</li>`;
   };

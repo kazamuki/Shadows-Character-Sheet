@@ -4026,11 +4026,11 @@ window.SHADOWS_DATA = {
     "houseRuleLabel": "How this works",
     "railEmpty": "Your numbers fill in as you build.",
     "stepOneIntro": "Character Creation takes time. Pause when you need to. Nothing locks in until you're ready.",
-    "stepOneGm": "Your GM picks the Power Level. If they haven't, ask before you go on.",
+    "stepOneGm": "If your GM hasn't named one yet, ask before you go on.",
     "leftToDo": "{n} left to do",
     "toFix": "{n} to fix first",
     "showAllOptions": "Show all {n} {label}s",
-    "demandsTitle": "Some archetypes' choices need minimum stats",
+    "demandsTitle": "Which archetype choices need minimum stats",
     "showFewerOptions": "Show fewer",
     "statusLabel": {
       "draft": "in progress",

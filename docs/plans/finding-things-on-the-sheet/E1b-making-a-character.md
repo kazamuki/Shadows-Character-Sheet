@@ -150,7 +150,7 @@ On Decision 161: `→ **Superseded in part by Decision N**: before a Power Level
 
 **Step 1, under its title** (NYTE voice; voice pass):
 > Character Creation takes time. Pause when you need to. Nothing locks in until you're ready.
-> Your GM picks the Power Level. If they haven't, ask before you go on.
+> If your GM hasn't named one yet, ask before you go on.
 
 The first line is the book's own (0400). The ledger already shows the eight steps, so this doesn't list them.
 
@@ -160,7 +160,7 @@ The first line is the book's own (0400). The ledger already shows the eight step
 
 **The rail before a Power Level:** the name group, then *"Your numbers fill in as you build."* *(Voice pass.)*
 
-**Stats:** after the stat rows, a closed `<details>`: *"Some archetypes' choices need minimum stats"*. Inside, one line per option: *Professional · Enforcer — BOD 8 ✓, COOL 7 (6)*. A met demand is marked met in more than colour alone (a ✓ or the word). With an archetype chosen, the panel lists that archetype's options and starts open.
+**Stats:** after the stat rows, a closed `<details>`: *"Which archetype choices need minimum stats"*. Inside, one line per option: *Professional · Enforcer — BOD 8 ✓, COOL 7 (you have 6)*. A met demand is marked met in more than colour alone (a ✓ or the word). With an archetype chosen, the panel lists that archetype's options and starts open.
 
 **Archetype, before choosing a subtype:** a card's demand reads *"requires BOD 8 (you have 7), COOL 7"* for an unmet one, and as today when met.
 

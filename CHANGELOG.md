@@ -32,7 +32,7 @@ own in the footer.
 - **Once you've picked a Subtype, Bloodline or Origin, the others fold away.** Show all brings them back.
 - **Archetype cards no longer say "in progress".**
 - **The Cyborg is no longer offered to a new character**; cybernetics are on their way as gear. A character who has one keeps it.
-- **Step 1 says what's coming and whose call the Power Level is**, and Character Points shows its note once.
+- **Step 1 tells you to take your time, and that the Power Level is your GM's call.** Character Points shows its note once.
 
 ## v0.66.0 — 2026-11-07
 
