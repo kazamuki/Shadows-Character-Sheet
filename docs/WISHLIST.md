@@ -940,7 +940,7 @@ change), S4 (GM writes: a note to a player, the composer, reconciliation on re-i
 Build it only if hand entry drifts, or when live sync starts: [accounts-and-sync](plans/accounts-and-sync.md)'s N5 carries
 dispatches to a player's inbox, posted instead of saved, and builds on this. Its open question is GQ3 (one file per table).
 
-**W150 — Help's polish: the foot links, an A–Z jump in Every word, a stronger heading.** *Claude, from S31's review · 💡 · Fix · raised 2026-11-12*\
+**W150 — Help's polish: the foot links, an A–Z jump in Every word, a stronger heading.** *Claude, from S31's re-critique (PR #323), 2026-11-12; Ken: one W item · 💡 · Fix*\
 **Plan:** none yet
 
 Not planned: best done after Deighton's read of Help's words (S31, GQ39) is in, since his answers may move the copy these sit around. S31's Help panel works, and its review found three things that read poorly. On a phone the foot (A night at the table, Every word,
