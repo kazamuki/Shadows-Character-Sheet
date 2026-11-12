@@ -289,3 +289,53 @@ test("S31: pinned, Help is a column that stays open across visits", () => {
   assert.equal(ls(narrow, GMHELP), "open", "opening a flyout rewrote the pinned preference");
   assert.deepEqual(app.errors.concat(narrow.errors), []);
 });
+
+test("S31: Esc closes one layer at a time, a box sits above the panel, a night's link goes there, and resizing across 1280 keeps it", () => {
+  // Pinned: Keys from the foot opens a box over the column; Esc closes the box first, the column second.
+  const app = helpApp("sessions", { width: 1280 });
+  app.click("[data-thelp]");
+  app.click("#ghelp [data-hkeys]");
+  assert.ok(app.$("dialog.modal[open]"), "Keys didn't open");
+  assert.equal(shown(app), true);
+  pressEsc(app);
+  assert.equal(app.$("dialog.modal[open]"), null, "Esc left the box open");
+  assert.equal(shown(app), true, "Esc closed the panel under the box");
+  assert.ok(panel(app).contains(app.doc.activeElement), "the box didn't hand focus back into the panel");
+  pressEsc(app);
+  assert.equal(shown(app), false, "a second Esc didn't close the panel");
+  // A flyout: ⋮ open, Esc closes the menu and not the flyout; a second Esc closes the flyout.
+  const narrow = helpApp("sessions", { width: 1024 });
+  narrow.click("[data-thelp]");
+  narrow.click("[data-menu-toggle]");
+  assert.equal(narrow.$("#hdrmenu").hidden, false);
+  pressEsc(narrow);
+  assert.equal(narrow.$("#hdrmenu").hidden, true, "Esc left ⋮ open");
+  assert.equal(shown(narrow), true, "Esc closed the flyout with ⋮ open");
+  pressEsc(narrow);
+  assert.equal(shown(narrow), false);
+  // A night's link: it goes to that tab, and a flyout is done by then.
+  narrow.click("[data-thelp]");
+  narrow.click("#ghelp [data-hnight]");
+  assert.equal(narrow.$("#ghelp h2").textContent, G.ui.nightLink);
+  narrow.click('#ghelp [data-hsec="reference"]');
+  assert.equal(tabNow(narrow), "reference");
+  assert.equal(shown(narrow), false, "the link left the flyout open");
+  // Every word lists each term once, A to Z, and Back returns to the link that opened it.
+  narrow.click("[data-thelp]");
+  narrow.click("#ghelp [data-hwords]");
+  const terms = narrow.$$("#ghelp dt").map(d => d.textContent);
+  assert.equal(terms.length, Object.keys(G.words).length);
+  assert.deepEqual(terms, [...terms].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase())));
+  narrow.click("#ghelp [data-help-back]");
+  assert.equal(narrow.$("#ghelp h2").textContent, "Reference");
+  assert.equal(narrow.doc.activeElement, narrow.$("#ghelp [data-hwords]"));
+  // A note with no title still has help, and a pinned panel follows the page into it.
+  const wide = helpApp("notes", { width: 1280 });
+  wide.click("[data-thelp]");
+  wide.click("[data-tnew]");
+  assert.equal(heading(wide), "A note");
+  // Pinned open, then narrower: the same panel is a flyout, and nothing throws.
+  wide.resize(1024);
+  assert.equal(shown(wide), true);
+  assert.deepEqual(app.errors.concat(narrow.errors, wide.errors), []);
+});
