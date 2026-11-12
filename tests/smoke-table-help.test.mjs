@@ -337,5 +337,10 @@ test("S31: Esc closes one layer at a time, a box sits above the panel, a night's
   // Pinned open, then narrower: the same panel is a flyout, and nothing throws.
   wide.resize(1024);
   assert.equal(shown(wide), true);
+  // A redraw that isn't a move (an edit, an undo) leaves it open: the column followed the page, so the flyout starts from this one.
+  wide.window.eval("renderTable()");
+  assert.equal(shown(wide), true, "a redraw on the same page closed the flyout the column became");
+  wide.click('[data-tsec="cast"]');
+  assert.equal(shown(wide), false, "a move left the flyout open");
   assert.deepEqual(app.errors.concat(narrow.errors, wide.errors), []);
 });

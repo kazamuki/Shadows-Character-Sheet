@@ -468,6 +468,7 @@ function helpBodyHtml(id){
 function paintHelp(force){
   const el=$("ghelp"); if (!el || !helpShown()) return;
   const id=helpContext();
+  if (helpPinRoom()) S.helpFrom=id;   // a column follows the page, so a resize to a flyout starts from the page it's on
   if (S.helpCtx!==id){ S.helpCtx=id; S.helpView=null; }   // a new page gets its own help, not the last view
   const key=id + "|" + (S.helpView||"");
   if (!force && helpKey===key && el.firstElementChild) return;
