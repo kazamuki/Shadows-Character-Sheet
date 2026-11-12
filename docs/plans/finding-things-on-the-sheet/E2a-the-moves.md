@@ -1,7 +1,7 @@
 # Work order E2a — The moves: seven tabs, one home each
 
 **Plan:** [finding-things-on-the-sheet](../finding-things-on-the-sheet.md), session E2, its first build. The shape is [E2-where-everything-lives](E2-where-everything-lives.md), and Ken answered EQ17–EQ22 on 2026-11-12.
-**Status:** drafted 2026-11-12 by an Opus session the conductor started (Ken asked that orders be drafted by Opus, not by the reviewer). Awaiting Ken's answers to EQ23–EQ27 (§4); one he leaves blank takes its default.
+**Status:** drafted 2026-11-12 by an Opus session the conductor started (Ken asked that orders be drafted by Opus, not by the reviewer). Ken answered EQ23–EQ27 on 2026-11-12 (§4); approval of the order is pending.
 **Branch:** the builder's own, cut from `main` once this order (#326) has merged. #325 is already in.
 **Runs beside:** E4 (colour). Not E2b, E3 or E5, which wait for it.
 **Impeccable:** none. The shape was E2's first half; this order builds it. E2b (the distill) is a separate order.
@@ -143,6 +143,14 @@ Each question has a default, and one left blank takes it.
   - *Alternative:* the card's line, dropping the panel. That leaves `specializationText` a panel type nothing renders, which `engine.test.mjs` fails (Decision 135).
 - **EQ27 — App minor or patch?**
   - **Default: minor.** A tab goes and three change for every player. E1's patches each changed one screen.
+
+**Ken's answers, 2026-11-12** (in the conductor's session):
+
+- **EQ23:** Loadout. Ken: "Yes, it will be part of the load out - we have a wishlist item to bring the cybernetics gear into the character sheet as well."
+- **EQ24:** the note field and the stacking rule go in Main's chip (Default).
+- **EQ25:** the shape's order, under a jump bar (Default).
+- **EQ26:** the Tweak panel stays, and the Subtype card's line goes (Default).
+- **EQ27:** Ken left it blank, so it takes the default: an app minor bump.
 
 ## 5. The assumption sweep
 
