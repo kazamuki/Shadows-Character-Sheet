@@ -64,6 +64,8 @@ function wizardRailHtml(ch){
   let h = `<div class="vgroup">
     <div class="vname">${esc(charName(ch, "—"))}</div>
     <div class="vsub">${a?esc(a.name):"no archetype"} · ${pl?esc(pl.name):"no power level"}</div></div>`;
+  // Decision 274: before a Power Level there is nothing to count, so the rail says so in one line, not a column of dashes.
+  if (!pl && !locked) return h + `<div class="vgroup"><div class="vsub vempty">${esc(copy("railEmpty"))}</div></div>`;
   if (pl && !locked){
     const sp=Engine.statPool(ch), kp=Engine.skillPool(ch), cp=Engine.cp(ch);
     h += `<div class="vgroup">`;
@@ -167,14 +169,20 @@ function constraintHtml(kind, id){
 // refreshNav redraws the same two pieces in place.
 const navErrors = issues => issues.filter(i=>i.level==="error").length;
 const wizIssuesHtml = issues => `<div id="wiz-issues">${issuesHtml(issues)}</div>`;
-const wizWhyHtml = n => n ? `<a class="wiznav-why" href="#wiz-issues">${n===1?"1 thing":`${n} things`} to fix first</a>` : "";
+// Decision 274: "N left to do" while every error is a to-do, "N to fix first" once anything entered is wrong.
+const wizWhyHtml = issues => {
+  const errs = issues.filter(i=>i.level==="error"), n = errs.length;
+  if (!n) return "";
+  const t = errs.every(i=>i.todo) ? copy("leftToDo") : copy("toFix");
+  return `<a class="wiznav-why" href="#wiz-issues">${esc(t.replace("{n}", n))}</a>`;
+};
 function wizNav(stepId){
   const issues = Engine.validate(stepId, S.ch), errors = navErrors(issues);
   const last = S.step===STEPS.length-1;
   return `${wizIssuesHtml(issues)}<div class="wiznav">
     ${S.step>0?`<button class="btn" data-nav="-1">Back</button>`:""}
     ${!last?`<button class="btn primary" data-nav="1" ${errors?"disabled":""}>Continue</button>`:""}
-    ${wizWhyHtml(errors)}
+    ${wizWhyHtml(issues)}
   </div>`;
 }
 
@@ -189,7 +197,7 @@ function stepHeader(st){
   if (v) st = Object.assign({}, st, v);
   return importIssuesHtml() + `<div class="eyebrow">Step ${st.n} of ${STEPS.length}</div>
     <h1 class="step-title">${esc(st.short)}</h1>
-    <p class="step-note">${esc(sentence(st.label))}${st.note?` <em>${esc(st.note)}</em>`:""}</p>${expertHintHtml()}`;
+    <p class="step-note">${esc(sentence(st.label))}${st.note?` <em>${esc(st.note)}</em>`:""}</p>${st.id==="power-level"?`<p class="step-note">${esc(copy("stepOneIntro"))}<br>${esc(copy("stepOneGm"))}</p>`:""}${expertHintHtml()}`;
 }
 
 function renderPowerLevel(){
@@ -200,12 +208,12 @@ function renderPowerLevel(){
       <h3>${esc(p.name)}</h3>
       <p>${esc(p.description||"")}</p>
       <div class="stat-line">
-        <span>Stats <b>${rolled ? `${p.statPoints.rolled.base}+${p.statPoints.rolled.roll}` : p.statPoints.flat}</b></span>
-        <span>Skills <b>${p.skillPoints.base}+${(p.skillPoints.plusStats||[]).join("+")}</b></span>
-        <span>CP <b>${p.characterPoints}</b></span>
-        <span>Skill cap <b>${p.maxSkillRank}</b></span>
-        <span>Max CP Boost <b>${p.maxBoost}</b></span>
-        <span>${CR} <b>${p.startingCredits.roll}×${p.startingCredits.multiplier}</b></span>
+        <span>Stat Points <b>${rolled ? `${p.statPoints.rolled.base}+${p.statPoints.rolled.roll}` : p.statPoints.flat}</b></span>
+        <span>Skill Points <b>${p.skillPoints.base}+${(p.skillPoints.plusStats||[]).join("+")}</b></span>
+        <span>Character Points <b>${p.characterPoints}</b></span>
+        <span>Skills start at <b>${p.maxSkillRank}</b> at most</span>
+        <span>Max Character Point Boost <b>${p.maxBoost}</b></span>
+        <span>${CR} <b>${p.startingCredits.roll} × ${p.startingCredits.multiplier}</b></span>
       </div>
     </button>`).join("") + `</div>`;
   return h + statMethodHtml(ch);
@@ -255,15 +263,45 @@ function renderStats(){
       <span class="mod ${m>0?"pos":m<0?"neg":""}">${modText(m)}</span>
     </div>`;
   }
-  return h + `</div>`;
+  return h + `</div>` + demandsHtml(ch);
+}
+
+// Decision 276: what each archetype's choices ask of the stats, read from the data (`requires.stats` on a
+// specialization option), marked met or not against the stats as they stand. With an archetype chosen, only its
+// options; before one, every archetype's that has any. Browser state (S.demandsOpen) keeps it open through a redraw.
+function specDemands(a){
+  const opts = ((a.specialization||{}).options||[]).filter(o=>o.requires && o.requires.stats && Object.keys(o.requires.stats).length);
+  return opts.map(o=>({ a, o }));
+}
+function demandsHtml(ch){
+  const sel = Engine.archetype(ch);
+  const rows = (sel ? [sel] : D.archetypes.filter(a=>!a.retired)).flatMap(specDemands);
+  if (!rows.length) return "";
+  const open = S.demandsOpen!=null ? S.demandsOpen : !!sel;
+  const line = ({a, o}) => {
+    const parts = Object.entries(o.requires.stats).map(([sid, need])=>{
+      const have = Engine.statValue(ch, sid), ok = have>=need;
+      return `<span class="${ok?"met":"short"}">${esc(sid)} ${need} ${ok?"✓":`(${have})`}</span>`;
+    });
+    return `<li><b>${esc(sel ? o.name : a.name+" · "+o.name)}</b> — ${parts.join(", ")}</li>`;
+  };
+  return `<details class="demands" data-demands ${open?"open":""}><summary>${esc(copy("demandsTitle"))}</summary><ul>${rows.map(line).join("")}</ul></details>`;
+}
+// A card's demand, naming each stat that's short: "requires BOD 8 (you have 7), COOL 7".
+function specReqHtml(ch, o){
+  if (!(o.requires && o.requires.stats)) return "";
+  const ents = Object.entries(o.requires.stats), unmet = ents.filter(([sid,r])=>Engine.statValue(ch,sid)<r);
+  const txt = ents.map(([sid,r])=>{ const have = Engine.statValue(ch,sid); return sid+" "+r+(have<r?` (you have ${have})`:""); }).join(", ");
+  return `<span class="cost ${unmet.length?"":"grant"}">requires ${esc(txt)}</span>`;
 }
 
 function renderArchetype(){
   const ch=S.ch, ac=ch.archetypeChoices, sel=Engine.archetype(ch);
-  let h = `<div class="cards two">` + D.archetypes.map(a=>{
+  // Decision 277: a retired archetype has no card, unless it's this character's own.
+  let h = `<div class="cards two">` + D.archetypes.filter(a=>!a.retired || a.id===ch.identity.archetype).map(a=>{
     const card = `
     <button class="card ${ch.identity.archetype===a.id?"selected":""}" data-arch="${a.id}" aria-pressed="${ch.identity.archetype===a.id}">
-      <span class="badge ${a.status}">${esc(statusLabel(a.status))}</span>
+      ${showsStatus(a)?`<span class="badge ${a.status}">${esc(statusLabel(a.status))}</span>`:""}
       <h3>${esc(a.name)}</h3>
       <div class="sub">${(a.primaryStats||[]).join(" · ")||""}</div>
       <p${foldAttr("arch|"+a.id)}>${esc(a.summary||"")}</p>
@@ -300,13 +338,16 @@ function renderArchetype(){
     h += `<div class="sect">${esc(sel.specialization.label)}${need>1?` — choose ${need}`:""}</div>`;
     if (sel.specialization.intro) h += `<p class="step-note">${esc(sel.specialization.intro)}</p>`;
     if (need>1) h += `<p class="step-note"><em>${picked.length}/${need} chosen.</em></p>`;
-    h += sel.specialization.options.map(o=>{
+    // Decision 276: once the set is complete, what wasn't chosen folds to a line each (S.specAll opens it again).
+    const opts = sel.specialization.options, done = need>0 && picked.length>=need, fold = done && !S.specAll;
+    if (done && opts.length>picked.length){
+      h += `<div class="spec-fold"><button class="btn sm" type="button" data-spec-all aria-expanded="${!fold}">${esc(fold ? copy("showAllOptions").replace("{n}", opts.length).replace("{label}", sel.specialization.label) : copy("showFewerOptions"))}</button></div>`;
+    }
+    h += opts.map(o=>{
       const seld = picked.includes(o.id);
-      let req = "";
-      if (o.requires && o.requires.stats){
-        const unmet = Object.entries(o.requires.stats).filter(([sid,r])=>Engine.statValue(ch,sid)<r);
-        req = `<span class="cost ${unmet.length?"":"grant"}">requires ${Object.entries(o.requires.stats).map(([s,r])=>s+" "+r).join(", ")}</span>`;
-      }
+      const req = specReqHtml(ch, o);
+      if (fold && !seld) return `<div class="pick folded"><div class="head"><h2>${esc(o.name)}</h2>${req}
+          <div class="controls"><button class="toggle" data-spec="${o.id}">${need>1?"Choose":"Select"}</button></div></div></div>`;
       return `<div class="pick ${seld?"selected":""}">${o.flagged?flagHtml(o):""}
         <div class="head"><h2>${esc(o.name)}</h2>${o.description?foldBtn("spec|"+o.id, o.name):""}${req}
           <div class="controls"><button class="toggle" data-spec="${o.id}">${need>1?(seld?"Chosen":"Choose"):(seld?"Selected":"Select")}</button></div></div>
@@ -554,8 +595,7 @@ function renderCP(){
   const cls = Engine.classification(ch), gated = !!cls && cls.advantages==="universal";
   const secs = sectionList("cp");
   let top = `<div class="roll-entry">
-    <span class="pool" style="margin-left:0">Base <b>${bal.base}</b> + Disadvantages <b>${bal.granted}</b> = Budget <b>${bal.budget}</b> · Spent <b>${bal.spent}</b> · <span style="color:${bal.left<0?"var(--magenta)":"var(--gold)"}">Remaining <b>${bal.left}</b></span></span>
-    <span class="dice-note">${esc(D.creationFlow.steps.find(s=>s.id==="character-points").note||"")}</span></div>`;
+    <span class="pool" style="margin-left:0">Base <b>${bal.base}</b> + Disadvantages <b>${bal.granted}</b> = Budget <b>${bal.budget}</b> · Spent <b>${bal.spent}</b> · <span style="color:${bal.left<0?"var(--magenta)":"var(--gold)"}">Remaining <b>${bal.left}</b></span></span></div>`;
   if (gated) top += ruleHtml(`${a.name} · ${cls.name}: only Universal Advantages are open. Disadvantages, LUCK, and boosts remain open.`);
 
   // Disadvantages
@@ -754,7 +794,7 @@ function renderReview(){
     <input type="text" inputmode="numeric" pattern="[0-9]*" data-roll="credits" value="${ch.creation.rolls.credits==null?"":ch.creation.rolls.credits}" aria-label="credits roll">
     <span class="pool">${startingCreditsLine(ch)}</span></div>`;
   h += `<div class="review-block"><h2>${esc(charName(ch, "Unnamed"))}</h2>${intakeHtml(ch)}<div class="kv">
-    <span class="k">Archetype</span><span class="v">${a?esc(Engine.archetypeContent(ch).name):"—"}${Engine.specializationLabel(ch)?" · "+esc(Engine.specializationLabel(ch)):""}${a&&a.status!=="final"?" · "+esc(statusLabel(a.status)):""}</span>
+    <span class="k">Archetype</span><span class="v">${a?esc(Engine.archetypeContent(ch).name):"—"}${Engine.specializationLabel(ch)?" · "+esc(Engine.specializationLabel(ch)):""}${showsStatus(a)?" · "+esc(statusLabel(a.status)):""}</span>
     <span class="k">Power Level</span><span class="v">${esc(pl.name)}</span>
     <span class="k">Stats</span><span class="v">${D.stats.map(s=>s.id+" "+t[s.id].value).join(" · ")}</span>
     <span class="k">Derived</span><span class="v">TOL ${der.TOL} · WILL ${der.WILL} · SAN ${der.SAN}% · ${hp.levels} HL / ${hp.total} HP · LUCK ${D.resources.luck.startingValue+ch.trackers.luck.bonus}</span>
@@ -768,7 +808,7 @@ function renderReview(){
     <button class="btn" data-nav="-1">Back</button>
     <button class="btn" data-export="draft">Export draft</button>
     <button class="btn go" data-lock="1" ${blocked?"disabled":""}>Lock &amp; Export</button>
-    ${wizWhyHtml(navErrors(issues))}
+    ${wizWhyHtml(issues)}
   </div>
   <p class="step-note" style="margin-top:12px">Locking finalizes creation. The exported <span style="font-family:var(--mono)">.shadows.json</span> is the character — keep it, share it, bring it to the table.</p>`;
   return h;
@@ -935,6 +975,8 @@ function bindMain(){
   // replaces; multi-select toggles. Over-picking is deliberately allowed —
   // validate() says "Too many", and an error you can read beats a click that
   // silently does nothing.
+  main.querySelectorAll("[data-spec-all]").forEach(b=>b.onclick=()=>{ S.specAll=!S.specAll; update(); });
+  main.querySelectorAll("[data-demands]").forEach(d=>d.ontoggle=()=>{ S.demandsOpen=d.open; });
   main.querySelectorAll("[data-spec]").forEach(b=>b.onclick=()=>{
     const id=b.dataset.spec, ac=ch.archetypeChoices;
     if (!Array.isArray(ac.specialization)) ac.specialization=[];
@@ -1150,7 +1192,7 @@ function refreshNav(){
   const old=document.getElementById("wiz-issues"); if(old) old.remove();
   nav.insertAdjacentHTML("beforebegin", wizIssuesHtml(issues));
   const why=nav.querySelector(".wiznav-why"); if(why) why.remove();
-  nav.insertAdjacentHTML("beforeend", wizWhyHtml(errors));
+  nav.insertAdjacentHTML("beforeend", wizWhyHtml(issues));
 }
 
 function applyStep(key, delta){

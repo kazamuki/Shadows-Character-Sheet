@@ -53,9 +53,9 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.53",
+    "gamedataVersion": "0.54",
     "rulesetVersion": "CRB v4 (in progress)",
-    "updated": "2026-10-08"
+    "updated": "2026-11-11"
   },
   /* STATS -- the 8 Basic Stats. These ids are the most-referenced contract in
      the file: skills point at them (`primaryStat`/`synergyStat`), derived
@@ -2223,6 +2223,8 @@ window.SHADOWS_DATA = {
        5. coreMechanic:  the signature system + `panels` (see below)
        6. powers + vulnerabilities, then growth (minorMilestones + archetype
           majorMilestones)
+     `retired` (Decision 277): true = not offered to a new character, in the wizard or
+     Admin's archetype select. A character already on it keeps it; nothing else changes.
      `status`: "final" | "draft" | "tbd" | "written-in" -- the app shows a badge
      (`appCopy.statusLabel`) and treats tbd/draft content as reference text,
      never blocking on un-modeled rules.
@@ -2474,6 +2476,7 @@ window.SHADOWS_DATA = {
     {
       "id": "cyborg",
       "name": "Cyborg",
+      "retired": true,
       "status": "tbd",
       "flagged": true,
       "flagNote": "F6: Full rewrite queued (rename to Biomech; TOL replaces SAN as primary resource pressure; NCI tiers; Set Bonuses; Kicker Dice rules). Content below is WIP narrative only.",
@@ -4021,6 +4024,14 @@ window.SHADOWS_DATA = {
     "hitThickSkull": "Head: not doubled (Thick Skull)",
     "unsettledRule": "This rule is still being written. Until it is, it's your GM's call.",
     "houseRuleLabel": "How this works",
+    "railEmpty": "Your numbers fill in as you build.",
+    "stepOneIntro": "Character Creation takes time. Pause when you need to. Nothing locks in until you're ready.",
+    "stepOneGm": "Your GM picks the Power Level. If they haven't, ask before you go on.",
+    "leftToDo": "{n} left to do",
+    "toFix": "{n} to fix first",
+    "showAllOptions": "Show all {n} {label}s",
+    "demandsTitle": "Some archetypes' choices need minimum stats",
+    "showFewerOptions": "Show fewer",
     "statusLabel": {
       "draft": "in progress",
       "tbd": "not written yet",
@@ -5503,7 +5514,7 @@ window.SHADOWS_DATA = {
         "n": 7,
         "short": "Character Points",
         "label": "Spend Character Points on Advantages, Disadvantages, and powers. Allocate any remaining points.",
-        "note": "Formerly 'Freebie Points'. Disadvantages grant CP (no cap). Leftover CP buys LUCK, boosts skills and stats, or raises or learns a power, up to the Max Character Point Boost on each."
+        "note": "Disadvantages grant CP (no cap). Leftover CP buys LUCK, boosts skills and stats, or raises or learns a power, up to the Max Character Point Boost on each."
       }
     ],
     "boostRules": {

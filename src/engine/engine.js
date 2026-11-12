@@ -5979,7 +5979,9 @@ const Engine = (() => {
 
   function validate(stepId, ch){
     const out = [], pl = powerLevel(ch), a = archetype(ch);
-    const E=(m)=>out.push({level:"error",msg:m}), W=(m, pool)=>out.push(pool ? {level:"warn",msg:m,pool} : {level:"warn",msg:m});
+    // Decision 274: T() is an error that asks for something not yet entered (a choice, a roll, a name),
+    // and E() one where something entered is wrong. Both block; only the tone differs.
+    const E=(m)=>out.push({level:"error",msg:m}), T=(m)=>out.push({level:"error",msg:m,todo:true}), W=(m, pool)=>out.push(pool ? {level:"warn",msg:m,pool} : {level:"warn",msg:m});
     // The starting cap (Decision 134): the stepper and canBoost refuse to pass
     // it, but changing Subtype after assigning ranks can leave a skill over.
     // The skills step reports a rank over the cap; Character Points reports
@@ -6010,15 +6012,15 @@ const Engine = (() => {
     // Decision 235: a stat past a trait's cap refuses the lock, on the step that can lower it (its base, a Focus or Stat
     // Bonus point, or a boost), so Continue is only held where the player can clear it. The engine never lowers one.
     for (const o of statOverCaps(ch)) if (o.stepId===stepId) E(copyOf("statMaxLock", "{stat} is {value}, over {by}'s max of {max}. Lower it on the {step} step.", o));
-    if (stepId==="power-level"){ if (!pl) E("Choose a Campaign Power Level."); }
-    if (stepId==="concept"){ if (!String((ch.identity||{}).name||"").trim()) E("Your character needs a name."); }
+    if (stepId==="power-level"){ if (!pl) T("Choose a Campaign Power Level."); }
+    if (stepId==="concept"){ if (!String((ch.identity||{}).name||"").trim()) T("Your character needs a name."); }
     if (stepId==="stats"){
       // B7: the pools are null until a power level is chosen. validate() must
       // report that, never throw — a corrupt import or an admin edit gets here
       // even though the wizard gates it.
       const p = statPool(ch);
-      if (!p) E("Choose a Campaign Power Level before assigning Stat Points.");
-      else if (p.total==null) E(`Enter your ${p.rollDie} Stat Point roll.`);
+      if (!p) T("Choose a Campaign Power Level before assigning Stat Points.");
+      else if (p.total==null) T(`Enter your ${p.rollDie} Stat Point roll.`);
       else if (p.range && (p.roll < p.range[0] || p.roll > p.range[1]))
         E(`A ${p.rollDie} roll is ${p.range[0]} to ${p.range[1]}. Enter what you rolled.`);
       else {
@@ -6028,13 +6030,13 @@ const Engine = (() => {
       }
     }
     if (stepId==="archetype"){
-      if (!a) { E("Choose an Archetype."); return out; }
+      if (!a) { T("Choose an Archetype."); return out; }
       // Decision 153: a write-in archetype needs a name and a classification.
       // Other's own words are the table's business: warned, never blocked (78).
       if (writeInSpec(ch)){
         const w = writeInOf(ch), c = classification(ch);
-        if (!txt(w.name).trim()) E("Name your archetype. What are you?");
-        if (!c) E("Choose a classification for your archetype.");
+        if (!txt(w.name).trim()) T("Name your archetype. What are you?");
+        if (!c) T("Choose a classification for your archetype.");
         else if (c.writeIn && !txt(w.classificationText).trim()) W(`Say what ${c.name} means for you, in a word or two.`);
         // A row with words but no name never shows on the sheet; an empty one is just unused.
         const nameless = rows => rows.filter(r=>!r.name.trim() && [r.description, r.uses, r.effect, r.notes].some(v=>txt(v).trim())).length;
@@ -6050,7 +6052,7 @@ const Engine = (() => {
         const need = specializationNeed(ch), have = specializationIds(ch).length;
         const label = a.specialization.label || "Specialization";
         if (a.specialization.required !== false && have < need)
-          E(need>1 ? `Choose ${need} ${label}s (${have}/${need}).` : `Choose a ${label}.`);
+          T(need>1 ? `Choose ${need} ${label}s (${have}/${need}).` : `Choose a ${label}.`);
         if (have > need)
           E(need>1 ? `Too many ${label}s chosen (${have}/${need}).` : `Choose only one ${label}.`);
       }
@@ -6063,7 +6065,7 @@ const Engine = (() => {
       const row = scalingRow(ch);
       if (row && row.focusStatBonusRoll){
         const r = ch.archetypeChoices.rolls.focusStatBonus;
-        if (r==null) E(`Enter your ${row.focusStatBonusRoll} Focus Stat bonus roll.`);
+        if (r==null) T(`Enter your ${row.focusStatBonusRoll} Focus Stat bonus roll.`);
         else {
           const used = Object.values(ch.archetypeChoices.focusAllocation).reduce((s,v)=>s+v,0);
           if (used > r) E(`Focus Stat bonus overspent by ${used-r}.`);
@@ -6072,7 +6074,7 @@ const Engine = (() => {
       }
       if (row && row.statBonusRoll){
         const r = ch.archetypeChoices.rolls.statBonus;
-        if (r==null) E(`Enter your ${row.statBonusRoll} Stat Bonus roll.`);
+        if (r==null) T(`Enter your ${row.statBonusRoll} Stat Bonus roll.`);
         else {
           const used = Object.values(ch.archetypeChoices.statBonusAllocation).reduce((s,v)=>s+v,0);
           if (used > r) E(`Stat Bonus overspent by ${used-r}.`);
@@ -6092,13 +6094,13 @@ const Engine = (() => {
         const cat = focusedCategoryName(fp.category);
         for (const id of fp.invalid) E(`${(skillById(id)||{name:id}).name} can't be one of your Focused Skill picks. Unchoose it.`);
         if (fp.have !== fp.need)
-          E(`Choose ${fp.need} ${cat} Skill${fp.need>1?"s":""} for your Focused Skills (${fp.have}/${fp.need}).`);
+          (fp.have < fp.need ? T : E)(`Choose ${fp.need} ${cat} Skill${fp.need>1?"s":""} for your Focused Skills (${fp.have}/${fp.need}).`);
       }
       // Base Powers (Decisions 200, 240), once a Bloodline is chosen:
       // short warns (the lock wants them spent), over or out of reach blocks.
       const bps = basePowerState(ch);
       if (bps && specializationIds(ch).length){
-        if (bps.count==null) E("Choose a Campaign Power Level before placing Base Powers.");
+        if (bps.count==null) T("Choose a Campaign Power Level before placing Base Powers.");
         else if (bps.left < 0) E(`Base Powers overspent by ${-bps.left}.`);
         else if (bps.left > 0) W(`${bps.left} Base Power${bps.left>1?"s":""} unplaced.`, "basePowers");
         for (const r of bps.rows) if (r.placed > r.cap)
@@ -6112,18 +6114,18 @@ const Engine = (() => {
           const left = c.fields.filter(f=>!f.value.trim()).map(f=>f.name.replace(/^The /, "the "));
           if (left.length) W(`${c.name}: write ${left.length>1 ? left.slice(0, -1).join(", ")+" and "+left[left.length-1] : left[0]} with your GM.`);
         }
-        else if (!c.done) E(`Choose ${c.name}.`);
+        else if (!c.done) T(`Choose ${c.name}.`);
       }
       const row2 = scalingRow(ch);
       if (specializationIds(ch).length && naturalAdvantagePool(a) && row2 && row2.naturalAdvantageRanks!=null){
         const have = ch.archetypeChoices.naturalAdvantages.reduce((s,n)=>s+n.rank,0);
         if (have !== row2.naturalAdvantageRanks)
-          E(`Allocate ${row2.naturalAdvantageRanks} Natural Advantage ranks (${have}/${row2.naturalAdvantageRanks}).`);
+          (have < row2.naturalAdvantageRanks ? T : E)(`Allocate ${row2.naturalAdvantageRanks} Natural Advantage ranks (${have}/${row2.naturalAdvantageRanks}).`);
       }
     }
     if (stepId==="skills"){
       const p = skillPool(ch);
-      if (!p) E("Choose a Campaign Power Level before assigning Skill Points.");
+      if (!p) T("Choose a Campaign Power Level before assigning Skill Points.");
       else {
         const left = p.total - skillSpent(ch);
         if (left < 0) E(`Skill Points overspent by ${-left}.`);
@@ -6136,13 +6138,13 @@ const Engine = (() => {
         if (!def || !Array.isArray(def.picks)) continue;
         for (const st of picksFor(ch, "skill", id)){
           if (st.complete) continue;
-          E(`Choose ${st.need} ${st.pick.label||"option"}${st.need>1?"s":""} for ${def.name} (${st.filled}/${st.need}).`);
+          T(`Choose ${st.need} ${st.pick.label||"option"}${st.need>1?"s":""} for ${def.name} (${st.filled}/${st.need}).`);
         }
       }
     }
     if (stepId==="character-points"){
       const bal = cp(ch);
-      if (!bal) E("Choose a Campaign Power Level before spending Character Points.");
+      if (!bal) T("Choose a Campaign Power Level before spending Character Points.");
       else if (bal.left < 0) E(`Character Points overspent by ${-bal.left}.`);
       else if (bal.left > 0) W(`${bal.left} Character Points unspent.`, "cp");
       overCap(true);
@@ -6202,10 +6204,10 @@ const Engine = (() => {
               // table's. A player who has not had the GM conversation yet is
               // warned, never blocked out of locking their character.
               const m = `${def.name} — ${label}${/[.!?]$/.test(label)?"":"."}`;
-              st.gmApproval ? W(m) : E(m);
+              st.gmApproval ? W(m) : T(m);
             } else {
               const noun = st.pick.type==="skill" ? "Skill" : "option";
-              E(`Choose ${st.need} ${noun}${st.need>1?"s":""} for ${def.name} (${st.filled}/${st.need}).`);
+              T(`Choose ${st.need} ${noun}${st.need>1?"s":""} for ${def.name} (${st.filled}/${st.need}).`);
             }
           }
         }
@@ -6218,7 +6220,7 @@ const Engine = (() => {
       for (const s of ["power-level","concept","stats","archetype","skills","character-points"])
         for (const i of validate(s,ch)){
           if (!i.pool) out.push(i);
-          else if (spendable(ch, i.pool)) E(`${i.msg.replace(/\.$/, "")}. Spend them before you lock.`);
+          else if (spendable(ch, i.pool)) T(`${i.msg.replace(/\.$/, "")}. Spend them before you lock.`);
           else W(`${i.msg.replace(/\.$/, "")}, and nothing left they can buy.`);
         }
       // At lock, a written-in archetype is the GM's call (Decision 153). Copy
