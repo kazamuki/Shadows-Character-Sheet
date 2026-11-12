@@ -876,6 +876,7 @@ function askRemove(e){
 function renderHome(){
   const app=$("app"); if (app) app.classList.remove("sheet-mode", "table-mode");
   renderTopChrome(); closeVitals(); renderDrawer();   // a pinned panel goes with the sheet
+  syncHelp();   // and a table's Help goes with the table (gm.js, Decision 278)
   releaseMain();
   readOnlyChar=null;   // a seat's copy the GM read goes with the table (Decision 256)
   const roster = rosterEntries(), tables = gmTableEntries();

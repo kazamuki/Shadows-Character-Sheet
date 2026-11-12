@@ -12,7 +12,7 @@
 //   minor — a capability a player can use that wasn't there before
 //   major — existing character files or the workflow break
 // The other three versions have their own triggers; see CLAUDE.md.
-const APP_VERSION = "0.66.2";
+const APP_VERSION = "0.67.0";
 
 // ── Main render + events ─────────────────────────────────────────────
 // Header chrome: brand context + the section tabs (which now live in the
@@ -181,7 +181,7 @@ function renderMain(){
   keepPlace(document.querySelector("header.top"), renderTopChrome, ["[data-menu-toggle]"]);
   const same=sameView(), main=$("main");
   if (!same){ S.specAll=false; S.demandsOpen=null; }   // Decision 276: browser state, gone when the step is left
-  if (S.screen!=="table") releaseMain();
+  if (S.screen!=="table"){ releaseMain(); syncHelp(); }
   const fill = html => same ? keepPlace(main, ()=>{ main.innerHTML=html; }) : (main.innerHTML=html);
   if (S.screen==="home") return renderHome();
   if (S.screen==="table") return renderTable();   // gm.js (Decision 172)
@@ -389,6 +389,8 @@ function boot(){
     if (e.key==="Escape"){
       const layer = e.defaultPrevented || popState || document.querySelector("dialog.modal[open]");
       if (!layer && S.vitalsOpen) closeVitals();
+      const menu=$("hdrmenu");
+      if (!layer && !(menu && !menu.hidden) && helpEscCloses()) closeHelp();   // a table's Help (Decision 278): one layer at a time
       closeMenu();
     }
   });

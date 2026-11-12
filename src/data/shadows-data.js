@@ -4832,6 +4832,634 @@ window.SHADOWS_DATA = {
       "helpless": true, "counter": { "max": 3, "label": "Death Marks", "atMax": "Three Death Marks. You're dead, and your options are seriously limited." } }
   ],
 
+  /* GM mode's Help (Decision 278): the words the ? panel, the guide lines and
+     the empty states read, so Deighton and Scott edit them here and nowhere else. `contexts` has one entry per section and per
+     page a table can show (`helpContext()` in gm.js names it); `words` defines each term once and a context lists them by id;
+     `night` is A night at the table; `empty` is the sections' empty states; `ui` is the panel's own labels. **bold** is a button
+     or label as the screen has it, and `code` is a file name. Read only by GM mode: no character can observe it, so it moves no
+     game-data version (Decision 68). */
+  "gmGuide": {
+    "ui": {
+      "title": "Help",
+      "close": "Close",
+      "back": "Back to this page",
+      "on": "On",
+      "off": "Off",
+      "forLabel": "What it's for",
+      "whenLabel": "When",
+      "wordsLabel": "On this page",
+      "tipsLabel": "Try this",
+      "nightLink": "A night at the table",
+      "wordsLink": "Every word",
+      "keysLink": "Keys",
+      "guideSwitch": "Guide lines",
+      "when": {
+        "before": "Before a session",
+        "during": "At the table",
+        "after": "After"
+      }
+    },
+    "night": [
+      {
+        "when": "before",
+        "sections": [
+          "sessions",
+          "cast",
+          "encounters",
+          "threats"
+        ],
+        "text": "Open **Sessions** and read **Next session** top to bottom: the clocks close to full, the threads still open, what last session set up, and anyone the crew met who'll need numbers. Give those people a stat block on **Cast**. Plan the fight you expect on **Encounters**, and pull what you need from your pack on **Threats**."
+      },
+      {
+        "when": "during",
+        "sections": [
+          "sessions",
+          "encounters",
+          "reference",
+          "players"
+        ],
+        "text": "Press **New session** when you sit down. **Jot** (J) catches a name or a debt without leaving the page, and files it with the session. Run a fight from **Encounters**. While a session is open or a fight runs, the strip under the header keeps the round, the current thread and the nearest clock a tap away on every tab. **Reference** has the rules you'll look up; **Players** has everyone's HP and Conditions at a glance."
+      },
+      {
+        "when": "after",
+        "sections": [
+          "sessions"
+        ],
+        "text": "Open the session and **close it out**: who came, how long you played, and the IP each character earns. Close the threads that ended, add the people the crew met, and write the seed for next session. Then **Export**: the file is the copy that lasts."
+      }
+    ],
+    "contexts": {
+      "sessions": {
+        "title": "Sessions",
+        "section": "sessions",
+        "when": [
+          "before",
+          "during",
+          "after"
+        ],
+        "intro": "Your nights of play: what's coming, the threads in motion, and every session so far.",
+        "for": "Where the campaign's nights live. Before you play, **Next session** is your prep in one screen. When you sit down, start a session. Afterwards, close it out.",
+        "words": [
+          "table",
+          "closeToFull",
+          "currentThread",
+          "thread",
+          "lastSetUp",
+          "metNoStat",
+          "session",
+          "closeout"
+        ],
+        "tips": [
+          "Keep one thread current, the one tonight is about: it rides in the strip on every tab.",
+          "Read **Next session** before you play, not during."
+        ]
+      },
+      "session": {
+        "title": "A session",
+        "section": "sessions",
+        "when": [
+          "during",
+          "after"
+        ],
+        "for": "One night: who was there, how long, what passed between the crew and the cast, what you jotted, and your write-up of it.",
+        "words": [
+          "openSession",
+          "line",
+          "jot",
+          "journal",
+          "closeout"
+        ],
+        "tips": [
+          "Log a line the moment someone tells, learns or owes something: **Who knows what** is built from them.",
+          "Write **Seed for next session** while it's fresh. Next time it's on Sessions as **Last session set up**."
+        ]
+      },
+      "closeout": {
+        "title": "Close-out",
+        "section": "sessions",
+        "when": [
+          "after"
+        ],
+        "for": "The end of a night. Check who came and how long you played, and the IP for each character is worked out. Then close or keep each open thread, and add the people the crew met.",
+        "words": [
+          "closeout",
+          "ip",
+          "away",
+          "thread"
+        ],
+        "tips": [
+          "The IP is a starting point: change any of it."
+        ]
+      },
+      "players": {
+        "title": "Players",
+        "section": "players",
+        "when": [
+          "before",
+          "during"
+        ],
+        "intro": "Who's at the table, and a copy of each character to check at a glance.",
+        "for": "The people at your table and copies of their characters, so you can see HP, Awareness and Conditions without asking.",
+        "words": [
+          "player",
+          "characterCopy",
+          "benched"
+        ],
+        "tips": [
+          "Ask for each player's `.shadows.json` after a session and import it, so your copy matches their sheet."
+        ]
+      },
+      "character": {
+        "title": "A character's sheet",
+        "section": "players",
+        "when": [
+          "before",
+          "during"
+        ],
+        "for": "A read-only copy of this character's sheet, from the last file you imported.",
+        "words": [
+          "characterCopy"
+        ],
+        "tips": [
+          "It doesn't change when the player plays. Import a fresh file to bring it up to date."
+        ]
+      },
+      "cast": {
+        "title": "Cast",
+        "section": "cast",
+        "when": [
+          "before",
+          "during",
+          "after"
+        ],
+        "intro": "Everyone in NYTE City the crew deals with, and what they know.",
+        "for": "Everyone in the story who isn't a player's character. Write who they are and what they want, give the ones who might fight a stat block, and log what passes between them and the crew.",
+        "words": [
+          "cast",
+          "status",
+          "affiliation",
+          "statBlock",
+          "whoKnows"
+        ],
+        "tips": [
+          "Not everyone needs a stat block, only people who might end up in a fight."
+        ]
+      },
+      "whoKnows": {
+        "title": "Who knows what",
+        "section": "cast",
+        "when": [
+          "before",
+          "during"
+        ],
+        "for": "Every line between the crew and the cast, by character: who told whom what, and who owes whom.",
+        "words": [
+          "line",
+          "whoKnows"
+        ],
+        "tips": [
+          "Check it before a reveal: who already knows, and who'd be surprised."
+        ]
+      },
+      "member": {
+        "title": "A cast member",
+        "section": "cast",
+        "when": [
+          "before",
+          "during"
+        ],
+        "for": "Who this person is, what they want, what they'd do if pushed, their clocks and stat block, and everything between them and the crew.",
+        "words": [
+          "statBlock",
+          "clock",
+          "line",
+          "affiliation",
+          "keyTo"
+        ],
+        "tips": [
+          "**What they want** and **If pushed** are what you'll reach for when the crew surprises you."
+        ]
+      },
+      "city": {
+        "title": "City",
+        "section": "city",
+        "when": [
+          "before",
+          "after"
+        ],
+        "intro": "Where the story happens, and who's moving in it.",
+        "for": "The places the crew has been or is going. **Factions** is the groups moving around them, and **The city** is NYTE City from the book.",
+        "words": [
+          "place",
+          "siteProfile",
+          "clock",
+          "gazetteer"
+        ],
+        "tips": [
+          "Name a place as **Where** on a line, and the place remembers what happened there."
+        ]
+      },
+      "place": {
+        "title": "A place",
+        "section": "city",
+        "when": [
+          "before",
+          "during"
+        ],
+        "for": "What happened here, who the crew met here, its clocks, and its site profile if it has one.",
+        "words": [
+          "place",
+          "siteProfile",
+          "clock",
+          "line"
+        ],
+        "tips": []
+      },
+      "factions": {
+        "title": "Factions",
+        "section": "city",
+        "when": [
+          "before",
+          "after"
+        ],
+        "for": "The groups with their own agendas: how hard each is looking at the crew, what would push it to act, and who matters in it.",
+        "words": [
+          "faction",
+          "attention",
+          "tippingPoints",
+          "keyNpcs",
+          "clock"
+        ],
+        "tips": [
+          "Give a faction a clock for what it's working toward, and press **+** when the crew isn't looking."
+        ]
+      },
+      "faction": {
+        "title": "A faction",
+        "section": "city",
+        "when": [
+          "before",
+          "after"
+        ],
+        "for": "One faction on file: its attention, its tipping points, its key NPCs, who's tied to it, and its clocks.",
+        "words": [
+          "attention",
+          "tippingPoints",
+          "keyNpcs",
+          "affiliation",
+          "clock"
+        ],
+        "tips": []
+      },
+      "gazetteer": {
+        "title": "The city",
+        "section": "city",
+        "when": [
+          "before"
+        ],
+        "for": "NYTE City as the book has it: territories, what lies beyond, the powers, and kinds of ground.",
+        "words": [
+          "gazetteer",
+          "place",
+          "faction"
+        ],
+        "tips": [
+          "When the crew heads somewhere, add it from here so it's on file when you need it."
+        ]
+      },
+      "threats": {
+        "title": "Threats",
+        "section": "threats",
+        "when": [
+          "before",
+          "during"
+        ],
+        "intro": "Ready-made opposition from your packs.",
+        "for": "Threats, people and groups from a pack such as the Threat Codex. Browse them, and add one to your cast or straight into an encounter.",
+        "words": [
+          "pack",
+          "codex",
+          "statBlock"
+        ],
+        "tips": [
+          "Slot in a pack once: it stays in this browser for every table."
+        ]
+      },
+      "threat": {
+        "title": "A threat",
+        "section": "threats",
+        "when": [
+          "before",
+          "during"
+        ],
+        "for": "One entry from a pack, as the book writes it. Add it to the cast to give it a name and a history, or to an encounter to fight it.",
+        "words": [
+          "pack",
+          "statBlock"
+        ],
+        "tips": []
+      },
+      "encounters": {
+        "title": "Encounters",
+        "section": "encounters",
+        "when": [
+          "before",
+          "during",
+          "after"
+        ],
+        "intro": "Plan a fight, run it round by round, and keep the ones that are done.",
+        "for": "Scenes you plan ahead, usually fights. Plan the stakes and the ground, put the crew and the opposition in, then run it round by round.",
+        "words": [
+          "encounter",
+          "plan",
+          "clock"
+        ],
+        "tips": [
+          "Plan the fight you expect before the session, so at the table you only press start."
+        ]
+      },
+      "encounterPlan": {
+        "title": "A planned encounter",
+        "section": "encounters",
+        "when": [
+          "before"
+        ],
+        "for": "The plan, who's in it, and its clocks. Fill what helps and skip the rest.",
+        "words": [
+          "plan",
+          "clock"
+        ],
+        "tips": [
+          "**Core Stakes** and **Planned Escape Options** do the most work when a fight goes sideways."
+        ]
+      },
+      "encounterRunning": {
+        "title": "A running encounter",
+        "section": "encounters",
+        "when": [
+          "during"
+        ],
+        "for": "A fight in progress, in turn order. **Next** (N) moves to whoever acts next; each row has **Hit** and **Heal**, and **More** adds a Condition or a Delay.",
+        "words": [
+          "round",
+          "nextTurn",
+          "combatSense",
+          "strip"
+        ],
+        "tips": [
+          "The strip under the header shows the round and who acts on every tab, so you can check Reference mid-fight and come straight back."
+        ]
+      },
+      "encounterPast": {
+        "title": "A past encounter",
+        "section": "encounters",
+        "when": [
+          "after"
+        ],
+        "for": "A finished fight, kept as a record of who was in it and how long it ran.",
+        "words": [
+          "encounter"
+        ],
+        "tips": []
+      },
+      "reference": {
+        "title": "Reference",
+        "section": "reference",
+        "when": [
+          "during"
+        ],
+        "intro": "The rules you'll look up mid-session.",
+        "for": "The book's rules for the table: Conditions, the Codex, Defense, checks, damage, Pain Levels, recovery and more. Search it, or jump to a part.",
+        "words": [
+          "codex"
+        ],
+        "tips": [
+          "Press **7** to get here from any tab while the keys are on."
+        ]
+      },
+      "notes": {
+        "title": "Notes",
+        "section": "notes",
+        "when": [
+          "before",
+          "during",
+          "after"
+        ],
+        "intro": "Thoughts just for you, kept with the table.",
+        "for": "Anything you want to keep for yourself: a campaign pitch, safety notes, spoilers, rulings you've made, a rumor table.",
+        "words": [
+          "note",
+          "jot",
+          "find"
+        ],
+        "tips": [
+          "Write down what you don't want to forget. **Find** (F) searches every note.",
+          "Mid-session, **Jot** (J) a thought without leaving the page. It goes with the open session, or here if none is open."
+        ]
+      },
+      "note": {
+        "title": "A note",
+        "section": "notes",
+        "when": [
+          "before",
+          "during",
+          "after"
+        ],
+        "for": "One note, yours alone.",
+        "words": [
+          "note",
+          "find"
+        ],
+        "tips": []
+      }
+    },
+    "words": {
+      "table": {
+        "term": "Table",
+        "text": "Everything about one campaign: its sessions, players, cast, city, encounters and notes. It lives in this browser, and the exported `.shadows-table.json` is the copy that lasts."
+      },
+      "session": {
+        "term": "Session",
+        "text": "One night of play: the day, who was there, how long, what passed between the crew and the cast, and your write-up."
+      },
+      "openSession": {
+        "term": "Open session",
+        "text": "The latest session that isn't closed out. Jot files to it, and the strip shows while it's open."
+      },
+      "closeout": {
+        "term": "Close-out",
+        "text": "The end of a session. Check who came and for how long, and each character's IP is worked out. Then settle the threads and add anyone new."
+      },
+      "thread": {
+        "term": "Thread",
+        "text": "A question the story hasn't answered yet: a missing witness, a debt, a contract on someone. Close it as **Resolved** or **Dropped** when it ends."
+      },
+      "currentThread": {
+        "term": "Current thread",
+        "text": "The thread tonight is about. Only one at a time, and it rides in the strip on every tab."
+      },
+      "clock": {
+        "term": "Clock",
+        "text": "A countdown to trouble: 2 to 12 segments that fill as something gets closer. Give it to a faction, a person, a place or a fight, say what moves it and what happens when it's full, and press **+** when the story pushes it."
+      },
+      "closeToFull": {
+        "term": "Close to full",
+        "text": "Clocks nearly full. Read these before a session: they're what's about to happen."
+      },
+      "lastSetUp": {
+        "term": "Last session set up",
+        "text": "The seed you wrote at the end of the last session: where things stand and what's likely next."
+      },
+      "metNoStat": {
+        "term": "Met last session, no stat block yet",
+        "text": "People the crew met last time who'd need numbers if a fight started."
+      },
+      "journal": {
+        "term": "Debrief",
+        "text": "Your write-up of a session: what happened, the fallout, new threads, how factions and the city moved, how it went, and a seed for next time. Every part is optional."
+      },
+      "line": {
+        "term": "Line",
+        "text": "One thing between a character and a cast member: told them, learned from them, helped, wronged, killed, fought, owes, or is owed."
+      },
+      "ip": {
+        "term": "Improvement Points",
+        "text": "What characters spend to grow. The close-out gives each character who was there 5 an hour, rounded up."
+      },
+      "away": {
+        "term": "Away tonight",
+        "text": "Characters who missed the session. Tick **Took a job** for one who worked off-screen, and pick the job's tier for their Çredits."
+      },
+      "player": {
+        "term": "Player",
+        "text": "A person at your table. A player can have more than one character."
+      },
+      "characterCopy": {
+        "term": "Character copy",
+        "text": "A copy of a player's `.shadows.json`, imported so you can see their sheet. It changes only when you import a fresh file."
+      },
+      "benched": {
+        "term": "Benched, retired and dead",
+        "text": "Characters a player isn't playing now. They keep their history."
+      },
+      "cast": {
+        "term": "Cast",
+        "text": "Everyone in the story who isn't a player's character: contacts, rivals, bosses, monsters."
+      },
+      "status": {
+        "term": "Status",
+        "text": "Where someone stands: alive, dead, missing, or out of the picture. **In play** shows the ones who are alive or missing."
+      },
+      "affiliation": {
+        "term": "Affiliation",
+        "text": "Who someone answers to: a faction, a crew, a company. Filter the cast by it."
+      },
+      "statBlock": {
+        "term": "Stat block",
+        "text": "A cast member's numbers for a fight. Only people who might fight need one."
+      },
+      "whoKnows": {
+        "term": "Who knows what",
+        "text": "Every line between the crew and the cast, grouped by character."
+      },
+      "keyTo": {
+        "term": "Key to",
+        "text": "The factions this person matters to. They're among those factions' key NPCs."
+      },
+      "place": {
+        "term": "Place",
+        "text": "Somewhere the crew has been or will go. Lines and encounters can name it, so it remembers what happened there."
+      },
+      "siteProfile": {
+        "term": "Site profile",
+        "text": "A ready-made profile from the Threat Codex for a kind of place, with a level and how exposed each character is there. A pack brings them."
+      },
+      "faction": {
+        "term": "Faction",
+        "text": "A group with its own agenda: a gang, a corporation, a precinct."
+      },
+      "attention": {
+        "term": "Attention",
+        "text": "How hard a faction is looking at the crew: **Neutral**, **Aware** or **Active**."
+      },
+      "tippingPoints": {
+        "term": "Tipping points",
+        "text": "What would push a faction to act. Write them down so you know when to move it."
+      },
+      "keyNpcs": {
+        "term": "Key NPCs",
+        "text": "The cast members who matter most to a faction."
+      },
+      "gazetteer": {
+        "term": "The city",
+        "text": "NYTE City from the book: its territories, what lies beyond, the powers, and kinds of ground."
+      },
+      "pack": {
+        "term": "Pack",
+        "text": "A file of ready-made threats, people, groups and site profiles. The Threat Codex comes as one. It stays in this browser until you remove it."
+      },
+      "codex": {
+        "term": "The Codex",
+        "text": "The Threat Codex: the book's opposition, from a slotted-in pack."
+      },
+      "encounter": {
+        "term": "Encounter",
+        "text": "A scene you plan ahead, usually a fight: who's in it, the stakes, the ground and the way out. Start it to run it round by round."
+      },
+      "plan": {
+        "term": "The plan",
+        "text": "The Encounter Design worksheet: hook, stakes, terrain, escalations, ways out. Fill what helps."
+      },
+      "round": {
+        "term": "Round",
+        "text": "One pass through everyone in the fight, in turn order."
+      },
+      "nextTurn": {
+        "term": "Next turn",
+        "text": "The **Next** button moves to whoever acts next. **N** does the same on a running fight's page."
+      },
+      "combatSense": {
+        "term": "Combat Sense",
+        "text": "What sets the turn order. In a fight run by waves, each side rolls it again at a round's end if the fight has changed."
+      },
+      "strip": {
+        "term": "The strip",
+        "text": "The line under the header while a session is open or a fight runs: the round and who acts, who's down, the current thread, the clock nearest full, and **Unexported**. Tap any of it to go there."
+      },
+      "unexported": {
+        "term": "Unexported",
+        "text": "The table has changed since you last exported it. Tap it to export: the file is your backup."
+      },
+      "find": {
+        "term": "Find",
+        "text": "Searches the whole table: cast, sessions, lines, threads, notes, encounters, places, factions, clocks and players. **F** opens it."
+      },
+      "jot": {
+        "term": "Jot",
+        "text": "A quick note without leaving the page. It goes with the open session, or to Notes if none is open. **J** opens it."
+      },
+      "activity": {
+        "term": "Activity",
+        "text": "Every change to this table, newest first, and Undo for the newest. **A** opens it."
+      },
+      "note": {
+        "term": "Note",
+        "text": "Anything for you alone. Tie it to a session to find it by that session later."
+      }
+    },
+    "empty": {
+      "sessions": "Nothing yet. Start a session when you sit down to play, or add a thread you want to follow. Press **?** for what each tab is for.",
+      "threads": "No threads yet. A thread is a question the story hasn't answered: add one to follow it from session to session.",
+      "sessionsList": "No sessions yet. Start one when you sit down to play.",
+      "players": "Nobody seated yet. Add a player, then import their characters.",
+      "cast": "Nobody yet. The city fills up fast: add the people the crew meets, or bring them in from Threats.",
+      "places": "No places yet. Add one, or find it in The city.",
+      "factions": "No factions yet. Add one, or find it in The city.",
+      "threats": "No threats yet. Slot in the pack that came with your GM material to see its threats here.",
+      "encounters": "Nothing on the books. Plan a fight ahead, or start one when it breaks out.",
+      "notes": "Nothing on file yet. Write down what you don't want to forget: it's for you, not your players, and **Find** searches it."
+    }
+  },
   /* GM mode's Reference (Decision 207): its panels, in order. A panel with
      `from` draws what the data or the slotted packs already hold
      (`conditions`, `packs`, `pain`, `hits`, `recovery`, `weaponTags`,

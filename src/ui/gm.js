@@ -301,7 +301,7 @@ function renderTableChrome(){
   nav.querySelectorAll("[data-tsec]").forEach(b=>b.onclick=()=>pressTableTab(b.dataset.tsec));
   showActiveTab(nav);
   if (!act) return;
-  act.innerHTML = `<button type="button" class="hdr-act" data-tfind>Find</button><button type="button" class="hdr-act" data-tjot>Jot</button>
+  act.innerHTML = `<button type="button" class="hdr-act" data-tfind>Find</button><button type="button" class="hdr-act" data-tjot>Jot</button><button type="button" class="hdr-act" data-thelp aria-label="Help" aria-controls="ghelp" aria-expanded="${helpShown()}">?</button>
     <button class="kebab" data-menu-toggle aria-haspopup="true" aria-expanded="false" aria-label="Table actions">⋮</button>
     <div class="hdr-menu" id="hdrmenu" hidden>
       <button data-trename="1">Rename</button>
@@ -313,6 +313,7 @@ function renderTableChrome(){
     </div>`;
   act.querySelector("[data-tfind]").onclick=()=>openFind();
   act.querySelector("[data-tjot]").onclick=()=>openJot();
+  act.querySelector("[data-thelp]").onclick=()=>toggleHelp();
   keyHints();
   const menu=$("hdrmenu"), kb=act.querySelector("[data-menu-toggle]");
   kb.onclick=e=>{ e.stopPropagation(); const willOpen=menu.hidden; menu.hidden=!willOpen; kb.setAttribute("aria-expanded", willOpen?"true":"false"); };
@@ -334,20 +335,20 @@ function setKeys(on){ try{ if (on) localStorage.removeItem(KEYS_PREF); else loca
 function keyHints(){
   const on=keysOn();
   const hint=(b, key)=>{ if (!b) return; if (on) b.setAttribute("aria-keyshortcuts", key); else b.removeAttribute("aria-keyshortcuts"); };
-  for (const [sel, key] of [["[data-tfind]","F"],["[data-tjot]","J"],["[data-tactivity]","A"],["#main [data-enext]","N"]]) hint(document.querySelector(sel), key);
+  for (const [sel, key] of [["[data-tfind]","F"],["[data-tjot]","J"],["[data-thelp]","?"],["[data-tactivity]","A"],["#main [data-enext]","N"]]) hint(document.querySelector(sel), key);
   TABLE_SECTIONS.forEach((sec, i)=>hint(document.querySelector(attrSel("data-tsec", sec.id)), String(i+1)));
 }
-function openKeys({ viaKey }={}){
+function openKeys({ viaKey, returnTo }={}){
   const draw=()=>{ const on=keysOn(); return `<div class="form-toggle" role="group" aria-label="Keys">
       <button type="button" data-keyon class="${on?"on":""}" aria-pressed="${on}"${on?" autofocus":""}>On</button>
       <button type="button" data-keyoff class="${on?"":"on"}" aria-pressed="${!on}"${on?"":" autofocus"}>Off</button></div>`; };
-  openModal({ title:"Keys", returnTo:"[data-menu-toggle]", viaKey,
+  openModal({ title:"Keys", returnTo:returnTo || "[data-menu-toggle]", viaKey,
     html:`<ul class="step-note keys-list">
         <li><b>1–8</b> · The sections, in order: Sessions to Notes</li>
         <li><b>N</b> · Next turn, on a running fight's page</li>
         <li><b>Ctrl/⌘+Z</b> · Take back the last change, on any page</li>
         <li><b>A</b> · Activity</li>
-        <li><b>?</b> · These keys</li>
+        <li><b>?</b> · Help</li>
         <li><b>F</b> · Find</li>
         <li><b>J</b> · Jot</li>
         <li><b>Esc</b> · Close a box</li>
@@ -364,6 +365,134 @@ function openKeys({ viaKey }={}){
       wire();
     } });
 }
+// ── Help (Decision 278) ────────────────────────────────────────────────
+// A ? in the header and the ? key open a panel for the page that's open: what it's for, when in a night you'd use it, the words
+// on it and a tip or two. Every string is the data's `gmGuide`; this code holds none. From 1280px the panel is a column beside
+// the page and stays as the browser left it (`shadows.ui.gmHelp`); narrower it is a flyout over the page that shuts at any move,
+// as the vitals flyout does (Decision 166), with its own element and setter: that panel is the sheet's, and a table never shows it.
+// `shadows.ui.gmGuide` is "off" or nothing: it turns the one-line guides under each section's list off for this browser. Neither
+// is stored in the table. The panel's state is view state on S (helpOpen, helpView, helpFrom).
+const HELP_PREF="shadows.ui.gmHelp", GUIDE_PREF="shadows.ui.gmGuide", HELP_MEDIA="(min-width:1280px)";
+const gmGuide = () => D.gmGuide;
+const helpPinRoom = () => !!(window.matchMedia && window.matchMedia(HELP_MEDIA).matches);
+function helpPref(){ try{ return localStorage.getItem(HELP_PREF)==="open"; }catch(e){ return false; } }
+function setHelpPref(on){ try{ if (on) localStorage.setItem(HELP_PREF, "open"); else localStorage.removeItem(HELP_PREF); }catch(e){} }
+function guideOn(){ try{ return localStorage.getItem(GUIDE_PREF)!=="off"; }catch(e){ return true; } }
+function setGuide(on){ try{ if (on) localStorage.removeItem(GUIDE_PREF); else localStorage.setItem(GUIDE_PREF, "off"); }catch(e){} }
+// The data's marks: **bold** is a button or label as the screen has it, `code` is a file name.
+const helpMd = s => esc(String(s||"")).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/`(.+?)`/g, "<code>$1</code>");
+// A section's empty state is the data's line. `mark` says it stands for the whole section being empty (no guide line then).
+const emptyHtml = (key, mark) => `<p class="step-note"${mark ? " data-sec-empty" : ""}>${helpMd(gmGuide().empty[key])}</p>`;
+// The context id of whatever is on the page: a key of gmGuide.contexts, and the section's own when nothing narrower matches.
+// Total: a state it doesn't know is the section's, and it never throws (constraint 8's shape, for a view).
+function helpContext(){
+  const G=gmGuide().contexts, sec = TABLE_SECTIONS.some(s=>s.id===S.tsection) ? S.tsection : TABLE_SECTIONS[0].id;
+  let id=sec;
+  try{
+    if (sec==="sessions"){ const s=sessOpenNow(); if (s) id = closeEndNow(s) || closeSheetNow(s) ? "closeout" : "session"; }
+    else if (sec==="players"){ if (seatSheetNow(seatPageNow())) id="character"; }
+    else if (sec==="cast"){ id = castOpenMember() ? "member" : S.castView==="crew" ? "whoKnows" : "cast"; }
+    else if (sec==="city"){ id = cityPageNow() ? "place" : factionPageNow() ? "faction" : S.cityView==="city" ? "gazetteer" : S.cityView==="factions" ? "factions" : "city"; }
+    else if (sec==="threats"){ if (threatPageNow()) id="threat"; }
+    else if (sec==="encounters"){ const e=encOpenNow(); if (e) id = e.status==="running" ? "encounterRunning" : e.status==="planned" ? "encounterPlan" : e.status==="ended" ? "encounterPast" : sec; }
+    else if (sec==="notes"){ if (S.noteOpen) id="note"; }
+  }catch(e){ id=sec; }
+  return G[id] ? id : sec;
+}
+const helpShown = () => S.screen==="table" && !!S.table && !!S.helpOpen;
+let helpKey=null;
+// Where focus goes when the panel leaves: where ? was pressed if it was a key, else the ? button.
+function helpHandBack(){
+  const back=S.helpReturn;
+  S.helpReturn=null;
+  const to = back && back.isConnected && back!==document.body && !back.closest("#ghelp") ? back : document.querySelector("[data-thelp]");
+  if (to) to.focus({ preventScroll:!!back });
+}
+// One place that says whether the panel is on screen, as the vitals flyout's setter does: shown, it is the panel; otherwise it is
+// out of sight and inert so Tab can't walk into it. Focus leaves before inert lands.
+function syncHelp(){
+  const el=$("ghelp"), sc=$("ghscrim"), app=$("app"); if (!el) return;
+  const shown=helpShown();
+  if (!shown && el.contains(document.activeElement)) helpHandBack();
+  el.classList.toggle("open", shown);
+  el.setAttribute("aria-hidden", shown?"false":"true");
+  el.toggleAttribute("inert", !shown);
+  if (sc){ sc.classList.toggle("open", shown); sc.onclick=closeHelp; }   // a click on the scrim shuts the flyout, as the vitals scrim does
+  if (app) app.classList.toggle("help-pinned", shown);
+  const b=document.querySelector("[data-thelp]"); if (b) b.setAttribute("aria-expanded", shown?"true":"false");
+  if (S.screen!=="table"){ el.innerHTML=""; helpKey=null; }
+}
+function openHelp({ viaKey }={}){
+  S.helpReturn = viaKey && document.activeElement!==document.body ? document.activeElement : null;
+  S.helpOpen=true; S.helpView=null; S.helpFrom=helpContext(); S.helpCtx=S.helpFrom;
+  if (helpPinRoom()) setHelpPref(true);
+  syncHelp(); paintHelp(true);
+  const x=$("ghelp").querySelector("[data-help-close]"); if (x) x.focus({ preventScroll:true });
+}
+function closeHelp(){
+  S.helpOpen=false;
+  if (helpPinRoom()) setHelpPref(false);
+  syncHelp();
+  // Closed by the button or a click on the scrim, with focus nowhere: it goes back to what opens it.
+  if (!document.activeElement || document.activeElement===document.body) helpHandBack();
+}
+function toggleHelp(opts){ if (helpShown()) closeHelp(); else openHelp(opts); }
+// Esc closes one layer. A flyout covers the page, so it answers Esc anywhere; a column answers it only from inside itself,
+// since Esc in the page beside it is the page's.
+function helpEscCloses(){ const el=$("ghelp"); return helpShown() && !!el && (!helpPinRoom() || el.contains(document.activeElement)); }
+const helpWordsHtml = ids => `<dl class="help-words">${ids.map(w=>{ const x=gmGuide().words[w]; return x ? `<dt>${esc(x.term)}</dt><dd>${helpMd(x.text)}</dd>` : ""; }).join("")}</dl>`;
+function helpSwitchHtml(){
+  const u=gmGuide().ui, on=guideOn();
+  return `<div class="form-toggle" role="group" aria-label="${esc(u.guideSwitch)}">
+    <button type="button" data-help-guide-on class="${on?"on":""}" aria-pressed="${on}">${esc(u.on)}</button>
+    <button type="button" data-help-guide-off class="${on?"":"on"}" aria-pressed="${!on}">${esc(u.off)}</button></div>`;
+}
+function helpBodyHtml(id){
+  const g=gmGuide(), u=g.ui, c=g.contexts[id], head = (title, back) => `<div class="dhead"><h2 id="ghelp-h" tabindex="-1">${esc(title)}</h2>
+      <button type="button" class="btn sm" data-help-close aria-label="${esc(u.close)} ${esc(u.title.toLowerCase())}">${esc(u.close)}</button></div>${back ? `<p><button type="button" class="btn sm" data-help-back>${esc(u.back)}</button></p>` : ""}`;
+  if (S.helpView==="night")
+    return head(u.nightLink, true) + g.night.map(p=>`<h3 class="ref-sub dos-l">${esc(u.when[p.when])}</h3><p class="dos-p">${helpMd(p.text)}</p>
+      <p class="help-secs">${p.sections.map(sid=>{ const sec=TABLE_SECTIONS.find(s=>s.id===sid); return sec ? `<button type="button" class="btn sm" data-hsec="${esc(sid)}">${esc(sec.label)}</button>` : ""; }).join(" ")}</p>`).join("");
+  if (S.helpView==="words")
+    return head(u.wordsLink, true) + helpWordsHtml(Object.keys(g.words).sort((a, b)=>g.words[a].term.toLowerCase().localeCompare(g.words[b].term.toLowerCase())));
+  return head(c.title) + `<h3 class="ref-sub dos-l">${esc(u.forLabel)}</h3><p class="dos-p">${helpMd(c.for)}</p>
+    <h3 class="ref-sub dos-l">${esc(u.whenLabel)}</h3><ul class="help-when">${c.when.map(w=>`<li class="tag plain">${esc(u.when[w])}</li>`).join("")}</ul>
+    ${c.words.length ? `<h3 class="ref-sub dos-l">${esc(u.wordsLabel)}</h3>${helpWordsHtml(c.words)}` : ""}
+    ${c.tips.length ? `<h3 class="ref-sub dos-l">${esc(u.tipsLabel)}</h3><ul class="help-tips">${c.tips.map(t=>`<li>${helpMd(t)}</li>`).join("")}</ul>` : ""}
+    <div class="help-foot"><p class="help-links"><button type="button" class="btn sm" data-hnight>${esc(u.nightLink)}</button>
+      <button type="button" class="btn sm" data-hwords>${esc(u.wordsLink)}</button>
+      <button type="button" class="btn sm" data-hkeys>${esc(u.keysLink)}</button></p>
+      <div class="field tag-choice"><span>${esc(u.guideSwitch)}</span><div data-help-switch>${helpSwitchHtml()}</div></div></div>`;
+}
+// Drawn again only when the page it is for, or its view, has changed: a press inside it must keep its focus.
+function paintHelp(force){
+  const el=$("ghelp"); if (!el || !helpShown()) return;
+  const id=helpContext();
+  if (helpPinRoom()) S.helpFrom=id;   // a column follows the page, so a resize to a flyout starts from the page it's on
+  if (S.helpCtx!==id){ S.helpCtx=id; S.helpView=null; }   // a new page gets its own help, not the last view
+  const key=id + "|" + (S.helpView||"");
+  if (!force && helpKey===key && el.firstElementChild) return;
+  const hadFocus=el.contains(document.activeElement);
+  el.innerHTML=helpBodyHtml(id); helpKey=key;
+  el.querySelectorAll("[data-help-close]").forEach(b=>b.onclick=closeHelp);
+  const go = (sel, view) => { const b=el.querySelector(sel); if (b) b.onclick=()=>{ S.helpView=view; S.helpWas=sel; paintHelp(); const h=$("ghelp-h"); if (h) h.focus({ preventScroll:true }); }; };
+  go("[data-hnight]", "night"); go("[data-hwords]", "words");
+  const back=el.querySelector("[data-help-back]"); if (back) back.onclick=()=>{ S.helpView=null; paintHelp(); const w=S.helpWas && el.querySelector(S.helpWas); if (w) w.focus({ preventScroll:true }); };
+  const keys=el.querySelector("[data-hkeys]"); if (keys) keys.onclick=()=>openKeys({ returnTo:"[data-hkeys]" });
+  el.querySelectorAll("[data-hsec]").forEach(b=>b.onclick=()=>{
+    // The page is where the GM is going: a flyout is done, and a column shows that page's help, not this view.
+    S.helpView=null; S.helpCtx=null;
+    if (!helpPinRoom()){ S.helpOpen=false; syncHelp(); }
+    pressTableTab(b.dataset.hsec);
+  });
+  const sw=el.querySelector("[data-help-switch]");
+  if (sw){
+    const wire = () => { const a=sw.querySelector("[data-help-guide-on]"), b=sw.querySelector("[data-help-guide-off]"); if (a) a.onclick=()=>set(true); if (b) b.onclick=()=>set(false); };
+    const set = on => { setGuide(on); sw.innerHTML=helpSwitchHtml(); wire(); renderTable(); const b=sw.querySelector(on ? "[data-help-guide-on]" : "[data-help-guide-off]"); if (b) b.focus({ preventScroll:true }); };
+    wire();
+  }
+  if (hadFocus && !el.contains(document.activeElement)){ const h=$("ghelp-h"); if (h) h.focus({ preventScroll:true }); }
+}
 // A field is typingNow's list plus select, contenteditable and an IME mid-word.
 const inField = el => !!el && (isTextField(el) || el.tagName==="SELECT" || !!(el.closest && el.closest('[contenteditable]:not([contenteditable="false"])')));
 // What a key does, if it is one of ours (Decisions 259, 272). Each carries its own modifier rule; a key that is
@@ -375,7 +504,7 @@ function keyAction(e){
   const m=bare && /^(?:Digit|Numpad)([1-8])$/.exec(typeof e.code==="string" ? e.code : "");
   if (m && e.code.indexOf("Numpad")===0 && !/^[1-8]$/.test(e.key)) return null;
   if (m) return { run:()=>pressTableTab(TABLE_SECTIONS[Number(m[1])-1].id) };
-  if (bare && e.key==="?") return { run:()=>openKeys({ viaKey:true }) };
+  if (bare && e.key==="?") return { run:()=>toggleHelp({ viaKey:true }) };
   if (bare && !e.shiftKey){
     if (k==="f") return { run:()=>openFind({ viaKey:true }) };
     if (k==="j") return { run:()=>openJot({ viaKey:true }) };
@@ -448,7 +577,7 @@ function noteCardHtml(n){
 }
 function notesTabHtml(t){
   return `${t.notes.length ? `<ul class="int-list note-list">${t.notes.map(noteCardHtml).join("")}</ul>`
-      : `<p class="step-note">Nothing on file yet. What you write here stays with the table and goes wherever its file goes.</p>`}
+      : emptyHtml("notes", true)}
     <p><button class="btn primary" data-tnew>New note</button></p>`;
 }
 // ── Tonight (Decision 270) ───────────────────────────────────────────────
@@ -561,16 +690,22 @@ function renderTable(){
     if (!here) S.editing=null;
   }
   if (S.tsection!=="notes") S.noteOpen=null;
-  const head = onPage ? "" :
-    `<h1 class="step-title tbl-title">${esc(tableName(t))}</h1>
-    <p class="step-note">Table${Number.isFinite(made)?` · created ${esc(new Date(made).toLocaleDateString())}`:""}</p>`;
+  // Help (Decision 278): a pinned panel is open as the browser left it; a flyout shuts at any move to another page.
+  if (S.helpOpen===undefined) S.helpOpen = helpPinRoom() && helpPref();
+  if (S.helpOpen && !helpPinRoom() && S.helpFrom && S.helpFrom!==helpContext()) S.helpOpen=false;
   const body = S.tsection==="sessions" ? (sessPage ? (closeEndNow(sessPage) ? closeEndHtml(sessPage) : closeSheetNow(sessPage) ? closeSheetHtml(sessPage) : sessionPageHtml(sessPage)) : sessionsTabHtml(t))
     : S.tsection==="players" ? (seatSheet ? readOnlySheetHtml(seatSheet) : seatPage ? seatPageHtml(seatPage) : playersTabHtml(t))
     : S.tsection==="cast" ? (onPage ? castPageHtml(onPage) : castTabHtml(t))
     : S.tsection==="city" ? (placePage ? placePageHtml(placePage) : factionPage ? factionPageHtml(factionPage) : cityTabHtml(t))
     : S.tsection==="threats" ? (threatPage ? threatPage.html : threatsTabHtml(t)) : S.tsection==="encounters" ? encountersTabHtml(t) : S.tsection==="reference" ? referenceTabHtml() : notesTabHtml(t);
+  // The guide line sits on a section's list; a page inside a section and a section with nothing in it (its empty state teaches) have none.
+  const guide = !onPage && guideOn() && !body.includes("data-sec-empty") ? `<p class="step-note guide-line" data-guide>${helpMd(gmGuide().contexts[S.tsection].intro)}</p>` : "";
+  const head = onPage ? "" :
+    `<h1 class="step-title tbl-title">${esc(tableName(t))}</h1>
+    <p class="step-note">Table${Number.isFinite(made)?` · created ${esc(new Date(made).toLocaleDateString())}`:""}</p>${guide}`;
   // A redraw a press causes keeps the keyboard's place (Decision 164).
   keepPlace(main, ()=>{ main.innerHTML = failed + head + body; paintTonight(); bindTable(); }, ["[data-cadd-name]", "[data-pyadd-name]", "[data-padd-name]", "[data-fadd-name]", "[data-tnew]", "[data-tsearch]", "[data-pslot]", "[data-enc-new]", "[data-thadd]", "[data-snew]", "[data-jumpfilter]"]);
+  syncHelp(); paintHelp();
 }
 function bindTable(){
   // The page's bar is a sideways row like the sheet's tabs: fades, a kept place and the wheel (Decision 165). An encounter's
@@ -881,7 +1016,7 @@ function castCardHtml(n){
 }
 function castListHtml(t){
   if (S.castView==="crew") return crewViewHtml(t);
-  if (!t.cast.length) return `<p class="step-note">Nobody yet. The city fills up fast.</p>`;
+  if (!t.cast.length) return emptyHtml("cast", true);
   const list=Engine.castFilter(t, castFilterNow());
   if (!list.length) return `<p class="step-note">No one matches.</p><p><button class="btn sm" data-cclear>Clear the filter</button></p>`;
   return `<ul class="roster-list">${list.map(castCardHtml).join("")}</ul>`;
@@ -1474,7 +1609,7 @@ function placeCardHtml(t, p){
     ${bits ? `<div class="roster-meta cast-meta">${bits}</div>` : ""}${clockLinesHtml(Engine.clocksOn(t, { kind:"place", id:p.id }))}</li>`;
 }
 function placeListHtml(t){
-  if (!placeRecords().length) return `<p class="step-note">No places yet. Add one, or find it in The city.</p>`;
+  if (!placeRecords().length) return emptyHtml("places", true);
   const list=Engine.placeList(t, { q:S.placeQ||"" });
   return list.length ? `<ul class="roster-list">${list.map(p=>placeCardHtml(t, p)).join("")}</ul>` : `<p class="step-note">No place matches.</p>`;
 }
@@ -1883,7 +2018,7 @@ function factionCardHtml(t, f){
     ${bits ? `<div class="roster-meta cast-meta">${bits}</div>` : ""}${clockLinesHtml(factionClocks(f))}</li>`;
 }
 function factionListHtml(t){
-  if (!factionRecords().length) return `<p class="step-note">No factions yet. Add one, or find it in The city.</p>`;
+  if (!factionRecords().length) return emptyHtml("factions", true);
   const list=Engine.factionList(t, { q:S.factionQ||"" });
   return list.length ? `<ul class="roster-list">${list.map(f=>factionCardHtml(t, f)).join("")}</ul>` : `<p class="step-note">No faction matches.</p>`;
 }
@@ -2320,7 +2455,7 @@ function nextSessionHtml(t){
   const n=Engine.nextSession(t), near=nearFullHtml(t);
   if (!(t.sessions||[]).length && !(t.threads||[]).length)
     return near ? `<div class="next-session">${near}</div>`
-      : `<p class="step-note">Nothing yet. Start a session when you sit down to play, or add a thread you want to follow.</p>`;
+      : emptyHtml("sessions", true);
   const open = h => `<button type="button" class="cast-open" data-thopen="${esc(h.id)}">${esc(threadTitle(h))}</button>`;
   if (!n.current && !n.open.length && !n.seed && !n.unbuilt.length)
     return near ? `<div class="next-session">${near}</div>`
@@ -2362,7 +2497,7 @@ function threadRowHtml(h){
 function threadsHtml(t){
   const all=Engine.threadList(t), open=all.filter(h=>h.status==="open"), shut=all.filter(h=>h.status!=="open");
   return `<h2 class="cast-h sec-h" tabindex="-1" data-threads-h>Threads</h2>
-    ${open.length ? `<ul class="int-list">${open.map(threadRowHtml).join("")}</ul>` : all.length ? "" : `<p class="step-note">No threads yet.</p>`}
+    ${open.length ? `<ul class="int-list">${open.map(threadRowHtml).join("")}</ul>` : all.length ? "" : emptyHtml("threads")}
     ${shut.length ? `<details class="thread-shut" data-thshut${S.threadsShut?" open":""}><summary>Closed (${shut.length})</summary><ul class="int-list">${shut.map(threadRowHtml).join("")}</ul></details>` : ""}
     <div class="cast-add thread-add">
       <label class="field"><span>New thread</span><input type="text" data-thadd value="${esc(S.threadAdd||"")}" placeholder="What's still open?" autocomplete="off"></label>
@@ -2376,7 +2511,7 @@ function sessionsTabHtml(t){
     ${coTotalsHtml(t)}
     ${list.length ? `<ul class="roster-list sess-list">${list.map(s=>
       `<li class="sess-item"><button type="button" class="cast-open sess-open" data-sopen="${esc(s.id)}">${esc(sessionLine(s))}</button></li>`).join("")}</ul>`
-      : `<p class="step-note">No sessions yet.</p>`}
+      : emptyHtml("sessionsList")}
     <p><button type="button" class="btn primary" data-snew>New session</button></p>`;
 }
 function sessionInteractionHtml(t, x, offered){
@@ -3051,7 +3186,7 @@ function threatListHtml(){
 }
 function threatsTabHtml(){
   if (!packsMemo.length){
-    return `<p class="step-note">No threats yet. Slot in the pack that came with your GM material to see its threats here.</p>
+    return `${emptyHtml("threats", true)}
       <p><button class="btn primary" data-pslot>Slot in a pack</button>
       <input type="file" id="pack-file" accept=".json,.shadows-pack.json" hidden></p>`;
   }
@@ -3294,7 +3429,7 @@ function encListHtml(t){
     <button class="cast-open" data-enc-open="${esc(e.id)}">${esc(Engine.encounterTitle(e))}</button>
     <div class="roster-meta cast-meta">${esc(meta)}</div>${clocks}</li>`; };
   const sect = (h, items) => items.length ? `<h2 class="cast-h sec-h">${h}</h2><ul class="roster-list">${items.join("")}</ul>` : "";
-  return `${all.length ? "" : `<p class="step-note">Nothing on the books.</p>`}
+  return `${all.length ? "" : emptyHtml("encounters", true)}
     ${sect("Running", by("running").map(e=>card(e, [`Round ${e.round}`, encCount(e.rows.length)].filter(Boolean).join(" · "))))}
     ${sect("Planned", by("planned").map(e=>card(e, [encCount(e.rows.length)].filter(Boolean).join(" · "))))}
     ${sect("Past encounters", by("ended").map(e=>card(e, [e.round ? encRounds(e.round) : "Not run", day(e)].filter(Boolean).join(" · "))))}
@@ -4223,7 +4358,7 @@ function playersTabHtml(t){
   return `<div class="cast-add">
       <label class="field"><span>Name</span><input type="text" data-pyadd-name placeholder="Player's name" autocomplete="off"></label>
       <button type="button" class="btn primary" data-pyadd>Add a player</button></div>
-    ${list.length ? list.map(playerHtml).join("") : `<p class="step-note">Nobody seated yet. Add a player, then import their characters.</p>`}`;
+    ${list.length ? list.map(playerHtml).join("") : emptyHtml("players", true)}`;
 }
 // The names a seat answers to: its character's own, then the typed rows.
 function seatNameRowsHtml(v){

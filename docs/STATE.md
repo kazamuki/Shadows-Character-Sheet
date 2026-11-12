@@ -1,7 +1,7 @@
 # State of the build
 
-**Updated:** 2026-11-07
-**Versions:** app `0.66.2` · game data `0.54` · character schema `0.34` · table schema `0.19` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
+**Updated:** 2026-11-12
+**Versions:** app `0.67.0` · game data `0.54` · character schema `0.34` · table schema `0.19` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -109,7 +109,7 @@ is the authority on a flag's full text.
 | **Vampire** — `0413` | ✅ built (Decisions 200–202, 215, 223, 240, 264, 266): Bloodlines, the Thirst, 22 Majors; Base Powers and CP as the 2026-10-22 book prints; sustained powers run (Start/Stop, Turn Reset charges them) | Nobody. Whether it leaves `draft` is Ken's (the chapter dropped "Under Construction") |
 | **Werewolf** — `0414` | ✅ built (Decisions 195–197, 199, 215, 240, 264, 266): Origins, Form, Call of the Wild, its own Majors; Base Powers and CP as the book prints; its powers run only in Werewolf Form | Nobody. As the Vampire: `draft` is Ken's call |
 | **Arcanist / Magic** | 🔶 spells, Cascade, Aberrations, magic on the sheet, holding a spell (Decision 224), Disciplines as Boosts with their prerequisites (Decision 265) all built · Origins still `draft` | Deighton: **F43** (the held spell's check). Deighton + Scott + Bill + Ken: Origins and spheres/implements, after the four-way comparison; not blocking |
-| **GM mode** — `plans/gm-mode-next.md` | 🔶 **launched in 0.57.0** (260); its first plan (S1–S21) and GM-at-the-table (U1–U5: the encounter row, the Tonight strip, records that open to read, keys; 269–272, in 0.63.0–0.66.0) are built and archived. A GM session ships visible, with changelog lines and an app bump | Scott: a session on the live version first (S22), then his to-dos (the plan's §4: Codex v2 for S12a and S17, the Site Profiles, the print files). Then Ken's pick from S23–S30 |
+| **GM mode** — `plans/gm-mode-next.md` | 🔶 **launched in 0.57.0** (260); its first plan (S1–S21) and GM-at-the-table (U1–U5: the encounter row, the Tonight strip, records that open to read, keys; 269–272, in 0.63.0–0.66.0) are built and archived, and **S31** (Help on every table page, 278) is built in 0.67.0. A GM session ships visible, with changelog lines and an app bump | Scott: a session on the live version first (S22), then his to-dos (the plan's §4: Codex v2 for S12a and S17, the Site Profiles, the print files). Then Ken's pick from S23–S30. **Deighton's read of Help's words** (GQ39) arrives as edits to `gmGuide` in the data |
 | **The book** — `plans/crb-catch-up.md` | 📋 what the CRB still needs from the sheet, by chapter | Ken. The sheet-from-book syncs are closed (`plans/archive/`); the next mirror refresh gets a new one |
 | **Print sheet — visual system** — `plans/print-sheet-scotts-look.md` | 📋 Scott's export landed 2026-09-23 (landscape) · front-page restyle proposed and mocked up · one known cosmetic defect | Ken: approve the plan. Scott said yes to PQ1 (embed Cerulean Nights) and PQ2 (all his artwork) and answered PQ4, 2026-11-03; he still has to send the files. Deighton: PQ3 (do the stat groups mean anything). The frame/texture print defect blocks on no one |
 

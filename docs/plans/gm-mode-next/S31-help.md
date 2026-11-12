@@ -5,7 +5,10 @@
 Threads, sessions and clocks are all on the first tab, before Players, Cast, City and the rest. Ken's read: the words
 he and Claude chose while designing GM mode haven't clicked yet, even for the game's designer. A new GM will be more
 lost.
-**Status:** **drafted 2026-11-11 by Claude (Opus)**, in the session Ken took the feedback to, for Ken's approval.
+**Status:** **drafted 2026-11-11 by Claude (Opus)**, in the session Ken took the feedback to. **Approved by Ken
+2026-11-11**, in that session: he merged PR #321 and asked to run it. GQ32–GQ42 were left blank, so each takes its default,
+**except GQ39** (below). Ken's words: "I think we can build out the updates, since we will just be feeding data to the
+structure you will be building, right?"
 **Ken's ask, as given:** a **?** at the top right near ⋮. Pressing it opens a sidebar on the right that says what the
 left side of the screen is doing. Each page gets help on what its tab does, how it works and why a GM would use it.
 Tips prompt a GM on what to do in a section. Ken's example, for Notes: "write thoughts that are just for you that you
@@ -23,10 +26,17 @@ don't want to forget, it can be searched for later".
 first, this order is re-pre-flighted and Appendix A is re-read against those screens (*An order that waited*,
 `WORK-ORDERS.md`).
 
-**Before the builder starts (§12, step 0):** the conductor turns Appendix A and B into a page for Deighton (GQ39).
-Each piece of help and each word gets "clicks / doesn't / try this". His answers go into the appendix as edits, and the
-build pastes the appendix as it then stands. This is what worked for the 34 rules questions. It's the right order for
-this work: the words are most of it, and they're Deighton's to judge.
+**Deighton's read runs beside the build (GQ39, as Ken changed it).** The conductor published Appendix A and B as
+Deighton's page on 2026-11-11 (https://claude.ai/artifact/PJA74VW6g8ns7PcFS7367X): every piece of help and every word
+gets "clicks / doesn't / I'd word it differently". The builder builds the structure and pastes Appendix A **as it stands
+here**. When his answers come in, the conductor sends them to the builder as edits to `gmGuide`. **They land on the PR
+before it merges**, so the reviewer's voice pass reads the final words. If they come after the merge, they're a Fix.
+Nothing in his answers can change the order's shapes:
+- a word added or dropped is a `words` entry;
+- a different tip is a string;
+- a rename is GQ38's follow-up, not this build.
+
+An answer that would change the shape (a new kind of page, help organised differently) is a stop, brought to Ken.
 
 **Pre-flight:** against `main` at `f7e5f7a` (PR #319, E1b's order, merged): app 0.66.1, game data 0.53, character
 schema 0.34, table schema 0.19, pack schema 0.3. Decision **273** is the last in the ledger. **E1b's order is
@@ -436,8 +446,8 @@ The builder writes these first and **shows each failing on `main`**, and pastes 
 
 ## 12. Steps
 
-0. **Before the builder (the conductor's step).** Publish Appendix A and B as Deighton's page (GQ39). Fold his
-   answers into the appendix in a Docs commit on `main`, then start the builder.
+0. **The conductor's step, done 2026-11-11.** Deighton's page is published, and his answers arrive while the
+   builder works (see the header). Paste Appendix A as it stands; the conductor sends his edits as they come.
 1. `git submodule update --init private`, then `npm run test:fast`.
 2. Write §10's tests and **run them on `main`: all seven fail**. Paste the run into the PR.
 3. Read `craft-floor.md`. Run **`/impeccable shape`** on the panel against §9. Report what it proposes, and apply only
