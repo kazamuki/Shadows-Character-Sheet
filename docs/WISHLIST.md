@@ -945,7 +945,7 @@ dispatches to a player's inbox, posted instead of saved, and builds on this. Its
 
 Not planned: best done after Deighton's read of Help's words (S31, GQ39) is in, since his answers may move the copy these sit around. S31's Help panel works, and its review found three things that read poorly. On a phone the foot (A night at the table, Every word,
 Keys and the Guide lines switch) is about 530px below the fold, so a GM has to scroll the whole page's help to reach the one link
-they came for. **Every word** is 44 terms in one A–Z list with no jump to a letter. And the panel's heading is the page's name in small
+they came for. **Every word** is 43 terms in one A–Z list with no jump to a letter. And the panel's heading is the page's name in small
 mono caps, which is weak next to the page's own title. *To respect:* the words stay in `gmGuide` (Decision 278), the panel never
 traps focus (166), and the column keeps 258's 20rem card floor.
 
