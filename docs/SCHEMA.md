@@ -5469,7 +5469,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** a round counter, or a heal-per-round button outside Reset (the sheet knows no round but Reset; W128); Regeneration as a running power (it costs nothing, and the form carries it, Decision 195); a heal through `heal()` uncapped (it trims Withering); storing the HL surged this round (HQ21); healing a GM's claimed row (it keeps no Withering, Decision 257); healing that ends Dying (only a Nanomed Kit does, Decision 105).
      - **Replaces:** nothing; extends 195 (the form carries Regeneration), 220 (who heals at Reset) and 266 (what a running power does at Reset).
      - **Revisit if:** W128 knows a round or a scene; the book says the form ends at Unconscious on the sheet's side; a table asks for Vitality Surge's per-round cap.
-     - **Built:** app 0.62.0 (unreleased), game data 0.53 (unreleased), character schema 0.34, PR #324, log 2026-11-05 (H3).
+     - **Built:** app 0.62.0 (unreleased), game data 0.53 (unreleased), character schema 0.34, PR #…, log 2026-11-05 (H3).
 
 269. **An encounter row reads like the sheet's Health readout: one row acts at a time, two buttons are its own, and a hit past twice what it holds asks first.**
      *2026-11-05 · Ken + Claude · Touches: encounter row, encRowHtml, encounterView, health.hpPer, label, hlCellsOf, More, Hit, Heal, Take, Down, Dying, Act now, Now badge, Hit panel, Apply, enc-bar, plan labels, Add to <encounter>, Decision 190, Decision 211, Decision 258*
