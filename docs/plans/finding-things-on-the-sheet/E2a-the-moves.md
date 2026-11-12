@@ -2,12 +2,12 @@
 
 **Plan:** [finding-things-on-the-sheet](../finding-things-on-the-sheet.md), session E2, its first build. The shape is [E2-where-everything-lives](E2-where-everything-lives.md), and Ken answered EQ17–EQ22 on 2026-11-12.
 **Status:** drafted 2026-11-12 by an Opus session the conductor started (Ken asked that orders be drafted by Opus, not by the reviewer). Awaiting Ken's answers to EQ23–EQ27 (§4); one he leaves blank takes its default.
-**Branch:** the builder's own, cut from `main` once this order and #325 have merged.
+**Branch:** the builder's own, cut from `main` once this order (#326) has merged. #325 is already in.
 **Runs beside:** E4 (colour). Not E2b, E3 or E5, which wait for it.
 **Impeccable:** none. The shape was E2's first half; this order builds it. E2b (the distill) is a separate order.
 
 **Pre-flight:**
-- **The commit is `64982a5`** (main after #324: app 0.67.1, game data unchanged since E1b, last decision 280). #325 is docs only.
+- **The commit is `64982a5`** (main after #324: app 0.67.1, game data unchanged since E1b, last decision 280).
 - **Measured at 375×812** in the dev preview. The five TestCharacters were loaded with `openEntry()` and taken through every tab.
   - This session's figures read a constant 58px taller than E2's table on the same commit, every tab but Notes. So compare a build against this order's figures, measured the same way, never against E2's.
 - **Prototyped.** The five moves were made in a scratch copy of `sheet.js` and `shared.js` (about 40 lines), then measured. `npm test` was run against them, so §5's list of expected breaks is the suite's own. The scratch was reverted, and nothing of it is on this branch.
