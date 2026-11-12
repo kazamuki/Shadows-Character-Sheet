@@ -323,6 +323,7 @@ const MAPS = [/\.byPowerLevel$/, /^statRules\.(modifiers|raiseCost)$/, /^spells\
   /^armorRules\.integrityLossByDifficulty$/, /^skillCheckRules\.difficulties$/, /^armorRules\.slotNames$/,
   /\.starterPower$/, /\.starterPower\.\*\[\]$/,
   /\.sp(\.\*)?$/, // W32: keyed by the text an amount sits beside, read by spAmounts
+  /^gmGuide\.(contexts|words|empty|ui\.when)$/, // keyed by a page, a word, a section's empty state and a part of a night, read by gm.js's Help (Decision 278)
   /^appCopy\.statusLabel$/, // keyed by an archetype's `status`, read by statusLabel()
   /^skillRowText$/, // keyed by what a Skill's row says (a Take X, a die face, a light level), read by skillLine and attackNotes (Decision 233)
   /\.grants\[\]\.(shift|mod)$/, // a `visibility` row's maps, keyed by a light level's id, read by visShifts and visModText (Decision 237)
@@ -380,6 +381,36 @@ test("every data key is read by code, or named as text (R6 key guard, Decision 1
   assert.deepEqual(textButNot, [], "a key named as text holds something else");
   const stale = Object.keys(NOT_YET_SHOWN).filter(k => !keys.has(k) || isRead(k));
   assert.deepEqual(stale, [], "shown now, or gone from the data: take it off NOT_YET_SHOWN");
+});
+
+// S31 (Decision 278): GM mode's Help is one block of data, and it has a shape. The section ids come from gm.js's TABLE_SECTIONS, so a
+// new tab with no help entry fails here (Decision 135 turned round: a new tab needs zero code, and one entry of help).
+test("gmGuide is shaped: every page has help, every word it names is defined, and every empty state is there (S31)", () => {
+  const G = D.gmGuide, gm = readFileSync(join(ROOT, "src/ui/gm.js"), "utf8");
+  const sections = [...(/const TABLE_SECTIONS = \[(.*)\];/.exec(gm)[1]).matchAll(/id:"([a-z]+)"/g)].map(m => m[1]);
+  assert.ok(sections.length >= 8, "found only " + sections.length + " sections");
+  const order = ["before", "during", "after"], bad = [];
+  for (const [id, c] of Object.entries(G.contexts)) {
+    if (typeof c.title !== "string" || !c.title) bad.push(id + ": no title");
+    if (typeof c.for !== "string" || !c.for) bad.push(id + ": no `for`");
+    if (!Array.isArray(c.when) || !c.when.length || c.when.some(w => !order.includes(w)) || c.when.some((w, i) => i && order.indexOf(w) <= order.indexOf(c.when[i - 1]))) bad.push(id + ": `when` is not a subset of before, during, after in order");
+    if (!Array.isArray(c.words)) bad.push(id + ": no `words`"); else for (const w of c.words) if (!G.words[w]) bad.push(id + ": names an undefined word " + w);
+    if (!Array.isArray(c.tips) || c.tips.length > 2) bad.push(id + ": `tips` is not a list of at most two");
+    if (!sections.includes(c.section)) bad.push(id + ": its section " + c.section + " isn't a TABLE_SECTIONS id");
+    if (sections.includes(id) && (c.section !== id || !c.intro)) bad.push(id + ": a section needs itself as `section` and an `intro`");
+    if (!sections.includes(id) && c.intro) bad.push(id + ": only a section has an `intro`");
+  }
+  for (const s of sections) if (!G.contexts[s]) bad.push("section " + s + " has no context");
+  // Every word is named by a context, so none is dead copy. The two on none are on screen in the strip and the menu, and Every word lists them.
+  const named = new Set(Object.values(G.contexts).flatMap(c => c.words)), HEADER_WORDS = ["unexported", "activity"];
+  for (const w of Object.keys(G.words)) if (!named.has(w) && !HEADER_WORDS.includes(w)) bad.push("word " + w + " is on no page");
+  for (const w of HEADER_WORDS) if (named.has(w)) bad.push("word " + w + " is on a page: take it off HEADER_WORDS");
+  const terms = Object.values(G.words).map(w => w.term.toLowerCase());
+  if (new Set(terms).size !== terms.length) bad.push("a term is defined twice");
+  for (const p of G.night) if (!order.includes(p.when) || !p.sections.every(s => sections.includes(s))) bad.push("night part " + p.when);
+  assert.equal(G.night.length, 3);
+  assert.deepEqual(Object.keys(G.empty).sort(), ["cast", "encounters", "factions", "notes", "places", "players", "sessions", "sessionsList", "threads", "threats"]);
+  assert.deepEqual(bad, []);
 });
 
 // The key guard proves a field is named in code; these prove it's read. Each

@@ -5360,6 +5360,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 211 in part (on a page Add to sits in the bar). Extends 35 (a table escapes the frame), 140, 188–189.
      - **Revisit if:** Home gets its own layout (W80's rest), or a tab needs a column the measures lack.
      - **Built:** switched off (173); PR #276; log 2026-10-30 (S18).
+    → **Superseded in part by Decision 278** — from 1280px a table can have a column on the right, Help's, so "no vitals column" no longer rules out every column.
     → **Superseded in part by Decision 270** — while the Tonight strip shows, the bar is on every tab, not only on a page.
     → **Superseded in part by Decision 271** — card grids are one, two or three columns by width, not auto-fill.
 
@@ -5526,6 +5527,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 259 in part: more keys under the same rules, and the Keys switch covers them all.
      - **Revisit if:** a GM wants keys on the player's sheet, a browser takes a digit, or Redo arrives.
      - **Built:** app 0.66.0, no schema move, PR #313, log 2026-11-07 (U5).
+    → **Superseded in part by Decision 278** — **?** opens Help, not Keys; Keys lists it as Help and is one link down, and ⋮ → Keys stays.
 
 273. **A locked character owed a pick sees one line at the top of each tab, and the picker opens in a dialog when they press Choose.**
      *2026-11-11 · Ken + Claude · Touches: focusedOwedHtml, focusedPickHtml, data-fpick, data-fowedopen, sheetHeader, .focused-owed, openModal, focusedOwedLines, openFocusedPicker, versionCheck, loadIssuesHtml, E1a*
@@ -5571,6 +5573,20 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. (W61's fold stays on the wishlist as the later step.)
      - **Revisit if:** the Cyborg returns as an archetype, or W61 is built.
      - **Built:** app 0.66.2 (patch), gamedata 0.54, PR #320, log 2026-11-11 (E1b).
+
+278. **Every table page has Help: a ? in the header and the ? key open a panel for the page that's open, from the data's gmGuide; each section has a guide line; and every word GM mode uses is defined once.**
+     *2026-11-11 · Ken + Deighton + Claude · Touches: Help, ?, data-thelp, gmGuide, contexts, words, night, intro, empty, guide line, shadows.ui.gmGuide, shadows.ui.gmHelp, help panel, help flyout, pinned column, PIN_MEDIA, table-mode, renderTableChrome, hdractions, keyAction, openKeys, Keys list, empty states, Every word, A night at the table, Decision 139, Decision 160, Decision 166, Decision 258, Decision 272*
+     - **Decided:** A **?** button between Jot and ⋮, and the **?** key, open Help for the page that's open: what it's for, when in a night you'd use it, the words on it and a tip or two, from `gmGuide` in the data. Its foot links *A night at the table*, *Every word* and Keys, and holds the **Guide lines** switch. From 1280px Help is a column beside the page that follows it and stays open across visits (this browser's); below, a flyout as the vitals flyout is (166), closing on any move. Each section's list carries one guide line, on until the switch turns them off. Each section's empty state says what it's for, from the data.
+     - **Why:** Deighton, the game's designer, couldn't tell how, why or when to use much of GM mode; a GM who didn't design the game will know less.
+     - **Rejected:**
+       - A first-run tour: it is read once, mid-setup, and gone when it's needed.
+       - Help in the copy of each page: it would bury the tools a GM uses every night.
+       - Help in `gm.js`: Deighton and Scott edit the data, not the code.
+       - `H` for Help: `?` is the convention, and Keys sits one link down.
+       - A dismiss on each guide line: eight choices where one will do.
+     - **Replaces:** Decision 272 in part (`?` opens Help, not Keys; Keys lists it as Help). Decision 258 in part (from 1280px a table can have a column on the right: Help's).
+     - **Revisit if:** GMs keep Help open all night (it's become a reference and wants a different shape), or a player's sheet asks for the same.
+     - **Built:** app 0.67.0; PR #…; log 2026-11-11 (S31).
 
 ## 5. Open Flags
 

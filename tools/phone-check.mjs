@@ -375,6 +375,45 @@ async function tableScreens(browser, file, rows, numbers) {
   }
 }
 
+// S31 (Decision 278): from 1280px Help is a column beside the page, open as the browser left it. With it open the page has less width, and
+// 258's floor holds: every card is still 20rem wide, nothing runs under the column, and no sideways scroll. At 1280 exactly, where it first pins.
+async function tableHelp(browser, file, rows, numbers) {
+  const seed = tableSeed();
+  for (const z of [{ width: 1280, height: 900 }, { width: 1300, height: 900 }, { width: 1980, height: 1080 }]) {
+    const c = await browser.newContext({ viewport: { width: z.width, height: z.height } });
+    await c.addInitScript(([s, pk, pack]) => { try {
+      localStorage.setItem("shadows.feature.gm", "on"); localStorage.setItem("shadows.ui.gmHelp", "open");
+      if (!localStorage.getItem("shadows.table.v1." + s.table.meta.id)) {
+        localStorage.setItem("shadows.table.v1." + s.table.meta.id, JSON.stringify(s));
+        localStorage.setItem(pk, JSON.stringify(pack));
+      }
+    } catch (e) {} }, [seed.table, seed.packKey, seed.pack]);
+    const page = await c.newPage();
+    await page.goto(pathToFileURL(file).href);
+    await page.click("[data-topen]");
+    for (const [name, sel] of [["sessions", "sessions"], ["cast", "cast"], ["city", "city"], ["threats", "threats"], ["encounters", "encounters"], ["notes", "notes"]]) {
+      await page.click(`[data-tsec="${sel}"]`);
+      const m = await page.evaluate(tableMeasure);
+      const h = await page.evaluate(() => { const p = document.querySelector("#ghelp"), r = p.getBoundingClientRect(), main = document.querySelector("main").getBoundingClientRect();
+        const bar = document.querySelector("#main > .tbl-bar, #main > .enc-bar"), b = bar && bar.getBoundingClientRect();
+        return { open: p.classList.contains("open") && !p.hasAttribute("inert"), x: Math.round(r.left), w: Math.round(r.width), height: Math.round(r.height), vh: innerHeight, mainRight: Math.round(main.right), barRight: b ? Math.round(b.right) : 0 }; });
+      const bad = [];
+      if (!h.open) bad.push("Help isn't open from the preference");
+      if (h.w < 300 || h.w > 360) bad.push(`the column is ${h.w}px`);
+      if (h.x < z.width - h.w - 1) bad.push(`the column is at x ${h.x}, not on the right`);
+      if (h.height < h.vh - 1) bad.push(`the column is ${h.height}px of ${h.vh}`);
+      if (h.mainRight > h.x + 1) bad.push(`the page runs ${h.mainRight - h.x}px under the column`);
+      if (h.barRight > h.x + 1) bad.push(`the bar runs ${h.barRight - h.x}px under the column`);
+      if (m.scrollW > 0) bad.push(`the page scrolls sideways by ${m.scrollW}px`);
+      if (m.over) bad.push(`${m.over} elements past the right edge`);
+      if (m.cards && m.cardMin < CARD_MIN - 1) bad.push(`cards ${m.cardMin}-${m.cardMax}px, ${CARD_MIN} is the floor`);
+      rows.push({ width: `table ${z.width}`, screen: `${name}, Help open`, layout: bad.length ? bad.join("; ") : "ok", ok: !bad.length });
+      numbers.push({ w: z.width, screen: `${name}, Help open`, main: `${m.x}+${m.w}`, over: m.over, field: m.field, area: m.area, prose: "", cards: m.cards ? `${m.perRow}/row ${m.cardMin}-${m.cardMax}` : "", enc: "", bar: m.bar ? `${m.barKind} ${m.bar}px` : "", header: m.header });
+    }
+    await c.close();
+  }
+}
+
 // L2: the read-only sheet lays out as the player's own sheet of the same file. L8: from 1280px a member's stat block is a
 // panel on the right that stays put under the bar; below that it is the last block of the page.
 async function tableExtras(browser, file, rows, numbers) {
@@ -743,7 +782,7 @@ try {
     }
   }
   // S18: a table's screens, at four widths.
-  if (!RECORD) { await tableScreens(browser, file, rows, tableNumbers); await tableExtras(browser, file, rows, tableNumbers); await tableKeys(browser, file, rows); }
+  if (!RECORD) { await tableScreens(browser, file, rows, tableNumbers); await tableExtras(browser, file, rows, tableNumbers); await tableHelp(browser, file, rows, tableNumbers); await tableKeys(browser, file, rows); }
   // S18 (L9): the frame fixture, recorded or diffed.
   const frames = await recordFrames(browser, file, seed);
   if (RECORD) {

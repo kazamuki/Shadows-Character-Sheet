@@ -4832,7 +4832,7 @@ window.SHADOWS_DATA = {
       "helpless": true, "counter": { "max": 3, "label": "Death Marks", "atMax": "Three Death Marks. You're dead, and your options are seriously limited." } }
   ],
 
-  /* GM mode's Help (Decision 274's draft number is N in the order; see SCHEMA §4): the words the ? panel, the guide lines and
+  /* GM mode's Help (Decision 278): the words the ? panel, the guide lines and
      the empty states read, so Deighton and Scott edit them here and nowhere else. `contexts` has one entry per section and per
      page a table can show (`helpContext()` in gm.js names it); `words` defines each term once and a context lists them by id;
      `night` is A night at the table; `empty` is the sections' empty states; `ui` is the panel's own labels. **bold** is a button
@@ -5199,7 +5199,7 @@ window.SHADOWS_DATA = {
         "when": [
           "during"
         ],
-        "for": "A fight in progress, in turn order. **Next turn** (N) moves to whoever acts next; open a row to take a hit, add a Condition or hold a turn.",
+        "for": "A fight in progress, in turn order. **Next turn** (N) moves to whoever acts next; each row has **Hit** and **Heal**, and **More** adds a Condition or a Delay.",
         "words": [
           "round",
           "nextTurn",
@@ -5348,7 +5348,7 @@ window.SHADOWS_DATA = {
       },
       "status": {
         "term": "Status",
-        "text": "Where someone stands: alive, dead, missing, or out of the picture. **In play** shows everyone who still matters."
+        "text": "Where someone stands: alive, dead, missing, or out of the picture. **In play** shows the ones who are alive or missing."
       },
       "affiliation": {
         "term": "Affiliation",
@@ -5420,11 +5420,11 @@ window.SHADOWS_DATA = {
       },
       "combatSense": {
         "term": "Combat Sense",
-        "text": "What sets the turn order. If the fight has changed at a round's end, each side rolls it again."
+        "text": "What sets the turn order. In a fight run by waves, each side rolls it again at a round's end if the fight has changed."
       },
       "strip": {
         "term": "The strip",
-        "text": "The line under the header while a session is open or a fight runs: the round and who acts, the current thread, the clock nearest full, and **Unexported**. Tap any of it to go there."
+        "text": "The line under the header while a session is open or a fight runs: the round and who acts, who's down, the current thread, the clock nearest full, and **Unexported**. Tap any of it to go there."
       },
       "unexported": {
         "term": "Unexported",
@@ -5432,7 +5432,7 @@ window.SHADOWS_DATA = {
       },
       "find": {
         "term": "Find",
-        "text": "Searches the whole table: cast, sessions, lines, threads, notes and encounters. **F** opens it."
+        "text": "Searches the whole table: cast, sessions, lines, threads, notes, encounters, places, factions, clocks and players. **F** opens it."
       },
       "jot": {
         "term": "Jot",

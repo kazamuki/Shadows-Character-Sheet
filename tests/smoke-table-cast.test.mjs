@@ -110,7 +110,7 @@ test("Decision 171: notes save as they're typed and survive a reload; Delete ask
   const app = boot({ storage: GM_ON });
   runTable(app, "Notes table");
   notesTab(app);
-  assert.match(app.$("#main").textContent, /Nothing on file yet. What you write here stays with the table/);
+  assert.match(app.$("#main").textContent, /Nothing on file yet. Write down what you don.t want to forget/);
   app.click("[data-tnew]");
   assert.equal(app.doc.activeElement && app.doc.activeElement.hasAttribute("data-ntitle"), true, "New note didn't focus its title");
   const id = app.doc.activeElement.dataset.ntitle;
@@ -302,7 +302,7 @@ test("Decision 176: the Cast tab has quick-add and the filters, with Notes besid
   assert.equal(app.window.eval("S.tsection"), "cast");
   assert.deepEqual(app.$$("#topnav .tab").map(b => b.textContent.trim()), ["Sessions", "Players", "Cast", "City", "Threats", "Encounters", "Reference", "Notes"]);
   assert.ok(app.$("[data-cadd-name]") && app.$("[data-csearch]"));
-  assert.match(app.$("#main").textContent, /Nobody yet\. The city fills up fast\./);
+  assert.match(app.$("#main").textContent, /Nobody yet\. The city fills up fast: add the people the crew meets/);
   notesTab(app);
   assert.ok(app.$("[data-tnew]"));
   app.click("[data-tnew]");
