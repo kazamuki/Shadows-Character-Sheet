@@ -5588,6 +5588,24 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** GMs keep Help open all night (it wants another shape), or a player's sheet asks for the same.
      - **Built:** app 0.67.0; PR #323; log 2026-11-12 (S31).
 
+279. **Character Points' Disadvantage and Advantage lists show what's taken, and the rest a press away.**
+     *2026-11-12 · Ken + Claude · Touches: renderCP, details.group, Disadvantages list, Advantages list, applyPickFilter, data-filterable, data-cp-list, Held only, S.cpAll, data-cp-all, showAllOptions, E1c*
+     - **Decided:** Each list draws every entry as today, but entries the character doesn't hold are hidden until the player presses **Show all N**, which opens that list (and reads Show fewer once open). A held entry always shows. While the filter has text, it decides what shows in both lists, folded or not, and clearing it restores the fold. Held only is unchanged. The fold is browser state (`S.cpAll`), reset when the step is left or the character changes, as Decision 276's is, and it applies with Expert mode on or off. `applyPickFilter` is the one place a pick's `hidden` is decided; it is passed the fold state.
+     - **Why:** On a phone the step was 35,220px, nearly all of it two lists of book text; folded it is 2,480px. A first-timer sees the step's shape (what gives CP, what costs it, what else it buys) and opens a list to browse it. The `<details>` the lists sat in could close, but closing one hid what had been taken.
+     - **Rejected:** closing the `<details>` by default (it hides held picks); clamping each description to two lines (the book text is the help a first-timer needs, and 87 clamped cards are still about 13,000px); grouping by category (the data has none); not rendering folded entries (the filter searches the rendered page, Decision 114); folding only with Expert mode off (a veteran also scrolls past 87 to reach Boosts; the filter is their path anyway).
+     - **Replaces:** nothing. (Decision 114's filter, and its rule that a held pick always shows, stand. So do 232's Held only and Expert folds.)
+     - **Revisit if:** the data gains categories, which would make a list grouped and folded by category the better shape.
+     - **Built:** app 0.67.1 (patch), no schema bump, PR #324, log 2026-11-12 (E1c).
+
+280. **The Natural Advantage panel folds what wasn't allocated, once every rank is.**
+     *2026-11-12 · Ken + Claude · Touches: naturalAdvantagePool, the Natural Advantages panel, renderArchetype, data-nat-all, S.natAll, Decision 276, E1c*
+     - **Decided:** Once a specialization's Natural Advantage ranks are all allocated, every pool entry with no rank folds to its name and maximum rank, and one press of **Show all** opens them again; an allocated entry stays in full. Until then the panel is as today. The fold is browser state (`S.natAll`), reset where 276's is, and when the subtype changes.
+     - **Why:** The panel was a slab of a phone's Archetype step after the choice was made: the same shape Decision 276 folded for subtypes, met one panel further down.
+     - **Rejected:** folding before the ranks are allocated (the descriptions are how a first-timer chooses); folding the Focused Skill picker too (its options are one-line toggles already).
+     - **Replaces:** nothing. Extends Decision 276's fold to the Natural Advantage pool (Decision 134).
+     - **Revisit if:** an archetype's pool grows past what one fold row should hide.
+     - **Built:** app 0.67.1 (patch), no schema bump, PR #324, log 2026-11-12 (E1c).
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data

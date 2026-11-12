@@ -851,7 +851,10 @@ function jumpTo(id){
 // every .desc, folded or not, since textContent reads text that's hidden. A
 // skill row (.alloc-row) filters the same way, and takes its picks with it.
 // `held` (Held only) hides whatever the character doesn't hold.
-function applyPickFilter(root, q, { held=false }={}){
+// `fold` (Decision 279) names the lists ([data-cp-list]) that are open; one that isn't shows only what's held,
+// until the filter has text. This is the one place a pick's `hidden` is decided, so a redraw and a cleared
+// filter can't disagree about it.
+function applyPickFilter(root, q, { held=false, fold=null }={}){
   const k=String(q||"").trim().toLowerCase(); let shown=0, total=0, heldN=0;
   root.querySelectorAll("[data-filterable] .pick, [data-filterable] .alloc-row").forEach(p=>{
     const isRow = p.classList.contains("alloc-row");
@@ -859,7 +862,9 @@ function applyPickFilter(root, q, { held=false }={}){
     const text = `${name} ${isRow ? "" : [...p.querySelectorAll(".desc")].map(d=>d.textContent).join(" ")}`.toLowerCase();
     const mine = !isRow && p.hasAttribute("data-held");   // bought, or held as natural ranks only
     total++; if (mine) heldN++;
-    const hit = held ? mine : (!k || mine || text.includes(k));
+    const list = fold ? (p.closest("[data-cp-list]")||{dataset:{}}).dataset.cpList : null;
+    const folded = !!list && !fold[list];
+    const hit = held ? mine : k ? (mine || text.includes(k)) : (mine || !folded);
     p.hidden = !hit; if (hit) shown++;
     // A skill's picks (Martial Arts styles) follow the row they belong to.
     if (isRow) for (let n=p.nextElementSibling; n && n.classList.contains("picks"); n=n.nextElementSibling) n.hidden = !hit;

@@ -35,7 +35,7 @@
 
 - **Tier:** *Rule or shape*: where a creation list's entries show is a player-facing behaviour someone could have chosen otherwise.
 - **Versions:** app **patch** (EQ16). Game data, character, table and pack schemas unchanged: the fold is browser state, and the new `appCopy` keys are words (Decision 68). No `migrate()` step.
-- **Numbers:** two decisions, **N** and **N+1**, the next free numbers on `origin/main` when built (278–279 if nothing lands first). No flags.
+- **Numbers:** two decisions, **N** and **N+1**, the next free numbers on `origin/main` when built (278–279 if nothing lands first; S31 took 278 first, so E1c was built as **279–280**). No flags.
 
 ## 3. Decisions, drafted in full
 
@@ -109,9 +109,9 @@ No data, save-file or engine change. Browser state only: `S.cpAll` and `S.natAll
 ## 9. The UI
 
 **Each list, folded** (the top of the list, under its section heading):
-> **None taken.** *Disadvantages give you Character Points to spend.* **[Show all 30 Disadvantages]**
+> **None taken.** **[Show all 30 Disadvantages]**
 
-and, once one is taken, the held picks in full, then **[Show all 30 Disadvantages]**. For Advantages: *"Advantages cost Character Points."* *(Voice pass.)* Once open, the button reads **Show fewer** and sits in the same place, so pressing it twice in a row toggles.
+and, once one is taken, the held picks in full, with the button above them (the row sits at the top of the list, so the button stays in one place as the list toggles). Advantages read the same: **None taken.** **[Show all 57 Advantages]**. *(Ken's voice pass, 2026-11-12: no sentence on what each list is for.)* Once open, the button reads **Show fewer** and sits in the same place, so pressing it twice in a row toggles.
 
 **The filter:** unchanged. With text, matches show from both lists whether folded or not, and "N of M" counts them.
 

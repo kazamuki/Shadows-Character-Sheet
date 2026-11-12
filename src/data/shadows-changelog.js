@@ -2,10 +2,12 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
-    "version": "0.67.0",
+    "version": "0.67.1",
     "date": null,
     "intro": [],
     "items": [
+      "**Character Points opens with its Disadvantages and Advantages folded away.** What you've taken stays in view, and Show all opens a list. The filter still finds anything.",
+      "**Once you've allocated your Natural Advantages, the ones you didn't take fold away, and Show all brings them back.**",
       "**Every table page has Help.** Press **?** (the button in the header, or the key) for what the page is for, when you'd use it, and what its words mean.",
       "**A night at the table** walks through what to use before, during and after a session, and **Every word** lists every word GM mode uses, A to Z.",
       "**Each section has a one-line guide**, and Help's **Guide lines** switch turns them off.",

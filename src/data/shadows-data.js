@@ -4032,6 +4032,7 @@ window.SHADOWS_DATA = {
     "showAllOptions": "Show all {n} {label}s",
     "demandsTitle": "Which archetype choices need minimum stats",
     "showFewerOptions": "Show fewer",
+    "cpNoneTaken": "None taken.",
     "statusLabel": {
       "draft": "in progress",
       "tbd": "not written yet",
