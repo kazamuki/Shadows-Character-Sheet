@@ -1692,7 +1692,7 @@ function renderShProgression(){
   const head = sheetHeader("Progression", `Logging a session grants <em>${D.ip.perHour} IP an hour of play</em> (change it below if your table runs different), 1 Milestone Point, and refreshes LUCK — it only resets when a session truly ends.`);
   let h = logSessionHtml(ch, secs);
 
-  h += secs.sect("IP") + `<div class="trk"><h2>IP</h2><span class="big ${ip.available<0?"bad":""}">${ip.available}</span>
+  h += `<div class="trk" ${secs.at("IP")}><h2>IP</h2><span class="big ${ip.available<0?"bad":""}">${ip.available}</span>
     <span class="sub" style="flex-basis:auto">earned ${ip.earned} · spent ${ip.spent}</span>
     <input type="number" min="0" data-ipamt placeholder="amount" aria-label="IP grant amount">
     <input type="text" data-ipnote placeholder="note (e.g. Improved roll, GM bonus)" aria-label="IP grant note">

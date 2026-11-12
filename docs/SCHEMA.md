@@ -1599,6 +1599,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
     chip + human label; the newest row carries an inline undo (↶). An admin-only
     "Clear activity log" is offered (guarded; not undoable — it drops history, not
     values). (Ken, 2026-06-16)
+    → **Superseded by Decision 281**: the Activity Log lives on Progression, under History.
 51. **(Phase 3.3)** **Admin mode reaches everything, incl. archetype + power
     level.** Toggled from the kebab menu; a sticky gold **ADMIN** banner reminds
     you it's on and offers Open-editor / Exit. The editor (a hidden `admin`
@@ -2523,6 +2524,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
     jsdom has no layout. Treat any further addition to that column as a page
     break. App **0.11.0 → 0.12.0** (minor, new capability). (Ken + Claude,
     2026-09-22)
+    → **Superseded in part by Decision 283**: Trackers' full cards go, and the note field and the rule's notice are in Main's opened chip.
 
 97. **(Design-team rulings, 2026-09-22 — rules + data + engine)** **Four
     flags close on a ruling from the design team (Scott + Deighton), and a
@@ -3031,6 +3033,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
       Main's active chips open their effect and recovery in place, where
       before they only had a hover tooltip.
     App **0.16.0**, shared with Decision 106. (Ken + Claude, 2026-09-23)
+     → **Superseded in part by Decision 283**: the palette is on Main only.
 
 108. **(The Grimoire reads the book — magic plan Session 1, schema 0.9,
     data + engine + app)** **A Grimoire row is a book spell or your own, and
@@ -4064,6 +4067,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** powers gain a price list or ranks (Decision 153's Revisit), or a GM wants free rewording in play without Admin.
      - **Built:** app 0.34.0; `engine.test.mjs` and `smoke.test.mjs`, mutation-tested. Log 2026-10-01.
      → **Superseded in part by Decision 194**: Add power in play costs `0450`'s new-power price, not the GM's; Improve is unchanged.
+     → **Superseded in part by Decision 282**: the power cards are on Character.
 
 
 155. **A TAGless character's number reads without its TAG- prefix; the stored number keeps it.**
@@ -4114,6 +4118,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** an archetype's reference grows so long the Advantages are hard to reach, or the print sheet's archetype page wants the same order.
      - **Built:** app 0.35.0, no data or schema bump; `smoke.test.mjs`, mutation-tested. Log 2026-10-01.
      → **Superseded in part by Decision 168** — traits, powers and vulnerabilities flow into columns by the page's width, not a column each; the archetype sits beside its core mechanic.
+     → **Superseded in part by Decisions 281 and 282**: seven tabs, and Character holds what the archetype lets you do.
 
 159. **Progression's Raise a Stat and Raise a Skill are buttons that open a modal; a raise keeps it open.**
      *2026-10-01 · Ken + Claude · Touches: Progression tab, Raise a Stat, Raise a Skill, Learn a new skill, openRaisePicker, raiseIP, data-raiseopen, data-ipbuy, Milestones, IP Journal, openModal*
@@ -4624,6 +4629,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. Extends Decision 15's panels (a toggle option can do something) and 135 (`costFrom` names the key it reads).
      - **Revisit if:** a buff with a duration (Apex Fury, Moonsworn, Adaptive Skeleton) should compute too; that's an activation, not a form.
      - **Built:** app 0.39.0, game data 0.31; tests mutation-tested. Log 2026-10-08 (P3).
+     → **Superseded in part by Decision 282**: Main is the switch's only home; Loadout's copy goes.
 
 196. **A Werewolf carries `0414`'s whole kit: every Innate power and its Origin's at rank 1, raised with IP; three Origins with Shifting, Refuel, Need, a starter power and withdrawal steps; Call of the Wild as a stepper; Resilient Spirit retired.**
      *2026-10-08 · Ken + Claude · Touches: archetypes[].powers, origin, perRank, maxRank, archetypePowers, powerRanks, powerAllowance, Base Powers, Max Starting Rank, F38, vulnerabilities origin, EMP, powersText, features, withdrawal, starterPower rows, Aspect of the Beast, CyberWolf Protocol, stepsFrom, Call of the Wild, Wildblood, Forge Fang, Lunar Phase Blessing, Resilient Spirit, additionalPowers, F7, P3, VQ10–VQ15*
@@ -5107,8 +5113,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 134 in part: a locked character short of a pick chose it in the Loadout panel; it now chooses it at the top of whichever tab is open, and the panel keeps a line pointing there.
      - **Revisit if:** another creation choice can go missing on a locked character (a Base Power, a Natural Advantage) and wants the same ask; then the block becomes a list of what's owed.
      - **Built:** app 0.53.0, game data 0.46, no schema bump, PR #227. Log 2026-10-23 (Y1).
-
-     → **Superseded in part by Decision 273** — the picker opens in a dialog from a one-line ask; the ask, its tabs and its words stay.
+     → **Superseded in part by Decisions 273 and 282** — the picker opens in a dialog from a one-line ask (273); the Focused Skills panel and its line are on Character (282); the ask, its tabs and its words stay.
 
 239. **CRANK is back: the team kept it, so `FEATURES.crank` is true and every player sees CRANK again.**
      *2026-10-23 · Ken + Claude · Touches: CRANK, FEATURES, featureOn, crankOn, ?crank=on, ?crank=off, shadows.feature.crank, Main CRANK card, Trackers CRANK section, Admin CRANK rep, print front page, blank sheet, launch line, W101*
@@ -5537,6 +5542,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 238 in part: the picker moves from the top of each tab into a dialog opened from there; the ask itself, its tabs, its words and the Loadout panel's line stay.
      - **Revisit if:** another creation choice can go missing on a locked character (238's own condition); then the line becomes a list of what's owed, each with its button.
      - **Built:** app 0.66.1 (patch), no data or schema bump, PR #317, log 2026-11-11 (E1a).
+     → **Superseded in part by Decision 282**: the Focused Skills panel and its line are on Character.
 
 274. **A creation step says what's left to do in a neutral tone; only something wrong is an error.**
      *2026-11-11 · Ken + Claude · Touches: validate, todo, issuesHtml, wizWhyHtml, wiznav-why, .issues li.todo, wizardRailHtml, appCopy.leftToDo, appCopy.toFix, appCopy.railEmpty, Decision 161, Decision 162, E1b*
@@ -5605,6 +5611,33 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. Extends Decision 276's fold to the Natural Advantage pool (Decision 134).
      - **Revisit if:** an archetype's pool grows past what one fold row should hide.
      - **Built:** app 0.67.1 (patch), no schema bump, PR #324, log 2026-11-12 (E1c).
+
+281. **The sheet has seven tabs: Session Log is part of Progression, and Loadout & Powers is Loadout.**
+     *2026-11-12 · Ken + Claude · Touches: SHEET_SECTIONS, LEGACY_SECTION, normSection, SHEET_RENDER, renderShProgression, Session Log, Progression tab, Activity Log, Undo, data-undolast, Log a session, History, jump bar, sectionList, Loadout tab, tab row, RO_SECTIONS, phone-check TABS, E2a*
+     - **Decided:** The tabs are Main, Skills, Character, Trackers, Progression, Loadout and Notes. Progression holds what happens between sessions, in this order: Log a session; IP, with its spends and journal; Milestones; History; the Activity Log with Undo. A jump bar under its title reaches each, one row as Character's and Loadout's are. Loadout & Powers is renamed Loadout. A saved `sessions` section opens Progression. GM mode's read-only sheet follows `SHEET_SECTIONS`.
+     - **Why:** Logging a session grants the IP and Milestone Points that Progression spends, so they're one between-sessions page, and the history sits beside what it earned (E2's shape, EQ18). Undo had been filed under a session log. "& Powers" named what now lives on Character. One fewer tab helps a row that scrolls on a phone.
+     - **Rejected:** keeping Session Log and moving only Undo (two between-sessions tabs); Undo in the ⋮ menu (EQ21: the toast covers the mid-scene case); History and the Activity Log first (logging a session and spending what it earned are the page's work; the jump bar reaches the log in one tap).
+     - **Replaces:** Decision 158 in part (eight tabs, now seven); Decision 50 (the Activity Log lives on Progression, under History, not on Session Log).
+     - **Revisit if:** players look for Undo on Trackers or Main after the toast is gone (EQ21's wish), or the merged page grows past what its jump bar makes easy.
+     - **Built:** app 0.68.0 (minor), no schema bump, PR #…, log 2026-11-12 (E2a).
+
+282. **What you can do lives on Character, and what you carry on Loadout. Main is the only home of a toggle.**
+     *2026-11-12 · Ken + Claude · Touches: renderShCharacter, renderShLoadout, archPanels, rankedList panel, grimoire panel, powers panel, powersPanelHtml, powerCardHtml, focusedSkills panel, specializationText panel, Tweak, toggle panel, togglePanelHtml, table panel, Installed Cybernetics, Disciplines, Grimoire, arch-flow, arch-part, arch-wide, Character jump bar, tab-links, focusedOwedLines, Main Form switch, The Code, E2a*
+     - **Decided:** An archetype's `rankedList`, `grimoire`, `powers`, `focusedSkills` and `specializationText` panels render on Character, each a section of its own in Decision 246's grid, before Advantages. Each shows once: where a `rankedList` panel is declared, its table (ranks with descriptions) is the Disciplines section; where a `powers` panel is declared, it is the Powers section in place of the read cards; a tweak shows in its panel, not again on the subtype's card (EQ26). Loadout holds Weapons, Armor, Gear and `table` panels (EQ23). Main draws every `toggle` panel, and Loadout none.
+     - **Why:** "Where's my power?" took one to two taps, and you had to know your archetype to know the tab. Spells were filed with weapons. Character already held the powers as reference (EQ19). A form switch on two tabs was two homes for one control, and shifting is a combat action (Decision 195).
+     - **Rejected:** a Powers tab (an eighth tab back, and the reference split from what it explains); Cybernetics on Character (EQ23); keeping Loadout's switch (two homes); Main drawing only a toggle that does something (a new toggle would have no home, Decision 135).
+     - **Replaces:** Decisions 154, 195, 238, 273 and 158, each in part: a character's own powers and the Focused Skills panel are on Character, the switch is on Main alone, and Character holds what the archetype lets you do. Decisions 110, 201 and 246 stand.
+     - **Revisit if:** an archetype gains a panel that is both something you can do and something you carry (a bonded weapon), or Character grows so long that its jump bar no longer reaches Advantages easily.
+     - **Built:** app 0.68.0 (minor), no schema bump, PR #…, log 2026-11-12 (E2a).
+
+283. **Conditions live on Main: Trackers' copy goes, and Main's opened chip holds the note and the rule.**
+     *2026-11-12 · Ken + Claude · Touches: conditionsHtml, conditionInfoHtml, conditionAddHtml, data-condinfo, data-condnote, cond-note, S.condInfo, Conditions section, Trackers tab, Main tab, Pain & Conditions popover, conditionRules.rollPenalty, conditionRules.penaltyStacking, conditionRules.noStacking, ruleHtml, E2a*
+     - **Decided:** Conditions are on Main and in the Pain & Conditions popover, as chips with Add a Condition, Death Marks and the Helpless banner, as today. Trackers has no Conditions section. Opening a chip shows its effect and recovery, as today, and also its note field and, if it carries a roll penalty, the stacking rule (EQ24). Each note edit is the one undoable action it was. `conditionsHtml`'s full density goes.
+     - **Why:** Conditions change the totals a player rolls, and Main is the in-fight page (EQ20). Two tabs held the same controls. The note and the rule were all Trackers' copy had that Main's didn't, and a tap on the chip is where a player already reads a Condition.
+     - **Rejected:** keeping Trackers' cards (EQ20); dropping the note field (a note is stored, and the poison's source is what the table asks about later); the stacking rule always under the chips (height on Main for a line read once); the note field on every chip (a row of inputs under each chip on a phone).
+     - **Replaces:** Decision 96 in part (its full cards with effect, recovery and a note field on Trackers; the rule's notice "on Trackers only when a Condition it governs is active" now shows in that Condition's opened chip); Decision 107 in part (its "Both tabs show a collapsible palette": Main's only).
+     - **Revisit if:** players miss a Condition's text in full without a tap, or a GM's notes outgrow one line.
+     - **Built:** app 0.68.0 (minor), no schema bump, PR #…, log 2026-11-12 (E2a).
 
 ## 5. Open Flags
 

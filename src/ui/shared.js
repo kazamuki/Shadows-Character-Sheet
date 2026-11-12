@@ -794,7 +794,9 @@ function sectionList(prefix){
   const list=[];
   return { list, sect(label, html){
     const id=`${prefix}-${list.length}`; list.push({ id, label });
-    return `<div class="sect" id="${id}" tabindex="-1">${html==null?esc(label):html}</div>`; } };
+    return `<div class="sect" id="${id}" tabindex="-1">${html==null?esc(label):html}</div>`; },
+    // A card that is its own heading (Progression's IP) takes the jump's id instead of getting a heading of its own.
+    at(label){ const id=`${prefix}-${list.length}`; list.push({ id, label }); return `id="${id}" tabindex="-1"`; } };
 }
 // `filter` adds a search box over the page's [data-filterable] picks (W22);
 // `extra` is anything else the bar should keep in view. `row` (W45) keeps

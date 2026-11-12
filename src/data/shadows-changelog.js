@@ -2,10 +2,13 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
-    "version": "0.67.1",
+    "version": "0.68.0",
     "date": null,
     "intro": [],
     "items": [
+      "**The sheet has seven tabs.** Session Log is now part of Progression: log a session, spend what it earned, and find your history and Undo in one place. A sheet you left on Session Log opens there.",
+      "**Powers, Disciplines, your Grimoire, Focused Skills and your Tweak are on Character now**, with the rest of what your archetype lets you do. Loadout holds what you carry.",
+      "**A form switch is on Main, where you fight. Conditions live on Main too:** tap one to read it, type its note, or see how penalties stack.",
       "**Character Points opens with its Disadvantages and Advantages folded away.** What you've taken stays in view, and Show all opens a list. The filter still finds anything.",
       "**Once you've allocated your Natural Advantages, the ones you didn't take fold away, and Show all brings them back.**",
       "**Every table page has Help.** Press **?** (the button in the header, or the key) for what the page is for, when you'd use it, and what its words mean.",
