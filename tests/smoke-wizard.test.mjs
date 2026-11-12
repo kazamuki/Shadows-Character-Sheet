@@ -553,6 +553,22 @@ test("Decision 273: a pick that leaves more owed keeps the dialog open", () => {
   assert.deepEqual(app.errors, []);
 });
 
+test("Decision 273: the toast's Undo with the dialog open redraws the dialog from the character", () => {
+  const ch = lockedCharacter();
+  ch.identity.archetype = "professional";
+  ch.archetypeChoices.specialization = ["cleaner"];
+  const app = openSheet(ch, "main");
+  app.click("[data-fowedopen]");
+  app.click(`#modal [data-fpick="${app.$$("#modal [data-fpick]").find(b => !b.disabled).dataset.fpick}"]`);
+  assert.match(app.$("#modal").textContent, /1\/2 chosen/);
+  app.click("[data-toastundo]");
+  assert.equal(activeChar(app).archetypeChoices.focusedSkillPicks.length, 0);
+  assert.ok(modalOpen(app), "Undo closed a dialog that is still owed a pick");
+  assert.match(app.$("#modal").textContent, /0\/2 chosen/, "the dialog kept the undone pick's count");
+  assert.equal(app.$$("#modal .pick.selected").length, 0, "the dialog still marks the undone pick Chosen");
+  assert.deepEqual(app.errors, []);
+});
+
 // ── Read it or label it (Decision 135) ────────────────────────────────
 const withDisciplines = d => d.archetypes.find(a => a.coreMechanic && a.coreMechanic.disciplines);
 

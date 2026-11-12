@@ -3209,10 +3209,21 @@ function openRaisePicker(type){
 
 // ── The Focused Skill pick, in a dialog (Decision 273; picks are Decision 134) ──
 // Opened by the tab's one-line ask. commit() re-renders #main, not the dialog,
-// so each pick redraws the dialog's own body; the last one closes it.
+// so update() calls refreshFocusedPicker, which redraws the dialog's own body and closes it on the last pick.
 function focusedPickBodyHtml(ch){
   return focusedOwedLines(Engine.focusedPicks(ch)).map(l=>`<p class="step-note">${esc(l)}</p>`).join("")
     + focusedPickHtml(ch, "data-fpick");
+}
+// Any render (a pick, or the toast's Undo) leaves the dialog showing what the
+// character now owes: redrawn while picks are owed, closed once they're complete.
+function refreshFocusedPicker(){
+  const host = document.querySelector("#modal[open] [data-fpickbody]"); if (!host) return;
+  const fp = S.ch && Engine.focusedPicks(S.ch);
+  if (!fp || fp.complete){
+    closeModal();
+    // The Choose button went with the last pick, so nothing got focus back.
+    if (!document.activeElement || document.activeElement===document.body) toastLanding();
+  } else keepPlace(host, ()=>{ host.innerHTML = focusedPickBodyHtml(S.ch); }, ["#modal-title"]);
 }
 function openFocusedPicker(){
   const ch = S.ch; if (!ch) return;
@@ -3225,12 +3236,6 @@ function openFocusedPicker(){
         const id=b.dataset.fpick, name=(Engine.skillById(id)||{name:id}).name;
         const had=(S.ch.archetypeChoices.focusedSkillPicks||[]).includes(id);
         commit("loadout", had?`Focused Skill removed: ${name}`:`Focused Skill: ${name}`, ()=>{ Engine.toggleFocusedPick(S.ch, id); });
-        const fp = Engine.focusedPicks(S.ch);
-        if (!fp || fp.complete){
-          closeModal();
-          // The Choose button went with the last pick, so nothing got focus back.
-          if (!document.activeElement || document.activeElement===document.body) toastLanding();
-        } else keepPlace(host, ()=>{ host.innerHTML = focusedPickBodyHtml(S.ch); }, ["#modal-title"]);
       };
     } });
 }

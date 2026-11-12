@@ -199,7 +199,7 @@ function renderMain(){
     landedNow = null; issuedNow = false;
     renderDrawer();
     bindMain(); bindSheet();
-    refreshPopover();
+    refreshPopover(); refreshFocusedPicker();
     return;
   }
   closeVitals(); renderDrawer(); closePopover(false);   // a pinned panel goes with the sheet
