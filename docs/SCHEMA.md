@@ -5531,7 +5531,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** a dialog that opens by itself (238's reason: it blocks the sheet for a choice that can wait a tap); the picker on Main only (238: the sheet reopens on the tab it was left on); a Dismiss (238: a short pick is an unfinished character); keeping the version numbers in the line (EQ4; the footer shows the current version).
      - **Replaces:** Decision 238 in part: the picker moves from the top of each tab into a dialog opened from there; the ask itself, its tabs, its words and the Loadout panel's line stay.
      - **Revisit if:** another creation choice can go missing on a locked character (238's own condition); then the line becomes a list of what's owed, each with its button.
-     - **Built:** app 0.66.1 (patch), no data or schema bump, PR #…, log 2026-11-11 (E1a).
+     - **Built:** app 0.66.1 (patch), no data or schema bump, PR #317, log 2026-11-11 (E1a).
 
 ## 5. Open Flags
 
