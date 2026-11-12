@@ -51,8 +51,8 @@ const painWhyLine = pain => [painExtra(pain) ? `${signed(painExtra(pain))} Lv fr
 const painChip = pain => pain.level
   ? ` <span class="chip pain">Pain Lv ${pain.level} · ${pain.skillPenalty} skill</span>` : "";
 
-// ── Conditions (Decision 95) — one renderer, two densities: Main shows chips,
-// Trackers shows each Condition's effect and recovery text. Everything shown
+// ── Conditions (Decision 95) — one renderer, Main's and the Pain & Conditions
+// popover's: chips that open their text (Decision 283). Everything shown
 // comes from Engine.conditionState() and the catalog; nothing is decided here.
 // W14: adding is one click on a chip from the catalog. A body-part Condition
 // asks where first (S.condPick), and one you already have is greyed out.
@@ -1549,7 +1549,7 @@ function renderShTrackers(){
   let h = sheetHeader("Trackers", "Current state only — every maximum on this page is computed and recalculates the moment an input changes.");
 
   // W1: two columns on a wide screen. The body (Damage with its Health
-  // Levels, recovery, Armor, Pain, Conditions) reads down the left; the rest
+  // Levels, recovery, Armor, Pain) reads down the left; the rest
   // (Sanity, LUCK, archetype trackers, Çredits) down the right. One column on
   // a phone, in the same order.
   h += `<div class="trk-grid"><div class="trk-col">`;

@@ -338,7 +338,7 @@ const landedCls = (what, i) => !landedNow ? "" : what==="hp" ? " struck"
 
 // W12 — undo where the action happened. Every commit() that changed something
 // offers its own undo for a few seconds, through the same LIFO undo the
-// Session Log uses (Decision 49). It undoes only if that action's own audit
+// Activity Log on Progression uses (Decision 49). It undoes only if that action's own audit
 // entry is still the newest one (by identity: a seq is reused once an undo
 // pops it), so a leftover toast can't take back a later action. Lives outside
 // #main so a re-render doesn't wipe it.
@@ -1071,7 +1071,7 @@ function focusedPickHtml(ch, attr){
   }).join("");
 }
 // What a locked character is still owed in Focused Skills (Decision 238): one helper for
-// the block at the top of the tab and the Loadout panel's lines, so the words can't drift.
+// the block at the top of the tab and Character's Focused Skills lines, so the words can't drift.
 // `away` is the panel's: the picker is at the top of the tab, not beside the line.
 function focusedOwedLines(fp, away){
   if (!fp || fp.complete) return [];
