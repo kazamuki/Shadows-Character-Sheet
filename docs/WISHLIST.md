@@ -131,7 +131,7 @@ print renderer for a skill row; the line is `Engine.maneuverChecks`, so print on
 *To respect:* Decision 229. Player-visible: a CHANGELOG line and a patch bump.
 
 **W133 — The game's words inside a sentence are a tap away too.** *Ken, from P21's voice pass · 💡 · Rule or shape · raised 2026-10-21*\
-**Plan:** none yet
+**Plan:** weighed by [finding-things-on-the-sheet](plans/finding-things-on-the-sheet.md) E2 (EQ1): its proposal says whether it joins the pass
 
 Reading Night Eyes' attack line ("In Dark, your attacks take −1 instead of −3; in Blind, −3 instead of −5"), Ken had to ask what Dim and Dark were. Decision 139 already puts a rule a hover or tap away (`data-tip`, `TIPS` in `shared.js`), but only for a tag, a stat score and a few fixed panels. A term inside a **sentence the app writes** is plain text: a light level, *Kicker Die*, *Take X*, *Defensive Action*, a Condition named in a mark, *Pain Level*. The player has to know it already, or go and find it.
 The shape: a list of game terms in the data, each with the rule it opens (a sentence, or a table such as `visibility`, drawn with its numbers). The renderer wraps each known term it finds in a Skill-row mark, an attack or check note, a rest line or a `playerNote` as a tip trigger. Hover or focus shows the tip, and a tap pins it, as Decision 139's do.
@@ -683,6 +683,19 @@ It carries W29's stages 2–3. *It must respect:* constraint 1 (the folder copy
 never needs it, and can't sign in), the player owning the character, and
 `migrate()` as the gate on every copy that comes down.
 
+**W147 — An old file with no TAG opens as a new character every time.** *Claude, from the sheet critique with the TestCharacters · 🔎 · Fix · raised 2026-11-11*\
+**Plan:** none yet
+
+A file saved before characters carried a TAG has no `meta.id`, so `migrate()`
+mints a fresh one on each load (`engine.js`, `newIntakeId()`). Import the same
+old file twice and Home shows two copies of the character. The older-copy guard
+(B18) can't help, because the two never share an id. Four of the five local
+test characters were like this. *To respect:* `migrate()` stays total and keeps
+minting for a file that truly has none (constraints 8 and 10); a player
+importing a different character with the same name must still get a second
+entry. One shape to weigh is matching an id-less file to a saved character by
+`meta.created` and name, with the player confirming.
+
 ### GM mode
 
 W29 is the whole of GM mode. The rest are Ken's notes from playing with the
@@ -1102,7 +1115,7 @@ and the `ui` keys change, with no layout change since the slots are the same siz
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W147.** Everything above is open. What was built is in
+- **Next free number: W148.** Everything above is open. What was built is in
   [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)
