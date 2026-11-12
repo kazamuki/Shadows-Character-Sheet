@@ -396,6 +396,7 @@ test("B12: the wizard asks a Mercenary for its fifth Focused Skill, and Jack's c
   app.click('[data-fskill="rifles"]');
   assert.equal(draft(app).archetypeChoices.focusedSkillPicks.join(), "rifles");
   assert.ok(app.$('[data-fskill="melee"]').disabled, "a second pick is offered when one is the count");
+  app.click("[data-spec-all]");   // Decision 276: the unchosen Subtypes fold once one is picked
   const jack = app.$('[data-spec="jack-of-all-trades"]').closest(".pick");
   // F33 closed (0412): the rule is in the benefit, and nothing says it's unsettled.
   assert.match(jack.textContent, /doesn't raise any skill's starting rank/, "Jack of All Trades doesn't say it raises no starting cap");
@@ -647,11 +648,11 @@ test("Decision 198: the Power Level step offers the book's flat pool, rolling is
   assert.ok(box(), "no box to roll for Stat Points on the Power Level step");
   assert.equal(box().checked, false, "a new character isn't on the flat pool");
   assert.equal(pl.$("[data-stat-method]"), null, "flat and rolled are still an equal choice");
-  assert.match(pl.$("#main").textContent, /Stats 45\s*Skills/, "the Street card doesn't show the flat pool alone");
+  assert.match(pl.$("#main").textContent, /Stat Points 45\s*Skill Points/, "the Street card doesn't show the flat pool alone");
   box().checked = true; box().dispatchEvent(new pl.window.Event("change"));
   assert.equal(draft(pl).creation.statMethod, "rolled");
   assert.ok(box().checked, "the box didn't stay ticked");
-  assert.match(pl.$("#main").textContent, /Stats 40\+1d10\s*Skills/, "the card doesn't show the rolled pool once ticked");
+  assert.match(pl.$("#main").textContent, /Stat Points 40\+1d10\s*Skill Points/, "the card doesn't show the rolled pool once ticked");
   assert.match(pl.$("#main .stat-method").textContent, /Street Level is 40 \+ 1d10 instead of 45/);
   assert.deepEqual(pl.errors, []);
 
@@ -714,7 +715,7 @@ test("the wizard's nav sticks to the screen's bottom, counts what blocks Continu
   assert.ok(count() > 0, "a nameless Custom archetype has nothing to fix");
   assert.equal(app.$('[data-nav="1"]').disabled, true);
   assert.ok(why(), "Continue is disabled and the bar doesn't say why");
-  assert.match(why().textContent, new RegExp(`^${count()} things? to fix first$`));
+  assert.match(why().textContent, new RegExp(`^${count()} left to do$`));
   assert.equal(why().getAttribute("href"), "#wiz-issues");
   assert.ok(above(), "the issues aren't just above the nav");
 
@@ -723,7 +724,7 @@ test("the wizard's nav sticks to the screen's bottom, counts what blocks Continu
   assert.equal(count(), before - 1, "naming the archetype didn't clear its error");
   assert.ok(above(), "a redraw in place put the issues below the nav, or twice");
   assert.equal(app.$$(".wiznav-why").length, 1, "a redraw in place doubled the count");
-  assert.match(why().textContent, new RegExp(`^${count()} things? to fix first$`), "the count didn't follow the redraw");
+  assert.match(why().textContent, new RegExp(`^${count()} left to do$`), "the count didn't follow the redraw");
 });
 
 // ── The wizard on a small screen (Decision 161, W44) ────────────────────
@@ -759,9 +760,9 @@ test("the rail's stats read — until a Stat Point is spent, then their scores (
   const app = newCharacterApp();
   const bod = () => app.$$("#vitals .vfull .vrow").find(r => r.querySelector(".k").textContent.trim() === "BOD");
   const will = () => app.$$("#vitals .vfull .vrow").find(r => r.querySelector(".k").textContent.trim() === "WILL");
+  app.$(`[data-pl="${D.powerLevels[0].id}"]`).dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));   // Decision 274: no rows before a Power Level
   assert.equal(bod().querySelector(".v").textContent, "—", "an unchosen stat reads as a score");
   assert.equal(will().querySelector(".v").textContent, "—", "a value worked out from unchosen stats reads as a score");
-  app.$(`[data-pl="${D.powerLevels[0].id}"]`).dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
   for (const _ of [1, 2]) app.$('[data-nav="1"]').dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
   const up = app.$('[data-step="stat|BOD|1"]');
   assert.ok(up, "no way to raise BOD on the Stats step");
@@ -1053,7 +1054,7 @@ test("P7: a Street character's LUCK + goes off after 2 with its reason, and the 
 
 test("P7: the Campaign Power Level chip reads Max CP Boost", () => {
   const app = onStep("arcanist", "street", "power-level");
-  assert.match(app.$("#main").textContent, /Max CP Boost\s*2/);
+  assert.match(app.$("#main").textContent, /Max Character Point Boost\s*2/);
   assert.doesNotMatch(app.$("#main").textContent, /Max Boost/);
 });
 
@@ -1688,7 +1689,7 @@ test("Decision 265: the Power Level card has no Power cap chip, and the Discipli
   const first = D.creationFlow.steps[0].id;
   const card1 = onStep("arcanist", "street", first);
   assert.doesNotMatch(card1.$("#main").textContent, /Power cap|Max Power Rank/);
-  assert.match(card1.$("#main").textContent, /Max CP Boost/);
+  assert.match(card1.$("#main").textContent, /Max Character Point Boost/);
   const cp = onStep("arcanist", "heroic", "character-points");
   assert.match(cp.$("#main").textContent, /Disciplines — 5 CP per rank · up to \+3 each \(Max CP Boost\)/);
   assert.doesNotMatch(cp.$("#main").textContent, /Max Power Rank/);
@@ -1703,4 +1704,150 @@ test("Decision 265: the Power Level card has no Power cap chip, and the Discipli
   assert.match(ench2.textContent, /rank 1/);
   assert.match(ench2.textContent, /needs Evocation 3/, "a broken prerequisite went quiet on its row");
   assert.deepEqual([card1.errors, cp.errors], [[], []]);
+});
+
+// ── E1b: a first-timer's wizard (Decisions 274 to 277) ──────────────────
+const todoNav = app => (app.$(".wiznav-why") || {}).textContent;
+const specArch = () => D.archetypes.find(a => ((a.specialization || {}).options || []).some(o => o.requires && o.requires.stats));
+const statOpt = () => specArch().specialization.options.find(o => o.requires && o.requires.stats);
+const typeInto = (app, el, v) => { el.value = v; el.dispatchEvent(new app.window.Event("input", { bubbles: true })); };
+
+test("Decision 274: a new character's first step shows what's left to do, not an error", () => {
+  const app = newCharacterApp();
+  assert.equal(app.$$("#wiz-issues li.todo").length, 1);
+  assert.equal(app.$$("#wiz-issues li.error:not(.todo)").length, 0);
+  assert.equal(todoNav(app), "1 left to do");
+  assert.equal(app.$('[data-nav="1"]').disabled, true, "Continue let a missing Power Level through");
+  app.click("[data-pl]");
+  assert.equal(app.$$("#wiz-issues li").length, 0);
+  assert.equal(app.$('[data-nav="1"]').disabled, false);
+  app.click('[data-nav="1"]');
+  assert.equal(app.$$("#wiz-issues li.todo").length, 1, "step 2 doesn't ask for the name as a to-do");
+  assert.equal(app.$$("#wiz-issues li.error:not(.todo)").length, 0);
+  assert.equal(todoNav(app), "1 left to do");
+  // Typing a name redraws the nav in place: the wording must follow.
+  const el = app.$('[data-id="name"]');
+  typeInto(app, el, "Ada");
+  assert.equal(app.$$("#wiz-issues li").length, 0);
+  assert.equal(todoNav(app), undefined);
+  typeInto(app, el, "");
+  assert.equal(todoNav(app), "1 left to do", "the in-place redraw flipped the wording");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 274: a wrong value is an error beside a to-do, and the nav says to fix", () => {
+  const a = specArch(), o = statOpt();
+  const app = onStep(a.id, D.powerLevels[0].id, "archetype", ch => {
+    for (const id of Object.keys(ch.stats)) ch.stats[id].base = D.statRules.base;
+    ch.archetypeChoices.specialization = [o.id];
+  });
+  assert.ok(app.$$("#wiz-issues li.error:not(.todo)").length >= 1, "no unmet requirement shown as an error");
+  assert.ok(app.$$("#wiz-issues li.todo").length >= 1, "no to-do beside it");
+  assert.match(todoNav(app), /^\d+ to fix first$/);
+  assert.match(wizCss(), /\.issues li\.todo\{color:var\(--dim\)\}/, "the to-do tone isn't the neutral one");
+});
+
+test("Decision 274: before a Power Level the rail is one line", () => {
+  const app = newCharacterApp();
+  assert.equal(app.$$("#vitals .vfull .vrow").length, 0, "stat rows before a Power Level");
+  assert.ok(app.$("#vitals .vfull").textContent.includes(D.appCopy.railEmpty));
+  app.click("[data-pl]");
+  assert.ok(app.$$("#vitals .vfull .vrow").length > 0, "choosing a Power Level didn't bring the rows back");
+  assert.ok(!app.$("#vitals .vfull").textContent.includes(D.appCopy.railEmpty));
+});
+
+test("Decision 275: no card or chip says 'in progress'; an unwritten archetype still says so", () => {
+  const draftLabel = D.appCopy.statusLabel.draft;
+  assert.ok(D.archetypes.some(a => a.status === "draft"), "no draft archetype to test");
+  const app = onArchetypeStep("");
+  for (const a of D.archetypes.filter(a => !a.retired)) {
+    const t = app.$(`[data-arch="${a.id}"]`).textContent;
+    assert.ok(!t.includes(draftLabel), `${a.id}'s card says "${draftLabel}"`);
+    if (a.status === "written-in") assert.ok(t.includes(D.appCopy.statusLabel[a.status]), `${a.id} lost its badge`);
+  }
+  // The sheet's chip, on a locked character whose archetype is a draft; and an unwritten one keeps its own.
+  const dr = D.archetypes.find(a => a.status === "draft" && !a.retired);
+  const ch = lockedCharacter(); ch.identity.archetype = dr.id;
+  assert.ok(!openSheet(ch, "character").$("#main").textContent.includes(draftLabel), "the Character tab says in progress");
+  const tbd = D.archetypes.find(a => a.status === "tbd");
+  const ch2 = lockedCharacter(); ch2.identity.archetype = tbd.id;
+  assert.ok(openSheet(ch2, "character").$("#main").textContent.includes(D.appCopy.statusLabel.tbd), "the unwritten chip went");
+});
+
+test("Decision 276: the Stats step shows each option's demands, and they follow the stats", () => {
+  const withReq = D.archetypes.flatMap(a => ((a.specialization || {}).options || []).filter(o => o.requires && o.requires.stats));
+  assert.ok(withReq.length);
+  const app = onStep("", D.powerLevels[0].id, "stats", ch => { for (const id of Object.keys(ch.stats)) ch.stats[id].base = D.statRules.base; });
+  const panel = () => app.$("[data-demands]");
+  assert.ok(panel(), "no demands panel");
+  assert.equal(panel().open, false, "with no archetype chosen the panel starts closed");
+  assert.equal(panel().querySelectorAll("li").length, withReq.length);
+  const o = statOpt(), [sid, need] = Object.entries(o.requires.stats)[0];
+  const line = () => [...panel().querySelectorAll("li")].find(l => l.textContent.includes(o.name));
+  const mark = new RegExp(`${sid} ${need} ✓`);
+  assert.doesNotMatch(line().textContent, mark);
+  const has = () => Engine.statValue(stored(app, { locked: false }), sid);
+  for (let g = 0; has() < need && g < 20; g++) app.click(`[data-step="stat|${sid}|1"]`);
+  assert.ok(has() >= need, "couldn't raise the stat");
+  assert.match(line().textContent, mark, "the demand didn't mark met");
+  // The panel keeps its open state through the redraw a press causes.
+  panel().open = true; panel().dispatchEvent(new app.window.Event("toggle"));
+  app.click(`[data-step="stat|${sid}|-1"]`);
+  assert.equal(panel().open, true, "a redraw closed the panel");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 276: an unmet option says what's short, and a complete choice folds the rest", () => {
+  const a = specArch(), opts = a.specialization.options, o = statOpt();
+  const app = onStep(a.id, D.powerLevels[0].id, "archetype", ch => { for (const id of Object.keys(ch.stats)) ch.stats[id].base = D.statRules.base; });
+  const card = id => app.$$("#main .pick").find(p => p.querySelector(`[data-spec="${id}"]`));
+  assert.match(card(o.id).textContent, /\(you have \d+\)/, "the card doesn't say what's short");
+  assert.equal(app.$$("#main .pick.folded").length, 0);
+  app.click(`[data-spec="${o.id}"]`);
+  assert.equal(app.$$("#main .pick.folded").length, opts.length - 1, "the rest didn't fold");
+  assert.equal(app.$$("#main .pick.folded .desc").length, 0);
+  const all = app.$("[data-spec-all]");
+  assert.ok(all.textContent.includes(String(opts.length)) && all.textContent.includes(a.specialization.label));
+  const before = JSON.stringify(stored(app, { locked: false }).archetypeChoices);
+  app.click("[data-spec-all]");
+  assert.equal(app.$$("#main .pick.folded").length, 0, "Show all didn't open them");
+  assert.equal(app.$("[data-spec-all]").textContent, D.appCopy.showFewerOptions);
+  assert.equal(JSON.stringify(stored(app, { locked: false }).archetypeChoices), before, "the fold touched the character");
+  app.click("[data-spec-all]");
+  assert.equal(app.$$("#main .pick.folded").length, opts.length - 1);
+  const other = opts.find(x => x.id !== o.id);
+  app.click(`[data-spec="${other.id}"]`);
+  assert.ok(card(other.id) && !card(other.id).classList.contains("folded"), "choosing from a folded row didn't work");
+  // Show all was for this archetype's options: another archetype's complete choice folds its own.
+  app.click("[data-spec-all]");
+  const next = D.archetypes.find(x => x.id !== a.id && !x.retired && x.specialization && (x.specialization.options || []).length > 1);
+  app.click(`[data-arch="${next.id}"]`);
+  const need = Engine.specializationNeed(stored(app, { locked: false }));
+  for (const x of next.specialization.options.slice(0, need)) app.click(`[data-spec="${x.id}"]`);
+  assert.equal(app.$$("#main .pick.folded").length, next.specialization.options.length - need, "Show all carried over to another archetype");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 274: the Character Points note shows once, and doesn't say Freebie", () => {
+  const app = onStep("professional", D.powerLevels[0].id, "character-points");
+  const note = D.creationFlow.steps.find(s => s.id === "character-points").note;
+  const text = app.$("#main").textContent;
+  assert.equal(text.split(note).length - 1, 1, "the note isn't drawn exactly once");
+  assert.doesNotMatch(text, /Freebie/i);
+});
+
+test("Decision 277: a retired archetype isn't offered, and a character on it keeps it", () => {
+  const retired = D.archetypes.filter(a => a.retired);
+  assert.ok(retired.length, "nothing is retired");
+  const app = onArchetypeStep("professional");
+  for (const a of retired) assert.equal(app.$(`[data-arch="${a.id}"]`), null, `${a.id} has a card`);
+  const ch = lockedCharacter(); ch.identity.archetype = retired[0].id;
+  const sheet = openSheet(ch, "character");
+  assert.deepEqual(sheet.errors, []);
+  assert.ok(sheet.$("#main").textContent.includes(retired[0].name), "the sheet lost the archetype");
+  sheet.click("[data-menu-toggle]"); sheet.click("[data-admin]");
+  const opts = [...sheet.$("[data-admin-arch]").options].map(o => o.value);
+  assert.ok(opts.includes(retired[0].id), "Admin dropped the character's own archetype");
+  const s2 = openSheet(lockedCharacter(), "character"); s2.click("[data-menu-toggle]"); s2.click("[data-admin]");
+  assert.ok(![...s2.$("[data-admin-arch]").options].some(o => retired.some(r => r.id === o.value)), "Admin offers a retired archetype");
 });

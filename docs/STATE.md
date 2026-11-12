@@ -1,7 +1,7 @@
 # State of the build
 
 **Updated:** 2026-11-07
-**Versions:** app `0.66.1` · game data `0.53` · character schema `0.34` · table schema `0.19` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.66.2` · game data `0.54` · character schema `0.34` · table schema `0.19` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -32,8 +32,8 @@ decision; that's how this section reached 1,500 words (`log/archive.md` §4).
   and shown as tags everywhere.
 - **The archetypes**: the Professional and the Arcanist (`draft`), the
   Werewolf (`0414`) and the Vampire (`0413`), both `draft` with their Majors,
-  and a player-written **Custom** one. The Cyborg is cut and still `tbd`
-  (§3). Supernatural powers have ranks; creation follows the book's caps
+  and a player-written **Custom** one. The Cyborg is cut, still `tbd`, and
+  retired from the picker (Decision 277; §3). Supernatural powers have ranks; creation follows the book's caps
   (240, 264) and play stops at 10 (194).
 - **Magic** (spells, Cascade, Aberrations, holding a spell) and **combat**
   are built end to end, and both plans are closed.
@@ -105,7 +105,7 @@ is the authority on a flag's full text.
 | **Creation-pool economics** — W37 | ✅ built (Decisions 150, 157) | Nobody |
 | **Milestones** — F12, F32 | ✅ P6 built (Decision 217): any Minor repeats, each with its chooser | Ken: **F32** (Arcanist Majors; until then **Add one** is the stand-in) and **F12** |
 | **Advantages/Disadvantages fine print** | 🔶 mostly settled · F17 closed (97) · one `excludes` pair, Dwarf and Giant (235) | Deighton. The CRB names no other pair, so none is invented |
-| **Cyborg** — F6, F19 | ⏸ **cut as an archetype**: cybernetics become a list and a mini-game, Professionals only; data still `tbd` | Deighton's system is mirrored (`private/crb/Cybernetics_*`); **W90** holds the six questions before a plan. Then the app retires `cyborg` (a decision and a `migrate()` step) and closes F6 and F19 |
+| **Cyborg** — F6, F19 | ⏸ **cut as an archetype and retired from the picker** (Decision 277, E1b): a new character can't choose it, a saved one opens and plays as before; cybernetics become a list and a mini-game, Professionals only; data still `tbd` | Deighton's system is mirrored (`private/crb/Cybernetics_*`); **W90** holds the six questions before a plan. Then W61 folds saved Cyborgs into Custom and F6 and F19 close |
 | **Vampire** — `0413` | ✅ built (Decisions 200–202, 215, 223, 240, 264, 266): Bloodlines, the Thirst, 22 Majors; Base Powers and CP as the 2026-10-22 book prints; sustained powers run (Start/Stop, Turn Reset charges them) | Nobody. Whether it leaves `draft` is Ken's (the chapter dropped "Under Construction") |
 | **Werewolf** — `0414` | ✅ built (Decisions 195–197, 199, 215, 240, 264, 266): Origins, Form, Call of the Wild, its own Majors; Base Powers and CP as the book prints; its powers run only in Werewolf Form | Nobody. As the Vampire: `draft` is Ken's call |
 | **Arcanist / Magic** | 🔶 spells, Cascade, Aberrations, magic on the sheet, holding a spell (Decision 224), Disciplines as Boosts with their prerequisites (Decision 265) all built · Origins still `draft` | Deighton: **F43** (the held spell's check). Deighton + Scott + Bill + Ken: Origins and spheres/implements, after the four-way comparison; not blocking |
@@ -140,7 +140,7 @@ rev 9's `C1`–`C3` are still forward notes.
 **The live site is v0.66.0** (data 0.53, schema 0.34), released 2026-11-07.
 
 **Next is Ken's pick**, each built through a work order (`WORK-ORDERS.md`):
-- **Finding things on the sheet** (`plans/finding-things-on-the-sheet.md`, open, proposed 2026-11-11): the running sheet's usability pass, from the 2026-11-11 critique (26/40), as sessions E1–E7, each with its impeccable command. E1 is first, as two orders: **E1a** (an older file's owed choice as one line and a dialog, the load notice in plain words; merged in 0.66.1, Decision 273) and **E1b** (the wizard for first-timers, Ken widened E1 on 2026-11-11; its order approved by Ken 2026-11-11, with the Cyborg's retirement from the picker added, and building; E1c, Character Points for a first-timer, follows it). E2 shapes and distills the tabs, with a stop for Ken in the middle. Ken answered EQ1–EQ3 on 2026-11-11: E2 weighs W133, the tab count is open, and each session ships when it merges.
+- **Finding things on the sheet** (`plans/finding-things-on-the-sheet.md`, open, proposed 2026-11-11): the running sheet's usability pass, from the 2026-11-11 critique (26/40), as sessions E1–E7, each with its impeccable command. E1 is first, as two orders: **E1a** (an older file's owed choice as one line and a dialog, the load notice in plain words; merged in 0.66.1, Decision 273) and **E1b** (the wizard for first-timers: to-dos not errors, the Stats step's demands and the folded Subtypes, no "in progress" badge, the Cyborg retired from the picker; Decisions 274–277, app 0.66.2, in review; E1c, Character Points for a first-timer, follows it). E2 shapes and distills the tabs, with a stop for Ken in the middle. Ken answered EQ1–EQ3 on 2026-11-11: E2 weighs W133, the tab count is open, and each session ships when it merges.
 - **GM mode, what's next** (`plans/gm-mode-next.md`): Scott's play report first (S22), then S23 (the leftover fixes) is suggested.
 - **The vehicles-and-gear plan** (`plans/loadout-and-gear.md`) is approved (Ken, 2026-10-24, LQ1–LQ10 on their defaults); L1 (weapon damage types), L2 (written-in weapons read like the catalog's), L2b (they tick their fire modes and reload from carried ammo) and L3 (worn armor and gear in use carry modifiers) and L5 (a Major on one weapon or armor row, Decision 263) are built.
   L4 (natural attacks and the unarmed strike) waits on the 2026-10-29 meeting's notes. L5b, the powers half of W136, follows L4 (Ken, 2026-11-01); L6 (vehicles, was P14) and L7

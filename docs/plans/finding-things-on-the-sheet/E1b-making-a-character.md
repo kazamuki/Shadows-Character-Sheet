@@ -31,7 +31,7 @@
 - The Stats step shows which subtypes need which stats, marked met or not as the player spends. A subtype card says what's short before it's chosen. Once a subtype is chosen, the others fold to one line each, and the player can open them again.
 - Character Points' note shows once, and no longer says "Formerly 'Freebie Points'" (Ken, on approval: most players have never seen the term).
 - Step 1 says what's coming and whose call the Power Level is (§9).
-- The Archetype step with Professional and Enforcer chosen is at most half today's 8,710px at 375×812.
+- The Archetype step with Professional and Enforcer chosen is 5,841px at 375×812, down from 8,710px (-33%; Ken, 2026-11-11: the target of half assumed the subtype cards were most of it; folding the Natural Advantage cards goes to E1c).
 - `npm run verify` and `npm run phone-check` pass.
 
 ## 2. Tier, versions, numbers
@@ -150,17 +150,17 @@ On Decision 161: `→ **Superseded in part by Decision N**: before a Power Level
 
 **Step 1, under its title** (NYTE voice; voice pass):
 > Character Creation takes time. Pause when you need to. Nothing locks in until you're ready.
-> Your GM picks the Power Level. If they haven't, ask before you go on.
+> If your GM hasn't named one yet, ask before you go on.
 
 The first line is the book's own (0400). The ledger already shows the eight steps, so this doesn't list them.
 
-**Power Level cards:** the numbers stay, with plain labels: *Stat Points 45 · Skill Points 40 + INT + REF · Character Points 5 · Skills start at 4 at most · Boost up to 2 · Çredits 3d4 × 100*. *(Voice pass.)*
+**Power Level cards:** the numbers stay, with plain labels: *Stat Points 45 · Skill Points 40 + INT + REF · Character Points 5 · Skills start at 4 at most · Max Character Point Boost 2 · Çredits 3d4 × 100*. *(Voice pass.)*
 
 **To-dos:** the same list above the nav, each to-do in the neutral tone with no icon. The nav reads **"1 left to do"** or **"2 left to do"**, linking to the list as now, and **"N to fix first"** once anything is wrong. *(Voice pass.)*
 
 **The rail before a Power Level:** the name group, then *"Your numbers fill in as you build."* *(Voice pass.)*
 
-**Stats:** after the stat rows, a closed `<details>`: *"Some archetypes' choices need minimum stats"*. Inside, one line per option: *Professional · Enforcer — BOD 8 ✓, COOL 7 (6)*. A met demand is marked met in more than colour alone (a ✓ or the word). With an archetype chosen, the panel lists that archetype's options and starts open.
+**Stats:** after the stat rows, a closed `<details>`: *"Which archetype choices need minimum stats"*. Inside, one line per option: *Professional · Enforcer — BOD 8 ✓, COOL 7 (you have 6)*. A met demand is marked met in more than colour alone (a ✓ or the word). With an archetype chosen, the panel lists that archetype's options and starts open.
 
 **Archetype, before choosing a subtype:** a card's demand reads *"requires BOD 8 (you have 7), COOL 7"* for an unmet one, and as today when met.
 
@@ -195,7 +195,7 @@ Write these first, and show each failing on `main`.
 ## 11. Tests beyond the examples
 
 - **Totality:** `validate` over every step, on `newCharacter()` and on junk (`{}`, a string), returns an array, and every issue's `todo` is `true` or absent.
-- **Phone:** at 375×812, Professional + Enforcer, the Archetype step is at most 4,355px (half today's). Put it in `phone-check` if it can hold it, or say in the PR why not.
+- **Phone:** at 375×812, Professional + Enforcer, the Archetype step is at most 5,841px plus a small margin (Ken, 2026-11-11: -33%, not half). Put it in `phone-check` if it can hold it, or say in the PR why not.
 - **Contrast:** the to-do tone passes the contrast guard in both themes.
 - **Voice:** `voice.test.mjs` over the new `appCopy`.
 - **Mutation tests**, against the built code: drop `todo` from 6013 (example 2 fails); mark a `requires` issue `todo` (example 3 fails); render the draft badge (example 5 fails); drop the demands panel's redraw (example 6 fails); skip the fold (example 7 fails); restore the `dice-note` note (example 8 fails); drop the `retired` filter from the wizard (example 9 fails), and from Admin's select.

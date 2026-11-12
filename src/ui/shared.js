@@ -1023,7 +1023,7 @@ const optionFeaturesText = o => optionFeatures(o).map(f=>`\n${esc(f.name)}: ${es
 
 function issuesHtml(list){
   if (!list.length) return "";
-  return `<ul class="issues">`+list.map(i=>`<li class="${i.level}">${esc(i.msg)}</li>`).join("")+`</ul>`;
+  return `<ul class="issues">`+list.map(i=>`<li class="${i.level}${i.todo?" todo":""}">${esc(i.msg)}</li>`).join("")+`</ul>`;
 }
 
 // Decision 70 — two audiences, two fields. `flagNote` is written for
@@ -1090,6 +1090,9 @@ function flagHtml(entry){
 // it reuses the panel but says so, rather than implying the rule is in doubt.
 function ruleHtml(text){ return noticeHtml(copy("houseRuleLabel"), text); }
 const statusLabel = s => ((D.appCopy||{}).statusLabel||{})[s] || s;
+// Decision 275: a draft archetype is playable, so it wears no badge. Only content whose rules aren't written, or a
+// write-in, says so where it's chosen.
+const showsStatus = a => !!a && a.status!=="final" && a.status!=="draft";
 
 // ── Editable tables (weapons / gear / archetype panel tables) — shared by
 // the Loadout tab's renderer and the sheet's event bindings. ─────────────

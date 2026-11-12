@@ -1382,6 +1382,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
     *Backfilled 2026-09-24 from this entry and the log (Decision 130) · Touches: archetypes, panels, specialization, status badges, archetype special cases, A8*
     - **Rejected:** an app page per archetype (a Cyborg page, an Arcanist page), and branches in the renderers on an archetype's id. Batch 3's A3 removed the last renderer branches (Decision 79).
     - **Revisit if:** an archetype's rule can't be written as data an existing reader understands. Then it gets a generic reader or panel type, not a branch on its id (audit A8).
+    → **Superseded in part by Decision 275**: a `draft` archetype wears no badge; `tbd` and `written-in` keep theirs.
 16. **(Phase 2)** Ranked Advantages cost `cost` **per rank** (Archery Master
     rank 2 = 12 CP). Disadvantages grant `pointsGranted` per rank.
 17. **(Phase 2)** Professional natural advantages are stored as normal
@@ -1883,6 +1884,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
     UI into `ip` alongside every other flag. The lock screen simply lost its
     fourth sentence: the three before it were already a closing cadence, and the
     roadmap note was stepping on the ending. (Ken, 2026-09-02)
+    → **Superseded in part by Decision 275**: `appCopy.statusLabel.draft` is no longer rendered; the key stays for the maintainers.
 
 72. **(Batch 2)** **`validate()` writes player-facing copy, and that is where a
     build-state sentence hid longest.** Every wizard error and warning a player
@@ -4149,6 +4151,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 37 in part (the flyout serves the wizard as well, without a pin).
      - **Revisit if:** a step gets its own sticky bar without a pool count, or players want a pool the line doesn't show.
      - **Built:** app 0.35.1; `smoke.test.mjs`, 12 mutations; `phone-check` passes. Log 2026-10-01.
+     → **Superseded in part by Decision 274**: before a Power Level the rail is one line, not stats as dashes; after it, the "not yet" dashes stand.
 
 162. **A character locks only once every creation point that can still buy something is spent.**
      *2026-10-01 · Ken + Claude · Touches: validate, review, Lock & Export, data-lock, Stat Points, Skill Points, Character Points, Focus Stat bonus, Stat Bonus, unspent, unallocated, spendable, wiznav-why, W57*
@@ -5532,6 +5535,42 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 238 in part: the picker moves from the top of each tab into a dialog opened from there; the ask itself, its tabs, its words and the Loadout panel's line stay.
      - **Revisit if:** another creation choice can go missing on a locked character (238's own condition); then the line becomes a list of what's owed, each with its button.
      - **Built:** app 0.66.1 (patch), no data or schema bump, PR #317, log 2026-11-11 (E1a).
+
+274. **A creation step says what's left to do in a neutral tone; only something wrong is an error.**
+     *2026-11-11 · Ken + Claude · Touches: validate, todo, issuesHtml, wizWhyHtml, wiznav-why, .issues li.todo, wizardRailHtml, appCopy.leftToDo, appCopy.toFix, appCopy.railEmpty, Decision 161, Decision 162, E1b*
+     - **Decided:** `validate()` marks an issue `todo: true` when it asks for something the player hasn't entered yet (a choice, a roll, a name, points unspent at Review), and leaves it unmarked when something entered is wrong (over a pool or a cap, a requirement unmet, a pick that can't be). Both stay `level: "error"`, so Continue and Lock wait exactly as before. A to-do renders in the neutral tone, and the nav counts "N left to do" while every error is a to-do, or "N to fix first" once any isn't. Before a Power Level is chosen, the rail shows the name and one line saying the numbers fill in as the character is built.
+     - **Why:** A new character met "Choose a Campaign Power Level." in the error colour before touching anything, and the same on step 2. A choice not yet made isn't a mistake. Telling the two apart is a fact the engine already has, so the tone needs no memory of what the player touched.
+     - **Rejected:** hiding errors until the player has touched the step or pressed Continue (it needs per-step state that a redraw, an undo or a reload can lose, and a disabled Continue then has no visible reason); making to-dos warnings (Continue would let a player past a missing choice, against 162's reasoning); a separate to-do list beside the errors (two lists for one question: why can't I go on?).
+     - **Replaces:** Decision 161 in part: before a Power Level the rail is one line, not the stats as dashes; after it, 161's "not yet" dashes stand.
+     - **Revisit if:** a step needs a required choice the engine can't tell apart from a wrong one.
+     - **Built:** app 0.66.2 (patch), no schema bump, PR #320, log 2026-11-11 (E1b).
+
+275. **No archetype wears a build-state badge; one whose rules aren't written says so where it's chosen.**
+     *2026-11-11 · Ken + Claude · Touches: archetype status, .badge, statusLabel, appCopy.statusLabel, renderArchetype, showsStatus, the sheet's archetype chip, archetypeUnwritten, Decision 15, Decision 71, E1b*
+     - **Decided:** An archetype whose `status` is `draft` shows no badge, on the wizard's card, Review's summary line or the sheet's Character tab. One whose `status` is `tbd` keeps its badge, in `appCopy.statusLabel.tbd`'s words, and its `archetypeUnwritten` note when chosen. `written-in` (Custom) keeps "off the books". `status` stays in the data for the maintainers.
+     - **Why:** Four of six cards read IN PROGRESS: a first-timer reads that as an unfinished product, and hard constraint 9 says the app doesn't narrate its build state. A draft archetype is playable; its open questions already reach the player as `playerNote`s where they bite. An unwritten one isn't playable from the book, and the player needs to know before building it.
+     - **Rejected:** dropping every badge (Cyborg would be chosen blind); rewording "in progress" (any wording of it is still build state).
+     - **Replaces:** Decision 15 in part (badges for `draft` content) and Decision 71 in part (`statusLabel.draft` no longer renders).
+     - **Revisit if:** the CRB marks an archetype provisional in print, as a rule the table should know.
+     - **Built:** app 0.66.2 (patch), no schema bump, PR #320, log 2026-11-11 (E1b).
+
+276. **The Stats step shows what each archetype's choices demand, and the Archetype step folds what wasn't chosen.**
+     *2026-11-11 · Ken + Claude · Touches: requires.stats, specialization options, renderStats, demandsHtml, renderArchetype, the subtype card, data-spec, data-spec-all, S.specAll, S.demandsOpen, Expert mode, E1b*
+     - **Decided:** Wherever the data gives specialization options `requires.stats`, the Stats step carries a closed panel listing each option's demands, marked met or not against the stats as they're spent; with an archetype already chosen, it lists only that archetype's options, open. Before an option is chosen, its card says what's short ("BOD 8 (you have 7)"). Once the specialization is complete, every other option folds to its name and demands, and one press opens them all again. The book's step order is unchanged.
+     - **Why:** An Enforcer's BOD 8 and COOL 7 first showed on step 4, after the Stat Points were spent, so the player went back and re-spent them. The book puts Stats first on purpose (0400, 0434), so the demands come forward instead of the step. The chosen subtype's other seven cards were most of the 8,710px a phone scrolled.
+     - **Rejected:** moving Archetype before Stats (the book's order, twice); disabling options the stats don't meet (the player may mean to raise the stats; the error already blocks Continue); a dialog for the demands (it hides them while the player spends).
+     - **Replaces:** nothing. (Decisions 91 and 134 are kept: the gate is still `requires` data checked by `checkPrereqs`.)
+     - **Revisit if:** demands come to depend on something other than stats (a skill, an advantage), which the panel would then have to read too.
+     - **Built:** app 0.66.2 (patch), no schema bump, PR #320, log 2026-11-11 (E1b).
+
+277. **The Cyborg is retired in place: a new character can't choose it, and one that has it keeps it.**
+     *2026-11-11 · Ken + Claude · Touches: cyborg, retired, archetypes, renderArchetype, the Admin archetype select, F6, F19, W61, Decision 143, E1b*
+     - **Decided:** An archetype with `"retired": true` isn't offered: it has no card in the wizard and no option in Admin's archetype select, unless it's the character's own. A character already on it loads, plays and saves as before, with its computed values unchanged. The Cyborg is marked `retired`. Its id, data and flags stay.
+     - **Why:** The team cut the Cyborg (cybernetics become gear for Professionals, W90), and its card offered a first-timer an archetype with no rules. Retiring in place is Decision 143's pattern for armor upgrades, and needs no conversion.
+     - **Rejected:** folding Cyborg characters into Custom now (W61: it needs the cybernetics design, F6 and F19, and its caveats weighed); deleting the archetype (constraint 6); keeping its card with a "not written yet" badge (it offers a choice the team has cut).
+     - **Replaces:** nothing. (W61's fold stays on the wishlist as the later step.)
+     - **Revisit if:** the Cyborg returns as an archetype, or W61 is built.
+     - **Built:** app 0.66.2 (patch), gamedata 0.54, PR #320, log 2026-11-11 (E1b).
 
 ## 5. Open Flags
 

@@ -23,10 +23,16 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.66.1
+## [Unreleased] — app 0.66.2
 
 - **A character that owes a choice since the rules changed now asks in one line at the top of each tab.** **Choose** opens the picker, so the sheet's Health and name stay on the first screen.
 - **Opening an older file says it was saved under older rules and opens under the current ones**, without version numbers.
+- **Making a character no longer greets you with errors.** What's still to choose reads as what's left to do, and only a real mistake shows as one.
+- **The Stats step shows which archetype choices need minimum stats**, so an Enforcer's BOD 8 isn't a surprise on the next step.
+- **Once you've picked a Subtype, Bloodline or Origin, the others fold away.** Show all brings them back.
+- **Archetype cards no longer say "in progress".**
+- **The Cyborg is no longer offered to a new character**; cybernetics are on their way as gear. A character who has one keeps it.
+- **Step 1 tells you to take your time, and that the Power Level is your GM's call.** Character Points shows its note once.
 
 ## v0.66.0 — 2026-11-07
 

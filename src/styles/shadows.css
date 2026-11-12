@@ -157,7 +157,6 @@ button.card:hover{border-color:var(--violet-hi)}
 .card .stat-line span b{color:var(--cyan); font-weight:500}
 .badge{font-family:var(--mono); font-size:.7rem; letter-spacing:.12em; text-transform:uppercase;
   padding:2px 7px; border-radius:3px; border:1px solid; position:absolute; top:12px; right:12px}
-.badge.draft{color:var(--gold); border-color:var(--gold)}
 .badge.tbd{color:var(--magenta-text); border-color:var(--magenta)}
 .badge.final{color:var(--green); border-color:var(--green)}
 .badge.written-in{color:var(--violet-text); border-color:var(--violet)}
@@ -236,6 +235,13 @@ textarea{min-height:150px; resize:vertical; line-height:1.6}
 /* pick lists (advantages, skills detail, aberrations) */
 .pick{background:var(--panel); border:1px solid var(--frame); border-radius:5px; padding:12px 14px; margin-bottom:10px}
 .pick.selected{border-color:var(--green)}
+.pick.folded{padding:8px 14px; margin-bottom:6px}
+.spec-fold{margin-bottom:10px}
+.demands{margin:18px 0 6px; font-size:.82rem}
+.demands summary{cursor:pointer; color:var(--dim); padding:12px 0}
+.demands ul{margin:8px 0 0 18px}
+.demands .met{color:var(--green)}
+.demands .short{color:var(--gold)}
 .pick .head{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap}
 .pick .head h2{font-size:.92rem; font-weight:600}
 .pw-card .head [data-pwimprove]{margin-left:auto}
@@ -291,6 +297,7 @@ table.ref td.num{font-family:var(--mono); color:var(--cyan)}
 .issues{margin-top:14px; font-size:.82rem}
 .issues li{color:var(--magenta-text); margin-left:18px; margin-bottom:3px}
 .issues li.warn{color:var(--gold)}
+.issues li.todo{color:var(--dim)}
 .intake{display:flex; align-items:center; gap:10px; margin:2px 0 8px; color:var(--dim)}
 .intake-bars{flex:none; opacity:.85}
 .intake-no{font-family:var(--mono); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase}

@@ -461,7 +461,7 @@ test("Decision 162: Review's Lock waits until every point that can buy something
   assert.ok(lock(), "Review didn't render");
   assert.equal(lock().disabled, true, "Lock was open with Skill Points unspent");
   assert.match(app.$("#wiz-issues").textContent, /Skill Points unspent\. Spend them before you lock\./);
-  assert.match(app.$(".wiznav-why").textContent, /to fix first/, "the nav doesn't say what's holding the lock");
+  assert.match(app.$(".wiznav-why").textContent, /left to do/, "the nav doesn't say what's holding the lock");
   assert.deepEqual(app.errors, []);
 });
 
