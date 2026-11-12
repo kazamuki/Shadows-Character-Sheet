@@ -1,7 +1,7 @@
 # Work order E2a — The moves: seven tabs, one home each
 
 **Plan:** [finding-things-on-the-sheet](../finding-things-on-the-sheet.md), session E2, its first build. The shape is [E2-where-everything-lives](E2-where-everything-lives.md), and Ken answered EQ17–EQ22 on 2026-11-12.
-**Status:** drafted 2026-11-12 by an Opus session the conductor started (Ken asked that orders be drafted by Opus, not by the reviewer). Ken answered EQ23–EQ27 on 2026-11-12 (§4); approval of the order is pending.
+**Status:** drafted 2026-11-12 by an Opus session the conductor started (Ken asked that orders be drafted by Opus, not by the reviewer). Ken answered EQ23–EQ27 on 2026-11-12 (§4). **Approved by Ken 2026-11-12** ("Approve, build it", in the conductor's session).
 **Branch:** the builder's own, cut from `main` once this order (#326) has merged. #325 is already in.
 **Runs beside:** E4 (colour). Not E2b, E3 or E5, which wait for it.
 **Impeccable:** none. The shape was E2's first half; this order builds it. E2b (the distill) is a separate order.
