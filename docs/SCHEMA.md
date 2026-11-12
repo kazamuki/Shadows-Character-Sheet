@@ -5105,6 +5105,8 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** another creation choice can go missing on a locked character (a Base Power, a Natural Advantage) and wants the same ask; then the block becomes a list of what's owed.
      - **Built:** app 0.53.0, game data 0.46, no schema bump, PR #227. Log 2026-10-23 (Y1).
 
+     → **Superseded in part by Decision 273** — the picker opens in a dialog from a one-line ask; the ask, its tabs and its words stay.
+
 239. **CRANK is back: the team kept it, so `FEATURES.crank` is true and every player sees CRANK again.**
      *2026-10-23 · Ken + Claude · Touches: CRANK, FEATURES, featureOn, crankOn, ?crank=on, ?crank=off, shadows.feature.crank, Main CRANK card, Trackers CRANK section, Admin CRANK rep, print front page, blank sheet, launch line, W101*
      - **Decided:** The team decided to keep CRANK (Ken, 2026-10-23), so `FEATURES.crank` is `true`: Main's card and popover, Trackers' section and ledger, Admin's correction and the print front page's field show for everyone, the blank sheet's too, and a rep kept while it was hidden is back as stored. The switch stays in `FEATURES`, on; `?crank=off` no longer hides it. CHANGELOG carries the launch line **CRANK is back.**
@@ -5521,6 +5523,15 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 259 in part: more keys under the same rules, and the Keys switch covers them all.
      - **Revisit if:** a GM wants keys on the player's sheet, a browser takes a digit, or Redo arrives.
      - **Built:** app 0.66.0, no schema move, PR #313, log 2026-11-07 (U5).
+
+273. **A locked character owed a pick sees one line at the top of each tab, and the picker opens in a dialog when they press Choose.**
+     *2026-11-11 · Ken + Claude · Touches: focusedOwedHtml, focusedPickHtml, data-fpick, data-fowedopen, sheetHeader, .focused-owed, openModal, focusedOwedLines, openFocusedPicker, versionCheck, loadIssuesHtml, E1a*
+     - **Decided:** While `Engine.focusedPicks(ch)` is incomplete on a locked character, every sheet tab opens with one line saying what's owed and a Choose button (Fix when a pick is no longer allowed); the picker is no longer on the page. Choose opens a dialog with the wizard's picker. Each pick is the one undoable action it was. The dialog closes when the picks are complete and stays open while more are owed. The load notice's game-data line says the file was saved under older rules and what to do, with no version numbers.
+     - **Why:** Ten picker rows above every tab pushed a returning player's vitals a full phone screen down (the 2026-11-11 critique, with Kade). A line keeps 238's point, that whichever tab the sheet opens on asks, without taking the screen. "Saved against game data 0.9; loaded data is 0.53" read as a downgrade and said nothing to do.
+     - **Rejected:** a dialog that opens by itself (238's reason: it blocks the sheet for a choice that can wait a tap); the picker on Main only (238: the sheet reopens on the tab it was left on); a Dismiss (238: a short pick is an unfinished character); keeping the version numbers in the line (EQ4; the footer shows the current version).
+     - **Replaces:** Decision 238 in part: the picker moves from the top of each tab into a dialog opened from there; the ask itself, its tabs, its words and the Loadout panel's line stay.
+     - **Revisit if:** another creation choice can go missing on a locked character (238's own condition); then the line becomes a list of what's owed, each with its button.
+     - **Built:** app 0.66.1 (patch), no data or schema bump, PR #317, log 2026-11-11 (E1a).
 
 ## 5. Open Flags
 

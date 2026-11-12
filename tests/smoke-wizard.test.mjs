@@ -432,10 +432,11 @@ test("a locked Mercenary short its pick chooses it on Loadout, as one undoable a
   ch.identity.archetype = "professional";
   ch.archetypeChoices.specialization = ["mercenary"];
   const app = openSheet(ch, "loadout");
-  assert.match(app.$("#main").textContent, /Choose 1 more Combat Skill to Focus/);
-  app.click('[data-fpick="rifles"]');
+  assert.match(app.$("#main").textContent, /1 more Combat Skill to pick/);
+  app.click("[data-fowedopen]");   // Decision 273: the picker is in the dialog Choose opens
+  app.click('#modal [data-fpick="rifles"]');
   assert.equal(activeChar(app).archetypeChoices.focusedSkillPicks.join(), "rifles");
-  assert.doesNotMatch(app.$("#main").textContent, /Choose 1 more/, "the picker stays after the count is met");
+  assert.doesNotMatch(app.$("#main").textContent, /1 more Combat Skill to pick/, "the ask stays after the count is met");
   assert.match(app.$("#main").textContent, /Rifles/);
   app.click('[data-sec="sessions"]');
   assert.match(app.$("#main").textContent, /Focused Skill: Rifles/, "the pick is missing from the Activity Log");
@@ -450,65 +451,79 @@ const lockedEnforcer = () => {
   ch.archetypeChoices.specialization = ["enforcer"];
   return ch;
 };
-const ASK = /Choose 1 more Combat Skill to Focus/;
+const ASK = /1 more Combat Skill to pick/;
 const askCount = app => app.$$("[data-focused-owed]").length;
 
-test("Decision 238: a locked Enforcer short its Combat Skill is asked on whichever tab it opens on, and choosing it there is one undoable action", () => {
+const modalOpen = app => !!app.$("#modal[open]");
+
+test("Decision 273: a locked Enforcer short its Combat Skill sees one line on every tab, and the picker only in the dialog", () => {
   const app = openSheet(lockedEnforcer(), "skills");
   const tabs = app.$$("[data-sec]").map(b => b.dataset.sec);
   assert.ok(tabs.length >= 8, "the sheet's tabs weren't found");
   const main = app.$("#main");
-  assert.ok(main.innerHTML.indexOf("Choose 1 more Combat Skill") < main.innerHTML.indexOf('class="step-title"'), "the ask isn't above the title");
+  assert.ok(main.innerHTML.indexOf("1 more Combat Skill") < main.innerHTML.indexOf('class="step-title"'), "the ask isn't above the title");
   for (const t of tabs) {
     app.click(`[data-sec="${t}"]`);
     assert.equal(askCount(app), 1, `${t}: the ask isn't there exactly once`);
     assert.match(app.$("[data-focused-owed]").textContent, ASK);
-    assert.equal(app.$$('[data-fpick="rifles"]').length, 1, `${t}: not exactly one picker`);
+    assert.equal(app.$$("[data-fowedopen]").length, 1, `${t}: not exactly one Choose button`);
+    assert.equal(app.$$("[data-fpick]").length, 0, `${t}: a picker is on the page`);
   }
-  // The Loadout panel's line points at the top of the tab; the block's own words don't.
+  // The Loadout panel's line points at the top of the tab; the line's own words don't.
   app.click('[data-sec="loadout"]');
   const panelLine = [...app.$$("#main p.step-note")].find(p => !p.closest("[data-focused-owed]") && ASK.test(p.textContent));
   assert.ok(panelLine, "Loadout's panel lost its line");
   assert.match(panelLine.textContent, /at the top of this tab/);
   assert.doesNotMatch(app.$("[data-focused-owed]").textContent, /at the top of this tab/);
-  app.click('[data-fpick="rifles"]');
+  assert.equal(modalOpen(app), false, "the dialog opened by itself");
+  app.click("[data-fowedopen]");
+  assert.ok(modalOpen(app), "Choose didn't open the dialog");
+  assert.match(app.$("#modal-title").textContent, /Focused Skills/);
+  assert.equal(app.$$('#modal [data-fpick="rifles"]').length, 1);
+  app.click('#modal [data-fpick="rifles"]');
   assert.equal(activeChar(app).archetypeChoices.focusedSkillPicks.join(), "rifles");
+  assert.equal(modalOpen(app), false, "the dialog stays open after the last pick");
+  assert.match(app.$("#undotoast").textContent, /Focused Skill: Rifles/);
+  assert.equal(app.$("#undotoast").hidden, false, "the toast isn't visible after the dialog closes");
+  assert.ok(app.$("#undotoast").parentNode === app.window.document.body, "the toast stayed inside the closed dialog");
   for (const t of tabs) {
     app.click(`[data-sec="${t}"]`);
     assert.equal(askCount(app), 0, `${t}: the ask stays after the pick`);
-    assert.equal(app.$$("[data-fpick]").length, 0, `${t}: a picker stays after the pick`);
+    assert.equal(app.$$("[data-fpick],[data-fowedopen]").length, 0, `${t}: a picker or button stays after the pick`);
   }
-  app.click('[data-sec="sessions"]');
-  assert.match(app.$("#main").textContent, /Focused Skill: Rifles/);
-  app.click("button[data-undolast]");
-  assert.equal(activeChar(app).archetypeChoices.focusedSkillPicks.length, 0);
+  app.click("[data-toastundo]");
+  assert.equal(activeChar(app).archetypeChoices.focusedSkillPicks.length, 0, "undo didn't take the pick back");
   assert.equal(askCount(app), 1, "undo didn't bring the ask back");
   assert.deepEqual(app.errors, []);
 });
 
-test("Decision 238: a complete pick asks nothing, and an invalid one asks to be removed", () => {
+test("Decision 273: a complete pick asks nothing, and an invalid one reads Fix with Remove in the dialog", () => {
   const merc = lockedCharacter();
   merc.identity.archetype = "professional";
   merc.archetypeChoices.specialization = ["mercenary"];
   merc.archetypeChoices.focusedSkillPicks = ["rifles"];
   const done = openSheet(merc, "main");
-  assert.equal(done.$$("[data-fpick]").length, 0);
-  assert.doesNotMatch(done.$("#main").textContent, /to Focus\./);
+  assert.equal(done.$$("[data-fpick],[data-fowedopen]").length, 0);
+  assert.doesNotMatch(done.$("#main").textContent, /to pick\./);
 
   const ch = lockedEnforcer();
   ch.archetypeChoices.focusedSkillPicks = ["survival"];
   const app = openSheet(ch, "main");
-  assert.match(app.$("#main").textContent, /can't be a Focused Skill any more/);
-  assert.equal(app.$$('[data-fpick="survival"]').length, 1);
-  assert.equal(app.$('[data-fpick="survival"]').textContent, "Remove");
+  assert.match(app.$("#main").textContent, /isn't allowed any more/);
+  assert.equal(app.$$("[data-fpick]").length, 0, "a picker is on the page");
+  assert.equal(app.$("[data-fowedopen]").textContent.trim(), "Fix");
   app.click('[data-sec="loadout"]');
-  const panelBad = [...app.$$("#main p.step-note")].find(p => !p.closest("[data-focused-owed]") && /can't be a Focused Skill/.test(p.textContent));
-  assert.match(panelBad ? panelBad.textContent : "", /at the top of this tab/, "Loadout's panel sends the player below, where no picker is");
-  app.click('[data-fpick="survival"]');
+  const panelBad = [...app.$$("#main p.step-note")].find(p => !p.closest("[data-focused-owed]") && /isn't allowed any more/.test(p.textContent));
+  assert.match(panelBad ? panelBad.textContent : "", /at the top of this tab/);
+  assert.match(panelBad ? panelBad.textContent : "", /Fix it from the line at the top of this tab/);
+  app.click("[data-fowedopen]");
+  assert.equal(app.$('#modal [data-fpick="survival"]').textContent, "Remove");
+  app.click('#modal [data-fpick="survival"]');
   assert.equal(activeChar(app).archetypeChoices.focusedSkillPicks.length, 0);
+  assert.ok(modalOpen(app), "the dialog closed with a pick still owed");
   assert.match(app.$("[data-focused-owed]").textContent, ASK);
   assert.ok(!app.$("[data-focused-owed]").closest("[role=status],[role=alert],[aria-live]"),
-    "the ask is a live region: every re-render of the tab would read its ten buttons out");
+    "the ask is a live region: every re-render of the tab would read it out");
   assert.deepEqual(app.errors, []);
 
   // Total (the order's §11): a draft, no specialization, picks migrate() cleaned of junk.
@@ -518,6 +533,40 @@ test("Decision 238: a complete pick asks nothing, and an invalid one asks to be 
   const junk = lockedEnforcer(); junk.archetypeChoices.focusedSkillPicks = ["rifles", 7, null, {}];
   for (const [name, c] of [["a draft", draft], ["no specialization", unchosen], ["junk picks", junk], ["no character", null]])
     assert.equal(owed(c), "", `${name}: asked for a pick`);
+});
+
+test("Decision 273: a pick that leaves more owed keeps the dialog open", () => {
+  const ch = lockedCharacter();
+  ch.identity.archetype = "professional";
+  ch.archetypeChoices.specialization = ["cleaner"];
+  const app = openSheet(ch, "main");
+  app.click("[data-fowedopen]");
+  assert.match(app.$("#modal").textContent, /0\/2 chosen/);
+  const first = app.$$("#modal [data-fpick]").find(b => !b.disabled);
+  app.click(`#modal [data-fpick="${first.dataset.fpick}"]`);
+  assert.ok(modalOpen(app), "the dialog closed with a pick still owed");
+  assert.match(app.$("#modal").textContent, /1\/2 chosen/, "the dialog didn't redraw its count");
+  const second = app.$$("#modal [data-fpick]").find(b => !b.disabled && b.textContent.trim() === "Choose");
+  app.click(`#modal [data-fpick="${second.dataset.fpick}"]`);
+  assert.equal(modalOpen(app), false, "the dialog stays open when the set is complete");
+  assert.equal(askCount(app), 0);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 273: the toast's Undo with the dialog open redraws the dialog from the character", () => {
+  const ch = lockedCharacter();
+  ch.identity.archetype = "professional";
+  ch.archetypeChoices.specialization = ["cleaner"];
+  const app = openSheet(ch, "main");
+  app.click("[data-fowedopen]");
+  app.click(`#modal [data-fpick="${app.$$("#modal [data-fpick]").find(b => !b.disabled).dataset.fpick}"]`);
+  assert.match(app.$("#modal").textContent, /1\/2 chosen/);
+  app.click("[data-toastundo]");
+  assert.equal(activeChar(app).archetypeChoices.focusedSkillPicks.length, 0);
+  assert.ok(modalOpen(app), "Undo closed a dialog that is still owed a pick");
+  assert.match(app.$("#modal").textContent, /0\/2 chosen/, "the dialog kept the undone pick's count");
+  assert.equal(app.$$("#modal .pick.selected").length, 0, "the dialog still marks the undone pick Chosen");
+  assert.deepEqual(app.errors, []);
 });
 
 // ── Read it or label it (Decision 135) ────────────────────────────────

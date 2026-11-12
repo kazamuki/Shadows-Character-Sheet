@@ -3207,6 +3207,39 @@ function openRaisePicker(type){
     } });
 }
 
+// ── The Focused Skill pick, in a dialog (Decision 273; picks are Decision 134) ──
+// Opened by the tab's one-line ask. commit() re-renders #main, not the dialog,
+// so update() calls refreshFocusedPicker, which redraws the dialog's own body and closes it on the last pick.
+function focusedPickBodyHtml(ch){
+  return focusedOwedLines(Engine.focusedPicks(ch)).map(l=>`<p class="step-note">${esc(l)}</p>`).join("")
+    + focusedPickHtml(ch, "data-fpick");
+}
+// Any render (a pick, or the toast's Undo) leaves the dialog showing what the
+// character now owes: redrawn while picks are owed, closed once they're complete.
+function refreshFocusedPicker(){
+  const host = document.querySelector("#modal[open] [data-fpickbody]"); if (!host) return;
+  const fp = S.ch && Engine.focusedPicks(S.ch);
+  if (!fp || fp.complete){
+    closeModal();
+    // The Choose button went with the last pick, so nothing got focus back.
+    if (!document.activeElement || document.activeElement===document.body) toastLanding();
+  } else keepPlace(host, ()=>{ host.innerHTML = focusedPickBodyHtml(S.ch); }, ["#modal-title"]);
+}
+function openFocusedPicker(){
+  const ch = S.ch; if (!ch) return;
+  openModal({ title:"Focused Skills", html:`<div data-fpickbody>${focusedPickBodyHtml(ch)}</div>`, foot:pickerFootHtml(),
+    returnTo:"[data-fowedopen]",
+    bind: body => {
+      const host = body.querySelector("[data-fpickbody]");
+      host.onclick = e => {
+        const b = e.target.closest("[data-fpick]"); if (!b || b.disabled) return;
+        const id=b.dataset.fpick, name=(Engine.skillById(id)||{name:id}).name;
+        const had=(S.ch.archetypeChoices.focusedSkillPicks||[]).includes(id);
+        commit("loadout", had?`Focused Skill removed: ${name}`:`Focused Skill: ${name}`, ()=>{ Engine.toggleFocusedPick(S.ch, id); });
+      };
+    } });
+}
+
 // ── Buy an Advantage / Buy off a Disadvantage / Restore (Decision 227) ──
 // Three more modals over the same journal, opened from Progression beside
 // Raise a Stat. Each buy is one commit() with its undo toast, and the modal
@@ -4278,11 +4311,8 @@ function bindSheet(){
   // A Focused Skill pick taken on the sheet (Decision 134): a locked
   // character short of its picks (or holding one the data no longer allows)
   // settles it here, as one undoable action.
-  main.querySelectorAll("[data-fpick]").forEach(b=>b.onclick=()=>{
-    const id=b.dataset.fpick, name=(Engine.skillById(id)||{name:id}).name;
-    const had=(ch.archetypeChoices.focusedSkillPicks||[]).includes(id);
-    commit("loadout", had?`Focused Skill removed: ${name}`:`Focused Skill: ${name}`, ()=>{ Engine.toggleFocusedPick(ch, id); });
-  });
+  // Decision 273: the picker lives in a dialog the tab's one-line ask opens.
+  main.querySelectorAll("[data-fowedopen]").forEach(b=>b.onclick=openFocusedPicker);
 
   // A toggle panel (Decision 195): a Werewolf's Form. What entering an option
   // costs (a Forge Fang's HL) is written in the same commit, so one Undo
