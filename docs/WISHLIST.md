@@ -1113,9 +1113,27 @@ Main's, Encounters has Trackers'. Scott is to draw six of the GM's own; when the
 and the `ui` keys change, with no layout change since the slots are the same size. *To respect:* the icons are data
 (no `gamedataVersion`, Decision 68), one stroke and weight with the sheet's set.
 
+**W148 — Read CI on the head commit instead of re-running the suite in review.** *Claude, from Ken on E1a's build · ⏭ · Docs, process · raised 2026-11-11*\
+**Plan:** none yet
+
+A work order's PR runs the full suite on one head commit up to four times: the
+builder's `npm run verify`, the reviewer's, CI's, and the conductor's before it
+tells Ken the PR is ready. The suite is now the slowest part of the loop. CI
+already runs it on every push. The reviewer and the conductor could check that
+CI is green on the exact head commit (`gh pr checks`, against `headRefOid`)
+and run locally only what CI can't: the mutation tests, the dev preview, a
+scratch probe of `main`, and the named tests behind each finding
+(`node --test --test-name-pattern=…`). The builder still runs `verify` before
+each push, since it's the one changing code.
+*To respect:* a green check counts only for the commit it ran on, so a nit
+the reviewer pushes needs CI again before "Ready to merge". The edit is to
+the reviewer prompt in `docs/WORK-ORDERS.md` and the `run-a-work-order`
+skill's step 6. CLAUDE.md's "after a change, the full `npm run verify`,
+always" stays true of whoever makes the change.
+
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W148.** Everything above is open. What was built is in
+- **Next free number: W149.** Everything above is open. What was built is in
   [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)
