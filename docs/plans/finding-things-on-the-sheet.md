@@ -8,7 +8,9 @@ the session that builds it numbers it in `SCHEMA.md` §4. Its sessions are
 `E`_n_ (E for easy to find) and its questions `EQ`_n_ (§5).
 **Covers:** the 2026-11-11 critique of the running sheet (26/40, snapshot
 `.impeccable/critique/2026-11-12T01-36-16Z__src-ui-sheet-js.md`), every
-finding in it, and Ken's ask for a shape-and-distill pass over the tabs.
+finding in it, Ken's ask for a shape-and-distill pass over the tabs, and
+(E1b) making a character as easy as possible for everyone. Its orders are
+in `plans/finding-things-on-the-sheet/`.
 **Sources:** `src/ui/sheet.js`, `src/ui/shared.js` (`SHEET_SECTIONS`, the
 vitals bar, `importIssuesHtml`), `src/styles/shadows.css`, `PRODUCT.md`,
 `DESIGN.md`; Decisions 140, 151, 156, 158, 160 and 165.
@@ -59,7 +61,8 @@ all correct, but it takes knowing the sheet to find it:
 
 | Session | What | Impeccable | Tier | After |
 |---|---|---|---|---|
-| E1 | Opening an older file | `onboard`, then `clarify` | Rule or shape | — |
+| E1a | Opening an older file: an owed choice as one line, the load notice in plain words ([order](finding-things-on-the-sheet/E1a-opening-an-older-file.md), approved) | `onboard`, then `clarify` | Rule or shape | — |
+| E1b | Making a character, for everyone: the wizard's first-timer path | `onboard` | Rule or shape | E1a |
 | E2 | Where everything lives: the tabs, shaped and distilled | `shape`, then `distill` | Rule or shape | — |
 | E3 | Main's columns and the Grimoire's read mode | `layout` | Rule or shape | E2 |
 | E4 | Colour that keeps its one meaning | `colorize` | Fix | — |
@@ -67,23 +70,67 @@ all correct, but it takes knowing the sheet to find it:
 | E6 | The phone | `adapt` | Fix | E3 |
 | E7 | Polish, then measure | `polish`, then `critique` | Fix | all |
 
-E1 and E4 stand alone and can run beside anything. E2 decides what each tab
+E1a and E4 stand alone and can run beside anything. E2 decides what each tab
 holds, so the sessions that lay a tab out or word it wait for it.
 
-### E1 — Opening an older file
+### E1 — The first minutes: an older file, and a new character
 
-`/impeccable onboard the first seconds after opening an older character file: owed choices and the load notice`,
-then `/impeccable clarify` on the notice's words.
+Ken widened E1 on 2026-11-11: onboarding covers making a character too, so
+that creating one is as easy as possible for everyone, not only veterans
+in Expert mode. It is two orders, because they share a goal but not code:
+E1a is a small change to the sheet and is ready now; E1b is a shaping job
+over the whole wizard, and gets its order once E1a merges (the cadence in
+`WORK-ORDERS.md`: an order is drafted from `main` with the last PR merged).
 
-- An owed choice (Kade's Focus skill) becomes one strip under the vitals,
-  for example *"Kade owes one choice since the rules changed · Choose ▸"*,
-  that opens the picker in a sheet. The vitals stay first on every tab.
-- The load notice (`Engine` load issues: "saved against game data 0.9;
-  loaded data is 0.53", and the "no longer exists in game data" lines with
-  raw ids) is rewritten in tool voice and says what to do.
-- Making the choice confirms it, with an undo toast like every other change.
-- **Done when:** the five pre-refresh files each open with their vitals in
-  the first screen at 375px, and Kade's choice is one strip.
+#### E1a — Opening an older file
+
+Order: [E1a-opening-an-older-file.md](finding-things-on-the-sheet/E1a-opening-an-older-file.md).
+An owed choice (Kade's Focused Skill) becomes one line with a Choose
+button on every tab, and the picker opens in a dialog (Decision 238 in
+part). The load notice's game-data line says the file was saved under
+earlier rules, in tool voice. The orphan lines ("no longer exists in game
+data") move to E5.
+
+#### E1b — Making a character, for everyone
+
+`/impeccable onboard the character creation wizard for a first-time player, with Expert mode as the veteran's path`
+
+Like E2, it runs in two halves: the onboard analysis ends in a proposal
+for Ken, and nothing is built until he answers. What the 2026-11-11
+walkthrough (a new character, then a filled draft through all eight steps,
+normal and Expert, at 1280px) gives it to start from:
+
+- **The first screen is a rules table.** Step 1 asks for a Campaign Power
+  Level with *Stats 45 · Skills 40+INT+REF · CP 5 · Max CP Boost 2 ·
+  Ç 3d4×100* on each card, before the player knows what any of it means.
+  It's the GM's call, and nothing says so up front, or what making a
+  character involves, or how long it takes.
+- **Errors before input.** Step 1 shows "Choose a Campaign Power Level."
+  and step 2 "Your character needs a name." in the error colour on
+  arrival, beside a disabled Continue and "1 thing to fix first".
+- **The order asks for numbers before identity.** Concept (step 2) is
+  name, age, build, hair, eyes and skin; the archetype, the real concept,
+  is step 4, after Stats. A subtype's required stats (Enforcer: BOD 8,
+  COOL 7) only show on step 4, after the stats are spent. *Whether the
+  order can move is a CRB question first:* check the book's own order
+  before proposing one, and cite it.
+- **Two steps are very long.** Archetype is about 4,600px tall;
+  Character Points about 24,000px (11,800px in Expert mode), with every
+  Disadvantage open. "Formerly 'Freebie Points'…" is said twice on it.
+- **The archetype cards wear build-state chips.** Four of six read
+  IN PROGRESS and Cyborg NOT WRITTEN YET. To a first-timer, that reads as
+  an unfinished product. Find the decision that put them there before
+  proposing anything.
+- **The vitals rail on step 1 is a column of dashes.**
+- **What already works:** the step ledger with ✓ and !, Back on every
+  step, filters and category chips on Skills and Character Points, `?` on
+  every entry, and Expert mode (Decisions 234 and its predecessors) for
+  the veteran.
+- **Not looked at yet:** the wizard on a phone; a full run from a blank
+  character to Lock & Export; the Custom archetype's path.
+
+**Weighs:** W131 (Expert mode as one long page) and W121 (type a number
+into a stepper), both on the wishlist, as part of the proposal.
 
 ### E2 — Where everything lives: the tabs, shaped and distilled
 
@@ -144,6 +191,9 @@ middle, because the first half's answer is *Rule or shape*.
 `/impeccable clarify the sheet's player-facing copy`
 
 - Whatever tab intros survive E2, in NYTE voice (`docs/VOICE-APP.md`).
+- The orphan lines from the load check ("Skill "x" no longer exists in
+  game data.") and the sheet's "no longer in the game data" chips, as one
+  wording, engine and UI together (moved here from E1a).
 - The IP amount placeholder cut to "amoun".
 - TOL and WILL show a `?` where a modifier goes, which reads as "unknown".
 - Hyphen-minus and true minus mixed in the same table: true minus
@@ -173,7 +223,8 @@ middle, because the first half's answer is *Rule or shape*.
   import): Ken put it on the wishlist on 2026-11-11 rather than in this
   pass. It is an engine fix, not design.
 - **The printed sheet**: its own plan (`print-sheet-scotts-look.md`).
-- **The wizard and Home**: the critique was of the running sheet.
+- **Home**: the critique was of the running sheet. (The wizard was out too,
+  until Ken widened E1 on 2026-11-11: E1b.)
 
 ## 5. Questions for Ken
 
