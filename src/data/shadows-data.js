@@ -2226,7 +2226,7 @@ window.SHADOWS_DATA = {
      `retired` (Decision 277): true = not offered to a new character, in the wizard or
      Admin's archetype select. A character already on it keeps it; nothing else changes.
      `status`: "final" | "draft" | "tbd" | "written-in" -- the app shows a badge
-     (`appCopy.statusLabel`) and treats tbd/draft content as reference text,
+     (`appCopy.statusLabel`) for tbd and written-in, never for draft (Decision 275), and treats tbd/draft content as reference text,
      never blocking on un-modeled rules.
      `classification` (Decision 152) names a CLASSIFICATIONS id: which
      Advantages the archetype may buy.

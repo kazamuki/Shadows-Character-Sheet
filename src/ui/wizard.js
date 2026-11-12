@@ -968,6 +968,7 @@ function bindMain(){
     if (ch.identity.archetype!==b.dataset.arch){
       ch.identity.archetype=b.dataset.arch;
       resetArchetypeChoices(ch);
+      S.specAll=false;   // Decision 276: Show all was for the last archetype's options; a new one's complete set folds
     }
     update();
   });

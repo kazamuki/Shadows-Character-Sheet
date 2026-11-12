@@ -1818,6 +1818,13 @@ test("Decision 276: an unmet option says what's short, and a complete choice fol
   const other = opts.find(x => x.id !== o.id);
   app.click(`[data-spec="${other.id}"]`);
   assert.ok(card(other.id) && !card(other.id).classList.contains("folded"), "choosing from a folded row didn't work");
+  // Show all was for this archetype's options: another archetype's complete choice folds its own.
+  app.click("[data-spec-all]");
+  const next = D.archetypes.find(x => x.id !== a.id && !x.retired && x.specialization && (x.specialization.options || []).length > 1);
+  app.click(`[data-arch="${next.id}"]`);
+  const need = Engine.specializationNeed(stored(app, { locked: false }));
+  for (const x of next.specialization.options.slice(0, need)) app.click(`[data-spec="${x.id}"]`);
+  assert.equal(app.$$("#main .pick.folded").length, next.specialization.options.length - need, "Show all carried over to another archetype");
   assert.deepEqual(app.errors, []);
 });
 
