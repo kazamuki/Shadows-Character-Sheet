@@ -1,7 +1,7 @@
 # Work order E1b — Making a character, for everyone
 
 **Plan:** [finding-things-on-the-sheet](../finding-things-on-the-sheet.md), session E1 (E1b; E1a was the older file).
-**Status:** drafted 2026-11-11 by the conductor (Opus), not by E1a's reviewer: Ken asked for it, since that review ran on Sonnet. **Awaiting Ken:** EQ7–EQ12 (§4).
+**Status:** drafted 2026-11-11 by the conductor (Opus), not by E1a's reviewer: Ken asked for it, since that review ran on Sonnet. Ken answered EQ7–EQ10 on 2026-11-11 (§4). EQ7's answer added Decision N+3 (Cyborg retired from the picker). **Awaiting Ken:** approval of the order as amended, and EQ11–EQ12.
 **Branch:** the builder's own, cut from `main`.
 **Runs beside:** E4 (colour), which touches no wizard renderer. Not E2 or E5: E5 rewords copy this order adds.
 **Impeccable:** `/impeccable onboard the character creation wizard for a first-time player, with Expert mode as the veteran's path`. Its analysis is in this order (§1, §9), from a walkthrough at 375×812 on a blank character. The builder runs `/impeccable clarify` on §9's new words to check them, not to reopen the shape.
@@ -27,7 +27,7 @@
 **Done when:**
 - A new character's step 1 and step 2 show what's left to do in the neutral tone, with no error colour, and the nav says what's left rather than what to fix. A wrong value, such as an overspend or an unmet requirement, is still an error, in the error colour.
 - The rail before a Power Level is chosen is the character's name and one line, not a column of dashes.
-- No archetype card and no sheet chip says "in progress". An archetype whose rules aren't written still says so when it's chosen.
+- No archetype card and no sheet chip says "in progress". The Cyborg isn't offered to a new character, and a saved one opens and plays as before.
 - The Stats step shows which subtypes need which stats, marked met or not as the player spends. A subtype card says what's short before it's chosen. Once a subtype is chosen, the others fold to one line each, and the player can open them again.
 - Character Points says "Formerly 'Freebie Points'" once.
 - Step 1 says what's coming and whose call the Power Level is (§9).
@@ -36,9 +36,9 @@
 
 ## 2. Tier, versions, numbers
 
-- **Tier:** *Rule or shape*: three player-facing behaviours someone could have chosen otherwise, plus *Fix*-tier copy riding along.
-- **Versions:** app **patch** (EQ12). Game data **unchanged**: no character's computed values or choices move, and the new `appCopy` keys are words, not content (Decision 68). Character, table and pack schemas unchanged. No `migrate()` step. `validate()`'s issue objects gain an optional field, but they're computed, never stored.
-- **Numbers:** three decisions, **N**, **N+1** and **N+2**, the next free numbers on `origin/main` when built (274–276 if nothing lands first). No flags.
+- **Tier:** *Rule or shape*: four player-facing behaviours someone could have chosen otherwise, one of them (N+3) also *Content*, plus *Fix*-tier copy riding along.
+- **Versions:** app **patch** (EQ12). Game data **bumps** (Decision 68), because N+3 changes the choices a new character has: Cyborg is no longer offered. Nothing else in the data moves: the new `appCopy` keys are words, not content. Character, table and pack schemas unchanged. No `migrate()` step: a saved Cyborg loads as before. `validate()`'s issue objects gain an optional field, but they're computed, never stored.
+- **Numbers:** four decisions, **N** to **N+3**, the next free numbers on `origin/main` when built (274–277 if nothing lands first). No flags: F6 and F19 stay open on the Cyborg's data.
 
 ## 3. Decisions, drafted in full
 
@@ -69,16 +69,25 @@ N+2. **The Stats step shows what each archetype's choices demand, and the Archet
      - **Replaces:** nothing. (Decisions 91 and 134 are kept: the gate is still `requires` data checked by `checkPrereqs`.)
      - **Revisit if:** demands come to depend on something other than stats (a skill, an advantage), which the panel would then have to read too.
      - **Built:** app X.Y.Z (patch), PR #…, log entry.
+
+N+3. **The Cyborg is retired in place: a new character can't choose it, and one that has it keeps it.**
+     *2026-11-?? · Ken + Claude · Touches: cyborg, retired, archetypes, renderArchetype, the Admin archetype select, F6, F19, W61, Decision 143, E1b*
+     - **Decided:** An archetype with `"retired": true` isn't offered: it has no card in the wizard and no option in Admin's archetype select, unless it's the character's own. A character already on it loads, plays and saves as before, with its computed values unchanged. The Cyborg is marked `retired`. Its id, data and flags stay.
+     - **Why:** The team cut the Cyborg (cybernetics become gear for Professionals, W90), and its card offered a first-timer an archetype with no rules. Retiring in place is Decision 143's pattern for armor upgrades, and needs no conversion.
+     - **Rejected:** folding Cyborg characters into Custom now (W61: it needs the cybernetics design, F6 and F19, and its caveats weighed); deleting the archetype (constraint 6); keeping its card with a "not written yet" badge (it offers a choice the team has cut).
+     - **Replaces:** nothing. (W61's fold stays on the wishlist as the later step.)
+     - **Revisit if:** the Cyborg returns as an archetype, or W61 is built.
+     - **Built:** app X.Y.Z (patch), gamedata X.Y, PR #…, log entry.
 ```
 
 On Decision 161: `→ **Superseded in part by Decision N**: before a Power Level the rail is one line.` On 15: `→ **Superseded in part by Decision N+1**: no badge for draft content.` On 71: `→ **Superseded in part by Decision N+1**: statusLabel.draft no longer renders.` Each INDEX line gets its mark.
 
 ## 4. Questions for Ken
 
-- **EQ7:** Drop the "in progress" badge (N+1)? **Default: yes**, from the wizard and the sheet. Cyborg keeps "not written yet", and Custom keeps "off the books".
-- **EQ8:** To-do or error, by what the engine knows (N) or by what the player has touched? **Default: what the engine knows.** It holds through a reload or an undo, and needs no state.
-- **EQ9:** Character Points is still about 24,000px at 1280 (11,800 in Expert mode). Shorten it here, or in its own session? **Default: its own session, E1c**, added to the plan. It turns on how Disadvantages and Advantages fold for a first-timer, which Decisions 232 and 234 shaped for Expert mode, and it wants measuring on its own. E1b fixes only the doubled note.
-- **EQ10:** W131 (Expert mode as one page) and W121 (type a number into a stepper)? **Default: set aside by E1b.** Both are for the veteran, and this order is the first-timer's. Their Plan lines say so in this order's PR.
+- **EQ7:** Drop the "in progress" badge (N+1)? **Default: yes**, from the wizard and the sheet. Cyborg keeps "not written yet", and Custom keeps "off the books". *Ken, 2026-11-11: "Let's drop it, but should we also drop the cyborg at this point, since that was a large wishlist item change. If you think we should wait, we can wait."* **Conductor's call, on Ken's leave:** don't wait. The Cyborg is retired from the picker now, in place (N+3); W61's fold into Custom waits for the cybernetics design, as its Plan line says. With no `tbd` archetype offered, N+1's `tbd` rule stays only for one that's added later.
+- **EQ8:** To-do or error, by what the engine knows (N) or by what the player has touched? **Default: what the engine knows.** It holds through a reload or an undo, and needs no state. *Ken, 2026-11-11: Default.*
+- **EQ9:** Character Points is still about 24,000px at 1280 (11,800 in Expert mode). Shorten it here, or in its own session? **Default: its own session, E1c**, added to the plan. It turns on how Disadvantages and Advantages fold for a first-timer, which Decisions 232 and 234 shaped for Expert mode, and it wants measuring on its own. E1b fixes only the doubled note. *Ken, 2026-11-11: Default.*
+- **EQ10:** W131 (Expert mode as one page) and W121 (type a number into a stepper)? **Default: set aside by E1b.** Both are for the veteran, and this order is the first-timer's. Their Plan lines say so in this order's PR. *Ken, 2026-11-11: Default.*
 - **EQ11:** Step 1's new lines (§9): the book's own words on taking time, and "your GM picks this"? **Default: yes.**
 - **EQ12:** App patch or minor? **Default: patch.** Nothing new becomes possible, and three behaviours change.
 
@@ -104,6 +113,10 @@ On Decision 161: `→ **Superseded in part by Decision N**: before a Power Level
 | Demands on Stats | Not shown | `renderStats`, `wizard.js:236` | A `<details>` after the allocation rows, only when some option carries `requires.stats`. Redrawn with the stats on every press: the step re-renders `#main` |
 | The doubled note | Header and `dice-note` both draw `steps[].note` | `stepHeader`, `wizard.js:186`; `renderCP`, `wizard.js:558` | Header only |
 | Power Level cards | "Stats 45 · Skills 40+INT+REF · CP 5 · Skill cap 4 · Max CP Boost 2 · Ç 3d4×100" | `renderPowerLevel`, `wizard.js:195` | Labels as §9. No number moves |
+| Archetypes offered | Every entry in `D.archetypes` | `renderArchetype`, `wizard.js:263`; Admin's select, `sheet.js:2634` | Not `retired`, unless it's the character's own. **Grep every reader of `D.archetypes`/`D().archetypes`** (`engine.js:109, 3903, 3971`; `sheet.js:704, 1730, 4360`; `wizard.js:794`) and class each one as *offers a choice* (filter) or *reads a held one* (don't) |
+| A saved Cyborg | Loads; `versionCheck` reports nothing | `migrate`, `versionCheck` | Unchanged. Its computed values diff identical before and after (script it, per *How exact to be*) |
+| `gamedataVersion` | Current on `main` | `shadows-data.js` `meta` | Bumped, per Decision 68, for N+3 |
+| Tests that pick Cyborg | Any test booting a new Cyborg through the wizard (`voice.test.mjs:191` boots one by storage, which still works) | grep `cyborg` in `tests/` | A storage-seeded Cyborg still loads; a test that *clicks* the Cyborg card is an expected break |
 | Tests that pin the nav's words | `/to fix first/`; `^N things? to fix first$` | `smoke-sheet-archetypes.test.mjs:464`; `smoke-wizard.test.mjs:717, 726` | 464 stays (unspent points on Review are to-dos: it becomes "left to do"); 717 and 726 count to-dos on a nameless Custom. Expected breaks |
 | Tests that count `li.error` | A nameless Custom's errors | `smoke-wizard.test.mjs:712` | They gain `todo`; still `li.error`. Check it holds |
 | The badge guard | No leaf reads a raw status | `voice.test.mjs:171–209` | Still passes; it boots Arcanist (draft, now no badge) and Cyborg (tbd) |
@@ -177,6 +190,7 @@ Write these first, and show each failing on `main`.
 6. Same file: **"Decision N+2: the Stats step shows each option's demands, and they follow the stats"**. Reads every option with `requires.stats` from the data. On Stats, the panel has one line per option. Raising a stat to an option's demand marks it met, with no reload.
 7. Same file: **"Decision N+2: an unmet option says what's short, and a complete choice folds the rest"**. Before choosing: an unmet card reads `(you have \d+)`. Choose one: the others have no `.desc`, and the show-all button reads its count. Press it: all are full. Undo from the toast: none folded.
 8. Same file: **"the Character Points note shows once"**. The note's text occurs once in `#main`.
+9. Same file: **"Decision N+3: a retired archetype isn't offered, and a character on it keeps it"**. The Archetype step has no card for any `retired` archetype (read from the data). A locked character seeded on one opens with no error, shows its archetype on Character, and Admin's select keeps it as the current option while offering no other retired one.
 
 ## 11. Tests beyond the examples
 
@@ -184,7 +198,8 @@ Write these first, and show each failing on `main`.
 - **Phone:** at 375×812, Professional + Enforcer, the Archetype step is at most 4,355px (half today's). Put it in `phone-check` if it can hold it, or say in the PR why not.
 - **Contrast:** the to-do tone passes the contrast guard in both themes.
 - **Voice:** `voice.test.mjs` over the new `appCopy`.
-- **Mutation tests**, against the built code: drop `todo` from 6013 (example 2 fails); mark a `requires` issue `todo` (example 3 fails); render the draft badge (example 5 fails); drop the demands panel's redraw (example 6 fails); skip the fold (example 7 fails); restore the `dice-note` note (example 8 fails).
+- **Mutation tests**, against the built code: drop `todo` from 6013 (example 2 fails); mark a `requires` issue `todo` (example 3 fails); render the draft badge (example 5 fails); drop the demands panel's redraw (example 6 fails); skip the fold (example 7 fails); restore the `dice-note` note (example 8 fails); drop the `retired` filter from the wizard (example 9 fails), and from Admin's select.
+- **Nothing else moves:** a script of every computed output for a saved Cyborg, before and after, diffs identical.
 
 ## 12. Steps
 
@@ -192,9 +207,10 @@ Write these first, and show each failing on `main`.
 2. N: `todo` in `validate`, the 47-site table, `issuesHtml`, the CSS, the three nav sites, the rail. `npm run verify`.
 3. N+1: the card and the chip, and remove `.badge.draft`. `npm run verify`.
 4. N+2: the Stats panel, the shortfall on the card, the fold. `npm run verify`.
-5. The copy (§9) and the doubled note. `npm run verify`.
-6. In the dev preview, at 375×812 and 1280×860: a blank character from step 1 to Archetype as Professional/Enforcer, spending Stats past and short of the demands; Arcanist and Cyborg cards; Custom unchanged; Expert mode on, the same path. **Screenshots in the PR.** `npm run phone-check`.
-7. Mutation tests (§11). Close-out (§14).
+5. N+3: `retired` on the Cyborg, the filter at every reader that offers a choice, `gamedataVersion`. The before-and-after diff of a saved Cyborg. `npm run verify`.
+6. The copy (§9) and the doubled note. `npm run verify`.
+7. In the dev preview, at 375×812 and 1280×860: a blank character from step 1 to Archetype as Professional/Enforcer, spending Stats past and short of the demands; Arcanist's card with no badge, no Cyborg card, a seeded Cyborg on the sheet; Custom unchanged; Expert mode on, the same path. **Screenshots in the PR.** `npm run phone-check`.
+8. Mutation tests (§11). Close-out (§14).
 
 ## 13. Stop and ask
 
@@ -205,14 +221,15 @@ Write these first, and show each failing on `main`.
 
 ## 14. Close-out
 
-- `close-the-session` for *Rule or shape*: N, N+1 and N+2 pasted from §3 with *Built* filled; 15, 71 and 161 and their INDEX lines marked; app patch; STATE rewritten where E1b stands; a log entry; a `shipped.md` row. W131's and W121's Plan lines as EQ10 answered. The plan's §3: E1b's row links this order, and E1c's row is added if EQ9 is answered so.
+- `close-the-session` for *Rule or shape*: N to N+3 pasted from §3 with *Built* filled; 15, 71 and 161 and their INDEX lines marked; app patch; `gamedataVersion` bumped; STATE rewritten (the Cyborg row too) where E1b stands; a log entry; a `shipped.md` row. W131's and W121's Plan lines already say E1b set them aside (this order's PR), and E1c is in the plan: check both still hold.
 - **CHANGELOG** (player voice):
   - "Making a character no longer greets you with errors: what's still to choose reads as what's left to do, and only a real mistake shows as one."
   - "The Stats step shows which archetype choices need minimum stats, so an Enforcer's BOD 8 isn't a surprise on the next step."
   - "Once you've picked a Subtype, Bloodline or Origin, the others fold away. Show all brings them back."
   - "Archetype cards no longer say 'in progress'."
-- **PR title:** `feat(wizard): to-dos not errors, demands on Stats, no build-state badges (E1b, Decisions N–N+2)`.
-- **PR body:** the template's sections, the 47-site table (§8), **every new string as it renders** (for the voice pass), **Where the order didn't fit**, and the screenshots from step 6.
+  - "The Cyborg is no longer offered to a new character; cybernetics are on their way as gear. A character who has one keeps it."
+- **PR title:** `feat(wizard): to-dos not errors, demands on Stats, no build-state badges, Cyborg retired (E1b, Decisions N–N+3)`.
+- **PR body:** the template's sections, the 47-site table (§8), **every new string as it renders** (for the voice pass), **Where the order didn't fit**, and the screenshots from step 7.
 - **Review checklist:**
   - Run step 6's path yourself in a browser at both widths, with Expert mode on and off.
   - Check the 47-site table against §8's rule, line by line, not just against its list.

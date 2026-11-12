@@ -42,7 +42,7 @@ and that Goes with is mutual.
 ### Wizard
 
 **W121 — Type a number into a stepper.** *Claude, from P13 · 💡 · Fix (UI) · raised 2026-10-16*\
-**Plan:** weighed by [finding-things-on-the-sheet](plans/finding-things-on-the-sheet.md) E1b: its proposal says whether it joins the pass · **Goes with:** W131
+**Plan:** set aside by [finding-things-on-the-sheet](plans/finding-things-on-the-sheet.md) E1b: the order is the first-timer's, and this is the veteran's (EQ10) · **Goes with:** W131
 
 Every rank in the wizard is one click: spending the Skill pool alone is about 30, before stats, boosts and Advantages. An experienced player knows the
 targets. The stepper's value could take a typed number and the arrow keys, held to the same caps and pools as + and −.
@@ -57,7 +57,7 @@ Home offers Open, Export and Remove, and no copy, so a second character of the s
 choice someone could make differently: a numbered decision.
 
 **W131 — Expert mode as one long page.** *Ken, after P13 · 💡 · Rule or shape · raised 2026-10-17*\
-**Plan:** weighed by [finding-things-on-the-sheet](plans/finding-things-on-the-sheet.md) E1b: its proposal says whether it joins the pass · **Goes with:** W121
+**Plan:** set aside by [finding-things-on-the-sheet](plans/finding-things-on-the-sheet.md) E1b: the order is the first-timer's, and this is the veteran's (EQ10) · **Goes with:** W121
 
 An experienced player who knows what they want could make a character on one scrolling page: every creation step in order, folded as Expert mode folds
 them, with one sticky bar that jumps between steps and filters, instead of eight screens and seven Continues. P13 and P19 make it plausible: Expert mode
