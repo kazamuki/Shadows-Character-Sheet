@@ -1069,9 +1069,9 @@ function focusedPickHtml(ch, attr){
 function focusedOwedLines(fp, away){
   if (!fp || fp.complete) return [];
   const more = fp.need - fp.have, cat = Engine.focusedCategoryName(fp.category), out = [];
-  if (more>0) out.push(`Choose ${more} more ${cat} Skill${more===1?"":"s"} to Focus${away?" at the top of this tab":""}.`);
-  if (fp.invalid.length) out.push(away ? "A pick at the top of this tab can't be a Focused Skill any more. Fix it there."
-    : "A pick can't be a Focused Skill any more.");
+  if (more>0) out.push(`${more} more ${cat} Skill${more===1?"":"s"} to pick${away?" at the top of this tab":""}.`);
+  if (fp.invalid.length) out.push(away ? "One of your Focused Skills isn't allowed any more. Fix it from the line at the top of this tab."
+    : "One of your Focused Skills isn't allowed any more.");
   return out;
 }
 // The ask at the top of every sheet tab (Decision 273): one line and a button. ""

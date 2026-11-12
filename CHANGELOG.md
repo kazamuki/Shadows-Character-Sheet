@@ -26,7 +26,7 @@ own in the footer.
 ## [Unreleased] — app 0.66.1
 
 - **A character that owes a choice since the rules changed now asks in one line at the top of each tab.** **Choose** opens the picker, so the sheet's Health and name stay on the first screen.
-- **Opening an older file says it was saved under earlier rules and opens under the current ones**, without version numbers.
+- **Opening an older file says it was saved under older rules and opens under the current ones**, without version numbers.
 
 ## v0.66.0 — 2026-11-07
 

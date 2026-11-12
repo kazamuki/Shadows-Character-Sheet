@@ -432,11 +432,11 @@ test("a locked Mercenary short its pick chooses it on Loadout, as one undoable a
   ch.identity.archetype = "professional";
   ch.archetypeChoices.specialization = ["mercenary"];
   const app = openSheet(ch, "loadout");
-  assert.match(app.$("#main").textContent, /Choose 1 more Combat Skill to Focus/);
+  assert.match(app.$("#main").textContent, /1 more Combat Skill to pick/);
   app.click("[data-fowedopen]");   // Decision 273: the picker is in the dialog Choose opens
   app.click('#modal [data-fpick="rifles"]');
   assert.equal(activeChar(app).archetypeChoices.focusedSkillPicks.join(), "rifles");
-  assert.doesNotMatch(app.$("#main").textContent, /Choose 1 more/, "the ask stays after the count is met");
+  assert.doesNotMatch(app.$("#main").textContent, /1 more Combat Skill to pick/, "the ask stays after the count is met");
   assert.match(app.$("#main").textContent, /Rifles/);
   app.click('[data-sec="sessions"]');
   assert.match(app.$("#main").textContent, /Focused Skill: Rifles/, "the pick is missing from the Activity Log");
@@ -451,7 +451,7 @@ const lockedEnforcer = () => {
   ch.archetypeChoices.specialization = ["enforcer"];
   return ch;
 };
-const ASK = /Choose 1 more Combat Skill to Focus/;
+const ASK = /1 more Combat Skill to pick/;
 const askCount = app => app.$$("[data-focused-owed]").length;
 
 const modalOpen = app => !!app.$("#modal[open]");
@@ -461,7 +461,7 @@ test("Decision 273: a locked Enforcer short its Combat Skill sees one line on ev
   const tabs = app.$$("[data-sec]").map(b => b.dataset.sec);
   assert.ok(tabs.length >= 8, "the sheet's tabs weren't found");
   const main = app.$("#main");
-  assert.ok(main.innerHTML.indexOf("Choose 1 more Combat Skill") < main.innerHTML.indexOf('class="step-title"'), "the ask isn't above the title");
+  assert.ok(main.innerHTML.indexOf("1 more Combat Skill") < main.innerHTML.indexOf('class="step-title"'), "the ask isn't above the title");
   for (const t of tabs) {
     app.click(`[data-sec="${t}"]`);
     assert.equal(askCount(app), 1, `${t}: the ask isn't there exactly once`);
@@ -504,18 +504,18 @@ test("Decision 273: a complete pick asks nothing, and an invalid one reads Fix w
   merc.archetypeChoices.focusedSkillPicks = ["rifles"];
   const done = openSheet(merc, "main");
   assert.equal(done.$$("[data-fpick],[data-fowedopen]").length, 0);
-  assert.doesNotMatch(done.$("#main").textContent, /to Focus\./);
+  assert.doesNotMatch(done.$("#main").textContent, /to pick\./);
 
   const ch = lockedEnforcer();
   ch.archetypeChoices.focusedSkillPicks = ["survival"];
   const app = openSheet(ch, "main");
-  assert.match(app.$("#main").textContent, /can't be a Focused Skill any more/);
+  assert.match(app.$("#main").textContent, /isn't allowed any more/);
   assert.equal(app.$$("[data-fpick]").length, 0, "a picker is on the page");
   assert.equal(app.$("[data-fowedopen]").textContent.trim(), "Fix");
   app.click('[data-sec="loadout"]');
-  const panelBad = [...app.$$("#main p.step-note")].find(p => !p.closest("[data-focused-owed]") && /can't be a Focused Skill/.test(p.textContent));
+  const panelBad = [...app.$$("#main p.step-note")].find(p => !p.closest("[data-focused-owed]") && /isn't allowed any more/.test(p.textContent));
   assert.match(panelBad ? panelBad.textContent : "", /at the top of this tab/);
-  assert.match(panelBad ? panelBad.textContent : "", /Fix it there/);
+  assert.match(panelBad ? panelBad.textContent : "", /Fix it from the line at the top of this tab/);
   app.click("[data-fowedopen]");
   assert.equal(app.$('#modal [data-fpick="survival"]').textContent, "Remove");
   app.click('#modal [data-fpick="survival"]');

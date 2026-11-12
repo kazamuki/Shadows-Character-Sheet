@@ -7,7 +7,7 @@ window.SHADOWS_CHANGELOG = [
     "intro": [],
     "items": [
       "**A character that owes a choice since the rules changed now asks in one line at the top of each tab.** **Choose** opens the picker, so the sheet's Health and name stay on the first screen.",
-      "**Opening an older file says it was saved under earlier rules and opens under the current ones**, without version numbers."
+      "**Opening an older file says it was saved under older rules and opens under the current ones**, without version numbers."
     ]
   },
   {

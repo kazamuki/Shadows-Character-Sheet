@@ -6251,7 +6251,7 @@ const Engine = (() => {
     const issues = [];
     const saved = (c.meta||{}).gamedataVersion;
     if (saved !== D().meta.gamedataVersion)
-      issues.push("This character was saved under an earlier version of the rules. It opens under the current ones; export it to keep this copy.");
+      issues.push("This file was saved under older rules and opens under the current ones. Export it to keep this copy.");
     for (const id of Object.keys(c.skills||{}))
       if (!skillById(id)) issues.push(`Skill "${id}" no longer exists in game data.`);
     for (const a of c.advantages||[])
