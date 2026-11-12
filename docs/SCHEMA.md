@@ -5475,7 +5475,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** a round counter, or a heal-per-round button outside Reset (the sheet knows no round but Reset; W128); Regeneration as a running power (it costs nothing, and the form carries it, Decision 195); a heal through `heal()` uncapped (it trims Withering); storing the HL surged this round (HQ21); healing a GM's claimed row (it keeps no Withering, Decision 257); healing that ends Dying (only a Nanomed Kit does, Decision 105).
      - **Replaces:** nothing; extends 195 (the form carries Regeneration), 220 (who heals at Reset) and 266 (what a running power does at Reset).
      - **Revisit if:** W128 knows a round or a scene; the book says the form ends at Unconscious on the sheet's side; a table asks for Vitality Surge's per-round cap.
-     - **Built:** app 0.62.0 (unreleased), game data 0.53 (unreleased), character schema 0.34, PR #…, log 2026-11-05 (H3).
+     - **Built:** app 0.62.0 (unreleased), game data 0.53 (unreleased), character schema 0.34, PR #327, log 2026-11-05 (H3).
 
 269. **An encounter row reads like the sheet's Health readout: one row acts at a time, two buttons are its own, and a hit past twice what it holds asks first.**
      *2026-11-05 · Ken + Claude · Touches: encounter row, encRowHtml, encounterView, health.hpPer, label, hlCellsOf, More, Hit, Heal, Take, Down, Dying, Act now, Now badge, Hit panel, Apply, enc-bar, plan labels, Add to <encounter>, Decision 190, Decision 211, Decision 258*
@@ -5619,7 +5619,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** keeping Session Log and moving only Undo (two between-sessions tabs); Undo in the ⋮ menu (EQ21: the toast covers the mid-scene case); History and the Activity Log first (logging a session and spending what it earned are the page's work; the jump bar reaches the log in one tap).
      - **Replaces:** Decision 158 in part (eight tabs, now seven); Decision 50 (the Activity Log lives on Progression, under History, not on Session Log).
      - **Revisit if:** players look for Undo on Trackers or Main after the toast is gone (EQ21's wish), or the merged page grows past what its jump bar makes easy.
-     - **Built:** app 0.68.0 (minor), no schema bump, PR #…, log 2026-11-12 (E2a).
+     - **Built:** app 0.68.0 (minor), no schema bump, PR #327, log 2026-11-12 (E2a).
 
 282. **What you can do lives on Character, and what you carry on Loadout. Main is the only home of a toggle.**
      *2026-11-12 · Ken + Claude · Touches: renderShCharacter, renderShLoadout, archPanels, rankedList panel, grimoire panel, powers panel, powersPanelHtml, powerCardHtml, focusedSkills panel, specializationText panel, Tweak, toggle panel, togglePanelHtml, table panel, Installed Cybernetics, Disciplines, Grimoire, arch-flow, arch-part, arch-wide, Character jump bar, tab-links, focusedOwedLines, Main Form switch, The Code, E2a*
@@ -5628,7 +5628,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** a Powers tab (an eighth tab back, and the reference split from what it explains); Cybernetics on Character (EQ23); keeping Loadout's switch (two homes); Main drawing only a toggle that does something (a new toggle would have no home, Decision 135).
      - **Replaces:** Decisions 154, 195, 238, 273 and 158, each in part: a character's own powers and the Focused Skills panel are on Character, the switch is on Main alone, and Character holds what the archetype lets you do. Decisions 110, 201 and 246 stand.
      - **Revisit if:** an archetype gains a panel that is both something you can do and something you carry (a bonded weapon), or Character grows so long that its jump bar no longer reaches Advantages easily.
-     - **Built:** app 0.68.0 (minor), no schema bump, PR #…, log 2026-11-12 (E2a).
+     - **Built:** app 0.68.0 (minor), no schema bump, PR #327, log 2026-11-12 (E2a).
 
 283. **Conditions live on Main: Trackers' copy goes, and Main's opened chip holds the note and the rule.**
      *2026-11-12 · Ken + Claude · Touches: conditionsHtml, conditionInfoHtml, conditionAddHtml, data-condinfo, data-condnote, cond-note, S.condInfo, Conditions section, Trackers tab, Main tab, Pain & Conditions popover, conditionRules.rollPenalty, conditionRules.penaltyStacking, conditionRules.noStacking, ruleHtml, E2a*
@@ -5637,7 +5637,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** keeping Trackers' cards (EQ20); dropping the note field (a note is stored, and the poison's source is what the table asks about later); the stacking rule always under the chips (height on Main for a line read once); the note field on every chip (a row of inputs under each chip on a phone).
      - **Replaces:** Decision 96 in part (its full cards with effect, recovery and a note field on Trackers; the rule's notice "on Trackers only when a Condition it governs is active" now shows in that Condition's opened chip); Decision 107 in part (its "Both tabs show a collapsible palette": Main's only).
      - **Revisit if:** players miss a Condition's text in full without a tap, or a GM's notes outgrow one line.
-     - **Built:** app 0.68.0 (minor), no schema bump, PR #…, log 2026-11-12 (E2a).
+     - **Built:** app 0.68.0 (minor), no schema bump, PR #327, log 2026-11-12 (E2a).
 
 ## 5. Open Flags
 
