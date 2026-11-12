@@ -5586,7 +5586,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - A dismiss on each guide line: eight choices where one will do.
      - **Replaces:** Decision 272 in part (`?` opens Help, not Keys; Keys lists it as Help). Decision 258 in part (from 1280px a table can have a column on the right: Help's).
      - **Revisit if:** GMs keep Help open all night (it wants another shape), or a player's sheet asks for the same.
-     - **Built:** app 0.67.0; PR #…; log 2026-11-11 (S31).
+     - **Built:** app 0.67.0; PR #323; log 2026-11-12 (S31).
 
 ## 5. Open Flags
 
