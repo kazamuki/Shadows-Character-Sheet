@@ -1170,6 +1170,8 @@ const cpExpert = (mut, store = EXPERT) => onStep("professional", "street", "char
 const pickOf13 = (app, name) => app.$$("#main .pick").find(p => p.querySelector("h2") && p.querySelector("h2").textContent === name);
 const hiddenIn = el => !!el.closest("[hidden]");
 const shownNames = app => app.$$("#main [data-filterable] .pick").filter(p => !p.hidden).map(p => p.querySelector("h2").textContent);
+// Decision 278: the lists open folded; a test that counts all 87 asks for them open first.
+const openLists = app => { for (const k of ["disadvantages", "advantages"]) app.click(`[data-cp-all="${k}"]`); return app; };
 const typeFilter = (app, v) => { const f = app.$("#main [data-jumpfilter]"); f.value = v; f.dispatchEvent(new app.window.Event("input")); };
 const holdThree = ch => {
   ch.advantages = [{ id: "bullseye", rank: 1, notes: "" }, { id: "common-sense", rank: 1, notes: "", selections: { skill: ["investigation"] } }];
@@ -1287,7 +1289,7 @@ test("P13 4: the CP Boosts heading names Max CP Boost, and every stepper keeps i
 
 test("P13 5: the CP filter finds an entry by its name, in both modes", () => {
   for (const store of [{}, EXPERT]) {
-    const app = cpExpert(() => {}, store);
+    const app = openLists(cpExpert(() => {}, store));
     typeFilter(app, "Ambidextrous");
     assert.deepEqual(shownNames(app), ["Ambidextrous"], "the name didn't find its entry");
     assert.equal(app.$("#main [data-jumpcount]").textContent, "1 of 87");
@@ -1299,7 +1301,7 @@ test("P13 5: the CP filter finds an entry by its name, in both modes", () => {
     assert.equal(shownNames(app).length, 87);
   }
   // Held entries stay, as before.
-  const app = cpExpert(holdThree);
+  const app = openLists(cpExpert(holdThree));
   typeFilter(app, "Ambidextrous");
   assert.deepEqual(shownNames(app).sort(), ["Ambidextrous", "Blood Lust", "Bullseye", "Common Sense"]);
 });
@@ -1357,7 +1359,7 @@ test("P13 7: Expert mode folds the Archetype step's prose and keeps what each ch
 
 test("P13 8: Held only shows the build, and works with the filter", () => {
   // Educated is held as natural ranks only (a Professional's free ones): it's held, though it has no bought row.
-  const app = cpExpert(ch => { holdThree(ch); ch.advantages.push({ id: "educated", rank: 2, notes: "", source: "natural" }); }, {});
+  const app = openLists(cpExpert(ch => { holdThree(ch); ch.advantages.push({ id: "educated", rank: 2, notes: "", source: "natural" }); }, {}));
   const held = ["Blood Lust", "Bullseye", "Common Sense", "Educated"];
   assert.ok(app.$("#main [data-heldonly]"), "no Held only toggle");
   assert.equal(app.$("#main [data-heldonly]").getAttribute("aria-pressed"), "false");
