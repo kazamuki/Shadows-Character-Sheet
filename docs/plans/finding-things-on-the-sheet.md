@@ -62,7 +62,7 @@ all correct, but it takes knowing the sheet to find it:
 | Session | What | Impeccable | Tier | After |
 |---|---|---|---|---|
 | E1a | Opening an older file: an owed choice as one line, the load notice in plain words ([order](finding-things-on-the-sheet/E1a-opening-an-older-file.md), built: PR #317, app 0.66.1, Decision 273) | `onboard`, then `clarify` | Rule or shape | — |
-| E1b | Making a character, for everyone: the wizard's first-timer path ([order](finding-things-on-the-sheet/E1b-making-a-character.md), approved) | `onboard` | Rule or shape | E1a |
+| E1b | Making a character, for everyone: the wizard's first-timer path ([order](finding-things-on-the-sheet/E1b-making-a-character.md), built: PR #320, app 0.66.2, Decisions 274–277) | `onboard` | Rule or shape | E1a |
 | E1c | Character Points for a first-timer: how Disadvantages and Advantages fold (EQ9) | `distill` | Rule or shape | E1b |
 | E2 | Where everything lives: the tabs, shaped and distilled | `shape`, then `distill` | Rule or shape | — |
 | E3 | Main's columns and the Grimoire's read mode | `layout` | Rule or shape | E2 |

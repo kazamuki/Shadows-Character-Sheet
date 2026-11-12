@@ -13270,3 +13270,43 @@ test("U2: a session dated today and closed out is last session", () => {
   Engine.writeCloseOut(t, seven, { lines: [{ name: "Mara", present: true }] });
   assert.equal(Engine.nextSession(t).last.id, seven, "closed out, 7 is last whatever its date");
 });
+
+// ── Decision 274: a choice not yet made is a to-do; only something wrong is an error ──
+test("Decision 274: a choice not yet made is a to-do; a wrong value isn't", () => {
+  const fresh = Engine.newCharacter();
+  const pl = Engine.validate("power-level", fresh);
+  assert.equal(pl.length, 1);
+  assert.deepEqual([pl[0].level, pl[0].todo], ["error", true], "a missing Power Level isn't a to-do");
+
+  // The first subtype with a stat demand, read from the data: below its demands it is wrong, not undone.
+  const arch = D.archetypes.find(a => ((a.specialization || {}).options || []).some(o => o.requires && o.requires.stats));
+  const opt = arch.specialization.options.find(o => o.requires && o.requires.stats);
+  const ch = Engine.newCharacter();
+  ch.identity.name = "Probe"; ch.identity.archetype = arch.id; ch.creation.powerLevel = D.powerLevels[0].id;
+  ch.archetypeChoices.specialization = [opt.id];
+  for (const id of Object.keys(ch.stats)) ch.stats[id].base = D.statRules.base;
+  const unmet = Engine.validate("archetype", ch).filter(i => i.msg.startsWith(opt.name + " requires"));
+  assert.ok(unmet.length, "the demand isn't reported");
+  assert.ok(unmet.every(i => i.level === "error" && !i.todo), "an unmet requirement was marked a to-do");
+  assert.ok(Engine.validate("archetype", ch).some(i => i.todo), "the picks not yet made aren't to-dos");
+
+  // Overspent Stat Points: something entered is wrong.
+  const over = Engine.newCharacter(); over.creation.powerLevel = D.powerLevels[0].id;
+  for (const id of Object.keys(over.stats)) over.stats[id].base = 10;
+  const spent = Engine.validate("stats", over).filter(i => /overspent/.test(i.msg));
+  assert.ok(spent.length && spent.every(i => !i.todo), "an overspend was marked a to-do");
+});
+
+test("Decision 274: validate returns an array for every step, and todo is only ever true", () => {
+  const steps = D.creationFlow.steps.map(s => s.id).concat("review");
+  for (const ch of [Engine.newCharacter(), Engine.migrate({}), subject()]) {
+    for (const s of steps) {
+      const out = Engine.validate(s, ch);
+      assert.ok(Array.isArray(out), s);
+      for (const i of out) assert.ok(i.todo === undefined || i.todo === true, `${s}: ${i.msg}`);
+    }
+  }
+  // Review re-reads the other steps' issues: a to-do stays one.
+  const r = Engine.validate("review", Engine.newCharacter());
+  assert.ok(r.some(i => i.todo), "Review dropped the to-dos it re-read");
+});

@@ -548,7 +548,7 @@ function renderShCharacter(){
   let h = "";
 
   if (a){
-    const badge = a.status!=="final"?` <span class="chip ${a.status==="tbd"?"pain":"gold"}">${esc(statusLabel(a.status))}</span>`:"";
+    const badge = showsStatus(a)?` <span class="chip ${a.status==="tbd"?"pain":"gold"}">${esc(statusLabel(a.status))}</span>`:"";
     // What the archetype is, from the data or the player's own words (Decision 153).
     const content = Engine.archetypeContent(ch), cls = content.classification;
     const specLabel = Engine.specializationLabel(ch);
@@ -2631,7 +2631,7 @@ function renderShAdmin(){
     <select data-admin-pl>${D.powerLevels.map(p=>`<option value="${p.id}" ${ch.creation.powerLevel===p.id?"selected":""}>${esc(p.name)}</option>`).join("")}</select>
     <span class="sub">Changes every cap (Max Skill Rank, Max Character Point Boost, and an archetype's Max Starting Rank) and the CP budget. Stored values don't move, so the sheet may read "over" until you adjust them.</span></div>`;
   h += `<div class="trk"><h2>Archetype</h2>
-    <select data-admin-arch><option value="">— none —</option>${D.archetypes.map(a=>`<option value="${a.id}" ${ch.identity.archetype===a.id?"selected":""}>${esc(a.name)}</option>`).join("")}</select>
+    <select data-admin-arch><option value="">— none —</option>${D.archetypes.filter(a=>!a.retired || a.id===ch.identity.archetype).map(a=>`<option value="${a.id}" ${ch.identity.archetype===a.id?"selected":""}>${esc(a.name)}</option>`).join("")}</select>
     <span class="sub" style="color:var(--magenta)">⚠ Changing archetype clears every archetype-specific choice — focus / stat-bonus allocations, specialization, disciplines, natural advantages. One undo brings it all back.</span></div>`;
   h += adminWriteInHtml(ch) + adminArchChoicesHtml(ch);
 
