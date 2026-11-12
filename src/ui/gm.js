@@ -417,7 +417,7 @@ function syncHelp(){
   el.classList.toggle("open", shown);
   el.setAttribute("aria-hidden", shown?"false":"true");
   el.toggleAttribute("inert", !shown);
-  if (sc) sc.classList.toggle("open", shown);
+  if (sc){ sc.classList.toggle("open", shown); sc.onclick=closeHelp; }   // a click on the scrim shuts the flyout, as the vitals scrim does
   if (app) app.classList.toggle("help-pinned", shown);
   const b=document.querySelector("[data-thelp]"); if (b) b.setAttribute("aria-expanded", shown?"true":"false");
   if (S.screen!=="table"){ el.innerHTML=""; helpKey=null; }

@@ -344,3 +344,13 @@ test("S31: Esc closes one layer at a time, a box sits above the panel, a night's
   assert.equal(shown(wide), false, "a move left the flyout open");
   assert.deepEqual(app.errors.concat(narrow.errors, wide.errors), []);
 });
+
+test("S31: a click on the scrim closes the flyout and focus returns to the ? button", () => {
+  const app = helpApp("sessions", { width: 1024 });
+  app.click("[data-thelp]");
+  assert.equal(shown(app), true);
+  app.click("#ghscrim");
+  assert.equal(shown(app), false, "the scrim didn't close the flyout");
+  assert.equal(app.doc.activeElement, app.$("[data-thelp]"));
+  assert.deepEqual(app.errors, []);
+});

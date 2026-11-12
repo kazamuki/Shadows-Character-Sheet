@@ -5167,7 +5167,7 @@ window.SHADOWS_DATA = {
           "during",
           "after"
         ],
-        "intro": "Plan a fight, run it turn by turn, and keep the ones that are done.",
+        "intro": "Plan a fight, run it round by round, and keep the ones that are done.",
         "for": "Scenes you plan ahead, usually fights. Plan the stakes and the ground, put the crew and the opposition in, then run it round by round.",
         "words": [
           "encounter",
@@ -5199,7 +5199,7 @@ window.SHADOWS_DATA = {
         "when": [
           "during"
         ],
-        "for": "A fight in progress, in turn order. **Next turn** (N) moves to whoever acts next; each row has **Hit** and **Heal**, and **More** adds a Condition or a Delay.",
+        "for": "A fight in progress, in turn order. **Next** (N) moves to whoever acts next; each row has **Hit** and **Heal**, and **More** adds a Condition or a Delay.",
         "words": [
           "round",
           "nextTurn",
@@ -5315,7 +5315,7 @@ window.SHADOWS_DATA = {
         "text": "People the crew met last time who'd need numbers if a fight started."
       },
       "journal": {
-        "term": "Journal",
+        "term": "Debrief",
         "text": "Your write-up of a session: what happened, the fallout, new threads, how factions and the city moved, how it went, and a seed for next time. Every part is optional."
       },
       "line": {
@@ -5416,7 +5416,7 @@ window.SHADOWS_DATA = {
       },
       "nextTurn": {
         "term": "Next turn",
-        "text": "Moves to whoever acts next. **N** does the same on a running fight's page."
+        "text": "The **Next** button moves to whoever acts next. **N** does the same on a running fight's page."
       },
       "combatSense": {
         "term": "Combat Sense",
