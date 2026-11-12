@@ -2,10 +2,12 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
-    "version": "0.66.2",
+    "version": "0.66.3",
     "date": null,
     "intro": [],
     "items": [
+      "**Character Points opens with its Disadvantages and Advantages folded away.** What you've taken stays in view, and Show all opens a list. The filter still finds anything.",
+      "**Once you've allocated your Natural Advantages, the ones you didn't pick fold away too.**",
       "**A character that owes a choice since the rules changed now asks in one line at the top of each tab.** **Choose** opens the picker, so the sheet's Health and name stay on the first screen.",
       "**Opening an older file says it was saved under older rules and opens under the current ones**, without version numbers.",
       "**Making a character no longer greets you with errors.** What's still to choose reads as what's left to do, and only a real mistake shows as one.",

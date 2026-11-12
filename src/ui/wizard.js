@@ -427,9 +427,16 @@ function renderArchetype(){
       const have = ac.naturalAdvantages.reduce((s,n)=>s+n.rank,0);
       h += `<div class="sect">Natural Advantages — allocate ${rowP.naturalAdvantageRanks} ranks (free)</div>
         <p class="step-note">${esc(nat.description)} <em>${have}/${rowP.naturalAdvantageRanks} allocated.</em></p>`;
+      // Decision 279: once every rank is allocated, what has none folds to a line each (S.natAll opens it again).
+      const natDone = have>=rowP.naturalAdvantageRanks, natFold = natDone && !S.natAll;
+      if (natDone && nat.pool.some(p=>!((ac.naturalAdvantages.find(n=>n.id===p.advantageId)||{rank:0}).rank>0)))
+        h += `<div class="spec-fold"><button class="btn sm" type="button" data-nat-all aria-expanded="${!natFold}">${esc(natFold ? copy("showAllOptions").replace("{n}", nat.pool.length).replace("{label}", "Natural Advantage") : copy("showFewerOptions"))}</button></div>`;
       h += nat.pool.map(p=>{
         const def = Engine.advById(p.advantageId);
         const cur = (ac.naturalAdvantages.find(n=>n.id===p.advantageId)||{rank:0}).rank;
+        if (natFold && !(cur>0)) return `<div class="pick folded"><div class="head"><h2>${esc(def?def.name:p.advantageId)}</h2>
+          <span class="cost grant">max rank ${p.maxRank}</span>
+          <div class="controls">${stepper(cur,"natadv|"+p.advantageId, false, false, def?def.name:p.advantageId)}</div></div></div>`;
         return `<div class="pick ${cur>0?"selected":""}"><div class="head"><h2>${esc(def?def.name:p.advantageId)}</h2>${def&&def.description?foldBtn("nat|"+p.advantageId, def.name):""}
           <span class="cost grant">max rank ${p.maxRank}</span>
           <div class="controls">${stepper(cur,"natadv|"+p.advantageId, cur>0, cur<p.maxRank && have<rowP.naturalAdvantageRanks, def?def.name:p.advantageId)}</div></div>
@@ -588,6 +595,15 @@ function renderSkills(){
   return h.replace("@@BAR@@BAR", ()=>bar);
 }
 
+// Decision 278: the fold row at the top of a Character Points list. Which picks it hides is
+// applyPickFilter's to decide (S.cpAll is passed to it), so a redraw and a cleared filter agree.
+function cpFoldRow(key, n, anyHeld){
+  const open = !!(S.cpAll && S.cpAll[key]), singular = key==="advantages" ? "Advantage" : "Disadvantage";
+  const why = copy(key==="advantages" ? "cpAdvantagesNote" : "cpDisadvantagesNote");
+  return `<div class="cp-fold">${open ? "" : `<span class="cp-fold-note">${anyHeld ? "" : `<b>${esc(copy("cpNoneTaken"))}</b> `}<em>${esc(why)}</em></span>`}`
+    + `<button class="btn sm" type="button" data-cp-all="${key}" aria-expanded="${open}">${esc(open ? copy("showFewerOptions") : copy("showAllOptions").replace("{n}", n).replace("{label}", singular))}</button></div>`;
+}
+
 function renderCP(){
   const ch=S.ch, pl=Engine.powerLevel(ch), a=Engine.archetype(ch);
   const bal = Engine.cp(ch);
@@ -600,7 +616,8 @@ function renderCP(){
 
   // Disadvantages
   let h = secs.sect("Disadvantages", "Disadvantages — grant Character Points (no cap)");
-  h += `<details class="group" open data-filterable><summary>${D.disadvantages.length} available</summary>` +
+  h += `<details class="group" open data-filterable data-cp-list="disadvantages"><summary>${D.disadvantages.length} available</summary>` +
+    cpFoldRow("disadvantages", D.disadvantages.length, D.disadvantages.some(dd=>ch.disadvantages.some(x=>x.id===dd.id && x.rank>0))) +
     D.disadvantages.map(dd=>{
       const cur = (ch.disadvantages.find(x=>x.id===dd.id)||{rank:0}).rank;
       const lock = Engine.optionLock(ch,"disadvantage",dd.id);
@@ -622,7 +639,8 @@ function renderCP(){
   const advList = gated ? D.advantages.filter(ad=>Engine.canBuyAdvantage(ch, ad)).concat(D.advantages.filter(ad=>!Engine.canBuyAdvantage(ch, ad) && heldAdv(ad))) : D.advantages;
   const openCount = gated ? D.advantages.filter(ad=>Engine.canBuyAdvantage(ch, ad)).length : D.advantages.length;
   const heldClosed = gated ? advList.length-openCount : 0;
-  h += `<details class="group" open data-filterable><summary>${gated?`${openCount} open to ${esc(cls.name)}s${heldClosed?` · ${heldClosed} held that aren't`:""}`:`${openCount} available`}</summary>` +
+  h += `<details class="group" open data-filterable data-cp-list="advantages"><summary>${gated?`${openCount} open to ${esc(cls.name)}s${heldClosed?` · ${heldClosed} held that aren't`:""}`:`${openCount} available`}</summary>` +
+    cpFoldRow("advantages", advList.length, advList.some(heldAdv) || D.advantages.some(ad=>ch.advantages.some(x=>x.id===ad.id && x.rank>0))) +
     advList.map(ad=>{
       const cur = (ch.advantages.find(x=>x.id===ad.id && x.source!=="natural")||{rank:0}).rank;
       const natural = ch.advantages.find(x=>x.id===ad.id && x.source==="natural");
@@ -968,6 +986,7 @@ function bindMain(){
     if (ch.identity.archetype!==b.dataset.arch){
       ch.identity.archetype=b.dataset.arch;
       resetArchetypeChoices(ch);
+      S.natAll=false;
       S.specAll=false;   // Decision 276: Show all was for the last archetype's options; a new one's complete set folds
     }
     update();
@@ -977,6 +996,12 @@ function bindMain(){
   // validate() says "Too many", and an error you can read beats a click that
   // silently does nothing.
   main.querySelectorAll("[data-spec-all]").forEach(b=>b.onclick=()=>{ S.specAll=!S.specAll; update(); });
+  main.querySelectorAll("[data-nat-all]").forEach(b=>b.onclick=()=>{ S.natAll=!S.natAll; update(); });
+  main.querySelectorAll("[data-cp-all]").forEach(b=>b.onclick=()=>{
+    const k=b.dataset.cpAll; S.cpAll=Object.assign({}, S.cpAll, { [k]: !(S.cpAll && S.cpAll[k]) });
+    update();
+    const again=main.querySelector(`[data-cp-all="${k}"]`); if (again) again.focus({ preventScroll:true });
+  });
   main.querySelectorAll("[data-demands]").forEach(d=>d.ontoggle=()=>{ S.demandsOpen=d.open; });
   main.querySelectorAll("[data-spec]").forEach(b=>b.onclick=()=>{
     const id=b.dataset.spec, ac=ch.archetypeChoices;
@@ -992,6 +1017,7 @@ function bindMain(){
     // natural advantages mirror into ch.advantages, which the old
     // single-select handler cleared on one side only.
     if (ac.specialization[0]!==before){
+      S.natAll=false;   // Decision 279: Show all was for the last subtype's pool
       ac.focusedSkillPicks=[]; ac.naturalAdvantages=[];
       ch.advantages=ch.advantages.filter(x=>x.source!=="natural");
       // Decision 200: the choices were the old Bloodline's, and so were the
@@ -1036,7 +1062,13 @@ function bindMain(){
   main.querySelectorAll("[data-step]").forEach(b=>b.onclick=()=>{
     const [key,delta]=b.dataset.step.split("|").reduce((acc,part,i,arr)=>{
       if(i===arr.length-1) acc[1]=Number(part); else acc[0]=(acc[0]?acc[0]+"|":"")+part; return acc; },[null,0]);
+    // Decision 278: a − that folds the pick away takes the stepper with it; the list's fold button stands in.
+    const list = b.closest("[data-cp-list]"), listKey = list && list.dataset.cpList, had = document.activeElement===b;
     applyStep(key, delta); update(); announceStep(b.dataset.step);
+    const now = document.activeElement;   // keepPlace may have put it on the pick before the filter hid it
+    if (had && listKey && (!now || now===document.body || now.closest("[hidden]"))){
+      const fb = main.querySelector(`[data-cp-all="${listKey}"]`); if (fb) fb.focus({ preventScroll:true });
+    }
   });
   main.querySelectorAll("[data-stat-floor]").forEach(b=>b.onclick=()=>{
     const r = Engine.raiseStatsToFloor(ch);
@@ -1079,7 +1111,7 @@ function bindMain(){
   const jf=main.querySelector("[data-jumpfilter]"), heldBtn=main.querySelector("[data-heldonly]");
   const fkey = STEPS[S.step] && STEPS[S.step].id==="skills" ? "skillFilter" : "cpFilter";
   if (jf){
-    const run=()=>{ const held=!!S.cpHeld && !!heldBtn, r=applyPickFilter(main, jf.value, { held }), c=main.querySelector("[data-jumpcount]");
+    const run=()=>{ const held=!!S.cpHeld && !!heldBtn, r=applyPickFilter(main, jf.value, { held, fold: S.cpAll||{} }), c=main.querySelector("[data-jumpcount]");
       if (c) c.textContent = held ? `${r.held} held` : r.active ? `${r.shown} of ${r.total}` : ""; };
     jf.oninput=()=>{ S[fkey]=jf.value; run(); };
     if (heldBtn) heldBtn.onclick=()=>{ S.cpHeld=!S.cpHeld; heldBtn.setAttribute("aria-pressed", String(!!S.cpHeld)); run(); };

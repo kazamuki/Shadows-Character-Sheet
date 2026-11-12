@@ -1851,3 +1851,122 @@ test("Decision 277: a retired archetype isn't offered, and a character on it kee
   const s2 = openSheet(lockedCharacter(), "character"); s2.click("[data-menu-toggle]"); s2.click("[data-admin]");
   assert.ok(![...s2.$("[data-admin-arch]").options].some(o => retired.some(r => r.id === o.value)), "Admin offers a retired archetype");
 });
+
+// ── E1c: Character Points' lists, and the Natural Advantage panel, fold to what's taken ──
+const cpBlank = (expert = false) => onStep("professional", D.powerLevels[0].id, "character-points", () => {}, expert ? { "shadows.ui.expert": "on" } : {});
+const cpList = (app, key) => app.$(`[data-cp-list="${key}"]`);
+const cpVisible = (app, key) => [...cpList(app, key).querySelectorAll(".pick")].filter(p => !p.hidden);
+const cpAllBtn = (app, key) => cpList(app, key).querySelector(`[data-cp-all="${key}"]`);
+
+test("Decision 278: Character Points opens with both lists folded, and Show all opens one", () => {
+  const app = cpBlank();
+  assert.equal(cpVisible(app, "disadvantages").length, 0, "a Disadvantage shows on a new character");
+  assert.equal(cpVisible(app, "advantages").length, 0, "an Advantage shows on a new character");
+  assert.ok(cpAllBtn(app, "disadvantages").textContent.includes(`Show all ${D.disadvantages.length} Disadvantages`), cpAllBtn(app, "disadvantages").textContent);
+  assert.ok(cpAllBtn(app, "advantages").textContent.includes(`Show all ${D.advantages.length} Advantages`), cpAllBtn(app, "advantages").textContent);
+  app.click('[data-cp-all="disadvantages"]');
+  assert.equal(cpVisible(app, "disadvantages").length, D.disadvantages.length, "Show all didn't open the Disadvantages");
+  assert.equal(cpVisible(app, "advantages").length, 0, "the Advantages opened too");
+  assert.equal(cpAllBtn(app, "disadvantages").textContent, D.appCopy.showFewerOptions);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 278: a held pick shows in a folded list, and taking it to 0 folds it away", () => {
+  const app = cpBlank();
+  const id = D.disadvantages[0].id;
+  app.click('[data-cp-all="disadvantages"]');
+  app.click(`[data-step="disadv|${id}|1"]`);
+  assert.equal(cpVisible(app, "disadvantages").length, D.disadvantages.length, "buying folded the list");
+  app.click('[data-cp-all="disadvantages"]');
+  const shown = cpVisible(app, "disadvantages");
+  assert.equal(shown.length, 1, "Show fewer left the wrong picks");
+  assert.ok(shown[0].querySelector(`[data-step="disadv|${id}|1"]`));
+  app.$(`[data-step="disadv|${id}|-1"]`).focus();
+  app.click(`[data-step="disadv|${id}|-1"]`);
+  assert.equal(cpVisible(app, "disadvantages").length, 0, "a pick taken to 0 stayed");
+  assert.equal(app.window.document.activeElement, cpAllBtn(app, "disadvantages"), "focus didn't land on the fold row's button");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 278: the filter reaches into folded lists, and clearing it folds them again", () => {
+  const app = cpBlank();
+  const adv = D.advantages[0], box = app.$("[data-jumpfilter]");
+  const type = v => { box.value = v; box.dispatchEvent(new app.window.Event("input")); };
+  type(adv.name);
+  const hit = cpVisible(app, "advantages").find(p => p.querySelector(`[data-step="adv|${adv.id}|1"]`));
+  assert.ok(hit, "the filter didn't reach a folded Advantage");
+  type("");
+  assert.equal(cpVisible(app, "advantages").length, 0, "clearing the filter didn't fold the list");
+  assert.equal(cpVisible(app, "disadvantages").length, 0);
+  app.click(`[data-step="disadv|${D.disadvantages[0].id}|1"]`);
+  app.click("[data-heldonly]");
+  assert.equal(cpVisible(app, "disadvantages").length, 1, "Held only shows more than what's held");
+  assert.equal(cpVisible(app, "advantages").length, 0);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 278: the fold resets with the step", () => {
+  const app = cpBlank();
+  app.click('[data-cp-all="advantages"]');
+  assert.equal(cpVisible(app, "advantages").length, D.advantages.length);
+  app.click("[data-nav='-1']"); app.click("[data-nav='1']");
+  assert.equal(cpVisible(app, "advantages").length, 0, "Show all survived leaving the step");
+  app.click('[data-cp-all="disadvantages"]');
+  app.click("[data-nav='-1']"); app.click("[data-nav='1']");
+  assert.equal(cpVisible(app, "disadvantages").length, 0);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 278: with Expert mode on, the lists fold the same way", () => {
+  const app = cpBlank(true);
+  assert.equal(cpVisible(app, "disadvantages").length + cpVisible(app, "advantages").length, 0);
+  app.click('[data-cp-all="advantages"]');
+  assert.equal(cpVisible(app, "advantages").length, D.advantages.length);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 278: Show all and the filter leave the character as it was", () => {
+  const app = cpBlank();
+  const before = JSON.stringify(stored(app, { locked: false }));
+  app.click('[data-cp-all="advantages"]'); app.click('[data-cp-all="advantages"]'); app.click('[data-cp-all="disadvantages"]');
+  const box = app.$("[data-jumpfilter]"); box.value = "a"; box.dispatchEvent(new app.window.Event("input"));
+  assert.equal(JSON.stringify(stored(app, { locked: false })), before);
+});
+
+const natCards = app => app.$$("#main .pick").filter(p => p.querySelector('[data-step^="natadv|"]'));
+function enforcerPool() {
+  const app = onArchetypeStep("professional");
+  app.click('[data-spec="enforcer"]');
+  const ch = stored(app, { locked: false });
+  return { app, need: Engine.scalingRow(ch).naturalAdvantageRanks, pool: Engine.naturalAdvantagePool(Engine.archetype(ch)).pool };
+}
+
+test("Decision 279: Natural Advantages fold once every rank is allocated", () => {
+  const { app, need, pool } = enforcerPool();
+  assert.equal(natCards(app).length, pool.length);
+  assert.ok(natCards(app).every(p => p.querySelector(".desc")), "a card is folded before the ranks are allocated");
+  const first = pool[0].advantageId;
+  for (let i = 0; i < need; i++) app.click(`[data-step="natadv|${first}|1"]`);
+  assert.equal(stored(app, { locked: false }).archetypeChoices.naturalAdvantages.reduce((s, n) => s + n.rank, 0), need);
+  assert.equal(natCards(app).filter(p => !p.querySelector(".desc")).length, pool.length - 1, "the unallocated entries didn't fold");
+  assert.ok(natCards(app).find(p => p.querySelector(".desc")).querySelector(`[data-step="natadv|${first}|-1"]`), "the allocated one folded");
+  assert.ok(app.$("[data-nat-all]").textContent.includes(`Show all ${pool.length} Natural Advantages`), app.$("[data-nat-all]").textContent);
+  app.click("[data-nat-all]");
+  assert.ok(natCards(app).every(p => p.querySelector(".desc")), "Show all didn't open them");
+  app.click("[data-nat-all]");
+  assert.equal(natCards(app).filter(p => !p.querySelector(".desc")).length, pool.length - 1);
+  app.click(`[data-step="natadv|${first}|-1"]`);
+  assert.ok(natCards(app).every(p => p.querySelector(".desc")), "the fold stayed after a rank came back");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 279: Show all on Natural Advantages resets when the subtype changes", () => {
+  const { app, need, pool } = enforcerPool();
+  const first = pool[0].advantageId;
+  for (let i = 0; i < need; i++) app.click(`[data-step="natadv|${first}|1"]`);
+  app.click("[data-nat-all]");
+  const other = Engine.archetype(stored(app, { locked: false })).specialization.options.find(o => o.id !== "enforcer");
+  app.click(`[data-spec="${other.id}"]`); app.click('[data-spec="enforcer"]');
+  for (let i = 0; i < need; i++) app.click(`[data-step="natadv|${first}|1"]`);
+  assert.ok(natCards(app).some(p => !p.querySelector(".desc")), "Show all survived a subtype change");
+});

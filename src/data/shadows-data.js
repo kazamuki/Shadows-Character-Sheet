@@ -4032,6 +4032,9 @@ window.SHADOWS_DATA = {
     "showAllOptions": "Show all {n} {label}s",
     "demandsTitle": "Which archetype choices need minimum stats",
     "showFewerOptions": "Show fewer",
+    "cpNoneTaken": "None taken.",
+    "cpDisadvantagesNote": "Disadvantages give you Character Points to spend.",
+    "cpAdvantagesNote": "Advantages cost Character Points.",
     "statusLabel": {
       "draft": "in progress",
       "tbd": "not written yet",
