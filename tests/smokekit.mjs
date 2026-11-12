@@ -59,7 +59,7 @@ export function openSheet(ch, section, opts = {}) {
   const app = boot({ ...opts, storage: { "shadows.active.v1": { ch, section }, ...(opts.storage || {}) } });
   const open = app.$$("#main button").find(b => /Open sheet/.test(b.textContent));
   open.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
-  app.click(`[data-sec="${section}"]`);
+  app.click(`[data-sec="${section === "sessions" ? "progression" : section}"]`);   // Decision 281: Session Log is part of Progression
   return app;
 }
 

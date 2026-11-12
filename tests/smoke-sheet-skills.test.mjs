@@ -19,7 +19,7 @@ test("Grimoire: a typed spell links to the book, the picker adds one, Mastering 
   const ch = lockedCharacter();
   ch.panelData.grimoire = [{ custom: true, "Spell Name": "Zap", "Effect": "a snap of current", "Notes": "go-to" }];
   ch.progression.ip.log.push({ date: "2026-09-23", kind: "grant", amount: 100, note: "test" });
-  const app = openSheet(ch, "loadout");
+  const app = openSheet(ch, "character");
   assert.match(app.$("#main").textContent, /Spell Power \d+/);
   app.click('[data-spelllink="0"]');
   assert.equal(activeChar(app).panelData.grimoire[0].spellId, "zap");
@@ -50,7 +50,7 @@ test("Grimoire: a typed spell links to the book, the picker adds one, Mastering 
 test("Grimoire: the picker offers to link a spell you typed yourself instead of adding a second copy", () => {
   const ch = lockedCharacter();
   ch.panelData.grimoire = [{ custom: true, "Spell Name": "Kindle", "Notes": "lights the stove" }];
-  const app = openSheet(ch, "loadout");
+  const app = openSheet(ch, "character");
   app.click('[data-spellpickopen="sheet"]');
   search(app, "kindle");
   assert.equal(app.$('[data-spellresults] [data-spelladd="kindle"]'), null, "offered a second Kindle");
@@ -65,7 +65,7 @@ test("Grimoire: the picker offers to link a spell you typed yourself instead of 
 test("Grimoire: an inscribed-only spell says its form and time, and the picker filters by Discipline (Decision 136)", () => {
   const ch = lockedCharacter();
   ch.panelData.grimoire = [{ spellId: "lightning-trap", stage: "known", notes: "" }];
-  const app = openSheet(ch, "loadout");
+  const app = openSheet(ch, "character");
   const line = app.$("details.spell summary");
   assert.match(line.querySelector(".sub").textContent, /· Enchantment only · 4 hours$/);
   assert.match(line.querySelector(".num").textContent, /TH 4/, "the Grimoire showed the tier's TH, not Enchantment's");
@@ -111,16 +111,16 @@ test("Aberrations: a permanent one shows on the Archetype tab, Phantom Pain name
   ch.trackers.aberrations = [{ id: "phantom-pain", permanence: "permanent", note: "since the warehouse" }];
   const app = openSheet(ch, "character");
   const text = app.$("#main").textContent;
-  assert.match(text, /Permanent Aberrations[\s\S]*Phantom Pain[\s\S]*since the warehouse/);
-  const ref = app.$('[data-reference="magic-reference"]');
+  assert.match(text, /Permanent Aberrations[\s\S]*Phantom Pain[\s\S]*since the warehouse/);  const ref = app.$('[data-reference="magic-reference"]');
   assert.ok(ref, "no Magic reference");
   for (const t of ["The Spellcraft roll", "Spell tiers", "The Cascade Table", "The Aberration Table", "Aberrations"])
     assert.match(ref.textContent, new RegExp(t), `the reference has no ${t}`);
   assert.match(ref.textContent, /Spell Attack is Evocation rank \+ REF \+ WILL/);
   app.click('[data-sec="main"]');
   assert.match(app.$("#main").textContent, /from Phantom Pain/, "Main doesn't say where the Pain comes from");
-  app.click('[data-sec="loadout"]');
+  app.click('[data-sec="character"]');
   assert.match(app.$("#main").textContent, /Spell Attack \d+/);
+  app.click('[data-sec="loadout"]');
   assert.equal(app.$('#main [data-reference]'), null, "the reference panel leaked into Loadout");
   assert.deepEqual(app.errors, []);
 });
@@ -132,7 +132,7 @@ test("W32: a spell's Spell Power reads as a number beside the book's words, wher
   ch.archetypeChoices.disciplines = { evocation: 3 };           // Spell Power 5: its half rounds up to 3
   const sp = Engine.spellPower(ch).value, half = Math.ceil(sp / 2);
   assert.deepEqual([sp, half], [5, 3]);
-  const app = openSheet(ch, "loadout");
+  const app = openSheet(ch, "character");
   const [dart, bolt] = app.$$(".spell");
   assert.equal(dart.querySelector("summary .eff").textContent.trim(), `${half} (½ SP Damage)`);
   assert.match(dart.querySelector(".overflow").textContent, new RegExp(`1x ${sp} \\(Full Spell Power damage\\.\\)`));
@@ -217,17 +217,20 @@ test("W1/W10: Trackers reads in two columns, and the Health Levels sit in Damage
   assert.deepEqual(app.errors, []);
 });
 
-test("W5: Loadout jumps to each section it drew, archetype panels included, and focus lands on the heading", () => {
-  const app = openSheet(lockedCharacter(), "loadout");
+test("W5: Character jumps to each section it drew, archetype panels included, and focus lands on the heading (Decision 282)", () => {
+  const app = openSheet(lockedCharacter(), "character");
   const jumps = app.$$("#main .jumpbar [data-jump]");
   const heads = app.$$("#main .sect[id]");
-  assert.deepEqual(jumps.map(b => b.textContent), heads.map(h => h.textContent), "the bar and the page's sections disagree");
+  assert.deepEqual(jumps.map(b => b.dataset.jump), heads.map(h => h.id), "the bar and the page's sections disagree");
   const want = D.archetypes.find(a => a.id === "arcanist").coreMechanic.panels
     .filter(p => p.type !== "tracker" && p.type !== "reference").map(p => p.title);
   for (const t of want) assert.ok(jumps.some(b => b.textContent === t), `the archetype's ${t} panel has no jump`);
   const last = jumps[jumps.length - 1];
   app.click(`[data-jump="${last.dataset.jump}"]`);
   assert.equal(app.window.document.activeElement, app.$(`#${last.dataset.jump}`), "focus didn't land on the section");
+  // Loadout keeps a bar of its own: what you carry.
+  app.click('[data-sec="loadout"]');
+  assert.deepEqual(app.$$("#main .jumpbar [data-jump]").map(b => b.textContent), ["Weapons", "Armor", "Gear"]);
   assert.deepEqual(app.errors, []);
 });
 
@@ -711,6 +714,7 @@ test("Loadout's weapons and the Grimoire's spells read their tags out (Decision 
   const app = openSheet(ch, "loadout");
   clickIn(app, app.$('#main .lo-weapons .tag[data-term="AP"]'));
   assert.match(tipShown(app), /Armor Piercing/);
+  app.click('[data-sec="character"]');                 // the Grimoire is on Character (Decision 282)
   clickIn(app, app.$('#main .spell .tag[data-term="Fire"]'));
   assert.match(tipShown(app), new RegExp(D.spellTagGlossary.find(t => t.id === "Fire").description.slice(0, 20)));
   assert.deepEqual(app.errors, []);
@@ -817,7 +821,7 @@ test("P17 10: Splice on Progression asks which power, and one undo takes it back
   assert.ok(app.$('[data-takemajor="pure-blooded"]').disabled && /Can't be taken with Splice/.test(app.$('[data-takemajor="pure-blooded"]').closest(".pick").textContent));
   app.click('[data-sec="character"]');
   assert.match(app.$("#main").textContent, /Iron Hide[\s\S]*rank 1/);
-  app.click('[data-sec="sessions"]');
+  app.click('[data-sec="progression"]');
   app.click("button[data-undolast]");
   assert.deepEqual(activeChar(app).progression.milestones.major, [], "one undo left the Major");
   app.click('[data-sec="character"]');
@@ -932,12 +936,12 @@ function holdingArcanist(rank = 3, ids = ["fog-shroud", "wind-walker", "blazing-
 }
 
 test("P10 9: Hold and Let go on the Grimoire, one undo each", () => {
-  const app = openSheet(holdingArcanist(3), "loadout");
+  const app = openSheet(holdingArcanist(3), "character");
   assert.equal(app.$('[data-letgo]'), null, "a Let go with nothing held");
   assert.ok(app.$('[data-hold="fog-shroud"]'), "a Concentration spell has no Hold");
   assert.equal(app.$('[data-hold="fog-shroud"]').getAttribute("aria-label"), "Hold Fog Shroud", "Hold doesn't say which spell, as Let go does");
   assert.equal(app.$('[data-hold="zap"]'), null);
-  assert.ok(!/holding/i.test(app.$("#main").textContent), "the pool line shows with nothing held");
+  assert.ok(!/holding/i.test(app.$$("#main .grim-sp").map(p => p.textContent).join(" ")), "the pool line shows with nothing held");
   app.click('[data-hold="fog-shroud"]');
   assert.deepEqual(activeChar(app).trackers.heldSpells, ["fog-shroud"]);
   assert.ok(app.$('[data-letgo="fog-shroud"]'), "no Let go after Hold");
@@ -956,7 +960,7 @@ test("P10 9: Hold and Let go on the Grimoire, one undo each", () => {
 });
 
 test("P10 9b: past the cap Hold is disabled and says why, and removing a held spell asks first", () => {
-  const app = openSheet(holdingArcanist(1), "loadout");
+  const app = openSheet(holdingArcanist(1), "character");
   app.click('[data-hold="fog-shroud"]');
   const second = app.$('[data-hold="wind-walker"]');
   assert.ok(second.disabled);
@@ -973,7 +977,7 @@ test("P10 9b: past the cap Hold is disabled and says why, and removing a held sp
 test("P10 (hostile): a held id with script in it renders as nothing, and nowhere as markup", () => {
   const ch = holdingArcanist(3, ["fog-shroud"]);
   ch.trackers.heldSpells = ["<img src=x onerror=alert(1)>", "fog-shroud"];
-  const app = openSheet(ch, "loadout");
+  const app = openSheet(ch, "character");
   assert.equal(app.$("#main img"), null);
   assert.ok(!/img src/.test(app.$("#main").textContent), "the hostile id was shown");
   assert.ok(app.$('[data-letgo="fog-shroud"]'));

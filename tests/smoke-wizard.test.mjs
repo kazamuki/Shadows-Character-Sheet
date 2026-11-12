@@ -40,7 +40,7 @@ test("a locked character resumes from storage and every sheet tab renders", () =
   open.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
 
   const tabs = app.$$("[data-sec]").map(t => t.dataset.sec);
-  assert.equal(tabs.length, 8, `expected 8 sheet tabs, got ${tabs.length}`);
+  assert.equal(tabs.length, 7, `expected 7 sheet tabs, got ${tabs.length}`);
   for (const id of tabs) {
     app.click(`[data-sec="${id}"]`);
     assert.deepEqual(app.errors, [], `runtime error on tab: ${id}`);
@@ -49,15 +49,15 @@ test("a locked character resumes from storage and every sheet tab renders", () =
 });
 
 test("the tab row keeps the active tab in view and fades the side with more (B19)", () => {
-  // jsdom has no layout, so give the row one: eight 100 px tabs in 390 px.
+  // jsdom has no layout, so give the row one: 100 px tabs in 390 px (Decision 281: seven).
   const app = boot({ storage: { "shadows.active.v1": { ch: lockedCharacter(), section: "main" } } });
   app.$$("#main button").find(b => /Open sheet/.test(b.textContent))
     .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
   const nav = app.$("#topnav");
   let left = 0;
-  const max = 800 - 390;
+  const width = nav.children.length * 100, max = width - 390;
   Object.defineProperty(nav, "scrollLeft", { get: () => left, set: v => { left = Math.max(0, Math.min(max, v)); } });
-  Object.defineProperty(nav, "scrollWidth", { get: () => 800 });
+  Object.defineProperty(nav, "scrollWidth", { get: () => width });
   Object.defineProperty(nav, "clientWidth", { get: () => 390 });
   const rect = (l, w) => ({ left: l, right: l + w, top: 0, bottom: 40, width: w, height: 40 });
   const proto = app.window.HTMLElement.prototype, real = proto.getBoundingClientRect;
@@ -426,20 +426,20 @@ test("B13: the wizard's skill stepper lets a Focused Skill past the power level'
   assert.deepEqual(app.errors, []);
 });
 
-test("a locked Mercenary short its pick chooses it on Loadout, as one undoable action", () => {
+test("a locked Mercenary short its pick chooses it on Character, as one undoable action", () => {
   // A Mercenary locked before its pick existed, or after a designer raises a
   // count, would otherwise have no way to take it.
   const ch = lockedCharacter();
   ch.identity.archetype = "professional";
   ch.archetypeChoices.specialization = ["mercenary"];
-  const app = openSheet(ch, "loadout");
+  const app = openSheet(ch, "character");
   assert.match(app.$("#main").textContent, /1 more Combat Skill to pick/);
   app.click("[data-fowedopen]");   // Decision 273: the picker is in the dialog Choose opens
   app.click('#modal [data-fpick="rifles"]');
   assert.equal(activeChar(app).archetypeChoices.focusedSkillPicks.join(), "rifles");
   assert.doesNotMatch(app.$("#main").textContent, /1 more Combat Skill to pick/, "the ask stays after the count is met");
   assert.match(app.$("#main").textContent, /Rifles/);
-  app.click('[data-sec="sessions"]');
+  app.click('[data-sec="progression"]');
   assert.match(app.$("#main").textContent, /Focused Skill: Rifles/, "the pick is missing from the Activity Log");
   app.click("button[data-undolast]");
   assert.equal(activeChar(app).archetypeChoices.focusedSkillPicks.length, 0, "undo didn't take the pick back");
@@ -460,7 +460,7 @@ const modalOpen = app => !!app.$("#modal[open]");
 test("Decision 273: a locked Enforcer short its Combat Skill sees one line on every tab, and the picker only in the dialog", () => {
   const app = openSheet(lockedEnforcer(), "skills");
   const tabs = app.$$("[data-sec]").map(b => b.dataset.sec);
-  assert.ok(tabs.length >= 8, "the sheet's tabs weren't found");
+  assert.ok(tabs.length >= 7, "the sheet's tabs weren't found");
   const main = app.$("#main");
   assert.ok(main.innerHTML.indexOf("1 more Combat Skill") < main.innerHTML.indexOf('class="step-title"'), "the ask isn't above the title");
   for (const t of tabs) {
@@ -470,10 +470,10 @@ test("Decision 273: a locked Enforcer short its Combat Skill sees one line on ev
     assert.equal(app.$$("[data-fowedopen]").length, 1, `${t}: not exactly one Choose button`);
     assert.equal(app.$$("[data-fpick]").length, 0, `${t}: a picker is on the page`);
   }
-  // The Loadout panel's line points at the top of the tab; the line's own words don't.
-  app.click('[data-sec="loadout"]');
+  // The Focused Skills panel's line on Character points at the top of the tab; the line's own words don't.
+  app.click('[data-sec="character"]');
   const panelLine = [...app.$$("#main p.step-note")].find(p => !p.closest("[data-focused-owed]") && ASK.test(p.textContent));
-  assert.ok(panelLine, "Loadout's panel lost its line");
+  assert.ok(panelLine, "Character's Focused Skills panel lost its line");
   assert.match(panelLine.textContent, /at the top of this tab/);
   assert.doesNotMatch(app.$("[data-focused-owed]").textContent, /at the top of this tab/);
   assert.equal(modalOpen(app), false, "the dialog opened by itself");
@@ -513,7 +513,7 @@ test("Decision 273: a complete pick asks nothing, and an invalid one reads Fix w
   assert.match(app.$("#main").textContent, /isn't allowed any more/);
   assert.equal(app.$$("[data-fpick]").length, 0, "a picker is on the page");
   assert.equal(app.$("[data-fowedopen]").textContent.trim(), "Fix");
-  app.click('[data-sec="loadout"]');
+  app.click('[data-sec="character"]');
   const panelBad = [...app.$$("#main p.step-note")].find(p => !p.closest("[data-focused-owed]") && /isn't allowed any more/.test(p.textContent));
   assert.match(panelBad ? panelBad.textContent : "", /at the top of this tab/);
   assert.match(panelBad ? panelBad.textContent : "", /Fix it from the line at the top of this tab/);

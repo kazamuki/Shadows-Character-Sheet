@@ -10,7 +10,7 @@ import { boot } from "./harness.mjs";
 import { Engine, D, GM_ON, lockedCharacter, tableCard, clickIn, tipShown, charKeys, wizCss } from "./smokekit.mjs";
 
 const CY_TAG = "TAG-CCCC-CCCC-CCCC", AR_TAG = "TAG-DDDD-DDDD-DDDD";
-const SECTIONS = ["main", "skills", "character", "trackers", "progression", "sessions", "loadout", "notes"];
+const SECTIONS = ["main", "skills", "character", "trackers", "progression", "loadout", "notes"];
 
 /** A Cyborg with damage taken, two Conditions, a note and one audit entry; its Loadout writes panelData into what it draws. */
 function cyborg(updated = "2026-10-02T10:00:00.000Z") {
@@ -73,7 +73,7 @@ test("256: a card with a copy opens its read-only sheet on Main, and Back lands 
 test("256: every tab but Admin draws on the read-only sheet, from the copy", () => {
   const app = open();
   openSheet(app);
-  assert.deepEqual(tabs(app).map(b => b.textContent.trim()), ["Main", "Skills", "Character", "Trackers", "Progression", "Session Log", "Loadout & Powers", "Notes"]);
+  assert.deepEqual(tabs(app).map(b => b.textContent.trim()), ["Main", "Skills", "Character", "Trackers", "Progression", "Loadout", "Notes"]);
   for (const id of SECTIONS) {
     goTab(app, id);
     assert.ok(app.$("[data-rosheet]").children.length > 0, id);

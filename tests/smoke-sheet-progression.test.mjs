@@ -73,7 +73,7 @@ test("CRANK: Admin corrects rep through the ledger, and Undo takes a correction 
   assert.equal(activeChar(app).trackers.crank.rep, 0);
   const led = [...activeChar(app).trackers.crank.ledger];
   assert.deepEqual([led.map(e => e.amount), led.map(e => e.note)], [[1, -1], ["Admin correction", "Admin correction"]]);
-  app.click('[data-sec="sessions"]');
+  app.click('[data-sec="progression"]');
   app.click("button[data-undolast]");
   assert.equal(activeChar(app).trackers.crank.rep, 1, "Undo didn't take the last correction back");
   assert.deepEqual(app.errors, []);
@@ -190,7 +190,7 @@ test("Buy or Raise a Power: a Strigoi learns a Bloodline power from the modal, r
   assert.equal(activeChar(app).progression.powerIpe["veil-of-night"], 2);
   app.click("#modal [data-modalclose]");
   assert.match(app.$("#main .journal").textContent, /Veil of Night \(Masked\) 0 → 1/);
-  app.click('[data-sec="sessions"]');
+  app.click('[data-sec="progression"]');
   app.click("button[data-undolast]");                      // the raise
   app.click("button[data-undolast]");                      // the learn
   assert.equal(activeChar(app).progression.powerIpe["veil-of-night"], undefined, "Undo didn't take the learn back");
@@ -277,7 +277,7 @@ test("The CP step's Custom power: 5 CP, or free as a GM grant, and Add is off wi
 
 // ── P6: Milestones (Decision 217) ────────────────────────────────────────
 const p6Char = (arch = "professional", mp = 100) => { const c = lockedCharacter(); c.identity.archetype = arch; c.progression.milestonePoints = mp; return c; };
-const undoLast = app => { app.click('[data-sec="sessions"]'); app.click("button[data-undolast]"); app.click('[data-sec="progression"]'); };
+const undoLast = app => { app.click('[data-sec="progression"]'); app.click("button[data-undolast]"); };
 
 test("Decision 217: any Minor is taken twice from the picker, and Improved asks for 3d10 and adds 30", () => {
   const app = openSheet(p6Char("professional", 15), "progression");
@@ -622,7 +622,7 @@ test("P12b 12: Train a Skill from Progression, landed by the Session Log, one Un
   // The chip is on the skill's row.
   assert.match(seeSkillRow(app, "handguns").textContent, /in training · 10 MP/);
   // Log a session: the training lands, in the same commit.
-  app.click('[data-sec="sessions"]');
+  app.click('[data-sec="progression"]');
   fill(app, "[data-sesip]", "0");
   app.click("[data-seslog]");
   assert.match(app.$("#undotoast").textContent, /Handguns trained to 6/);
@@ -728,4 +728,36 @@ test("P13 10: the IP lists and Talented's pick show the tags: held for what the 
   const rr = [...r.$('#modal [data-mcpick="blood-lust"]').closest("tr").querySelectorAll(".effects .etag")].map(x => x.textContent);
   assert.deepEqual(rr, ["Max SAN −5", ...bl.grants.filter(g => g.type === "rule").map(g => g.ruleText), "Combat Sense checks fail on a natural 2 or 3 after you fail first blood's Sanity Check, for the encounter (a 1 still botches)"], "Redeemed's pick has no tags");
   assert.deepEqual(r.errors, []);
+});
+
+// ── E2a: Session Log is part of Progression (Decision 281) ─────────────
+test("Decision 281: a sheet saved on Session Log opens on Progression, with the log, IP, Milestones, History and the Activity Log", () => {
+  const ch = lockedCharacter();
+  ch.sessions = [{ date: "2026-10-01", title: "One", notes: "", ipEarned: 10, milestonePoint: true },
+                 { date: "2026-10-08", title: "Two", notes: "", ipEarned: 5, milestonePoint: false }];
+  const app = openSheet(ch, "sessions");
+  assert.equal(app.window.eval("S.section"), "progression");
+  for (const sel of ["[data-seslog]", "[data-ipgrant]", "[data-takeminor]", "[data-undolast]"])
+    assert.ok(app.$(`#main ${sel}`), `Progression lacks ${sel}`);
+  assert.deepEqual(app.$$("#main .jumpbar [data-jump]").map(b => b.textContent), ["Log a session", "IP", "Milestones", "History", "Activity Log"]);
+  assert.equal(app.$$("#main h1.step-title").length, 1, "two page titles");
+  // Log a session there, then Undo there: one Undo takes it back.
+  app.$("#main [data-seshours]").value = "2";
+  app.$("#main [data-seshours]").dispatchEvent(new app.window.Event("input", { bubbles: true }));
+  app.click("#main [data-seslog]");
+  assert.equal(activeChar(app).sessions.length, 3);
+  app.click("#main button[data-undolast]");
+  assert.equal(activeChar(app).sessions.length, 2, "one Undo didn't take the session back");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 281: Undo on Progression peels back an action taken on another tab", () => {
+  const app = openSheet(lockedCharacter(), "main");
+  const before = activeChar(app).trackers.damage;
+  app.click(`[data-dmg="1"]`);
+  assert.notEqual(activeChar(app).trackers.damage, before, "Hurt didn't land");
+  app.click('[data-sec="progression"]');
+  app.click("#main button[data-undolast]");
+  assert.equal(activeChar(app).trackers.damage, before);
+  assert.deepEqual(app.errors, []);
 });

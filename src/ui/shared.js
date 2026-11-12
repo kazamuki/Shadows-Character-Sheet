@@ -66,13 +66,13 @@ const SHEET_SECTIONS = [
   {id:"character",   label:"Character",   ui:"tab_archetype"},
   {id:"trackers",    label:"Trackers",    ui:"tab_trackers"},
   {id:"progression", label:"Progression", ui:"tab_progression"},
-  {id:"sessions",    label:"Session Log", ui:"tab_sessions"},
-  {id:"loadout",     label:"Loadout & Powers", ui:"tab_loadout"},
+  {id:"loadout",     label:"Loadout", ui:"tab_loadout"},
   {id:"notes",       label:"Notes",       ui:"tab_notes"}
 ];
 const SHEET_IDS = SHEET_SECTIONS.map(s=>s.id);
-// Older saved sections: Traits and Archetype became Character (Decision 158).
-const LEGACY_SECTION = { overview:"main", traits:"character", archetype:"character" };
+// Older saved sections: Traits and Archetype became Character (Decision 158),
+// and Session Log became part of Progression (Decision 281).
+const LEGACY_SECTION = { overview:"main", traits:"character", archetype:"character", sessions:"progression" };
 // "admin" is a hidden section (no tab) reachable only while admin mode is on.
 const normSection = s => s==="admin" ? (S.admin?"admin":"main")
                         : (SHEET_IDS.includes(s) ? s : (LEGACY_SECTION[s] || "main"));

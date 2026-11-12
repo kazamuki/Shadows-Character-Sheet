@@ -1015,6 +1015,7 @@ details.pick.trait>summary .effects{flex-basis:100%; margin-top:0}
 .arch-part{display:grid; grid-template-columns:repeat(auto-fill, minmax(min(300px,100%),1fr)); column-gap:20px; align-items:stretch; padding-bottom:18px; container-type:inline-size}
 .arch-part>.sect:first-child{margin-top:0}
 .arch-part>.sect,.arch-part>.step-note{grid-column:1/-1}
+.arch-part>.arch-wide{grid-column:1/-1; min-width:0}
 .arch-part>.step-note{max-width:70ch}
 .arch-part .ref{width:100%}
 @container (min-width:620px){ .arch-part>.solo{grid-column:span 2} }
@@ -1719,7 +1720,7 @@ h2.city-name{font-size:1.15rem}
 .exposure-step{flex:1 1 100%; overflow-wrap:anywhere; min-width:0}
 .exposure-step:empty{display:none}
 
-/* A Discipline's description on Loadout & Powers (W60: no inline style). */
+/* A Discipline's description on Character (W60: no inline style). */
 .disc-desc{font-size:.78rem; color:var(--dim)}
 
 /* An encounter's plan, opening and delay (Decisions 252–253). Typed text wraps; every control is a 44px tap. */
