@@ -940,6 +940,15 @@ change), S4 (GM writes: a note to a player, the composer, reconciliation on re-i
 Build it only if hand entry drifts, or when live sync starts: [accounts-and-sync](plans/accounts-and-sync.md)'s N5 carries
 dispatches to a player's inbox, posted instead of saved, and builds on this. Its open question is GQ3 (one file per table).
 
+**W150 — Help's polish: the foot links, an A–Z jump in Every word, a stronger heading.** *Claude, from S31's review · 💡 · Fix · raised 2026-11-12*\
+**Plan:** none yet
+
+Not planned: best done after Deighton's read of Help's words (S31, GQ39) is in, since his answers may move the copy these sit around. S31's Help panel works, and its review found three things that read poorly. On a phone the foot (A night at the table, Every word,
+Keys and the Guide lines switch) is about 530px below the fold, so a GM has to scroll the whole page's help to reach the one link
+they came for. **Every word** is 44 terms in one A–Z list with no jump to a letter. And the panel's heading is the page's name in small
+mono caps, which is weak next to the page's own title. *To respect:* the words stay in `gmGuide` (Decision 278), the panel never
+traps focus (166), and the column keeps 258's 20rem card floor.
+
 ### For the designers
 
 **W56 — A tuning bench: change the game's numbers, see what moves, hand back a change request.** *Ken · ⏭ · shaped with Claude 2026-10-01*\
