@@ -2258,3 +2258,16 @@ test("Decision 282: a spell held from Character is let go from Main", () => {
   assert.deepEqual(activeChar(app).trackers.heldSpells, []);
   assert.deepEqual(app.errors, []);
 });
+
+test("Decision 283: Clear on an open chip hands focus to the next chip, then to the palette", () => {
+  const app = openSheet(lockedCharacter(), "main");
+  app.click('#main [data-condquick="stunned"]'); app.click('#main [data-condquick="prone"]');
+  app.click('#main [data-condinfo="0"]');
+  app.click('#main [data-condrm="0"]');
+  assert.equal(activeChar(app).trackers.conditions.length, 1);
+  assert.equal(focused(app), app.$("#main [data-condinfo]"), "focus fell to the page when the pressed ✕ went");
+  app.click('#main [data-condrm="0"]');
+  assert.equal(activeChar(app).trackers.conditions.length, 0);
+  assert.equal(focused(app), app.$("#main [data-condpalette] > summary"), "focus didn't reach the palette with no chip left");
+  assert.deepEqual(app.errors, []);
+});

@@ -3683,6 +3683,10 @@ function bindVitalControls(root){
     const i=Number(b.dataset.condrm), e=ch.trackers.conditions[i];
     S.condInfo=null;                                   // indexes shift once one goes
     commit("condition", `Cleared: ${condLabel(e)}`, ()=>{ Engine.removeCondition(ch, i); });
+    // The ✕ pressed is gone with its chip: keyboard focus goes to the next chip, or to the palette when none is left (Decision 283).
+    const host = document.getElementById("vpop") && document.getElementById("vpop").contains(root) ? document.getElementById("vpop") : document.getElementById("main");
+    const next = host && (host.querySelector("[data-condinfo]") || host.querySelector("[data-condpalette] > summary"));
+    if (next) next.focus();
   });
   root.querySelectorAll("[data-condmarks]").forEach(b=>b.onclick=()=>{
     const [i,n]=b.dataset.condmarks.split("|").map(Number), e=ch.trackers.conditions[i];

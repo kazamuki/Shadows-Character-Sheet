@@ -735,7 +735,9 @@ test("Decision 281: a sheet saved on Session Log opens on Progression, with the 
   const ch = lockedCharacter();
   ch.sessions = [{ date: "2026-10-01", title: "One", notes: "", ipEarned: 10, milestonePoint: true },
                  { date: "2026-10-08", title: "Two", notes: "", ipEarned: 5, milestonePoint: false }];
-  const app = openSheet(ch, "sessions");
+  // Not openSheet: it presses the tab afterwards, which would hide a missing LEGACY_SECTION entry.
+  const app = boot({ storage: { "shadows.active.v1": { ch, section: "sessions" } } });
+  app.$$("#main button").find(b => /Open sheet/.test(b.textContent)).dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
   assert.equal(app.window.eval("S.section"), "progression");
   for (const sel of ["[data-seslog]", "[data-ipgrant]", "[data-takeminor]", "[data-undolast]"])
     assert.ok(app.$(`#main ${sel}`), `Progression lacks ${sel}`);
@@ -760,4 +762,16 @@ test("Decision 281: Undo on Progression peels back an action taken on another ta
   app.click("#main button[data-undolast]");
   assert.equal(activeChar(app).trackers.damage, before);
   assert.deepEqual(app.errors, []);
+});
+
+test("Decision 281: opening every tab, a saved Session Log included, writes nothing to the character", () => {
+  const ch = lockedCharacter();
+  const app = openSheet(ch, "main");
+  const before = JSON.stringify(activeChar(app));
+  for (const sec of ["skills", "character", "trackers", "progression", "loadout", "notes", "main"]) app.click(`[data-sec="${sec}"]`);
+  assert.equal(JSON.stringify(activeChar(app)), before, "a tab changed the stored character");
+  const old = boot({ storage: { "shadows.active.v1": { ch, section: "sessions" } } });
+  old.$$("#main button").find(b => /Open sheet/.test(b.textContent)).dispatchEvent(new old.window.MouseEvent("click", { bubbles: true }));
+  assert.equal(JSON.stringify(activeChar(old)), before, "opening a sheet saved on Session Log changed the character");
+  assert.deepEqual([app.errors, old.errors], [[], []]);
 });
