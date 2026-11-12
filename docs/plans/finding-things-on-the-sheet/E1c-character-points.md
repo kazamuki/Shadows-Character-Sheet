@@ -1,7 +1,7 @@
 # Work order E1c — Character Points for a first-timer
 
 **Plan:** [finding-things-on-the-sheet](../finding-things-on-the-sheet.md), session E1c (split from E1b by EQ9).
-**Status:** drafted 2026-11-12 by the conductor (Opus), as E1b's was. **Awaiting Ken:** EQ13–EQ16 (§4).
+**Status:** drafted 2026-11-12 by the conductor (Opus), as E1b's was. **Approved by Ken 2026-11-12**, in the conductor's session: he asked for the next order to be built (*"Lets get the next work order built"*) and answered EQ13–EQ16 on the defaults (§4). Ready for its builder.
 **Branch:** the builder's own, cut from `main`.
 **Runs beside:** E4 (colour). Not E2 or E5.
 **Impeccable:** `/impeccable distill the Character Points step and the Natural Advantage panel for a first-time player`. Its analysis is in this order (§1, §9), from measurements at 375×812 on `main`. The builder runs `/impeccable clarify` on §9's new words to check them, not to reopen the shape.
@@ -61,10 +61,10 @@ N+1. **The Natural Advantage panel folds what wasn't allocated, once every rank 
 
 ## 4. Questions for Ken
 
-- **EQ13:** Fold the lists with Expert mode on too? **Default: yes.** Expert mode is about reading less, and a veteran types in the filter. Otherwise Expert mode would be the longer page here.
-- **EQ14:** Keep **Held only**, now that a folded list already shows only what's held? **Default: keep.** It folds both lists at once and works mid-filter. Retiring it would be a decision against 232, for a button nobody has complained about.
-- **EQ15:** Should a list open by itself once the player has taken nothing from it and moves on? (A first-timer may never open Disadvantages and miss the CP they give.) **Default: no.** The fold row says what the list is for (§9), and the CP line at the top counts Disadvantages. A list opening by itself is the page changing under the player.
-- **EQ16:** App patch or minor? **Default: patch**, as E1a and E1b were.
+- **EQ13:** Fold the lists with Expert mode on too? **Default: yes.** Expert mode is about reading less, and a veteran types in the filter. Otherwise Expert mode would be the longer page here. *Ken, 2026-11-12: Default.*
+- **EQ14:** Keep **Held only**, now that a folded list already shows only what's held? **Default: keep.** It folds both lists at once and works mid-filter. Retiring it would be a decision against 232, for a button nobody has complained about. *Ken, 2026-11-12: Default.*
+- **EQ15:** Should a list open by itself once the player has taken nothing from it and moves on? (A first-timer may never open Disadvantages and miss the CP they give.) **Default: no.** The fold row says what the list is for (§9), and the CP line at the top counts Disadvantages. A list opening by itself is the page changing under the player. *Ken, 2026-11-12: Default.*
+- **EQ16:** App patch or minor? **Default: patch**, as E1a and E1b were. *Ken, 2026-11-12: Default.*
 
 ## 5. The assumption sweep
 
