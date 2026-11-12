@@ -1,7 +1,7 @@
 # Work order E1b — Making a character, for everyone
 
 **Plan:** [finding-things-on-the-sheet](../finding-things-on-the-sheet.md), session E1 (E1b; E1a was the older file).
-**Status:** drafted 2026-11-11 by the conductor (Opus), not by E1a's reviewer: Ken asked for it, since that review ran on Sonnet. Ken answered EQ7–EQ10 on 2026-11-11 (§4). EQ7's answer added Decision N+3 (Cyborg retired from the picker). **Awaiting Ken:** approval of the order as amended, and EQ11–EQ12.
+**Status:** drafted 2026-11-11 by the conductor (Opus), not by E1a's reviewer: Ken asked for it, since that review ran on Sonnet. Ken answered EQ7–EQ10 on 2026-11-11 (§4). EQ7's answer added Decision N+3 (Cyborg retired from the picker). **Approved by Ken 2026-11-11**, in the conductor's session: *"I think you could remove 'Freebie points' since most players will have never seen that term, otherwise, I think you can approve it!"* So the note loses its first sentence (§9), and EQ11–EQ12 are on their defaults. Ready for its builder.
 **Branch:** the builder's own, cut from `main`.
 **Runs beside:** E4 (colour), which touches no wizard renderer. Not E2 or E5: E5 rewords copy this order adds.
 **Impeccable:** `/impeccable onboard the character creation wizard for a first-time player, with Expert mode as the veteran's path`. Its analysis is in this order (§1, §9), from a walkthrough at 375×812 on a blank character. The builder runs `/impeccable clarify` on §9's new words to check them, not to reopen the shape.
@@ -29,7 +29,7 @@
 - The rail before a Power Level is chosen is the character's name and one line, not a column of dashes.
 - No archetype card and no sheet chip says "in progress". The Cyborg isn't offered to a new character, and a saved one opens and plays as before.
 - The Stats step shows which subtypes need which stats, marked met or not as the player spends. A subtype card says what's short before it's chosen. Once a subtype is chosen, the others fold to one line each, and the player can open them again.
-- Character Points says "Formerly 'Freebie Points'" once.
+- Character Points' note shows once, and no longer says "Formerly 'Freebie Points'" (Ken, on approval: most players have never seen the term).
 - Step 1 says what's coming and whose call the Power Level is (§9).
 - The Archetype step with Professional and Enforcer chosen is at most half today's 8,710px at 375×812.
 - `npm run verify` and `npm run phone-check` pass.
@@ -88,8 +88,8 @@ On Decision 161: `→ **Superseded in part by Decision N**: before a Power Level
 - **EQ8:** To-do or error, by what the engine knows (N) or by what the player has touched? **Default: what the engine knows.** It holds through a reload or an undo, and needs no state. *Ken, 2026-11-11: Default.*
 - **EQ9:** Character Points is still about 24,000px at 1280 (11,800 in Expert mode). Shorten it here, or in its own session? **Default: its own session, E1c**, added to the plan. It turns on how Disadvantages and Advantages fold for a first-timer, which Decisions 232 and 234 shaped for Expert mode, and it wants measuring on its own. E1b fixes only the doubled note. *Ken, 2026-11-11: Default.*
 - **EQ10:** W131 (Expert mode as one page) and W121 (type a number into a stepper)? **Default: set aside by E1b.** Both are for the veteran, and this order is the first-timer's. Their Plan lines say so in this order's PR. *Ken, 2026-11-11: Default.*
-- **EQ11:** Step 1's new lines (§9): the book's own words on taking time, and "your GM picks this"? **Default: yes.**
-- **EQ12:** App patch or minor? **Default: patch.** Nothing new becomes possible, and three behaviours change.
+- **EQ11:** Step 1's new lines (§9): the book's own words on taking time, and "your GM picks this"? **Default: yes.** *Ken, 2026-11-11: Default (approved with the order).*
+- **EQ12:** App patch or minor? **Default: patch.** Nothing new becomes possible, and four behaviours change. *Ken, 2026-11-11: Default (approved with the order).*
 
 ## 5. The assumption sweep
 
@@ -111,7 +111,7 @@ On Decision 161: `→ **Superseded in part by Decision N**: before a Power Level
 | The other options once chosen | All drawn in full | `renderArchetype`, spec block | Folded to a name-and-demands line once `specializationNeed` is met; a "Show all N" button reopens them (browser state, `S`, never the character). A Werewolf or Vampire has 3: the fold still applies |
 | Expert mode's folds | `foldAttr`/`foldBtn` per option | `shared.js:711–716`; `wizard.js:312` | Unchanged. A folded option has no description to fold |
 | Demands on Stats | Not shown | `renderStats`, `wizard.js:236` | A `<details>` after the allocation rows, only when some option carries `requires.stats`. Redrawn with the stats on every press: the step re-renders `#main` |
-| The doubled note | Header and `dice-note` both draw `steps[].note` | `stepHeader`, `wizard.js:186`; `renderCP`, `wizard.js:558` | Header only |
+| The doubled note | Header and `dice-note` both draw `steps[].note`, which opens "Formerly 'Freebie Points'." | `stepHeader`, `wizard.js:186`; `renderCP`, `wizard.js:558`; the note, `shadows-data.js:5506` | Header only, and the note starts at "Disadvantages grant CP". A data copy edit: no `gamedataVersion` for it (Decision 68). Decision 2's terminology line in SCHEMA stays, as history |
 | Power Level cards | "Stats 45 · Skills 40+INT+REF · CP 5 · Skill cap 4 · Max CP Boost 2 · Ç 3d4×100" | `renderPowerLevel`, `wizard.js:195` | Labels as §9. No number moves |
 | Archetypes offered | Every entry in `D.archetypes` | `renderArchetype`, `wizard.js:263`; Admin's select, `sheet.js:2634` | Not `retired`, unless it's the character's own. **Grep every reader of `D.archetypes`/`D().archetypes`** (`engine.js:109, 3903, 3971`; `sheet.js:704, 1730, 4360`; `wizard.js:794`) and class each one as *offers a choice* (filter) or *reads a held one* (don't) |
 | A saved Cyborg | Loads; `versionCheck` reports nothing | `migrate`, `versionCheck` | Unchanged. Its computed values diff identical before and after (script it, per *How exact to be*) |
@@ -166,7 +166,7 @@ The first line is the book's own (0400). The ledger already shows the eight step
 
 **Archetype, once the specialization is complete:** the chosen option(s) in full. The rest are one row each: name and demands. One button, *"Show all 8 Subtypes"* (from `specialization.label`), opens them, and they stay open until the step is left. Choosing a different option works from a folded row's own button. Focus stays on the button pressed (Decision 164's `keepPlace`).
 
-**Character Points:** the note once, under the title.
+**Character Points:** the note once, under the title, without its first sentence: *"Disadvantages grant CP (no cap). Leftover CP buys LUCK, …"* (the rest unchanged).
 
 **Where things land:**
 
@@ -189,7 +189,7 @@ Write these first, and show each failing on `main`.
 5. Same file: **"Decision N+1: no card or chip says 'in progress'; an unwritten archetype still says so"**. Every archetype card's text, and the Character tab of a locked draft-status character, lack `statusLabel.draft`. The `tbd` archetype's card has `statusLabel.tbd`. The test reads the statuses from the data, never names an archetype.
 6. Same file: **"Decision N+2: the Stats step shows each option's demands, and they follow the stats"**. Reads every option with `requires.stats` from the data. On Stats, the panel has one line per option. Raising a stat to an option's demand marks it met, with no reload.
 7. Same file: **"Decision N+2: an unmet option says what's short, and a complete choice folds the rest"**. Before choosing: an unmet card reads `(you have \d+)`. Choose one: the others have no `.desc`, and the show-all button reads its count. Press it: all are full. Undo from the toast: none folded.
-8. Same file: **"the Character Points note shows once"**. The note's text occurs once in `#main`.
+8. Same file: **"the Character Points note shows once, and doesn't say Freebie"**. The note's text occurs once in `#main`, and `/Freebie/i` is absent from the step.
 9. Same file: **"Decision N+3: a retired archetype isn't offered, and a character on it keeps it"**. The Archetype step has no card for any `retired` archetype (read from the data). A locked character seeded on one opens with no error, shows its archetype on Character, and Admin's select keeps it as the current option while offering no other retired one.
 
 ## 11. Tests beyond the examples
