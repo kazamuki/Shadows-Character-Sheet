@@ -131,7 +131,7 @@ print renderer for a skill row; the line is `Engine.maneuverChecks`, so print on
 *To respect:* Decision 229. Player-visible: a CHANGELOG line and a patch bump.
 
 **W133 — The game's words inside a sentence are a tap away too.** *Ken, from P21's voice pass · 💡 · Rule or shape · raised 2026-10-21*\
-**Plan:** weighed by [finding-things-on-the-sheet](plans/finding-things-on-the-sheet.md) E2 (EQ1): its proposal says whether it joins the pass
+**Plan:** [finding-things-on-the-sheet](plans/finding-things-on-the-sheet.md) E8, its own session after E5 (EQ22)
 
 Reading Night Eyes' attack line ("In Dark, your attacks take −1 instead of −3; in Blind, −3 instead of −5"), Ken had to ask what Dim and Dark were. Decision 139 already puts a rule a hover or tap away (`data-tip`, `TIPS` in `shared.js`), but only for a tag, a stat score and a few fixed panels. A term inside a **sentence the app writes** is plain text: a light level, *Kicker Die*, *Take X*, *Defensive Action*, a Condition named in a mark, *Pain Level*. The player has to know it already, or go and find it.
 The shape: a list of game terms in the data, each with the rule it opens (a sentence, or a table such as `visibility`, drawn with its numbers). The renderer wraps each known term it finds in a Skill-row mark, an attack or check note, a rest line or a `playerNote` as a tip trigger. Hover or focus shows the tip, and a tap pins it, as Decision 139's do.
