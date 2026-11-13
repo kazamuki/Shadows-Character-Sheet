@@ -788,7 +788,11 @@ test("E5: each tab's intro is its appCopy line", () => {
     assert.equal(note.textContent, introOf(key), `${sec}'s intro isn't appCopy.${key}`);
     assert.doesNotMatch(note.textContent, /\bTap\b/, `${sec}'s intro tells the player how to use the app`);
   }
-  assert.doesNotMatch(D.appCopy.introAdmin, /\bTap\b/);
+  // Admin isn't a [data-sec] tab: the menu opens it
+  app.click("[data-menu-toggle]"); app.click("[data-admin]");
+  const admin = app.$("#main h1.step-title + .step-note");
+  assert.equal(admin && admin.textContent, introOf("introAdmin"), "Admin's intro isn't appCopy.introAdmin");
+  assert.doesNotMatch(admin.textContent, /\bTap\b/, "Admin's intro tells the player how to use the app");
   assert.deepEqual(app.errors, []);
 });
 
