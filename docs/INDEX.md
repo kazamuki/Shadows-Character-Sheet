@@ -341,7 +341,7 @@ Promises the engine makes and the guards behind them.
 The seven-tab running sheet, damage, IP, milestones, sessions.
 
 - **23** *(Phase 3)* — Logging a session auto-grants the per-session IP (10 per WIP Professional cadence, overridable per session), 1 Mile...
-- **24** *(Phase 3)* — Pain Level penalties are applied to every displayed skill-check total, with the reason shown inline (breakdown colu...
+- **24** *(Phase 3)* — Pain Level penalties are applied to every displayed skill-check total, with the reason shown inline (breakdown colu... → **superseded in part by 285**
 - **25** *(Phase 3)* — The Grimoire is a free-entry table. → **superseded in part by 108**
 - **26** *(Phase 3)* — Un-modeled effects (milestone benefits, aberration prose, items) are applied through a manual adjustments ledger: s...
 - **27** *(Phase 3)* — The IP journal is the audit trail: entries are spend or grant; spends update the target's IPE atomically; the last... → **superseded in part by 49**
@@ -358,7 +358,7 @@ The seven-tab running sheet, damage, IP, milestones, sessions.
 - **41** *(Phase 3.2)* — Number-entry caret fix.
 - **43** *(Phase 3.2)* — Date-input theming.
 - **44** *(Phase 3.2)* — Skills aligned + per-skill descriptions. → **superseded in part by 156**
-- **156** *(Skills tab — every skill, two columns)* — Every skill in its category, untrained at Rank 0 and full strength; two columns from 1000px, categories never split, the first holding half the skills.
+- **156** *(Skills tab — every skill, two columns)* — Every skill in its category, untrained at Rank 0 and full strength; two columns from 1000px, categories never split, the first holding half the skills. → **superseded in part by 284**
 - **45** *(Phase 3.2)* — Traits collapsible. → **superseded in part by 158**
 - **158** *(The Character tab)* — Traits and Archetype are one Character tab (eight tabs): the archetype, its traits, powers and vulnerabilities a column each from 1000px, then Advantages beside Disadvantages, a sticky jump bar, Expand all remembered in the browser, buttons to Loadout & Powers and Trackers. → **superseded in part by 168** → **superseded in part by 281 and 282**
 - **168** *(Character tab — fill the width)* — The archetype beside its core mechanic; its parts flow into ~340px columns that break between cards; Advantage and Disadvantage cards as many across as fit; every count by the page's width, so pinned vitals take their columns back. → **superseded in part by 246**
@@ -471,6 +471,8 @@ W29, built a session at a time behind a feature switch (173). The first plan is 
 - **281** *(Seven tabs — E2a, EQ18)* — the sheet has seven tabs: Session Log is part of Progression (log a session, IP and the spends, Milestones, History, the Activity Log with Undo, under a jump bar), Loadout & Powers is Loadout, and a sheet saved on Session Log opens on Progression.
 - **282** *(What you can do, and what you carry — E2a, EQ19, EQ23, EQ26)* — Disciplines, the Grimoire, Focused Skills, a write-in's powers and a Tweak are Character's sections, each shown once; Loadout holds Weapons, Armor, Gear and Installed Cybernetics; Main draws every toggle and Loadout none.
 - **283** *(Conditions on Main — E2a, EQ20, EQ24)* — Trackers has no Conditions section; Main's opened chip (and the Pain & Conditions popover's) adds the Condition's note field and, for a roll penalty, the stacking rule.
+- **284** *(Main's combat skills, E2b, EQ28, EQ30)* — Main shows the combat skills you've trained and any untrained one whose row carries something (a chip, a pick, a Take X, a kicker); the plain untrained rows fold behind Show N untrained (browser state, starts folded); an untrained row is dimmed wherever it's drawn, its chips keep their colours.
+- **285** *(What a skill row says, E2b, EQ29)* — no skill row says "pain" or "conditions"; the line above Main's Combat section and the Skills table says the penalty and that the totals include it.
 - **276** *(Making a character — E1b)* — the Stats step lists each option's stat demands, met or not as stats are spent; a card says what's short; a complete choice folds the other options, Show all reopens them (browser state).
 - **279** *(Making a character — E1c)* — Character Points' Disadvantage and Advantage lists show only what's held until Show all opens one; the filter reaches both, folded or not; Held only unchanged (browser state, `applyPickFilter` decides visibility).
 - **280** *(Making a character — E1c)* — once every Natural Advantage rank is allocated, the unallocated entries fold to a line each, Show all opens them (extends 276).

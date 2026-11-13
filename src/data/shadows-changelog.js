@@ -8,6 +8,14 @@ window.SHADOWS_CHANGELOG = [
     "items": [],
     "groups": [
       {
+        "title": "Character sheet",
+        "items": [
+          "**Main shows the combat skills you've trained, and any untrained one you've got something on.** The rest are a tap away under **Show untrained**, and every skill is still on Skills.",
+          "**Untrained skills are dimmed, and a skill's row no longer repeats your Pain or Conditions penalty.** The line above the table says it once, and the totals already include it.",
+          "**Trackers and Skills get to the point.** Trackers opens on your pools, and Skills on how a check rolls."
+        ]
+      },
+      {
         "title": "GM mode",
         "items": [
           "**A clock's − and + sit right beside its name**, in one tidy column, instead of across the far side of a wide screen. Close to full reads at a glance.",

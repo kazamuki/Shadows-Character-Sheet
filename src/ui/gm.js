@@ -4394,7 +4394,7 @@ function seatPageHtml(v){
 // its own chrome. S.ch holds the clone only inside drawReadOnly, because update() saves whatever S.ch holds.
 const RO_SECTIONS = SHEET_SECTIONS.filter(s=>s.id!=="admin");
 // What stays live on the page: tips, jumps, another tab, a description. The page's own chrome is bound by bindReadOnlySheet.
-const RO_READERS = "[data-tip], [data-jump], [data-gotab], [data-skilldesc], [data-derivdesc], [data-rotab], [data-roseat], [data-roprint], [data-seatback]";
+const RO_READERS = "[data-tip], [data-jump], [data-gotab], [data-skilldesc], [data-untrainedfold], [data-derivdesc], [data-rotab], [data-roseat], [data-roprint], [data-seatback]";
 function drawReadOnly(ch, section){
   const keep = { ch:S.ch, section:S.section, admin:S.admin, issues:S.importIssues, failed:saveFailed };
   try {
