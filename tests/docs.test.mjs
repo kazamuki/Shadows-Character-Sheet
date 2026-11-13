@@ -350,6 +350,19 @@ test("the in-app release notes are generated from the current CHANGELOG.md (Deci
     `What's new has no section for app ${app}`);
 });
 
+test("a release's ### headings group its lines, and nothing else under one is allowed", async () => {
+  // So the sheet's lines and GM mode's don't intermingle in one list.
+  const { parseChangelog, CUTOFF } = await import("../tools/changelog.mjs");
+  const md = (body) => `# Changelog\n\n## [Unreleased] — app 9.9.9\n\n${body}\n\n## v9.9.8 — 2026-01-01\n\n- old\n\n${CUTOFF}\n`;
+  const [rel, old] = parseChangelog(md("- loose\n\n### Character sheet\n\n- a\n- b\n\n### GM mode\n\n- c"));
+  assert.deepEqual(rel.items, ["loose"]);
+  assert.deepEqual(rel.groups, [{ title: "Character sheet", items: ["a", "b"] }, { title: "GM mode", items: ["c"] }]);
+  assert.ok(!("groups" in old), "a release with no group heading gained a groups key");
+  assert.throws(() => parseChangelog(md("### GM mode\n\nA paragraph.")), /group holds bullets only/);
+  assert.throws(() => parseChangelog(md("### GM mode\n\n### Character sheet\n\n- a")), /has no bullets/);
+  assert.throws(() => parseChangelog(md("#### Deeper\n\n- a")), /no in-app rendering/);
+});
+
 test("the pack schema version in STATE.md and CLAUDE.md is the one migratePack() stamps (Decision 180)", () => {
   const m = /table schema `[\d.]+` · pack schema `([\d.]+)`/.exec(STATE);
   assert.ok(m, "STATE.md's Versions line lost its pack schema number");

@@ -311,6 +311,7 @@ function whatsNewHtml(){
       <summary><span class="wn-ver">${esc(r.version)}</span>${r.date?`<span class="wn-date">${esc(changelogDate(r.date))}</span>`:""}${fresh?`<span class="wn-new">New</span>`:""}</summary>
       ${(r.intro||[]).map(p=>`<p class="wn-intro">${changelogInline(p)}</p>`).join("")}
       ${(r.items||[]).length?`<ul>${r.items.map(t=>`<li>${changelogInline(t)}</li>`).join("")}</ul>`:""}
+      ${(r.groups||[]).map(g=>`<p class="wn-group">${esc(g.title)}</p><ul>${(g.items||[]).map(t=>`<li>${changelogInline(t)}</li>`).join("")}</ul>`).join("")}
     </details>`;
   }).join("")}</div>`;
 }
