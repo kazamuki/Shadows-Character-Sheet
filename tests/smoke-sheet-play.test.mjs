@@ -2277,7 +2277,7 @@ test("Decision 283: a Condition the game data no longer has still opens, and sho
   app.click('#main [data-condinfo="0"]');
   const info = app.$("#main .cond-info");
   assert.ok(info, "the chip opened to nothing");
-  assert.match(info.textContent, /isn't in the game data any more/);
+  assert.ok(info.textContent.includes(D.appCopy.orphanNote.replace("{kind}", "Condition")), "the missing Condition says it isn't in the current rules");
   assert.equal(app.$('#main [data-condnote="0"]').value, "kept from an old file");
   assert.deepEqual(app.errors, []);
 });
@@ -2292,5 +2292,33 @@ test("Decision 283: Clear on an open chip hands focus to the next chip, then to 
   app.click('#main [data-condrm="0"]');
   assert.equal(activeChar(app).trackers.conditions.length, 0);
   assert.equal(focused(app), app.$("#main [data-condpalette] > summary"), "focus didn't reach the palette with no chip left");
+  assert.deepEqual(app.errors, []);
+});
+
+// E5: what the game data dropped wears one chip, wherever it shows.
+export function orphanFixture() {
+  const ch = lockedCharacter();
+  ch.weapons = [{ id: "gone-gun" }]; ch.armor = [{ id: "gone-vest" }]; ch.gear = [{ id: "gone-kit", qty: 1 }];
+  ch.archetypeChoices.specialization = ["gone-origin"];
+  ch.trackers.aberrations = [{ id: "gone-aber", permanence: "permanent" }, { id: "gone-temp", permanence: "temporary" }];
+  ch.trackers.conditions = [{ id: "gone-cond" }];
+  ch.panelData = { grimoire: [{ spellId: "gone-spell", stage: "known" }] };
+  return ch;
+}
+test("E5: what the game data dropped wears one chip", () => {
+  const chip = D.appCopy.orphanChip, note = kind => D.appCopy.orphanNote.replace("{kind}", kind);
+  const app = openSheet(orphanFixture(), "loadout");
+  const seen = {};
+  for (const sec of ["loadout", "character", "trackers", "main"]) {
+    app.click(`[data-sec="${sec}"]`);
+    seen[sec] = app.$("#main").textContent;
+    assert.doesNotMatch(seen[sec], /game data|any more/, `${sec} still says "game data" or "any more"`);
+  }
+  assert.equal(seen.loadout.split(chip).length - 1, 3, "the weapon, the armor and the gear each wear the chip");
+  assert.ok(seen.character.includes(chip), "the specialization doesn't wear the chip");
+  assert.ok(seen.trackers.includes("gone-temp") && seen.trackers.includes(chip), "a temporary Aberration doesn't wear the chip");
+  assert.ok(seen.trackers.includes(note("Aberration")), "a permanent Aberration's card doesn't carry the note");
+  app.click('[data-sec="main"]'); app.click('#main [data-condinfo="0"]');
+  assert.ok(app.$("#main .cond-info").textContent.includes(note("Condition")), "a missing Condition's note");
   assert.deepEqual(app.errors, []);
 });

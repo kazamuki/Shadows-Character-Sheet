@@ -499,7 +499,7 @@ table.edit .lo-rounds .fire{flex-wrap:nowrap}   /* its width counts, so Done doe
 .lo-repair{margin:6px 0 2px}
 .lo-notes{margin:6px 0 0}
 /* Phase 3.3 — derived (TOL/WILL) "how it's derived" affordance */
-.deriv-q{margin:5px auto 0; display:block; width:18px; height:18px; border-radius:50%; border:1px solid var(--frame);
+.deriv-q{margin:0 0 0 4px; display:inline-block; vertical-align:middle; width:18px; height:18px; border-radius:50%; border:1px solid var(--frame);
   background:var(--panel-2); color:var(--dim); font-family:var(--mono); font-size:.7rem; line-height:1; cursor:pointer}
 .deriv-q:hover{border-color:var(--cyan); color:var(--cyan)}
 .statcell .dvbd{margin-top:6px; font-family:var(--mono); font-size:.7rem; line-height:1.45; color:var(--dim); letter-spacing:.01em}
@@ -527,6 +527,7 @@ table.edit .lo-rounds .fire{flex-wrap:nowrap}   /* its width counts, so Done doe
 .trk .sub{font-size:.74rem; color:var(--dim); flex-basis:100%}
 .trk .sub.trk-step{color:var(--text)}
 .trk input[type=number]{width:84px; text-align:center}
+.trk input[data-ipamt], .trk input[data-cramt]{width:124px}   /* E5: "amount" shows whole, spinner and all */
 .trk input[type=text]{width:auto; flex:1; min-width:140px}
 .btn.sm{padding:5px 12px; font-size:.78rem; font-weight:500}
 .btn.danger{border-color:var(--magenta); color:var(--magenta-text); background:transparent}

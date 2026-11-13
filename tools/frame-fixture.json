@@ -46,7 +46,7 @@
    0,
    88.2,
    390,
-   1854.7
+   1843.4
   ],
   "vitals": [
    0,
@@ -62,9 +62,9 @@
    "4 div.main-pin 0,0,0,0",
    "5 div.cond-grid 16,311.4,358,374.1",
    "6 section.main-conditions 16,709.5,358,94.5",
-   "7 div.main-grid 16,818,358,1054.9"
+   "7 div.main-grid 16,818,358,1043.6"
   ],
-  "deep": "332 boxes, dd24c3f3"
+  "deep": "332 boxes, 25b404e3"
  },
  "sheet: skills @390": {
   "header": [
@@ -100,7 +100,7 @@
    "5 div.skill-cols 16,405,358,3699.7",
    "6 details.group 16,4104.7,358,30.3"
   ],
-  "deep": "769 boxes, e590e30d"
+  "deep": "768 boxes, c842f275"
  },
  "sheet: character @390": {
   "header": [
@@ -119,7 +119,7 @@
    0,
    88.2,
    390,
-   4730.4
+   4683.9
   ],
   "vitals": [
    0,
@@ -131,16 +131,16 @@
    "0 div.vbar 16,108.2,358,59.9",
    "1 div.import-issues 16,182.1,358,64",
    "2 h1.step-title 16,260.2,358,32.2",
-   "3 p.step-note 16,296.4,358,93",
-   "4 nav.jumpbar.sticky.row 16,411.4,358,45.3",
-   "5 div.arch-top 16,470.8,358,781.1",
-   "6 div.arch-flow 16,1275.8,358,1641.9",
-   "7 div.trait-cols 16,2917.7,358,1392.8",
-   "8 div.sect 16,4334.5,358,23.4",
-   "9 div.reference 16,4369.9,358,298.8",
-   "10 div.tab-links 16,4686.6,358,62"
+   "3 p.step-note 16,296.4,358,46.5",
+   "4 nav.jumpbar.sticky.row 16,364.9,358,45.3",
+   "5 div.arch-top 16,424.3,358,781.1",
+   "6 div.arch-flow 16,1229.3,358,1641.9",
+   "7 div.trait-cols 16,2871.2,358,1392.8",
+   "8 div.sect 16,4288,358,23.4",
+   "9 div.reference 16,4323.4,358,298.8",
+   "10 div.tab-links 16,4640.1,358,62"
   ],
-  "deep": "727 boxes, 9b249946"
+  "deep": "727 boxes, 90375f56"
  },
  "sheet: trackers @390": {
   "header": [
@@ -159,7 +159,7 @@
    0,
    88.2,
    390,
-   2625.2
+   2601.9
   ],
   "vitals": [
    0,
@@ -173,10 +173,10 @@
    "2 h1.step-title 16,260.2,358,32.2",
    "3 div.trk-grid 16,296.4,358,1978.8",
    "4 div.sect 16,2299.3,358,23.4",
-   "5 p.step-note 16,2334.6,358,116.3",
-   "6 div.trk 16,2472.9,358,158.6"
+   "5 p.step-note 16,2334.6,358,93",
+   "6 div.trk 16,2449.6,358,158.6"
   ],
-  "deep": "187 boxes, 2a03f46e"
+  "deep": "186 boxes, 69252464"
  },
  "sheet: progression @390": {
   "header": [
@@ -224,7 +224,7 @@
    "17 div.trk 16,2601,358,160.7",
    "18 p.step-note 16,2773.7,358,23.3"
   ],
-  "deep": "193 boxes, 337202d8"
+  "deep": "192 boxes, 98ca207f"
  },
  "sheet: loadout @390": {
   "header": [
@@ -911,7 +911,7 @@
    "6 section.main-conditions 16,563,736,94.5",
    "7 div.main-grid 16,671.4,736,740.8"
   ],
-  "deep": "343 boxes, fa84b9df"
+  "deep": "343 boxes, e77149a9"
  },
  "sheet: skills @768": {
   "header": [
@@ -947,7 +947,7 @@
    "5 div.skill-cols 16,370.6,736,2047.9",
    "6 details.group 16,2418.6,736,30.3"
   ],
-  "deep": "791 boxes, c6faa127"
+  "deep": "790 boxes, d4561c2"
  },
  "sheet: character @768": {
   "header": [
@@ -966,7 +966,7 @@
    0,
    88.2,
    768,
-   3440.5
+   3417.3
   ],
   "vitals": [
    0,
@@ -978,16 +978,16 @@
    "0 div.vbar 16,108.2,736,65.9",
    "1 div.import-issues 16,196.1,736,27",
    "2 h1.step-title 16,237.1,736,42.2",
-   "3 p.step-note 16,285.3,586.7,69.8",
-   "4 nav.jumpbar.sticky.row 16,377,736,45.3",
-   "5 div.arch-top 16,436.4,736,571.8",
-   "6 div.arch-flow 16,1032.2,736,1167.2",
-   "7 div.trait-cols 16,2199.4,736,856.3",
-   "8 div.sect 16,3079.7,736,23.4",
-   "9 div.reference 16,3115,736,298.8",
-   "10 div.tab-links 16,3431.8,736,27"
+   "3 p.step-note 16,285.3,586.7,46.5",
+   "4 nav.jumpbar.sticky.row 16,353.8,736,45.3",
+   "5 div.arch-top 16,413.1,736,571.8",
+   "6 div.arch-flow 16,1009,736,1167.2",
+   "7 div.trait-cols 16,2176.1,736,856.3",
+   "8 div.sect 16,3056.4,736,23.4",
+   "9 div.reference 16,3091.8,736,298.8",
+   "10 div.tab-links 16,3408.5,736,27"
   ],
-  "deep": "727 boxes, f30e9dfe"
+  "deep": "727 boxes, f41960e1"
  },
  "sheet: trackers @768": {
   "header": [
@@ -1023,7 +1023,7 @@
    "5 p.step-note 16,1917,586.7,69.8",
    "6 div.trk 16,2008.8,736,158.6"
   ],
-  "deep": "187 boxes, fd5f06b6"
+  "deep": "186 boxes, 176e70a"
  },
  "sheet: progression @768": {
   "header": [
@@ -1042,7 +1042,7 @@
    0,
    88.2,
    768,
-   2272.1
+   2248.8
   ],
   "vitals": [
    0,
@@ -1054,24 +1054,24 @@
    "0 div.vbar 16,108.2,736,65.9",
    "1 div.import-issues 16,196.1,736,27",
    "2 h1.step-title 16,237.1,736,42.2",
-   "3 p.step-note 16,285.3,586.7,69.8",
-   "4 nav.jumpbar.row 16,377,736,28.3",
-   "5 div.sect 16,429.4,736,23.4",
-   "6 div.review-block 16,464.8,736,488",
-   "7 div.trk 16,966.8,736,67",
-   "8 div.raise-row 16,1047.8,736,88",
-   "9 details.group 16,1153.8,736,30.3",
-   "10 div.sect 16,1208.1,736,23.4",
-   "11 div.trk 16,1243.5,736,91.3",
-   "12 details.group 16,1346.8,736,598.2",
-   "13 details.group 16,1955.1,736,30.3",
-   "14 div.sect 16,2009.4,736,23.4",
-   "15 p.step-note 16,2044.8,586.7,23.3",
-   "16 div.sect 16,2092,736,23.4",
-   "17 div.trk 16,2127.4,736,105.7",
-   "18 p.step-note 16,2245.1,586.7,23.3"
+   "3 p.step-note 16,285.3,586.7,46.5",
+   "4 nav.jumpbar.row 16,353.8,736,28.3",
+   "5 div.sect 16,406.1,736,23.4",
+   "6 div.review-block 16,441.5,736,488",
+   "7 div.trk 16,943.5,736,67",
+   "8 div.raise-row 16,1024.5,736,88",
+   "9 details.group 16,1130.5,736,30.3",
+   "10 div.sect 16,1184.9,736,23.4",
+   "11 div.trk 16,1220.3,736,91.3",
+   "12 details.group 16,1323.6,736,598.2",
+   "13 details.group 16,1931.8,736,30.3",
+   "14 div.sect 16,1986.2,736,23.4",
+   "15 p.step-note 16,2021.5,586.7,23.3",
+   "16 div.sect 16,2068.8,736,23.4",
+   "17 div.trk 16,2104.1,736,105.7",
+   "18 p.step-note 16,2221.8,586.7,23.3"
   ],
-  "deep": "193 boxes, 7b98bce2"
+  "deep": "192 boxes, c31c1695"
  },
  "sheet: loadout @768": {
   "header": [
@@ -1758,7 +1758,7 @@
    "6 section.main-conditions 30,499.8,1240,94.5",
    "7 div.main-grid 30,608.3,1240,468.1"
   ],
-  "deep": "345 boxes, eef1a941"
+  "deep": "345 boxes, e9358545"
  },
  "sheet: skills @1300": {
   "header": [
@@ -1794,7 +1794,7 @@
    "5 div.skill-cols 30,376.6,1240,1499.2",
    "6 details.group 30,1875.8,1240,30.3"
   ],
-  "deep": "791 boxes, f02d971b"
+  "deep": "790 boxes, ccc82215"
  },
  "sheet: character @1300": {
   "header": [
@@ -1813,7 +1813,7 @@
    0,
    88.2,
    1300,
-   3269.1
+   3245.9
   ],
   "vitals": [
    0,
@@ -1825,16 +1825,16 @@
    "0 div.vbar 30,114.2,1240,65.9",
    "1 div.import-issues 30,202.1,1240,27",
    "2 h1.step-title 30,243.1,1240,42.2",
-   "3 p.step-note 30,291.3,586.7,69.8",
-   "4 nav.jumpbar.sticky.row 30,383,1240,45.3",
-   "5 div.arch-top 30,442.4,1240,313.9",
-   "6 div.arch-flow 30,780.3,1240,1130",
-   "7 div.trait-cols 30,1910.3,1240,964",
-   "8 div.sect 30,2898.3,1240,23.4",
-   "9 div.reference 30,2933.6,1240,298.8",
-   "10 div.tab-links 30,3250.4,1240,27"
+   "3 p.step-note 30,291.3,586.7,46.5",
+   "4 nav.jumpbar.sticky.row 30,359.8,1240,45.3",
+   "5 div.arch-top 30,419.1,1240,313.9",
+   "6 div.arch-flow 30,757,1240,1130",
+   "7 div.trait-cols 30,1887,1240,964",
+   "8 div.sect 30,2875,1240,23.4",
+   "9 div.reference 30,2910.4,1240,298.8",
+   "10 div.tab-links 30,3227.1,1240,27"
   ],
-  "deep": "727 boxes, 57031fe3"
+  "deep": "727 boxes, 7f6b4009"
  },
  "sheet: trackers @1300": {
   "header": [
@@ -1870,7 +1870,7 @@
    "5 p.step-note 30,1567.8,586.7,69.8",
    "6 div.trk 30,1659.5,1240,158.6"
   ],
-  "deep": "187 boxes, 68639825"
+  "deep": "186 boxes, f732d67b"
  },
  "sheet: progression @1300": {
   "header": [
@@ -1889,7 +1889,7 @@
    0,
    88.2,
    1300,
-   2049.7
+   2026.5
   ],
   "vitals": [
    0,
@@ -1901,24 +1901,24 @@
    "0 div.vbar 30,114.2,1240,65.9",
    "1 div.import-issues 30,202.1,1240,27",
    "2 h1.step-title 30,243.1,1240,42.2",
-   "3 p.step-note 30,291.3,586.7,69.8",
-   "4 nav.jumpbar.row 30,383,1240,28.3",
-   "5 div.sect 30,435.4,1240,23.4",
-   "6 div.review-block 30,470.8,1240,338.3",
-   "7 div.trk 30,823.1,1240,67",
-   "8 div.raise-row 30,904.1,1240,39",
-   "9 details.group 30,961.1,1240,30.3",
-   "10 div.sect 30,1015.4,1240,23.4",
-   "11 div.trk 30,1050.8,1240,91.3",
-   "12 details.group 30,1154.1,1240,558.6",
-   "13 details.group 30,1722.7,1240,30.3",
-   "14 div.sect 30,1777,1240,23.4",
-   "15 p.step-note 30,1812.4,586.7,23.3",
-   "16 div.sect 30,1859.6,1240,23.4",
-   "17 div.trk 30,1895,1240,105.7",
-   "18 p.step-note 30,2012.7,586.7,23.3"
+   "3 p.step-note 30,291.3,586.7,46.5",
+   "4 nav.jumpbar.row 30,359.8,1240,28.3",
+   "5 div.sect 30,412.1,1240,23.4",
+   "6 div.review-block 30,447.5,1240,338.3",
+   "7 div.trk 30,799.8,1240,67",
+   "8 div.raise-row 30,880.8,1240,39",
+   "9 details.group 30,937.8,1240,30.3",
+   "10 div.sect 30,992.2,1240,23.4",
+   "11 div.trk 30,1027.5,1240,91.3",
+   "12 details.group 30,1130.9,1240,558.6",
+   "13 details.group 30,1699.4,1240,30.3",
+   "14 div.sect 30,1753.8,1240,23.4",
+   "15 p.step-note 30,1789.1,586.7,23.3",
+   "16 div.sect 30,1836.4,1240,23.4",
+   "17 div.trk 30,1871.8,1240,105.7",
+   "18 p.step-note 30,1989.4,586.7,23.3"
   ],
-  "deep": "193 boxes, 587721c1"
+  "deep": "192 boxes, 2d31c345"
  },
  "sheet: loadout @1300": {
   "header": [
@@ -2032,7 +2032,7 @@
    "6 section.main-conditions 30,456.8,940,94.5",
    "7 div.main-grid 30,565.3,940,468.1"
   ],
-  "deep": "343 boxes, 8ac65fcc"
+  "deep": "343 boxes, ffd4326c"
  },
  "sheet: skills @1300 pinned": {
   "header": [
@@ -2068,7 +2068,7 @@
    "5 div.skill-cols 30,288.7,940,2230.4",
    "6 details.group 30,2519.1,940,30.3"
   ],
-  "deep": "725 boxes, 85d3c43c"
+  "deep": "724 boxes, 6ed864fb"
  },
  "sheet: character @1300 pinned": {
   "header": [
@@ -2087,7 +2087,7 @@
    0,
    88.2,
    1000,
-   3287.2
+   3264
   ],
   "vitals": [
    0,
@@ -2099,16 +2099,16 @@
    "0 div.vbar 0,0,0,0",
    "1 div.import-issues 30,114.2,940,27",
    "2 h1.step-title 30,155.2,940,42.2",
-   "3 p.step-note 30,203.4,586.7,69.8",
-   "4 nav.jumpbar.sticky.row 30,295.1,940,45.3",
-   "5 div.arch-top 30,354.5,940,360.4",
-   "6 div.arch-flow 30,738.8,940,1189.5",
-   "7 div.trait-cols 30,1928.3,940,964",
-   "8 div.sect 30,2916.3,940,23.4",
-   "9 div.reference 30,2951.7,940,298.8",
-   "10 div.tab-links 30,3268.4,940,27"
+   "3 p.step-note 30,203.4,586.7,46.5",
+   "4 nav.jumpbar.sticky.row 30,271.9,940,45.3",
+   "5 div.arch-top 30,331.2,940,360.4",
+   "6 div.arch-flow 30,715.6,940,1189.5",
+   "7 div.trait-cols 30,1905.1,940,964",
+   "8 div.sect 30,2893.1,940,23.4",
+   "9 div.reference 30,2928.4,940,298.8",
+   "10 div.tab-links 30,3245.2,940,27"
   ],
-  "deep": "661 boxes, f23fa3b1"
+  "deep": "661 boxes, 660d9a6d"
  },
  "sheet: trackers @1300 pinned": {
   "header": [
@@ -2127,7 +2127,7 @@
    0,
    88.2,
    1000,
-   1793.3
+   1804.3
   ],
   "vitals": [
    0,
@@ -2139,12 +2139,12 @@
    "0 div.vbar 0,0,0,0",
    "1 div.import-issues 30,114.2,940,27",
    "2 h1.step-title 30,155.2,940,42.2",
-   "3 div.trk-grid 30,203.4,940,1276.5",
-   "4 div.sect 30,1503.9,940,23.4",
-   "5 p.step-note 30,1539.2,586.7,69.8",
-   "6 div.trk 30,1631,940,158.6"
+   "3 div.trk-grid 30,203.4,940,1287.5",
+   "4 div.sect 30,1514.9,940,23.4",
+   "5 p.step-note 30,1550.2,586.7,69.8",
+   "6 div.trk 30,1642,940,158.6"
   ],
-  "deep": "121 boxes, 4855ebf2"
+  "deep": "120 boxes, d4ab7cf6"
  },
  "sheet: progression @1300 pinned": {
   "header": [
@@ -2163,7 +2163,7 @@
    0,
    88.2,
    1000,
-   2001.5
+   1978.2
   ],
   "vitals": [
    0,
@@ -2175,24 +2175,24 @@
    "0 div.vbar 0,0,0,0",
    "1 div.import-issues 30,114.2,940,27",
    "2 h1.step-title 30,155.2,940,42.2",
-   "3 p.step-note 30,203.4,586.7,69.8",
-   "4 nav.jumpbar.row 30,295.1,940,28.3",
-   "5 div.sect 30,347.5,940,23.4",
-   "6 div.review-block 30,382.8,940,338.3",
-   "7 div.trk 30,735.2,940,67",
-   "8 div.raise-row 30,816.2,940,39",
-   "9 details.group 30,873.2,940,30.3",
-   "10 div.sect 30,927.5,940,23.4",
-   "11 div.trk 30,962.9,940,91.3",
-   "12 details.group 30,1066.2,940,598.2",
-   "13 details.group 30,1674.4,940,30.3",
-   "14 div.sect 30,1728.8,940,23.4",
-   "15 p.step-note 30,1764.1,586.7,23.3",
-   "16 div.sect 30,1811.4,940,23.4",
-   "17 div.trk 30,1846.8,940,105.7",
-   "18 p.step-note 30,1964.4,586.7,23.3"
+   "3 p.step-note 30,203.4,586.7,46.5",
+   "4 nav.jumpbar.row 30,271.9,940,28.3",
+   "5 div.sect 30,324.2,940,23.4",
+   "6 div.review-block 30,359.6,940,338.3",
+   "7 div.trk 30,711.9,940,67",
+   "8 div.raise-row 30,792.9,940,39",
+   "9 details.group 30,849.9,940,30.3",
+   "10 div.sect 30,904.3,940,23.4",
+   "11 div.trk 30,939.6,940,91.3",
+   "12 details.group 30,1043,940,598.2",
+   "13 details.group 30,1651.2,940,30.3",
+   "14 div.sect 30,1705.5,940,23.4",
+   "15 p.step-note 30,1740.9,586.7,23.3",
+   "16 div.sect 30,1788.1,940,23.4",
+   "17 div.trk 30,1823.5,940,105.7",
+   "18 p.step-note 30,1941.2,586.7,23.3"
   ],
-  "deep": "127 boxes, 69835e7d"
+  "deep": "126 boxes, 2ad670c5"
  },
  "sheet: loadout @1300 pinned": {
   "header": [
@@ -2879,7 +2879,7 @@
    "6 section.main-conditions 30,499.8,1920,94.5",
    "7 div.main-grid 30,608.3,1920,468.1"
   ],
-  "deep": "345 boxes, a5c40f2a"
+  "deep": "345 boxes, f0dc8516"
  },
  "sheet: skills @1980": {
   "header": [
@@ -2915,7 +2915,7 @@
    "5 div.skill-cols 30,376.6,1920,1021.1",
    "6 details.group 30,1397.7,1920,30.3"
   ],
-  "deep": "791 boxes, d0bab064"
+  "deep": "790 boxes, e1dff296"
  },
  "sheet: character @1980": {
   "header": [
@@ -2934,7 +2934,7 @@
    0,
    88.2,
    1980,
-   2817.3
+   2794
   ],
   "vitals": [
    0,
@@ -2946,16 +2946,16 @@
    "0 div.vbar 30,114.2,1920,65.9",
    "1 div.import-issues 30,202.1,1920,27",
    "2 h1.step-title 30,243.1,1920,42.2",
-   "3 p.step-note 30,291.3,586.7,69.8",
-   "4 nav.jumpbar.sticky.row 30,383,1920,45.3",
-   "5 div.arch-top 30,442.4,1920,313.9",
-   "6 div.arch-flow 30,780.3,1920,1108.6",
-   "7 div.trait-cols 30,1888.9,1920,533.5",
-   "8 div.sect 30,2446.4,1920,23.4",
-   "9 div.reference 30,2481.7,1920,298.8",
-   "10 div.tab-links 30,2798.5,1920,27"
+   "3 p.step-note 30,291.3,586.7,46.5",
+   "4 nav.jumpbar.sticky.row 30,359.8,1920,45.3",
+   "5 div.arch-top 30,419.1,1920,313.9",
+   "6 div.arch-flow 30,757,1920,1108.6",
+   "7 div.trait-cols 30,1865.6,1920,533.5",
+   "8 div.sect 30,2423.1,1920,23.4",
+   "9 div.reference 30,2458.5,1920,298.8",
+   "10 div.tab-links 30,2775.2,1920,27"
   ],
-  "deep": "727 boxes, 3d98947f"
+  "deep": "727 boxes, 99c62c10"
  },
  "sheet: trackers @1980": {
   "header": [
@@ -2991,7 +2991,7 @@
    "5 p.step-note 30,1447.6,586.7,69.8",
    "6 div.trk 30,1539.4,1920,158.6"
   ],
-  "deep": "187 boxes, ae39ace5"
+  "deep": "186 boxes, 2abbe79e"
  },
  "sheet: progression @1980": {
   "header": [
@@ -3010,7 +3010,7 @@
    0,
    88.2,
    1980,
-   2031.4
+   2008.1
   ],
   "vitals": [
    0,
@@ -3022,24 +3022,24 @@
    "0 div.vbar 30,114.2,1920,65.9",
    "1 div.import-issues 30,202.1,1920,27",
    "2 h1.step-title 30,243.1,1920,42.2",
-   "3 p.step-note 30,291.3,586.7,69.8",
-   "4 nav.jumpbar.row 30,383,1920,28.3",
-   "5 div.sect 30,435.4,1920,23.4",
-   "6 div.review-block 30,470.8,1920,338.3",
-   "7 div.trk 30,823.1,1920,67",
-   "8 div.raise-row 30,904.1,1920,39",
-   "9 details.group 30,961.1,1920,30.3",
-   "10 div.sect 30,1015.4,1920,23.4",
-   "11 div.trk 30,1050.8,1920,91.3",
-   "12 details.group 30,1154.1,1920,558.6",
-   "13 details.group 30,1722.7,1920,30.3",
-   "14 div.sect 30,1777,1920,23.4",
-   "15 p.step-note 30,1812.4,586.7,23.3",
-   "16 div.sect 30,1859.6,1920,23.4",
-   "17 div.trk 30,1895,1920,87.3",
-   "18 p.step-note 30,1994.3,586.7,23.3"
+   "3 p.step-note 30,291.3,586.7,46.5",
+   "4 nav.jumpbar.row 30,359.8,1920,28.3",
+   "5 div.sect 30,412.1,1920,23.4",
+   "6 div.review-block 30,447.5,1920,338.3",
+   "7 div.trk 30,799.8,1920,67",
+   "8 div.raise-row 30,880.8,1920,39",
+   "9 details.group 30,937.8,1920,30.3",
+   "10 div.sect 30,992.2,1920,23.4",
+   "11 div.trk 30,1027.5,1920,91.3",
+   "12 details.group 30,1130.9,1920,558.6",
+   "13 details.group 30,1699.4,1920,30.3",
+   "14 div.sect 30,1753.8,1920,23.4",
+   "15 p.step-note 30,1789.1,586.7,23.3",
+   "16 div.sect 30,1836.4,1920,23.4",
+   "17 div.trk 30,1871.8,1920,87.3",
+   "18 p.step-note 30,1971.1,586.7,23.3"
   ],
-  "deep": "193 boxes, a0bdeb72"
+  "deep": "192 boxes, ce11c3bf"
  },
  "sheet: loadout @1980": {
   "header": [
@@ -3153,7 +3153,7 @@
    "6 section.main-conditions 30,456.8,1620,94.5",
    "7 div.main-grid 30,565.3,1620,468.1"
   ],
-  "deep": "343 boxes, 8cd93f19"
+  "deep": "343 boxes, f4aa1c82"
  },
  "sheet: skills @1980 pinned": {
   "header": [
@@ -3189,7 +3189,7 @@
    "5 div.skill-cols 30,288.7,1620,1155.8",
    "6 details.group 30,1444.5,1620,30.3"
   ],
-  "deep": "725 boxes, 5af54928"
+  "deep": "724 boxes, 51d77209"
  },
  "sheet: character @1980 pinned": {
   "header": [
@@ -3208,7 +3208,7 @@
    0,
    88.2,
    1680,
-   2789.6
+   2766.4
   ],
   "vitals": [
    0,
@@ -3220,16 +3220,16 @@
    "0 div.vbar 0,0,0,0",
    "1 div.import-issues 30,114.2,1620,27",
    "2 h1.step-title 30,155.2,1620,42.2",
-   "3 p.step-note 30,203.4,586.7,69.8",
-   "4 nav.jumpbar.sticky.row 30,295.1,1620,45.3",
-   "5 div.arch-top 30,354.5,1620,313.9",
-   "6 div.arch-flow 30,692.3,1620,1108.6",
-   "7 div.trait-cols 30,1801,1620,593.8",
-   "8 div.sect 30,2418.8,1620,23.4",
-   "9 div.reference 30,2454.1,1620,298.8",
-   "10 div.tab-links 30,2770.9,1620,27"
+   "3 p.step-note 30,203.4,586.7,46.5",
+   "4 nav.jumpbar.sticky.row 30,271.9,1620,45.3",
+   "5 div.arch-top 30,331.2,1620,313.9",
+   "6 div.arch-flow 30,669.1,1620,1108.6",
+   "7 div.trait-cols 30,1777.7,1620,593.8",
+   "8 div.sect 30,2395.5,1620,23.4",
+   "9 div.reference 30,2430.9,1620,298.8",
+   "10 div.tab-links 30,2747.6,1620,27"
   ],
-  "deep": "661 boxes, a7b3b85"
+  "deep": "661 boxes, d625c856"
  },
  "sheet: trackers @1980 pinned": {
   "header": [
@@ -3265,7 +3265,7 @@
    "5 p.step-note 30,1359.7,586.7,69.8",
    "6 div.trk 30,1451.5,1620,158.6"
   ],
-  "deep": "121 boxes, 462ea96f"
+  "deep": "120 boxes, 802cb4d6"
  },
  "sheet: progression @1980 pinned": {
   "header": [
@@ -3284,7 +3284,7 @@
    0,
    88.2,
    1680,
-   1943.5
+   1920.2
   ],
   "vitals": [
    0,
@@ -3296,24 +3296,24 @@
    "0 div.vbar 0,0,0,0",
    "1 div.import-issues 30,114.2,1620,27",
    "2 h1.step-title 30,155.2,1620,42.2",
-   "3 p.step-note 30,203.4,586.7,69.8",
-   "4 nav.jumpbar.row 30,295.1,1620,28.3",
-   "5 div.sect 30,347.5,1620,23.4",
-   "6 div.review-block 30,382.8,1620,338.3",
-   "7 div.trk 30,735.2,1620,67",
-   "8 div.raise-row 30,816.2,1620,39",
-   "9 details.group 30,873.2,1620,30.3",
-   "10 div.sect 30,927.5,1620,23.4",
-   "11 div.trk 30,962.9,1620,91.3",
-   "12 details.group 30,1066.2,1620,558.6",
-   "13 details.group 30,1634.8,1620,30.3",
-   "14 div.sect 30,1689.1,1620,23.4",
-   "15 p.step-note 30,1724.5,586.7,23.3",
-   "16 div.sect 30,1771.7,1620,23.4",
-   "17 div.trk 30,1807.1,1620,87.3",
-   "18 p.step-note 30,1906.4,586.7,23.3"
+   "3 p.step-note 30,203.4,586.7,46.5",
+   "4 nav.jumpbar.row 30,271.9,1620,28.3",
+   "5 div.sect 30,324.2,1620,23.4",
+   "6 div.review-block 30,359.6,1620,338.3",
+   "7 div.trk 30,711.9,1620,67",
+   "8 div.raise-row 30,792.9,1620,39",
+   "9 details.group 30,849.9,1620,30.3",
+   "10 div.sect 30,904.3,1620,23.4",
+   "11 div.trk 30,939.6,1620,91.3",
+   "12 details.group 30,1043,1620,558.6",
+   "13 details.group 30,1611.5,1620,30.3",
+   "14 div.sect 30,1665.9,1620,23.4",
+   "15 p.step-note 30,1701.2,586.7,23.3",
+   "16 div.sect 30,1748.5,1620,23.4",
+   "17 div.trk 30,1783.8,1620,87.3",
+   "18 p.step-note 30,1883.2,586.7,23.3"
   ],
-  "deep": "127 boxes, 4e451eab"
+  "deep": "126 boxes, 99191fa4"
  },
  "sheet: loadout @1980 pinned": {
   "header": [

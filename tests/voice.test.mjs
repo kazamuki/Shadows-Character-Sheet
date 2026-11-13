@@ -295,3 +295,32 @@ test("U4: the software words are gone", () => {
     "aren't kept anywhere else unless you've exported the table"])
     assert.equal(src.includes(old), false, "\"" + old + "\" is back in src/ui");
 });
+
+// E5: the check above reads an unhurt character, and Pain is the one place a hyphen stood in for a minus. This one is hurt
+// (damage through the engine's own Health Levels), and reads what a screen reader or a hover reads too.
+test("a minus is a minus: a hurt character's Pain reads −, in text and in attributes", () => {
+  const ch = lockedCharacter();
+  ch.trackers.damage = Engine.health(ch).hpPer * 4;
+  assert.ok(Engine.painState(ch).level >= 1 && !Engine.painState(ch).down, "the fixture must be hurt but standing, so the pill shows its penalty");
+  const app = boot({ storage: { "shadows.active.v1": { ch, section: "main" } } });
+  app.$$("#main button").find(b => /Open sheet/.test(b.textContent))
+    .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  const seen = [];
+  let sawPain = 0;
+  for (const id of app.$$("[data-sec]").map(t => t.dataset.sec)) {
+    app.click(`[data-sec="${id}"]`);
+    for (const line of visibleText(app).split("\n")) {
+      if (/Pain Lv|all (skill )?checks take|Essence/.test(line)) sawPain++;
+      if (HYPHEN_MINUS.test(line)) seen.push(`${id}: ${line.trim().slice(0, 80)}`);
+    }
+    // a number in its own element (the vitals pill's <small>) has nothing before it for the line scan to see
+    for (const el of app.$$("#main *, .vbar *")) if (!el.children.length && HYPHEN_MINUS.test(el.textContent)) seen.push(`${id} <${el.tagName.toLowerCase()}>: ${el.textContent.slice(0, 40)}`);
+    for (const el of app.$$("[title], [aria-label], [placeholder]"))
+      for (const a of ["title", "aria-label", "placeholder"]) {
+        const v = el.getAttribute(a);
+        if (v && HYPHEN_MINUS.test(v)) seen.push(`${id} [${a}]: ${v.slice(0, 80)}`);
+      }
+  }
+  assert.ok(sawPain > 3, "no Pain line was read, so the check proves nothing");
+  assert.deepEqual(seen, [], "a Pain number rendered with a hyphen (sheet.js painSummary, painChip, the vitals pill, Main's and Skills' lines)");
+});

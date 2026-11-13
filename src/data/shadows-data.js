@@ -4056,7 +4056,16 @@ window.SHADOWS_DATA = {
     "lockIssuedTagless": "NYTE City doesn't know your name. Keep it that way. Your copy is {file}.",
     "statMaxBy": "Max {max} ({by}).",
     "statMaxOver": "{stat} is {value}, over {by}'s max of {max}.",
-    "statMaxLock": "{stat} is {value}, over {by}'s max of {max}. Lower it on the {step} step."
+    "statMaxLock": "{stat} is {value}, over {by}'s max of {max}. Lower it on the {step} step.",
+    "orphanLine": "{kind} \"{name}\" isn't in the current rules. The character keeps it, and your GM says what it does now.",
+    "orphanChip": "not in the current rules",
+    "orphanNote": "This {kind} isn't in the current rules.",
+    "introSkills": "A trained Skill rolls 1d10 + its Rank, its Primary Stat and its Synergy. An untrained one rolls 1d10 + its Primary Stat, and nothing else.",
+    "introCharacter": "What you are and what it gives you, then the Advantages and Disadvantages you carry.",
+    "introProgression": "Log a session when it truly ends. It pays {perHour} IP an hour of play (your table can change the rate below), 1 Milestone Point, and refreshes your LUCK.",
+    "introLoadout": "Weapons, armor and gear: what you carry into the city.",
+    "introNotes": "Freeform. The city keeps receipts — so should you.",
+    "introAdmin": "Change any number directly, past creation's caps and pools. It's for fixing mistakes: every change is logged in the Activity Log on Progression and can be undone."
   },
   "ip": {
     /* 5 IP an hour of play, rounded up (CRB 0450): Progression's Log a session and GM mode's close-out (Decisions 206, 228). */

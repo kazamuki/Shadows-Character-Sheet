@@ -350,6 +350,10 @@ const Engine = (() => {
     return out;
   }
   const copyOf = (key, fallback, vars) => fillTag(((D().appCopy)||{})[key], vars) || fillTag(fallback, vars) || "";
+  // What the game data no longer has, said one way (E5): the load check's lines and skillLine's warning read this. fillTag drops a
+  // line whose placeholder is empty, so the name always goes in as a string, and an empty one as "?".
+  const ORPHAN_LINE = "{kind} \"{name}\" isn't in the current rules. The character keeps it, and your GM says what it does now.";
+  const orphanLine = (kind, name) => copyOf("orphanLine", ORPHAN_LINE, { kind, name: String(name) || "?" });
   const OVER_CAP = "{stat} is {value}, over {by}'s max of {max}.";
   // "Max 3 (Dwarf)." for a stat a trait caps (the Stats step's line and canBoost's refusal), or "" when only the human maximum is in the way.
   function statMaxText(ch, id){
@@ -1213,7 +1217,7 @@ const Engine = (() => {
                              primaryStat:null, synergyStat:null },
                        rank, trained:rank>0, checkBonus:0, kickers:[], takeX:[], marks:[],
                        breakdown:{ rank, primary:{id:null,value:0}, synergy:{id:null,mod:0}, pain:0, conditions:0, traits:0, traitParts:[] },
-                       dataWarning:`Skill "${id}" is no longer in the game data.` };
+                       dataWarning:orphanLine("Skill", id) };
     const t = statTable(ch);
     const pri = normStat(def.primaryStat), syn = normStat(def.synergyStat);
     const priVal = pri ? t[pri].value : 0;
@@ -6255,36 +6259,36 @@ const Engine = (() => {
     if (saved !== D().meta.gamedataVersion)
       issues.push("This file was saved under older rules and opens under the current ones. Export it to keep this copy.");
     for (const id of Object.keys(c.skills||{}))
-      if (!skillById(id)) issues.push(`Skill "${id}" no longer exists in game data.`);
+      if (!skillById(id)) issues.push(orphanLine("Skill", id));
     for (const a of c.advantages||[])
-      if (!advById(a.id)) issues.push(`Advantage "${a.id}" no longer exists in game data.`);
+      if (!advById(a.id)) issues.push(orphanLine("Advantage", a.id));
     for (const d of c.disadvantages||[])
-      if (!disById(d.id)) issues.push(`Disadvantage "${d.id}" no longer exists in game data.`);
+      if (!disById(d.id)) issues.push(orphanLine("Disadvantage", d.id));
     for (const e of ((c.trackers||{}).conditions)||[])
-      if (e && !conditionById(e.id)) issues.push(`Condition "${e.id}" no longer exists in game data.`);
+      if (e && !conditionById(e.id)) issues.push(orphanLine("Condition", e.id));
     const abs = (c.trackers||{}).aberrations;
     for (const e of Array.isArray(abs) ? abs : [])
-      if (e && !aberrationById(e.id)) issues.push(`Aberration "${e.id}" no longer exists in game data.`);
+      if (e && !aberrationById(e.id)) issues.push(orphanLine("Aberration", e.id));
     // Loadout, Grimoire and specialization ids (C9). Each reader already shows
     // an orphan as a name with nothing behind it; this says so on load, too.
     listOf(c, "weapons").forEach((e, i)=>{ const l = weaponLine(c, i);
-      if (l && l.missing) issues.push(`Weapon "${l.name}" no longer exists in game data.`); });
+      if (l && l.missing) issues.push(orphanLine("Weapon", l.name)); });
     listOf(c, "armor").forEach(e=>{ if (e && typeof e==="object" && !e.custom && !armorDefById(e.id))
-      issues.push(`Armor "${String(e.id)}" no longer exists in game data.`); });
+      issues.push(orphanLine("Armor", String(e.id))); });
     listOf(c, "gear").forEach((e, i)=>{ const l = gearLine(c, i);
-      if (l && l.missing) issues.push(`Gear "${l.name}" no longer exists in game data.`); });
+      if (l && l.missing) issues.push(orphanLine("Gear", l.name)); });
     for (const l of grimoire(c).lines)
-      if (l.missing) issues.push(`Spell "${l.spellId}" no longer exists in game data.`);
+      if (l.missing) issues.push(orphanLine("Spell", l.spellId));
     for (const o of specializationChosen(c))
-      if (o.missing) issues.push(`Specialization "${o.id}" no longer exists in game data.`);
+      if (o.missing) issues.push(orphanLine("Specialization", o.id));
     // Milestone ids, then the IP journal against IPE
     for (const t of ((c.progression||{}).milestones||{}).minor||[])
       if (!(D().milestones.minorShared||[]).some(m=>m.id===t.id))
-        issues.push(`Minor Milestone "${t.id}" no longer exists in game data.`);
+        issues.push(orphanLine("Minor Milestone", t.id));
     const noted = new Set();
     for (const t of ((c.progression||{}).milestones||{}).major||[]){
       if (!majorById(c, t && t.id)){
-        issues.push(`Major Milestone "${t && t.id}" no longer exists in game data.`);
+        issues.push(orphanLine("Major Milestone", t && t.id));
         continue;
       }
       // Decision 217: a General Major on an archetype that isn't offered them

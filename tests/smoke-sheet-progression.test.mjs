@@ -775,3 +775,33 @@ test("Decision 281: opening every tab, a saved Session Log included, writes noth
   assert.equal(JSON.stringify(activeChar(old)), before, "opening a sheet saved on Session Log changed the character");
   assert.deepEqual([app.errors, old.errors], [[], []]);
 });
+
+// E5: the intros are the city's lines, from appCopy, not a second copy in sheet.js.
+const INTROS = { skills: "introSkills", character: "introCharacter", progression: "introProgression", loadout: "introLoadout", notes: "introNotes" };
+const introOf = (key) => D.appCopy[key].replace("{perHour}", String(D.ip.perHour));
+test("E5: each tab's intro is its appCopy line", () => {
+  const app = openSheet(lockedCharacter(), "main");
+  for (const [sec, key] of Object.entries(INTROS)) {
+    app.click(`[data-sec="${sec}"]`);
+    const note = app.$("#main h1.step-title + .step-note");
+    assert.ok(note, `${sec} has no intro under its title`);
+    assert.equal(note.textContent, introOf(key), `${sec}'s intro isn't appCopy.${key}`);
+    assert.doesNotMatch(note.textContent, /\bTap\b/, `${sec}'s intro tells the player how to use the app`);
+  }
+  assert.doesNotMatch(D.appCopy.introAdmin, /\bTap\b/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("E5: Manual Adjustments doesn't ask for a Minor that applies itself", () => {
+  const chosen = D.milestones.minorShared.filter(m => m.choice);
+  assert.ok(chosen.length, "no Minor has a choice, so the check proves nothing");
+  const app = openSheet(lockedCharacter(), "trackers");
+  const sect = [...app.$$("#main .sect")].find(s => /Manual Adjustments/.test(s.textContent));
+  const note = sect.nextElementSibling.textContent, why = app.$("[data-adjnote]").getAttribute("placeholder");
+  for (const m of chosen) {
+    const name = String(m.name || m.id).toLowerCase();
+    assert.ok(!note.toLowerCase().includes(name), `the note names ${name}, which applies itself (Decision 217)`);
+    assert.ok(!why.toLowerCase().includes(name), `the placeholder names ${name}`);
+  }
+  assert.doesNotMatch(note, /engine/i);
+});

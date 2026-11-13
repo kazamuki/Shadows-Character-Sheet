@@ -265,7 +265,7 @@ test("a character holding a skill the data no longer defines still renders (B10)
     assert.deepEqual(app.errors, [], `orphaned skill broke the ${sec} tab`);
   }
   const line = app.Engine.skillLine(ch, "skill-that-was-removed");
-  assert.match(line.dataWarning, /no longer in the game data/);
+  assert.equal(line.dataWarning, D.appCopy.orphanLine.replace("{kind}", "Skill").replace("{name}", "skill-that-was-removed"));
   assert.equal(line.rank, 3);
 });
 

@@ -24,7 +24,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.68.2
+## [Unreleased] — app 0.68.3
 
 ### Character sheet
 
@@ -32,6 +32,11 @@ own in the footer.
 - **Untrained skills are dimmed, and a skill's row no longer repeats your Pain or Conditions penalty.** The line above the table says it once, and the totals already include it.
 - **Trackers and Skills get to the point.** Trackers opens on your pools, and Skills on how a check rolls.
 - **Spells you wrote yourself read like the book's, in full.** **Edit** opens one, and **Done** puts it back. **Link to the book** sits on the spell's line.
+
+- **Negative numbers read with a true minus everywhere**, Pain's included.
+- **Anything the rules dropped says so the same way**, and your GM decides what it does now.
+- **The tab intros say what the city does, not how the app works**, and the Manual Adjustments note no longer asks you to add Honed's point twice.
+- **TOL and WILL's ? sits by their names**, and the amount fields show the whole word.
 
 ### GM mode
 
