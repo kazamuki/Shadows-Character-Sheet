@@ -5,25 +5,36 @@ window.SHADOWS_CHANGELOG = [
     "version": "0.68.0",
     "date": null,
     "intro": [],
-    "items": [
-      "**The sheet has seven tabs.** Session Log is now part of Progression: log a session, spend what it earned, and find your history and Undo in one place. A sheet you left on Session Log opens there.",
-      "**Powers, Disciplines, your Grimoire, Focused Skills and your Tweak are on Character now**, with the rest of what your archetype lets you do. Loadout holds what you carry.",
-      "**A form switch and your Conditions are on Main, where you fight.** Tap a Condition to read it, type its note, or see how penalties stack.",
-      "**Character Points opens with its Disadvantages and Advantages folded away.** What you've taken stays in view, and Show all opens a list. The filter still finds anything.",
-      "**Once you've allocated your Natural Advantages, the ones you didn't take fold away, and Show all brings them back.**",
-      "**Every table page has Help.** Press **?** (the button in the header, or the key) for what the page is for, when you'd use it, and what its words mean.",
-      "**A night at the table** walks through what to use before, during and after a session, and **Every word** lists every word GM mode uses, A to Z.",
-      "**Each section has a one-line guide**, and Help's **Guide lines** switch turns them off.",
-      "**On a wide screen, Help stays open beside the page and follows you.** On a narrower one it opens over the page and closes when you move.",
-      "**Empty sections say what they're for.** A new table's Sessions, Cast, Notes and the rest tell you what to do first. **?** no longer opens Keys: Keys is one link down in Help, and still in ⋮.",
-      "**A character that owes a choice since the rules changed now asks in one line at the top of each tab.** **Choose** opens the picker, so the sheet's Health and name stay on the first screen.",
-      "**Opening an older file says it was saved under older rules and opens under the current ones**, without version numbers.",
-      "**Making a character no longer greets you with errors.** What's still to choose reads as what's left to do, and only a real mistake shows as one.",
-      "**The Stats step shows which archetype choices need minimum stats**, so an Enforcer's BOD 8 isn't a surprise on the next step.",
-      "**Once you've picked a Subtype, Bloodline or Origin, the others fold away.** Show all brings them back.",
-      "**Archetype cards no longer say \"in progress\".**",
-      "**The Cyborg is no longer offered to a new character**; cybernetics are on their way as gear. A character who has one keeps it.",
-      "**Step 1 tells you to take your time, and that the Power Level is your GM's call.** Character Points shows its note once."
+    "items": [],
+    "groups": [
+      {
+        "title": "Character sheet",
+        "items": [
+          "**The sheet has seven tabs.** Session Log is now part of Progression: log a session, spend what it earned, and find your history and Undo in one place. A sheet you left on Session Log opens there.",
+          "**Powers, Disciplines, your Grimoire, Focused Skills and your Tweak are on Character now**, with the rest of what your archetype lets you do. Loadout holds what you carry.",
+          "**A form switch and your Conditions are on Main, where you fight.** Tap a Condition to read it, type its note, or see how penalties stack.",
+          "**Character Points opens with its Disadvantages and Advantages folded away.** What you've taken stays in view, and Show all opens a list. The filter still finds anything.",
+          "**Once you've allocated your Natural Advantages, the ones you didn't take fold away, and Show all brings them back.**",
+          "**A character that owes a choice since the rules changed now asks in one line at the top of each tab.** **Choose** opens the picker, so the sheet's Health and name stay on the first screen.",
+          "**Opening an older file says it was saved under older rules and opens under the current ones**, without version numbers.",
+          "**Making a character no longer greets you with errors.** What's still to choose reads as what's left to do, and only a real mistake shows as one.",
+          "**The Stats step shows which archetype choices need minimum stats**, so an Enforcer's BOD 8 isn't a surprise on the next step.",
+          "**Once you've picked a Subtype, Bloodline or Origin, the others fold away.** Show all brings them back.",
+          "**Archetype cards no longer say \"in progress\".**",
+          "**The Cyborg is no longer offered to a new character**; cybernetics are on their way as gear. A character who has one keeps it.",
+          "**Step 1 tells you to take your time, and that the Power Level is your GM's call.** Character Points shows its note once."
+        ]
+      },
+      {
+        "title": "GM mode",
+        "items": [
+          "**Every table page has Help.** Press **?** (the button in the header, or the key) for what the page is for, when you'd use it, and what its words mean.",
+          "**A night at the table** walks through what to use before, during and after a session, and **Every word** lists every word GM mode uses, A to Z.",
+          "**Each section has a one-line guide**, and Help's **Guide lines** switch turns them off.",
+          "**On a wide screen, Help stays open beside the page and follows you.** On a narrower one it opens over the page and closes when you move.",
+          "**Empty sections say what they're for.** A new table's Sessions, Cast, Notes and the rest tell you what to do first. **?** no longer opens Keys: Keys is one link down in Help, and still in ⋮."
+        ]
+      }
     ]
   },
   {

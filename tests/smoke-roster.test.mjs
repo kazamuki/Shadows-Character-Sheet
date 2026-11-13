@@ -49,6 +49,12 @@ test("What's new: a returning player sees one quiet line, and opening the notes 
   for (const r of rels) assert.equal(r.open, !!r.querySelector(".wn-new"), "a New release is closed, or an old one open");
   assert.equal(app.window.localStorage.getItem("shadows.seenVersion"), APP_V(), "opening the notes didn't mark them seen");
   assert.ok(!app.$("#homenews .wn-note"), "the notice outlived opening the notes");
+  // A release's groups (### in CHANGELOG.md) each draw their title above their own list.
+  for (const [i, r] of [...app.window.SHADOWS_CHANGELOG].entries()) {
+    const heads = [...rels[i].querySelectorAll(".wn-group")];
+    assert.deepEqual(heads.map(h => h.textContent), [...(r.groups || [])].map(g => String(g.title)), `${r.version}'s group titles`);
+    heads.forEach((h, n) => assert.equal(h.nextElementSibling.querySelectorAll("li").length, r.groups[n].items.length, `${r.version}'s ${r.groups[n].title} lines`));
+  }
   assert.match(app.$("#modal .whatsnew").innerHTML, /<strong>/, "the notes' **bold** didn't render");
 });
 
