@@ -1562,8 +1562,14 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .next-h{margin:14px 0 6px}
 .next-list li{padding:4px 0}
 .next-seed{white-space:pre-wrap; overflow-wrap:anywhere; margin:0 0 6px}
-.thread-row{background:var(--panel); border:1px solid var(--frame); border-radius:6px; padding:8px 12px; margin-bottom:8px; min-width:0}
+/* A thread reads at a working width, not the page's: on a wide screen its buttons stay a glance from its title, in one column
+   down the list. Read, a row is title | tag or Current | Edit (the close-out's: title | Current | status); editing, it wraps. */
+.thread-row{background:var(--panel); border:1px solid var(--frame); border-radius:6px; padding:8px 12px; margin-bottom:8px; min-width:0; max-width:44rem}
 .thread-main{display:flex; flex-wrap:wrap; gap:8px; align-items:center; min-width:0}
+.thread-row:not(.editing) > .thread-main{display:grid; grid-template-columns:minmax(0, 1fr) auto auto}
+/* On a phone the close-out's title takes its own line, Current and the status beneath it: three across left it ~116px. */
+@media (max-width:640px){ .thread-row[data-co-thread] > .thread-main{grid-template-columns:auto auto minmax(0, 1fr)}
+  .thread-row[data-co-thread] .co-name{grid-column:1 / -1} }
 .thread-main input[type=text]{flex:1 1 220px; min-width:0}
 .thread-main select{min-width:0; max-width:100%}
 .thread-cur.on{background:var(--violet); color:var(--on-accent)}
@@ -1690,11 +1696,14 @@ h2.city-name{font-size:1.15rem}
 .clock-box.on{background:var(--cyan); border-color:var(--cyan); color:var(--ink)}
 .clock-count{font-family:var(--mono); font-size:.85rem}
 /* A clock as a line (Decision 270): on a card and in Close to full. */
-.clock-lines{margin:8px 0 0}
-.clock-line{display:flex; flex-wrap:nowrap; align-items:center; justify-content:space-between; gap:4px 12px; padding:3px 0; scroll-margin-top:calc(var(--hdr-off) + 72px)}
+/* Two columns sized to the list's longest line, so − and + sit in one column right after the words they change, never across
+   a wide page from them. Each line spans both columns on a subgrid; a narrow card wraps the words and keeps the buttons. The
+   words' column stops at 28rem, so one very long name wraps rather than carrying every line's buttons out with it. */
+.clock-lines{margin:8px 0 0; display:grid; grid-template-columns:fit-content(28rem) auto; justify-content:start; column-gap:20px}
+.clock-line{grid-column:1 / -1; display:grid; grid-template-columns:subgrid; align-items:center; padding:3px 0; scroll-margin-top:calc(var(--hdr-off) + 72px)}
 .clock-line-t{min-width:0; overflow-wrap:anywhere}
 .clock-line-n{font-family:var(--numeric); font-weight:600}
-.clock-line .clock-btns{flex:none}
+.clock-line .clock-btns{flex-wrap:nowrap}
 .near-list{margin-bottom:6px}
 .sess-debrief{margin:10px 0 14px}
 .sess-debrief > summary{cursor:pointer; color:var(--text); font-size:.9rem; padding:6px 0}

@@ -14,6 +14,13 @@ window.SHADOWS_CHANGELOG = [
           "**Untrained skills are dimmed, and a skill's row no longer repeats your Pain or Conditions penalty.** The line above the table says it once, and the totals already include it.",
           "**Trackers and Skills get to the point.** Trackers opens on your pools, and Skills on how a check rolls."
         ]
+      },
+      {
+        "title": "GM mode",
+        "items": [
+          "**A clock's − and + sit right beside its name**, in one tidy column, instead of across the far side of a wide screen. Close to full reads at a glance.",
+          "**A thread's Make current and Edit stay close to its title** on a wide screen, lined up down the list."
+        ]
       }
     ]
   },
