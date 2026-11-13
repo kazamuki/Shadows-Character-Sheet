@@ -709,8 +709,9 @@ function renderShCharacter(){
   // Reference panels (Decision 110): rules text straight from the data.
   if (a) for (const p of Engine.archPanels(ch).filter(x=>x.type==="reference")) h += referencePanelHtml(ch, p, secs.sect);
 
-  h += `<div class="tab-links"><span class="step-note">What you carry is on</span> <button class="btn sm" data-gotab="loadout">Loadout</button><span class="step-note">.</span>
-    <span class="step-note">The pools you spend are on</span> <button class="btn sm" data-gotab="trackers">Trackers</button><span class="step-note">.</span></div>`;
+  // One span a sentence, its button inline, so a full stop never parts from its button.
+  h += `<div class="tab-links"><span class="step-note">What you carry is on <button class="btn sm" data-gotab="loadout">Loadout</button>.</span>
+    <span class="step-note">The pools you spend are on <button class="btn sm" data-gotab="trackers">Trackers</button>.</span></div>`;
 
   const toggle = any ? `<button class="jump jump-end" data-traits-all aria-pressed="${open}">${open?"Collapse all":"Expand all"}</button>` : "";
   return sheetHeader("Character", "Who you are and what you can do: your archetype and what it gives you, then the Advantages and Disadvantages you bought. Tap an Advantage or Disadvantage to read what it does.")
