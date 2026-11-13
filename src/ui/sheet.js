@@ -2537,7 +2537,7 @@ function grimoireHtml(ch, p){
           <button class="x" data-spellrm="${l.index}" title="remove spell" aria-label="Remove ${esc(name)}">✕</button></span></div>
           ${val(r, cEff)?`<div class="eff">${esc(val(r, cEff))}</div>`:""}
           ${val(r, cOv)?`<div class="sp-more"><span class="sub">${esc(cOv)}:</span> ${esc(val(r, cOv))}</div>`:""}
-          ${val(r, cNotes)?`<div class="sp-more">${esc(val(r, cNotes))}</div>`:""}</div>`;
+          ${val(r, cNotes)?`<div class="sp-more sp-notes">${esc(val(r, cNotes))}</div>`:""}</div>`;
       }
       return `<div class="spell own open"><div class="sp-form">
         ${[cName, cDisc, cTN, cTH].filter(Boolean).map(c=>field(l, c, false)).join("")}
@@ -4189,10 +4189,14 @@ function bindSheet(){
     const [key,i]=b.dataset.rowdel.split("|");
     commit("loadout", `Remove ${key} row`, ()=>{ panelRows(ch, key).splice(Number(i),1); });
   });
+  // An own spell's long fields grow with what's typed, where `field-sizing` isn't there to do it.
+  const growBox = el => { el.style.height="auto"; el.style.height=(el.scrollHeight+el.offsetHeight-el.clientHeight)+"px"; };
+  main.querySelectorAll(".sp-f textarea").forEach(growBox);
   main.querySelectorAll("[data-cell]").forEach(inp=>inp.oninput=()=>{   // text: not audited (keystrokes)
     const [key,i,col]=inp.dataset.cell.split("|");
     const rows=panelRows(ch, key);
     if (rows[Number(i)]) rows[Number(i)][col]=inp.value;
+    if (inp.matches(".sp-f textarea")) growBox(inp);
     // W70: an open custom row offers Done once it has a name.
     const done = col==="name" && main.querySelector(`[data-lodone="${key}|${i}"]`);
     if (done) done.hidden = !inp.value.trim();

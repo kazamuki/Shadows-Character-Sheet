@@ -657,6 +657,7 @@ table.edit .x,.journal .x,table.edit .x:hover,.journal .x:hover,.ms{position:rel
 .spell.own .sub{color:var(--dim); font-size:.78rem}
 .spell.own .eff{font-size:.84rem; margin-top:2px}
 .spell.own .sp-more{font-size:.84rem; margin-top:2px; overflow-wrap:anywhere}
+.spell.own .sp-notes{font-style:italic; color:var(--dim)}
 .spell.own .sp-ctl{display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-left:auto}
 .spell.own .sp-ctl .btn{white-space:nowrap}
 .spell.own .x{background:none; border:0; color:var(--dim); font-size:.95rem; padding:2px 6px; cursor:pointer}
@@ -1332,7 +1333,7 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
   /* iOS zooms the page into any field under 16px when it takes focus. */
   input[type=text], input[type=search], input[type=number], input[type=date], textarea, select,
   .picks select, .picks input[type=text], table.lo-weapons input[type=text],
-  table.edit input, table.edit textarea{font-size:16px}
+  table.edit input, table.edit textarea, .sp-f input, .sp-f textarea{font-size:16px}
   input[type=text], input[type=search], input[type=number], input[type=date], select{min-height:44px}
 }
 
