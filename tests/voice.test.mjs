@@ -301,6 +301,8 @@ test("U4: the software words are gone", () => {
 test("a minus is a minus: a hurt character's Pain reads −, in text and in attributes", () => {
   const ch = lockedCharacter();
   ch.trackers.damage = Engine.health(ch).hpPer * 4;
+  ch.progression.ip.log.push({ kind: "spend", amount: 7, targetType: "skill", targetId: "handguns", via: {}, mp: 0 });   // more IP spent than earned
+  assert.ok(Engine.ipState(ch).available < 0, "the fixture should owe IP, so the IP pill and rows read a negative number");
   assert.ok(Engine.painState(ch).level >= 1 && !Engine.painState(ch).down, "the fixture must be hurt but standing, so the pill shows its penalty");
   const app = boot({ storage: { "shadows.active.v1": { ch, section: "main" } } });
   app.$$("#main button").find(b => /Open sheet/.test(b.textContent))
@@ -314,7 +316,9 @@ test("a minus is a minus: a hurt character's Pain reads −, in text and in attr
       if (HYPHEN_MINUS.test(line)) seen.push(`${id}: ${line.trim().slice(0, 80)}`);
     }
     // a number in its own element (the vitals pill's <small>) has nothing before it for the line scan to see
-    for (const el of app.$$("#main *, .vbar *")) if (!el.children.length && HYPHEN_MINUS.test(el.textContent)) seen.push(`${id} <${el.tagName.toLowerCase()}>: ${el.textContent.slice(0, 40)}`);
+    const toggle = app.$("[data-vitals-toggle]");
+    if (toggle) toggle.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));   // the drawer holds the IP row
+    for (const el of app.$$("#main *, .vbar *, #vdrawer *")) if (!el.children.length && HYPHEN_MINUS.test(el.textContent)) seen.push(`${id} <${el.tagName.toLowerCase()}>: ${el.textContent.slice(0, 40)}`);
     for (const el of app.$$("[title], [aria-label], [placeholder]"))
       for (const a of ["title", "aria-label", "placeholder"]) {
         const v = el.getAttribute(a);

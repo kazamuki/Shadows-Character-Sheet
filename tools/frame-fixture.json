@@ -159,7 +159,7 @@
    0,
    88.2,
    390,
-   2601.9
+   2625.2
   ],
   "vitals": [
    0,
@@ -173,10 +173,10 @@
    "2 h1.step-title 16,260.2,358,32.2",
    "3 div.trk-grid 16,296.4,358,1978.8",
    "4 div.sect 16,2299.3,358,23.4",
-   "5 p.step-note 16,2334.6,358,93",
-   "6 div.trk 16,2449.6,358,158.6"
+   "5 p.step-note 16,2334.6,358,116.3",
+   "6 div.trk 16,2472.9,358,158.6"
   ],
-  "deep": "186 boxes, 69252464"
+  "deep": "186 boxes, 3e37b966"
  },
  "sheet: progression @390": {
   "header": [
@@ -224,7 +224,7 @@
    "17 div.trk 16,2601,358,160.7",
    "18 p.step-note 16,2773.7,358,23.3"
   ],
-  "deep": "192 boxes, 98ca207f"
+  "deep": "192 boxes, c16b21"
  },
  "sheet: loadout @390": {
   "header": [
@@ -1071,7 +1071,7 @@
    "17 div.trk 16,2104.1,736,105.7",
    "18 p.step-note 16,2221.8,586.7,23.3"
   ],
-  "deep": "192 boxes, c31c1695"
+  "deep": "192 boxes, b674e42a"
  },
  "sheet: loadout @768": {
   "header": [
@@ -1918,7 +1918,7 @@
    "17 div.trk 30,1871.8,1240,105.7",
    "18 p.step-note 30,1989.4,586.7,23.3"
   ],
-  "deep": "192 boxes, 2d31c345"
+  "deep": "192 boxes, b30d624a"
  },
  "sheet: loadout @1300": {
   "header": [
@@ -2192,7 +2192,7 @@
    "17 div.trk 30,1823.5,940,105.7",
    "18 p.step-note 30,1941.2,586.7,23.3"
   ],
-  "deep": "126 boxes, 2ad670c5"
+  "deep": "126 boxes, f02c2910"
  },
  "sheet: loadout @1300 pinned": {
   "header": [
@@ -3039,7 +3039,7 @@
    "17 div.trk 30,1871.8,1920,87.3",
    "18 p.step-note 30,1971.1,586.7,23.3"
   ],
-  "deep": "192 boxes, ce11c3bf"
+  "deep": "192 boxes, d5e0f364"
  },
  "sheet: loadout @1980": {
   "header": [
@@ -3313,7 +3313,7 @@
    "17 div.trk 30,1783.8,1620,87.3",
    "18 p.step-note 30,1883.2,586.7,23.3"
   ],
-  "deep": "126 boxes, 99191fa4"
+  "deep": "126 boxes, 158fc079"
  },
  "sheet: loadout @1980 pinned": {
   "header": [

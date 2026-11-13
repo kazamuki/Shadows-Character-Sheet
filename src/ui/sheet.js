@@ -247,7 +247,7 @@ function sheetVitalsBar(ch){
   if (sf && sf.value!=null){ const left=Math.max(0,sf.value-(ch.trackers.sfr.spent||0));
     h+=pill("sfr","sfr","SFR",`${left}<small>/${sf.value}</small>`); }
   h+=pill("cred","credits",CR,numText(ch.trackers.credits.current),"cred");
-  h+=pill(ip.available<0?"danger":"","","IP",`${ip.available}`);
+  h+=pill(ip.available<0?"danger":"","","IP",`${numText(ip.available)}`);
   h+=pill("","","MP",`${ms.mp}`);
   h+=`</div><button class="vpill toggle" data-vitals-toggle aria-label="Open full vitals"><span class="vtext"><span class="vk">Vitals</span><span class="vv">View ▸</span></span></button>`;
   return h+`</div>`;
@@ -278,7 +278,7 @@ function vitalsPanelHtml(ch){
   if (sfr && sfr.value!=null) h += vrow("SFR", Math.max(0,sfr.value-(ch.trackers.sfr.spent||0))+" / "+sfr.value);
   h += vrow(CR, numText(ch.trackers.credits.current), "gold", "", "cred");
   h += `</div><div class="vgroup">`;
-  h += vrow("IP", ip.available, ip.available<0?"over":"");
+  h += vrow("IP", numText(ip.available), ip.available<0?"over":"");
   h += vrow("Milestone Pts", ms.mp);
   h += `</div><div class="vgroup">` + D.stats.map(s=>{
     const m=t[s.id].mod; return vrow(s.id, t[s.id].value+" ("+modText(m)+")", "", s.id);
@@ -1675,7 +1675,7 @@ ${esc(painIgnoredText(pain))}: ${signed(-pain.ignored)} Pain Level${pain.ignored
 
   // Manual adjustments
   h += `<div class="sect">Manual Adjustments</div>
-    <p class="step-note">For what the sheet doesn't add up by itself: an item, a ruling, a scar the city left. A Stat moves everything worked out from it; TOL, WILL, LUCK and the maximums move only themselves.</p>
+    <p class="step-note">For what the sheet doesn't add up by itself: an item, a ruling, a scar the city left. A Stat moves everything worked out from it. TOL, WILL and the maximums take the amount as it is, and the Stats they come from don't move.</p>
     <div class="trk"><h2>Add</h2>
     <select data-adjtarget aria-label="adjustment target">
       ${D.stats.map(s=>`<option value="${s.id}">${s.id} (cascades)</option>`).join("")}
@@ -1707,7 +1707,7 @@ function renderShProgression(){
   const head = sheetHeader("Progression", esc(copyFill("introProgression", { perHour: D.ip.perHour })));
   let h = logSessionHtml(ch, secs);
 
-  h += `<div class="trk" ${secs.at("IP")}><h2>IP</h2><span class="big ${ip.available<0?"bad":""}">${ip.available}</span>
+  h += `<div class="trk" ${secs.at("IP")}><h2>IP</h2><span class="big ${ip.available<0?"bad":""}">${numText(ip.available)}</span>
     <span class="sub" style="flex-basis:auto">earned ${ip.earned} · spent ${ip.spent}</span>
     <input type="number" min="0" data-ipamt placeholder="amount" aria-label="IP grant amount">
     <input type="text" data-ipnote placeholder="note (e.g. Improved roll, GM bonus)" aria-label="IP grant note">
@@ -1782,7 +1782,7 @@ function renderShProgression(){
   const offered = Engine.majorOffered(ch), shared = new Set((D.milestones.majorGeneral||[]).map(m=>m.id));
   const own = offered.filter(m=>!shared.has(m.id)), arch = D.archetypes.find(a=>a.id===ch.identity.archetype);
   h += `<details class="group" ${ms.majorLeft>0?"open":""}><summary>Major Milestones ${ms.majorLeft>0?`— <b style="color:var(--green)">${ms.majorLeft} to pick</b>`:""}</summary>
-    <p class="step-note">Each once, in any order, when you meet what it asks. What the book asks in words is your table's call: taking one marked <span class="chip gold">GM</span> asks you to confirm.</p>`;
+    <p class="step-note">Each once, in any order, when you meet what it asks. Where the book leaves it to judgement, your table decides: taking one marked <span class="chip gold">GM</span> asks you to confirm.</p>`;
   const majorHtml = m=>{
     const taken = ms.majorTaken.some(t=>t.id===m.id);
     const pre = Engine.majorPrereqs(ch, m);
@@ -2095,7 +2095,7 @@ function powersPanelHtml(ch){
   if (!powers.length) h += `<p class="step-note">No powers yet.</p>`;
   h += `<details class="group pw-add"><summary>Add a power</summary><div class="ref-body">
     ${powerFieldsHtml(k=>`data-pwnew="${k}"`, null, uses)}${powerCostHtml(k=>`data-pwnew="${k}"`, S.admin, !S.admin)}
-    <p class="step-note">${esc(S.admin ? copy("powerAddAdminNote") : copy("powerAddNote").replace("{cost}", D.ip.powerIncreaseCost.newPower))} You have ${ip.available} IP.</p>
+    <p class="step-note">${esc(S.admin ? copy("powerAddAdminNote") : copy("powerAddNote").replace("{cost}", D.ip.powerIncreaseCost.newPower))} You have ${numText(ip.available)} IP.</p>
     <button class="btn" data-pwadd-go>Add power</button></div></details>`;
   return h;
 }
@@ -2105,7 +2105,7 @@ function openImprovePower(ch, id){
   const wi = Engine.writeInOptions(ch), uses = wi ? wi.powerUses : [];
   openModal({ title:`Improve ${p.name||"this power"}`,
     html:`${powerFieldsHtml(k=>`data-pwimp="${k}"`, p, uses)}${powerCostHtml(k=>`data-pwimp="${k}"`, false)}
-      <p class="step-note">${esc(copy("powerImproveNote"))} You have ${Engine.ipState(ch).available} IP.</p>`,
+      <p class="step-note">${esc(copy("powerImproveNote"))} You have ${numText(Engine.ipState(ch).available)} IP.</p>`,
     foot:`<button class="btn primary" data-pwimp-go>Improve</button><button class="btn" data-modalclose>Cancel</button>`,
     bind(body, foot){
       foot.querySelector("[data-pwimp-go]").onclick=()=>{
@@ -3001,7 +3001,7 @@ function renderPrintView(ch){
   p1main += `<div class="p-fieldrow">${pField("Age", id.age)}${pField("Build", id.build)}${pField("Archetype", arch&&Engine.archetypeContent(ch).name)}${pField("Power Level", pl&&pl.name)}</div>`;
   p1main += `<div class="p-fieldrow">${pField("Hair", id.hair)}${pField("Eyes", id.eyes)}${pField("Skin", id.skin)}${pField("Çredits", ch ? numText(ch.trackers.credits.current) : null)}</div>`;
   const crkSt = ch && Engine.crankState(ch);
-  p1main += `<div class="p-fieldrow">${pField("IP Available", ip&&ip.available)}${pField("IP Spent", ip&&ip.spent)}${crankOn()?pField("CRANK", crkSt&&`${crkSt.rep} · ${crkSt.tier?crkSt.tier.name:""}`):""}</div>`;
+  p1main += `<div class="p-fieldrow">${pField("IP Available", ip&&numText(ip.available))}${pField("IP Spent", ip&&ip.spent)}${crankOn()?pField("CRANK", crkSt&&`${crkSt.rep} · ${crkSt.tier?crkSt.tier.name:""}`):""}</div>`;
   p1main += `<div class="p-frontbody">`;
   p1main += `<div class="p-frontleft">${pCard("Stats", pStatsHtml(ch))}${pCard("Conditions", pConditionsHtml(ch), "magenta p-condcard")}</div>`;
   p1main += `<div class="p-frontright">` +
@@ -3163,11 +3163,11 @@ function addCustomPowerFrom(body){
 }
 function raiseStatusHtml(ch, type){
   const ip = Engine.ipState(ch).available;
-  if (type==="stat") return `You have <b>${ip} IP</b> · a Stat costs its current value × ${D.ip.statIncreaseCost.perPoint} IP`;
+  if (type==="stat") return `You have <b>${numText(ip)} IP</b> · a Stat costs its current value × ${D.ip.statIncreaseCost.perPoint} IP`;
   if (type==="power"){ const p = D.ip.powerIncreaseCost;
-    return `You have <b>${ip} IP</b> · a Power costs ${p.perRank} × its current rank · a new one ${p.newPower} · cap ${D.ip.rankCap}`; }
+    return `You have <b>${numText(ip)} IP</b> · a Power costs ${p.perRank} × its current rank · a new one ${p.newPower} · cap ${D.ip.rankCap}`; }
   const price = D.ip.skillIncreaseCost;
-  return `You have <b>${ip} IP</b> · a Skill costs ${price.perRank} × its current rank, Focused ${price.focusedPerRank} × · a new skill ${price.newSkill} · cap ${D.ip.rankCap}`;
+  return `You have <b>${numText(ip)} IP</b> · a Skill costs ${price.perRank} × its current rank, Focused ${price.focusedPerRank} × · a new skill ${price.newSkill} · cap ${D.ip.rankCap}`;
 }
 // One row: the name and what's under it, the move, the price, the button.
 // `why` dims the row and says why the button is off.
@@ -3178,7 +3178,7 @@ function raiseRowHtml({ name, sub, move, cost, btn, key, why }){
 }
 function raiseResultsHtml(ch, type){
   const ip = Engine.ipState(ch).available;
-  const short = c => c.ok && ip < c.cost ? `Needs ${c.cost} IP; you have ${ip}.` : "";
+  const short = c => c.ok && ip < c.cost ? `Needs ${c.cost} IP; you have ${numText(ip)}.` : "";
   if (type==="stat"){
     const rows = D.stats.map(s=>{
       const c = Engine.ipCost(ch,"stat",s.id), v = Engine.statValue(ch,s.id), ipe = ch.stats[s.id].ipe;
@@ -3298,9 +3298,9 @@ const IPBUY_TITLE = { advantage:"Buy an Advantage", disadvantage:"Buy off a Disa
 const heldTraitRank = (rows, id) => (Array.isArray(rows) ? rows : []).reduce((n, r)=>n + (r && r.id===id ? Math.max(0, Math.floor(Number(r.rank)||0)) : 0), 0);
 function ipBuyStatusHtml(ch, kind){
   const ip = Engine.ipState(ch).available, P = D.ip;
-  if (kind==="advantage") return `You have <b>${ip} IP</b> · an Advantage costs its points × ${P.advantageCost.timesPoints} IP a rank, the same at every rank`;
-  if (kind==="disadvantage") return `You have <b>${ip} IP</b> · a Disadvantage comes off at its points × ${P.disadvantageBuyOff.timesPoints} IP, a rank at a time`;
-  return `You have <b>${ip} IP</b> · SAN ${P.restore.sanPerPoint} IP a point · a Health Level lost to a maiming ${P.restore.healthLevel} IP`;
+  if (kind==="advantage") return `You have <b>${numText(ip)} IP</b> · an Advantage costs its points × ${P.advantageCost.timesPoints} IP a rank, the same at every rank`;
+  if (kind==="disadvantage") return `You have <b>${numText(ip)} IP</b> · a Disadvantage comes off at its points × ${P.disadvantageBuyOff.timesPoints} IP, a rank at a time`;
+  return `You have <b>${numText(ip)} IP</b> · SAN ${P.restore.sanPerPoint} IP a point · a Health Level lost to a maiming ${P.restore.healthLevel} IP`;
 }
 // The pick a new rank asks for, drawn in its row. What's chosen waits in S.ipBuy until Buy.
 function ipPickHtml(ch, id, ask){
@@ -3341,7 +3341,7 @@ function ipAdvantagesHtml(ch){
   const heldIds = [...new Set((ch.advantages||[]).filter(r=>r && Engine.advById(r.id)).map(r=>r.id))];
   const row = def => {
     const c = Engine.ipCost(ch, "advantage", def.id), rank = heldTraitRank(ch.advantages, def.id);
-    const short = c.ok && ip < c.cost ? `Needs ${c.cost} IP; you have ${ip}.` : "";
+    const short = c.ok && ip < c.cost ? `Needs ${c.cost} IP; you have ${numText(ip)}.` : "";
     const asks = c.ok ? c.picks : [];
     const pts = Number(def.cost);
     return ipBuyRowHtml({ name: esc(def.name), sub: esc(`${pts} point${pts===1?"":"s"} a rank${rank?` · rank ${rank}`:""}`), tags: effectsHtml(ch, "advantage", def.id),
@@ -3362,7 +3362,7 @@ function ipDisadvantagesHtml(ch){
   if (!ids.length) return `<p class="step-note">No Disadvantage left to buy off.</p>`;
   const rows = ids.map(id=>{
     const def = Engine.disById(id), c = Engine.ipCost(ch, "disadvantage", id), rank = heldTraitRank(ch.disadvantages, id);
-    const short = c.ok && ip < c.cost ? `Needs ${c.cost} IP; you have ${ip}.` : "";
+    const short = c.ok && ip < c.cost ? `Needs ${c.cost} IP; you have ${numText(ip)}.` : "";
     return ipBuyRowHtml({ name: esc(def.name),
       sub: esc(`${def.pointsGranted} point${Number(def.pointsGranted)===1?"":"s"} a rank · rank ${rank}`), tags: effectsHtml(ch, "disadvantage", id),
       move: c.ok ? (c.to>0 ? `rank ${c.from} → ${c.to}` : "removed") : `${rank}`, cost: c.ok ? `${c.cost} IP` : "—", btn:"Buy off",
@@ -3380,7 +3380,7 @@ function ipSanN(ch){
 }
 function ipSanButton(ch){
   const n = ipSanN(ch), c = Engine.ipCost(ch, "restore", "san", n), ip = Engine.ipState(ch).available;
-  const short = c.ok && ip < c.cost ? `Needs ${c.cost} IP; you have ${ip}.` : "";
+  const short = c.ok && ip < c.cost ? `Needs ${c.cost} IP; you have ${numText(ip)}.` : "";
   return { text: c.ok ? `Restore ${n} SAN · ${c.cost} IP` : "Restore SAN", why: c.ok ? short : c.why, off: !c.ok || !!short };
 }
 function ipRestoreHtml(ch){
@@ -3393,7 +3393,7 @@ function ipRestoreHtml(ch){
       <button class="btn sm primary" data-ipbuy="restore|san" data-sanbtn ${b.off?"disabled":""}>${esc(b.text)}</button></div>`;
   }
   if (massive>0){
-    const c = Engine.ipCost(ch, "restore", "massiveLevel"), short = c.ok && ip < c.cost ? `Needs ${c.cost} IP; you have ${ip}.` : "";
+    const c = Engine.ipCost(ch, "restore", "massiveLevel"), short = c.ok && ip < c.cost ? `Needs ${c.cost} IP; you have ${numText(ip)}.` : "";
     h += `<div class="ip-restore"><div class="ip-what"><b>Health Levels</b><div class="sub">${massive} lost to a maiming</div>${short?`<div class="why">${esc(short)}</div>`:""}</div>
       <button class="btn sm primary" data-ipbuy="restore|massiveLevel" ${!c.ok||short?"disabled":""}>Restore a Health Level · ${c.ok ? c.cost : ""} IP</button></div>`;
   }

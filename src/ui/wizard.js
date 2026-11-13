@@ -87,7 +87,7 @@ function wizardRailHtml(ch){
     if (sfr && sfr.value!=null) h += vrow("SFR", Math.max(0,sfr.value-(ch.trackers.sfr.spent||0))+" / "+sfr.value);
     h += vrow(CR, numText(ch.trackers.credits.current), "gold");
     h += `</div><div class="vgroup">`;
-    h += vrow("IP", ip.available, ip.available<0?"over":"");
+    h += vrow("IP", numText(ip.available), ip.available<0?"over":"");
     h += vrow("Milestone Pts", ms.mp);
     h += `</div>`;
   }

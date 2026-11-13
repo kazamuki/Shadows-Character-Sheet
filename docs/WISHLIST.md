@@ -959,6 +959,28 @@ exclusive: the add field leads the Threads section, or **Jot** (the header's qui
 prep second. *To respect:* the cast and city keep their add fields at the foot of their lists today, so moving only this one
 is a choice to make for every page at once, not one-off; and Jot's note stays a note unless the GM asks otherwise.
 
+**W152 — An overspent pool reads with a true minus.** *Ken, from E5's review, 2026-11-13 · 🔧 · Fix*\
+**Plan:** none yet
+
+In the wizard, a pool spent past its total shows a hyphen-minus ("-3 / 40", `wizard.js` lines 72–74) and the Character Points pill
+does the same (line 55). E5 made the sheet's numbers read with a true minus (`numText`/`signed`); the wizard's are the same
+mistake, left because E5 is the sheet. *To respect:* `voice.test.mjs`'s minus check reads the sheet only, so it needs a wizard
+pass over an overspent draft to hold the fix.
+
+**W153 — The no-data screen stops saying "game data".** *Ken, from E5's review, 2026-11-13 · 🔧 · Fix*\
+**Plan:** none yet
+
+`app.js` line 349: when the data file doesn't load, the page's heading says "No game data". E5 took the phrase out of everything
+a player reads on a sheet, and this is the one place left. It's a screen only seen when something is broken, so it's tool voice:
+plain, short, and saying what to do. *To respect:* it can't use `appCopy`, since that lives in the data that didn't load.
+
+**W154 — GM mode's seat sheet reads as read-only in its intros.** *Ken, from E5's review, 2026-11-13 · 🔧 · Fix*\
+**Plan:** none yet
+
+The seat sheet draws the player's tabs, so its Progression intro says "Log a session when it truly ends…" on a sheet nobody can
+log on. A seat's intro could read as what the table sees, not what the player does. *To respect:* the seat sheet draws the same
+tabs on purpose (Decision 256), so this is a different line for a read-only view, not a second sheet.
+
 ### For the designers
 
 **W56 — A tuning bench: change the game's numbers, see what moves, hand back a change request.** *Ken · ⏭ · shaped with Claude 2026-10-01*\
@@ -1152,7 +1174,7 @@ always" stays true of whoever makes the change.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W152.** Everything above is open. What was built is in
+- **Next free number: W155.** Everything above is open. What was built is in
   [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)
