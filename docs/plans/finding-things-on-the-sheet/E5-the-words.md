@@ -282,7 +282,7 @@ Write these first, and show each failing on `main`, or say why it passes there.
    - Fails on `main` (no such keys).
 6. Same file: **"E5: Manual Adjustments doesn't ask for a Minor that applies itself"**.
    - Reads `D.milestones.minorShared` for every Minor with a `choice`.
-   - Asserts that the Manual Adjustments note names none of them, and doesn't say "engine".
+   - Asserts that the Manual Adjustments note **and its note field's placeholder** (`sheet.js:1686`) name none of them, and that the note doesn't say "engine".
    - Fails on `main` (Honed).
 7. `smoke-sheet-skills.test.mjs`: **"E5: TOL and WILL show no modifier, and the derivation is a tap on the ? by the name"**.
    - On Main, the `[data-derivdesc]` button sits in TOL's and WILL's name row (with `.sid`), not after the value (`.sv`), and has an `aria-label`. Nothing follows `.sv` but the breakdown row. Pressing it toggles `[data-derivrow]`.
@@ -303,7 +303,7 @@ Write these first, and show each failing on `main`, or say why it passes there.
   - One `versionCheck` kind back to its literal: example 2 fails, and so does example 3's "five before".
   - One chip back to its literal: example 4 fails.
   - An intro back to a literal in `sheet.js`: example 5 fails.
-  - "Honed" back in the note: example 6 fails.
+  - "Honed" back in the note: example 6 fails. "Honed" back in the placeholder: example 6 fails too.
   - The `?` back in the slot: example 7 fails.
   - The `String(…)` dropped from a Major's name: example 2's "no id" case fails.
 - **Check each for a second path** that already covers it. Example 1's hurt character must be what fails it, not the unhurt one.
