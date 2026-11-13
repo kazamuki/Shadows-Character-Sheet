@@ -1426,3 +1426,103 @@ test("Decision 284: an untrained combat row that carries something stays shown, 
   assert.deepEqual(shownIds(app), ids);
   assert.deepEqual(app.errors, []);
 });
+
+// ── Your own spells read like the book's (E3, Decision 286) ───────────
+const grimPanel = ch => Engine.archPanels(ch).find(p => p.type === "grimoire");
+const ownSpells = () => {
+  const ch = lockedCharacter(), cols = grimPanel(ch).columns, [N, DI, TN, TH, EF, OV, NO] = cols;
+  const book = D.spells.find(s => s.name && !/\s{2,}/.test(s.name));
+  const long = "x".repeat(40) + " " + "wraps and never gets cut ".repeat(6).trim();
+  ch.panelData.grimoire = [
+    { custom: true, [N]: book.name, [DI]: "Evocation", [TN]: "7", [TH]: "1", [EF]: "a snap of current" },
+    { custom: true, [N]: "Longhand", [DI]: "Wards", [TN]: "5", [TH]: "2", [EF]: long },
+    { custom: true, [N]: "Wordy", [EF]: "short", [OV]: "twice the heat", [NO]: "learned from Ivo" },
+  ];
+  return { ch, cols, book, long };
+};
+const lineText = el => el.textContent.replace(/\s+/g, " ").trim();
+const ownLines = app => app.$$("#main .spell.own");
+const openCount = app => ownLines(app).filter(x => x.classList.contains("open")).length;
+
+test("Decision 286: a named own spell reads as a line, in full, with Link to the book on it", () => {
+  const { ch, book, long } = ownSpells();
+  const app = openSheet(ch, "character");
+  assert.equal(app.$$('#main [data-cell^="grimoire|"]').length, 0, "an own spell drew inputs at rest");
+  const [a, b, c] = ownLines(app);
+  assert.ok(lineText(a).startsWith(book.name), lineText(a));
+  assert.ok(lineText(a).includes("Evocation · TN 7 / TH 1"), lineText(a));
+  assert.ok(lineText(b).includes("Wards") && lineText(b).includes("TN 5") && lineText(b).includes("TH 2"));
+  assert.ok(lineText(b).includes(long), "the effect was cut");
+  assert.ok(!/Overflow|learned from Ivo/.test(lineText(a) + lineText(b)), "overflow or notes drawn where there are none");
+  assert.ok(lineText(c).includes("Overflow: twice the heat") && lineText(c).includes("learned from Ivo"));
+  assert.ok(a.querySelector("[data-spelllink]"), "no Link to the book on the matching line");
+  assert.equal(app.$$("#main [data-spelllink]").length, 1, "Link to the book on a line that doesn't match");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 286: Edit opens one spell and Done folds it, and neither writes", () => {
+  const { ch, cols } = ownSpells();
+  const app = openSheet(ch, "character");
+  const before = JSON.stringify(activeChar(app)), log = activeChar(app).audit.length;
+  app.click('[data-spelledit="1"]');
+  assert.equal(openCount(app), 1, "Edit opened more than one");
+  assert.ok(app.$(`[data-cell="grimoire|1|${cols[4]}"]`).value.includes("wraps and never"));
+  assert.equal(focused(app), app.$(`[data-cell="grimoire|1|${cols[0]}"]`), "focus isn't in the name field");
+  assert.equal(JSON.stringify(activeChar(app)), before, "Edit changed the character");
+  assert.equal(activeChar(app).audit.length, log, "Edit logged");
+  const eff = app.$(`[data-cell="grimoire|1|${cols[4]}"]`);
+  eff.value = "now different"; eff.dispatchEvent(new app.window.Event("input", { bubbles: true }));
+  assert.equal(activeChar(app).panelData.grimoire[1][cols[4]], "now different");
+  app.click('[data-spelldone="1"]');
+  assert.ok(lineText(ownLines(app)[1]).includes("now different"));
+  assert.equal(focused(app), app.$('[data-spelledit="1"]'), "focus isn't on Edit");
+  assert.equal(app.$$('#main [data-cell^="grimoire|"]').length, 0);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 286: Add your own opens a nameless spell with focus in its name, and only Done folds it", () => {
+  const { ch, cols } = ownSpells();
+  const app = openSheet(ch, "character");
+  app.click('[data-spellown="1"]');
+  const lines = ownLines(app);
+  assert.equal(lines.length, 4);
+  assert.ok(lines[3].classList.contains("open"), "the new spell isn't open");
+  const name = app.$(`[data-cell="grimoire|3|${cols[0]}"]`);
+  assert.equal(focused(app), name, "focus isn't in the name field");
+  assert.equal(app.$('[data-spelldone="3"]').hidden, true, "Done shows on a nameless spell");
+  name.value = "Newly Named"; name.dispatchEvent(new app.window.Event("input", { bubbles: true }));
+  assert.equal(app.$('[data-spelldone="3"]').hidden, false, "Done stayed hidden once it was named");
+  assert.ok(ownLines(app)[3].classList.contains("open"), "naming it folded it");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 286: an undo and the next character fold every named own spell, and a nameless one stays open", () => {
+  const { ch } = ownSpells();
+  const app = openSheet(ch, "character");
+  app.click('[data-spelledit="1"]'); app.click('[data-spelledit="2"]');
+  assert.equal(openCount(app), 2);
+  app.click('[data-spelllink="0"]');                        // a logged change that keeps the row count, so an undo puts back copies
+  assert.equal(openCount(app), 2, "linking folded the others");
+  app.click("[data-toastundo]");
+  assert.equal(openCount(app), 0, "an undo left a named spell open");
+  app.click('[data-spelledit="2"]');
+  assert.equal(openCount(app), 1);
+  // The next character, opened in the same page (a fresh boot would pass whatever openEntry kept).
+  const next = ownSpells().ch; next.panelData.grimoire.push({ custom: true });
+  app.window.openEntry({ ch: next, section: "character" });
+  assert.deepEqual(ownLines(app).map(x => x.classList.contains("open")), [false, false, false, true], "named spells aren't lines, or the nameless one isn't open");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 286: an own spell with only a name reads as its name", () => {
+  const { ch, cols } = ownSpells();
+  ch.panelData.grimoire = [{ custom: true, [cols[0]]: "Bare" }];
+  const app = openSheet(ch, "character");
+  const t = lineText(ownLines(app)[0]);
+  assert.ok(t.startsWith("Bare"), t);
+  assert.doesNotMatch(t.replace(/^Bare/, ""), /·|TN|TH|undefined|Overflow/);
+  ch.panelData.grimoire = [{ custom: true, [cols[0]]: "Half", [cols[2]]: "6" }];
+  const half = lineText(ownLines(openSheet(ch, "character"))[0]);
+  assert.match(half, /^Half TN 6/);
+  assert.doesNotMatch(half, /TH|·/);
+});

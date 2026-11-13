@@ -2001,11 +2001,13 @@ function loadoutAddHtml(kind){
 // A row drawn open stays open until Done, so naming it doesn't fold it away.
 // An undo replaces the rows with clones (diffChar's same-length "set"), so
 // open rows fold, the way a reload folds them (Ken, 2026-10-23).
-function loOpen(e){
+// The name to read defaults to the row's `name`; the Grimoire's own spells
+// pass their panel's first column (E3, Decision 286).
+function loOpen(e, name){
   if (!e || typeof e!=="object") return true;
   if (!S.loOpen) S.loOpen = new WeakSet();
   if (S.loOpen.has(e)) return true;
-  if (String((e && e.name)||"").trim()) return false;
+  if (String((arguments.length>1 ? name : e.name)||"").trim()) return false;
   S.loOpen.add(e);
   return true;
 }
@@ -2516,11 +2518,33 @@ function grimoireHtml(ch, p){
   // Your own
   h += `<div class="subsect">Your own spells</div>`;
   if (own.length){
-    const cols = p.columns||[];
-    h += `<table class="edit"><thead><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join("")}<th></th></tr></thead><tbody>` +
-      own.map(l=>`<tr>${cols.map(c=>`<td><input type="text" data-cell="${esc(p.id)}|${l.index}|${esc(c)}" value="${esc(l.row[c]||"")}" aria-label="${esc(c)}"></td>`).join("")}
-        <td class="rm">${l.match?`<button class="btn sm" data-spelllink="${l.index}" title="Swap this row for the book's ${esc(l.match.name)}, keeping your notes">Link to the book</button>`:""}
-          <button class="x" data-spellrm="${l.index}" title="remove row">✕</button></td></tr>`).join("") + `</tbody></table>`;
+    // E3 (Decision 286): a named own spell reads as a line, like the book's; Edit opens its
+    // fields and Done folds it, as W70's Loadout rows do. The columns are the panel's, read
+    // by position: name, discipline, TN, TH, effect, overflow, notes.
+    const cols = p.columns||[], [cName, cDisc, cTN, cTH, cEff, cOv, cNotes] = cols, rows = panelRows(ch, p.id);
+    const val = (r, c) => c ? String(r[c]==null ? "" : r[c]).trim() : "";
+    const field = (l, c, wrap) => wrap
+      ? `<label class="sp-f sp-wide"><span>${esc(c)}</span><textarea rows="2" data-cell="${esc(p.id)}|${l.index}|${esc(c)}" aria-label="${esc(c)}">${esc(l.row[c]||"")}</textarea></label>`
+      : `<label class="sp-f"><span>${esc(c)}</span><input type="text" data-cell="${esc(p.id)}|${l.index}|${esc(c)}" value="${esc(l.row[c]||"")}" aria-label="${esc(c)}"></label>`;
+    const link = l => l.match ? `<button class="btn sm" data-spelllink="${l.index}" title="Swap this row for the book's ${esc(l.match.name)}, keeping your notes">Link to the book</button>` : "";
+    h += own.map(l=>{
+      const r = l.row, name = val(r, cName);
+      if (!loOpen(rows[l.index], name)){
+        const tt = [val(r, cTN) && `TN ${val(r, cTN)}`, val(r, cTH) && `TH ${val(r, cTH)}`].filter(Boolean).join(" / ");
+        const sub = [val(r, cDisc), tt].filter(Boolean).join(" · ");
+        return `<div class="spell own"><div class="sp-line"><b>${esc(name)}</b>${sub?` <span class="sub">${esc(sub)}</span>`:""}
+          <span class="sp-ctl">${link(l)}<button class="btn sm" data-spelledit="${l.index}" aria-label="Edit ${esc(name)}">Edit</button>
+          <button class="x" data-spellrm="${l.index}" title="remove spell" aria-label="Remove ${esc(name)}">✕</button></span></div>
+          ${val(r, cEff)?`<div class="eff">${esc(val(r, cEff))}</div>`:""}
+          ${val(r, cOv)?`<div class="sp-more"><span class="sub">${esc(cOv)}:</span> ${esc(val(r, cOv))}</div>`:""}
+          ${val(r, cNotes)?`<div class="sp-more">${esc(val(r, cNotes))}</div>`:""}</div>`;
+      }
+      return `<div class="spell own open"><div class="sp-form">
+        ${[cName, cDisc, cTN, cTH].filter(Boolean).map(c=>field(l, c, false)).join("")}
+        ${[cEff, cOv, cNotes].filter(Boolean).map(c=>field(l, c, true)).join("")}</div>
+        <div class="sp-ctl">${link(l)}<button class="btn sm" data-spelldone="${l.index}" ${name?"":"hidden"}>Done</button>
+        <button class="x" data-spellrm="${l.index}" title="remove spell" aria-label="Remove ${esc(name||"this spell")}">✕</button></div></div>`;
+    }).join("");
   }
   h += `<button class="btn sm" data-spellown="1">+ Add your own</button>
     <p class="step-note">Improvised spells and ones your GM agreed to. The book's numbers don't apply to these.</p>`;
@@ -4129,6 +4153,22 @@ function bindSheet(){
   main.querySelectorAll("[data-spellown]").forEach(b=>b.onclick=()=>{
     const p = Engine.archPanels(ch).find(x=>x.type==="grimoire"); if (!p) return;
     commit("grimoire", "Grimoire: your own spell", ()=>{ panelRows(ch, p.id).push({ custom:true }); });
+    takeFocus(document.querySelector("#main "+attrSel("data-cell", `${p.id}|${panelRows(ch, p.id).length-1}|${(p.columns||[])[0]}`)));
+  });
+  // E3: Edit and Done change only what's drawn. Nothing is saved or logged.
+  const spellFirst = (p, i) => "#main "+attrSel("data-cell", `${p.id}|${i}|${(p.columns||[])[0]}`);
+  main.querySelectorAll("[data-spelledit]").forEach(b=>b.onclick=()=>{
+    const p = Engine.archPanels(ch).find(x=>x.type==="grimoire"), i = Number(b.dataset.spelledit), e = p && panelRows(ch, p.id)[i];
+    if (!e || typeof e!=="object") return;
+    if (!S.loOpen) S.loOpen = new WeakSet();
+    S.loOpen.add(e); renderMain();
+    takeFocus(document.querySelector(spellFirst(p, i)));
+  });
+  main.querySelectorAll("[data-spelldone]").forEach(b=>b.onclick=()=>{
+    const p = Engine.archPanels(ch).find(x=>x.type==="grimoire"), i = Number(b.dataset.spelldone), e = p && panelRows(ch, p.id)[i];
+    if (S.loOpen && e && typeof e==="object") S.loOpen.delete(e);
+    renderMain();
+    takeFocus(document.querySelector(`#main [data-spelledit="${i}"]`));
   });
   main.querySelectorAll("[data-spellnote]").forEach(inp=>inp.oninput=()=>{
     const p = Engine.archPanels(ch).find(x=>x.type==="grimoire"), r = p && panelRows(ch, p.id)[Number(inp.dataset.spellnote)];
@@ -4156,6 +4196,9 @@ function bindSheet(){
     // W70: an open custom row offers Done once it has a name.
     const done = col==="name" && main.querySelector(`[data-lodone="${key}|${i}"]`);
     if (done) done.hidden = !inp.value.trim();
+    // E3: the same for an own spell, whose name is its panel's first column.
+    const sdone = main.querySelector(`[data-spelldone="${i}"]`);
+    if (sdone){ const gp = Engine.archPanels(ch).find(x=>x.type==="grimoire"); if (gp && gp.id===key && col===(gp.columns||[])[0]) sdone.hidden = !inp.value.trim(); }
     lite();
   });
 

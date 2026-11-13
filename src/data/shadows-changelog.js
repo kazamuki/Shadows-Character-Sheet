@@ -2,7 +2,7 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
-    "version": "0.68.1",
+    "version": "0.68.2",
     "date": null,
     "intro": [],
     "items": [],
@@ -12,7 +12,8 @@ window.SHADOWS_CHANGELOG = [
         "items": [
           "**Main shows the combat skills you've trained, and any untrained one you've got something on.** The rest are a tap away under **Show untrained**, and every skill is still on Skills.",
           "**Untrained skills are dimmed, and a skill's row no longer repeats your Pain or Conditions penalty.** The line above the table says it once, and the totals already include it.",
-          "**Trackers and Skills get to the point.** Trackers opens on your pools, and Skills on how a check rolls."
+          "**Trackers and Skills get to the point.** Trackers opens on your pools, and Skills on how a check rolls.",
+          "**Spells you wrote yourself read like the book's, in full.** **Edit** opens one, and **Done** puts it back. **Link to the book** sits on the spell's line."
         ]
       },
       {

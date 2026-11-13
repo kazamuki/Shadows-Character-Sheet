@@ -322,3 +322,22 @@ test("Decision 284: the read-only seat sheet's fold opens, and nothing that writ
   for (const el of app.$("[data-rosheet]").querySelectorAll("button, select")) assert.ok(el.disabled || el.matches(readers), `live ${el.tagName} ${el.textContent.trim().slice(0, 20)}`);
   assert.deepEqual(app.errors, []);
 });
+
+test("Decision 286: the seat sheet reads an own spell whole, and its Edit is dead", () => {
+  const ar = arcanist(), cols = Engine.archPanels(ar).find(x => x.type === "grimoire").columns;
+  const eff = "e".repeat(30) + " " + "reads whole ".repeat(20).trim();
+  ar.panelData.grimoire.push({ custom: true, [cols[0]]: "Handwritten", [cols[1]]: "Wards", [cols[4]]: eff });
+  const app = open([cyborg(), ar]);
+  openSheet(app, AR_TAG); goTab(app, "character");
+  const body = app.$("[data-rosheet]");
+  const line = body.querySelector(".spell.own");
+  assert.ok(line && line.textContent.includes(eff), "the own spell isn't a whole line");
+  assert.equal(body.querySelectorAll('[data-cell^="grimoire|"]').length, 0);
+  const readers = ev(app, "RO_READERS");
+  for (const sel of ["[data-spelledit]", "[data-spellrm]"]) {
+    const els = body.querySelectorAll(sel);
+    assert.ok(els.length > 0, sel);
+    for (const el of els) assert.ok(el.disabled && !el.matches(readers), `${sel} is live`);
+  }
+  assert.deepEqual(app.errors, []);
+});
