@@ -246,14 +246,14 @@ The Grimoire's spell list is wider than a card. It spans the row, as a `solo` ca
 
 | Where | Today | Draft |
 |---|---|---|
-| Character's intro | "Who you are: your archetype, and the Advantages and Disadvantages you bought for it. Tap an Advantage or Disadvantage to read what it does." | "Who you are and what you can do: your archetype, its powers, and the Advantages and Disadvantages you bought. Tap an Advantage or Disadvantage to read what it does." |
+| Character's intro | "Who you are: your archetype, and the Advantages and Disadvantages you bought for it. Tap an Advantage or Disadvantage to read what it does." | "Who you are and what you can do: your archetype and what it gives you, then the Advantages and Disadvantages you bought. Tap an Advantage or Disadvantage to read what it does." |
 | Character's foot | "Tracker pools and editable manifests (grimoire, augments, forms) are on [Loadout & Powers] [Trackers]" | "What you carry is on [Loadout]. The pools you spend are on [Trackers]." |
 | Loadout's title | "Loadout & Powers" | "Loadout" |
 | Loadout's intro | "Weapons, armor, gear, and whatever your archetype carries that the rest of the city can't." | "Weapons, armor and gear: what you carry into the city." |
 | Progression's intro | Two: Progression's "Improvement Points and Milestones. Every spend is a journal entry — auditable, undoable, …", and Session Log's "Logging a session grants 5 IP an hour of play (change it below if your table runs different), 1 Milestone Point, and refreshes LUCK …" | Session Log's, unchanged. Progression's goes: it describes the software (E2's §1) |
 | Admin's power line (`sheet.js:1989`) | "Powers are edited, added and removed on Loadout &amp; Powers." | "Powers are edited, added and removed on Character." |
 | Admin's intro (`sheet.js:2603`) | "…logged to the Activity Log (Session Log tab) and can be undone." | "…logged to the Activity Log on Progression and can be undone." |
-| The Arcanist's description (`shadows-data.js:2399`) | "Your Grimoire, under Loadout & Powers, holds the Known spells …" | "Your Grimoire, on the Character tab, holds the Known spells …" |
+| The Arcanist's description (`shadows-data.js:2399`) | "Your Grimoire, under Loadout & Powers, holds the Known spells …" | "Your Grimoire holds the Known spells … Both are on the Character tab." |
 
 **Where things land:**
 
