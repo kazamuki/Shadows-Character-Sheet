@@ -1,7 +1,7 @@
 # Work order E2b — The distill: say each thing once on the skill tables
 
 **Plan:** [finding-things-on-the-sheet](../finding-things-on-the-sheet.md), session E2, its second build. The shape is [E2-where-everything-lives](E2-where-everything-lives.md) (§1, §3.1, answered 2026-11-12). [E2a](E2a-the-moves.md) (the moves) merged as #327.
-**Status:** drafted 2026-11-12 by an Opus session the conductor started. Awaiting Ken's answers to EQ28–EQ31 (§4).
+**Status:** drafted 2026-11-12 by an Opus session the conductor started. Ken answered EQ28–EQ31 on 2026-11-12 (§4). EQ30 went against the draft's default, so the order must be updated to match before it's approved.
 **Branch:** the builder's own, cut from `main` once this order has merged.
 **Runs beside:** E4 (colour). Not E3, E5 or E6, which wait for E2.
 **Impeccable:** `/impeccable distill the running sheet's skill tables and tab intros: what a player reads twice, and what they never need on Main`. The analysis is in §1 and §9, run on `main` at 375×812. Nothing moves between tabs, so the builder doesn't run it again.
@@ -105,6 +105,13 @@ Each question has a default, and one left blank takes it.
 - **EQ31 — Trackers' intro.** "Current state only — every maximum on this page is computed and recalculates the moment an input changes." All of it describes the software.
   - **Default:** no intro. The title and the panels say what the page is, and E5 writes any intro that comes back, in NYTE's voice.
   - *Alternative:* one line of what's there, such as "Your pools, your recovery, your armor and your Çredits."
+
+**Ken's answers, 2026-11-12** (in the conductor's session):
+
+- **EQ28:** take the measured rise as the target: Kade and Sigrun 468px, Dax and Juno about 554, Wren 724. Slimming a phone's rows is left to E6 (Default).
+- **EQ29:** "−N conditions" comes off the rows too (Default).
+- **EQ30: not the default.** An untrained combat row that carries a chip or a trait's effect stays shown on Main. Only plain untrained rows fold, because what the character has stays in view, as E1c had it. Ken took the conductor's recommendation.
+- **EQ31:** Trackers has no intro. E5 writes one if it's ever needed (Default).
 
 ## 5. The assumption sweep
 
