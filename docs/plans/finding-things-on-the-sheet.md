@@ -65,7 +65,7 @@ all correct, but it takes knowing the sheet to find it:
 | E1b | Making a character, for everyone: the wizard's first-timer path ([order](finding-things-on-the-sheet/E1b-making-a-character.md), built: PR #320, app 0.66.2, Decisions 274–277) | `onboard` | Rule or shape | E1a |
 | E1c | Character Points for a first-timer: how Disadvantages and Advantages fold (EQ9), and the Natural Advantage panel ([order](finding-things-on-the-sheet/E1c-character-points.md), built: PR #324, app 0.67.1, Decisions 279–280) | `distill` | Rule or shape | E1b |
 | E2 | Where everything lives: the tabs, shaped and distilled ([shape](finding-things-on-the-sheet/E2-where-everything-lives.md), answered 2026-11-12: seven tabs, as E2a then E2b; E2a, the moves: [order](finding-things-on-the-sheet/E2a-the-moves.md), **E2a built**, PR #327; E2b, the distill: [order](finding-things-on-the-sheet/E2b-the-distill.md), **E2b built**, Decisions 284–285) | `shape`, then `distill` | Rule or shape | — |
-| E3 | Main's columns and the Grimoire's read mode | `layout` | Rule or shape | E2 |
+| E3 | The Grimoire's read mode ([order](finding-things-on-the-sheet/E3-the-grimoire.md), drafted 2026-11-12, EQ32–EQ35 answered, awaiting approval). Main's columns stay as E2b left them (EQ32, Alternative B); revisit if a character's fight runs past the screen under the header by more than a few pixels (today Dax's, by 96px at 1280×860), or E6 changes a skill row's or a card's height. The measurements are in the order's §1 | `layout` | Rule or shape | E2 |
 | E4 | Colour that keeps its one meaning | `colorize` | Fix | — |
 | E5 | The words: intros, placeholders, the `?` modifiers | `clarify` | Fix | E2 |
 | E6 | The phone | `adapt` | Fix | E3 |
@@ -183,7 +183,10 @@ middle, because the first half's answer is *Rule or shape*.
 
 - Main's first column runs 167% of the screen against stats at 60%:
   rebalance so weapons and the combat skills E2 keeps on Main show
-  together without scrolling.
+  together without scrolling. → **Left as E2b made it (Ken, EQ32,
+  2026-11-12):** after E2b four of the five fights fit one 1280px screen,
+  and the band that fit Dax's dropped every character's Stats 393–671px.
+  The order's §1 has the figures and when to revisit.
 - The Grimoire's own spells read as rows, with editing one press away (the
   pattern GM mode already uses); no truncated text, and no four-line
   "Link to the book" button.
