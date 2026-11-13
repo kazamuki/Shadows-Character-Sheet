@@ -1292,8 +1292,10 @@ test("Decision 284: the fold outlives a re-render and starts folded for the next
   app.click('[data-dmg="1"]');
   assert.equal(shownIds(app).length, combatIds().length, "a re-render folded the rows again");
   assert.equal(foldBtn(app).textContent.trim(), "Hide untrained");
-  const app2 = openSheet(trainSome(lockedCharacter(), combatIds().slice(0, 2)), "main");
-  assert.equal(shownIds(app2).length, 2, "a new sheet opens with the rows shown");
+  // The next character, opened in the same page (a fresh boot would pass whatever openEntry kept).
+  app.window.openEntry({ ch: trainSome(lockedCharacter(), combatIds().slice(0, 2)), section: "main" });
+  assert.equal(shownIds(app).length, 2, "the next character opens with the rows shown");
+  assert.match(foldBtn(app).textContent.trim(), /^Show \d+ untrained$/);
   assert.deepEqual(app.errors, []);
 });
 
@@ -1316,6 +1318,12 @@ test("Decision 284: no combat skill trained gets the button alone, and every one
   const none = openSheet(lockedCharacter(), "main");
   assert.deepEqual(shownIds(none), []);
   assert.equal(foldBtn(none).textContent.trim(), `Show ${combatIds().length} untrained`);
+  const head = () => none.$("#main .main-combat .skill-table thead");
+  assert.equal(head().hidden, true, "a header row over no rows: the button isn't alone");
+  none.click("#main [data-untrainedfold]");
+  assert.equal(head().hidden, false, "Show opened the rows under no header");
+  none.click("#main [data-untrainedfold]");
+  assert.equal(head().hidden, true);
   const all = openSheet(trainSome(lockedCharacter(), combatIds()), "main");
   assert.equal(foldBtn(all), null, "a button with nothing to fold");
   assert.deepEqual(shownIds(all), combatIds());

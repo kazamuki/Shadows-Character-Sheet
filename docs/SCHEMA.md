@@ -5645,11 +5645,11 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
 284. **Main shows the combat skills you've trained or have something on, and folds the rest behind Show N untrained; an untrained row is dimmed wherever it's drawn.**
      *2026-11-12 · Ken + Claude · Touches: skillTableHtml, includeUntrained, skillRowCarries, renderShMain, main-combat, Combat skills, main-stats, data-untrainedfold, data-untrainedrows, S.combatUntrained, bindSheetReaders, RO_READERS, inertSheet, skillRowPair, skill-line, untrained, Rank 0, skill-table, Overcast Steel, --dim, Skills tab, phone-check, E2b*
      - **Decided:** Main's Combat skills table shows a combat skill that's trained, or untrained but whose row carries something: a chip, a pick, a Combat Maneuvers line, or a trait's effect (Decision 233). The plain untrained rows are drawn in the same table, hidden, under **Show N untrained**, which then reads **Hide untrained**. Nothing hides a row that's trained or carries something (EQ30). The choice is browser state and starts folded for each character opened. An untrained row's text is Overcast Steel on Main and Skills, its chips keep their colours, and Skills still lists every skill (Decision 156).
-     - **Why:** the full combat table ran 938-1,096px on a phone and put Stats 2,347-3,109px down. Folding raised Stats by 468-724px. Skills is every skill's home (E2), and what a character has stays in view (Decision 279).
+     - **Why:** the full combat table ran 938-1,096px on a phone and put Stats 2,347-3,109px down. Folding raised Stats by 460-716px (measured on the build). Skills is every skill's home (E2), and what a character has stays in view (Decision 279).
      - **Rejected:** the shape's 600px for every character (EQ28: a phone row is 85px, so it needs eight folded); a `<details>` wrapper (E1c: a tappable wrapper can hide what's kept); a phone-only CSS fold (Decision 165: different contents by width); folding by rank alone (EQ30: it hides a Take X or kicker); dimming chips too (a chip is a signal).
      - **Replaces:** Decision 156 in part (an untrained row is dimmed, and Main folds the plain ones). Decisions 165 and 233 stand.
      - **Revisit if:** players roll untrained combat skills from Main often enough to want them open, or E6 slims the phone's rows.
-     - **Built:** app 0.68.1 (patch), no schema bump, log 2026-11-12 (E2b).
+     - **Built:** app 0.68.1 (patch), no schema bump, PR #332, log 2026-11-12 (E2b).
 
 285. **A skill row says what's particular to that skill: Pain's penalty, and a Condition's, are said once above the table.**
      *2026-11-12 · Ken + Claude · Touches: skillRowPair, breakdown, breakdown.pain, breakdown.conditions, painChip, conditionTotalsNote, Skills tab, Main's Combat table, Pain Lv chip, "totals include it", E2b*
@@ -5658,7 +5658,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** keeping it on the rows (the critique's repetition); dropping the line above instead (it's the one place that says the totals include it); keeping "conditions" on the rows while dropping "pain" (EQ29: the same repetition, with the same line above it).
      - **Replaces:** Decision 24 in part (the reason is the line above the table and the chip, not the breakdown column). Decision 96's `breakdown.conditions` stays in the engine and keeps its readers; only the row's text changes.
      - **Revisit if:** a penalty starts to differ from one skill to the next (a Condition that hits only some skills), when the row is where it belongs again.
-     - **Built:** app 0.68.1 (patch), no schema bump, log 2026-11-12 (E2b).
+     - **Built:** app 0.68.1 (patch), no schema bump, PR #332, log 2026-11-12 (E2b).
 
 ## 5. Open Flags
 

@@ -384,10 +384,11 @@ function skillRowCarries(ch, l){
 function skillTableHtml(ch, cid, cname, {includeUntrained=false}={}){
   const all = D.skills.filter(s=>s.category===cid).map(s=>Engine.skillLine(ch,s.id));
   const shown = [], folded = [];
-  for (const l of all) (l.trained || !includeUntrained || skillRowCarries(ch, l) ? shown : folded).push(l);
+  for (const l of all) if (l.trained || includeUntrained) (l.trained || skillRowCarries(ch, l) ? shown : folded).push(l);
   if (!shown.length && !folded.length) return "";
   const open = !!S.combatUntrained, fid = `untrained-${cid}`;
-  const head = `<thead><tr><th>${esc(cname)}</th><th>Rank</th><th>Check</th><th>Breakdown</th></tr></thead>`;
+  // Nothing shown: the header row folds with the rows, so a closed fold is the button alone.
+  const head = `<thead${shown.length ? "" : ` data-untrainedhead${open ? "" : " hidden"}`}><tr><th>${esc(cname)}</th><th>Rank</th><th>Check</th><th>Breakdown</th></tr></thead>`;
   const body = (rows, extra="") => `<tbody${extra}>` + rows.map(l=>skillRowPair(ch,l)).join("") + `</tbody>`;
   const btn = folded.length ? `<button class="btn sm ghost untrained-fold" data-untrainedfold aria-controls="${fid}" aria-expanded="${open}">${open?"Hide untrained":`Show ${folded.length} untrained`}</button>` : "";
   return `<table class="ref skill-table">${skillColgroup()}${head}${shown.length?body(shown):""}${folded.length?body(folded, ` id="${fid}" data-untrainedrows${open?"":" hidden"}`):""}</table>${btn}`;
@@ -3815,7 +3816,7 @@ function bindSheetReaders(main, goTab){
   main.querySelectorAll("[data-untrainedfold]").forEach(b=>b.onclick=()=>{
     const open=!S.combatUntrained; S.combatUntrained=open;
     const rows=main.querySelector("#"+b.getAttribute("aria-controls"));
-    if (rows) rows.hidden=!open;
+    if (rows){ rows.hidden=!open; const head=rows.closest("table").querySelector("thead[data-untrainedhead]"); if (head) head.hidden=!open; }
     b.setAttribute("aria-expanded", open?"true":"false");
     b.textContent = open ? "Hide untrained" : `Show ${rows ? rows.querySelectorAll("tr.skill-line").length : ""} untrained`;
     // Show lands on what appeared; Hide keeps the button, and takes it back if the hidden rows held focus.
