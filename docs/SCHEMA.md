@@ -5660,6 +5660,15 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** a penalty starts to differ from one skill to the next (a Condition that hits only some skills), when the row is where it belongs again.
      - **Built:** app 0.68.1 (patch), no schema bump, PR #332, log 2026-11-12 (E2b).
 
+286. **Your own spells read like the book's: a named one is a line, Edit opens it, Done folds it.**
+     *2026-11-13 · Ken + Claude · Touches: grimoireHtml, Your own spells, own spell line, data-cell, data-spelledit, data-spelldone, data-spelllink, Link to the book, data-spellown, Add your own, data-spellrm, loOpen, S.loOpen, W70, inertSheet, RO_READERS, Grimoire, Character tab, E3*
+     - **Decided:** In the Grimoire an own spell with a name reads as a line: its name, "Discipline · TN n / TH n", its effect, then its overflow and notes when it has any, all in full, with Link to the book (when its name matches a book spell), Edit and ✕ on the line (EQ34). Edit opens its fields as a form whose long fields wrap, and Done folds it (EQ35). A spell with no name reads open. It's view state, as W70's Loadout rows are (`S.loOpen`): nothing is saved or logged, and another character, a reload, or an undo that puts the Grimoire's rows back folds every named row.
+     - **Why:** the critique's P2: Wren's three spells were rows of seven inputs, 103px tall, three cut off, with Link to the book wrapped to four lines. W70 already reads Loadout's custom rows this way, so the sheet keeps one pattern.
+     - **Rejected:** GM mode's page-level Edit (Decision 271: a spell is a row, like a custom weapon); the input row with wider columns (still a form where a player reads); today's row opened in place (EQ35: long text is still cut off while it's typed); ✕ only inside Edit (EQ34: W70's rows keep theirs on the line); tap a line to edit (Decision 271 rejected it, because it hides what's editable).
+     - **Replaces:** nothing. It extends W70 to the Grimoire. Decision 108's free entry and Link to the book stand.
+     - **Revisit if:** a player edits their own spells more often than they read them, or the book's spells gain an editable field beyond notes.
+     - **Built:** app 0.68.2 (patch), no data or schema move, PR #334, log 2026-11-13 (E3).
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data

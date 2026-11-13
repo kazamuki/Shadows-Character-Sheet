@@ -544,8 +544,8 @@ table.edit th{font-family:var(--mono); font-size:.7rem; letter-spacing:.1em; tex
 table.edit td{padding:3px 4px; border-bottom:1px solid rgba(32,63,123,.25); vertical-align:top}
 table.edit input,table.edit textarea{padding:5px 7px; font-size:.8rem; min-height:0; min-width:70px}
 table.edit td.rm{width:34px; text-align:center}
-table.edit .x,.journal .x{background:none; border:0; color:var(--dim); font-size:.95rem; padding:2px 6px; cursor:pointer}
-table.edit .x:hover,.journal .x:hover{color:var(--magenta-text)}
+table.edit .x,.journal .x,.spell.own .x{background:none; border:0; color:var(--dim); font-size:.95rem; padding:2px 6px; cursor:pointer}
+table.edit .x:hover,.journal .x:hover,.spell.own .x:hover{color:var(--magenta-text)}
 .ms{position:relative}
 .ms .req{display:flex; gap:6px; flex-wrap:wrap; margin-top:6px}
 /* A prerequisite chip can name three advantages: on a phone it wraps inside
@@ -652,9 +652,23 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta-text)}
 .spell.mastered{border-color:var(--violet-hi)}
 .spell.missing{padding:8px 12px; color:var(--dim)}
 .spell > summary{cursor:pointer; list-style:none; display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px; padding:8px 12px}
-.spell > summary .sub{color:var(--dim); font-size:.78rem}
+.spell > summary .sub,.spell.own .sub{color:var(--dim); font-size:.78rem}
 .spell > summary .num{font-family:var(--mono); font-size:.78rem; color:var(--cyan)}
 .spell > summary .eff{flex-basis:100%; font-size:.84rem}
+.spell.own{padding:8px 12px}
+.spell.own .sp-line{display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px}
+.spell.own .eff{font-size:.84rem; margin-top:2px}
+.spell.own .sp-more{font-size:.84rem; margin-top:2px; overflow-wrap:anywhere}
+.spell.own .sp-notes{font-style:italic; color:var(--dim)}
+.spell.own .sp-ctl{display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-left:auto}
+.spell.own .sp-ctl .btn{white-space:nowrap}
+.spell.own.open .sp-ctl{margin:6px 0 0; justify-content:flex-end}
+.sp-form{display:flex; flex-wrap:wrap; gap:8px}
+.sp-f{display:flex; flex-direction:column; gap:2px; flex:1 1 90px; min-width:0; font-size:.72rem; color:var(--dim)}
+.sp-f:first-child{flex:3 1 160px}
+.sp-f.sp-wide{flex:1 1 100%}
+.sp-f input,.sp-f textarea{width:100%; min-width:0; padding:5px 7px; font-size:.8rem; min-height:0}
+.sp-f textarea{field-sizing:content; resize:vertical; line-height:1.4}
 .spell-body{padding:0 12px 10px; font-size:.84rem}
 .spell-body p{margin:4px 0}
 .spell-body .flavor, p.flavor{font-style:italic; color:var(--dim)}
@@ -1319,7 +1333,7 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
   /* iOS zooms the page into any field under 16px when it takes focus. */
   input[type=text], input[type=search], input[type=number], input[type=date], textarea, select,
   .picks select, .picks input[type=text], table.lo-weapons input[type=text],
-  table.edit input, table.edit textarea{font-size:16px}
+  table.edit input, table.edit textarea, .sp-f input, .sp-f textarea{font-size:16px}
   input[type=text], input[type=search], input[type=number], input[type=date], select{min-height:44px}
 }
 
