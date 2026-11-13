@@ -5667,7 +5667,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** GM mode's page-level Edit (Decision 271: a spell is a row, like a custom weapon); the input row with wider columns (still a form where a player reads); today's row opened in place (EQ35: long text is still cut off while it's typed); ✕ only inside Edit (EQ34: W70's rows keep theirs on the line); tap a line to edit (Decision 271 rejected it, because it hides what's editable).
      - **Replaces:** nothing. It extends W70 to the Grimoire. Decision 108's free entry and Link to the book stand.
      - **Revisit if:** a player edits their own spells more often than they read them, or the book's spells gain an editable field beyond notes.
-     - **Built:** app 0.68.2 (patch), no data or schema move, PR #PRNUM, log 2026-11-13 (E3).
+     - **Built:** app 0.68.2 (patch), no data or schema move, PR #334, log 2026-11-13 (E3).
 
 ## 5. Open Flags
 
