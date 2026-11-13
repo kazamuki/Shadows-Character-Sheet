@@ -357,13 +357,12 @@ function skillRowPair(ch, l){
   const b=l.breakdown;
   const parts = l.trained
     ? [`rank ${b.rank}`, skillStatsHtml(l)]
-    : [skillStatsHtml(l), `<span style="color:var(--dim)">untrained</span>`];
-  if (b.pain) parts.push(`<span style="color:var(--magenta)">${b.pain} pain</span>`);
-  if (b.conditions) parts.push(`<span style="color:var(--magenta)">${b.conditions} conditions</span>`);
+    : [skillStatsHtml(l), `untrained`];
+  // Decision 285: Pain's penalty and a Condition's are said once, above the table; the totals include them.
   for (const t of b.traitParts||[]) parts.push(`<span class="trait-part">${modText(t.amount)} ${esc(t.name)}</span>`);
   const ipe = ch.skills[l.def.id] ? ch.skills[l.def.id].ipe : 0;
   const q = `<button class="skill-q" data-skilldesc="${l.def.id}" aria-expanded="${open?"true":"false"}" aria-label="Toggle description" title="Description">?</button>`;
-  // Decision 156: an untrained skill reads at full strength, Rank 0 dimmed.
+  // Decision 284: an untrained row is dimmed whole (`tr.untrained td`); its chips keep their colours.
   let tr = `<tr class="skill-line${l.trained?"":" untrained"}">`;
   tr += `<td data-skillname="${esc(l.def.id)}" tabindex="-1">${esc(l.def.name)}${focused.includes(l.def.id)?' <span class="chip gold">focused</span>':""}${ipe?` <span class="chip cyan">+${ipe} IP</span>`:""}${trainingChipHtml(ch, l.def.id)}${l.barred?` <span class="chip pain" title="${esc(l.barred)}">not while shifted</span>`:""}${l.formPenalty?` <span class="chip pain">${l.formPenalty} while shifted</span>`:""}${q}${skillChosenHtml(ch, l.def.id)}${maneuverLineHtml(ch, l.def.id)}${skillFxHtml(l)}</td>`;
   tr += `<td class="num" data-k="Rank">${l.trained?l.rank:0}</td>`;
@@ -371,14 +370,27 @@ function skillRowPair(ch, l){
   tr += `<td class="bd">${parts.join(" · ")}</td></tr>`;
   return tr + skillDescRow(ch, l.def, 4, open);
 }
-// One category as a standalone aligned table (used on Main for Combat).
+// Does this row draw anything beyond its name, rank and check (EQ30, Decision 284)? It asks the same calls
+// skillRowPair draws from, so the two can't disagree: a row that carries something never folds.
+function skillRowCarries(ch, l){
+  const id = l.def.id;
+  return Engine.focusedSkillIds(ch).includes(id) || !!trainingChipHtml(ch, id) || !!l.barred || !!l.formPenalty
+    || !!skillChosenHtml(ch, id) || !!maneuverLineHtml(ch, id) || !!skillFxHtml(l)
+    || (l.kickers||[]).length>0 || ((l.breakdown||{}).traitParts||[]).length>0;
+}
+// One category as a standalone aligned table (used on Main for Combat). With includeUntrained, the skills you've
+// trained and the ones whose row carries something are shown, and the plain untrained rows are drawn after them in a
+// second <tbody>, hidden unless S.combatUntrained, under a button (Decision 284). No wrapper: the shown rows sit outside it.
 function skillTableHtml(ch, cid, cname, {includeUntrained=false}={}){
   const all = D.skills.filter(s=>s.category===cid).map(s=>Engine.skillLine(ch,s.id));
-  const rows = includeUntrained ? all : all.filter(l=>l.trained);
-  if (!rows.length) return "";
-  return `<table class="ref skill-table">${skillColgroup()}
-    <thead><tr><th>${esc(cname)}</th><th>Rank</th><th>Check</th><th>Breakdown</th></tr></thead>
-    <tbody>` + rows.map(l=>skillRowPair(ch,l)).join("") + `</tbody></table>`;
+  const shown = [], folded = [];
+  for (const l of all) (l.trained || !includeUntrained || skillRowCarries(ch, l) ? shown : folded).push(l);
+  if (!shown.length && !folded.length) return "";
+  const open = !!S.combatUntrained, fid = `untrained-${cid}`;
+  const head = `<thead><tr><th>${esc(cname)}</th><th>Rank</th><th>Check</th><th>Breakdown</th></tr></thead>`;
+  const body = (rows, extra="") => `<tbody${extra}>` + rows.map(l=>skillRowPair(ch,l)).join("") + `</tbody>`;
+  const btn = folded.length ? `<button class="btn sm ghost untrained-fold" data-untrainedfold aria-controls="${fid}" aria-expanded="${open}">${open?"Hide untrained":`Show ${folded.length} untrained`}</button>` : "";
+  return `<table class="ref skill-table">${skillColgroup()}${head}${shown.length?body(shown):""}${folded.length?body(folded, ` id="${fid}" data-untrainedrows${open?"":" hidden"}`):""}</table>${btn}`;
 }
 
 // ── Sheet: MAIN (what you need right now) ────────────────────────────
@@ -442,8 +454,8 @@ function renderShMain(){
 
   // ── left: what gets rolled in a fight (W13) ──
   // The weapons you carry come first, with their magazines (W16), then the
-  // armor that answers, then every combat skill. The skill table is long, and
-  // it was pushing the lines a player actually rolls below the fold.
+  // armor that answers, then the combat skills you've trained or have something on (Decision 284). The
+  // skill table was long, and it was pushing the lines a player actually rolls below the fold.
   h += `<section class="main-combat"><div class="sect">Combat${painChip(pain)}</div>`;
   if (pain.level) h += `<p class="step-note" style="margin-bottom:10px">${esc(pain.label)} — all checks take ${pain.skillPenalty}; totals below include it.</p>`;
   h += movementLineHtml(ch);   // Decision 226
@@ -501,10 +513,10 @@ function renderShMain(){
 function renderShSkills(){
   const ch=S.ch, pain=Engine.painState(ch);
   S.openSkills = S.openSkills || new Set();
-  let h = sheetHeader("Skills", "Every skill, grouped by category. Trained skills roll 1d10 + Rank + Primary Stat + Synergy; untrained roll 1d10 + Primary Stat only. Tap <b>?</b> on any skill for what it covers.");
+  let h = sheetHeader("Skills", "Trained skills roll 1d10 + Rank + Primary Stat + Synergy; untrained roll 1d10 + Primary Stat only. Tap <b>?</b> on any skill for what it covers.");
   if (pain.level) h += `<p class="step-note">${esc(pain.label)} — all skill checks take ${pain.skillPenalty}; the totals below already include it.${painChip(pain)}</p>`;
   h += conditionTotalsNote(ch, false) + checkNotesHtml(ch);
-  // Decision 156: every skill, trained or not, in its category, so every
+  // Decision 156: every skill, trained or not, in its category (Main folds the plain untrained ones; this tab never does), so every
   // character's list reads the same. Two columns from 1000px: the categories
   // in order, the first column taking them until it holds half the skills.
   const cats = [["combat","Combat"],["utility","Utility"],["general","General"]]
@@ -1548,7 +1560,7 @@ function renderShTrackers(){
   // Take a hit is a modal (W6), so only a recovery panel holds the page.
   const open = !!S.act;
   const hs=Engine.hlState(ch), withering=Math.min(hs.damage, Math.max(0, Math.floor(Number(ch.trackers.witheringDamage)||0)));
-  let h = sheetHeader("Trackers", "Current state only — every maximum on this page is computed and recalculates the moment an input changes.");
+  let h = sheetHeader("Trackers");
 
   // W1: two columns on a wide screen. The body (Damage with its Health
   // Levels, recovery, Armor, Pain) reads down the left; the rest
@@ -3799,6 +3811,17 @@ function bindSheetReaders(main, goTab){
   // A button that goes to another tab, the way the header's tabs do.
   main.querySelectorAll("[data-gotab]").forEach(b=>b.onclick=()=>goTab(b.dataset.gotab));
   main.querySelectorAll("[data-jump]").forEach(b=>b.onclick=()=>jumpTo(b.dataset.jump));
+  // Main's untrained combat skills (Decision 284): flip the hidden rows and the label in place, no re-render.
+  main.querySelectorAll("[data-untrainedfold]").forEach(b=>b.onclick=()=>{
+    const open=!S.combatUntrained; S.combatUntrained=open;
+    const rows=main.querySelector("#"+b.getAttribute("aria-controls"));
+    if (rows) rows.hidden=!open;
+    b.setAttribute("aria-expanded", open?"true":"false");
+    b.textContent = open ? "Hide untrained" : `Show ${rows ? rows.querySelectorAll("tr.skill-line").length : ""} untrained`;
+    // Show lands on what appeared; Hide keeps the button, and takes it back if the hidden rows held focus.
+    if (open){ const first = rows && rows.querySelector("td[data-skillname]"); if (first) takeFocus(first); }
+    else takeFocus(b);
+  });
   // Skill description toggles (no full re-render — flip the hidden detail row)
   main.querySelectorAll("[data-skilldesc]").forEach(b=>b.onclick=()=>{
     const id=b.dataset.skilldesc; S.openSkills=S.openSkills||new Set();

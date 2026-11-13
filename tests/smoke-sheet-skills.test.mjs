@@ -11,6 +11,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { boot } from "./harness.mjs";
 import { Engine, D, lockedCharacter, onArchetypeStep, openSheet, activeChar, pickFromCatalog, search, clickIn, arcanistOnCP, card, tipShown, pick, tip, lockedVampire, focused } from "./smokekit.mjs";
 
@@ -1252,5 +1253,168 @@ test("P21 10 (sheet): the flagged kicker rules show their notes where a player m
     assert.ok(card, `${id} has no card`);
     assert.match(card.textContent, /(Kicker Die (grows|rolls twice) is your GM's call until the rule is settled|When two Kicker Dice meet on one roll, your GM rules how they combine)/);
   }
+  assert.deepEqual(app.errors, []);
+});
+
+// ── E2b: say each thing once on the skill tables (Decisions 284, 285) ──
+const combatIds = () => Array.from(D.skills.filter(s => s.category === "combat").map(s => s.id));   // D lives in another realm: deepEqual wants this realm's array
+const mainRows = app => [...app.$$("#main .main-combat .skill-line")];
+// Shown means neither the row nor its <tbody> is hidden. Never textContent: it includes hidden rows.
+const rowShown = r => !r.hidden && !r.closest("tbody").hidden;
+const rowId = r => r.querySelector("[data-skillname]").dataset.skillname;
+const shownIds = app => mainRows(app).filter(rowShown).map(rowId);
+const foldBtn = app => app.$("#main [data-untrainedfold]");
+const trainSome = (ch, ids) => { for (const id of ids) ch.skills[id] = { rank: 1, ipe: 0 }; return ch; };
+
+test("Decision 284: Main shows trained combat skills and folds the rest behind Show N untrained", () => {
+  const ids = combatIds(), trained = ids.slice(0, 3), rest = ids.slice(3);
+  const ch = trainSome(lockedCharacter(), trained);
+  for (const id of rest) assert.equal(Engine.skillLine(ch, id).trained, false);
+  const app = openSheet(ch, "main");
+  assert.deepEqual(mainRows(app).map(rowId).sort(), [...ids].sort(), "every combat skill is drawn, shown or not");
+  assert.deepEqual(shownIds(app), trained, "Main shows more than the trained skills");
+  assert.equal(foldBtn(app).textContent.trim(), `Show ${rest.length} untrained`);
+  assert.equal(foldBtn(app).getAttribute("aria-expanded"), "false");
+  app.click("#main [data-untrainedfold]");
+  assert.deepEqual(shownIds(app).sort(), [...ids].sort(), "Show didn't show every combat skill");
+  assert.equal(foldBtn(app).textContent.trim(), "Hide untrained");
+  assert.equal(foldBtn(app).getAttribute("aria-expanded"), "true");
+  assert.equal(focused(app), mainRows(app).find(r => rowId(r) === rest[0]).querySelector("[data-skillname]"), "focus didn't land on the first row that appeared");
+  app.click("#main [data-untrainedfold]");
+  assert.deepEqual(shownIds(app), trained, "Hide didn't hide");
+  assert.equal(focused(app), foldBtn(app), "focus left the button");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 284: the fold outlives a re-render and starts folded for the next character", () => {
+  const app = openSheet(trainSome(lockedCharacter(), combatIds().slice(0, 2)), "main");
+  app.click("#main [data-untrainedfold]");
+  app.click('[data-dmg="1"]');
+  assert.equal(shownIds(app).length, combatIds().length, "a re-render folded the rows again");
+  assert.equal(foldBtn(app).textContent.trim(), "Hide untrained");
+  const app2 = openSheet(trainSome(lockedCharacter(), combatIds().slice(0, 2)), "main");
+  assert.equal(shownIds(app2).length, 2, "a new sheet opens with the rows shown");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 284: nothing on Main hides a trained combat skill", () => {
+  const trained = combatIds().slice(0, 3);
+  const app = openSheet(trainSome(lockedCharacter(), trained), "main");
+  const controls = () => [...app.$$("#main .main-combat button, #main .main-combat summary, #main .main-combat [aria-expanded]")];
+  const n = controls().length;
+  assert.ok(n > 0);
+  for (let i = 0; i < n; i++) {
+    const el = controls()[i];
+    if (!el || !el.isConnected) continue;
+    el.click();
+    for (const id of trained) assert.ok(shownIds(app).includes(id), `pressing "${el.textContent.trim().slice(0, 20)}" hid ${id}`);
+  }
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 284: no combat skill trained gets the button alone, and every one trained gets none", () => {
+  const none = openSheet(lockedCharacter(), "main");
+  assert.deepEqual(shownIds(none), []);
+  assert.equal(foldBtn(none).textContent.trim(), `Show ${combatIds().length} untrained`);
+  const all = openSheet(trainSome(lockedCharacter(), combatIds()), "main");
+  assert.equal(foldBtn(all), null, "a button with nothing to fold");
+  assert.deepEqual(shownIds(all), combatIds());
+});
+
+test("Decision 284: an untrained row is dimmed on Skills, and its chips aren't", () => {
+  const css = readFileSync(new URL("../src/styles/shadows.css", import.meta.url), "utf8");
+  assert.match(css, /\.skill-table tr\.untrained td\s*\{[^}]*color:\s*var\(--dim\)/, "no rule dims an untrained row");
+  assert.match(css, /\.chip\{[^}]*color:var\(--dim\)/, "a chip no longer sets its own colour, so the row's dimming would take it");
+  assert.match(css, /\.chip\.gold\{color:var\(--gold\)/);
+  const app = openSheet(trainSome(lockedCharacter(), ["handguns"]), "skills");
+  const ch = activeChar(app);
+  for (const r of app.$$("#main .skill-line")) {
+    const l = Engine.skillLine(ch, rowId(r));
+    assert.equal(r.classList.contains("untrained"), !l.trained, l.def.name);
+  }
+});
+
+test("Decision 285: no skill row says pain or conditions, and the line above says the totals include them", () => {
+  const ch = trainSome(lockedCharacter(), ["handguns"]);
+  const cond = D.conditions.find(c => c.rollPenalty);
+  assert.ok(cond, "no Condition carries a rollPenalty");
+  ch.trackers.conditions = [{ id: cond.id }];
+  ch.trackers.damage = Math.ceil(Engine.health(ch).total / 2);
+  assert.ok(Engine.painState(ch).level > 0 && Engine.skillLine(ch, "handguns").breakdown.pain, "the character isn't in Pain");
+  for (const sec of ["skills", "main"]) {
+    const app = openSheet(ch, sec);
+    if (sec === "main") app.click("#main [data-untrainedfold]");
+    const rows = app.$$(sec === "main" ? "#main .main-combat .skill-line" : "#main .skill-line");
+    assert.ok(rows.length);
+    for (const r of rows) {
+      const l = Engine.skillLine(ch, rowId(r));
+      assert.doesNotMatch(r.querySelector("td.bd").textContent, /pain|conditions/i, `${sec}: ${l.def.name}`);
+      assert.equal(r.querySelector('[data-k="Check"]').textContent, `1d10 + ${l.checkBonus}`, `${sec}: ${l.def.name}'s check dropped the penalty`);
+    }
+    const text = app.$("#main").textContent;
+    assert.match(text, sec === "skills" ? /all skill checks take .* already include it/ : /all checks take .* totals below include it/);
+    assert.match(text, /totals include it/);
+  }
+});
+
+test("E2b: Trackers has no intro, and Skills' doesn't describe the software", () => {
+  const trackers = openSheet(lockedCharacter(), "trackers");
+  const h1 = trackers.$("#main h1.step-title");
+  assert.ok(!h1.nextElementSibling || !h1.nextElementSibling.matches(".step-note"), "Trackers still has an intro under its title");
+  const skills = openSheet(lockedCharacter(), "skills");
+  assert.doesNotMatch(skills.$("#main .step-note").textContent, /grouped by category/);
+  for (const sec of ["character", "main", "skills", "trackers", "progression", "loadout", "notes"]) {
+    const a = openSheet(lockedCharacter(), sec);
+    const h = a.$("#main h1.step-title");
+    const intro = h && h.nextElementSibling && h.nextElementSibling.matches(".step-note") ? h.nextElementSibling : null;
+    if (intro) assert.doesNotMatch(intro.textContent, /computed|recalculates|auditable|undoable/, `${sec}'s intro`);
+  }
+});
+
+test("Decision 284: an untrained combat row that carries something stays shown, and N counts only the rows it hides", () => {
+  const ids = combatIds();
+  const base = () => trainSome(lockedCharacter(), [ids[0]]);
+  const hiddenN = app => Number(/Show (\d+) untrained/.exec(foldBtn(app).textContent)[1]);
+  const plainN = ids.length - 1;
+  // Hyper Vigilance: a 1d4 kicker on Combat Sense at Rank 0.
+  const hv = base(); hv.advantages.push({ id: "hyper-vigilance", rank: 1 });
+  assert.equal(Engine.skillLine(hv, "combat-sense").trained, false);
+  let app = openSheet(hv, "main");
+  const cs = () => mainRows(app).find(r => rowId(r) === "combat-sense");
+  assert.ok(rowShown(cs()), "Combat Sense folded with a kicker on it");
+  assert.ok(cs().classList.contains("untrained"), "a kept row isn't dimmed");
+  assert.match(cs().querySelector('[data-k="Check"]').textContent, /\+ 1d4/);
+  assert.equal(hiddenN(app), plainN - 1, "N counts the kept row");
+  app.click("#main [data-untrainedfold]"); assert.ok(rowShown(cs()));
+  app.click("#main [data-untrainedfold]"); assert.ok(rowShown(cs()));
+  // Without the Advantage it folds again and N is back.
+  app = openSheet(base(), "main");
+  assert.ok(!rowShown(mainRows(app).find(r => rowId(r) === "combat-sense")));
+  assert.equal(hiddenN(app), plainN);
+  // In training.
+  const tr = base(); tr.progression.training = { skill: ids[1], mp: 0, credits: 0, date: "2026-11-12" };
+  app = openSheet(tr, "main");
+  assert.ok(shownIds(app).includes(ids[1]), "a skill in training folded");
+  // Take 6 from a Major Milestone.
+  const qs = base(); qs.progression.milestones.major.push({ id: "quick-study", date: "2026-11-12" });
+  assert.equal(Engine.skillLine(qs, "combat-sense").trained, false);
+  assert.ok(Engine.skillLine(qs, "combat-sense").takeX.length, "no Take X on Combat Sense");
+  app = openSheet(qs, "main");
+  assert.ok(shownIds(app).includes("combat-sense"), "a Take X row folded");
+  // Focused, from a Professional subtype named in the data.
+  const pro = base(); pro.identity.archetype = "professional";
+  const find = n => n && typeof n === "object" ? ((n.focusedSkills && Array.isArray(n.focusedSkills.ids) && n.focusedSkills.ids.includes("combat-sense") && n.id) || Object.values(n).map(find).find(Boolean)) : null;
+  const spec = find(D.archetypes);
+  assert.ok(spec, "no subtype focuses Combat Sense");
+  pro.archetypeChoices.specialization = [spec];
+  assert.ok(Engine.focusedSkillIds(pro).includes("combat-sense"));
+  app = openSheet(pro, "main");
+  assert.ok(shownIds(app).includes("combat-sense"), "a focused row folded");
+  // (A Combat Maneuvers line and a chosen option need a trained skill with the data we have: skipped, not faked.)
+  // Everything trained but Combat Sense, which carries a kicker: nothing left to fold.
+  const full = trainSome(lockedCharacter(), ids.filter(i => i !== "combat-sense")); full.advantages.push({ id: "hyper-vigilance", rank: 1 });
+  app = openSheet(full, "main");
+  assert.equal(foldBtn(app), null, "a button with nothing to fold");
+  assert.deepEqual(shownIds(app), ids);
   assert.deepEqual(app.errors, []);
 });

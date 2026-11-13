@@ -911,7 +911,10 @@ tr.lo-modrow td{border-top:0; padding-top:0}
 .skill-table .c-check{width:120px}
 .skill-table .c-break{width:38%}
 .skill-table th,.skill-table td{overflow-wrap:anywhere}
-.skill-table tr.untrained td.num[data-k="Rank"]{color:var(--dim)}
+/* Decision 284: an untrained row's text is Overcast Steel; a chip on it sets its own colour and keeps it. */
+.skill-table tr.untrained td{color:var(--dim)}
+.skill-table tbody[hidden]{display:none}
+.untrained-fold{margin-top:8px}
 .skill-cols{display:grid; grid-template-columns:1fr; column-gap:28px}
 @media (min-width:1000px){ .skill-cols{grid-template-columns:1fr 1fr} .skill-cols .skill-table .c-break{width:34%} }
 .ref td.bd{font-family:var(--mono); font-size:.72rem; color:var(--dim)}
@@ -921,6 +924,7 @@ tr.lo-modrow td{border-top:0; padding-top:0}
    breakdown under them. Same pattern as .cat-results above. */
 @media (max-width:640px){
   .skill-table, .skill-table tbody{display:block}
+  .skill-table tbody[hidden]{display:none}   /* display:block above beats the hidden attribute */
   .skill-table colgroup, .skill-table thead{display:none}
   .skill-table tr.skill-line{display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 18px; padding:9px 0; border-bottom:1px solid rgba(32,63,123,.35)}
   .skill-table tr.skill-line td{border:0; padding:0; overflow-wrap:normal}

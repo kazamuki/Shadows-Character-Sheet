@@ -305,3 +305,20 @@ test("U4: the seat copy names its seat once, and its disabled controls read as d
   assert.match(app.$("#main").textContent, /Read only/);
   assert.deepEqual(app.errors, []);
 });
+
+test("Decision 284: the read-only seat sheet's fold opens, and nothing that writes is pressable", () => {
+  const app = open();
+  openSheet(app);
+  const btn = app.$("[data-rosheet] [data-untrainedfold]");
+  assert.ok(btn, "no fold on the seat sheet's Main");
+  assert.equal(btn.disabled, false, "the fold is dead on the read-only sheet");
+  const rows = app.$("[data-rosheet] [data-untrainedrows]");
+  assert.equal(rows.hidden, true);
+  const before = tableJson(app);
+  clickIn(app, btn);
+  assert.equal(app.$("[data-rosheet] [data-untrainedrows]").hidden, false, "pressing the fold showed nothing");
+  assert.equal(tableJson(app), before, "the fold wrote to the table");
+  const readers = ev(app, "RO_READERS");
+  for (const el of app.$("[data-rosheet]").querySelectorAll("button, select")) assert.ok(el.disabled || el.matches(readers), `live ${el.tagName} ${el.textContent.trim().slice(0, 20)}`);
+  assert.deepEqual(app.errors, []);
+});
