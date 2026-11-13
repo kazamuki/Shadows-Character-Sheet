@@ -1,7 +1,7 @@
 # State of the build
 
 **Updated:** 2026-11-12
-**Versions:** app `0.68.0` · game data `0.54` · character schema `0.34` · table schema `0.19` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.68.1` · game data `0.54` · character schema `0.34` · table schema `0.19` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -140,7 +140,7 @@ rev 9's `C1`–`C3` are still forward notes.
 **The live site is v0.68.0** (data 0.54, schema 0.34), released 2026-11-12.
 
 **Next is Ken's pick**, each built through a work order (`WORK-ORDERS.md`):
-- **Finding things on the sheet** (`plans/finding-things-on-the-sheet.md`, open, proposed 2026-11-11): the running sheet's usability pass, as sessions E1–E7, each with its impeccable command. E1 (the owed pick, the wizard for first-timers, Character Points folds; Decisions 273–280) is merged through 0.67.1. E2's shape is Ken's: seven tabs, one home each. **E2a** (the moves: Session Log into Progression, what you can do onto Character, Conditions onto Main; Decisions 281–283, 0.68.0) is built and awaits merge; **E2b** (the distill) is next, and E3 and E5 wait on it.
+- **Finding things on the sheet** (`plans/finding-things-on-the-sheet.md`, open, proposed 2026-11-11): the running sheet's usability pass, as sessions E1–E7, each with its impeccable command. E1 (the owed pick, the wizard for first-timers, Character Points folds; Decisions 273–280) is merged through 0.67.1. E2's shape is Ken's: seven tabs, one home each. **E2a** (the moves: Session Log into Progression, what you can do onto Character, Conditions onto Main; Decisions 281–283, 0.68.0) is merged and released. **E2b** (the distill: Main folds the plain untrained combat skills behind Show N untrained, a skill row no longer repeats the shared Pain and Conditions penalty, untrained rows dim, Trackers loses its intro; Decisions 284–285, 0.68.1) is built and awaits merge. E2 is built: **E3, E5 and E6 are unblocked** (E4 runs beside).
 - **GM mode, what's next** (`plans/gm-mode-next.md`): Scott's play report first (S22), then S23 (the leftover fixes) is suggested.
 - **The vehicles-and-gear plan** (`plans/loadout-and-gear.md`) is approved (Ken, 2026-10-24, LQ1–LQ10 on their defaults); L1 (weapon damage types), L2 (written-in weapons read like the catalog's), L2b (they tick their fire modes and reload from carried ammo) and L3 (worn armor and gear in use carry modifiers) and L5 (a Major on one weapon or armor row, Decision 263) are built.
   L4 (natural attacks and the unarmed strike) waits on the 2026-10-29 meeting's notes. L5b, the powers half of W136, follows L4 (Ken, 2026-11-01); L6 (vehicles, was P14) and L7

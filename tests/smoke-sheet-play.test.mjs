@@ -249,7 +249,7 @@ test("a flat Condition penalty reaches the skill totals the sheet shows", () => 
   ch.trackers.conditions = [{ id: "disoriented" }];
   const app = openSheet(ch, "main");
   assert.match(app.$("#main").textContent, new RegExp(`1d10 \\+ ${before - 1}`));
-  assert.match(app.$("#main").textContent, /-1 conditions/);
+  assert.doesNotMatch(app.$("#main").textContent, /-1 conditions/, "a row repeats the Condition (Decision 285)");
   assert.match(app.$("#main").textContent, /Conditions take −1; totals include it/);
   assert.deepEqual(app.errors, []);
 });

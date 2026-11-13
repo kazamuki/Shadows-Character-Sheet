@@ -1416,6 +1416,8 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
     skill-check total, with the reason shown inline (breakdown column +
     "Pain Lv N" chip) so the number is table-ready and explainable.
     (Ken, 2026-06-12)
+    → **Superseded in part by Decision 285**: the reason is the line above
+    the table and the chip, not each row.
 25. **(Phase 3)** The Grimoire is a free-entry table. Free-form stays even
     after a spell catalog exists — players can improvise magic. A catalog
     slots in later as data without touching the sheet. (Ken, 2026-06-12)
@@ -4090,6 +4092,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - One table across both columns, for alignment: Rank, Check and Breakdown line up within a column, which is where the eye travels.
        - A column per category: three columns don't fit beside the breakdown, and General alone outweighs the other two.
      - **Replaces:** Decision 44 in part: one table per column, not one for all three categories.
+       → **Superseded in part by Decision 284**: an untrained row is dimmed, and Main's table folds the plain untrained rows behind Show N untrained.
      - **Revisit if:** a category is added, or the print sheet's Skills panels (Decision 94) want the same order.
      - **Built:** app 0.34.0; `smoke.test.mjs`, mutation-tested. Log 2026-10-01.
 
@@ -5638,6 +5641,24 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 96 in part (its full cards with effect, recovery and a note field on Trackers; the rule's notice "on Trackers only when a Condition it governs is active" now shows in that Condition's opened chip); Decision 107 in part (its "Both tabs show a collapsible palette": Main's only).
      - **Revisit if:** players miss a Condition's text in full without a tap, or a GM's notes outgrow one line.
      - **Built:** app 0.68.0 (minor), no schema bump, PR #327, log 2026-11-12 (E2a).
+
+284. **Main shows the combat skills you've trained or have something on, and folds the rest behind Show N untrained; an untrained row is dimmed wherever it's drawn.**
+     *2026-11-12 · Ken + Claude · Touches: skillTableHtml, includeUntrained, skillRowCarries, renderShMain, main-combat, Combat skills, main-stats, data-untrainedfold, data-untrainedrows, S.combatUntrained, bindSheetReaders, RO_READERS, inertSheet, skillRowPair, skill-line, untrained, Rank 0, skill-table, Overcast Steel, --dim, Skills tab, phone-check, E2b*
+     - **Decided:** Main's Combat skills table shows a combat skill that's trained, or untrained but whose row carries something: a chip, a pick, a Combat Maneuvers line, or a trait's effect (Decision 233). The plain untrained rows are drawn in the same table, hidden, under **Show N untrained**, which then reads **Hide untrained**. Nothing hides a row that's trained or carries something (EQ30). The choice is browser state and starts folded for each character opened. An untrained row's text is Overcast Steel on Main and Skills, its chips keep their colours, and Skills still lists every skill (Decision 156).
+     - **Why:** the full combat table ran 938-1,096px on a phone and put Stats 2,347-3,109px down. Folding raised Stats by 460-716px (measured on the build). Skills is every skill's home (E2), and what a character has stays in view (Decision 279).
+     - **Rejected:** the shape's 600px for every character (EQ28: a phone row is 85px, so it needs eight folded); a `<details>` wrapper (E1c: a tappable wrapper can hide what's kept); a phone-only CSS fold (Decision 165: different contents by width); folding by rank alone (EQ30: it hides a Take X or kicker); dimming chips too (a chip is a signal).
+     - **Replaces:** Decision 156 in part (an untrained row is dimmed, and Main folds the plain ones). Decisions 165 and 233 stand.
+     - **Revisit if:** players roll untrained combat skills from Main often enough to want them open, or E6 slims the phone's rows.
+     - **Built:** app 0.68.1 (patch), no schema bump, PR #332, log 2026-11-12 (E2b).
+
+285. **A skill row says what's particular to that skill: Pain's penalty, and a Condition's, are said once above the table.**
+     *2026-11-12 · Ken + Claude · Touches: skillRowPair, breakdown, breakdown.pain, breakdown.conditions, painChip, conditionTotalsNote, Skills tab, Main's Combat table, Pain Lv chip, "totals include it", E2b*
+     - **Decided:** No skill row says "-N pain" or "-N conditions". The penalty is in each row's check as before. The line above Main's Combat section and above the Skills table names it and says the totals include it, with the Pain Lv chip (EQ29). A row's breakdown keeps its rank, its stats, "untrained", and each trait's part, since those differ by row.
+     - **Why:** Dax's Skills tab said "-1 pain" 36 times under a line that already said the totals include it (E2's §1). A number that's the same on every row is read once.
+     - **Rejected:** keeping it on the rows (the critique's repetition); dropping the line above instead (it's the one place that says the totals include it); keeping "conditions" on the rows while dropping "pain" (EQ29: the same repetition, with the same line above it).
+     - **Replaces:** Decision 24 in part (the reason is the line above the table and the chip, not the breakdown column). Decision 96's `breakdown.conditions` stays in the engine and keeps its readers; only the row's text changes.
+     - **Revisit if:** a penalty starts to differ from one skill to the next (a Condition that hits only some skills), when the row is where it belongs again.
+     - **Built:** app 0.68.1 (patch), no schema bump, PR #332, log 2026-11-12 (E2b).
 
 ## 5. Open Flags
 

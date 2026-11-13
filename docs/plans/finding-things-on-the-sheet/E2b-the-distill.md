@@ -1,8 +1,8 @@
 # Work order E2b — The distill: say each thing once on the skill tables
 
 **Plan:** [finding-things-on-the-sheet](../finding-things-on-the-sheet.md), session E2, its second build. The shape is [E2-where-everything-lives](E2-where-everything-lives.md) (§1, §3.1, answered 2026-11-12). [E2a](E2a-the-moves.md) (the moves) merged as #327.
-**Status:** drafted 2026-11-12 by an Opus session the conductor started. Ken answered EQ28–EQ31 on 2026-11-12 (§4), and the order now follows his answers, EQ30's included: an untrained combat row that carries something stays shown. Awaiting approval.
-**Branch:** the builder's own, cut from `main` once this order has merged.
+**Status:** drafted 2026-11-12 by an Opus session the conductor started. Ken answered EQ28–EQ31 on 2026-11-12 (§4), and the order now follows his answers, EQ30's included: an untrained combat row that carries something stays shown. **Approved by Ken 2026-11-12** ("Approve, build it", in the conductor's session).
+**Branch:** the builder's own, cut from `claude/work-order-distill-bc1324` (main at `92a8a79`, after #328 and #330, plus this approval).
 **Runs beside:** E4 (colour). Not E3, E5 or E6, which wait for E2.
 **Impeccable:** `/impeccable distill the running sheet's skill tables and tab intros: what a player reads twice, and what they never need on Main`. The analysis is in §1 and §9, run on `main` at 375×812. Nothing moves between tabs, so the builder doesn't run it again.
 

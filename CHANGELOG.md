@@ -24,6 +24,14 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.68.1
+
+### Character sheet
+
+- **Main shows the combat skills you've trained, and any untrained one you've got something on.** The rest are a tap away under **Show untrained**, and every skill is still on Skills.
+- **Untrained skills are dimmed, and a skill's row no longer repeats your Pain or Conditions penalty.** The line above the table says it once, and the totals already include it.
+- **Trackers and Skills get to the point.** Trackers opens on your pools, and Skills on how a check rolls.
+
 ## v0.68.0 — 2026-11-12
 
 ### Character sheet

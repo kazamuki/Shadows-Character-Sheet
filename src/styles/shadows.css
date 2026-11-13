@@ -911,7 +911,10 @@ tr.lo-modrow td{border-top:0; padding-top:0}
 .skill-table .c-check{width:120px}
 .skill-table .c-break{width:38%}
 .skill-table th,.skill-table td{overflow-wrap:anywhere}
-.skill-table tr.untrained td.num[data-k="Rank"]{color:var(--dim)}
+/* Decision 284: an untrained row's text is Overcast Steel; a chip on it sets its own colour and keeps it. */
+.skill-table tr.untrained td{color:var(--dim)}
+.skill-table tbody[hidden]{display:none}   /* beats the phone's .skill-table tbody{display:block} below, by specificity */
+.untrained-fold{margin-top:8px}
 .skill-cols{display:grid; grid-template-columns:1fr; column-gap:28px}
 @media (min-width:1000px){ .skill-cols{grid-template-columns:1fr 1fr} .skill-cols .skill-table .c-break{width:34%} }
 .ref td.bd{font-family:var(--mono); font-size:.72rem; color:var(--dim)}
