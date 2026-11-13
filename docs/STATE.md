@@ -1,7 +1,7 @@
 # State of the build
 
 **Updated:** 2026-11-12
-**Versions:** app `0.67.1` · game data `0.54` · character schema `0.34` · table schema `0.19` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.68.0` · game data `0.54` · character schema `0.34` · table schema `0.19` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -15,7 +15,7 @@ schemas, decisions and flags is `SCHEMA.md`; `INDEX.md` finds anything else.
 ## 1. Where things stand
 
 The app is a browser character creator and live play sheet for **Shadows**
-(Synergy system). Eight-step wizard → lock → eight-tab sheet. It runs from
+(Synergy system). Eight-step wizard → lock → seven-tab sheet. It runs from
 `file://` with no server and no build step, which drives most of the
 architecture and is enforced by tests.
 
@@ -140,7 +140,7 @@ rev 9's `C1`–`C3` are still forward notes.
 **The live site is v0.66.0** (data 0.53, schema 0.34), released 2026-11-07.
 
 **Next is Ken's pick**, each built through a work order (`WORK-ORDERS.md`):
-- **Finding things on the sheet** (`plans/finding-things-on-the-sheet.md`, open, proposed 2026-11-11): the running sheet's usability pass, from the 2026-11-11 critique (26/40), as sessions E1–E7, each with its impeccable command. E1 is first, as three orders: **E1a** (an older file's owed choice as one line and a dialog, the load notice in plain words; merged in 0.66.1, Decision 273) and **E1b** (the wizard for first-timers: to-dos not errors, the Stats step's demands and the folded Subtypes, no "in progress" badge, the Cyborg retired from the picker; Decisions 274–277, merged in 0.66.2) and **E1c** (Character Points' lists and the Natural Advantage panel fold to what's taken; Decisions 279–280, in 0.67.1, awaiting merge). E2 shapes and distills the tabs, with a stop for Ken in the middle. Ken answered EQ1–EQ3 on 2026-11-11: E2 weighs W133, the tab count is open, and each session ships when it merges.
+- **Finding things on the sheet** (`plans/finding-things-on-the-sheet.md`, open, proposed 2026-11-11): the running sheet's usability pass, as sessions E1–E7, each with its impeccable command. E1 (the owed pick, the wizard for first-timers, Character Points folds; Decisions 273–280) is merged through 0.67.1. E2's shape is Ken's: seven tabs, one home each. **E2a** (the moves: Session Log into Progression, what you can do onto Character, Conditions onto Main; Decisions 281–283, 0.68.0) is built and awaits merge; **E2b** (the distill) is next, and E3 and E5 wait on it.
 - **GM mode, what's next** (`plans/gm-mode-next.md`): Scott's play report first (S22), then S23 (the leftover fixes) is suggested.
 - **The vehicles-and-gear plan** (`plans/loadout-and-gear.md`) is approved (Ken, 2026-10-24, LQ1–LQ10 on their defaults); L1 (weapon damage types), L2 (written-in weapons read like the catalog's), L2b (they tick their fire modes and reload from carried ammo) and L3 (worn armor and gear in use carry modifiers) and L5 (a Major on one weapon or armor row, Decision 263) are built.
   L4 (natural attacks and the unarmed strike) waits on the 2026-10-29 meeting's notes. L5b, the powers half of W136, follows L4 (Ken, 2026-11-01); L6 (vehicles, was P14) and L7

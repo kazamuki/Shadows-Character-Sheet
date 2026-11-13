@@ -186,19 +186,18 @@ function addCondition(app, id, location) {
 }
 const activeConditions = app => stored(app, { locked: true }).trackers.conditions;
 
-test("a Condition added on Trackers raises Pain, shows on Main, and undoes", () => {
-  const app = openSheet(lockedCharacter(), "trackers");
+test("a Condition added on Main raises Pain, reads in full on its chip, and undoes (Decision 283)", () => {
+  const app = openSheet(lockedCharacter(), "main");
   addCondition(app, "agonized");
   assert.deepEqual(app.errors, []);
   assert.equal(activeConditions(app).length, 1);
   assert.match(app.$("#main").textContent, /Pain Level 1/, "Agonized did not raise the Pain Level");
-  assert.match(app.$("#main").textContent, /Medical \(Difficulty 15\)/, "recovery text is missing on Trackers");
-
-  app.click('[data-sec="main"]');
   assert.ok(app.$(".cond-chip"), "no Condition chip on Main");
   assert.match(app.$(".cond-chip").textContent, /Agonized/);
+  app.click('[data-condinfo="0"]');
+  assert.match(app.$("#main").textContent, /Medical \(Difficulty 15\)/, "recovery text is missing on the opened chip");
 
-  app.click('[data-sec="sessions"]');
+  app.click('[data-sec="progression"]');
   assert.match(app.$("#main").textContent, /Condition: Agonized/, "the add is missing from the Activity Log");
   app.click("button[data-undolast]");
   assert.equal(activeConditions(app).length, 0, "undo did not clear the Condition");
@@ -206,7 +205,7 @@ test("a Condition added on Trackers raises Pain, shows on Main, and undoes", () 
 });
 
 test("a body-part Condition shows the picker, and the same part twice is refused", () => {
-  const app = openSheet(lockedCharacter(), "trackers");
+  const app = openSheet(lockedCharacter(), "main");
   assert.equal(app.$("[data-condadd-loc]"), null, "the body-part picker shows before it's needed");
   app.click('[data-condquick="injured"]');
   assert.ok(app.$("[data-condadd-loc]"), "Injured did not ask for a body part");
@@ -291,7 +290,7 @@ test("Take a hit: a worn vest answers, the hit lands as one undoable action", ()
   app.click("[data-hitapply]");
   assert.equal(app.$("[data-hitpanel]"), null, "the panel stayed open after Apply");
   assert.equal(activeChar(app).trackers.damage, 4);
-  app.click('[data-sec="sessions"]');
+  app.click('[data-sec="progression"]');
   assert.match(app.$("#main").textContent, /Hit: 9 Ballistic → 4 through/);
   app.click("button[data-undolast]");
   assert.equal(activeChar(app).trackers.damage, 0, "undo didn't take the hit back");
@@ -383,7 +382,7 @@ test("Loadout: Buy a vest from the catalog — it's paid for, worn, answers a hi
   assert.match(app.$("[data-hitpanel]").textContent, /Kevlar Vest · PROT 1d6/, "the hit panel didn't pick up the worn vest");
   app.click("[data-hitcancel]");
 
-  app.click('[data-sec="sessions"]');
+  app.click('[data-sec="progression"]');
   assert.match(app.$("#main").textContent, /Bought Kevlar Vest \(−500Ç\)/);
   app.click("button[data-undolast]");
   const undone = activeChar(app);
@@ -418,7 +417,7 @@ test("Turn Reset: Bleeding ticks one HP and lists what each Condition needs, as 
   assert.match(panel, /Medical \(Difficulty 15\)/, "the recovery text isn't listed");
   app.click("[data-actapply]");
   assert.equal(activeChar(app).trackers.damage, 1);
-  app.click('[data-sec="sessions"]');
+  app.click('[data-sec="progression"]');
   assert.match(app.$("#main").textContent, /Turn Reset: 1 damage/);
   app.click("button[data-undolast]");
   assert.equal(activeChar(app).trackers.damage, 0);
@@ -471,7 +470,7 @@ test("a tracker action offers its own Undo, and that Undo takes back only that a
   // takes the same number).
   app.click('[data-dmg="1"]');
   const stale = app.$("[data-toastundo]");
-  app.click('[data-sec="sessions"]');
+  app.click('[data-sec="progression"]');
   app.click("button[data-undolast]");        // the Hurt 1, undone from the log instead
   app.click('[data-sec="trackers"]');
   app.click('[data-dmg="5"]');
@@ -546,7 +545,7 @@ test("a palette chip adds its Condition in one click, greys out once held, and M
 test("picker: a click anywhere on a row picks it, a held row is dimmed and says why, and Done closes", () => {
   const ch = lockedCharacter();
   ch.panelData.grimoire = [{ spellId: "zap", stage: "known", notes: "" }];
-  const app = openSheet(ch, "loadout");
+  const app = openSheet(ch, "character");
   app.click('[data-spellpickopen="sheet"]');
   // W25: the search and the status line sit in the sticky head, above the results.
   assert.ok(app.$("#modal .pick-head [data-spellq]"), "the search isn't in the picker's sticky head");
@@ -587,6 +586,7 @@ test("W47: Trackers keeps the keyboard on the button pressed, and a chip that gr
   assert.equal(activeChar(app).trackers.damage, 2, "the second Enter did nothing");
   assert.equal(focused(app), app.$('#main [data-dmg="1"]'), "focus didn't stay on Hurt 1");
 
+  app.click('[data-sec="main"]');       // Decision 283: the palette is on Main
   app.window.eval("S.condPalette=true; update();");
   press(app, '#main [data-condquick="stunned"]');
   assert.deepEqual(activeChar(app).trackers.conditions.map(c => c.id), ["stunned"]);
@@ -716,7 +716,7 @@ test("W60: every wizard step's headings go down one level at a time, its sentenc
 
 test("W60: every sheet tab's headings go down one level at a time", () => {
   const app = openSheet(writtenInCharacter(), "main");
-  for (const sec of ["main", "skills", "character", "trackers", "progression", "sessions", "loadout", "notes"]) {
+  for (const sec of ["main", "skills", "character", "trackers", "progression", "loadout", "notes"]) {
     app.click(`[data-sec="${sec}"]`);
     assertNoSkips(outline(app.$("#main")), `the ${sec} tab`);
   }
@@ -758,7 +758,7 @@ test("W93 / Decision 213: Improved asks for the dice, shows + 15 IP, and grants 
   const grant = now.progression.ip.log.find(e => /Improved/.test(e.note));
   assert.equal(grant.amount, 44, "14 on the dice and the 30 aren't 44");
   assert.match(grant.note, /rolled 14/);
-  app.click('[data-sec="sessions"]');
+  app.click('[data-sec="progression"]');
   app.click("button[data-undolast]");
   const back = activeChar(app);
   assert.equal(back.progression.milestones.minor.length, 0, "Undo left the Minor");
@@ -944,7 +944,7 @@ test("P8b 16: Admin keeps damage past zero, undoably", () => {
   assert.equal(box().checked, false, "off by default");
   box().checked = true; box().dispatchEvent(new app.window.Event("change", { bubbles: true }));
   assert.equal(activeChar(app).houseRules.keepDamagePastZero, true);
-  app.click('[data-sec="sessions"]');
+  app.click('[data-sec="progression"]');
   assert.match(app.$("#main").textContent, /Admin: keep damage past zero/);
   app.click("button[data-undolast]");
   assert.equal(activeChar(app).houseRules.keepDamagePastZero, false);
@@ -1046,7 +1046,7 @@ test("P10 11b: applying a hit that drops you to zero lets nothing go on its own"
 test("P10 12: with no dice left the pool line says so, and several holds read the plural check in the hit panel", () => {
   const ch = holdingCharacter(["fog-shroud", "wind-walker", "blazing-fury"]);
   ch.panelData.grimoire.push({ spellId: "blazing-fury", stage: "known", notes: "" });
-  const app = openSheet(ch, "loadout");
+  const app = openSheet(ch, "character");
   assert.match(app.$("#main").textContent, /holding 3: no dice left/);
   assert.ok(!app.$$("#main .grim-sp").some(p => /exploding 10/.test(p.title)), "the pool line promises an exploding 10 with no dice left");
   assert.equal(app.$("#main .beyond"), null, "a spell was marked Beyond your pool with no dice left");
@@ -1188,7 +1188,7 @@ test("P20b 3b: the Rest panel proposes by every multiplier and names them", () =
   assert.match(app.$("[data-restsum]").textContent, new RegExp(`× 3 \\(Rapid Healing\\) × 2 \\(Speed Heal\\) = ${bod * 6} a day`));
   app.click("[data-actapply]");
   assert.equal(activeChar(app).trackers.damage, Math.max(0, 30 - bod * 6));
-  app.click('[data-sec="sessions"]');
+  app.click('[data-sec="progression"]');
   assert.match(app.$("#main").textContent, /Rested 1 day \(×3 Rapid Healing, ×2 Speed Heal\)/);
   // Nothing held: no sum line, and the proposal is BOD.
   const plain = openSheet(lockedCharacter(), "trackers");
@@ -1247,7 +1247,7 @@ test("P21 11 (sheet): Speed Heal doubles one day, the sum line and the log say s
   app.click("[data-actapply]");
   assert.equal(activeChar(app).trackers.damage, Math.max(0, hp - 1 - bod * 4));
   assert.equal(activeChar(app).gear.find(g => g.id === "speed-heal").qty, 1, "one dose leaves your gear");
-  app.click('[data-sec="sessions"]');
+  app.click('[data-sec="progression"]');
   assert.match(app.$("#main").textContent, /Rested 3 days \(Speed Heal doubled one day\)/);
   assert.deepEqual(app.errors, []);
 });
@@ -1992,7 +1992,7 @@ test("Decision 266 (Ken, 2026-11-05): a refused Start says why under the button,
   app.click('[data-sec="main"]'); app.click('#main [data-vpop="sfr"]');
   assert.equal(app.$("#vpop [data-runwhy]").textContent, "Werewolf Form only", "the popover's disabled Start gives no reason");
   app.click('#main [data-vpop="sfr"]');
-  app.click('[data-sec="loadout"]'); app.click('[data-ptoggle="form|Werewolf"]');
+  app.click('[data-ptoggle="form|Werewolf"]');
   app.click('[data-sec="character"]');
   assert.equal(app.$("[data-runwhy]"), null);
   press(app, '[data-runtoggle="let-it-loose|start"]');
@@ -2133,7 +2133,7 @@ test("Decision 268: Turn Reset shows the heal and Quick Clot, and one undo takes
   app.click("[data-actapply]");
   const now = activeChar(app).trackers;
   assert.deepEqual([now.damage, now.witheringDamage, now.conditions], [16, 5, []]);
-  app.click('[data-sec="sessions"]');
+  app.click('[data-sec="progression"]');
   assert.match(app.$("#main").textContent, /Turn Reset: 1 damage, Regeneration \+5 HP, Bleeding ended \(Quick Clot\)/);
   app.click("button[data-undolast]");
   const back = activeChar(app).trackers;
@@ -2172,11 +2172,125 @@ test("Decision 268: Vitality Surge on the card and the HP popover, disabled with
 test("Decision 268: shifting in with Bone and Sinew says which Maimed ended, and undo brings it back", () => {
   const ch = wildbloodSheet(true);
   ch.trackers.conditions = [{ id: "maimed", location: "left-arm" }];
-  const app = openSheet(ch, "loadout");
+  const app = openSheet(ch, "main");
   app.click('[data-ptoggle="form|Werewolf"]');
   assert.match(app.$("#undotoast").textContent, /Form: Werewolf\. Maimed \(Left Arm\) ends\./);
   assert.deepEqual(activeChar(app).trackers.conditions, []);
   app.click("button[data-undolast], [data-toastundo]");
   assert.deepEqual(activeChar(app).trackers.conditions.map(c => c.id), ["maimed"]);
+  assert.deepEqual(app.errors, []);
+});
+
+// ── E2a: seven tabs, one home each (Decisions 281–283) ─────────────────
+test("Decision 281: the sheet has seven tabs, and Loadout is Loadout", () => {
+  const app = openSheet(lockedCharacter(), "main");
+  const tabs = app.$$("#topnav [data-sec]");
+  assert.deepEqual(tabs.map(t => t.dataset.sec), ["main", "skills", "character", "trackers", "progression", "loadout", "notes"]);
+  assert.deepEqual(tabs.map(t => t.textContent.trim()), ["Main", "Skills", "Character", "Trackers", "Progression", "Loadout", "Notes"]);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 283: Conditions are on Main, and an opened chip takes its note", () => {
+  const noPenalty = D.conditions.find(c => typeof c.rollPenalty !== "number" && !c.rollPenaltyWhen && !c.location && !c.helpless);
+  const penalty = D.conditions.find(c => typeof c.rollPenalty === "number" && !c.location && !c.helpless);
+  const app = openSheet(lockedCharacter(), "trackers");
+  assert.equal(app.$("#main .cond-card"), null, "Trackers still draws Condition cards");
+  assert.equal(app.$("#main [data-condpalette]"), null, "Trackers still has the Condition palette");
+  assert.ok(![...app.$$("#main .sect")].some(s => /^Conditions/.test(s.textContent)), "Trackers still has a Conditions heading");
+  app.click('[data-sec="main"]');
+  app.click(`#main [data-condquick="${noPenalty.id}"]`);
+  app.click('#main [data-condinfo="0"]');
+  const note = app.$('#main [data-condnote="0"]');
+  assert.ok(note, "an opened chip has no note field");
+  note.value = "the poison, from the dealer";
+  note.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  assert.equal(activeChar(app).trackers.conditions[0].note, "the poison, from the dealer");
+  assert.ok(app.$('#main [data-condnote="0"]'), "the chip closed after the note was typed");
+  assert.ok(!app.$("#main .cond-info").textContent.includes(D.conditionRules.penaltyStacking.text), "the stacking rule shows on a Condition with no roll penalty");
+  app.click("[data-toastundo]");
+  assert.equal(activeChar(app).trackers.conditions[0].note || "", "", "one Undo didn't take the note back");
+  app.click(`#main [data-condquick="${penalty.id}"]`);
+  app.click('#main [data-condinfo="1"]');
+  assert.ok(app.$("#main .cond-info").textContent.includes(D.conditionRules.penaltyStacking.text), "a penalised Condition's chip lacks the stacking rule");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 283: the Pain & Conditions popover's chip takes a note too", () => {
+  const c = D.conditions.find(x => !x.location && !x.helpless);
+  const app = openSheet(lockedCharacter(), "skills");
+  app.click('[data-vpop="pain"]');
+  app.click(`#vpop [data-condquick="${c.id}"]`);
+  app.click('#vpop [data-condinfo="0"]');
+  const note = app.$('#vpop [data-condnote="0"]');
+  assert.ok(note, "the popover's opened chip has no note field");
+  note.value = "from the popover";
+  note.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  assert.equal(activeChar(app).trackers.conditions[0].note, "from the popover");
+  app.click("[data-toastundo]");
+  assert.equal(activeChar(app).trackers.conditions[0].note || "", "");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 282: Main draws every toggle, even one whose options do nothing the engine models", () => {
+  const ch = lockedVampire("draugur");
+  const app = boot({ storage: { "shadows.active.v1": { ch, section: "main" } } });
+  const panel = app.Engine.archPanels(ch).find(p => p.type === "toggle");
+  for (const o of panel.options) { delete o.effectText; delete o.stats; delete o.grants; }
+  app.$$("#main button").find(b => /Open sheet/.test(b.textContent)).dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  app.click('[data-sec="main"]');
+  assert.ok(app.$(`#main [data-ptoggle^="${panel.id}|"]`), "Main didn't draw a toggle whose options do nothing");
+  assert.ok(app.$("#main .main-form").textContent.includes(D.appCopy.applyFromText), "Main lacks the apply-from-the-text line");
+  app.click(`#main [data-ptoggle="${panel.id}|${panel.options[1].name}"]`);
+  assert.match(JSON.stringify(activeChar(app).panelData), new RegExp(panel.options[1].name));
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 282: a spell held from Character is let go from Main", () => {
+  const ch = lockedCharacter();
+  ch.archetypeChoices.disciplines = { evocation: 3 - Engine.disciplineRanks(ch).find(d => d.id === "evocation").rank };
+  ch.panelData.grimoire = [{ spellId: "fog-shroud", stage: "known", notes: "" }];
+  const app = openSheet(ch, "character");
+  app.click('#main [data-hold="fog-shroud"]');
+  assert.deepEqual(activeChar(app).trackers.heldSpells, ["fog-shroud"]);
+  app.click('[data-sec="main"]');
+  assert.match(app.$("[data-holding]").textContent, /Holding Fog Shroud/);
+  app.click('[data-holding] [data-letgo="fog-shroud"]');
+  assert.deepEqual(activeChar(app).trackers.heldSpells, []);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 283: Clear in the popover keeps focus inside the popover", () => {
+  const app = openSheet(lockedCharacter(), "main");
+  app.click('#main [data-condquick="stunned"]'); app.click('#main [data-condquick="prone"]');
+  app.click('#main [data-vpop="pain"]');
+  app.click('#vpop [data-condinfo="0"]');
+  app.click('#vpop [data-condrm="0"]');
+  assert.equal(activeChar(app).trackers.conditions.length, 1);
+  assert.ok(app.$("#vpop").contains(focused(app)), "focus left the popover for the page behind it");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 283: a Condition the game data no longer has still opens, and shows its note", () => {
+  const ch = lockedCharacter();
+  ch.trackers.conditions = [{ id: "gone-condition", note: "kept from an old file" }];
+  const app = openSheet(ch, "main");
+  app.click('#main [data-condinfo="0"]');
+  const info = app.$("#main .cond-info");
+  assert.ok(info, "the chip opened to nothing");
+  assert.match(info.textContent, /isn't in the game data any more/);
+  assert.equal(app.$('#main [data-condnote="0"]').value, "kept from an old file");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 283: Clear on an open chip hands focus to the next chip, then to the palette", () => {
+  const app = openSheet(lockedCharacter(), "main");
+  app.click('#main [data-condquick="stunned"]'); app.click('#main [data-condquick="prone"]');
+  app.click('#main [data-condinfo="0"]');
+  app.click('#main [data-condrm="0"]');
+  assert.equal(activeChar(app).trackers.conditions.length, 1);
+  assert.equal(focused(app), app.$("#main [data-condinfo]"), "focus fell to the page when the pressed ✕ went");
+  app.click('#main [data-condrm="0"]');
+  assert.equal(activeChar(app).trackers.conditions.length, 0);
+  assert.equal(focused(app), app.$("#main [data-condpalette] > summary"), "focus didn't reach the palette with no chip left");
   assert.deepEqual(app.errors, []);
 });

@@ -66,13 +66,13 @@ const SHEET_SECTIONS = [
   {id:"character",   label:"Character",   ui:"tab_archetype"},
   {id:"trackers",    label:"Trackers",    ui:"tab_trackers"},
   {id:"progression", label:"Progression", ui:"tab_progression"},
-  {id:"sessions",    label:"Session Log", ui:"tab_sessions"},
-  {id:"loadout",     label:"Loadout & Powers", ui:"tab_loadout"},
+  {id:"loadout",     label:"Loadout", ui:"tab_loadout"},
   {id:"notes",       label:"Notes",       ui:"tab_notes"}
 ];
 const SHEET_IDS = SHEET_SECTIONS.map(s=>s.id);
-// Older saved sections: Traits and Archetype became Character (Decision 158).
-const LEGACY_SECTION = { overview:"main", traits:"character", archetype:"character" };
+// Older saved sections: Traits and Archetype became Character (Decision 158),
+// and Session Log became part of Progression (Decision 281).
+const LEGACY_SECTION = { overview:"main", traits:"character", archetype:"character", sessions:"progression" };
 // "admin" is a hidden section (no tab) reachable only while admin mode is on.
 const normSection = s => s==="admin" ? (S.admin?"admin":"main")
                         : (SHEET_IDS.includes(s) ? s : (LEGACY_SECTION[s] || "main"));
@@ -338,7 +338,7 @@ const landedCls = (what, i) => !landedNow ? "" : what==="hp" ? " struck"
 
 // W12 — undo where the action happened. Every commit() that changed something
 // offers its own undo for a few seconds, through the same LIFO undo the
-// Session Log uses (Decision 49). It undoes only if that action's own audit
+// Activity Log on Progression uses (Decision 49). It undoes only if that action's own audit
 // entry is still the newest one (by identity: a seq is reused once an undo
 // pops it), so a leftover toast can't take back a later action. Lives outside
 // #main so a re-render doesn't wipe it.
@@ -794,7 +794,9 @@ function sectionList(prefix){
   const list=[];
   return { list, sect(label, html){
     const id=`${prefix}-${list.length}`; list.push({ id, label });
-    return `<div class="sect" id="${id}" tabindex="-1">${html==null?esc(label):html}</div>`; } };
+    return `<div class="sect" id="${id}" tabindex="-1">${html==null?esc(label):html}</div>`; },
+    // A card that is its own heading (Progression's IP) takes the jump's id instead of getting a heading of its own.
+    at(label){ const id=`${prefix}-${list.length}`; list.push({ id, label }); return `id="${id}" tabindex="-1"`; } };
 }
 // `filter` adds a search box over the page's [data-filterable] picks (W22);
 // `extra` is anything else the bar should keep in view. `row` (W45) keeps
@@ -1069,7 +1071,7 @@ function focusedPickHtml(ch, attr){
   }).join("");
 }
 // What a locked character is still owed in Focused Skills (Decision 238): one helper for
-// the block at the top of the tab and the Loadout panel's lines, so the words can't drift.
+// the block at the top of the tab and Character's Focused Skills lines, so the words can't drift.
 // `away` is the panel's: the picker is at the top of the tab, not beside the line.
 function focusedOwedLines(fp, away){
   if (!fp || fp.complete) return [];

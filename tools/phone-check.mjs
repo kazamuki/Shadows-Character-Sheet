@@ -425,7 +425,7 @@ async function tableExtras(browser, file, rows, numbers) {
     const w = sel => Math.round(Math.max(0, ...[...document.querySelectorAll(sel.split(",").map(x => root + " " + x.trim()).join(","))].filter(e => e.getBoundingClientRect().height > 0).map(e => e.getBoundingClientRect().width)));
     return [w("input:not([type=hidden]):not([type=checkbox]):not([type=radio]), select"), w("textarea"), w("p, dd")];
   };
-  const TABS = ["main", "skills", "character", "trackers", "progression", "sessions", "loadout", "notes"];
+  const TABS = ["main", "skills", "character", "trackers", "progression", "loadout", "notes"];
   const ctx = async (z, init) => { const c = await browser.newContext({ viewport: { width: z.width, height: z.height } }); await c.addInitScript(init.fn, init.arg); return c; };
   for (const z of TABLE_WIDTHS.filter(z => z.width >= 1300)) {
     const tableInit = { fn: ([s, pk, pack]) => { try { localStorage.setItem("shadows.feature.gm", "on");

@@ -51,8 +51,8 @@ const painWhyLine = pain => [painExtra(pain) ? `${signed(painExtra(pain))} Lv fr
 const painChip = pain => pain.level
   ? ` <span class="chip pain">Pain Lv ${pain.level} · ${pain.skillPenalty} skill</span>` : "";
 
-// ── Conditions (Decision 95) — one renderer, two densities: Main shows chips,
-// Trackers shows each Condition's effect and recovery text. Everything shown
+// ── Conditions (Decision 95) — one renderer, Main's and the Pain & Conditions
+// popover's: chips that open their text (Decision 283). Everything shown
 // comes from Engine.conditionState() and the catalog; nothing is decided here.
 // W14: adding is one click on a chip from the catalog. A body-part Condition
 // asks where first (S.condPick), and one you already have is greyed out.
@@ -70,11 +70,18 @@ function conditionAddHtml(st){
   return `<details class="cond-add" data-condpalette ${S.condPalette||pick?"open":""}><summary>Add a Condition</summary>
     <div class="cond-chips palette">${chips}</div>${where}</details>`;
 }
-// Main's chips open their effect and recovery in place (S.condInfo = index).
+// A chip opens its effect and recovery in place (S.condInfo = index), then the
+// Condition's note, and for one with a roll penalty the rule for how penalties
+// stack (Decision 283). Main and the Pain & Conditions popover share this, and
+// bindVitalControls binds the note in both.
 function conditionInfoHtml(st){
   const a = st.active.find(x=>x.index===S.condInfo);
-  if (!a || !a.def) return "";
-  return `<div class="cond-info"><b>${esc(a.label)}.</b> ${esc(a.def.effect)} <b>Recovery:</b> ${esc(a.def.recovery)}</div>`;
+  if (!a) return "";
+  const R = D.conditionRules||{}, penalised = !!a.def && typeof a.def.rollPenalty==="number";
+  // A Condition the game data no longer has still shows its note (Trackers' card used to).
+  return `<div class="cond-info"><b>${esc(a.label)}.</b> ${a.def ? `${esc(a.def.effect)} <b>Recovery:</b> ${esc(a.def.recovery)}` : "This Condition isn't in the game data any more."}
+    <input type="text" class="cond-note" data-condnote="${a.index}" value="${esc(a.note)}" placeholder="note — source, poison, who did it" aria-label="${esc(a.label)} note">${
+    penalised ? ruleHtml([(R.rollPenalty||{}).text, (R.penaltyStacking||{}).text].filter(Boolean).join(" ")) : ""}</div>`;
 }
 function conditionCounterHtml(c){
   let pips = "";
@@ -83,26 +90,17 @@ function conditionCounterHtml(c){
   return `<div class="cond-counter${c.full?" full":""}"><span class="k">${esc(c.label)}</span>${pips}
     <span class="v">${c.marks} / ${c.max}</span>${c.full&&c.atMax?`<span class="at-max">${esc(c.atMax)}</span>`:""}</div>`;
 }
-function conditionsHtml(ch, full){
+function conditionsHtml(ch){
   const st = Engine.conditionState(ch), R = D.conditionRules||{};
   let h = "";
   if (st.isHelpless)
     h += `<div class="cond-alert" role="status"><b>${esc(st.helpless.join(" · "))}</b> — ${esc(R.helpless||"")}</div>`;
   for (const c of st.counters) h += conditionCounterHtml(c);
-  if (!st.active.length) h += `<p class="step-note cond-none">No Conditions. ${full?esc(R.noStacking||""):""}</p>`;
-  else if (!full){
+  if (!st.active.length) h += `<p class="step-note cond-none">No Conditions.</p>`;
+  else {
     h += `<div class="cond-chips">` + st.active.map(a=>`<span class="cond-chip${a.def&&a.def.helpless?" bad":""}${S.condInfo===a.index?" on":""}">
       <button class="cond-chip-body" data-condinfo="${a.index}" aria-expanded="${S.condInfo===a.index}" title="${esc(a.def?a.def.effect:"")}"><b>${esc(a.label)}</b>${a.def?` <small>${esc(a.def.short)}</small>`:""}</button>
       <button class="x" data-condrm="${a.index}" aria-label="Clear ${esc(a.label)}" title="Clear">✕</button></span>`).join("") + `</div>` + conditionInfoHtml(st);
-  } else {
-    h += st.active.map(a=>`<div class="pick cond-card"><div class="head"><h2>${esc(a.label)}</h2>
-      ${a.def?`<span class="cost">${esc(a.def.short)}</span>`:""}
-      <div class="controls"><button class="btn sm" data-condrm="${a.index}">Clear</button></div></div>
-      <div class="desc">${a.def?esc(a.def.effect)+"\n<b>Recovery:</b> "+esc(a.def.recovery):"This Condition isn't in the game data any more."}</div>
-      <input type="text" class="cond-note" data-condnote="${a.index}" value="${esc(a.note)}" placeholder="note — source, poison, who did it" aria-label="${esc(a.label)} note"></div>`).join("");
-    // How the penalties add up, shown only when one is in play.
-    const penalised = st.active.filter(a=>a.def && typeof a.def.rollPenalty==="number");
-    if (penalised.length) h += ruleHtml([(R.rollPenalty||{}).text, (R.penaltyStacking||{}).text].filter(Boolean).join(" "));
   }
   return h + conditionAddHtml(st);
 }
@@ -435,7 +433,7 @@ function renderShMain(){
   // Feeding (Decision 201) sits under the SFR it refills.
   for (const p of Engine.archPanels(ch).filter(x=>x.type==="feed"))
     h += `<section class="main-feed"><div class="sect">${esc(p.title)}</div>${feedPanelHtml(ch, p)}</section>`;
-  h += `<section class="main-conditions"><div class="sect">Conditions</div>${conditionsHtml(ch, false)}</section>`;
+  h += `<section class="main-conditions"><div class="sect">Conditions</div>${conditionsHtml(ch)}</section>`;
 
   // Two-column command console: combat on the left, stats on the right.
   // W45: combat comes first at every width, so a phone reaches the weapon
@@ -452,9 +450,10 @@ function renderShMain(){
   h += conditionTotalsNote(ch, true);
   // Weapons: a catalog piece is computed (Decision 100); a custom one is
   // computed from its picks (Decision 247) and reads the rest as typed.
-  // A form the archetype shifts into (Decision 195) is switched here as well
-  // as on Loadout, and while it's on, its natural weapons lead the weapons.
-  for (const p of Engine.archPanels(ch).filter(x=>x.type==="toggle" && Engine.toggleView(ch, x).some(o=>o.does || o.text)))
+  // A form the archetype shifts into (Decision 195) is switched here, and only
+  // here, whatever its options do (Decision 282); while it's on, its natural
+  // weapons lead the weapons.
+  for (const p of Engine.archPanels(ch).filter(x=>x.type==="toggle"))
     h += `<div class="main-form"><div class="sect">${esc(p.title)}</div>${togglePanelHtml(ch, p)}</div>`;
   const lines = (ch.weapons||[]).map((e,i)=>Engine.weaponLine(ch,i)).filter(Boolean);
   const natural = formWeaponRowsHtml(ch) + archetypeWeaponRowsHtml(ch);
@@ -537,9 +536,11 @@ function checkRulesHtml(){
 }
 
 // ── Sheet: CHARACTER (the archetype, then Advantages and Disadvantages) ──
-// One page for who the character is (Decision 158): the archetype's own
-// traits, powers and vulnerabilities side by side, then the Advantages and
-// Disadvantages bought for it, then the archetype's reference panels.
+// One page for who the character is and what they can do (Decisions 158, 282):
+// the archetype's own traits, powers and vulnerabilities side by side, then
+// what its panels let you do (Disciplines, the Grimoire, Focused Skills, a
+// Tweak), then the Advantages and Disadvantages bought for it, then the
+// archetype's reference panels.
 // A jump bar reaches each section the page drew.
 const TRAITS_OPEN_KEY = "shadows.ui.traitsOpen";
 function traitsOpen(){ try{ return localStorage.getItem(TRAITS_OPEN_KEY)==="open"; }catch(e){ return false; } }
@@ -574,8 +575,8 @@ function renderShCharacter(){
     // (Decision 246). A part with exactly one card marks it `solo`, which spans
     // two columns where the grid has them: the renderer knows the count, so a
     // note beside the card can't unmark it the way `:only-child` would. Powers
-    // are the data's, then the character's own (`uses`, `effect`), which
-    // Loadout & Powers edits.
+    // are the data's, then the character's own (`uses`, `effect`), which a
+    // `powers` panel edits here.
     const parts = [];
     const cardsOf = cards => (cards.length===1 ? [cards[0].replace('class="pick', 'class="pick solo')] : cards).join("");
     const traits = content.traits.filter(t=>t.name);
@@ -593,7 +594,10 @@ function renderShCharacter(){
     const allowHtml = allow && powers.some(p=>!p.custom) ? `<p class="step-note">${[allow.basePowers!=null&&`Base Powers ${allow.basePowers}`, allow.maxStartingRank!=null&&`Max Starting Rank ${allow.maxStartingRank}`].filter(Boolean).join(" · ")}</p>${toPlace}` : "";
     const opening = Engine.specializationOpening(ch);
     const runnable = new Map(Engine.runnablePowers(ch).map(r=>[r.id, r]));
-    if (powers.length) parts.push(secs.sect("Powers") + allowHtml + cardsOf(powers.map(p=>
+    const panels = Engine.archPanels(ch), powersPanel = panels.find(x=>x.type==="powers");
+    // Decision 282: where the archetype declares a `powers` panel, it is the Powers section (the cards, Improve, Add power).
+    if (powersPanel) parts.push(secs.sect(powersPanel.title||"Powers") + `<div class="arch-wide">${powersPanelHtml(ch)}</div>` + (content.powersText ? `<p class="step-note">${esc(content.powersText)}</p>` : ""));
+    else if (powers.length) parts.push(secs.sect("Powers") + allowHtml + cardsOf(powers.map(p=>
       p.custom && !content.writeIn ? powerCardHtml(p, []) :
       `<div class="pick" ${p.gainsSpecialization?`data-powercard="${esc(p.id)}" tabindex="-1"`:""}><div class="head"><h2>${esc(p.name)}</h2>
         ${p.origin&&!specIds.includes(p.origin)?`<span class="chip">${esc(specNameOf(ch, p.origin))}</span>`:""}
@@ -613,7 +617,7 @@ function renderShCharacter(){
       parts.push(secs.sect(label, `${esc(label)}${chosen.length?"":" <span class='chip'>none chosen</span>"}`)
         + cardsOf(chosen.map(o=>`<div class="pick selected"><div class="head"><h2>${esc(o.name)}</h2>
         ${o.missing?`<span class="cost">no longer in the game data</span>`:""}</div>
-        <div class="desc">${esc(o.description||"")}${o.benefit?"\n— "+esc(o.benefit):""}${o.tweak?"\nTweak — "+esc(o.tweak.name)+": "+esc(o.tweak.description):""}${optionFeaturesText(o)}</div>${optionPowersHtml(o)}${starterRunHtml(ch, o)}${chosenChoicesHtml(ch, o)}</div>`)));
+        <div class="desc">${esc(o.description||"")}${o.benefit?"\n— "+esc(o.benefit):""}${optionFeaturesText(o)}</div>${optionPowersHtml(o)}${starterRunHtml(ch, o)}${chosenChoicesHtml(ch, o)}</div>`)));
     }
 
     // Permanent Aberrations a Cascade left (Decision 110), read-only here; the
@@ -625,12 +629,47 @@ function renderShCharacter(){
         <div class="desc">${x.def?(x.def.as?`As ${esc(x.def.as)}. `:"")+esc(x.def.description)+spTail((Engine.spAmounts(ch, x.def)||{}).description):"This Aberration isn't in the game data any more."}${x.note?"\n— "+esc(x.note):""}</div></div>`)));
     }
 
-    // Disciplines (computed ranks: scaling base + CP-bought), read-only
+    // Disciplines (computed ranks: scaling base + CP-bought), read-only. Where
+    // the archetype declares a `rankedList` panel its table, with the
+    // descriptions, is the one Disciplines section (Decision 282).
     const dr = (Engine.disciplineRanks && Engine.disciplineRanks(ch)) || [];
-    if (dr.length){
+    const rankedPanel = panels.find(x=>x.type==="rankedList");
+    if (rankedPanel){
+      parts.push(secs.sect(rankedPanel.title) + `<div class="arch-wide">` + (dr.length
+        ? `<table class="ref"><tbody>` + dr.map(d=>
+          `<tr><td>${esc(d.name)}</td><td class="num">rank ${d.rank}</td>
+           <td class="disc-desc">${esc(d.description||"")}</td></tr>`).join("") + `</tbody></table>
+          <p class="step-note">${esc(copy("ranksAdvanceInPlay"))}</p>`
+        : `<p class="step-note">Nothing here yet.</p>`) + `</div>`);
+    } else if (dr.length){
       parts.push(secs.sect("Disciplines") + `<table class="ref"><thead><tr><th>Discipline</th><th>Rank</th></tr></thead><tbody>` +
         dr.map(d=>`<tr><td>${esc(d.name||d.id)}</td><td class="num">${d.rank}</td></tr>`).join("") +
         `</tbody></table>`);
+    }
+    // What else the archetype's panels let you do (Decisions 134, 282): the
+    // Grimoire, Focused Skills and a Tweak. Nothing here knows which
+    // archetype declared them.
+    for (const p of panels){
+      if (p.type==="grimoire") parts.push(secs.sect(p.title) + `<div class="arch-wide">${grimoireHtml(ch, p)}</div>`);
+      if (p.type==="focusedSkills"){
+        const f = Engine.focusedSkillSpec(ch), fp = Engine.focusedPicks(ch);
+        const names = Engine.focusedSkillIds(ch).map(id=>(Engine.skillById(id)||{name:id}).name);
+        const per = D.ip.skillIncreaseCost.focusedPerRank;
+        let fh = "";
+        if (f && f.source.flagged) fh += flagHtml(f.source);
+        if (names.length) fh += `<p class="step-note">${names.map(esc).join(" · ")} — advance at ${per}× current rank.</p>`;
+        if (f && f.all) fh += `<p class="step-note">Every skill advances at ${per}× current rank up to rank ${esc(f.all.throughRank)}.</p>`;
+        if (!names.length && !(f && f.all)) fh += `<p class="step-note">None.</p>`;
+        // The picker is at the top of the tab (Decision 238), not here.
+        fh += focusedOwedLines(fp, true).map(l=>`<p class="step-note">${esc(l)}</p>`).join("");
+        parts.push(secs.sect(p.title) + fh);
+      }
+      if (p.type==="specializationText"){
+        const entries = Engine.specializationChosen(ch).map(o=>o[p.field]).filter(x=>x && typeof x==="object");
+        parts.push(secs.sect(p.title) + (entries.length ? cardsOf(entries.map(t=>`<div class="pick"><div class="head"><h2>${esc(t.name||"")}</h2></div>
+          <div class="desc">${esc(t.description||"")}${(t.benefits||[]).length?"\n• "+t.benefits.map(esc).join("\n• "):""}</div></div>`))
+          : `<p class="step-note">No ${esc(p.title||"entry")} on record.</p>`));
+      }
     }
     if (parts.length) h += `<div class="arch-flow">${parts.map(x=>`<section class="arch-part">${x}</section>`).join("")}</div>`;
   } else {
@@ -670,12 +709,12 @@ function renderShCharacter(){
   // Reference panels (Decision 110): rules text straight from the data.
   if (a) for (const p of Engine.archPanels(ch).filter(x=>x.type==="reference")) h += referencePanelHtml(ch, p, secs.sect);
 
-  h += `<div class="tab-links"><span class="step-note">Tracker pools and editable manifests (grimoire, augments, forms) are on</span>
-    <button class="btn sm" data-gotab="loadout">Loadout &amp; Powers</button>
-    <button class="btn sm" data-gotab="trackers">Trackers</button></div>`;
+  // One span a sentence, its button inline, so a full stop never parts from its button.
+  h += `<div class="tab-links"><span class="step-note">What you carry is on <button class="btn sm" data-gotab="loadout">Loadout</button>.</span>
+    <span class="step-note">The pools you spend are on <button class="btn sm" data-gotab="trackers">Trackers</button>.</span></div>`;
 
   const toggle = any ? `<button class="jump jump-end" data-traits-all aria-pressed="${open}">${open?"Collapse all":"Expand all"}</button>` : "";
-  return sheetHeader("Character", "Who you are: your archetype, and the Advantages and Disadvantages you bought for it. Tap an Advantage or Disadvantage to read what it does.")
+  return sheetHeader("Character", "Who you are and what you can do: your archetype and what it gives you, then the Advantages and Disadvantages you bought. Tap an Advantage or Disadvantage to read what it does.")
     + jumpBarHtml(secs.list, { sticky:true, extra:toggle, row:true }) + h;
 }
 
@@ -1472,7 +1511,7 @@ function vitalPopover(ch, key){
        <button class="btn sm" data-popgo="trackers">Recovery on Trackers</button></div>` };
   if (key==="pain" || key==="cond") return { title:"Pain & Conditions",
     html: now(pain.down?"DOWN":pain.level?`Pain Lv ${pain.level}`:"No Pain", pain.level||pain.down?"bad":"",
-      pain.level?esc(painPenaltyLine(pain,false)):"no penalties") + holdingNoteHtml(ch) + conditionsHtml(ch, false) };
+      pain.level?esc(painPenaltyLine(pain,false)):"no penalties") + holdingNoteHtml(ch) + conditionsHtml(ch) };
   if (key==="san"){ const san=Engine.sanState(ch);
     return { title:"Sanity", html: now(`${san.current} / ${san.max}%`, san.current<=san.max/2?"bad":"san", "") +
       `<div class="trk-row">${sanControlsHtml(ch)}</div>` }; }
@@ -1512,7 +1551,7 @@ function renderShTrackers(){
   let h = sheetHeader("Trackers", "Current state only — every maximum on this page is computed and recalculates the moment an input changes.");
 
   // W1: two columns on a wide screen. The body (Damage with its Health
-  // Levels, recovery, Armor, Pain, Conditions) reads down the left; the rest
+  // Levels, recovery, Armor, Pain) reads down the left; the rest
   // (Sanity, LUCK, archetype trackers, Çredits) down the right. One column on
   // a phone, in the same order.
   h += `<div class="trk-grid"><div class="trk-col">`;
@@ -1551,8 +1590,6 @@ function renderShTrackers(){
 ${esc(pain.immunity.name)}: only Health Levels lost to Withering count here.`:""}${painExtra(pain)?`\nHealth Levels lost put you at Pain Level ${pain.fromHealth}; ${esc(pain.painSources.join(", "))} add${pain.painSources.length===1?"s":""} ${signed(painExtra(pain))}. `+esc(D.conditionRules.painClamp):""}${pain.ignored?`
 ${esc(painIgnoredText(pain))}: ${signed(-pain.ignored)} Pain Level${pain.ignored===1?"":"s"}.`:""}${pain.level?"\n"+esc(pain.penaltyNotes):""}</div></div>`;
 
-  // Conditions (Decision 95)
-  h += `<div class="sect">Conditions</div>${conditionsHtml(ch, true)}`;
   h += `</div><div class="trk-col">`;
 
   // SAN
@@ -1651,10 +1688,13 @@ ${esc(painIgnoredText(pain))}: ${signed(-pain.ignored)} Pain Level${pain.ignored
 const ipTraitName = (e, lookup, fallback) => { const d = typeof e.targetId==="string" ? lookup(e.targetId) : null; return d ? d.name : (typeof e.name==="string" && e.name ? e.name : fallback); };
 const ipMove = e => Number.isFinite(e.from) && Number.isFinite(e.to) ? `${e.from} → ${e.to}` : "";
 function renderShProgression(){
-  const ch=S.ch, ip=Engine.ipState(ch), ms=Engine.milestoneState(ch);
-  let h = sheetHeader("Progression", `Improvement Points and Milestones. Every spend is a journal entry — auditable, undoable, and everything downstream recalculates on its own.`);
+  const ch=S.ch, ip=Engine.ipState(ch), ms=Engine.milestoneState(ch), secs=sectionList("pr");
+  // Decision 281: what happens between sessions, in one page: log one, spend
+  // what it earned, read the history, and Undo, each reached from the jump bar.
+  const head = sheetHeader("Progression", `Logging a session grants <em>${D.ip.perHour} IP an hour of play</em> (change it below if your table runs different), 1 Milestone Point, and refreshes LUCK — it only resets when a session truly ends.`);
+  let h = logSessionHtml(ch, secs);
 
-  h += `<div class="trk"><h2>IP</h2><span class="big ${ip.available<0?"bad":""}">${ip.available}</span>
+  h += `<div class="trk" ${secs.at("IP")}><h2>IP</h2><span class="big ${ip.available<0?"bad":""}">${ip.available}</span>
     <span class="sub" style="flex-basis:auto">earned ${ip.earned} · spent ${ip.spent}</span>
     <input type="number" min="0" data-ipamt placeholder="amount" aria-label="IP grant amount">
     <input type="text" data-ipnote placeholder="note (e.g. Improved roll, GM bonus)" aria-label="IP grant note">
@@ -1690,7 +1730,7 @@ function renderShProgression(){
   h += `</details>`;
 
   // Milestones
-  h += `<div class="sect">Milestones — ${ms.mp} Milestone Point${ms.mp===1?"":"s"}</div>
+  h += secs.sect("Milestones", `Milestones — ${ms.mp} Milestone Point${ms.mp===1?"":"s"}`) + `
     <div class="trk"><h2>MP</h2><span class="big">${ms.mp}</span>
     <span class="sub" style="flex-basis:auto">${ms.sessionMP} from sessions · ${ms.manualMP} manual</span>
     <button class="btn sm" data-mp="-1" ${ms.manualMP<=0?"disabled":""}>−1 manual</button>
@@ -1764,14 +1804,15 @@ function renderShProgression(){
     return `<div class="jrow"><span class="d">${esc(String(t.date||"").slice(0,10))}</span><span class="what">${esc(m.name)}${pick?`: ${esc(pick)}`:""}${where?`: ${esc(where)}`:""}</span>
       ${text?`<span class="note">${esc(text)}</span>`:""}<button class="x" data-delmajor="${i}" title="remove">✕</button></div>`; }).join("") + `</div>`;
   h += `</details>`;
-  return h;
+  h += sessionHistoryHtml(ch, secs);
+  return head + jumpBarHtml(secs.list, { row:true }) + h;
 }
 
-// ── Sheet: sessions ──────────────────────────────────────────────────
-function renderShSessions(){
-  const ch=S.ch, ms=Engine.milestoneState(ch), ip=Engine.ipState(ch);
-  let h = sheetHeader("Session Log", `Logging a session grants <em>${D.ip.perHour} IP an hour of play</em> (change it below if your table runs different), 1 Milestone Point, and refreshes LUCK — it only resets when a session truly ends.`);
-  h += `<div class="review-block"><h2>Log a session</h2>
+// ── Progression's other halves: Log a session, History, the Activity Log ──
+// (Session Log's page until Decision 281.)
+function logSessionHtml(ch, secs){
+  let h = secs.sect("Log a session");
+  h += `<div class="review-block">
     <div class="grid-3">
       <label class="field"><span>Date</span><input type="date" data-sesdate value="${localDay()}"></label>
       <label class="field"><span>Title</span><input type="text" data-sestitle placeholder="What the city did to you this time"></label>
@@ -1786,7 +1827,11 @@ function renderShSessions(){
       <button class="btn go" data-seslog="1" disabled>Log session</button>
       <span class="sub" data-seswhy>Enter the hours played or the IP earned.</span>
     </div></div>`;
-  h += `<div class="sect">History — ${ch.sessions.length} session${ch.sessions.length===1?"":"s"} · ${ms.mp} MP · ${ip.earned} IP earned</div>`;
+  return h;
+}
+function sessionHistoryHtml(ch, secs){
+  const ms=Engine.milestoneState(ch), ip=Engine.ipState(ch);
+  let h = secs.sect("History", `History — ${ch.sessions.length} session${ch.sessions.length===1?"":"s"} · ${ms.mp} MP · ${ip.earned} IP earned`);
   h += ch.sessions.length ? ch.sessions.map((s,i)=>`<div class="pick"><div class="head">
       <h2>${esc(s.title)||"Session "+(i+1)}</h2>
       <span class="cost">${esc(s.date)} · +${s.ipEarned} IP${s.milestonePoint?" · +1 MP":""}</span>
@@ -1796,7 +1841,7 @@ function renderShSessions(){
 
   // Activity Log — the full audit trail. Undo is last-in-first-out.
   const log=ch.audit||[];
-  h += `<div class="sect">Activity Log — ${log.length} action${log.length===1?"":"s"}</div>`;
+  h += secs.sect("Activity Log", `Activity Log — ${log.length} action${log.length===1?"":"s"}`);
   h += `<div class="trk"><h2>Undo</h2>
     <button class="btn sm danger" data-undolast ${log.length?"":"disabled"}>Undo last action</button>
     <span class="sub">Peels back the most recent action — damage, IP, milestones, credits, and admin edits all land here. To fix an <em>older</em> mistake, switch on Admin mode (⋮ menu) and edit the value directly; that edit is logged here too and is itself undoable.</span></div>`;
@@ -1986,7 +2031,7 @@ function adminWriteInHtml(ch){
     <label class="field"><span>What they are</span><input type="text" data-admin-wi="name" value="${esc(w.name)}"></label>
     <label class="field"><span>Description</span><textarea rows="2" data-admin-wi="description">${esc(w.description||"")}</textarea></label>
     ${cls && cls.writeIn ? `<label class="field"><span>${esc(cls.name)}: in their words</span><input type="text" data-admin-wi="classificationText" value="${esc(w.classificationText)}"></label>` : ""}
-    <p class="step-note">Classification: <b>${esc(cls ? cls.name : "none")}</b>. It stays as it was at lock. Powers are edited, added and removed on Loadout &amp; Powers.</p>
+    <p class="step-note">Classification: <b>${esc(cls ? cls.name : "none")}</b>. It stays as it was at lock. Powers are edited, added and removed on Character.</p>
     <div class="sect">Baseline traits</div>${rows("traits", "Trait")}
     <div class="sect">Vulnerabilities</div>${rows("vulnerabilities", "Vulnerability")}`;
 }
@@ -2469,10 +2514,10 @@ function grimoireHtml(ch, p){
   return h;
 }
 
-// ── Sheet: loadout & powers ──────────────────────────────────────────
+// ── Sheet: loadout ──────────────────────────────────────────
 function renderShLoadout(){
   const ch=S.ch;
-  const head = sheetHeader("Loadout & Powers", "Weapons, armor, gear, and whatever your archetype carries that the rest of the city can't.");
+  const head = sheetHeader("Loadout", "Weapons, armor and gear: what you carry into the city.");
   // W5: a jump to each section, from the sections this page drew. Anchors
   // and scroll rather than sub-tabs, so print and Ctrl-F see the whole page.
   const secs = sectionList("lo");
@@ -2480,44 +2525,12 @@ function renderShLoadout(){
   h += secs.sect("Armor") + armorRowsHtml(ch);
   h += secs.sect("Gear") + gearRowsHtml(ch);
 
-  // Archetype panels: rankedList / table / grimoire / focusedSkills /
-  // specializationText / toggle
+  // What you carry: an archetype's `table` panels (a Cyborg's Installed
+  // Cybernetics). What it lets you do is on Character; a form switch is on
+  // Main (Decision 282).
   for (const p of Engine.archPanels(ch)){
-    if (p.type==="tracker" || p.type==="feed") continue; // lives in Trackers (feeding on Main too)
-    if (p.type==="reference") continue; // lives on the Character tab
-    h += secs.sect(p.title);
-    if (p.type==="rankedList"){
-      const ranks = Engine.disciplineRanks(ch);
-      if (ranks.length){
-        h += `<table class="ref"><tbody>` + ranks.map(d=>
-          `<tr><td>${esc(d.name)}</td><td class="num">rank ${d.rank}</td>
-           <td class="disc-desc">${esc(d.description||"")}</td></tr>`).join("") + `</tbody></table>
-          <p class="step-note">${esc(copy("ranksAdvanceInPlay"))}</p>`;
-      } else h += `<p class="step-note">Nothing here yet.</p>`;
-    }
-    if (p.type==="table") h += editTable(panelRows(ch, p.id), p.columns, p.id, "Add row");
-    if (p.type==="grimoire") h += grimoireHtml(ch, p);
-    if (p.type==="powers") h += powersPanelHtml(ch);
-    // Decision 134: both read the chosen specialization's data. Nothing here
-    // knows which archetype declared them.
-    if (p.type==="focusedSkills"){
-      const f = Engine.focusedSkillSpec(ch), fp = Engine.focusedPicks(ch);
-      const names = Engine.focusedSkillIds(ch).map(id=>(Engine.skillById(id)||{name:id}).name);
-      const per = D.ip.skillIncreaseCost.focusedPerRank;
-      if (f && f.source.flagged) h += flagHtml(f.source);
-      if (names.length) h += `<p class="step-note">${names.map(esc).join(" · ")} — advance at ${per}× current rank.</p>`;
-      if (f && f.all) h += `<p class="step-note">Every skill advances at ${per}× current rank up to rank ${esc(f.all.throughRank)}.</p>`;
-      if (!names.length && !(f && f.all)) h += `<p class="step-note">None.</p>`;
-      // The picker is at the top of the tab (Decision 238), not here.
-      h += focusedOwedLines(fp, true).map(l=>`<p class="step-note">${esc(l)}</p>`).join("");
-    }
-    if (p.type==="specializationText"){
-      const entries = Engine.specializationChosen(ch).map(o=>o[p.field]).filter(x=>x && typeof x==="object");
-      h += entries.length ? entries.map(t=>`<div class="pick"><div class="head"><h2>${esc(t.name||"")}</h2></div>
-        <div class="desc">${esc(t.description||"")}${(t.benefits||[]).length?"\n• "+t.benefits.map(esc).join("\n• "):""}</div></div>`).join("")
-        : `<p class="step-note">No ${esc(p.title||"entry")} on record.</p>`;
-    }
-    if (p.type==="toggle") h += togglePanelHtml(ch, p);
+    if (p.type!=="table") continue;
+    h += secs.sect(p.title) + editTable(panelRows(ch, p.id), p.columns, p.id, "Add row");
   }
   return head + jumpBarHtml(secs.list, { row:true }) + h;
 }
@@ -2525,7 +2538,7 @@ function renderShLoadout(){
 // A toggle panel (Decision 195): one switch of its options. An option that
 // does something says what, and what entering it costs (a Forge Fang's HL);
 // one that does nothing the engine models still says to apply it by hand.
-// Main draws the same switch, since shifting is a combat action.
+// Main is its only home, since shifting is a combat action (Decision 282).
 function togglePanelHtml(ch, p){
   const opts = Engine.toggleView(ch, p), f = Engine.formView(ch);
   const costText = c => `${c.hl} HL${c.category?` of ${c.category} damage`:""}`;
@@ -2600,7 +2613,7 @@ function renderShNotes(){
 function renderShAdmin(){
   const ch=S.ch;
   let h = sheetHeader("Admin — Free Edit",
-    "Direct edits to the character's stored values, bypassing creation caps and pools. For fixing mistakes. Everything here is logged to the Activity Log (Session Log tab) and can be undone.");
+    "Direct edits to the character's stored values, bypassing creation caps and pools. For fixing mistakes. Everything here is logged to the Activity Log on Progression and can be undone.");
 
   // Non-blocking budget echo so you can see the consequences of an edit.
   const sp=Engine.statPool(ch), kp=Engine.skillPool(ch), bal=Engine.cp(ch);
@@ -3002,7 +3015,7 @@ function pArchetypePage(ch){
 
 const SHEET_RENDER = { main:renderShMain, skills:renderShSkills, character:renderShCharacter,
   trackers:renderShTrackers,
-  progression:renderShProgression, sessions:renderShSessions,
+  progression:renderShProgression,
   loadout:renderShLoadout, notes:renderShNotes, admin:renderShAdmin };
 
 // ── The spell picker (Decisions 108, 111) ────────────────────────────
@@ -3671,7 +3684,12 @@ function bindVitalControls(root){
   root.querySelectorAll("[data-condrm]").forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.condrm), e=ch.trackers.conditions[i];
     S.condInfo=null;                                   // indexes shift once one goes
+    // The host is found before commit(): a popover's body is replaced by it (Decision 283).
+    const host = root.closest("#vpop") || document.getElementById("main");
     commit("condition", `Cleared: ${condLabel(e)}`, ()=>{ Engine.removeCondition(ch, i); });
+    // The ✕ pressed is gone with its chip: keyboard focus goes to the next chip, or to the palette when none is left.
+    const next = host && (host.querySelector("[data-condinfo]") || host.querySelector("[data-condpalette] > summary"));
+    if (next) next.focus();
   });
   root.querySelectorAll("[data-condmarks]").forEach(b=>b.onclick=()=>{
     const [i,n]=b.dataset.condmarks.split("|").map(Number), e=ch.trackers.conditions[i];

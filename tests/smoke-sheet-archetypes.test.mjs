@@ -122,7 +122,7 @@ test("Raise a Power: a Discipline and a written power rise on Progression, the j
   wapp.click('[data-raiseopen="power"]');
   wapp.click(`#modal [data-raise="power|${w.powers[0].id}"]`);
   wapp.click("#modal [data-modalclose]");
-  wapp.click(`[data-sec="${loadoutSec(wapp)}"]`);
+  wapp.click(`[data-sec="${powersSec(wapp)}"]`);
   assert.match(wapp.$(".pw-card").textContent, /Fade\s*rank 2/, "Loadout doesn't show the written power's new rank");
   assert.deepEqual(wapp.errors, []);
 
@@ -248,7 +248,7 @@ test("W45: Main puts combat before Stats, and no sheet tab carries the Live Shee
   const app = openSheet(lockedCharacter(), "main");
   const grid = [...app.$("#main .main-grid").children].map(e => e.className);
   assert.deepEqual(grid, ["main-combat", "main-stats"], "Stats come before the weapon on a phone");
-  for (const sec of ["main", "skills", "character", "trackers", "progression", "sessions", "loadout", "notes"]) {
+  for (const sec of ["main", "skills", "character", "trackers", "progression", "loadout", "notes"]) {
     app.click(`[data-sec="${sec}"]`);
     assert.ok(!app.$("#main .eyebrow"), `the ${sec} tab still opens on an eyebrow`);
   }
@@ -265,7 +265,7 @@ test("W45: the vitals bar and the sheet's jump bars are one row each, with what 
   app.click('[data-sec="character"]');
   assert.ok(app.$("#main .jumpbar.row > .jump-row.scroll-row [data-jump]"), "Character's jump bar isn't one row");
   assert.ok(app.$("#main .jumpbar.row > [data-traits-all]"), "Expand all scrolls away with the chips");
-  app.click(`[data-sec="${loadoutSec(app)}"]`);
+  app.click('[data-sec="loadout"]');
   assert.ok(app.$("#main .jumpbar.row .jump-row [data-jump]"), "Loadout's jump bar isn't one row");
   // Step 7's bar keeps its filter and wraps, as before.
   const wiz = arcanistOnCP();
@@ -301,7 +301,8 @@ test("W45: a name of only spaces reads Unnamed in the header, Main's heading and
   assert.deepEqual(app.errors, []);
 });
 
-const loadoutSec = app => app.$$("[data-sec]").map(b => b.dataset.sec).find(s => /loadout/.test(s));
+// Decision 282: a character's own powers (Improve, Add power, Admin's fields) are on Character.
+const powersSec = app => "character";
 
 test("the sheet draws a written-in archetype: its name everywhere, its classification, traits, powers and vulnerabilities", () => {
   const home = boot({ storage: { "shadows.active.v1": { ch: writtenInCharacter(), section: "main" } } });
@@ -318,7 +319,7 @@ test("the sheet draws a written-in archetype: its name everywhere, its classific
   app.click('[data-sec="trackers"]');
   assert.ok(app.$$("#main .trk h2").some(h => h.textContent === "SFR"), "Uses SFR didn't put SFR on Trackers");
   assert.ok(!app.$$("#main .trk h2").some(h => h.textContent === "TOL Spent"), "TOL Spent showed without Uses magic");
-  app.click(`[data-sec="${loadoutSec(app)}"]`);
+  app.click(`[data-sec="${powersSec(app)}"]`);
   // Decision 154: in play a power reads as written, its notes free to edit.
   assert.deepEqual(app.$$("[data-pwedit]").map(e => e.dataset.pwedit.split("|")[1]), ["notes"], "a power's words are editable in play");
   assert.match(app.$(".pw-card").textContent, /Fade[\s\S]*uses SFR[\s\S]*Unseen/, "the power doesn't read as written");
@@ -334,7 +335,7 @@ test("the sheet draws a written-in archetype: its name everywhere, its classific
 test("Add power in play costs a new power's price: the row and the spend are one change, and one Undo takes both (Decision 194)", () => {
   const NEW = D.ip.powerIncreaseCost.newPower;
   const short = openSheet(writtenInCharacter(), "main");      // 30 IP
-  short.click(`[data-sec="${loadoutSec(short)}"]`);
+  short.click(`[data-sec="${powersSec(short)}"]`);
   assert.ok(!short.$('[data-pwnew="cost"]'), "play still asks for a price the book sets");
   assert.match(short.$(".pw-add").textContent, new RegExp(`a new power costs ${NEW} IP`));
   short.$('[data-pwnew="name"]').value = "Thorn hedge";
@@ -345,7 +346,7 @@ test("Add power in play costs a new power's price: the row and the spend are one
 
   const ch = writtenInCharacter(); ch.progression.ip.earned = NEW + 15;
   const app = openSheet(ch, "main");
-  app.click(`[data-sec="${loadoutSec(app)}"]`);
+  app.click(`[data-sec="${powersSec(app)}"]`);
   const fill = (k, v) => { app.$(`[data-pwnew="${k}"]`).value = v; };
   fill("name", "Thorn hedge"); fill("effect", "Briars erupt."); fill("note", "after the raid");
   app.click("[data-pwadd-go]");
@@ -369,7 +370,7 @@ test("Add power in play costs a new power's price: the row and the spend are one
 
 test("Improve rewrites a power for IP: the cost is required, a refusal keeps the form, and one Undo takes back both (Decision 154)", () => {
   const app = openSheet(writtenInCharacter(), "main");
-  app.click(`[data-sec="${loadoutSec(app)}"]`);
+  app.click(`[data-sec="${powersSec(app)}"]`);
   app.click("[data-pwimprove]");
   assert.ok(app.$("#modal[open]"), "Improve didn't open");
   const field = k => app.$(`#modal [data-pwimp="${k}"]`);
@@ -406,7 +407,7 @@ test("Admin edits a written-in archetype's words and lists, and removes a power 
   let w = activeChar(app).archetypeChoices.writeIn;
   assert.equal(JSON.stringify([w.name, w.traits.length, w.vulnerabilities.length]), JSON.stringify(["Fetch", 0, 2]));
 
-  app.click(`[data-sec="${loadoutSec(app)}"]`);
+  app.click(`[data-sec="${powersSec(app)}"]`);
   // Decision 154: Admin edits a power's words in place, and adds one free.
   assert.equal(app.$$("[data-pwedit]").length, 4, "Admin can't edit a power's words");
   const eff = app.$('[data-pwedit$="|effect"]');
@@ -513,7 +514,7 @@ test("Main shifts a Forge Fang: the switch names the HL it costs, Claws and Fang
   const bod = app.$$("#main .statcell").find(c => c.querySelector(".sid").textContent === "BOD");
   assert.match(bod.textContent, /12.*\+4 form/s, "the stat block doesn't show the shifted BOD");
   assert.match(app.$("#main .cond.hp").textContent, /10 HL × 7/);
-  app.click('[data-sec="sessions"]');
+  app.click('[data-sec="progression"]');
   assert.match(app.$("#main").textContent, /Form: Werewolf \(1 HL Withering\)/, "the Activity Log doesn't name the shift and its cost");
   app.click("button[data-undolast]");
   const back = activeChar(app);
@@ -891,7 +892,8 @@ test("P16 1: a section with exactly one card marks it solo, and only then", () =
     const app = openSheet(f.ch, "character");
     for (const p of archParts(app)) {
       const cards = partCards(p), name = `${f.name}: ${p.querySelector(".sect").textContent}`;
-      assert.ok(cards.length, `${name} has no card`);
+      // Decision 282: the Grimoire, Disciplines and a write-in's Powers are whole-row bodies (`arch-wide`), and Focused Skills is lines of text.
+      if (!cards.length) { assert.ok(p.querySelector(":scope > .arch-wide") || /^Focused Skills/.test(p.querySelector(".sect").textContent), `${name} has no card`); continue; }
       assert.deepEqual(cards.map(c => c.classList.contains("solo")), cards.map(() => cards.length === 1 && cards[0].matches(".pick")), name);
     }
   }
@@ -923,7 +925,7 @@ test("P16 2: every part opens with its heading, and its notes sit outside the ca
       // A part-level note is a direct child of the part; the only notes inside a card are a power's "Opened: …" lines.
       for (const n of p.querySelectorAll(".step-note")) {
         const card = n.closest(".pick");
-        assert.ok(card ? card.matches("[data-powercard]") && /^Opened: | bars it.$/.test(n.textContent) : n.parentElement === p, `${f.name}: a part note sits inside a card, or a card note inside a plain one`);
+        assert.ok(card ? card.matches("[data-powercard]") && /^Opened: | bars it.$/.test(n.textContent) : n.parentElement === p || n.closest(".arch-wide"), `${f.name}: a part note sits inside a card, or a card note inside a plain one`);
       }
     }
   }
@@ -961,4 +963,52 @@ test("Decision 264: the CP step lists the powers you could learn, learning one m
   assert.ok(card, "the CP-learned power isn't on the Character tab");
   assert.match(card.textContent, /rank 1/);
   assert.deepEqual(app.errors, []);
+});
+
+// ── E2a: what you can do is on Character, what you carry on Loadout (Decision 282) ──
+const e2aHeads = (app, tab) => { app.click(`[data-sec="${tab}"]`); return app.$$("#main .sect").map(s => s.textContent.trim().replace(/\s*none chosen$/, "")); };
+const e2aCases = () => {
+  const fx = characterFixtures(), pick = n => fx.find(f => f.name === n).ch;
+  const cyborg = lockedCharacter(); cyborg.identity.archetype = "cyborg";
+  const wheel = lockedCharacter(); wheel.identity.archetype = "professional"; wheel.archetypeChoices.specialization = ["wheelman"];
+  const ww = lockedCharacter(); ww.identity.archetype = "werewolf"; ww.creation.powerLevel = "heroic"; ww.archetypeChoices.specialization = ["trueborn"];
+  const wi = writtenInCharacter();
+  return [["werewolf", ww, ["Powers"], []], ["professional", wheel, ["Focused Skills", "Tweak"], []],
+          ["arcanist", lockedCharacter(), ["Disciplines", "Grimoire"], []], ["draugur", lockedVampire("draugur"), [], []],
+          ["cyborg", cyborg, [], ["Installed Cybernetics"]], ["write-in", wi, ["Powers"], []]];
+};
+test("Decision 282: what an archetype lets you do is on Character, and Loadout holds what you carry", () => {
+  for (const [name, ch, onCharacter, onLoadout] of e2aCases()) {
+    const app = openSheet(ch, "character");
+    const chr = e2aHeads(app, "character");
+    for (const h of onCharacter) assert.ok(chr.includes(h), `${name}: Character lacks ${h}: ${chr.join(" | ")}`);
+    const lo = e2aHeads(app, "loadout");
+    for (const h of ["Disciplines", "Grimoire", "Focused Skills", "Tweak", "Powers"]) assert.ok(!lo.includes(h), `${name}: Loadout still has ${h}`);
+    assert.deepEqual(lo.filter(h => !onLoadout.includes(h)).map(h => h.replace(/ —.*/, "")), ["Weapons", "Armor", "Gear"], `${name}: Loadout's headings`);
+    for (const h of onLoadout) assert.ok(lo.includes(h), `${name}: Loadout lacks ${h}`);
+    assert.equal(app.$("#main [data-ptoggle]"), null, `${name}: Loadout draws a toggle`);
+    assert.deepEqual(app.errors, []);
+  }
+});
+
+test("Decision 282: Character shows each thing once", () => {
+  const arc = openSheet(lockedCharacter(), "character");
+  const heads = arc.$$("#main .sect").map(s => s.textContent.trim());
+  assert.equal(heads.filter(h => h === "Disciplines").length, 1, "Disciplines twice");
+  const first = Engine.disciplineRanks(lockedCharacter())[0];
+  assert.ok(first.description && arc.$("#main").textContent.includes(first.description), "a Discipline's description isn't on Character");
+
+  const wheel = lockedCharacter(); wheel.identity.archetype = "professional"; wheel.archetypeChoices.specialization = ["wheelman"];
+  const pro = openSheet(wheel, "character");
+  const tweak = Engine.specializationChosen(wheel)[0].tweak;
+  assert.ok(tweak && tweak.description, "the fixture's Wheelman has no tweak");
+  const text = pro.$("#main").textContent;
+  assert.equal(text.split(tweak.description).length - 1, 1, "the tweak's text shows more than once");
+  assert.ok(!/Tweak —/.test(pro.$("#main .arch-flow").textContent), "the Subtype card still carries a Tweak line");
+
+  const wi = openSheet(writtenInCharacter(), "character");
+  const cards = wi.$$("#main .pick").filter(c => c.querySelector("h2") && c.querySelector("h2").textContent.trim().startsWith("Fade"));
+  assert.equal(cards.length, 1, "a write-in's power is drawn more than once");
+  assert.ok(cards[0].querySelector("[data-pwimprove]"), "the one card has no Improve");
+  assert.deepEqual([arc.errors, pro.errors, wi.errors], [[], [], []]);
 });

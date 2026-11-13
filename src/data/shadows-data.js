@@ -2396,7 +2396,7 @@ window.SHADOWS_DATA = {
       },
       "coreMechanic": {
         "name": "Magic",
-        "description": "Channeling the flow of Aether through your body. Every spell is a Spellcraft roll: Discipline rank sets the d10 pool, dice meeting the Target Number (TN) are Hits, and any 1 is a Dud. Net Hits measured against the spell's Threshold (TH) decide the outcome. If Duds exceed Hits, the Aether ruptures back on the caster and Tolerance (TOL) drops by the difference. At 0 TOL the Arcanist is Exhausted and cannot cast until TOL recovers above zero (one hour of rest restores 1 point); a Rupture that would push TOL below zero is a Cascade. Your Grimoire, under Loadout & Powers, holds the Known spells you take from the book. The Magic reference on the Character tab holds the Spellcraft roll, the spell tiers, the Cascade and the Aberrations.",
+        "description": "Channeling the flow of Aether through your body. Every spell is a Spellcraft roll: Discipline rank sets the d10 pool, dice meeting the Target Number (TN) are Hits, and any 1 is a Dud. Net Hits measured against the spell's Threshold (TH) decide the outcome. If Duds exceed Hits, the Aether ruptures back on the caster and Tolerance (TOL) drops by the difference. At 0 TOL the Arcanist is Exhausted and cannot cast until TOL recovers above zero (one hour of rest restores 1 point); a Rupture that would push TOL below zero is a Cascade. Your Grimoire holds the Known spells you take from the book. The Magic reference holds the Spellcraft roll, the spell tiers, the Cascade and the Aberrations. Both are on the Character tab.",
         "disciplines": {
           "list": [
             {
@@ -3970,7 +3970,7 @@ window.SHADOWS_DATA = {
     "majorGeneralNote": "The General Major Milestones are the Professional's alone (Deighton's ruling, F9). Every other archetype is offered its own list, as it is written; a character that already took a General Major keeps it."
   },
   /* IMPROVEMENT POINTS (IP) -- post-creation advancement costs (Decision 14).
-     `perHour` is the Session Log's rate and GM mode's close-out: 5 IP an hour of
+     `perHour` is Progression's Log a session rate and GM mode's close-out: 5 IP an hour of
      play, rounded up (0450, Decisions 206 and 228). `advantageCost` and
      `disadvantageBuyOff` are points x `timesPoints` a rank, flat by rank (0450,
      Deighton Q24); `restore` is 5 IP a point of SAN and 25 a Health Level lost
@@ -4059,7 +4059,7 @@ window.SHADOWS_DATA = {
     "statMaxLock": "{stat} is {value}, over {by}'s max of {max}. Lower it on the {step} step."
   },
   "ip": {
-    /* 5 IP an hour of play, rounded up (CRB 0450): the Session Log's and GM mode's close-out (Decisions 206, 228). */
+    /* 5 IP an hour of play, rounded up (CRB 0450): Progression's Log a session and GM mode's close-out (Decisions 206, 228). */
     "perHour": 5,
     "advantageCost": { "timesPoints": 10 },
     "disadvantageBuyOff": { "timesPoints": 10 },
