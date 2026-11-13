@@ -9,7 +9,7 @@
 
 E3's §7 handed it the Grimoire's "Improvised spells and ones your GM agreed to…" line, and "every intro".
 
-**Status:** drafted 2026-11-13 by the Opus session that reviewed E3, at the conductor's request. **Awaiting Ken** (§4).
+**Status:** drafted 2026-11-13 by the Opus session that reviewed E3, at the conductor's request. Ken answered EQ36–EQ40 on 2026-11-13 (§4), every one Default. **Approved by Ken 2026-11-13** (in the conductor's session, after EQ36 was explained to him).
 **Branch:** the builder's own, cut from `main` once this order has merged.
 **Runs beside:** E4 (colour) and E6 (the phone).
 - E4 also edits `shadows.css`, but different rules. E5's only CSS is the two amount fields' width (EQ39) and the TOL and WILL `?` (EQ38).
@@ -107,6 +107,14 @@ None. *Fix* tier (§2). Decision 26 gets its in-part mark for 217 (§14), a ledg
 ## 4. Questions for Ken
 
 Each has a default. A question Ken leaves blank is answered "Default".
+
+**Ken's answers, 2026-11-13** (in the conductor's session, picked from the options, recorded by the conductor):
+- **EQ36:** "In appCopy". He asked for it to be explained first, and chose it after the explanation.
+- **EQ37:** "isn't in the current rules".
+- **EQ38:** "? beside the name".
+- **EQ39:** "Widen the two fields".
+- **EQ40:** "Six intros + six notes".
+- Then: "Approve E5".
 
 - **EQ36 — Where the tab intros live.**
   - **Default:** in `appCopy`, one key a tab (`introSkills`, `introCharacter`, `introProgression`, `introLoadout`, `introNotes`, `introAdmin`), plain text with `{placeholders}`.
@@ -219,6 +227,7 @@ No save-file field, engine signature, schema or `migrate()` step changes. In the
 | Where | Old | New (draft) | Voice |
 |---|---|---|---|
 | Trackers, Manual Adjustments (`:1678`) | For milestone benefits and other effects the engine doesn't model yet — e.g. *Honed* grants a Stat point (any Stat, including WILL, LUCK, or TOL). Stat adjustments cascade through everything downstream; the rest apply flat. | For what the sheet doesn't add up by itself: an item, a ruling, a scar the city left. A Stat moves everything worked out from it; TOL, WILL, LUCK and the maximums move only themselves. | City |
+| Trackers, Manual Adjustments' note field placeholder (`:1686`) | why (e.g. Honed milestone) | why (e.g. a ruling) | Tool |
 | Progression, Major Milestones (`:1785`) | Once each, any order, subject to prerequisites. Prose prerequisites are the table's call — taking one with a **GM** requirement will ask you to confirm. | Each once, in any order, when you meet what it asks. What the book asks in words is your table's call: taking one marked **GM** asks you to confirm. | City |
 | Character, Grimoire (`:2550`) | Improvised spells and ones your GM agreed to. The book's numbers don't apply to these. | Spells you improvised, or settled with your GM. Their numbers are yours, not the book's. | City |
 | Admin, Stats (`:2700`) | TOL/WILL aren't editable here — they're derived. To move them, adjust their input Stats (or use a Manual Adjustment in Trackers). | TOL and WILL are worked out from other Stats, so they don't change here. Change the Stats they come from, or add a Manual Adjustment on Trackers. | Tool |
