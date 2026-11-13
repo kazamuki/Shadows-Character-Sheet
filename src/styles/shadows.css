@@ -544,9 +544,7 @@ table.edit th{font-family:var(--mono); font-size:.7rem; letter-spacing:.1em; tex
 table.edit td{padding:3px 4px; border-bottom:1px solid rgba(32,63,123,.25); vertical-align:top}
 table.edit input,table.edit textarea{padding:5px 7px; font-size:.8rem; min-height:0; min-width:70px}
 table.edit td.rm{width:34px; text-align:center}
-table.edit .x,.journal .x{background:none; border:0; color:var(--dim); font-size:.95rem; padding:2px 6px; cursor:pointer}
-table.edit .x:hover,.journal .x:hover{color:var(--magenta-text)}
-.ms{position:relative}
+table.edit .x,.journal .x,table.edit .x:hover,.journal .x:hover,.ms{position:relative}
 .ms .req{display:flex; gap:6px; flex-wrap:wrap; margin-top:6px}
 /* A prerequisite chip can name three advantages: on a phone it wraps inside
    itself rather than pushing the page sideways. */
@@ -652,8 +650,7 @@ table.edit .x:hover,.journal .x:hover{color:var(--magenta-text)}
 .spell.mastered{border-color:var(--violet-hi)}
 .spell.missing{padding:8px 12px; color:var(--dim)}
 .spell > summary{cursor:pointer; list-style:none; display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px; padding:8px 12px}
-.spell > summary .sub{color:var(--dim); font-size:.78rem}
-.spell > summary .num{font-family:var(--mono); font-size:.78rem; color:var(--cyan)}
+.spell > summary .sub,.spell > summary .num{font-family:var(--mono); font-size:.78rem; color:var(--cyan)}
 .spell > summary .eff{flex-basis:100%; font-size:.84rem}
 .spell.own{padding:8px 12px}
 .spell.own .sp-line{display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px}

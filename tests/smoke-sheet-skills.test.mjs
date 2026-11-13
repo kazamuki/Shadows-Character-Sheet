@@ -1507,9 +1507,10 @@ test("Decision 286: an undo and the next character fold every named own spell, a
   assert.equal(openCount(app), 0, "an undo left a named spell open");
   app.click('[data-spelledit="2"]');
   assert.equal(openCount(app), 1);
-  // The next character, opened in the same page (a fresh boot would pass whatever openEntry kept).
-  const next = ownSpells().ch; next.panelData.grimoire.push({ custom: true });
-  app.window.openEntry({ ch: next, section: "character" });
+  // The same character opened again in the same page (a fresh boot would pass whatever openEntry kept),
+  // with a nameless spell added, which reads open.
+  const again = activeChar(app); again.panelData.grimoire.push({ custom: true });
+  app.window.openEntry({ ch: again, section: "character" });
   assert.deepEqual(ownLines(app).map(x => x.classList.contains("open")), [false, false, false, true], "named spells aren't lines, or the nameless one isn't open");
   assert.deepEqual(app.errors, []);
 });
@@ -1525,4 +1526,11 @@ test("Decision 286: an own spell with only a name reads as its name", () => {
   const half = lineText(ownLines(openSheet(ch, "character"))[0]);
   assert.match(half, /^Half TN 6/);
   assert.doesNotMatch(half, /TH|·/);
+});
+
+// grimoireHtml reads the panel's columns by position (name, discipline, TN, TH, effect, overflow, notes),
+// so a column added, dropped or moved in the data must come back here and to grimoireHtml first.
+test("Decision 286: the Grimoire's own-spell line reads the panel's columns in this order", () => {
+  assert.deepEqual([...grimPanel(lockedCharacter()).columns], ["Spell Name", "Discipline", "TN", "TH", "Effect", "Overflow", "Notes"],
+    "the grimoire panel's columns moved: grimoireHtml's line reads them by position");
 });
