@@ -2,6 +2,21 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.68.1",
+    "date": null,
+    "intro": [],
+    "items": [],
+    "groups": [
+      {
+        "title": "GM mode",
+        "items": [
+          "**A clock's − and + sit right beside its name**, in one tidy column, instead of across the far side of a wide screen. Close to full reads at a glance.",
+          "**A thread's Make current and Edit stay close to its title** on a wide screen, lined up down the list."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.68.0",
     "date": "2026-11-12",
     "intro": [],

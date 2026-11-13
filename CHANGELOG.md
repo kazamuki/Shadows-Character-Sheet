@@ -24,6 +24,13 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.68.1
+
+### GM mode
+
+- **A clock's − and + sit right beside its name**, in one tidy column, instead of across the far side of a wide screen. Close to full reads at a glance.
+- **A thread's Make current and Edit stay close to its title** on a wide screen, lined up down the list.
+
 ## v0.68.0 — 2026-11-12
 
 ### Character sheet

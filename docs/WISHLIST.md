@@ -949,6 +949,16 @@ they came for. **Every word** is 43 terms in one A–Z list with no jump to a le
 mono caps, which is weak next to the page's own title. *To respect:* the words stay in `gmGuide` (Decision 278), the panel never
 traps focus (166), and the column keeps 258's 20rem card floor.
 
+**W151 — A new thread is always in reach.** *Ken, from the Sessions tab's layout pass, 2026-11-12 · 💡 · Rule or shape*\
+**Plan:** none yet
+
+On Sessions, **New thread** is a field below every open thread and the Closed fold, so a GM with a long list scrolls past
+all of it to write down the hook a player just raised, mid-scene, which is the moment it has to be quick. Two shapes, not
+exclusive: the add field leads the Threads section, or **Jot** (the header's quick note, reachable from every page) gets a
+"make it a thread" choice, so a thread is a keystroke away wherever the GM is. The second is the one that fits play first,
+prep second. *To respect:* the cast and city keep their add fields at the foot of their lists today, so moving only this one
+is a choice to make for every page at once, not one-off; and Jot's note stays a note unless the GM asks otherwise.
+
 ### For the designers
 
 **W56 — A tuning bench: change the game's numbers, see what moves, hand back a change request.** *Ken · ⏭ · shaped with Claude 2026-10-01*\
@@ -1142,7 +1152,7 @@ always" stays true of whoever makes the change.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W151.** Everything above is open. What was built is in
+- **Next free number: W152.** Everything above is open. What was built is in
   [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)
