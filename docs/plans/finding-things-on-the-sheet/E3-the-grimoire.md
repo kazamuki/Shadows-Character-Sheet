@@ -4,7 +4,7 @@
 - Main's columns at 1280px. **Ken left them as E2b made them (EQ32)**, and §1 keeps the measurements behind that.
 - The Grimoire's own spells, which should read as rows with editing one press away, with no truncated text and no four-line "Link to the book". That is what this order builds.
 
-**Status:** drafted 2026-11-12 by the Opus session that reviewed E2b, at the conductor's request. Ken answered EQ32–EQ35 on 2026-11-12 (§4), and the order was reworked to his answers: EQ32 took Alternative B. **Awaiting approval.**
+**Status:** drafted 2026-11-12 by the Opus session that reviewed E2b, at the conductor's request. Ken answered EQ32–EQ35 on 2026-11-12 (§4), and the order was reworked to his answers: EQ32 took Alternative B. **Approved by Ken 2026-11-12** ("B stands, approve E3", in the conductor's session, after the 96px correction).
 **Branch:** the builder's own, cut from `main` once this order has merged.
 **Runs beside:** E4 (colour), E5 (the words) and E6 (the phone). With Main's columns left as they are, E6 has nothing here to wait for: the Grimoire's line is the same at every width.
 **Impeccable:** `/impeccable layout Main at 1280px and the Grimoire's own spells`. The analysis is §1 and §9, run on `main` at 1280×860 and 1600×900 in the dev preview with the five TestCharacters. The builder doesn't run it again.
@@ -135,7 +135,7 @@ No supersession marks. N gets one INDEX §3 line, under *Sheet & play tracking*.
 - **EQ32 — What a wide Main does.** **Alternative B, not the default:** Main's columns stay as E2b left them. §1 keeps the measurements and the *Revisit if*.
   - *Default (not taken):* the band. Weapons and armor beside the combat skills, with Stats one row under them.
   - *Alternative A (not taken):* the combat skills in the right column above Stats.
-  - **A correction Ken should see:** the reason given with the answer was that Dax's fight is "over by 8px", which compared his 868px to the whole 860px screen. The sticky header leaves 772px, so Dax's is over by **96px**. The other four fit, and Sigrun's has 21px to spare. B still stands on the rest of its reasoning (the band would drop every character's Stats 393–671px), but Ken took it with the smaller figure in mind.
+  - **A correction Ken should see:** the reason given with the answer was that Dax's fight is "over by 8px", which compared his 868px to the whole 860px screen. The sticky header leaves 772px, so Dax's is over by **96px**. The other four fit, and Sigrun's has 21px to spare. B still stands on the rest of its reasoning (the band would drop every character's Stats 393–671px), but Ken took it with the smaller figure in mind. **Shown the 96px, Ken kept B:** "B stands, approve E3" (2026-11-12, in the conductor's session).
 - **EQ33 — Where "wide" starts.** **Default** (Main itself ≥ 1,100px). Under EQ32's Alternative B there's no band, so it governs nothing. It's kept in §1 for whoever reopens the band.
 - **EQ34 — What an own spell's line shows.** **Default:**
   - its name, "Evocation · TN 7 / TH 1", then its effect;
