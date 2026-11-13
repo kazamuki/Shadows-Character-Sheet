@@ -30,7 +30,7 @@ own in the footer.
 
 - **Main shows the combat skills you've trained, and any untrained one you've got something on.** The rest are a tap away under **Show untrained**, and every skill is still on Skills.
 - **Untrained skills are dimmed, and a skill's row no longer repeats your Pain or Conditions penalty.** The line above the table says it once, and the totals already include it.
-- **Trackers and Skills lose the lines that described the software**, and the page starts with what's on it.
+- **Trackers and Skills get to the point.** Trackers opens on your pools, and Skills on how a check rolls.
 
 ## v0.68.0 — 2026-11-12
 
