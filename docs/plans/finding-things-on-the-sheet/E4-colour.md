@@ -7,7 +7,7 @@
 
 The conductor asked for a sweep of every other state colour that breaks the rule, and for this order to say which of those E4 takes and which it leaves to E7 or the wishlist (§5, *The rest of the sweep*).
 
-**Status:** drafted 2026-11-14 by the Opus session that reviewed E8, at the conductor's request. EQ46–EQ50 are open (§4).
+**Status:** drafted 2026-11-14 by the Opus session that reviewed E8, at the conductor's request. EQ46–EQ51 are in §4 (EQ51 is Ken's addition).
 **Branch:** the builder's own, cut from `main` once this order has merged.
 **Runs beside:** anything but E6 (the phone), which also edits `shadows.css`. If E6 is open when E4 builds, the conductor checks that the two don't touch the same rules. E5 and E8 are merged.
 **Impeccable:** `/impeccable colorize the sheet's state colours against DESIGN.md's One Meaning Rule`. The pre-flight below is that pass's analysis. It was run on `main` in the dev preview with Dax (the werewolf with the scrapped jacket), in both themes. The builder doesn't run it again.
@@ -88,7 +88,7 @@ The conductor asked for a sweep of every other state colour that breaks the rule
   - **App: patch.** A player can see it. `npm run bump` moves `[Unreleased]` from whatever it reads at build (0.69.0 now) to the next patch.
   - **Game data: unchanged.** No value or choice moves (Decision 68). The note strings already exist.
   - **Schemas: unchanged.**
-- **Numbers:** no decision, no flag. EQ46–EQ50 are this order's questions. If Ken takes EQ50's default, the wish is the next free W number when it's built (W156 today).
+- **Numbers:** no decision, no flag. EQ46–EQ51 are this order's questions. If Ken takes EQ50's default, the wish is the next free W number when it's built (W156 today).
 
 ## 3. Decisions
 
@@ -120,6 +120,21 @@ Each has a default. A question Ken leaves blank is answered "Default".
   - the printed sheet's RES column (`sheet.js:2941`'s row prints the piece's RES beside "0 / 10 scrap").
   - **Default:** out of E4. One wish, the next free W number (W156 today), *Fix*: "RES reads gone for a scrapped piece in GM mode's seat line and on paper".
   - *Alternative:* E4 also fixes GM mode's seat line for scrap ("· Scrap: RES is gone"), updating `smoke-table-seat-fight.test.mjs:143`. Print stays a wish.
+- **EQ51 — A contrast and perception check** (Ken's addition, from `/impeccable colorize`'s *Contrast and perception*).
+  - **Measured, not assumed.** For every colour pair E4 changes, the builder measures the computed foreground against its computed background with `getComputedStyle`, in both themes. The ratios go in the PR body (§12 step 6, §14). The pairs:
+    - the form boost's violet frame against its cell, and "+4 form" against the cell;
+    - the damaged armour's magenta frame (solid, and dashed for scrap) against the card and the ground;
+    - the struck, dim RES against the card;
+    - the cyan computed effect tag's words and line against its card;
+    - the theme toggle's hover line and glyph against the header.
+  - **The bars:** text 4.5:1; large text 3:1; frames and controls 3:1 (WCAG 1.4.3 and 1.4.11).
+  - **Struck RES** may sit below 4.5:1 only because the data's note beside it carries the meaning in words. If the note isn't on that line's card or panel, RES must meet 4.5:1.
+  - **A cue that isn't colour.** Each state E4 changes must keep one, so it survives the light theme's fold and colour blindness:
+    - a form boost has the words "+4 form";
+    - a damaged piece has the strike through RES, the note and, for scrap, the dashed line;
+    - a computed tag has its words;
+    - Progression's row is one Go beside default buttons, which is a fill against none.
+  - **A pair that fails is a stop** (§13). Bring the pair and its ratio.
 
 ## 5. The assumption sweep
 
@@ -320,15 +335,18 @@ Write these first, run them on `main`, and **paste each failure into the PR** (�
      - an `.etag.rule` beside an `.etag.computed` (the Character tab, or the wizard's CP step).
    - **The theme toggle** on hover, by moving the mouse over it in the pane.
    - **GM mode's seat sheet** (Dead Air): its werewolf seat, Dex Villanueva, is in human form with healthy armour. Before seeding, shift the copy (`Engine.setToggle`) and scrap its vest, then read the seat's Main in the browser.
-6. **`npm run phone-check`.**
-7. **The mutation tests** (§11).
-8. **After the last change of any kind, the full `npm run verify` again**, and say so in the PR.
-9. **Close-out** (§14).
+6. **The contrast and perception check (EQ51)**, in the preview, both themes. For each pair EQ51 lists, read the foreground and the background it actually sits on (walk up to the first ancestor with a non-transparent `background-color`) by `getComputedStyle`, and compute the WCAG ratio. Record every pair, its two colours, its ratio and its bar in the PR body, as a table. Then name each state's non-colour cue, and confirm it shows in the light theme.
+7. **`npm run phone-check`.**
+8. **The mutation tests** (§11).
+9. **After the last change of any kind, the full `npm run verify` again**, and say so in the PR.
+10. **Close-out** (§14).
 
 ## 13. Stop and ask
 
 **Stop if:**
 - The Read Rule test fails on a colour this order picks.
+- A pair in EQ51's check misses its bar: text under 4.5:1 (struck RES excepted only beside its note), large text under 3:1, or a frame or control under 3:1. Bring the pair, both colours and the ratio.
+- A state E4 changes has no cue but colour in the light theme.
 - A colour can only be reached by editing a token's value, or by `!important`.
 - A site in §5 draws the armour line inside a `button`, a `<label>` or a `<summary>`, so a struck span would sit in a control's name.
 - A test you didn't expect reads one of these classes or colours and fails.
@@ -354,7 +372,7 @@ Write these first, run them on `main`, and **paste each failure into the PR** (�
 - **PR body:**
   - the template's sections;
   - **the colour picks as a table** (before → after, both themes, with the `getComputedStyle` values), plus DESIGN.md's lines and the changelog line, for Ken;
-  - **Evidence:** each example's failure on `main`, quoted; the mutation list; the preview reads (§12 step 5); `phone-check`; the frames re-recorded, if any;
+  - **Evidence:** each example's failure on `main`, quoted; the mutation list; the preview reads (§12 step 5); **the contrast table and each state's non-colour cue (§12 step 6, EQ51)**; `phone-check`; the frames re-recorded, if any;
   - **Where the order didn't fit**;
   - a line saying the full suite ran after the last change.
 - **Review checklist:**
@@ -365,6 +383,7 @@ Write these first, run them on `main`, and **paste each failure into the PR** (�
   - **The CSS by whole lines:** diff `shadows.css` and check that every changed line is one §9 names, and no neighbouring rule on a shared line was dropped (E3's fold).
   - **The neighbours by `getComputedStyle`,** both themes, 375 and 1280, as §12 step 5 lists. Don't take the PR's word for it.
   - **The seat sheet in the browser.**
+  - **Contrast and perception (EQ51):** re-measure every pair EQ51 lists in both themes yourself, against the PR's table, and check each meets its bar. Struck RES may be under 4.5:1 only where its note is on the same card or panel. Check each state's non-colour cue shows in the light theme.
   - **The fixtures' state:** compromised-not-scrap really is `integrity 0, scrapped false`; the Progression fixture really shows five buttons.
   - **Mutations:** re-run §11's yourself.
   - **The examples on `main`:** check examples 2, 4 and 7 fail there (scratch worktree, its own `npm ci`).
