@@ -130,6 +130,31 @@ alone (Ken took PQ7's default). A character who plays from paper has the style c
 print renderer for a skill row; the line is `Engine.maneuverChecks`, so print only draws it. Print's front page is full (Decision 96): put it on the skills page.
 *To respect:* Decision 229. Player-visible: a CHANGELOG line and a patch bump.
 
+**W156 — Help on the character sheet: what each tab is for, every word it uses, and a switch for the guide lines.** *Ken, 2026-11-14 · 💡 · Rule or shape*\
+**Plan:** none yet
+
+Ken wants this as a plan of its own, after `finding-things-on-the-sheet.md`. GM mode has Help on every page (Decision 278, S31): a **?** in the header and the **?** key open a panel for the page that's open, read from `gmGuide` in the data. It says what the page is for, when it's used, and the words on it. A **Guide lines** switch turns each section's one-line guide off once a GM knows the ground. The player's sheet has no such thing.
+
+**What the player feels today.** The sheet now names a lot of the game:
+- E8 made the rules' own words tappable inside the sheet's lines (`gameTerms`).
+- Decision 139 put a tip on every rule the sheet names.
+- E5 rewrote the tab intros in the city's voice.
+
+But a new player opening Trackers or Progression still has nowhere to ask what the tab is *for*, why its numbers are there, or what a word means before they meet it in a line. The intros are always on, so a player who knows the sheet can't put them away.
+
+**The idea.** Do for the sheet what S31 did for the table:
+- a **?** that opens Help for the tab that's open: what it's for, when you use it (making the character, at the table, between sessions), and the words on it, each with its tip;
+- an *Every word* page that lists the game's terms once, from the same data the tips read;
+- a **Guide lines** switch that hides the tab intros and section notes, remembered by this browser like GM mode's `shadows.ui.gmGuide`.
+
+*To respect:*
+- **The copy lives in the data** (Decision 71, `appCopy`, beside `gmGuide`), in NYTE voice per `VOICE-APP.md`. Help is tool voice where the player is stuck.
+- **The words come from what the tips already read** (`gameTerms`, Decision 139's tips, the Stat and Condition entries), defined once. A glossary must not become a second copy that drifts (Decision 135).
+- **The switch is view state, not character state.** It goes in browser storage like `gmGuide`, never in the `.shadows.json` (constraint 7).
+- **GM mode's seat sheet draws the player's tabs** (Decision 256). Decide whether a seat shows the player's Help or the table's.
+- **The phone** (E6): S31's review found Help's foot about 530px below the fold on a phone. Learn from that and from W150 before laying it out.
+- **Rules questions go to Deighton.** If a definition has to say something the CRB doesn't, it's a flag, not copy.
+
 ### Rules in play: powers, rounds, encounters, Sanity
 
 **W107 — An unarmed strike line, and Death Touch's AP on it.** *Ken, with Claude · 💡 · Content (if it follows Iron Shirt) · raised 2026-10-15*\
