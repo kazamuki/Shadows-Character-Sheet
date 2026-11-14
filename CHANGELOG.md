@@ -42,6 +42,7 @@ own in the footer.
 
 ### GM mode
 
+- **Help reads more plainly.** Its examples say they are examples, *Cast* says it means NPCs, the **N** key is called a key, and Players says what importing a character again does.
 - **A clock's − and + sit right beside its name**, in one tidy column, instead of across the far side of a wide screen. Close to full reads at a glance.
 - **A thread's Make current and Edit stay close to its title** on a wide screen, lined up down the list.
 
