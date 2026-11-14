@@ -70,7 +70,7 @@ all correct, but it takes knowing the sheet to find it:
 | E5 | The words: intros, placeholders, the `?` modifiers ([order](finding-things-on-the-sheet/E5-the-words.md), approved 2026-11-13, EQ36–EQ40 answered: all Default; **E5 built**) | `clarify` | Fix | E2 |
 | E6 | The phone | `adapt` | Fix | E3 |
 | E7 | Polish, then measure | `polish`, then `critique` | Fix | all |
-| E8 | The game's words a tap away (W133), from E2's shape (EQ22) ([order](finding-things-on-the-sheet/E8-the-games-words.md), approved 2026-11-13, EQ41–EQ45 answered: all Default) | `clarify` | Rule or shape | E5 |
+| E8 | The game's words a tap away (W133), from E2's shape (EQ22) ([order](finding-things-on-the-sheet/E8-the-games-words.md), approved 2026-11-13, EQ41–EQ45 answered: all Default; **E8 built**) | `clarify` | Rule or shape | E5 |
 
 E1a and E4 stand alone and can run beside anything. E2 decides what each tab
 holds, so the sessions that lay a tab out or word it wait for it.

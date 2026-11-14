@@ -360,3 +360,20 @@ test("E5: the seat sheet reads the same intros, and the same chip for what the r
   assert.ok(app.$("#main").textContent.includes(D.appCopy.orphanChip), "the seat's specialization wears the chip");
   assert.doesNotMatch(app.$("#main").textContent, /game data/);
 });
+
+// ── E8: a term on the seat sheet opens its tip, read-only (W133) ──────
+test("E8 7: a term on the seat sheet opens its tip, read-only", () => {
+  const ch = cyborg();
+  ch.stats.BOD.base = 9;
+  const app = open([ch, arcanist()]);
+  openSheet(app);
+  goTab(app, "skills");
+  const rank = app.$('#main [data-tip="term"]');
+  assert.ok(rank, "no term on the seat's Skills tab");
+  clickIn(app, rank);
+  assert.ok(tipShown(app).length > 0, "the term opened nothing on the seat sheet");
+  const want = Engine.statReading(Engine.migrate(JSON.parse(JSON.stringify(ch))), "BOD").value;
+  const title = app.window.eval('TIPS.term("BOD").title');
+  assert.equal(title, `${D.stats.find(s => s.id === "BOD").name} ${want}`, "a Stat term doesn't read the seat's character");
+  assert.deepEqual(app.errors, []);
+});

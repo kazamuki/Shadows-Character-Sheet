@@ -124,6 +124,10 @@ const FIXTURE_FILE = new URL("./frame-fixture.json", import.meta.url);
 const FIXTURE_SIZES = [
   { width: 390, height: 844 }, { width: 768, height: 1024 }, { width: 1300, height: 900 }, { width: 1980, height: 1080 },
 ];
+// The one thing exempt from the finger-size floor (Decision 287, W133): a game word that is part of a sentence, set in the line
+// (WCAG 2.5.8, "Inline"). It must be a .term button, drawn in the line (a button reads inline-block even when set inline), with words of its own sentence beside it. A term made a block,
+// and every other small control, still counts. Tested against a real layout before the run (see selfTest).
+const INLINE_TERM = `(el) => el.matches("button.term") && /^inline(-block)?$/.test(getComputedStyle(el).display) && !!el.parentNode && [...el.parentNode.childNodes].some(n => n.nodeType === 3 && n.textContent.trim() !== "")`;
 const args = process.argv.slice(2);
 const RECORD = args.includes("--record-fixture");
 const builtFile = args.find(a => !a.startsWith("--"));
@@ -590,7 +594,8 @@ try {
     // `scope` limits the controls and text counted to what P13 added: an unfinished character's wizard has
     // older findings of its own (the issues link, the second-look callout), which are not this row's.
     const measure = async (screen, scope = null) => {
-      const m = await page.evaluate(([floor, scope]) => {
+      const m = await page.evaluate(([floor, scope, inlineSrc]) => {
+        const inlineTerm = (0, eval)(inlineSrc);
         // Small controls and small text (W43). Collapsed sections are opened
         // so a palette isn't missed, then closed again.
         const shut = [...document.querySelectorAll("details:not([open])")];
@@ -598,8 +603,10 @@ try {
         const shown = el => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && !el.closest("[hidden]") && (!scope || !!el.closest(scope)); };
         const label = el => `${el.tagName.toLowerCase()}${el.classList.length ? "." + [...el.classList].join(".") : ""}`;
         const small = new Set(), tiny = new Set();
+        let inline = 0;
         for (const el of document.querySelectorAll("button, a[href], summary, select, input:not([type=hidden])")) {
           if (!shown(el)) continue;
+          if (inlineTerm(el)) { inline++; continue; }
           const r = (el.matches("input[type=checkbox], input[type=radio]") && el.closest("label") || el).getBoundingClientRect();
           let w = r.width, h = r.height;
           const a = getComputedStyle(el, "::after");
@@ -627,21 +634,38 @@ try {
         const de = document.documentElement;
         const brand = document.querySelector("header.top .brand");
         return { header: Math.round(h.bottom > 0 ? h.height : 0), overflow: de.scrollWidth - de.clientWidth,
-          nameCut: brand.scrollWidth > brand.clientWidth, small: [...small], tiny: [...tiny], bars };
-      }, [w.touch ? 44 : 24, scope]);
+          nameCut: brand.scrollWidth > brand.clientWidth, small: [...small], tiny: [...tiny], inline, bars };
+      }, [w.touch ? 44 : 24, scope, INLINE_TERM]);
       const share = m.header / w.height;
       const b = m.bars, rowsOk = b.vbar <= 1 && b.jump <= 1 && (b.sticky == null || b.sticky <= w.height * BAR_MAX_SHARE), hpOk = b.hp == null || w.width >= 640 || b.hp <= w.height * HP_MAX_SHARE;
       rows.push({ width: w.name, screen, header: `${m.header}px (${Math.round(share * 100)}%)`,
         overflow: m.overflow ? `${m.overflow}px` : "none",
         name: screen === "home" ? "" : m.nameCut ? "cut" : "fits",
-        targets: m.small.length ? m.small.join(", ") : "ok",
+        targets: m.small.length ? m.small.join(", ") : m.inline ? `ok (${m.inline} inline terms exempt)` : "ok",
         text: m.tiny.length ? m.tiny.join(", ") : "ok",
         fold: [b.hp != null ? `HP ${b.hp}px (${Math.round(b.hp / w.height * 100)}%)` : "",
           b.vbar > 1 ? `vitals ${b.vbar} rows` : "", b.jump > 1 ? `jump ${b.jump} rows` : "", b.sticky != null ? `bar ${b.sticky}px (${Math.round(b.sticky / w.height * 100)}%)` : ""].filter(Boolean).join(", ") || "ok",
         ok: rowsOk && hpOk && share <= HEADER_MAX_SHARE && m.overflow <= 0 && (!mustFit(screen) || !m.nameCut) && !m.small.length && !m.tiny.length });
     };
+    // The exemption is one rule, so it's checked both ways on a real layout: an inline .term in a sentence is exempt; a .term made
+    // a block, a .term alone in its parent, and a plain small button are not.
+    const selfTest = async page => {
+      const got = await page.evaluate(src => {
+        const inlineTerm = (0, eval)(src), host = document.createElement("div");
+        host.innerHTML = '<p id="a">a rule: <button class="term" type="button">Dark</button> applies</p>'
+          + '<p id="b">a rule: <button class="term" type="button" style="display:block">Dark</button></p>'
+          + '<p id="c"><button class="term" type="button">Dark</button></p>'
+          + '<p id="d">a rule: <button class="small" type="button">Dark</button></p>';
+        document.body.appendChild(host);
+        const r = ["a", "b", "c", "d"].map(id => inlineTerm(host.querySelector("#" + id + " button")));
+        host.remove();
+        return r;
+      }, INLINE_TERM);
+      if (JSON.stringify(got) !== "[true,false,false,false]") throw new Error("phone-check's inline-term exemption is wrong: " + JSON.stringify(got) + " (want inline in a sentence only)");
+    };
     const mustFit = screen => screen !== "home" && screen !== LONG;
     await page.goto(pathToFileURL(file).href);
+    await selfTest(page);
     await measure("home");
     await page.click("[data-open]");
     await page.waitForSelector("#topnav [data-sec]");

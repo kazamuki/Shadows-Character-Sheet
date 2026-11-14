@@ -1549,3 +1549,44 @@ test("E5: TOL and WILL show no modifier, and the derivation is a tap on the ? by
     assert.equal(app.$(`[data-derivrow="${id}"]`).hidden, !was, `${id}'s ? didn't toggle its row`);
   }
 });
+
+// ── E8: the game's words, inside the sheet's own sentences (W133) ─────
+const e8Triggers = el => [...el.querySelectorAll('[data-tip="term"]')].map(t => t.textContent);
+test("E8 4: Night Vision's Dim and Dark open their rules, on Skills and Main", () => {
+  const nv = D.advantages.find(a => (a.grants || []).some(g => g.type === "visibility" && Array.isArray(g.ignore)));
+  assert.ok(nv, "no Advantage ignores a light level");
+  const ch = p19Char(c => { p19Hold(c, "advantages", nv.id); c.weapons.push({ id: "vs4-ironside", notes: "", mods: [], roundsSpent: 0 }); });
+  assert.ok(ch.advantages.some(a => a.id === nv.id), "Night Vision isn't held");
+  const app = openSheet(ch, "skills");
+  const fx = p19Row(app, "awareness").querySelector('.skill-fx [data-fx="mark"]');
+  assert.deepEqual(e8Triggers(fx), ["Dim", "Dark"]);
+  assert.equal(fx.textContent.replace(/\s+/g, " ").trim(), "No Dim or Dark penalty on visual checks · Night Vision");
+  const row = p19Row(app, "awareness"), descRow = app.$('[data-descrow="awareness"]');
+  const was = [row.querySelector("[data-skilldesc]").getAttribute("aria-expanded"), descRow && descRow.hidden];
+  const dark = [...fx.querySelectorAll('[data-tip="term"]')].find(t => t.textContent === "Dark");
+  clickIn(app, dark);
+  const shown = tipShown(app);
+  assert.match(shown, /^Dark/);
+  assert.ok(shown.includes("−" + Math.abs(D.visibility.find(v => v.id === "dark").attack)), "the tip's number isn't written with U+2212: " + shown);
+  assert.doesNotMatch(shown, /-\d/);
+  assert.deepEqual([row.querySelector("[data-skilldesc]").getAttribute("aria-expanded"), descRow && descRow.hidden].map(String), was.map(String), "pressing a term changed the row");
+  const main = openSheet(ch, "main");
+  assert.deepEqual(e8Triggers(main.$(".main-combat [data-attacknote]")), ["Dim", "Dark"]);
+  assert.deepEqual([...app.errors, ...main.errors], []);
+});
+
+test("E8 4b: a check note's light levels are triggers, read from the engine's note", () => {
+  const noct = D.aberrations.find(a => (a.grants || []).some(g => g.type === "visibility" && (g.on || []).includes("checks")));
+  assert.ok(noct, "no aberration modifies checks by light");
+  const ch = p19Char(c => { c.trackers.aberrations.push({ id: noct.id, permanence: "permanent" }); });
+  assert.ok(ch.trackers.aberrations.some(a => a.id === noct.id), "the aberration isn't held");
+  const want = Engine.checkNotes(ch);
+  assert.equal(want.length, 1, "the fixture has no check note");
+  const app = openSheet(ch, "skills");
+  const note = app.$("[data-checknote]");
+  const ids = JSON.parse(JSON.stringify(Engine.termSpans(want[0].text))).map(s => s.id);
+  assert.ok(ids.length >= 2, "the note names no light level: " + want[0].text);
+  assert.deepEqual([...note.querySelectorAll('[data-tip="term"]')].map(t => t.dataset.term), ids);
+  assert.equal(note.textContent.replace(/\s+/g, " ").trim(), `${want[0].text} · ${want[0].from}`);
+  assert.deepEqual(app.errors, []);
+});

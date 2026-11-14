@@ -64,7 +64,7 @@
    "6 section.main-conditions 16,709.5,358,94.5",
    "7 div.main-grid 16,818,358,1043.6"
   ],
-  "deep": "332 boxes, 25b404e3"
+  "deep": "334 boxes, db6348d7"
  },
  "sheet: skills @390": {
   "header": [
@@ -100,7 +100,7 @@
    "5 div.skill-cols 16,405,358,3699.7",
    "6 details.group 16,4104.7,358,30.3"
   ],
-  "deep": "768 boxes, c842f275"
+  "deep": "791 boxes, a8c27e9b"
  },
  "sheet: character @390": {
   "header": [
@@ -176,7 +176,7 @@
    "5 p.step-note 16,2334.6,358,116.3",
    "6 div.trk 16,2472.9,358,158.6"
   ],
-  "deep": "186 boxes, 3e37b966"
+  "deep": "187 boxes, 2a55ab4e"
  },
  "sheet: progression @390": {
   "header": [
@@ -224,7 +224,7 @@
    "17 div.trk 16,2601,358,160.7",
    "18 p.step-note 16,2773.7,358,23.3"
   ],
-  "deep": "192 boxes, c16b21"
+  "deep": "194 boxes, 6976f2fb"
  },
  "sheet: loadout @390": {
   "header": [
@@ -911,7 +911,7 @@
    "6 section.main-conditions 16,563,736,94.5",
    "7 div.main-grid 16,671.4,736,740.8"
   ],
-  "deep": "343 boxes, e77149a9"
+  "deep": "345 boxes, b61f993e"
  },
  "sheet: skills @768": {
   "header": [
@@ -947,7 +947,7 @@
    "5 div.skill-cols 16,370.6,736,2047.9",
    "6 details.group 16,2418.6,736,30.3"
   ],
-  "deep": "790 boxes, d4561c2"
+  "deep": "813 boxes, f1427628"
  },
  "sheet: character @768": {
   "header": [
@@ -1023,7 +1023,7 @@
    "5 p.step-note 16,1917,586.7,69.8",
    "6 div.trk 16,2008.8,736,158.6"
   ],
-  "deep": "186 boxes, 176e70a"
+  "deep": "187 boxes, adda1108"
  },
  "sheet: progression @768": {
   "header": [
@@ -1071,7 +1071,7 @@
    "17 div.trk 16,2104.1,736,105.7",
    "18 p.step-note 16,2221.8,586.7,23.3"
   ],
-  "deep": "192 boxes, b674e42a"
+  "deep": "194 boxes, ea8b9fd"
  },
  "sheet: loadout @768": {
   "header": [
@@ -1758,7 +1758,7 @@
    "6 section.main-conditions 30,499.8,1240,94.5",
    "7 div.main-grid 30,608.3,1240,468.1"
   ],
-  "deep": "345 boxes, e9358545"
+  "deep": "347 boxes, 217aaf02"
  },
  "sheet: skills @1300": {
   "header": [
@@ -1794,7 +1794,7 @@
    "5 div.skill-cols 30,376.6,1240,1499.2",
    "6 details.group 30,1875.8,1240,30.3"
   ],
-  "deep": "790 boxes, ccc82215"
+  "deep": "813 boxes, 82751da9"
  },
  "sheet: character @1300": {
   "header": [
@@ -1870,7 +1870,7 @@
    "5 p.step-note 30,1567.8,586.7,69.8",
    "6 div.trk 30,1659.5,1240,158.6"
   ],
-  "deep": "186 boxes, f732d67b"
+  "deep": "187 boxes, 66dcdcdc"
  },
  "sheet: progression @1300": {
   "header": [
@@ -1918,7 +1918,7 @@
    "17 div.trk 30,1871.8,1240,105.7",
    "18 p.step-note 30,1989.4,586.7,23.3"
   ],
-  "deep": "192 boxes, b30d624a"
+  "deep": "194 boxes, c2977685"
  },
  "sheet: loadout @1300": {
   "header": [
@@ -2032,7 +2032,7 @@
    "6 section.main-conditions 30,456.8,940,94.5",
    "7 div.main-grid 30,565.3,940,468.1"
   ],
-  "deep": "343 boxes, ffd4326c"
+  "deep": "345 boxes, 75821b4f"
  },
  "sheet: skills @1300 pinned": {
   "header": [
@@ -2068,7 +2068,7 @@
    "5 div.skill-cols 30,288.7,940,2230.4",
    "6 details.group 30,2519.1,940,30.3"
   ],
-  "deep": "724 boxes, 6ed864fb"
+  "deep": "747 boxes, ea9f6c11"
  },
  "sheet: character @1300 pinned": {
   "header": [
@@ -2144,7 +2144,7 @@
    "5 p.step-note 30,1550.2,586.7,69.8",
    "6 div.trk 30,1642,940,158.6"
   ],
-  "deep": "120 boxes, d4ab7cf6"
+  "deep": "121 boxes, 6bf84ac8"
  },
  "sheet: progression @1300 pinned": {
   "header": [
@@ -2192,7 +2192,7 @@
    "17 div.trk 30,1823.5,940,105.7",
    "18 p.step-note 30,1941.2,586.7,23.3"
   ],
-  "deep": "126 boxes, f02c2910"
+  "deep": "128 boxes, 4876258d"
  },
  "sheet: loadout @1300 pinned": {
   "header": [
@@ -2879,7 +2879,7 @@
    "6 section.main-conditions 30,499.8,1920,94.5",
    "7 div.main-grid 30,608.3,1920,468.1"
   ],
-  "deep": "345 boxes, f0dc8516"
+  "deep": "347 boxes, a7ae82ba"
  },
  "sheet: skills @1980": {
   "header": [
@@ -2915,7 +2915,7 @@
    "5 div.skill-cols 30,376.6,1920,1021.1",
    "6 details.group 30,1397.7,1920,30.3"
   ],
-  "deep": "790 boxes, e1dff296"
+  "deep": "813 boxes, 23da6f14"
  },
  "sheet: character @1980": {
   "header": [
@@ -2991,7 +2991,7 @@
    "5 p.step-note 30,1447.6,586.7,69.8",
    "6 div.trk 30,1539.4,1920,158.6"
   ],
-  "deep": "186 boxes, 2abbe79e"
+  "deep": "187 boxes, c4eba9b3"
  },
  "sheet: progression @1980": {
   "header": [
@@ -3039,7 +3039,7 @@
    "17 div.trk 30,1871.8,1920,87.3",
    "18 p.step-note 30,1971.1,586.7,23.3"
   ],
-  "deep": "192 boxes, d5e0f364"
+  "deep": "194 boxes, e6eb03b3"
  },
  "sheet: loadout @1980": {
   "header": [
@@ -3153,7 +3153,7 @@
    "6 section.main-conditions 30,456.8,1620,94.5",
    "7 div.main-grid 30,565.3,1620,468.1"
   ],
-  "deep": "343 boxes, f4aa1c82"
+  "deep": "345 boxes, d9c8a0b5"
  },
  "sheet: skills @1980 pinned": {
   "header": [
@@ -3189,7 +3189,7 @@
    "5 div.skill-cols 30,288.7,1620,1155.8",
    "6 details.group 30,1444.5,1620,30.3"
   ],
-  "deep": "724 boxes, 51d77209"
+  "deep": "747 boxes, 522a9e16"
  },
  "sheet: character @1980 pinned": {
   "header": [
@@ -3265,7 +3265,7 @@
    "5 p.step-note 30,1359.7,586.7,69.8",
    "6 div.trk 30,1451.5,1620,158.6"
   ],
-  "deep": "120 boxes, 802cb4d6"
+  "deep": "121 boxes, b2cd422c"
  },
  "sheet: progression @1980 pinned": {
   "header": [
@@ -3313,7 +3313,7 @@
    "17 div.trk 30,1783.8,1620,87.3",
    "18 p.step-note 30,1883.2,586.7,23.3"
   ],
-  "deep": "126 boxes, 158fc079"
+  "deep": "128 boxes, cbb528ec"
  },
  "sheet: loadout @1980 pinned": {
   "header": [

@@ -2485,6 +2485,136 @@ const Engine = (() => {
              health: v>10 && id==="BOD" && hlRule ? hlRule : null };
   }
 
+  // ── The game's words inside a sentence (Decision 287, W133) ────────────
+  // `gameTerms` lists the words a sentence on the sheet can name and where each one's rule lives. termSpans says where the
+  // first of each sits in a string; term says what it means. Both read the data and never touch a DOM, and neither throws.
+  // The `from` kinds are a closed set; a row with another kind, or one pointing at what the data doesn't hold, says nothing.
+  const TERM_KINDS = ["visibility", "painLevel", "check", "derived", "luck", "stats", "milestones", "conditions"];
+  const termKind = row => {
+    const f = row && row.from;
+    return isPlainObj(f) ? TERM_KINDS.find(k => f[k] !== undefined) || null : null;
+  };
+  const termRows = () => (Array.isArray(D().gameTerms) ? D().gameTerms : []).filter(r => isPlainObj(r) && typeof r.id==="string" && r.id);
+  const termPainLevels = () => ((((D().resources||{}).healthLevels)||{}).painLevels||[]).filter(isPlainObj);
+  // Does this row's rule exist in the data? An n-form row is checked again for its number.
+  function termReadable(row){
+    const k = termKind(row), f = row.from;
+    if (!k) return typeof row.description==="string" && !!row.description && !row.from;
+    if (k==="visibility") return visTable().some(v=>v.id===f.visibility);
+    if (k==="painLevel") return termPainLevels().length>0;
+    if (k==="check") return typeof (D().skillCheckRules||{})[f.check]==="string";
+    if (k==="derived") return (D().derived||[]).some(d=>d && d.id===f.derived);
+    if (k==="luck") return isPlainObj(((D().resources||{}).luck));
+    if (k==="stats") return Array.isArray(D().stats);
+    if (k==="milestones") return isPlainObj((D().milestones||{}).rules);
+    return Array.isArray(D().conditions);
+  }
+  // Each readable row's words: [{ id, form, row }]. A `stats` row takes the stat ids, a `conditions` row the names.
+  function termForms(){
+    const out = [];
+    for (const row of termRows()){
+      if (!termReadable(row)) continue;
+      const k = termKind(row);
+      if (k==="stats") (D().stats||[]).forEach(s=>{ if (s && typeof s.id==="string" && s.id) out.push({ id:s.id, form:s.id, row }); });
+      else if (k==="conditions") (D().conditions||[]).forEach(c=>{ if (c && typeof c.name==="string" && c.name && typeof c.id==="string") out.push({ id:c.id, form:c.name, row }); });
+      else (Array.isArray(row.forms) ? row.forms : []).forEach(f=>{ if (typeof f==="string" && f) out.push({ id:row.id, form:f, row }); });
+    }
+    return out;
+  }
+  const escapeRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  // Where each listed term first appears in `text`: [{ start, end, id, n? }], whole words, case kept, the longest form where
+  // two overlap, none overlapping, and only the first of each id (and number). A value that isn't a string has none.
+  function termSpans(text){
+    if (typeof text!=="string" || !text) return [];
+    let forms; try { forms = termForms(); } catch (e){ return []; }
+    if (!forms.length) return [];
+    const plain = new Map(), withN = [];
+    for (const f of forms){
+      if (f.form.includes("{n}")) withN.push({ id:f.id, re:new RegExp("^" + f.form.split("{n}").map(escapeRe).join("(\\d+)") + "$"), src:f.form });
+      else if (!plain.has(f.form)) plain.set(f.form, f.id);
+    }
+    const alts = [...plain.keys(), ...withN.map(w=>w.src.split("{n}").map(escapeRe).join("\\d+"))].sort((a, b)=>b.length-a.length);
+    const body = alts.map(a => plain.has(a) ? escapeRe(a) : a).join("|");
+    const re = new RegExp("(?<![\\p{L}\\p{N}])(?:" + body + ")(?![\\p{L}\\p{N}])", "gu");
+    const seen = new Set(), spans = [];
+    let m;
+    while ((m = re.exec(text))){
+      if (!m[0]) { re.lastIndex++; continue; }
+      let id = plain.get(m[0]), n;
+      if (id===undefined){
+        const w = withN.find(x=>x.re.test(m[0]));
+        if (!w) continue;
+        id = w.id; n = Number(w.re.exec(m[0])[1]);
+        if (!termRows().some(r=>r.id===id && termBody(r, id, null, n))) continue;
+      }
+      const key = id + "|" + (n===undefined ? "" : n);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      spans.push(n===undefined ? { start:m.index, end:m.index+m[0].length, id } : { start:m.index, end:m.index+m[0].length, id, n });
+    }
+    return spans;
+  }
+  // What a term means, from the rule the data already holds. Numbers a sentence needs signed come back in `signed`, keyed by the
+  // {name} they fill in `text`, for the UI to write (the engine never formats a minus). Null for a term nobody lists.
+  function termBody(row, id, ch, n){
+    const k = termKind(row), f = row.from || {}, title = typeof row.title==="string" && row.title ? row.title : null;
+    if (!k) return termReadable(row) ? { title:title || (Array.isArray(row.forms) && row.forms[0]) || row.id, text:row.description, more:[] } : null;
+    if (k==="visibility"){
+      const v = visTable().find(x=>x.id===f.visibility); if (!v) return null;
+      // The sentence is appCopy's; the number stays {n} for the UI to sign.
+      const t = typeof v.attack==="number" && v.attack!==0 ? copyOf("termLightPenalty", "", { name:v.name, n:"{n}" }) : copyOf("termLightNone", "", { name:v.name });
+      return { title:v.name, text:v.description||"", more:t ? [typeof v.attack==="number" && v.attack!==0 ? { text:t, signed:{ n:v.attack } } : { text:t }] : [] };
+    }
+    if (k==="painLevel"){
+      const lvl = Number(n), p = Number.isInteger(lvl) ? termPainLevels().find(x=>x.level===lvl) : null; if (!p) return null;
+      const P = ((((D().resources||{}).healthLevels)||{}).painPenaltiesPerLevel)||{};
+      const more = [];
+      if (lvl>0 && [P.skillChecks, P.essenceCheckDice, P.breakerCheckPercent].every(x=>typeof x==="number"))
+        { const t = copyOf("termPainPenalties", "", { s:"{s}", e:"{e}", b:"{b}" });
+          if (t) more.push({ text:t, signed:{ s:P.skillChecks*lvl, e:P.essenceCheckDice*lvl, b:P.breakerCheckPercent*lvl } }); }
+      if (lvl>0 && typeof P.notes==="string" && P.notes) more.push({ text:P.notes });
+      return { title:p.label||"", text:p.description||"", more };
+    }
+    if (k==="check"){
+      const R = D().skillCheckRules||{}, t = R[f.check]; if (typeof t!=="string") return null;
+      return { title:title || f.check, text:t, more: f.check==="trained" && typeof R.untrained==="string" ? [{ text:R.untrained }] : [] };
+    }
+    if (k==="derived"){
+      const d = (D().derived||[]).find(x=>x && x.id===f.derived); if (!d) return null;
+      return { title:d.name||d.id, text:d.description||"", more:[] };
+    }
+    if (k==="luck"){
+      const R = (D().resources||{}).luck; if (!isPlainObj(R)) return null;
+      return { title:title || row.id, text:typeof R.refresh==="string" ? R.refresh : "",
+        more:(Array.isArray(R.spend) ? R.spend : []).filter(isPlainObj).map(s=>copyOf("termLuckSpend", "", { action:s.action, cost:s.cost, luck:title || row.id, effect:s.effect })).filter(Boolean).map(text=>({ text })) };
+    }
+    if (k==="stats"){
+      const def = (D().stats||[]).find(s=>s && s.id===id); if (!def) return null;
+      let r = null; try { r = ch && typeof ch==="object" ? statReading(ch, id) : null; } catch (e){ r = null; }
+      return r ? { title:`${r.name} ${r.value}`, text:r.description, more:[], stat:id } : { title:def.name||id, text:def.description||"", more:[], stat:id };
+    }
+    if (k==="milestones"){
+      const R = (D().milestones||{}).rules; if (!isPlainObj(R)) return null;
+      const num = x => typeof x==="number" && Number.isFinite(x);
+      const bits = [num(R.milestonePointsPerSession) && copyOf("termMilestoneSession", "", { n:R.milestonePointsPerSession }),
+        num(R.minorFirstAt) && num(R.minorEvery) && copyOf("termMilestoneMinor", "", { first:R.minorFirstAt, every:R.minorEvery }),
+        num(R.majorFirstAt) && num(R.majorEvery) && copyOf("termMilestoneMajor", "", { first:R.majorFirstAt, every:R.majorEvery })].filter(Boolean);
+      return { title:title || row.id, text:bits[0]||"", more:bits.slice(1).map(text=>({ text })) };
+    }
+    const c = (D().conditions||[]).find(x=>x && x.id===id); if (!c) return null;
+    return { title:c.name||c.id, text:c.effect||"", more:c.recovery && copyOf("termConditionRecovery", "", { text:c.recovery }) ? [{ text:copyOf("termConditionRecovery", "", { text:c.recovery }) }] : [] };
+  }
+  function term(id, ch, n){
+    try {
+      if (typeof id!=="string" || !id) return null;
+      const rows = termRows();
+      const row = rows.find(r=>r.id===id && termReadable(r))
+        || rows.find(r=>termKind(r)==="stats" && termReadable(r) && (D().stats||[]).some(s=>s && s.id===id))
+        || rows.find(r=>termKind(r)==="conditions" && termReadable(r) && (D().conditions||[]).some(c=>c && c.id===id));
+      return row ? termBody(row, id, ch, n) : null;
+    } catch (e){ return null; }
+  }
+
   // W4 — one catalog entry as the browser shows it, before it's added: the
   // same line Loadout would draw (a weapon's attack and damage for this
   // character, an armor piece's PROT, RES and Integrity), its price, and
@@ -10045,7 +10175,7 @@ const Engine = (() => {
     newCharacter, isIntakeId, tagReading, tagNumber, migrate, versionCheck, buildExport,
     statMax, statMaxText, statAtCap, humanMax, statOverCaps, statOverCap, derivedParts, startingCredits,
     // Stats, skills and derived values
-    powerLevel, archetype, classification, canBuyAdvantage, archetypeContent, writeInOptions, addPower, addCustomPower, ownPowers, improvePower, newPower, removePower, statMod, statValue, statTable, baseStatTable, statReading, archStatBonus, scalingRow,
+    powerLevel, archetype, classification, canBuyAdvantage, archetypeContent, writeInOptions, addPower, addCustomPower, ownPowers, improvePower, newPower, removePower, statMod, statValue, statTable, baseStatTable, statReading, termSpans, term, archStatBonus, scalingRow,
     derived, health, sfr, skillLine, adjFor, skillRankCap, disciplineCap, disciplineRanks, powerRanks, archetypePowers, powerAllowance,
     powerPool, basePowerState, placeBasePower, powerCpOf, powerCpSpent, powerCpState, buyPowerRank, buyDisciplineRank, optionChoices, setOptionPick, archetypeWeapons, painImmunity,
     feedView, feedGain, feed, goUnfed, goUnrested,

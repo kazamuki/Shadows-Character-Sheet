@@ -5670,6 +5670,20 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** a player edits their own spells more often than they read them, or the book's spells gain an editable field beyond notes.
      - **Built:** app 0.68.2 (patch), no data or schema move, PR #334, log 2026-11-13 (E3).
 
+287. **A game word inside a sentence the sheet writes opens its rule on the tip: the data lists the words and where each rule lives, the engine finds them, the UI makes each a trigger.**
+     *2026-11-13 · Ken + Claude · Touches: gameTerms, Engine.termSpans, Engine.term, termsHtml, TIPS.term, data-tip, visibility description, skillFxHtml, attackNotesHtml, checkNotesHtml, sheetHeader intros, Pain line, Rest line, flagHtml, playerNote, phone-check inline exemption, .term, print, seat sheet, Decision 139, Decision 207, Decision 233, Decision 256, W133*
+     - **Decided:** `gameTerms` lists each term by its `forms` and where its rule lives: a `from` the engine reads (a light level, a Pain Level, the check rules, a derived stat, a Stat, LUCK, the Milestone cadence, a Condition) or a `description` quoted from the CRB. `Engine.termSpans` finds the first of each in a string; `Engine.term` returns its tip, numbers unsigned. `termsHtml` escapes the text between and makes each span a Decision 139 trigger on the Skill marks, attack and check notes, tab intros, Pain and Rest lines and a flag's `playerNote`. A term is the word, underlined; `phone-check` exempts it as a target inside a sentence (WCAG 2.5.8). Print shows the word.
+     - **Why:** W133: Ken had to ask what Dim and Dark were. The list is explicit so a capitalised word is never a guess, and the tip reads the rule's own table so it can't drift from the number.
+     - **Rejected:**
+       - Each engine writer returning `{ text, terms }`: every reader of `skillLine`, `attackNotes` and the intros would change shape.
+       - Markers inside `appCopy` (`[[Rank]]`): a second syntax in the voice's file.
+       - A ⓘ after the line: it moves the rule away from the word.
+       - Every occurrence a trigger: a tab stop on each.
+       - Reusing GM mode's `TIPS.condition` and `TIPS.painlevel`: they live in `gm.js`.
+     - **Replaces:** nothing. It extends Decision 139 (a tip kind inside a sentence).
+     - **Revisit if:** playtesters miss a term on a phone, or a sentence site outside the list needs terms.
+     - **Built:** app 0.69.0 (minor), no game-data or schema bump, PR #338, log 2026-11-13 (E8).
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data

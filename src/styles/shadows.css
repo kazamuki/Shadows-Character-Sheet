@@ -360,6 +360,14 @@ aside.vitals:empty{display:none}
 .tag:focus-visible{outline:2px solid var(--cyan); outline-offset:2px}
 .tag.plain{border-bottom:0; cursor:default}
 .tag.plain:hover{color:var(--dim)}
+/* Decision 287 (W133): a game word inside a sentence the sheet writes. It's the word, in the line's own face and colour, with a dotted underline. */
+.term{font:inherit; color:inherit; background:none; border:0; border-radius:0; padding:0; margin:0; display:inline; cursor:help; text-decoration:underline dotted; text-underline-offset:.18em}
+.term:hover, .term:focus-visible, .term[aria-describedby]{color:var(--cyan)}
+.term:focus-visible{outline:2px solid var(--cyan); outline-offset:2px}
+/* A term that is a heading's only content (Trackers' Pain card) isn't inside running text, so it keeps the finger-size floor, as an invisible hit area. */
+h2 > .term:only-child{position:relative}
+h2 > .term:only-child::after{content:""; position:absolute; left:0; top:50%; width:max(100%, 44px); height:24px; transform:translateY(-50%)}
+@media (pointer:coarse){ h2 > .term:only-child::after{height:44px} }
 [data-tip="stat"]{cursor:help}
 [data-tip="stat"]:focus-visible{outline:2px solid var(--cyan); outline-offset:2px}
 .tip{position:absolute; z-index:80; width:max-content; max-width:min(340px, calc(100vw - 16px)); box-sizing:border-box;

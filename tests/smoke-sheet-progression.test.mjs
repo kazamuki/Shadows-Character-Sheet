@@ -809,3 +809,22 @@ test("E5: Manual Adjustments doesn't ask for a Minor that applies itself", () =>
   }
   assert.doesNotMatch(note, /engine/i);
 });
+
+// E8: each intro's listed words are triggers; their text is still appCopy's.
+test("E8 5: the intros' terms are triggers, and their text is still appCopy's", () => {
+  const triggers = el => [...el.querySelectorAll('[data-tip="term"]')].map(t => t.textContent);
+  const app = openSheet(lockedCharacter(), "main");
+  const want = { skills: ["Rank"], progression: ["Milestone Point", "LUCK"] };
+  for (const [sec, key] of Object.entries(INTROS)) {
+    app.click(`[data-sec="${sec}"]`);
+    const note = app.$("#main h1.step-title + .step-note");
+    assert.equal(note.textContent, introOf(key), `${sec}'s text moved`);
+    if (want[sec]) assert.deepEqual(triggers(note), want[sec], `${sec}'s triggers`);
+  }
+  app.click('[data-sec="skills"]');
+  assert.equal(app.$$('#main h1.step-title + .step-note [data-tip="term"][data-term^="skill-check"]').length, 1, "Skills' intro has one skill-check trigger");
+  app.click("[data-menu-toggle]"); app.click("[data-admin]");
+  const admin = app.$("#main h1.step-title + .step-note");
+  assert.equal(admin.textContent, introOf("introAdmin"));
+  assert.deepEqual(app.errors, []);
+});

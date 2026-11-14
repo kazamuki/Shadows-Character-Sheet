@@ -13,7 +13,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { boot, stored } from "./harness.mjs";
-import { Engine, D, lockedCharacter, openSheet, activeChar, pickFromCatalog, search, clickIn, draft, draftOn, wizCss, writtenInCharacter, focused, lockedVampire, type } from "./smokekit.mjs";
+import { Engine, D, tipShown, lockedCharacter, openSheet, activeChar, pickFromCatalog, search, clickIn, draft, draftOn, wizCss, writtenInCharacter, focused, lockedVampire, type } from "./smokekit.mjs";
 
 // ── Adversarial review of PR #7 — the UI half ─────────────────────────
 
@@ -2321,4 +2321,37 @@ test("E5: what the game data dropped wears one chip", () => {
   app.click('[data-sec="main"]'); app.click('#main [data-condinfo="0"]');
   assert.ok(app.$("#main .cond-info").textContent.includes(note("Condition")), "a missing Condition's note");
   assert.deepEqual(app.errors, []);
+});
+
+// ── E8: Pain Level, the Rest line and a flag's note carry their terms (W133) ──
+test("E8 6: Pain Level, the Rest line and a flag's note carry their terms", () => {
+  const trig = el => [...el.querySelectorAll('[data-tip="term"]')].map(t => t.textContent);
+  const ch = lockedCharacter();
+  ch.stats.BOD.base = 8;
+  ch.trackers.damage = 5 * (D.resources.healthLevels.hpPerLevel) + 2;   // five Health Levels gone
+  const pain = Engine.painState(ch), hp = Engine.health(ch);
+  assert.equal(pain.level, 2, "the fixture isn't at Pain Level 2");
+  assert.ok(ch.trackers.damage < hp.total, "the fixture is DOWN: " + JSON.stringify(hp));
+  const app = openSheet(ch, "main");
+  const mainPain = [...app.$$("#main .step-note")].find(n => n.textContent.startsWith("Pain Level 2"));
+  assert.ok(mainPain, "Main has no Pain line");
+  assert.deepEqual(trig(mainPain), ["Pain Level 2"]);
+  const t = mainPain.querySelector('[data-tip="term"]');
+  clickIn(app, t);
+  assert.ok(tipShown(app).includes(D.resources.healthLevels.painLevels[2].description), "the tip isn't the level's description: " + tipShown(app));
+  app.click('[data-sec="skills"]');
+  const sp = [...app.$$("#main .step-note")].find(n => n.textContent.startsWith("Pain Level 2"));
+  assert.deepEqual(trig(sp), ["Pain Level 2"]);
+  app.click('[data-sec="trackers"]');
+  assert.deepEqual(trig(app.$(".pick h2")).slice(0, 1), ["Pain Level 2"], "the Pain card's title");
+  app.click('[data-actopen="rest"]');
+  assert.ok(trig(app.$('[data-actpanel="rest"] .hitnote')).includes("BOD"), "the Rest line's BOD isn't a trigger");
+  assert.deepEqual(app.errors, []);
+  // a flagged Major's playerNote
+  const pro = lockedCharacter(); pro.identity.archetype = "professional"; pro.progression.milestonePoints = 100;
+  const prog = openSheet(pro, "progression");
+  const card = prog.$('[data-majorcard="specialist"]');
+  assert.ok(card, "no Specialist card");
+  assert.deepEqual(trig(card.querySelector(".flag")), ["Kicker Die"]);
+  assert.deepEqual(prog.errors, []);
 });
