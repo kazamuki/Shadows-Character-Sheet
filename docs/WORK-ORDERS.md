@@ -291,7 +291,7 @@ conductor adds the builder's session id and its notes' path):
 > Review against the order's review checklist too, and follow its steps for
 > the dev preview.
 >
-> Review PR #<n> adversarially against `docs/plans/<plan>/<order>.md`: the
+> Review PR #338 adversarially against `docs/plans/<plan>/<order>.md`: the
 > order, not just the diff. Re-do the order's assumption sweep yourself by
 > grepping the readers of everything it changes, and look for what it missed.
 > Run the tests, probe the behaviour on `main` and on the PR, and run it in

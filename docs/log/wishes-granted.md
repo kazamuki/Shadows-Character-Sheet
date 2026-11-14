@@ -1038,7 +1038,7 @@ groups (one audit entry per session instead of one per spell). Claude's
 take: (a), unless there's a case for backing out of a whole picking session
 that per-pick Undo doesn't already cover. **Ken chose (a), a Done button,** on 2026-09-23.
 
-**W133 — The game's words inside a sentence are a tap away too.** *Ken, from P21's voice pass · → Decision 287, app 0.69.0, PR #<n>*\
+**W133 — The game's words inside a sentence are a tap away too.** *Ken, from P21's voice pass · → Decision 287, app 0.69.0, PR #338*\
 
 Reading Night Eyes' attack line ("In Dark, your attacks take −1 instead of −3; in Blind, −3 instead of −5"), Ken had to ask what Dim and Dark were. Decision 139 already puts a rule a hover or tap away (`data-tip`, `TIPS` in `shared.js`), but only for a tag, a stat score and a few fixed panels. A term inside a **sentence the app writes** is plain text: a light level, *Kicker Die*, *Take X*, *Defensive Action*, a Condition named in a mark, *Pain Level*. The player has to know it already, or go and find it.
 The shape: a list of game terms in the data, each with the rule it opens (a sentence, or a table such as `visibility`, drawn with its numbers). The renderer wraps each known term it finds in a Skill-row mark, an attack or check note, a rest line or a `playerNote` as a tip trigger. Hover or focus shows the tip, and a tap pins it, as Decision 139's do.

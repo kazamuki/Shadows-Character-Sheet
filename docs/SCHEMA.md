@@ -5682,7 +5682,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - Reusing GM mode's `TIPS.condition` and `TIPS.painlevel`: they live in `gm.js`.
      - **Replaces:** nothing. It extends Decision 139 (a tip kind inside a sentence).
      - **Revisit if:** playtesters miss a term on a phone, or a sentence site outside the list needs terms.
-     - **Built:** app 0.69.0 (minor), no game-data or schema bump, PR #<n>, log 2026-11-13 (E8).
+     - **Built:** app 0.69.0 (minor), no game-data or schema bump, PR #338, log 2026-11-13 (E8).
 
 ## 5. Open Flags
 

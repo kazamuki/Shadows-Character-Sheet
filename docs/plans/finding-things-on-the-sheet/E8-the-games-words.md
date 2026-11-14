@@ -111,7 +111,7 @@ N. **A game word inside a sentence the sheet writes opens its rule on the tip: t
      - Reusing GM mode's `TIPS.condition` and `TIPS.painlevel`: they live in `gm.js`, and a term reads more kinds than those two.
    - **Replaces:** nothing. It extends Decision 139 (a tip kind inside a sentence) and reads 233's and 237's marks as text.
    - **Revisit if:** playtesters miss a term on a phone, or tap the wrong one of two next to each other; a sentence site outside the list needs terms (EQ43); or the list grows past what one sentence can be scanned for without a cost a player feels.
-   - **Built:** app <minor>, no game-data or schema bump, PR #<n>, log <date> (E8).
+   - **Built:** app <minor>, no game-data or schema bump, PR #338, log <date> (E8).
 ```
 
 ## 4. Questions for Ken

@@ -406,7 +406,7 @@ Start it with the title **P8b build**, and paste:
 
 Start a fresh Opus session and paste, with the PR number filled in:
 
-> Review PR #<n> adversarially against
+> Review PR #338 adversarially against
 > `docs/plans/sheet-wishlist/P08b-healing.md`: the order, not just the diff.
 > Check the order's §5 sweep yourself and look for what it missed, the way
 > #180's review found `soaked` reading the halved damage and Freezing's note
