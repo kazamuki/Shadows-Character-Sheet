@@ -1112,10 +1112,10 @@ window.SHADOWS_DATA = {
   /* Decision 233: the light levels 0530 (Visibility) sets, read by a `visibility` grants row (Night Vision), which names
      the ones it ignores. `attack` is the penalty to an attack against a target in that light. Read by Engine.attackNotes. */
   "visibility": [
-    { "id": "bright", "name": "Bright", "attack": 0 },
-    { "id": "dim",    "name": "Dim",    "attack": -1 },
-    { "id": "dark",   "name": "Dark",   "attack": -3 },
-    { "id": "blind",  "name": "Blind",  "attack": -5 }
+    { "id": "bright", "name": "Bright", "attack": 0, "description": "Bright refers to areas with ample natural or artificial light that do not impede visibility in any way." },
+    { "id": "dim",    "name": "Dim",    "attack": -1, "description": "Dim refers to areas with poor lighting, flickering neon or half-lit warehouses that make it difficult to determine distance, shape, or color." },
+    { "id": "dark",   "name": "Dark",   "attack": -3, "description": "Dark refers to moonlit alleyways, the tunnels of the Underground, or a warehouse floor on backup power bathed in dark red light." },
+    { "id": "blind",  "name": "Blind",  "attack": -5, "description": "Blind means the area is so choked with smoke, the lights are completely out, or a flashbang just went off in your face. Either way, you’re attacking a memory, not a target." }
   ],
   /* Decision 233: how a Skill's row says what a trait does to its check, filled from the same rows the engine computes
      from. `{total}` is X plus the whole check; `{names}` the levels a `visibility` row ignores ("Dim or Dark"), `{levels}`
@@ -1139,6 +1139,34 @@ window.SHADOWS_DATA = {
     "visibilityChecks": "{amount} to every check in {levels}",
     "visibilityChecksEach": "{amount} in {levels}"
   },
+  /* Decision N (W133): the game's words a sentence on the sheet can name, and where each one's rule lives. `forms` are exact
+     words, case kept; `{n}` stands for a number. A row's tip reads `from` (a rule this file already holds: a light level, a
+     Pain Level, a skillCheckRules key, a derived stat, LUCK, the Milestone cadence; `stats` and `conditions` take their forms
+     from those lists) or quotes the CRB (`description`, from `bookSource`). `title` heads the tip. Read by Engine.termSpans and
+     Engine.term. */
+  "gameTerms": [
+    { "id": "bright", "forms": ["Bright"], "from": { "visibility": "bright" } },
+    { "id": "dim", "forms": ["Dim"], "from": { "visibility": "dim" } },
+    { "id": "dark", "forms": ["Dark"], "from": { "visibility": "dark" } },
+    { "id": "blind", "forms": ["Blind"], "from": { "visibility": "blind" } },
+    { "id": "pain-level", "forms": ["Pain Level {n}"], "from": { "painLevel": "{n}" } },
+    { "id": "kicker-die", "title": "Kicker Die", "forms": ["Kicker Die", "Kicker Dice", "Kicker die", "kicker die"], "bookSource": "0300 Core Mechanics, Kicker Die",
+      "description": "Sometimes circumstances give you an edge. In these cases, a Skill Check may include Kicker die. You may see it written as an additional die (such as d10+d4). Roll the d10 as normal, then roll the kicker die and add it to the result." },
+    { "id": "take-x", "title": "Take X", "forms": ["Take {n}"], "bookSource": "0300 Core Mechanics, Take X",
+      "description": "Some abilities let you choose reliability over risk. When a feature says Take X (such as “Take 5”), treat the d10 result as X instead of rolling. Because you don’t roll, the result cannot explode and cannot botch. You can always choose to roll instead. Some moments are worth the risk." },
+    { "id": "explode", "title": "Explodes", "forms": ["Explodes", "explodes", "explode"], "from": { "check": "explosion" } },
+    { "id": "botch", "title": "Botch", "forms": ["botches", "botch", "Botch"], "from": { "check": "botch" } },
+    { "id": "defensive-action", "title": "Defensive Actions", "forms": ["Defensive Actions", "Defensive Action"], "bookSource": "0530 Combat Encounters, Defensive Actions",
+      "description": "Dodge. You can attempt to dodge against any attack. Parry. You can attempt to parry hand-to-hand attacks (Melee and Martial Arts) only, and only with a hand-to-hand weapon (Melee and Martial Arts). Scramble. You can attempt to get out of the way of attacks that expand outward from a single point — a grenade, a charge, a spell, etc." },
+    { "id": "skill-check", "title": "A Skill check", "forms": ["Primary Stat", "Synergy", "Rank"], "from": { "check": "trained" } },
+    { "id": "TOL", "forms": ["TOL"], "from": { "derived": "TOL" } },
+    { "id": "WILL", "forms": ["WILL"], "from": { "derived": "WILL" } },
+    { "id": "SAN", "forms": ["SAN"], "from": { "derived": "SAN" } },
+    { "id": "LUCK", "title": "LUCK", "forms": ["LUCK"], "from": { "luck": true } },
+    { "id": "stat", "from": { "stats": true } },
+    { "id": "milestone-point", "title": "Milestone Points", "forms": ["Milestone Points", "Milestone Point"], "from": { "milestones": true } },
+    { "id": "condition", "from": { "conditions": true } }
+  ],
   /* Decision 232: the same computed tags on a card the character holds, which state its total. `{total}` is the row's
      `perRank` times the held rank (natural and bought ranks summed), `{perRank}` is still the row's own. A type with no
      template here (LUCK costs, Pain Level, Milestones) reads its `effectTags` line. Read by Engine.effectTagsFor. */

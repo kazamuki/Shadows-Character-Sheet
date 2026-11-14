@@ -1626,3 +1626,23 @@ test("U1: encounterView over hostile rows gives hpPer null or a positive number 
   assert.equal(app.$$("[data-erow]").length, v.rows.length, `rows drawn (tab ${app.window.eval("S.tsection")}, open ${app.window.eval("S.encOpen")})`);
   assert.deepEqual(app.errors, []);
 });
+
+// ── E8: a sentence with markup in it stays text, wrapped or not ───────
+test("E8 8: a sentence with markup in it stays text, wrapped or not", () => {
+  const app = boot();
+  const into = html => { const d = app.window.document.createElement("div"); d.innerHTML = html; return d; };
+  const text = 'Dim <img src=x onerror=1> & "Dark"';
+  assert.equal(typeof app.window.eval("typeof termsHtml"), "string");
+  assert.equal(app.window.eval("typeof termsHtml"), "function", "termsHtml doesn't exist");
+  const d = into(app.window.eval(`termsHtml(${JSON.stringify(text)})`));
+  assert.equal(d.querySelector("img"), null, "markup in the sentence became an element");
+  assert.equal(d.textContent, text);
+  assert.deepEqual([...d.querySelectorAll('[data-tip="term"]')].map(e => e.textContent), ["Dim", "Dark"]);
+  // a flag's playerNote with markup in it, wrapped (it holds Kicker Die) and not
+  const f = into(app.window.eval(`flagHtml({ playerNote: ${JSON.stringify("<b>bold</b> Kicker Die <img src=x>")} })`));
+  assert.equal(f.querySelectorAll("b").length, 1, "the note's <b> became an element (the label's is the one)"); assert.equal(f.querySelector("img"), null);
+  assert.ok(f.textContent.includes("<b>bold</b> Kicker Die <img src=x>"));
+  assert.deepEqual([...f.querySelectorAll('[data-tip="term"]')].map(e => e.textContent), ["Kicker Die"]);
+  for (const v of [null, 42, undefined, ""]) assert.equal(app.window.eval(`termsHtml(${JSON.stringify(v)})`), "");
+  assert.deepEqual(app.errors, []);
+});

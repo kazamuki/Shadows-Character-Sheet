@@ -326,14 +326,14 @@ function maneuverLineHtml(ch, id){
 // before rolling, then each mark (a die face, a conditional bonus, a light level), each with where it comes from.
 // The words are the engine's, filled from the rows; they are text here, never markup.
 function skillFxHtml(l){
-  const line = (what, t) => `<div class="fx-line" data-fx="${what}">${esc(t.text)} <span class="fx-from">· ${esc(t.from)}</span></div>`;
+  const line = (what, t) => `<div class="fx-line" data-fx="${what}">${termsHtml(t.text)} <span class="fx-from">· ${esc(t.from)}</span></div>`;
   const rows = (l.takeX||[]).map(t=>line("takeX", t)).concat((l.marks||[]).map(t=>line("mark", t)));
   return rows.length ? `<div class="skill-fx">${rows.join("")}</div>` : "";
 }
 // The light a trait cancels on an attack, once under Main's attacks table (Decision 233).
-const attackNotesHtml = ch => Engine.attackNotes(ch).map(n=>`<p class="attack-note" data-attacknote>${esc(n.text)} <span class="fx-from">· ${esc(n.from)}</span></p>`).join("");
+const attackNotesHtml = ch => Engine.attackNotes(ch).map(n=>`<p class="attack-note" data-attacknote>${termsHtml(n.text)} <span class="fx-from">· ${esc(n.from)}</span></p>`).join("");
 // What the light does to every check, once atop the Skills table (Nocturnal, Decision 237).
-const checkNotesHtml = ch => Engine.checkNotes(ch).map(n=>`<p class="attack-note" data-checknote>${esc(n.text)} <span class="fx-from">· ${esc(n.from)}</span></p>`).join("");
+const checkNotesHtml = ch => Engine.checkNotes(ch).map(n=>`<p class="attack-note" data-checknote>${termsHtml(n.text)} <span class="fx-from">· ${esc(n.from)}</span></p>`).join("");
 // The check as it reads on a row: 1d10 + the number, then each kicker beside it (Decision 233).
 const checkText = (l, sep) => `1d10${sep}+${sep}${l.checkBonus}` + (l.kickers||[]).map(k=>`${sep}+${sep}${k.die}`).join("");
 // A skill in training shows when its rank arrives (Decision 230).
@@ -458,7 +458,7 @@ function renderShMain(){
   // armor that answers, then the combat skills you've trained or have something on (Decision 284). The
   // skill table was long, and it was pushing the lines a player actually rolls below the fold.
   h += `<section class="main-combat"><div class="sect">Combat${painChip(pain)}</div>`;
-  if (pain.level) h += `<p class="step-note" style="margin-bottom:10px">${esc(pain.label)} — all checks take ${signed(pain.skillPenalty)}; totals below include it.</p>`;
+  if (pain.level) h += `<p class="step-note" style="margin-bottom:10px">${termsHtml(pain.label)} — all checks take ${signed(pain.skillPenalty)}; totals below include it.</p>`;
   h += movementLineHtml(ch);   // Decision 226
   h += conditionTotalsNote(ch, true);
   // Weapons: a catalog piece is computed (Decision 100); a custom one is
@@ -514,8 +514,8 @@ function renderShMain(){
 function renderShSkills(){
   const ch=S.ch, pain=Engine.painState(ch);
   S.openSkills = S.openSkills || new Set();
-  let h = sheetHeader("Skills", esc(copy("introSkills")));
-  if (pain.level) h += `<p class="step-note">${esc(pain.label)} — all skill checks take ${signed(pain.skillPenalty)}; the totals below already include it.${painChip(pain)}</p>`;
+  let h = sheetHeader("Skills", termsHtml(copy("introSkills")));
+  if (pain.level) h += `<p class="step-note">${termsHtml(pain.label)} — all skill checks take ${signed(pain.skillPenalty)}; the totals below already include it.${painChip(pain)}</p>`;
   h += conditionTotalsNote(ch, false) + checkNotesHtml(ch);
   // Decision 156: every skill, trained or not, in its category (Main folds the plain untrained ones; this tab never does), so every
   // character's list reads the same. Two columns from 1000px: the categories
@@ -727,7 +727,7 @@ function renderShCharacter(){
     <span class="step-note">The pools you spend are on <button class="btn sm" data-gotab="trackers">Trackers</button>.</span></div>`;
 
   const toggle = any ? `<button class="jump jump-end" data-traits-all aria-pressed="${open}">${open?"Collapse all":"Expand all"}</button>` : "";
-  return sheetHeader("Character", esc(copy("introCharacter")))
+  return sheetHeader("Character", termsHtml(copy("introCharacter")))
     + jumpBarHtml(secs.list, { sticky:true, extra:toggle, row:true }) + h;
 }
 
@@ -1341,7 +1341,7 @@ function restPanelHtml(ch, st){
     ? `${nh.stat} ${nh.perDay}${everyDay.map(f=>` × ${f.x} (${f.name})`).join("")}${everyDay.length ? ` = ${nh.daily}` : ""} a day × ${nh.days} days = ${nh.daily*nh.days}, + ${nh.daily*(dose.x-1)} (${dose.name} doubles one day) = ${nh.proposed}`
     : `${nh.stat} ${nh.perDay}${nh.factors.map(f=>` × ${f.x} (${f.name})`).join("")}${nh.days===1?"":` × ${nh.days} days`} = ${nh.proposed}${nh.days===1?" a day":""}`;
   const sum = nh.factors.length ? `<p class="hitnote" data-restsum>${esc(sumText)}</p>` : "";
-  let h=`<div class="hitpanel" data-actpanel="rest"><h3>Rest</h3><p class="hitnote">${esc(nh.text)} ${esc(nh.speedHealText)}</p>${sum}
+  let h=`<div class="hitpanel" data-actpanel="rest"><h3>Rest</h3><p class="hitnote">${termsHtml(nh.text)} ${termsHtml(nh.speedHealText)}</p>${sum}
     <div class="hitrow">${actNum(st,"days","Days of rest")}
       <label class="check"><input type="checkbox" data-act="speed" ${st.speed?"checked":""}> Speed Heal</label>
       ${actNum({ hp: st.hp==="" ? inp.proposed : st.hp }, "hp", "HP recovered")}</div>${st.speed?gearUseHtml(ch, st, "speed-heal", "fromGear"):""}`;
@@ -1597,7 +1597,7 @@ function renderShTrackers(){
     : `<span class="sub">No body armor worn. Pick it up or put it on under Loadout.</span>`)
     + (naturalArmorText(ch) ? `<span class="hitarmor" style="flex-basis:100%">${esc(naturalArmorText(ch))}</span>` : "") + `</div>`;
   if (S.act && S.act.kind==="wear") h += actPanelHtml(ch);
-  h += `<div class="pick ${pain.level?"":"selected"}${landedCls("pain")}"><div class="head"><h2>${esc(pain.label)}</h2>
+  h += `<div class="pick ${pain.level?"":"selected"}${landedCls("pain")}"><div class="head"><h2>${termsHtml(pain.label)}</h2>
     ${pain.level?`<span class="cost">${esc(painPenaltyLine(pain,true))}</span>`:'<span class="cost grant">no penalties</span>'}${(h=>h.held.length?`<span class="cost">${esc(holdingSentence(h))}</span>`:"")(Engine.heldSpells(ch))}</div>
     <div class="desc">${esc(pain.description)}${pain.immunity?`
 ${esc(pain.immunity.name)}: only Health Levels lost to Withering count here.`:""}${painExtra(pain)?`\nHealth Levels lost put you at Pain Level ${pain.fromHealth}; ${esc(pain.painSources.join(", "))} add${pain.painSources.length===1?"s":""} ${signed(painExtra(pain))}. `+esc(D.conditionRules.painClamp):""}${pain.ignored?`
@@ -1704,7 +1704,7 @@ function renderShProgression(){
   const ch=S.ch, ip=Engine.ipState(ch), ms=Engine.milestoneState(ch), secs=sectionList("pr");
   // Decision 281: what happens between sessions, in one page: log one, spend
   // what it earned, read the history, and Undo, each reached from the jump bar.
-  const head = sheetHeader("Progression", esc(copyFill("introProgression", { perHour: D.ip.perHour })));
+  const head = sheetHeader("Progression", termsHtml(copyFill("introProgression", { perHour: D.ip.perHour })));
   let h = logSessionHtml(ch, secs);
 
   h += `<div class="trk" ${secs.at("IP")}><h2>IP</h2><span class="big ${ip.available<0?"bad":""}">${numText(ip.available)}</span>
@@ -2554,7 +2554,7 @@ function grimoireHtml(ch, p){
 // ── Sheet: loadout ──────────────────────────────────────────
 function renderShLoadout(){
   const ch=S.ch;
-  const head = sheetHeader("Loadout", esc(copy("introLoadout")));
+  const head = sheetHeader("Loadout", termsHtml(copy("introLoadout")));
   // W5: a jump to each section, from the sections this page drew. Anchors
   // and scroll rather than sub-tabs, so print and Ctrl-F see the whole page.
   const secs = sectionList("lo");
@@ -2638,7 +2638,7 @@ function feedPanelHtml(ch, p){
 
 // ── Sheet: notes ─────────────────────────────────────────────────────
 function renderShNotes(){
-  let h = sheetHeader("Notes", esc(copy("introNotes")));
+  let h = sheetHeader("Notes", termsHtml(copy("introNotes")));
   h += `<label class="field"><span>Character notes</span>
     <textarea data-notes style="min-height:340px" placeholder="Contacts. Debts. The thing you saw that no one believes.">${esc(S.ch.notes)}</textarea></label>`;
   return h;
@@ -2649,7 +2649,7 @@ function renderShNotes(){
 // here routes through commit(), so it lands in the Activity Log and is undoable.
 function renderShAdmin(){
   const ch=S.ch;
-  let h = sheetHeader("Admin — Free Edit", esc(copy("introAdmin")));
+  let h = sheetHeader("Admin — Free Edit", termsHtml(copy("introAdmin")));
 
   // Non-blocking budget echo so you can see the consequences of an edit.
   const sp=Engine.statPool(ch), kp=Engine.skillPool(ch), bal=Engine.cp(ch);

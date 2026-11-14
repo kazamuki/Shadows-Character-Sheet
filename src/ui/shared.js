@@ -591,6 +591,15 @@ const TIPS = {
     return { title:R.name, text:R.description,
       more:R.tiers.map(t=>`${t.name} · ${t.rep} rep · ${Engine.crankPayText(t)}`),
       note: st && st.unsettled ? `${copy("unsettledLabel")}: ${R.playerNote}` : "" }; },
+  // Decision N (W133): a game word inside a sentence. The key is the term's id, then "|" and its number when it has one. The
+  // engine says what it means and returns the numbers a line needs signed; the minus is written here.
+  term: key => {
+    const i = key.indexOf("|"), id = i<0 ? key : key.slice(0, i), p = Engine.term(id, tipChar(), i<0 ? undefined : Number(key.slice(i+1)));
+    if (!p) return null;
+    if (p.stat){ const t = TIPS.stat(p.stat); if (t) return t; }
+    const fill = m => m.signed ? m.text.replace(/\{(\w+)\}/g, (x, k)=> k in m.signed ? signed(m.signed[k]) : x) : m.text;
+    return { title:p.title, text:p.text, more:(p.more||[]).map(fill) };
+  },
 };
 // Tags as chips: one the glossary knows opens its sentence; one it doesn't
 // stays a plain word.
@@ -598,6 +607,18 @@ function tagChipsHtml(tags, kind="tag"){
   return (tags||[]).filter(t=>typeof t==="string" && t).map(t=> TIPS[kind](t)
     ? `<button type="button" class="tag" data-tip="${kind}" data-term="${esc(t)}">${esc(t)}</button>`
     : `<span class="tag plain">${esc(t)}</span>`).join("");
+}
+// A sentence the sheet writes, with each game word it names as a tip trigger (Decision N, W133). The engine finds the words
+// (the data lists them); everything between them is escaped, so a sentence is text whether or not it holds a term. This is
+// the only place a term becomes markup. A trigger is a button of its own, set in the line: it's never inside another one.
+function termsHtml(text){
+  if (typeof text!=="string" || !text) return "";
+  let h = "", at = 0;
+  for (const s of Engine.termSpans(text)){
+    h += esc(text.slice(at, s.start)) + `<button type="button" class="term" data-tip="term" data-term="${esc(s.id + (s.n===undefined ? "" : "|" + s.n))}">${esc(text.slice(s.start, s.end))}</button>`;
+    at = s.end;
+  }
+  return h + esc(text.slice(at));
 }
 let tipState=null, tipTimer=null, tipNode=null;
 function tipEl(){
@@ -1093,7 +1114,7 @@ function focusedOwedHtml(ch){
     lines.map(esc).join(" ")}</span><button class="btn sm" data-fowedopen>${fp.invalid.length?"Fix":"Choose"}</button></div>`;
 }
 function flagHtml(entry){
-  return noticeHtml(copy("unsettledLabel"), (entry && entry.playerNote) || copy("unsettledRule"));
+  return `<div class="flag"><div><b>${esc(copy("unsettledLabel"))}</b> — ${termsHtml(String((entry && entry.playerNote) || copy("unsettledRule")))}</div></div>`;
 }
 // A settled rule that happens to constrain the player is NOT a design flag —
 // it reuses the panel but says so, rather than implying the rule is in doubt.

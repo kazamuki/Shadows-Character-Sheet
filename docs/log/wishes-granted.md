@@ -1038,6 +1038,12 @@ groups (one audit entry per session instead of one per spell). Claude's
 take: (a), unless there's a case for backing out of a whole picking session
 that per-pick Undo doesn't already cover. **Ken chose (a), a Done button,** on 2026-09-23.
 
+**W133 — The game's words inside a sentence are a tap away too.** *Ken, from P21's voice pass · → Decision 287, app 0.69.0, PR #<n>*\
+
+Reading Night Eyes' attack line ("In Dark, your attacks take −1 instead of −3; in Blind, −3 instead of −5"), Ken had to ask what Dim and Dark were. Decision 139 already puts a rule a hover or tap away (`data-tip`, `TIPS` in `shared.js`), but only for a tag, a stat score and a few fixed panels. A term inside a **sentence the app writes** is plain text: a light level, *Kicker Die*, *Take X*, *Defensive Action*, a Condition named in a mark, *Pain Level*. The player has to know it already, or go and find it.
+The shape: a list of game terms in the data, each with the rule it opens (a sentence, or a table such as `visibility`, drawn with its numbers). The renderer wraps each known term it finds in a Skill-row mark, an attack or check note, a rest line or a `playerNote` as a tip trigger. Hover or focus shows the tip, and a tap pins it, as Decision 139's do.
+*To respect:* the engine still returns text and never markup (constraint 5), so the UI finds the terms; or the engine returns `{ text, terms }` and the UI wraps them (decide in the order). Decision 139's primitive, not a second one: hover, focus, tap to pin, and it works inside a modal. Terms come from data and are never typed in code (Decision 135), and a term's tip reads the same table the number came from, so it can't drift. Print gets no tips. On a phone a 44px tap target can't fit a word inside a sentence, so check `phone-check`'s floor and how a tapped word reads before choosing (an underline, or a ⓘ after the line). Not every capitalised word is a term: the list is explicit, and a term inside a book quote or a `whenText` stays a match on the list, never a guess.
+
 ### Docs
 
 **W18 — `CHANGELOG.md` stopped at 0.7.0.** *Claude · → caught up through v0.15.0 in `CHANGELOG.md`; `docs.test.mjs` now fails without a section for the current version*

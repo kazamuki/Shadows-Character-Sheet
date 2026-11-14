@@ -130,13 +130,6 @@ alone (Ken took PQ7's default). A character who plays from paper has the style c
 print renderer for a skill row; the line is `Engine.maneuverChecks`, so print only draws it. Print's front page is full (Decision 96): put it on the skills page.
 *To respect:* Decision 229. Player-visible: a CHANGELOG line and a patch bump.
 
-**W133 — The game's words inside a sentence are a tap away too.** *Ken, from P21's voice pass · 💡 · Rule or shape · raised 2026-10-21*\
-**Plan:** [finding-things-on-the-sheet](plans/finding-things-on-the-sheet.md) E8, its own session after E5 (EQ22); [order](plans/finding-things-on-the-sheet/E8-the-games-words.md) drafted 2026-11-13
-
-Reading Night Eyes' attack line ("In Dark, your attacks take −1 instead of −3; in Blind, −3 instead of −5"), Ken had to ask what Dim and Dark were. Decision 139 already puts a rule a hover or tap away (`data-tip`, `TIPS` in `shared.js`), but only for a tag, a stat score and a few fixed panels. A term inside a **sentence the app writes** is plain text: a light level, *Kicker Die*, *Take X*, *Defensive Action*, a Condition named in a mark, *Pain Level*. The player has to know it already, or go and find it.
-The shape: a list of game terms in the data, each with the rule it opens (a sentence, or a table such as `visibility`, drawn with its numbers). The renderer wraps each known term it finds in a Skill-row mark, an attack or check note, a rest line or a `playerNote` as a tip trigger. Hover or focus shows the tip, and a tap pins it, as Decision 139's do.
-*To respect:* the engine still returns text and never markup (constraint 5), so the UI finds the terms; or the engine returns `{ text, terms }` and the UI wraps them (decide in the order). Decision 139's primitive, not a second one: hover, focus, tap to pin, and it works inside a modal. Terms come from data and are never typed in code (Decision 135), and a term's tip reads the same table the number came from, so it can't drift. Print gets no tips. On a phone a 44px tap target can't fit a word inside a sentence, so check `phone-check`'s floor and how a tapped word reads before choosing (an underline, or a ⓘ after the line). Not every capitalised word is a term: the list is explicit, and a term inside a book quote or a `whenText` stays a match on the list, never a guess.
-
 ### Rules in play: powers, rounds, encounters, Sanity
 
 **W107 — An unarmed strike line, and Death Touch's AP on it.** *Ken, with Claude · 💡 · Content (if it follows Iron Shirt) · raised 2026-10-15*\

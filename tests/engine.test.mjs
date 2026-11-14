@@ -13374,3 +13374,88 @@ test("E5: every orphan line is appCopy.orphanLine, and none says 'game data'", (
   assert.doesNotMatch(issues.join("\n"), /game data/);
   assert.equal(Engine.skillLine(Engine.migrate(ch), "gone-skill").dataWarning, line("Skill", "gone-skill"));
 });
+
+// ── E8: the game's words inside a sentence (W133) ─────────────────────
+const E8_HOSTILE = [null, undefined, 42, {}, [], true, "", "   ", "Dim".repeat(500), Symbol.iterator.toString()];
+const condName = () => D.conditions[0].name;
+const spans = t => J(Engine.termSpans(t));
+const J = v => JSON.parse(JSON.stringify(v));
+const e8Hurt = () => { const ch = subject({ bod: 8 }); ch.trackers.damage = 5 * Engine.health(ch).hpPer + 2; return ch; };   // five Health Levels gone: Pain Level 2
+
+test("E8 1: termSpans finds each listed term once, whole words, longest first", () => {
+  assert.equal(typeof Engine.termSpans, "function", "Engine.termSpans doesn't exist");
+  const dd = spans("No Dim or Dark penalty on visual checks");
+  assert.deepEqual(dd.map(s => [s.id, s.start]), [["dim", 3], ["dark", 10]]);
+  assert.deepEqual(spans("Dimmer lights"), []);
+  const pl = spans("Pain Level 2 — all checks take −2");
+  assert.equal(pl.length, 1); assert.equal(pl[0].id, "pain-level"); assert.equal(pl[0].n, 2);
+  const tk = spans("Take 6: 19 on your next Pilot check");
+  assert.equal(tk.length, 1); assert.equal(tk[0].id, "take-x"); assert.equal(tk[0].n, 6);
+  const text = "a trained Skill rolls 1d10 + its Rank, its Primary Stat and its Synergy";
+  const sk = spans(text);
+  assert.equal(sk.length, 1, "the check's parts are one term, found once: " + JSON.stringify(sk));
+  assert.equal(sk[0].id, "skill-check"); assert.equal(text.slice(sk[0].start, sk[0].end), "Rank");
+  assert.deepEqual(spans("Primary Stat").map(s => s.id), ["skill-check"], "Stat inside Primary Stat is a second span");
+  // two Pain Levels are two terms; the same one twice is one
+  assert.deepEqual(spans("Pain Level 2 then Pain Level 3 then Pain Level 2").map(s => s.n), [2, 3]);
+  const c = condName();
+  const cs = spans(`You are ${c} now`);
+  assert.deepEqual(cs.map(s => s.id), [D.conditions[0].id]);
+  assert.equal(`You are ${c} now`.slice(cs[0].start, cs[0].end), c);
+  assert.deepEqual(spans(`${D.stats[0].id} and ${D.stats[0].id}`).map(s => s.start), [0]);
+  for (const v of [null, 42, {}, undefined]) assert.deepEqual(spans(v), []);
+  // the longest form wins where two overlap: a shorter row's word is inside a longer one's
+  const { Engine: e, D: d } = loadEngine();
+  d.gameTerms.push({ id: "short", forms: ["Primary"], from: { visibility: "dim" } });
+  assert.deepEqual(J(e.termSpans("its Primary Stat")).map(x => x.id), ["skill-check"], "the shorter form took the overlap");
+  assert.deepEqual(J(e.termSpans("its Primary one")).map(x => x.id), ["short"]);
+});
+
+test("E8 2: every term resolves to a tip, and its numbers are the table's", () => {
+  assert.equal(typeof Engine.term, "function", "Engine.term doesn't exist");
+  const ch = e8Hurt();
+  assert.equal(Engine.painState(ch).level, 2, "the fixture isn't at Pain Level 2");
+  assert.ok(ch.trackers.damage < Engine.health(ch).total, "the fixture is down");
+  const rows = D.gameTerms;
+  assert.ok(Array.isArray(rows) && rows.length, "no gameTerms");
+  for (const r of rows) {
+    const ids = r.id === "stat" ? D.stats.map(s => s.id) : r.id === "condition" ? D.conditions.map(c => c.id) : [r.id];
+    for (const id of ids) {
+      const t = Engine.term(id, ch, 2);
+      assert.ok(t && t.title, `term ${id} resolves to nothing`);
+    }
+  }
+  const dark = Engine.term("dark", ch);
+  const row = D.visibility.find(v => v.id === "dark");
+  assert.ok(dark.more.some(m => m.signed && Object.values(m.signed).includes(row.attack)), "Dark's tip doesn't carry the table's attack number");
+  const pl = Engine.term("pain-level", ch, 2), P = D.resources.healthLevels.painPenaltiesPerLevel;
+  const nums = pl.more.flatMap(m => m.signed ? Object.values(m.signed) : []);
+  assert.deepEqual(J(nums), [P.skillChecks * 2, P.essenceCheckDice * 2, P.breakerCheckPercent * 2]);
+  assert.equal(Engine.term("nope"), null);
+  assert.ok(Engine.term("dim", null));
+  assert.equal(Engine.term("pain-level", ch, 99), null);
+});
+
+test("E8 3: termSpans and term are total, and an unreadable row says nothing", () => {
+  for (const v of E8_HOSTILE) { assert.doesNotThrow(() => Engine.termSpans(v)); assert.doesNotThrow(() => Engine.term(v, v, v)); }
+  for (const [name, ch] of Object.entries(degenerates())) for (const id of ["dim", "pain-level", "BOD", "TOL", "luck", "LUCK", "condition", "milestone-point"]) assert.doesNotThrow(() => Engine.term(id, ch, 1), name + " " + id);
+  // a row whose `from` kind the engine doesn't know, or a level that isn't in the table, contributes nothing
+  const { Engine: e, D: d } = loadEngine();
+  d.gameTerms.push({ id: "bogus", forms: ["Bogosity"], from: { telepathy: true } }, { id: "ghost-light", forms: ["Gloaming"], from: { visibility: "gloaming" } });
+  assert.deepEqual(J(e.termSpans("Bogosity and Gloaming")), []);
+  assert.equal(e.term("bogus"), null); assert.equal(e.term("ghost-light"), null);
+});
+
+test("E8 4: no game term is typed in engine.js or the UI", () => {
+  const words = new Set([...D.gameTerms.flatMap(r => r.forms || []), ...D.conditions.map(c => c.name), ...D.stats.map(s => s.id)]);
+  const eng = readFileSync(join(ROOT, "src/engine/engine.js"), "utf8").replace(/\r/g, "");
+  const ui = readFileSync(join(ROOT, "src/ui/shared.js"), "utf8").replace(/\r/g, "");
+  const from = eng.indexOf("inside a sentence (Decision"), to = eng.indexOf("// W4 — one catalog entry");
+  const regions = [["engine", eng.slice(from, to)], ["ui", ui.slice(ui.indexOf("function termsHtml"), ui.indexOf("let tipState"))]];
+  const esc = w => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  for (const [name, code] of regions) {
+    assert.ok(code.length > 200, name + ": the region the guard reads is empty");
+    const body = code.split("\n").filter(l => !/^\s*(\/\/|\*|\/\*)/.test(l)).join("\n");
+    for (const w of words) assert.ok(!new RegExp("[\"'`]" + esc(w) + "[\"'`]").test(body), name + " types the term \"" + w + "\"");
+  }
+});

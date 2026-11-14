@@ -2,7 +2,7 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
-    "version": "0.68.3",
+    "version": "0.69.0",
     "date": null,
     "intro": [],
     "items": [],
@@ -10,6 +10,7 @@ window.SHADOWS_CHANGELOG = [
       {
         "title": "Character sheet",
         "items": [
+          "**The game's words inside the sheet's own lines open their rules.** Tap *Dark* in Night Vision's line, *Take 6* on a Skill, or *Pain Level 2* above your Skills, and the rule is right there.",
           "**Main shows the combat skills you've trained, and any untrained one you've got something on.** The rest are a tap away under **Show untrained**, and every skill is still on Skills.",
           "**Untrained skills are dimmed, and a skill's row no longer repeats your Pain or Conditions penalty.** The line above the table says it once, and the totals already include it.",
           "**Trackers and Skills get to the point.** Trackers opens on your pools, and Skills on how a check rolls.",
