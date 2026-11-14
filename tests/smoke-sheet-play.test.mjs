@@ -2387,7 +2387,7 @@ for (const kind of ["compromised", "scrap"]) {
       assert.ok(off, `${section}: no .res-off`);
       assert.ok(off.textContent.startsWith(`RES +${w.res}`), `${section}: .res-off reads "${off.textContent}"`);
       assert.ok(!off.textContent.includes("PROT"), `${section}: PROT is inside .res-off`);
-      assert.ok(!card.querySelector(".hitarmor").classList.contains("res-off"), `${section}: the whole line is struck`);
+      assert.ok(card.querySelector(".hitarmor").textContent.replace(off.textContent, "").includes(`PROT ${w.prot}`), `${section}: PROT doesn't read as a value outside the strike`);
       const notes = [...card.querySelectorAll("[data-armordown]")];
       // Loadout's repair row already says scrapNote for scrap, so it isn't repeated there.
       const want = section === "loadout" && kind === "scrap" ? 0 : 1;
