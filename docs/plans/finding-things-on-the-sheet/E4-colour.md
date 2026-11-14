@@ -7,7 +7,7 @@
 
 The conductor asked for a sweep of every other state colour that breaks the rule, and for this order to say which of those E4 takes and which it leaves to E7 or the wishlist (§5, *The rest of the sweep*).
 
-**Status:** drafted 2026-11-14 by the Opus session that reviewed E8, at the conductor's request. EQ46–EQ51 are in §4 (EQ51 is Ken's addition).
+**Status:** drafted 2026-11-14 by the Opus session that reviewed E8, at the conductor's request. Ken answered EQ46–EQ51 on 2026-11-14 (§4): EQ46–EQ50 Default, and EQ51 is his own addition. **Approved by Ken 2026-11-14** (in the conductor's session).
 **Branch:** the builder's own, cut from `main` once this order has merged.
 **Runs beside:** anything but E6 (the phone), which also edits `shadows.css`. If E6 is open when E4 builds, the conductor checks that the two don't touch the same rules. E5 and E8 are merged.
 **Impeccable:** `/impeccable colorize the sheet's state colours against DESIGN.md's One Meaning Rule`. The pre-flight below is that pass's analysis. It was run on `main` in the dev preview with Dax (the werewolf with the scrapped jacket), in both themes. The builder doesn't run it again.
@@ -135,6 +135,15 @@ Each has a default. A question Ken leaves blank is answered "Default".
     - a computed tag has its words;
     - Progression's row is one Go beside default buttons, which is a fill against none.
   - **A pair that fails is a stop** (§13). Bring the pair and its ratio.
+
+**Ken's answers, 2026-11-14** (in the conductor's session):
+- EQ46: "Violet" (Default).
+- EQ47: "Danger, RES struck" (Default).
+- EQ48: "None primary" (Default).
+- EQ49: "Cyan" (Default).
+- EQ50: "Out of E4, one wish" (Default).
+- EQ51: Ken asked whether an impeccable module helps with colour and readability, and chose "Add colorize's check". `/impeccable audit` is left for E7.
+- Then "Approve E4".
 
 ## 5. The assumption sweep
 
