@@ -979,7 +979,8 @@ tabs on purpose (Decision 256), so this is a different line for a read-only view
 
 CRB 0530 (Visibility) gives each light level a Stealth bonus beside its attack penalty: Dim +1, Dark +3, Blind +5. The `visibility` table holds only `attack`, so a Dim or Dark tip says what the light does to an attack and nothing about Stealth. Adding the numbers is a Content change (`gamedataVersion`, Decision 68), and a Stealth check would read them, so it's a rules-and-UI order of its own, not a rider on E8. *To respect:* the numbers come from the CRB mirror, never typed in code (Decision 135), and Night Vision and Night Eyes shift the level a check reads as (Decision 233, 237), so work out which light a Stealth check uses before wiring it.
 
-**W156 — RES reads gone for a scrapped piece in GM mode's seat line and on paper.** *Ken, from E4's order (EQ50), 2026-11-14 · 🔧 · Fix***Plan:** none yet
+**W156 — RES reads gone for a scrapped piece in GM mode's seat line and on paper.** *Ken, from E4's order (EQ50), 2026-11-14 · 🔧 · Fix*\
+**Plan:** none yet
 
 E4 struck RES on the sheet for a body piece at Integrity 0, because the engine already stops applying it (CRB 0460 §Integrity). Two places still print it as a number: GM mode's seat line ("RES +6 · INT 0/10 · Scrap", `gm.js` `seatArmorText`; the compromised case already says "RES is gone", and `smoke-table-seat-fight.test.mjs` pins "· Scrap"), and the printed sheet's RES column (`sheet.js` print view, beside "0 / 10 scrap"). *To respect:* Decisions 191 and 257 (the seat reads the sheet's pipeline), and the print sheet's text-only armour row.
 
