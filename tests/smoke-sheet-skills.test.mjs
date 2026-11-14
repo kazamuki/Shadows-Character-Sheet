@@ -1574,3 +1574,19 @@ test("E8 4: Night Vision's Dim and Dark open their rules, on Skills and Main", (
   assert.deepEqual(e8Triggers(main.$(".main-combat [data-attacknote]")), ["Dim", "Dark"]);
   assert.deepEqual([...app.errors, ...main.errors], []);
 });
+
+test("E8 4b: a check note's light levels are triggers, read from the engine's note", () => {
+  const noct = D.aberrations.find(a => (a.grants || []).some(g => g.type === "visibility" && (g.on || []).includes("checks")));
+  assert.ok(noct, "no aberration modifies checks by light");
+  const ch = p19Char(c => { c.trackers.aberrations.push({ id: noct.id, permanence: "permanent" }); });
+  assert.ok(ch.trackers.aberrations.some(a => a.id === noct.id), "the aberration isn't held");
+  const want = Engine.checkNotes(ch);
+  assert.equal(want.length, 1, "the fixture has no check note");
+  const app = openSheet(ch, "skills");
+  const note = app.$("[data-checknote]");
+  const ids = JSON.parse(JSON.stringify(Engine.termSpans(want[0].text))).map(s => s.id);
+  assert.ok(ids.length >= 2, "the note names no light level: " + want[0].text);
+  assert.deepEqual([...note.querySelectorAll('[data-tip="term"]')].map(t => t.dataset.term), ids);
+  assert.equal(note.textContent.replace(/\s+/g, " ").trim(), `${want[0].text} · ${want[0].from}`);
+  assert.deepEqual(app.errors, []);
+});
