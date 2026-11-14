@@ -1139,7 +1139,7 @@ window.SHADOWS_DATA = {
     "visibilityChecks": "{amount} to every check in {levels}",
     "visibilityChecksEach": "{amount} in {levels}"
   },
-  /* Decision N (W133): the game's words a sentence on the sheet can name, and where each one's rule lives. `forms` are exact
+  /* Decision 287 (W133): the game's words a sentence on the sheet can name, and where each one's rule lives. `forms` are exact
      words, case kept; `{n}` stands for a number. A row's tip reads `from` (a rule this file already holds: a light level, a
      Pain Level, a skillCheckRules key, a derived stat, LUCK, the Milestone cadence; `stats` and `conditions` take their forms
      from those lists) or quotes the CRB (`description`, from `bookSource`). `title` heads the tip. Read by Engine.termSpans and

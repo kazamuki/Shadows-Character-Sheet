@@ -591,7 +591,7 @@ const TIPS = {
     return { title:R.name, text:R.description,
       more:R.tiers.map(t=>`${t.name} · ${t.rep} rep · ${Engine.crankPayText(t)}`),
       note: st && st.unsettled ? `${copy("unsettledLabel")}: ${R.playerNote}` : "" }; },
-  // Decision N (W133): a game word inside a sentence. The key is the term's id, then "|" and its number when it has one. The
+  // Decision 287 (W133): a game word inside a sentence. The key is the term's id, then "|" and its number when it has one. The
   // engine says what it means and returns the numbers a line needs signed; the minus is written here.
   term: key => {
     const i = key.indexOf("|"), id = i<0 ? key : key.slice(0, i), p = Engine.term(id, tipChar(), i<0 ? undefined : Number(key.slice(i+1)));
@@ -608,7 +608,7 @@ function tagChipsHtml(tags, kind="tag"){
     ? `<button type="button" class="tag" data-tip="${kind}" data-term="${esc(t)}">${esc(t)}</button>`
     : `<span class="tag plain">${esc(t)}</span>`).join("");
 }
-// A sentence the sheet writes, with each game word it names as a tip trigger (Decision N, W133). The engine finds the words
+// A sentence the sheet writes, with each game word it names as a tip trigger (Decision 287, W133). The engine finds the words
 // (the data lists them); everything between them is escaped, so a sentence is text whether or not it holds a term. This is
 // the only place a term becomes markup. A trigger is a button of its own, set in the line: it's never inside another one.
 function termsHtml(text){

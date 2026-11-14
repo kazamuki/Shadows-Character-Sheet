@@ -124,7 +124,7 @@ const FIXTURE_FILE = new URL("./frame-fixture.json", import.meta.url);
 const FIXTURE_SIZES = [
   { width: 390, height: 844 }, { width: 768, height: 1024 }, { width: 1300, height: 900 }, { width: 1980, height: 1080 },
 ];
-// The one thing exempt from the finger-size floor (Decision N, W133): a game word that is part of a sentence, set in the line
+// The one thing exempt from the finger-size floor (Decision 287, W133): a game word that is part of a sentence, set in the line
 // (WCAG 2.5.8, "Inline"). It must be a .term button, drawn in the line (a button reads inline-block even when set inline), with words of its own sentence beside it. A term made a block,
 // and every other small control, still counts. Tested against a real layout before the run (see selfTest).
 const INLINE_TERM = `(el) => el.matches("button.term") && /^inline(-block)?$/.test(getComputedStyle(el).display) && !!el.parentNode && [...el.parentNode.childNodes].some(n => n.nodeType === 3 && n.textContent.trim() !== "")`;

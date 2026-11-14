@@ -218,5 +218,5 @@
 #printSheet table.p-powertable th:nth-child(2){ width:14% }
 #printSheet table.p-archtable td .p-line{ display:block; min-height:1.3em }
 #printSheet .p-blankrows td{ height:16px }
-/* Decision N (W133): a game word set in a sentence reads as the plain word on paper. */
+/* Decision 287 (W133): a game word set in a sentence reads as the plain word on paper. */
 .term{ border:0; color:inherit; text-decoration:none }

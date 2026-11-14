@@ -2485,7 +2485,7 @@ const Engine = (() => {
              health: v>10 && id==="BOD" && hlRule ? hlRule : null };
   }
 
-  // ── The game's words inside a sentence (Decision N, W133) ────────────
+  // ── The game's words inside a sentence (Decision 287, W133) ────────────
   // `gameTerms` lists the words a sentence on the sheet can name and where each one's rule lives. termSpans says where the
   // first of each sits in a string; term says what it means. Both read the data and never touch a DOM, and neither throws.
   // The `from` kinds are a closed set; a row with another kind, or one pointing at what the data doesn't hold, says nothing.

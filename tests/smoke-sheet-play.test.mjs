@@ -2349,10 +2349,9 @@ test("E8 6: Pain Level, the Rest line and a flag's note carry their terms", () =
   assert.deepEqual(app.errors, []);
   // a flagged Major's playerNote
   const pro = lockedCharacter(); pro.identity.archetype = "professional"; pro.progression.milestonePoints = 100;
-  const sm = D.milestones && JSON.stringify(D.archetypes.find(a => a.id === "professional")).includes('"specialist"');
   const prog = openSheet(pro, "progression");
   const card = prog.$('[data-majorcard="specialist"]');
-  assert.ok(card, "no Specialist card" + sm);
+  assert.ok(card, "no Specialist card");
   assert.deepEqual(trig(card.querySelector(".flag")), ["Kicker Die"]);
   assert.deepEqual(prog.errors, []);
 });
