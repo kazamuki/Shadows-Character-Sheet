@@ -8,7 +8,7 @@
 
 The conductor asked for a sweep of the running sheet at 375 for anything else that breaks, and for the order to say which of those E6 takes and which it leaves to E7 or the wishlist (§5, *The rest of the sweep*).
 
-**Status:** drafted 2026-11-14 by the Opus session that reviewed E4, at the conductor's request. **Waiting on Ken's answers to EQ52–EQ57 (§4).**
+**Status:** drafted 2026-11-14 by the Opus session that reviewed E4, at the conductor's request. Ken answered EQ52–EQ57 on 2026-11-14 (§4), every one Default. **Approved by Ken 2026-11-14** (in the conductor's session).
 **Branch:** the builder's own, cut from `main` once this order has merged.
 **Runs beside:** E7 waits for all. E4 is merged (#341). Nothing else is open on `shadows.css`.
 **Impeccable:** `/impeccable adapt the running sheet at 375px`. The pre-flight below is that pass's analysis, done by hand in the dev preview with the measurements given. The builder doesn't run it again.
@@ -111,6 +111,15 @@ Each has a default. A question Ken leaves blank is answered "Default".
 - **EQ57 — Which widths `phone-check`'s new floors run at.**
   - **Default: the phone widths it already has** (390, and 390 with touch), plus 768 for the overflow floor. Both breaks reproduce at 390 (the Arcanist's overflow is 164px there, and "1d10 + 22" is two lines), so the floors go red on `main` without a new width, and the frame fixture keeps its four sizes.
   - *Alternative:* add 375 as a fifth width. That's closer to the plan's wording, but it adds a set of frames to `tools/frame-fixture.json` and about a minute to every run, for breaks 390 already catches.
+
+**Ken's answers, 2026-11-14** (in the conductor's session):
+- EQ52: "Keep both" (Default).
+- EQ53: "One line on a phone" (Default).
+- EQ54: "Everywhere" (Default).
+- EQ55: "E6 takes it" (Default).
+- EQ56: "E6 takes it" (Default).
+- EQ57: "Existing widths" (Default).
+- Then "Approve E6". E6 stays *Fix*, with no decision.
 
 ## 5. The assumption sweep
 
