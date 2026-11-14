@@ -2355,3 +2355,75 @@ test("E8 6: Pain Level, the Rest line and a flag's note carry their terms", () =
   assert.deepEqual(trig(card.querySelector(".flag")), ["Kicker Die"]);
   assert.deepEqual(prog.errors, []);
 });
+
+// ── E4: colour that keeps its one meaning ─────────────────────────────
+// A worn body piece at Integrity 0 reads damaged wherever the sheet draws it,
+// and says RES is gone (the engine already skips it: resSkipped).
+const e4Piece = kind => {
+  const ch = lockedCharacter();
+  ch.armor.push({ id: "kevlar-vest", integrityLoss: 0, notes: "", worn: true, scrapped: false, upgrades: [] });
+  const max = Engine.armorState(ch).worn.integrityMax;
+  if (kind !== "healthy") ch.armor[0].integrityLoss = max;
+  if (kind === "scrap") ch.armor[0].scrapped = true;
+  const w = Engine.armorState(ch).worn;
+  if (kind === "compromised") assert.ok(w.integrity === 0 && w.compromised && !w.scrapped, "the compromised fixture isn't compromised-and-not-scrap");
+  if (kind === "scrap") assert.ok(w.scrapped && w.integrity === 0, "the scrap fixture isn't scrap");
+  if (kind === "healthy") assert.ok(w.integrity > 0 && !w.compromised && !w.scrapped, "the healthy fixture isn't healthy");
+  return { ch, w };
+};
+const e4Armor = (kind, section) => {
+  const { ch, w } = e4Piece(kind);
+  return { app: openSheet(ch, section), w };
+};
+for (const kind of ["compromised", "scrap"]) {
+  test(`E4 2: a ${kind} worn piece reads damaged on Main, Loadout, Trackers and the Hit panel`, () => {
+    const note = kind === "scrap" ? D.armorRules.scrapNote : D.armorRules.compromisedNote;
+    for (const section of ["main", "loadout"]) {
+      const { app, w } = e4Armor(kind, section);
+      const card = app.$("#main .lo-armor.worn");
+      assert.ok(card && card.classList.contains("down"), `${section}: the card isn't .down`);
+      assert.equal(card.classList.contains("scrap"), kind === "scrap", `${section}: .scrap is wrong for a ${kind} piece`);
+      const off = card.querySelector(".res-off");
+      assert.ok(off, `${section}: no .res-off`);
+      assert.ok(off.textContent.startsWith(`RES +${w.res}`), `${section}: .res-off reads "${off.textContent}"`);
+      assert.ok(!off.textContent.includes("PROT"), `${section}: PROT is inside .res-off`);
+      assert.ok(card.querySelector(".hitarmor").textContent.replace(off.textContent, "").includes(`PROT ${w.prot}`), `${section}: PROT doesn't read as a value outside the strike`);
+      const notes = [...card.querySelectorAll("[data-armordown]")];
+      // Loadout's repair row already says scrapNote for scrap, so it isn't repeated there.
+      const want = section === "loadout" && kind === "scrap" ? 0 : 1;
+      assert.equal(notes.length, want, `${section}: ${notes.length} [data-armordown] notes`);
+      if (want) assert.equal(notes[0].textContent.trim(), note);
+    }
+    const { app, w } = e4Armor(kind, "trackers");
+    const line = [...app.$$("#main .trk .hitarmor")].find(e => e.textContent.includes(w.name));
+    assert.ok(line && line.classList.contains("down"), "Trackers' Armor line isn't .down");
+    assert.equal(line.classList.contains("scrap"), kind === "scrap");
+    assert.ok(line.querySelector(".res-off") && line.querySelector(".res-off").textContent.startsWith(`RES +${w.res}`), "Trackers: RES isn't marked off");
+    assert.equal(app.$$("#main .trk [data-armordown]").length, 1, "Trackers: the note isn't there once");
+    assert.equal(app.$("#main .trk [data-armordown]").textContent.trim(), note);
+    app.click("[data-hitopen]");
+    const hl = [...app.$$("[data-hitpanel] .hitarmor")].find(e => e.textContent.includes(w.name));
+    assert.ok(hl && hl.classList.contains("down"), "the Hit panel's line isn't .down");
+    assert.equal(hl.classList.contains("scrap"), kind === "scrap");
+    assert.ok(hl.querySelector(".res-off") && hl.querySelector(".res-off").textContent === `RES +${w.res}`, "the Hit panel: RES isn't marked off");
+  });
+}
+test("E4 2: the After-the-fight panel's line is .down for a damaged piece", () => {
+  const { app, w } = e4Armor("compromised", "trackers");
+  app.click('[data-actopen="wear"]');
+  const l = [...app.$$('[data-actpanel="wear"] .hitarmor')].find(e => e.textContent.includes(w.name));
+  assert.ok(l && l.classList.contains("down"), "After the fight: not .down");
+});
+test("E4 2: a healthy worn piece wears none of it, and its text is the same", () => {
+  for (const section of ["main", "loadout", "trackers"]) {
+    const { app, w } = e4Armor("healthy", section);
+    assert.equal(app.$$("#main .down, #main .res-off, #main [data-armordown]").length, 0, `${section}: a healthy piece reads damaged`);
+    const line = [...app.$$("#main .hitarmor")].find(e => e.textContent.includes("PROT"));
+    assert.match(line.textContent.replace(/\s+/g, " "), new RegExp(`PROT ${w.prot} · RES \\+${w.res} \\(`));
+  }
+  const { app } = e4Armor("healthy", "trackers");
+  app.click("[data-hitopen]");
+  assert.equal(app.$$("[data-hitpanel] .down, [data-hitpanel] .res-off").length, 0);
+  app.click('[data-actopen="wear"]');
+  assert.equal(app.$$('[data-actpanel="wear"] .down').length, 0);
+});

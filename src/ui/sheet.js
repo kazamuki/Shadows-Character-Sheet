@@ -487,8 +487,8 @@ function renderShMain(){
   }
   const worn = Engine.armorState(ch).worn, natMain = naturalArmorText(ch);
   if (worn || natMain) h += `<div class="sect">Armor</div>`;
-  if (worn) h += `<div class="lo-armor worn"><div class="lo-armor-head"><b>${esc(worn.name)}</b></div>
-    <div class="lo-armor-stats"><span class="hitarmor">${armorStatLine(worn)}</span></div><div class="lo-armor-int">${intBar(worn)}</div></div>`;
+  if (worn) h += `<div class="lo-armor worn${armorDownCls(worn)}"><div class="lo-armor-head"><b>${esc(worn.name)}</b></div>
+    <div class="lo-armor-stats"><span class="hitarmor">${armorStatLine(worn)}</span></div><div class="lo-armor-int">${intBar(worn)}</div>${armorDownNote(worn, "p")}</div>`;
   if (natMain) h += `<p class="hitarmor">${esc(natMain)}</p>`;
   if (lines.length || natural || worn || natMain) h += `<div class="sect">Combat skills</div>`;
   h += skillTableHtml(ch, "combat", "Combat Skill", {includeUntrained:true}) || `<p class="step-note">No combat skills defined.</p>`;
@@ -1182,7 +1182,7 @@ function hitPanelHtml(ch, r){
   const skin=Engine.naturalArmor(ch, hitInput(st).natural).total>0;
   if (as.worn){
     const w=as.worn;
-    h+=`<div class="hitrow"><span class="hitarmor">${esc(w.name)} · PROT ${esc(w.prot||"—")} · RES +${w.res} · Integrity ${w.integrity}/${w.integrityMax}${w.scrapped?" · scrap":w.compromised?" · Compromised":""}</span>
+    h+=`<div class="hitrow"><span class="hitarmor${armorDownCls(w)}">${esc(w.name)} · PROT ${esc(w.prot||"—")} · ${resOffHtml(w, `RES +${w.res}`)} · Integrity ${w.integrity}/${w.integrityMax}${w.scrapped?" · scrap":w.compromised?" · Compromised":""}</span>
       ${!bypass && !(r.ok && r.immuneBy) && (!r.ok || r.covered) ? num("protRoll","PROT roll") : ""}</div>`;
   } else {
     h+=`<div class="hitrow"><span class="hitnote">No body armor worn${skin?"":", so nothing answers the hit"}. Armor goes on under Loadout.</span></div>`;
@@ -1402,7 +1402,7 @@ function wearPanelHtml(ch, st){
   let h=`<div class="hitpanel" data-actpanel="wear"><h3>After the fight</h3><p class="hitnote">${esc(R.wearNote||"")}</p>`;
   if (!w) return h + `<p class="hitwhy">No body armor worn.</p>` + actButtons(false, "Apply wear") + `</div>`;
   const dice=R.integrityLossByDifficulty||{};
-  h+=`<div class="hitrow"><span class="hitarmor">${esc(w.name)} · Integrity ${w.integrity}/${w.integrityMax}</span>
+  h+=`<div class="hitrow"><span class="hitarmor${armorDownCls(w)}">${esc(w.name)} · Integrity ${w.integrity}/${w.integrityMax}</span>
     <label class="field"><span>How hard was it</span><select data-act="difficulty">${Object.keys(dice).map(k=>actOpt(k, `${titleCase(k)} (${dice[k]})`, st.difficulty===k)).join("")}</select></label>
     ${actNum(st,"roll","Wear die",`max="${esc(String(dice[st.difficulty]||"").replace(/^1?d/,""))}"`)}</div>`;
   const sh = w.scrapped ? null : w.features.map(f=>(D.armorFeatureGlossary||[]).find(g=>g.id===f)).find(g=>g && g.afterEncounter);
@@ -1590,8 +1590,8 @@ function renderShTrackers(){
   // Armor: the worn body piece's Integrity, and the after-fight wear roll.
   const worn = Engine.armorState(ch).worn;
   h += `<div class="trk"><h2>Armor</h2>` + (worn
-    ? `<span class="hitarmor">${esc(worn.name)} · ${armorStatLine(worn)}</span>
-       <div class="lo-armor-int" style="flex-basis:100%">${intBar(worn)}</div>
+    ? `<span class="hitarmor${armorDownCls(worn)}">${esc(worn.name)} · ${armorStatLine(worn)}</span>
+       <div class="lo-armor-int" style="flex-basis:100%">${intBar(worn)}</div>${armorDownNote(worn, "span")}
        <button class="btn sm" data-actopen="wear" ${open?"disabled":""}>After the fight</button>
        <span class="sub">${esc((D.armorRules||{}).wearNote||"")} Repairs are on Loadout.</span>`
     : `<span class="sub">No body armor worn. Pick it up or put it on under Loadout.</span>`)
@@ -1717,13 +1717,13 @@ function renderShProgression(){
   // stat, skill or power with its price, so the Milestones below stay in
   // reach. Powers only when the character holds one with a rank (Decision 194).
   h += `<div class="raise-row">
-    <button class="btn primary" data-raiseopen="stat">Raise a Stat</button>
-    <button class="btn primary" data-raiseopen="skill">Raise a Skill</button>
-    ${(ch.houseRules && ch.houseRules.training===true) || ch.progression.training ? `<button class="btn primary" data-trainopen="1">Train a Skill</button>` : ""}
-    <button class="btn primary" data-raiseopen="power">Buy or Raise a Power</button>
-    <button class="btn primary" data-ipopen="advantage">Buy an Advantage</button>
-    ${(ch.disadvantages||[]).some(r=>r && Engine.disById(r.id)) ? `<button class="btn primary" data-ipopen="disadvantage">Buy off a Disadvantage</button>` : ""}
-    ${Engine.ipCost(ch, "restore", "san", 1).ok || Engine.hlState(ch).massive>0 ? `<button class="btn primary" data-ipopen="restore">Restore</button>` : ""}</div>`;
+    <button class="btn" data-raiseopen="stat">Raise a Stat</button>
+    <button class="btn" data-raiseopen="skill">Raise a Skill</button>
+    ${(ch.houseRules && ch.houseRules.training===true) || ch.progression.training ? `<button class="btn" data-trainopen="1">Train a Skill</button>` : ""}
+    <button class="btn" data-raiseopen="power">Buy or Raise a Power</button>
+    <button class="btn" data-ipopen="advantage">Buy an Advantage</button>
+    ${(ch.disadvantages||[]).some(r=>r && Engine.disById(r.id)) ? `<button class="btn" data-ipopen="disadvantage">Buy off a Disadvantage</button>` : ""}
+    ${Engine.ipCost(ch, "restore", "san", 1).ok || Engine.hlState(ch).massive>0 ? `<button class="btn" data-ipopen="restore">Restore</button>` : ""}</div>`;
 
   // IP journal
   h += `<details class="group"><summary>IP Journal (${ip.log.length})</summary>`;
@@ -2326,15 +2326,23 @@ const intBar = p => {
     <span class="lo-int">${p.integrity} / ${p.integrityMax} Integrity</span>${
     p.scrapped?' <span class="chip pain">scrap</span>':p.compromised?' <span class="chip pain">Compromised</span>':""}`;
 };
+// A body piece at Integrity 0, compromised or scrap, reads damaged wherever it's drawn: its card or
+// line takes the danger line, and RES is struck, because the engine stops applying it (resSkipped).
+// PROT still rolls, so it stays a value. The words are the data's own notes.
+const armorIsDown = p => !!(p && (p.compromised || p.scrapped));
+const armorDownCls = p => armorIsDown(p) ? ` down${p.scrapped?" scrap":""}` : "";
+const armorDownNote = (p, tag) => armorIsDown(p)
+  ? `<${tag} class="${tag==="p"?"hitnote":"sub"}" data-armordown>${esc((D.armorRules||{})[p.scrapped?"scrapNote":"compromisedNote"]||"")}</${tag}>` : "";
+const resOffHtml = (p, text) => armorIsDown(p) ? `<span class="res-off">${text}</span>` : text;
 function armorStatLine(p){
   const R = D.armorRules||{};
   const res = p.resAgainst.map(titleCase).join(", ");
-  return `PROT ${esc(p.prot||"—")} · RES +${p.res}${res?` (${esc(res)})`:""} · ${esc((R.coverageNames||{})[p.coverageName]||titleCase(p.coverageName))}`;
+  return `PROT ${esc(p.prot||"—")} · ${resOffHtml(p, `RES +${p.res}${res?` (${esc(res)})`:""}`)} · ${esc((R.coverageNames||{})[p.coverageName]||titleCase(p.coverageName))}`;
 }
 function armorRowHtml(ch, p){
   const R = D.armorRules||{}, e = ch.armor[p.index], body = p.slot==="body";
   const slotName = (R.slotNames||{})[p.slot]||titleCase(p.slot), open = p.custom && loOpen(e);
-  let h = `<div class="lo-armor${p.worn?" worn":""}"><div class="lo-armor-head">
+  let h = `<div class="lo-armor${p.worn?` worn${armorDownCls(p)}`:""}"><div class="lo-armor-head">
     <label class="check"><input type="checkbox" data-worn="${p.index}" ${p.worn?"checked":""}> Worn</label>
     <b>${esc(p.name)}</b> <span class="chip">${esc(slotName)}</span>
     ${p.missing?`<span class="chip pain">${esc(copy("orphanChip"))}</span>`:""}
@@ -2348,7 +2356,7 @@ function armorRowHtml(ch, p){
   if (body){
     h += `<div class="lo-armor-stats"><span class="hitarmor">${armorStatLine(p)}</span></div>${
       p.majors.length ? `<p class="lo-sub">${esc(p.protBase)}, a step up from ${esc(p.majors.map(m=>m.name).join(", "))}</p>` : ""}
-      <div class="lo-armor-int">${intBar(p)}</div>${majorsLineHtml(ch, "armor", p.index)}`;
+      <div class="lo-armor-int">${intBar(p)}</div>${p.scrapped ? "" : armorDownNote(p, "p")}${majorsLineHtml(ch, "armor", p.index)}`;
   }
   const piece = p.custom ? null : (D.armor||[]).find(a=>a.id===p.id);
   // A scrapped piece adds nothing though it's worn (wornGrants), so its line dims as an unworn one's does.

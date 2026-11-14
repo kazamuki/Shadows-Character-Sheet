@@ -2,7 +2,7 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
-    "version": "0.69.0",
+    "version": "0.69.1",
     "date": null,
     "intro": [],
     "items": [],
@@ -10,6 +10,7 @@ window.SHADOWS_CHANGELOG = [
       {
         "title": "Character sheet",
         "items": [
+          "**Colours say one thing each.** A werewolf's form boosts are violet, not the gold of things you spend; armour at 0 Integrity looks broken and shows its RES is gone; and Progression's buttons no longer all shout at once.",
           "**The game's words inside the sheet's own lines open their rules.** Tap *Dark* in Night Vision's line, *Take 6* on a Skill, or *Pain Level 2* above your Skills, and the rule is right there.",
           "**Main shows the combat skills you've trained, and any untrained one you've got something on.** The rest are a tap away under **Show untrained**, and every skill is still on Skills.",
           "**Untrained skills are dimmed, and a skill's row no longer repeats your Pain or Conditions penalty.** The line above the table says it once, and the totals already include it.",

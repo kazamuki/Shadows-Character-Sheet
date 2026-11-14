@@ -209,11 +209,11 @@ A cold navy night with five neons, each of which means exactly one thing.
 
 ### Primary
 - **Aether Pulse** (#712B8C): the brand's hand. Primary buttons, the on-state of a form toggle, text selection, the Take-a-hit panel's frame, the violet haze in the header. Fixed across both themes.
-- **Aether Pulse, lit** (#9B4DBA): the hover of anything violet, stat and tab icons at rest, the accent edge on toasts and modals. A line, a fill or an icon; never words on the ground (2.9–3.5:1 there).
-- **Aether Pulse, read** (#B47AD0, `--violet-text`): violet in words. Section labels (`.sect`, group summaries), the Spell Power readout, the What's-new version. 4.7:1 or better on every dark surface; folds to Aether Pulse in the light theme.
+- **Aether Pulse, lit** (#9B4DBA): the hover of anything violet, stat and tab icons at rest, the accent edge on toasts and modals. A line, a fill or an icon; never words on the ground (2.9–3.5:1 there). Also the frame of a stat your form changes.
+- **Aether Pulse, read** (#B47AD0, `--violet-text`): violet in words. Section labels (`.sect`, group summaries), the Spell Power readout, the What's-new version, a stat's form boost (+4 form). 4.7:1 or better on every dark surface; folds to Aether Pulse in the light theme.
 
 ### Secondary
-- **Static Cyan** (#1BBBC4): a value and where you are. Numeric readouts in text, the active tab underline and wizard step, a selected card's ring, the focus outline on every control, tip and What's-new accent edges, the Go button's fill.
+- **Static Cyan** (#1BBBC4): a value and where you are. Numeric readouts in text, the active tab underline and wizard step, a selected card's ring, the focus outline on every control, tip and What's-new accent edges, the Go button's fill, a computed effect tag.
 
 ### Tertiary
 - **Neon Veil** (#BC489A): harm and error. Damage fill on Health Levels, Pain bands, Conditions, negative modifiers, validation errors, over-budget costs, the landed-hit flash. Also the eyebrow above a step title — its one non-harm use.
@@ -310,7 +310,7 @@ Hard-edged with slightly softened corners. Radius scales with the size of the th
 Every surface is outlined by one 1px line, never a fill change alone. A floating message carries a **3px accent edge** on one side: cyan on the left of a tip or What's-new note, violet on the left of a toast, violet on the top of the modal. Damage has its own marks: filled Health Levels are washed magenta, and ones Massive damage removed are dashed and hatched at 135° so they never read as ordinary damage.
 
 ### Named Rules
-**The One-Line Frame Rule.** A surface is a tonal step plus one 1px Deep Circuit line. State recolours the line (cyan selected or worn, green picked, magenta danger, violet on hover); it doesn't thicken it, except on the Pain bands, where weight *is* the meaning.
+**The One-Line Frame Rule.** A surface is a tonal step plus one 1px Deep Circuit line. State recolours the line (cyan selected or worn, green picked, magenta danger (a worn armour piece at Integrity 0; dashed when it's scrap), violet on hover); it doesn't thicken it, except on the Pain bands, where weight *is* the meaning.
 
 ## Components
 
@@ -318,7 +318,7 @@ Every surface is outlined by one 1px line, never a fill change alone. A floating
 Engineered at rest, lit on touch.
 - **Shape:** gently squared (4px).
 - **Default:** Raised Panel fill, one Deep Circuit line, Neutral Zone text, 600 weight, 10px × 22px.
-- **Primary:** Aether Pulse fill and line with on-accent text; hover lifts to Aether Pulse, lit.
+- **Primary:** Aether Pulse fill and line with on-accent text; hover lifts to Aether Pulse, lit. A page's peers aren't primary: Progression's spend buttons are default buttons beside one Go.
 - **Go:** Static Cyan fill with Gutter Black text — the moment of commitment (Lock & Export, Log session, New character).
 - **Small:** 5px × 12px, 500 weight, for row actions. A dashed small button means an action with nothing to spend (reloading from empty).
 - **Hover / Focus:** the line turns Aether Pulse, lit; focus is a 2px Static Cyan outline offset 1px, on every control. Disabled drops to 45% opacity.
