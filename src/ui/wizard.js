@@ -80,14 +80,14 @@ function wizardRailHtml(ch){
     const ip=Engine.ipState(ch), ms=Engine.milestoneState(ch);
     h += `<div class="vgroup">`;
     h += vrow("HP", pain.hpLeft+" / "+hp.total, pain.down?"over":"hp");
-    h += vrow("Pain", pain.down?"DOWN":"Lv "+pain.level+(pain.level?" ("+pain.skillPenalty+" skill)":""), pain.level?"over":"");
+    h += vrow("Pain", pain.down?"DOWN":"Lv "+pain.level+(pain.level?" ("+signed(pain.skillPenalty)+" skill)":""), pain.level?"over":"");
     h += vrow("SAN", san.current+" / "+san.max+"%", san.current<=san.max/2?"over":"");
     h += vrow("LUCK", luck.current+" / "+luck.max, luck.current===0?"over":"gold");
     const sfr = Engine.sfr(ch);
     if (sfr && sfr.value!=null) h += vrow("SFR", Math.max(0,sfr.value-(ch.trackers.sfr.spent||0))+" / "+sfr.value);
     h += vrow(CR, numText(ch.trackers.credits.current), "gold");
     h += `</div><div class="vgroup">`;
-    h += vrow("IP", ip.available, ip.available<0?"over":"");
+    h += vrow("IP", numText(ip.available), ip.available<0?"over":"");
     h += vrow("Milestone Pts", ms.mp);
     h += `</div>`;
   }

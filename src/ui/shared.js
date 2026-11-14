@@ -1040,6 +1040,8 @@ function issuesHtml(list){
 // any more, which is the point — a maintainer note can no longer leak by
 // accident. Enforced by a test that scans rendered HTML for flagNote text.
 const copy = k => (D.appCopy||{})[k] || "";
+// A line from appCopy with its {placeholders} filled, as text (escape it before it goes in HTML). A placeholder with nothing to fill stays out.
+const copyFill = (k, vars) => copy(k).replace(/{([^{}]+)}/g, (_, n)=>vars && vars[n]!=null ? String(vars[n]) : "");
 function noticeHtml(label, text){
   return `<div class="flag"><div><b>${esc(label)}</b> — ${esc(text)}</div></div>`;
 }

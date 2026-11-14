@@ -341,3 +341,22 @@ test("Decision 286: the seat sheet reads an own spell whole, and its Edit is dea
   }
   assert.deepEqual(app.errors, []);
 });
+
+// E5: the seat sheet draws the same intros and chips as the player's own.
+test("E5: the seat sheet reads the same intros, and the same chip for what the rules dropped", () => {
+  const ch = cyborg();
+  ch.weapons = [{ id: "gone-gun" }]; ch.armor = [{ id: "gone-vest" }]; ch.gear = [{ id: "gone-kit", qty: 1 }];
+  ch.archetypeChoices.specialization = ["gone-origin"];
+  const app = open([ch, arcanist()]);
+  openSheet(app);
+  const intro = k => D.appCopy[k].replace("{perHour}", String(D.ip.perHour));
+  for (const [tab, key] of [["skills", "introSkills"], ["character", "introCharacter"], ["progression", "introProgression"], ["loadout", "introLoadout"], ["notes", "introNotes"]]) {
+    goTab(app, tab);
+    assert.ok([...app.$$("#main .step-note")].some(n => n.textContent === intro(key)), `the seat sheet's ${tab} intro`);
+  }
+  goTab(app, "loadout");
+  assert.equal(app.$("#main").textContent.split(D.appCopy.orphanChip).length - 1, 3, "the seat's weapon, armor and gear wear the chip");
+  goTab(app, "character");
+  assert.ok(app.$("#main").textContent.includes(D.appCopy.orphanChip), "the seat's specialization wears the chip");
+  assert.doesNotMatch(app.$("#main").textContent, /game data/);
+});

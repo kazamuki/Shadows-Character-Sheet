@@ -67,7 +67,7 @@ all correct, but it takes knowing the sheet to find it:
 | E2 | Where everything lives: the tabs, shaped and distilled ([shape](finding-things-on-the-sheet/E2-where-everything-lives.md), answered 2026-11-12: seven tabs, as E2a then E2b; E2a, the moves: [order](finding-things-on-the-sheet/E2a-the-moves.md), **E2a built**, PR #327; E2b, the distill: [order](finding-things-on-the-sheet/E2b-the-distill.md), **E2b built**, Decisions 284–285) | `shape`, then `distill` | Rule or shape | — |
 | E3 | The Grimoire's read mode ([order](finding-things-on-the-sheet/E3-the-grimoire.md), approved 2026-11-12, **E3 built**, Decision 286, EQ32–EQ35 answered). Main's columns stay as E2b left them (EQ32, Alternative B); revisit if a character's fight runs past the screen under the header by more than a few pixels (today Dax's, by 96px at 1280×860), or E6 changes a skill row's or a card's height. The measurements are in the order's §1 | `layout` | Rule or shape | E2 |
 | E4 | Colour that keeps its one meaning | `colorize` | Fix | — |
-| E5 | The words: intros, placeholders, the `?` modifiers ([order](finding-things-on-the-sheet/E5-the-words.md), approved 2026-11-13, EQ36–EQ40 answered: all Default) | `clarify` | Fix | E2 |
+| E5 | The words: intros, placeholders, the `?` modifiers ([order](finding-things-on-the-sheet/E5-the-words.md), approved 2026-11-13, EQ36–EQ40 answered: all Default; **E5 built**) | `clarify` | Fix | E2 |
 | E6 | The phone | `adapt` | Fix | E3 |
 | E7 | Polish, then measure | `polish`, then `critique` | Fix | all |
 | E8 | The game's words a tap away (W133), from E2's shape (EQ22) | `clarify` | Rule or shape | E5 |

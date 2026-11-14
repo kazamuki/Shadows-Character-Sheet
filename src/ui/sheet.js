@@ -9,9 +9,9 @@
 function painPenaltyLine(pain, long){
   const e = pain.essenceFloor==null ? "" : ` (min ${pain.essenceFloor})`;
   const b = pain.breakerFloor==null ? "" : ` (min ${pain.breakerFloor}%)`;
-  return `${pain.skillPenalty} ${long?"Skill checks":"skill"}`
-       + ` · ${pain.essencePenalty} ${long?"Essence dice":"Essence"}${e}`
-       + ` · ${pain.breakerPenalty}% Breaker${b}`;
+  return `${signed(pain.skillPenalty)} ${long?"Skill checks":"skill"}`
+       + ` · ${signed(pain.essencePenalty)} ${long?"Essence dice":"Essence"}${e}`
+       + ` · ${signed(pain.breakerPenalty)}% Breaker${b}`;
 }
 
 // Decision 224 (W87): a held Concentration spell sets a die aside from every Essence roll.
@@ -39,7 +39,7 @@ function holdingHtml(ch){
 function sheetHeader(title, note, under){
   let h = importIssuesHtml() + focusedOwedHtml(S.ch);
   h += `<h1 class="step-title">${esc(title)}</h1>${under||""}`;
-  if (note) h += `<p class="step-note">${note}</p>`;
+  if (note) h += `<p class="step-note">${note}</p>`;   // HTML: a caller escapes what it took from appCopy
   return h;
 }
 // Pain on top of Health Levels, from Conditions (Agonized) and Aberrations (Phantom Pain).
@@ -49,7 +49,7 @@ const painIgnoredText = pain => pain.ignored ? `${pain.ignoredBy.join(", ")} ${p
 const painWhyLine = pain => [painExtra(pain) ? `${signed(painExtra(pain))} Lv from ${pain.painSources.join(", ")}` : "",
   pain.ignored ? `${signed(-pain.ignored)} Lv ${pain.ignoredBy.join(", ")}` : ""].filter(Boolean).join(" · ");
 const painChip = pain => pain.level
-  ? ` <span class="chip pain">Pain Lv ${pain.level} · ${pain.skillPenalty} skill</span>` : "";
+  ? ` <span class="chip pain">Pain Lv ${pain.level} · ${signed(pain.skillPenalty)} skill</span>` : "";
 
 // ── Conditions (Decision 95) — one renderer, Main's and the Pain & Conditions
 // popover's: chips that open their text (Decision 283). Everything shown
@@ -79,7 +79,7 @@ function conditionInfoHtml(st){
   if (!a) return "";
   const R = D.conditionRules||{}, penalised = !!a.def && typeof a.def.rollPenalty==="number";
   // A Condition the game data no longer has still shows its note (Trackers' card used to).
-  return `<div class="cond-info"><b>${esc(a.label)}.</b> ${a.def ? `${esc(a.def.effect)} <b>Recovery:</b> ${esc(a.def.recovery)}` : "This Condition isn't in the game data any more."}
+  return `<div class="cond-info"><b>${esc(a.label)}.</b> ${a.def ? `${esc(a.def.effect)} <b>Recovery:</b> ${esc(a.def.recovery)}` : esc(copyFill("orphanNote", { kind:"Condition" }))}
     <input type="text" class="cond-note" data-condnote="${a.index}" value="${esc(a.note)}" placeholder="note — source, poison, who did it" aria-label="${esc(a.label)} note">${
     penalised ? ruleHtml([(R.rollPenalty||{}).text, (R.penaltyStacking||{}).text].filter(Boolean).join(" ")) : ""}</div>`;
 }
@@ -194,9 +194,9 @@ function statCellHtml(ch, id){
   }
   // derived (TOL/WILL): value only, with a "?" that reveals how it's derived
   const der=Engine.derived(ch), open=!!(S.openDerived && S.openDerived.has(id)), bd=derivedBreakdownStr(ch,id);
-  return `<div class="statcell">${statIco(id)}<div class="sid">${id}</div><div class="sv">${der[id]}</div>
-    ${bd?`<button class="deriv-q" data-derivdesc="${id}" aria-expanded="${open?"true":"false"}" title="How ${id} is derived">?</button>
-    <div class="dvbd" data-derivrow="${id}"${open?"":" hidden"}>${esc(bd)}</div>`:""}</div>`;
+  // EQ38: the "?" sits by the name, where a skill's does; the slot under the value stays empty (Decision 36).
+  return `<div class="statcell">${statIco(id)}<div class="sid">${id}${bd?` <button class="deriv-q" data-derivdesc="${id}" aria-expanded="${open?"true":"false"}" aria-label="How ${id} is derived" title="How ${id} is derived">?</button>`:""}</div><div class="sv">${der[id]}</div>
+    ${bd?`<div class="dvbd" data-derivrow="${id}"${open?"":" hidden"}>${esc(bd)}</div>`:""}</div>`;
 }
 function groupedStatBlockHtml(ch){
   return `<div class="statgroups">` + STAT_GROUPS.map(g=>
@@ -239,7 +239,7 @@ function sheetVitalsBar(ch){
   // it, so what opens the full panel (and Pin) is never scrolled away.
   let h=`<div class="vbar" aria-label="Vitals"><div class="vbar-row scroll-row" data-row="vbar">`;
   h+=pill((pain.down?"hp danger":"hp")+landedCls("hp"),"health","HP",`${pain.pastZero?"−"+pain.pastZero:pain.hpLeft}<small>/${hp.total}</small>`,"hp");
-  h+=pill((pain.level?"danger":"")+landedCls("pain"),"pain","Pain",pain.down?"DOWN":(pain.level?`Lv ${pain.level} <small>${pain.skillPenalty}</small>`:"&mdash;"),"pain");
+  h+=pill((pain.level?"danger":"")+landedCls("pain"),"pain","Pain",pain.down?"DOWN":(pain.level?`Lv ${pain.level} <small>${signed(pain.skillPenalty)}</small>`:"&mdash;"),"pain");
   const cs=Engine.conditionState(ch);
   if (cs.active.length) h+=pill(cs.isHelpless?"danger":"","","Cond",cs.isHelpless?"HELPLESS":`${cs.active.length}`,"cond");
   h+=pill(san.current<=san.max/2?"san danger":"san","sanity","SAN",`${san.current}<small>/${san.max}%</small>`,"san");
@@ -247,7 +247,7 @@ function sheetVitalsBar(ch){
   if (sf && sf.value!=null){ const left=Math.max(0,sf.value-(ch.trackers.sfr.spent||0));
     h+=pill("sfr","sfr","SFR",`${left}<small>/${sf.value}</small>`); }
   h+=pill("cred","credits",CR,numText(ch.trackers.credits.current),"cred");
-  h+=pill(ip.available<0?"danger":"","","IP",`${ip.available}`);
+  h+=pill(ip.available<0?"danger":"","","IP",`${numText(ip.available)}`);
   h+=pill("","","MP",`${ms.mp}`);
   h+=`</div><button class="vpill toggle" data-vitals-toggle aria-label="Open full vitals"><span class="vtext"><span class="vk">Vitals</span><span class="vv">View ▸</span></span></button>`;
   return h+`</div>`;
@@ -271,14 +271,14 @@ function vitalsPanelHtml(ch){
   // Each one the vitals bar opens, this opens too, to the left (Decision 160).
   const cs=Engine.conditionState(ch);
   h += vrow("HP", (pain.pastZero?"−"+pain.pastZero:pain.hpLeft)+" / "+hp.total, pain.down?"over":"hp", "", "hp");
-  h += vrow("Pain", pain.down?"DOWN":"Lv "+pain.level+(pain.level?" ("+pain.skillPenalty+" skill)":""), pain.level?"over":"", "", "pain");
+  h += vrow("Pain", pain.down?"DOWN":"Lv "+pain.level+(pain.level?" ("+signed(pain.skillPenalty)+" skill)":""), pain.level?"over":"", "", "pain");
   if (cs.active.length) h += vrow("Cond", cs.isHelpless?"HELPLESS":cs.active.length, "over", "", "cond");
   h += vrow("SAN", san.current+" / "+san.max+"%", san.current<=san.max/2?"over":"", "", "san");
   h += vrow("LUCK", luck.current+" / "+luck.max, luck.current===0?"over":"gold", "", "luck");
   if (sfr && sfr.value!=null) h += vrow("SFR", Math.max(0,sfr.value-(ch.trackers.sfr.spent||0))+" / "+sfr.value);
   h += vrow(CR, numText(ch.trackers.credits.current), "gold", "", "cred");
   h += `</div><div class="vgroup">`;
-  h += vrow("IP", ip.available, ip.available<0?"over":"");
+  h += vrow("IP", numText(ip.available), ip.available<0?"over":"");
   h += vrow("Milestone Pts", ms.mp);
   h += `</div><div class="vgroup">` + D.stats.map(s=>{
     const m=t[s.id].mod; return vrow(s.id, t[s.id].value+" ("+modText(m)+")", "", s.id);
@@ -458,7 +458,7 @@ function renderShMain(){
   // armor that answers, then the combat skills you've trained or have something on (Decision 284). The
   // skill table was long, and it was pushing the lines a player actually rolls below the fold.
   h += `<section class="main-combat"><div class="sect">Combat${painChip(pain)}</div>`;
-  if (pain.level) h += `<p class="step-note" style="margin-bottom:10px">${esc(pain.label)} — all checks take ${pain.skillPenalty}; totals below include it.</p>`;
+  if (pain.level) h += `<p class="step-note" style="margin-bottom:10px">${esc(pain.label)} — all checks take ${signed(pain.skillPenalty)}; totals below include it.</p>`;
   h += movementLineHtml(ch);   // Decision 226
   h += conditionTotalsNote(ch, true);
   // Weapons: a catalog piece is computed (Decision 100); a custom one is
@@ -514,8 +514,8 @@ function renderShMain(){
 function renderShSkills(){
   const ch=S.ch, pain=Engine.painState(ch);
   S.openSkills = S.openSkills || new Set();
-  let h = sheetHeader("Skills", "Trained skills roll 1d10 + Rank + Primary Stat + Synergy; untrained roll 1d10 + Primary Stat only. Tap <b>?</b> on any skill for what it covers.");
-  if (pain.level) h += `<p class="step-note">${esc(pain.label)} — all skill checks take ${pain.skillPenalty}; the totals below already include it.${painChip(pain)}</p>`;
+  let h = sheetHeader("Skills", esc(copy("introSkills")));
+  if (pain.level) h += `<p class="step-note">${esc(pain.label)} — all skill checks take ${signed(pain.skillPenalty)}; the totals below already include it.${painChip(pain)}</p>`;
   h += conditionTotalsNote(ch, false) + checkNotesHtml(ch);
   // Decision 156: every skill, trained or not, in its category (Main folds the plain untrained ones; this tab never does), so every
   // character's list reads the same. Two columns from 1000px: the categories
@@ -629,7 +629,7 @@ function renderShCharacter(){
       const label = a.specialization.label||"Specialization";
       parts.push(secs.sect(label, `${esc(label)}${chosen.length?"":" <span class='chip'>none chosen</span>"}`)
         + cardsOf(chosen.map(o=>`<div class="pick selected"><div class="head"><h2>${esc(o.name)}</h2>
-        ${o.missing?`<span class="cost">no longer in the game data</span>`:""}</div>
+        ${o.missing?`<span class="cost">${esc(copy("orphanChip"))}</span>`:""}</div>
         <div class="desc">${esc(o.description||"")}${o.benefit?"\n— "+esc(o.benefit):""}${optionFeaturesText(o)}</div>${optionPowersHtml(o)}${starterRunHtml(ch, o)}${chosenChoicesHtml(ch, o)}</div>`)));
     }
 
@@ -639,7 +639,7 @@ function renderShCharacter(){
     if (abPerm.length){
       parts.push(secs.sect("Permanent Aberrations") + cardsOf(abPerm.map(x=>`<div class="pick selected"><div class="head"><h2>${esc(x.name)}</h2>
         ${x.category?`<span class="cost">${esc(x.category)}</span>`:""}</div>
-        <div class="desc">${x.def?(x.def.as?`As ${esc(x.def.as)}. `:"")+esc(x.def.description)+spTail((Engine.spAmounts(ch, x.def)||{}).description):"This Aberration isn't in the game data any more."}${x.note?"\n— "+esc(x.note):""}</div></div>`)));
+        <div class="desc">${x.def?(x.def.as?`As ${esc(x.def.as)}. `:"")+esc(x.def.description)+spTail((Engine.spAmounts(ch, x.def)||{}).description):esc(copyFill("orphanNote", { kind:"Aberration" }))}${x.note?"\n— "+esc(x.note):""}</div></div>`)));
     }
 
     // Disciplines (computed ranks: scaling base + CP-bought), read-only. Where
@@ -727,7 +727,7 @@ function renderShCharacter(){
     <span class="step-note">The pools you spend are on <button class="btn sm" data-gotab="trackers">Trackers</button>.</span></div>`;
 
   const toggle = any ? `<button class="jump jump-end" data-traits-all aria-pressed="${open}">${open?"Collapse all":"Expand all"}</button>` : "";
-  return sheetHeader("Character", "Who you are and what you can do: your archetype and what it gives you, then the Advantages and Disadvantages you bought. Tap an Advantage or Disadvantage to read what it does.")
+  return sheetHeader("Character", esc(copy("introCharacter")))
     + jumpBarHtml(secs.list, { sticky:true, extra:toggle, row:true }) + h;
 }
 
@@ -830,12 +830,12 @@ function cascadePanelHtml(ch){
 function aberrationsHtml(ch){
   const st = Engine.aberrationState(ch), R = D.aberrationRules||{};
   const chip = a => `<span class="cond-chip${a.def&&a.def.category==="bad"?" bad":""}" title="${esc(a.def?a.def.description:"")}">
-      <span class="cond-chip-body"><b>${esc(a.name)}</b>${a.category?` <small>${esc(a.category)}</small>`:""}${a.missing?` <small>no longer in the game data</small>`:""}</span>
+      <span class="cond-chip-body"><b>${esc(a.name)}</b>${a.category?` <small>${esc(a.category)}</small>`:""}${a.missing?` <small>${esc(copy("orphanChip"))}</small>`:""}</span>
       <button class="x" data-abrm="${a.index}" aria-label="${a.permanence==="permanent"?"Remove":"Clear"} ${esc(a.name)}" title="${a.permanence==="permanent"?"Remove (a quest or ritual undid it)":"Clear (it wore off)"}">✕</button></span>`;
   const card = a => `<div class="pick cond-card"><div class="head"><h2>${esc(a.name)}</h2>
       ${a.category?`<span class="cost">${esc(a.category)}</span>`:""}
       <div class="controls"><button class="btn sm" data-abrm="${a.index}">${a.permanence==="permanent"?"Remove":"Clear"}</button></div></div>
-      <div class="desc">${a.def?(a.def.as?`<i>As ${esc(a.def.as)}.</i> `:"")+esc(a.def.description)+spTail((Engine.spAmounts(ch, a.def)||{}).description):"This Aberration isn't in the game data any more."}</div>
+      <div class="desc">${a.def?(a.def.as?`<i>As ${esc(a.def.as)}.</i> `:"")+esc(a.def.description)+spTail((Engine.spAmounts(ch, a.def)||{}).description):esc(copyFill("orphanNote", { kind:"Aberration" }))}</div>
       <input type="text" class="cond-note" data-abnote="${a.index}" value="${esc(a.note)}" placeholder="note: which Cascade, what it looks like on you" aria-label="${esc(a.name)} note"></div>`;
   let h = `<div class="sect">Aberrations</div>`;
   if (!st.active.length) h += `<p class="step-note cond-none">No Aberrations. ${esc(R.noStacking||"")}</p>`;
@@ -1675,7 +1675,7 @@ ${esc(painIgnoredText(pain))}: ${signed(-pain.ignored)} Pain Level${pain.ignored
 
   // Manual adjustments
   h += `<div class="sect">Manual Adjustments</div>
-    <p class="step-note">For milestone benefits and other effects the engine doesn't model yet — e.g. <em>Honed</em> grants a Stat point (any Stat, including WILL, LUCK, or TOL). Stat adjustments cascade through everything downstream; the rest apply flat.</p>
+    <p class="step-note">For what the sheet doesn't add up by itself: an item, a ruling, a scar the city left. A Stat moves everything worked out from it. TOL, WILL and the maximums take the amount as it is, and the Stats they come from don't move.</p>
     <div class="trk"><h2>Add</h2>
     <select data-adjtarget aria-label="adjustment target">
       ${D.stats.map(s=>`<option value="${s.id}">${s.id} (cascades)</option>`).join("")}
@@ -1683,7 +1683,7 @@ ${esc(painIgnoredText(pain))}: ${signed(-pain.ignored)} Pain Level${pain.ignored
       <option value="SAN">SAN max</option><option value="LUCK">LUCK max</option><option value="HP">HP max</option>
     </select>
     <input type="number" data-adjamt placeholder="±" aria-label="adjustment amount" style="width:70px">
-    <input type="text" data-adjnote placeholder="why (e.g. Honed milestone)" aria-label="adjustment note">
+    <input type="text" data-adjnote placeholder="why (e.g. a ruling)" aria-label="adjustment note">
     <button class="btn sm" data-adjadd="1">Apply</button></div>`;
   const adjs = ch.trackers.adjustments||[];
   if (adjs.length){
@@ -1704,10 +1704,10 @@ function renderShProgression(){
   const ch=S.ch, ip=Engine.ipState(ch), ms=Engine.milestoneState(ch), secs=sectionList("pr");
   // Decision 281: what happens between sessions, in one page: log one, spend
   // what it earned, read the history, and Undo, each reached from the jump bar.
-  const head = sheetHeader("Progression", `Logging a session grants <em>${D.ip.perHour} IP an hour of play</em> (change it below if your table runs different), 1 Milestone Point, and refreshes LUCK — it only resets when a session truly ends.`);
+  const head = sheetHeader("Progression", esc(copyFill("introProgression", { perHour: D.ip.perHour })));
   let h = logSessionHtml(ch, secs);
 
-  h += `<div class="trk" ${secs.at("IP")}><h2>IP</h2><span class="big ${ip.available<0?"bad":""}">${ip.available}</span>
+  h += `<div class="trk" ${secs.at("IP")}><h2>IP</h2><span class="big ${ip.available<0?"bad":""}">${numText(ip.available)}</span>
     <span class="sub" style="flex-basis:auto">earned ${ip.earned} · spent ${ip.spent}</span>
     <input type="number" min="0" data-ipamt placeholder="amount" aria-label="IP grant amount">
     <input type="text" data-ipnote placeholder="note (e.g. Improved roll, GM bonus)" aria-label="IP grant note">
@@ -1782,7 +1782,7 @@ function renderShProgression(){
   const offered = Engine.majorOffered(ch), shared = new Set((D.milestones.majorGeneral||[]).map(m=>m.id));
   const own = offered.filter(m=>!shared.has(m.id)), arch = D.archetypes.find(a=>a.id===ch.identity.archetype);
   h += `<details class="group" ${ms.majorLeft>0?"open":""}><summary>Major Milestones ${ms.majorLeft>0?`— <b style="color:var(--green)">${ms.majorLeft} to pick</b>`:""}</summary>
-    <p class="step-note">Once each, any order, subject to prerequisites. Prose prerequisites are the table's call — taking one with a <span class="chip gold">GM</span> requirement will ask you to confirm.</p>`;
+    <p class="step-note">Each once, in any order, when you meet what it asks. Where the book leaves it to judgement, your table decides: taking one marked <span class="chip gold">GM</span> asks you to confirm.</p>`;
   const majorHtml = m=>{
     const taken = ms.majorTaken.some(t=>t.id===m.id);
     const pre = Engine.majorPrereqs(ch, m);
@@ -2095,7 +2095,7 @@ function powersPanelHtml(ch){
   if (!powers.length) h += `<p class="step-note">No powers yet.</p>`;
   h += `<details class="group pw-add"><summary>Add a power</summary><div class="ref-body">
     ${powerFieldsHtml(k=>`data-pwnew="${k}"`, null, uses)}${powerCostHtml(k=>`data-pwnew="${k}"`, S.admin, !S.admin)}
-    <p class="step-note">${esc(S.admin ? copy("powerAddAdminNote") : copy("powerAddNote").replace("{cost}", D.ip.powerIncreaseCost.newPower))} You have ${ip.available} IP.</p>
+    <p class="step-note">${esc(S.admin ? copy("powerAddAdminNote") : copy("powerAddNote").replace("{cost}", D.ip.powerIncreaseCost.newPower))} You have ${numText(ip.available)} IP.</p>
     <button class="btn" data-pwadd-go>Add power</button></div></details>`;
   return h;
 }
@@ -2105,7 +2105,7 @@ function openImprovePower(ch, id){
   const wi = Engine.writeInOptions(ch), uses = wi ? wi.powerUses : [];
   openModal({ title:`Improve ${p.name||"this power"}`,
     html:`${powerFieldsHtml(k=>`data-pwimp="${k}"`, p, uses)}${powerCostHtml(k=>`data-pwimp="${k}"`, false)}
-      <p class="step-note">${esc(copy("powerImproveNote"))} You have ${Engine.ipState(ch).available} IP.</p>`,
+      <p class="step-note">${esc(copy("powerImproveNote"))} You have ${numText(Engine.ipState(ch).available)} IP.</p>`,
     foot:`<button class="btn primary" data-pwimp-go>Improve</button><button class="btn" data-modalclose>Cancel</button>`,
     bind(body, foot){
       foot.querySelector("[data-pwimp-go]").onclick=()=>{
@@ -2126,7 +2126,7 @@ function gearRowsHtml(ch){
   const own = mine.filter(l=>loOpen(ch.gear[l.index])), folded = mine.filter(l=>!own.includes(l));
   let h = "";
   if (cat.length || folded.length) h += `<div class="lo-gear">` + cat.map(l=>{
-    if (l.missing) return `<div class="lo-gear-row"><div class="lo-gear-name"><b>${esc(l.name)}</b> <span class="chip pain">no longer in the game data</span></div>
+    if (l.missing) return `<div class="lo-gear-row"><div class="lo-gear-name"><b>${esc(l.name)}</b> <span class="chip pain">${esc(copy("orphanChip"))}</span></div>
       <div class="lo-gear-ctl"></div><input type="text" data-lonote="gear|${l.index}" value="${esc(l.notes)}" aria-label="notes">
       <button class="x" data-lorm="gear|${l.index}" title="Remove">✕</button></div>`;
     const sub = [l.categoryName, l.material, l.action?`${l.action} Action`:null, l.itemNotes].filter(Boolean);
@@ -2285,7 +2285,7 @@ function weaponRowsHtml(ch){
   if (cat.length || folded.length){
     h += `<div class="lo-scroll"><table class="ref lo-weapons"><thead><tr><th>Weapon</th><th>Attack</th><th>Damage</th><th>Range</th><th>RoF</th><th>Cap.</th><th>Notes</th><th></th></tr></thead><tbody>` +
       cat.map(l=>{
-        if (l.missing) return `<tr><td><b>${esc(l.name)}</b> <span class="chip pain">no longer in the game data</span></td><td colspan="5"></td>
+        if (l.missing) return `<tr><td><b>${esc(l.name)}</b> <span class="chip pain">${esc(copy("orphanChip"))}</span></td><td colspan="5"></td>
           <td><input type="text" data-lonote="weapons|${l.index}" value="${esc(l.notes)}" aria-label="notes"></td>
           <td class="rm"><button class="x" data-lorm="weapons|${l.index}" title="Remove">✕</button></td></tr>`;
         const sub = [l.skill&&l.skill.name, l.style, l.damageType && l.damageType!=="Normal" ? l.damageType : null].filter(Boolean);
@@ -2337,7 +2337,7 @@ function armorRowHtml(ch, p){
   let h = `<div class="lo-armor${p.worn?" worn":""}"><div class="lo-armor-head">
     <label class="check"><input type="checkbox" data-worn="${p.index}" ${p.worn?"checked":""}> Worn</label>
     <b>${esc(p.name)}</b> <span class="chip">${esc(slotName)}</span>
-    ${p.missing?'<span class="chip pain">no longer in the game data</span>':""}
+    ${p.missing?`<span class="chip pain">${esc(copy("orphanChip"))}</span>`:""}
     ${p.custom && !open ? loEditHtml("armor", p.index, p.name) : ""}<button class="x" data-lorm="armor|${p.index}" title="Remove" aria-label="Remove ${esc(p.name)}">✕</button></div>`;
   if (open){
     const f=(k,label,type)=>`<label class="field"><span>${label}</span><input type="${type}" ${type==="number"?'min="0"':""} data-armorfield="${p.index}|${k}" value="${esc(e[k]==null?"":e[k])}"></label>`;
@@ -2492,7 +2492,7 @@ function grimoireHtml(ch, p){
 
   // From the book
   h += book.length ? book.map(l=>{
-    if (l.missing) return `<div class="spell missing"><b>${esc(l.spellId)}</b> isn't in the book any more.
+    if (l.missing) return `<div class="spell missing"><b>${esc(l.spellId)}.</b> ${esc(copyFill("orphanNote", { kind:"Spell" }))}
       <button class="x" data-spellrm="${l.index}" aria-label="Remove">✕</button></div>`;
     const ov = l.overflow ? Object.entries(l.overflow).map(([k,v])=>`<li><b>${esc(k)}</b> ${spText(l.sp&&l.sp.overflow[k], v)}</li>`).join("") : "";
     return `<details class="spell${l.mastered?" mastered":""}"><summary>
@@ -2547,14 +2547,14 @@ function grimoireHtml(ch, p){
     }).join("");
   }
   h += `<button class="btn sm" data-spellown="1">+ Add your own</button>
-    <p class="step-note">Improvised spells and ones your GM agreed to. The book's numbers don't apply to these.</p>`;
+    <p class="step-note">Spells you improvised, or settled with your GM. Their numbers are yours, not the book's.</p>`;
   return h;
 }
 
 // ── Sheet: loadout ──────────────────────────────────────────
 function renderShLoadout(){
   const ch=S.ch;
-  const head = sheetHeader("Loadout", "Weapons, armor and gear: what you carry into the city.");
+  const head = sheetHeader("Loadout", esc(copy("introLoadout")));
   // W5: a jump to each section, from the sections this page drew. Anchors
   // and scroll rather than sub-tabs, so print and Ctrl-F see the whole page.
   const secs = sectionList("lo");
@@ -2638,7 +2638,7 @@ function feedPanelHtml(ch, p){
 
 // ── Sheet: notes ─────────────────────────────────────────────────────
 function renderShNotes(){
-  let h = sheetHeader("Notes", "Freeform. The city keeps receipts — so should you.");
+  let h = sheetHeader("Notes", esc(copy("introNotes")));
   h += `<label class="field"><span>Character notes</span>
     <textarea data-notes style="min-height:340px" placeholder="Contacts. Debts. The thing you saw that no one believes.">${esc(S.ch.notes)}</textarea></label>`;
   return h;
@@ -2649,8 +2649,7 @@ function renderShNotes(){
 // here routes through commit(), so it lands in the Activity Log and is undoable.
 function renderShAdmin(){
   const ch=S.ch;
-  let h = sheetHeader("Admin — Free Edit",
-    "Direct edits to the character's stored values, bypassing creation caps and pools. For fixing mistakes. Everything here is logged to the Activity Log on Progression and can be undone.");
+  let h = sheetHeader("Admin — Free Edit", esc(copy("introAdmin")));
 
   // Non-blocking budget echo so you can see the consequences of an edit.
   const sp=Engine.statPool(ch), kp=Engine.skillPool(ch), bal=Engine.cp(ch);
@@ -2697,7 +2696,7 @@ function renderShAdmin(){
         <button class="btn sm" data-admin-stat="${s.id}|ipe|-1">−</button><button class="btn sm" data-admin-stat="${s.id}|ipe|1">+</button>
       </div><span class="mod"></span></div>`;
   }
-  h += `</div><p class="step-note">TOL/WILL aren't editable here — they're derived. To move them, adjust their input Stats (or use a Manual Adjustment in Trackers).</p>`;
+  h += `</div><p class="step-note">TOL and WILL are worked out from other Stats, so they don't change here. Change the Stats they come from, or add a Manual Adjustment on Trackers.</p>`;
 
   // Skills — rank + IP
   h += `<div class="sect">Skills — rank + IP</div><div class="alloc">`;
@@ -3002,7 +3001,7 @@ function renderPrintView(ch){
   p1main += `<div class="p-fieldrow">${pField("Age", id.age)}${pField("Build", id.build)}${pField("Archetype", arch&&Engine.archetypeContent(ch).name)}${pField("Power Level", pl&&pl.name)}</div>`;
   p1main += `<div class="p-fieldrow">${pField("Hair", id.hair)}${pField("Eyes", id.eyes)}${pField("Skin", id.skin)}${pField("Çredits", ch ? numText(ch.trackers.credits.current) : null)}</div>`;
   const crkSt = ch && Engine.crankState(ch);
-  p1main += `<div class="p-fieldrow">${pField("IP Available", ip&&ip.available)}${pField("IP Spent", ip&&ip.spent)}${crankOn()?pField("CRANK", crkSt&&`${crkSt.rep} · ${crkSt.tier?crkSt.tier.name:""}`):""}</div>`;
+  p1main += `<div class="p-fieldrow">${pField("IP Available", ip&&numText(ip.available))}${pField("IP Spent", ip&&ip.spent)}${crankOn()?pField("CRANK", crkSt&&`${crkSt.rep} · ${crkSt.tier?crkSt.tier.name:""}`):""}</div>`;
   p1main += `<div class="p-frontbody">`;
   p1main += `<div class="p-frontleft">${pCard("Stats", pStatsHtml(ch))}${pCard("Conditions", pConditionsHtml(ch), "magenta p-condcard")}</div>`;
   p1main += `<div class="p-frontright">` +
@@ -3164,11 +3163,11 @@ function addCustomPowerFrom(body){
 }
 function raiseStatusHtml(ch, type){
   const ip = Engine.ipState(ch).available;
-  if (type==="stat") return `You have <b>${ip} IP</b> · a Stat costs its current value × ${D.ip.statIncreaseCost.perPoint} IP`;
+  if (type==="stat") return `You have <b>${numText(ip)} IP</b> · a Stat costs its current value × ${D.ip.statIncreaseCost.perPoint} IP`;
   if (type==="power"){ const p = D.ip.powerIncreaseCost;
-    return `You have <b>${ip} IP</b> · a Power costs ${p.perRank} × its current rank · a new one ${p.newPower} · cap ${D.ip.rankCap}`; }
+    return `You have <b>${numText(ip)} IP</b> · a Power costs ${p.perRank} × its current rank · a new one ${p.newPower} · cap ${D.ip.rankCap}`; }
   const price = D.ip.skillIncreaseCost;
-  return `You have <b>${ip} IP</b> · a Skill costs ${price.perRank} × its current rank, Focused ${price.focusedPerRank} × · a new skill ${price.newSkill} · cap ${D.ip.rankCap}`;
+  return `You have <b>${numText(ip)} IP</b> · a Skill costs ${price.perRank} × its current rank, Focused ${price.focusedPerRank} × · a new skill ${price.newSkill} · cap ${D.ip.rankCap}`;
 }
 // One row: the name and what's under it, the move, the price, the button.
 // `why` dims the row and says why the button is off.
@@ -3179,7 +3178,7 @@ function raiseRowHtml({ name, sub, move, cost, btn, key, why }){
 }
 function raiseResultsHtml(ch, type){
   const ip = Engine.ipState(ch).available;
-  const short = c => c.ok && ip < c.cost ? `Needs ${c.cost} IP; you have ${ip}.` : "";
+  const short = c => c.ok && ip < c.cost ? `Needs ${c.cost} IP; you have ${numText(ip)}.` : "";
   if (type==="stat"){
     const rows = D.stats.map(s=>{
       const c = Engine.ipCost(ch,"stat",s.id), v = Engine.statValue(ch,s.id), ipe = ch.stats[s.id].ipe;
@@ -3187,7 +3186,7 @@ function raiseResultsHtml(ch, type){
         cost: c.ok?`${c.cost} IP`:"—", btn:"Raise", key:`stat|${s.id}`, why: c.ok ? short(c) : c.why });
     }).join("");
     return `<table class="ref spell-results raise-results"><tbody>${rows}</tbody></table>
-      <p class="step-note">WILL and TOL cannot be raised directly — they move when their input Stats do.</p>`;
+      <p class="step-note">TOL and WILL can't be raised with IP. They move when the Stats they come from do.</p>`;
   }
   if (type==="power"){
     const row = p=>{
@@ -3299,9 +3298,9 @@ const IPBUY_TITLE = { advantage:"Buy an Advantage", disadvantage:"Buy off a Disa
 const heldTraitRank = (rows, id) => (Array.isArray(rows) ? rows : []).reduce((n, r)=>n + (r && r.id===id ? Math.max(0, Math.floor(Number(r.rank)||0)) : 0), 0);
 function ipBuyStatusHtml(ch, kind){
   const ip = Engine.ipState(ch).available, P = D.ip;
-  if (kind==="advantage") return `You have <b>${ip} IP</b> · an Advantage costs its points × ${P.advantageCost.timesPoints} IP a rank, the same at every rank`;
-  if (kind==="disadvantage") return `You have <b>${ip} IP</b> · a Disadvantage comes off at its points × ${P.disadvantageBuyOff.timesPoints} IP, a rank at a time`;
-  return `You have <b>${ip} IP</b> · SAN ${P.restore.sanPerPoint} IP a point · a Health Level lost to a maiming ${P.restore.healthLevel} IP`;
+  if (kind==="advantage") return `You have <b>${numText(ip)} IP</b> · an Advantage costs its points × ${P.advantageCost.timesPoints} IP a rank, the same at every rank`;
+  if (kind==="disadvantage") return `You have <b>${numText(ip)} IP</b> · a Disadvantage comes off at its points × ${P.disadvantageBuyOff.timesPoints} IP, a rank at a time`;
+  return `You have <b>${numText(ip)} IP</b> · SAN ${P.restore.sanPerPoint} IP a point · a Health Level lost to a maiming ${P.restore.healthLevel} IP`;
 }
 // The pick a new rank asks for, drawn in its row. What's chosen waits in S.ipBuy until Buy.
 function ipPickHtml(ch, id, ask){
@@ -3342,7 +3341,7 @@ function ipAdvantagesHtml(ch){
   const heldIds = [...new Set((ch.advantages||[]).filter(r=>r && Engine.advById(r.id)).map(r=>r.id))];
   const row = def => {
     const c = Engine.ipCost(ch, "advantage", def.id), rank = heldTraitRank(ch.advantages, def.id);
-    const short = c.ok && ip < c.cost ? `Needs ${c.cost} IP; you have ${ip}.` : "";
+    const short = c.ok && ip < c.cost ? `Needs ${c.cost} IP; you have ${numText(ip)}.` : "";
     const asks = c.ok ? c.picks : [];
     const pts = Number(def.cost);
     return ipBuyRowHtml({ name: esc(def.name), sub: esc(`${pts} point${pts===1?"":"s"} a rank${rank?` · rank ${rank}`:""}`), tags: effectsHtml(ch, "advantage", def.id),
@@ -3363,7 +3362,7 @@ function ipDisadvantagesHtml(ch){
   if (!ids.length) return `<p class="step-note">No Disadvantage left to buy off.</p>`;
   const rows = ids.map(id=>{
     const def = Engine.disById(id), c = Engine.ipCost(ch, "disadvantage", id), rank = heldTraitRank(ch.disadvantages, id);
-    const short = c.ok && ip < c.cost ? `Needs ${c.cost} IP; you have ${ip}.` : "";
+    const short = c.ok && ip < c.cost ? `Needs ${c.cost} IP; you have ${numText(ip)}.` : "";
     return ipBuyRowHtml({ name: esc(def.name),
       sub: esc(`${def.pointsGranted} point${Number(def.pointsGranted)===1?"":"s"} a rank · rank ${rank}`), tags: effectsHtml(ch, "disadvantage", id),
       move: c.ok ? (c.to>0 ? `rank ${c.from} → ${c.to}` : "removed") : `${rank}`, cost: c.ok ? `${c.cost} IP` : "—", btn:"Buy off",
@@ -3381,7 +3380,7 @@ function ipSanN(ch){
 }
 function ipSanButton(ch){
   const n = ipSanN(ch), c = Engine.ipCost(ch, "restore", "san", n), ip = Engine.ipState(ch).available;
-  const short = c.ok && ip < c.cost ? `Needs ${c.cost} IP; you have ${ip}.` : "";
+  const short = c.ok && ip < c.cost ? `Needs ${c.cost} IP; you have ${numText(ip)}.` : "";
   return { text: c.ok ? `Restore ${n} SAN · ${c.cost} IP` : "Restore SAN", why: c.ok ? short : c.why, off: !c.ok || !!short };
 }
 function ipRestoreHtml(ch){
@@ -3394,7 +3393,7 @@ function ipRestoreHtml(ch){
       <button class="btn sm primary" data-ipbuy="restore|san" data-sanbtn ${b.off?"disabled":""}>${esc(b.text)}</button></div>`;
   }
   if (massive>0){
-    const c = Engine.ipCost(ch, "restore", "massiveLevel"), short = c.ok && ip < c.cost ? `Needs ${c.cost} IP; you have ${ip}.` : "";
+    const c = Engine.ipCost(ch, "restore", "massiveLevel"), short = c.ok && ip < c.cost ? `Needs ${c.cost} IP; you have ${numText(ip)}.` : "";
     h += `<div class="ip-restore"><div class="ip-what"><b>Health Levels</b><div class="sub">${massive} lost to a maiming</div>${short?`<div class="why">${esc(short)}</div>`:""}</div>
       <button class="btn sm primary" data-ipbuy="restore|massiveLevel" ${!c.ok||short?"disabled":""}>Restore a Health Level · ${c.ok ? c.cost : ""} IP</button></div>`;
   }

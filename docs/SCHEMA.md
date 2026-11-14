@@ -1430,6 +1430,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
     max/HP max apply flat. Milestone benefits stay prose + manual — except
     *Improved*, which prompts for the physical 2d10+15 roll and books it as
     an IP grant.
+    → **Superseded in part by Decision 217** — Honed and the other Minors with a `choice` apply themselves (taking one asks for its Stat and writes the Adjustment), so "Milestone benefits stay prose + manual" no longer holds for them.
     *Backfilled 2026-09-24 from this entry and the log (Decision 130) · Touches: manual adjustments, milestone benefits, aberration prose, item effects, un-modeled rules*
     - **Rejected:** a special case in the engine for each prose effect. Reference text alone (Decision 20's interim), which left a prose effect no way to reach the numbers.
     - **Revisit if:** one kind of effect recurs across many entries. Then it earns a structured field the engine reads, as `grants` did for Educated and Hard to Kill (Decision 87).

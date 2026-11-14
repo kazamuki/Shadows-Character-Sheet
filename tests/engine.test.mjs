@@ -1277,12 +1277,17 @@ test("versionCheck reports an orphaned weapon, armor, gear, spell or specializat
   for (const [kind, id] of [["Weapon", "no-such-gun"], ["Armor", "no-such-vest"], ["Gear", "no-such-kit"],
                             ["Spell", "no-such-spell"], ["Specialization", "no-such-origin"]])
     assert.ok(issues.some(i => i.startsWith(`${kind} "${id}"`)), `${kind} "${id}" went unreported`);
+  // E5: counted by the template's own tail, so a line that goes back to its old words isn't counted (and the five-before fails).
+  const tail = D.appCopy.orphanLine.split('"{name}"')[1];
+  assert.ok(tail && tail.length > 10, "orphanLine's tail is too short to count by");
+  const orphans = list => list.filter(i => i.endsWith(tail));
+  assert.equal(orphans(issues).length, 5, "five orphans, five lines in the one wording: " + issues.join(" · "));
   // What the data still defines, and a typed row, report nothing.
   ch.weapons = [{ id: D.weapons[0].id }, { custom: true, name: "Grandpa's revolver" }];
   ch.armor = [{ id: D.armor[0].id }]; ch.gear = [{ id: D.equipment[0].id, qty: 1 }];
   ch.panelData = { grimoire: [{ spellId: D.spells[0].id, stage: "known" }] };
   ch.archetypeChoices.specialization = [];
-  const left = Engine.versionCheck(Engine.migrate(ch)).filter(i => / no longer exists /.test(i));
+  const left = orphans(Engine.versionCheck(Engine.migrate(ch)));
   assert.equal(left.length, 0, left.join(" · "));
 });
 
@@ -5472,8 +5477,9 @@ test("Decision 199: Hardline Shift makes the shift's HL ordinary damage, Iron Ja
 test("Decision 199: a taken Werewolf Major resolves for a Werewolf, and versionCheck names one held by anyone else or with a junk id", () => {
   const issues = ch => Engine.versionCheck(ch).filter(x => /Major Milestone/.test(x));
   same(issues(withMajors(werewolf("trueborn"), "swift-change")), [], "a Werewolf's own Major reads as missing");
-  same(issues(withMajors(subject(), "swift-change")), ['Major Milestone "swift-change" no longer exists in game data.']);
-  same(issues(withMajors(werewolf("trueborn"), "<b>gone</b>")), ['Major Milestone "<b>gone</b>" no longer exists in game data.']);
+  const gone = id => D.appCopy.orphanLine.replace("{kind}", "Major Milestone").replace("{name}", id);
+  same(issues(withMajors(subject(), "swift-change")), [gone("swift-change")]);
+  same(issues(withMajors(werewolf("trueborn"), "<b>gone</b>")), [gone("<b>gone</b>")]);
   assert.equal(Engine.majorById(werewolf("trueborn"), "swift-change").name, "Swift Change");
   assert.equal(Engine.grants(withMajors(werewolf("trueborn"), "<b>gone</b>", "")).rou, 0, "a junk Major id granted something");
 });
@@ -13340,4 +13346,31 @@ test("Decision 274: validate returns an array for every step, and todo is only e
   // Review re-reads the other steps' issues: a to-do stays one.
   const r = Engine.validate("review", Engine.newCharacter());
   assert.ok(r.some(i => i.todo), "Review dropped the to-dos it re-read");
+});
+
+test("E5: every orphan line is appCopy.orphanLine, and none says 'game data'", () => {
+  const ch = subject();
+  ch.skills["gone-skill"] = { rank: 1, ipe: 0 };
+  ch.advantages = [{ id: "gone-adv", rank: 1 }];
+  ch.disadvantages = [{ id: "gone-dis", rank: 1 }];
+  ch.trackers.conditions = [{ id: "gone-cond" }];
+  ch.trackers.aberrations = [{ id: "gone-aber", permanence: "permanent" }];
+  ch.weapons = [{ id: "gone-gun" }]; ch.armor = [{ id: "gone-vest" }]; ch.gear = [{ id: "gone-kit", qty: 1 }];
+  ch.panelData = { grimoire: [{ spellId: "gone-spell", stage: "known" }] };
+  ch.archetypeChoices.specialization = ["gone-origin"];
+  ch.progression.milestones = { minor: [{ id: "gone-minor" }], major: [{ id: "gone-major" }, { id: "" }, {}] };
+  const issues = Engine.versionCheck(Engine.migrate(ch));
+  const line = (kind, name) => D.appCopy.orphanLine.replace("{kind}", kind).replace("{name}", () => name);
+  for (const [kind, name] of [["Skill", "gone-skill"], ["Advantage", "gone-adv"], ["Disadvantage", "gone-dis"], ["Condition", "gone-cond"],
+    ["Aberration", "gone-aber"], ["Weapon", "gone-gun"], ["Armor", "gone-vest"], ["Gear", "gone-kit"], ["Spell", "gone-spell"],
+    ["Specialization", "gone-origin"], ["Minor Milestone", "gone-minor"], ["Major Milestone", "gone-major"]])
+    assert.ok(issues.includes(line(kind, name)), `${kind} "${name}" isn't the shared line: ${issues.join(" · ")}`);
+  assert.ok(issues.every(i => typeof i === "string" && i.trim()), "a line came back empty");
+  // A Major with no id (or an empty one) still gives a line: fillTag drops one whose placeholder is empty.
+  const bare = Engine.migrate(ch); bare.progression.milestones.major = [{}, { id: "" }];   // set after migrate, which would drop them
+  const majors = Engine.versionCheck(bare).filter(i => i.startsWith("Major Milestone"));
+  assert.equal(majors.length, 2, "a Major with no id gave no line: " + majors.join(" · "));
+  assert.ok(majors.every(i => i.endsWith(D.appCopy.orphanLine.split('"{name}"')[1])));
+  assert.doesNotMatch(issues.join("\n"), /game data/);
+  assert.equal(Engine.skillLine(Engine.migrate(ch), "gone-skill").dataWarning, line("Skill", "gone-skill"));
 });

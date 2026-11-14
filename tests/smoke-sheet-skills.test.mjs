@@ -1534,3 +1534,18 @@ test("Decision 286: the Grimoire's own-spell line reads the panel's columns in t
   assert.deepEqual([...grimPanel(lockedCharacter()).columns], ["Spell Name", "Discipline", "TN", "TH", "Effect", "Overflow", "Notes"],
     "the grimoire panel's columns moved: grimoireHtml's line reads them by position");
 });
+
+test("E5: TOL and WILL show no modifier, and the derivation is a tap on the ? by the name", () => {
+  const app = openSheet(lockedCharacter(), "main");
+  for (const id of ["TOL", "WILL"]) {
+    const cell = app.$(`[data-derivdesc="${id}"]`).closest(".statcell");
+    const q = cell.querySelector("[data-derivdesc]");
+    assert.ok(cell.querySelector(".sid").contains(q), `${id}'s ? isn't by its name`);
+    assert.equal(q.getAttribute("aria-label"), `How ${id} is derived`);
+    const kids = [...cell.children], after = kids.slice(kids.indexOf(cell.querySelector(".sv")) + 1).map(e => e.className);
+    assert.deepEqual(after, ["dvbd"], `${id}: something sits under the value besides the breakdown row`);
+    const was = cell.querySelector("[data-derivrow]").hidden;
+    app.click(`[data-derivdesc="${id}"]`);
+    assert.equal(app.$(`[data-derivrow="${id}"]`).hidden, !was, `${id}'s ? didn't toggle its row`);
+  }
+});
