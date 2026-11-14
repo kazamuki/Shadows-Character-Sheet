@@ -2,7 +2,7 @@
 
 **Plan:** [finding-things-on-the-sheet](../finding-things-on-the-sheet.md), session E8. It's **W133**, which Ken set apart from E2 on 2026-11-12 (EQ22): a game term inside a sentence the app writes opens its rule on hover or tap, on Decision 139's primitive. It comes after E5, which rewrote the same sentences (E5's §9 *For E8*).
 
-**Status:** drafted 2026-11-13 by the Opus session that reviewed E5, at the conductor's request. **Awaiting Ken:** EQ41–EQ45 (§4). Nothing is built until he approves.
+**Status:** drafted 2026-11-13 by the Opus session that reviewed E5, at the conductor's request. Ken answered EQ41–EQ45 on 2026-11-13 (§4), every one Default. **Approved by Ken 2026-11-13** (in the conductor's session).
 **Branch:** the builder's own, cut from `main` once this order has merged.
 **Runs beside:** nothing that edits `sheet.js`, `shared.js` or the tip CSS. E4 (colour) and E6 (the phone) touch `shadows.css`; if either is open when E8 builds, the conductor checks the `.term` rule doesn't collide.
 **Impeccable:** `/impeccable clarify the game words inside the sheet's sentences`. The pre-flight below is that pass's analysis; the builder doesn't run it again.
@@ -117,6 +117,14 @@ N. **A game word inside a sentence the sheet writes opens its rule on the tip: t
 ## 4. Questions for Ken
 
 Each has a default. A question Ken leaves blank is answered "Default".
+
+**Ken's answers, 2026-11-13** (in the conductor's session, picked from the options, recorded by the conductor):
+- **EQ41:** "Engine finds them".
+- **EQ42:** "The word, underlined".
+- **EQ43:** "The named sites".
+- **EQ44:** "The default list".
+- **EQ45:** "First in each block".
+- Then: "Approve E8".
 
 - **EQ41 — Where the terms are found.**
   - **Default:** the engine finds them in the finished text (`Engine.termSpans`), and the UI wraps them. Every writer keeps returning text. `appCopy` stays plain text, with no markers.
