@@ -2561,18 +2561,19 @@ const Engine = (() => {
     if (!k) return termReadable(row) ? { title:title || (Array.isArray(row.forms) && row.forms[0]) || row.id, text:row.description, more:[] } : null;
     if (k==="visibility"){
       const v = visTable().find(x=>x.id===f.visibility); if (!v) return null;
-      const line = typeof v.attack==="number" && v.attack!==0 ? { text:`Attacks against targets in ${v.name} areas take {n}.`, signed:{ n:v.attack } }
-                 : { text:`Attacks against targets in ${v.name} areas take no penalty.` };
-      return { title:v.name, text:v.description||"", more:[line] };
+      // The sentence is appCopy's; the number stays {n} for the UI to sign.
+      const t = typeof v.attack==="number" && v.attack!==0 ? copyOf("termLightPenalty", "", { name:v.name, n:"{n}" }) : copyOf("termLightNone", "", { name:v.name });
+      return { title:v.name, text:v.description||"", more:t ? [typeof v.attack==="number" && v.attack!==0 ? { text:t, signed:{ n:v.attack } } : { text:t }] : [] };
     }
     if (k==="painLevel"){
       const lvl = Number(n), p = Number.isInteger(lvl) ? termPainLevels().find(x=>x.level===lvl) : null; if (!p) return null;
       const P = ((((D().resources||{}).healthLevels)||{}).painPenaltiesPerLevel)||{};
       const more = [];
       if (lvl>0 && [P.skillChecks, P.essenceCheckDice, P.breakerCheckPercent].every(x=>typeof x==="number"))
-        more.push({ text:"{s} Skill checks · {e} Essence dice · {b}% Breaker", signed:{ s:P.skillChecks*lvl, e:P.essenceCheckDice*lvl, b:P.breakerCheckPercent*lvl } });
+        { const t = copyOf("termPainPenalties", "", { s:"{s}", e:"{e}", b:"{b}" });
+          if (t) more.push({ text:t, signed:{ s:P.skillChecks*lvl, e:P.essenceCheckDice*lvl, b:P.breakerCheckPercent*lvl } }); }
       if (lvl>0 && typeof P.notes==="string" && P.notes) more.push({ text:P.notes });
-      return { title:p.label||`Pain Level ${lvl}`, text:p.description||"", more };
+      return { title:p.label||"", text:p.description||"", more };
     }
     if (k==="check"){
       const R = D().skillCheckRules||{}, t = R[f.check]; if (typeof t!=="string") return null;
@@ -2585,7 +2586,7 @@ const Engine = (() => {
     if (k==="luck"){
       const R = (D().resources||{}).luck; if (!isPlainObj(R)) return null;
       return { title:title || row.id, text:typeof R.refresh==="string" ? R.refresh : "",
-        more:(Array.isArray(R.spend) ? R.spend : []).filter(isPlainObj).map(s=>({ text:`${s.action} (${s.cost}): ${s.effect}` })) };
+        more:(Array.isArray(R.spend) ? R.spend : []).filter(isPlainObj).map(s=>copyOf("termLuckSpend", "", { action:s.action, cost:s.cost, luck:title || row.id, effect:s.effect })).filter(Boolean).map(text=>({ text })) };
     }
     if (k==="stats"){
       const def = (D().stats||[]).find(s=>s && s.id===id); if (!def) return null;
@@ -2594,14 +2595,14 @@ const Engine = (() => {
     }
     if (k==="milestones"){
       const R = (D().milestones||{}).rules; if (!isPlainObj(R)) return null;
-      const num = x => typeof x==="number" ? String(x) : null;
-      const bits = [num(R.milestonePointsPerSession) && `You earn ${R.milestonePointsPerSession} each session.`,
-        num(R.minorFirstAt) && num(R.minorEvery) && `Minor Milestones come first at ${R.minorFirstAt}, then every ${R.minorEvery}.`,
-        num(R.majorFirstAt) && num(R.majorEvery) && `Major Milestones come first at ${R.majorFirstAt}, then every ${R.majorEvery}.`].filter(Boolean);
+      const num = x => typeof x==="number" && Number.isFinite(x);
+      const bits = [num(R.milestonePointsPerSession) && copyOf("termMilestoneSession", "", { n:R.milestonePointsPerSession }),
+        num(R.minorFirstAt) && num(R.minorEvery) && copyOf("termMilestoneMinor", "", { first:R.minorFirstAt, every:R.minorEvery }),
+        num(R.majorFirstAt) && num(R.majorEvery) && copyOf("termMilestoneMajor", "", { first:R.majorFirstAt, every:R.majorEvery })].filter(Boolean);
       return { title:title || row.id, text:bits[0]||"", more:bits.slice(1).map(text=>({ text })) };
     }
     const c = (D().conditions||[]).find(x=>x && x.id===id); if (!c) return null;
-    return { title:c.name||c.id, text:c.effect||"", more:c.recovery ? [{ text:`Recovery: ${c.recovery}` }] : [] };
+    return { title:c.name||c.id, text:c.effect||"", more:c.recovery && copyOf("termConditionRecovery", "", { text:c.recovery }) ? [{ text:copyOf("termConditionRecovery", "", { text:c.recovery }) }] : [] };
   }
   function term(id, ch, n){
     try {

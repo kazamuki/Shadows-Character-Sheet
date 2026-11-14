@@ -4044,6 +4044,14 @@ window.SHADOWS_DATA = {
     "tagless": { "label": "Off grid", "text": "TAGless: no government identity, no 625Ç UBI, business done in skrip." }
   },
   "appCopy": {
+    "termLightPenalty": "Attacks against targets in {name} areas take {n}.",
+    "termLightNone": "Attacks against targets in {name} areas take no penalty.",
+    "termPainPenalties": "{s} Skill checks · {e} Essence dice · {b}% Breaker",
+    "termMilestoneSession": "Every session you play earns {n}.",
+    "termMilestoneMinor": "Minor Milestones at {first} points, then every {every} after.",
+    "termMilestoneMajor": "Major Milestones at {first} points, then every {every} after.",
+    "termConditionRecovery": "Recovery: {text}",
+    "termLuckSpend": "{action}, {cost} {luck}: {effect}",
     "expertHint": "Folds each entry to its name and cost. Tap ? to read one.",
     "expertTitle": "Folds the reading on the Stats, Archetype, Skills and Character Points steps. Tap ? to read one.",
     "unsettledLabel": "Not settled yet",

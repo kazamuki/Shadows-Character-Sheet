@@ -13459,3 +13459,27 @@ test("E8 4: no game term is typed in engine.js or the UI", () => {
     for (const w of words) assert.ok(!new RegExp("[\"'`]" + esc(w) + "[\"'`]").test(body), name + " types the term \"" + w + "\"");
   }
 });
+
+test("E8 5: the tips' sentences come from appCopy, and the engine hands back the numbers", () => {
+  const { Engine: e, D: d } = loadEngine();
+  const keys = ["termLightPenalty", "termLightNone", "termPainPenalties", "termMilestoneSession", "termMilestoneMinor", "termMilestoneMajor", "termConditionRecovery", "termLuckSpend"];
+  for (const k of keys) assert.equal(typeof D.appCopy[k], "string", `appCopy.${k} is missing`);
+  for (const k of keys) d.appCopy[k] = "ZZ" + k + " " + d.appCopy[k];
+  const lines = id => J(e.term(id, e8Hurt(), 2).more).map(m => m.text);
+  assert.ok(lines("dark")[0].startsWith("ZZtermLightPenalty "), lines("dark")[0]);
+  assert.ok(lines("dark")[0].includes("{n}") && J(e.term("dark").more)[0].signed.n === D.visibility.find(v => v.id === "dark").attack, "the number stays a number for the UI");
+  assert.ok(lines("bright")[0].startsWith("ZZtermLightNone "));
+  assert.ok(lines("pain-level")[0].startsWith("ZZtermPainPenalties "));
+  assert.ok(e.term("milestone-point").text.startsWith("ZZtermMilestoneSession "));
+  assert.ok(lines("milestone-point")[0].startsWith("ZZtermMilestoneMinor ") && lines("milestone-point")[1].startsWith("ZZtermMilestoneMajor "));
+  assert.ok(lines(D.conditions.find(c => c.recovery).id)[0].startsWith("ZZtermConditionRecovery "));
+  assert.ok(lines("LUCK").every(l => l.startsWith("ZZtermLuckSpend ")) && lines("LUCK").length === D.resources.luck.spend.length);
+  // the cadence reads the data's numbers, and LUCK's cost and word are the data's
+  const fresh = J(Engine.term("milestone-point").more).map(m => m.text);
+  assert.ok(fresh[0].includes(String(D.milestones.rules.minorFirstAt)) && fresh[0].includes(String(D.milestones.rules.minorEvery)), fresh[0]);
+  const spend = D.resources.luck.spend[0], row = J(Engine.term("LUCK").more)[0].text;
+  assert.ok(row.includes(spend.action) && row.includes(String(spend.cost)) && row.includes(D.gameTerms.find(r => r.id === "LUCK").title), row);
+  // a missing key says nothing rather than something typed in code
+  delete d.appCopy.termLightPenalty;
+  assert.deepEqual(J(e.term("dark").more), []);
+});

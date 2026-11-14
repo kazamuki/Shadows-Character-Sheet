@@ -974,6 +974,11 @@ The seat sheet draws the player's tabs, so its Progression intro says "Log a ses
 log on. A seat's intro could read as what the table sees, not what the player does. *To respect:* the seat sheet draws the same
 tabs on purpose (Decision 256), so this is a different line for a read-only view, not a second sheet.
 
+**W155 — Stealth reads the light: +1 in Dim, +3 in Dark, +5 in Blind.** *Ken, from E8's review, 2026-11-14 · 🔧 · Content*\
+**Plan:** none yet
+
+CRB 0530 (Visibility) gives each light level a Stealth bonus beside its attack penalty: Dim +1, Dark +3, Blind +5. The `visibility` table holds only `attack`, so a Dim or Dark tip says what the light does to an attack and nothing about Stealth. Adding the numbers is a Content change (`gamedataVersion`, Decision 68), and a Stealth check would read them, so it's a rules-and-UI order of its own, not a rider on E8. *To respect:* the numbers come from the CRB mirror, never typed in code (Decision 135), and Night Vision and Night Eyes shift the level a check reads as (Decision 233, 237), so work out which light a Stealth check uses before wiring it.
+
 ### For the designers
 
 **W56 — A tuning bench: change the game's numbers, see what moves, hand back a change request.** *Ken · ⏭ · shaped with Claude 2026-10-01*\
@@ -1167,7 +1172,7 @@ always" stays true of whoever makes the change.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W155.** Everything above is open. What was built is in
+- **Next free number: W156.** Everything above is open. What was built is in
   [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)
