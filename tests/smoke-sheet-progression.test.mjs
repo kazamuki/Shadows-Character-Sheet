@@ -828,3 +828,17 @@ test("E8 5: the intros' terms are triggers, and their text is still appCopy's", 
   assert.equal(admin.textContent, introOf("introAdmin"));
   assert.deepEqual(app.errors, []);
 });
+
+// E4: the spend buttons are peers; Log session is the page's one commitment.
+test("E4 4: Progression's spend buttons are peers, and Log session is the one commitment", () => {
+  const ch = lockedCharacter();
+  ch.disadvantages = [{ id: D.disadvantages[0].id, rank: 1 }];
+  assert.ok(Engine.disById(D.disadvantages[0].id), "the fixture's Disadvantage isn't one the sheet knows");
+  const app = openSheet(ch, "progression");
+  const row = app.$$("#main .raise-row .btn");
+  assert.ok(row.length >= 5, `only ${row.length} spend buttons drew`);
+  assert.ok(app.$('#main .raise-row [data-ipopen="disadvantage"]'), "the Disadvantage buy-off button didn't draw, so the row is short of five");
+  assert.equal(app.$$("#main .raise-row .btn.primary").length, 0, "a spend button is still primary");
+  assert.equal(app.$$("#main [data-seslog].btn.go").length, 1);
+  assert.deepEqual(app.errors, []);
+});

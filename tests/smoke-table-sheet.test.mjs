@@ -377,3 +377,24 @@ test("E8 7: a term on the seat sheet opens its tip, read-only", () => {
   assert.equal(title, `${D.stats.find(s => s.id === "BOD").name} ${want}`, "a Stat term doesn't read the seat's character");
   assert.deepEqual(app.errors, []);
 });
+
+// E4: the seat sheet is the same renderer, so a form and a broken piece read the same there.
+test("E4 7: the seat sheet shows a form and a broken piece the same way", () => {
+  const ch = lockedCharacter();
+  ch.identity.name = "Dax"; ch.identity.archetype = "werewolf"; ch.creation.powerLevel = "street";
+  ch.meta.id = CY_TAG; ch.meta.updated = "2026-10-02T10:00:00.000Z";
+  for (const id of Object.keys(ch.stats)) ch.stats[id].base = 6;
+  ch.archetypeChoices.specialization = ["wildblood"];
+  const panel = D.archetypes.find(a => a.id === "werewolf").coreMechanic.panels.find(p => p.id === "form");
+  const shifted = panel.options.find(o => o.name !== "Human").name;
+  assert.ok(Engine.setToggle(ch, "form", shifted).ok);
+  ch.armor.push({ id: "kevlar-vest", integrityLoss: 0, notes: "", worn: true, scrapped: true, upgrades: [] });
+  ch.armor[0].integrityLoss = Engine.armorState(ch).worn.integrityMax;
+  assert.ok(Engine.formState(ch), "the fixture isn't shifted");
+  assert.ok(Engine.armorState(ch).worn.scrapped, "the fixture's piece isn't scrap");
+  const app = open([ch]);
+  openSheet(app);
+  assert.ok(app.$("[data-rosheet] .statcell.shifted"), "no shifted stat cell");
+  assert.ok(app.$("[data-rosheet] .lo-armor.worn.down.scrap"), "no damaged scrap card");
+  assert.ok(app.$("[data-rosheet] .res-off"), "no .res-off");
+});

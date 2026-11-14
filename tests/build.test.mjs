@@ -386,3 +386,44 @@ test("U4: gm.js has no inline style but a computed transform", () => {
   const stray = styles.filter(x => !/^style="transform:scaleX\(\$\{[^}]+\}\)/.test(x));
   assert.deepEqual(stray, [], "gm.js writes a style attribute that isn't a computed transform");
 });
+
+// ── E4: colour that keeps its one meaning (DESIGN.md's One Meaning Rule) ──
+// Each rule is read the way the W43 test reads them: comments stripped, split on braces,
+// the selector matched exactly. Whole rules, never a substring, so a fold can't drop a neighbour.
+{
+  const css = readFileSync(join(ROOT, "src/styles/shadows.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(m => ({ sel: m[1].trim().replace(/\s+/g, " "), body: m[2] }));
+  const decl = (sel, prop) => {
+    const hits = rules.filter(r => r.sel.split(",").map(s => s.trim()).includes(sel));
+    const vals = hits.map(r => (new RegExp(`(?:^|;)\\s*${prop}\\s*:\\s*([^;]+)`).exec(r.body) || [])[1]).filter(Boolean).map(v => v.trim());
+    return vals.length ? vals[vals.length - 1] : null;
+  };
+  const naming = re => rules.filter(r => re.test(r.sel));
+
+  test("E4 1: a form's boost is violet, never gold", () => {
+    assert.equal(decl(".statcell.shifted", "border-color"), "var(--violet-hi)");
+    assert.equal(decl(".statcell .sform", "color"), "var(--violet-text)");
+    const gold = naming(/\.shifted|\.sform/).filter(r => /--gold/.test(r.body)).map(r => r.sel);
+    assert.deepEqual(gold, [], "a rule for a form's boost still names --gold");
+  });
+  test("E4 3: a damaged piece wears the danger line, its RES reads off, and .hitarmor is untouched", () => {
+    assert.equal(decl(".lo-armor.worn.down", "border-color"), "var(--magenta)");
+    assert.equal(decl(".lo-armor.worn.down.scrap", "border-style"), "dashed");
+    assert.equal(decl(".hitarmor .res-off", "color"), "var(--dim)");
+    assert.equal(decl(".hitarmor .res-off", "text-decoration"), "line-through");
+    assert.equal(decl(".hitarmor", "color"), "var(--cyan)", ".hitarmor's own colour moved");
+    const loud = naming(/\.hitarmor/).filter(r => !/\.res-off|\.down/.test(r.sel) && r.sel !== ".hitarmor" && /color/.test(r.body)).map(r => r.sel);
+    assert.deepEqual(loud, [], "a .hitarmor rule that isn't .down or .res-off sets a colour");
+  });
+  test("E4 5: a computed effect tag is a value, not health", () => {
+    assert.equal(decl(".effects .etag.computed", "color"), "var(--cyan)");
+    const rule = rules.find(r => r.sel === ".effects .etag.computed");
+    assert.ok(rule && /border\s*:[^;]*--cyan/.test(rule.body), "its line isn't cyan");
+    assert.doesNotMatch(rule.body, /--green/);
+  });
+  test("E4 6: the theme toggle lights violet on hover", () => {
+    assert.equal(decl(".theme-toggle:hover", "border-color"), "var(--violet-hi)");
+    assert.equal(decl(".theme-toggle:hover", "color"), "var(--violet-text)");
+    assert.doesNotMatch(rules.find(r => r.sel === ".theme-toggle:hover").body, /--gold/);
+  });
+}
