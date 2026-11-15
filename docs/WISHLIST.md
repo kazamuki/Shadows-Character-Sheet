@@ -1010,7 +1010,7 @@ CRB 0530 (Visibility) gives each light level a Stealth bonus beside its attack p
 E4 struck RES on the sheet for a body piece at Integrity 0, because the engine already stops applying it (CRB 0460 §Integrity). Two places still print it as a number: GM mode's seat line ("RES +6 · INT 0/10 · Scrap", `gm.js` `seatArmorText`; the compromised case already says "RES is gone", and `smoke-table-seat-fight.test.mjs` pins "· Scrap"), and the printed sheet's RES column (`sheet.js` print view, beside "0 / 10 scrap"). *To respect:* Decisions 191 and 257 (the seat reads the sheet's pipeline), and the print sheet's text-only armour row.
 
 **W158 — GM mode's Reference wraps its sentences on a phone.** *Ken, from E6's review (PR #344), 2026-11-14 · 🔧 · Fix*\
-**Plan:** none yet
+**Plan:** [finding-things-on-the-sheet](plans/finding-things-on-the-sheet.md), [E7's order](plans/finding-things-on-the-sheet/E7-polish.md) (EQ66)
 
 Below 640px a Reference panel's table is `width:max-content` inside its `.ref-frame` (`shadows.css`, the rules E6 left for GM mode), so each sentence is one line. At 375 the *Checks* panel is 1387px wide: a GM reads a rule by scrolling sideways about four screens. E6 gave the player's Magic reference `width:100%` inside its frame (`.ref-body .ref-frame table.ref`), so prose wraps and only a genuinely wide column table scrolls. The same split would serve Reference: sentence tables fill the frame, column tables keep `max-content`. *To respect:* Decision 207 (Reference's panels are rows in the data), so the split is read from the table's shape or a data field, not a panel id in code (Decision 135); `phone-check` should gain the open-panel overflow floor E6 added for the sheet.
 
