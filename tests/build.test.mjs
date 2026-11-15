@@ -467,5 +467,6 @@ test("U4: gm.js has no inline style but a computed transform", () => {
     assert.equal(val(rs, ".raise-row.spend", "display"), "grid");
     assert.equal(val(top, ".raise-row", "display"), "flex", "plain .raise-row lost its flex rule");
     assert.equal(val(rs, ".raise-row", "grid-template-columns"), null, "the phone grid is on plain .raise-row");
+    assert.equal(val(rs, ".raise-row.spend > .btn:last-child:nth-child(odd)", "grid-column"), "1/-1", "an odd last spend button doesn't take the row");
   });
 }

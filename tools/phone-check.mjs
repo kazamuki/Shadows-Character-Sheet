@@ -608,8 +608,8 @@ async function phoneFloors(browser, file, rows) {
         while ((n = tw.nextNode())) { mt = /^\s*(1d10 [+−] \d+)/.exec(n.textContent); if (mt) break; }
         if (!mt) continue;
         const r = document.createRange(); r.setStart(n, mt[0].indexOf(mt[1])); r.setEnd(n, mt[0].indexOf(mt[1]) + mt[1].length);
-        const q0 = [...r.getClientRects()]; if (!q0.length) continue;
-        out.push({ text: mt[1], lines: new Set([...r.getClientRects()].map(q => Math.round(q.top))).size });
+        const rects = [...r.getClientRects()]; if (!rects.length) continue;
+        out.push({ text: mt[1], lines: new Set(rects.map(q => Math.round(q.top))).size });
       }
       return out;
     });
