@@ -137,7 +137,7 @@ rev 9's `C1`–`C3` are still forward notes.
 
 ## 5. Where to start
 
-**The live site is v0.68.0** (data 0.54, schema 0.34), released 2026-11-12.
+**The live site is v0.69.1** (data 0.54, schema 0.34), released 2026-11-14.
 
 **Next is Ken's pick**, each built through a work order (`WORK-ORDERS.md`):
 - **Finding things on the sheet** (`plans/finding-things-on-the-sheet.md`, open, proposed 2026-11-11): the running sheet's usability pass, as sessions E1–E7, each with its impeccable command. E1 (the owed pick, the wizard for first-timers, Character Points folds; Decisions 273–280) is merged through 0.67.1. E2's shape is Ken's: seven tabs, one home each. **E2a** (the moves: Session Log into Progression, what you can do onto Character, Conditions onto Main; Decisions 281–283, 0.68.0) is merged and released. **E2b** (the distill: Main folds the plain untrained combat skills behind Show N untrained, a skill row no longer repeats the shared Pain and Conditions penalty, untrained rows dim, Trackers loses its intro; Decisions 284–285, 0.68.1) is merged (0.68.1). **E3**, **E5** and **E8** (Decisions 286–287) are merged. **E4** (colour that keeps its one meaning, 0.69.1) is merged. **E6** (the phone, 0.69.2) is built, PR open.

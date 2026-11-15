@@ -29,6 +29,11 @@ own in the footer.
 ### Character sheet
 
 - **The sheet sits right on a phone.** Attack rolls stay on one line, a spellcaster's reference tables scroll on their own instead of pushing the page sideways, the card alone at the bottom of Main's vitals takes one line, and Progression's buttons line up in pairs.
+
+## v0.69.1 — 2026-11-14
+
+### Character sheet
+
 - **Colours say one thing each.** A werewolf's form boosts are violet, not the gold of things you spend; armour at 0 Integrity looks broken and shows its RES is gone; and Progression's buttons no longer all shout at once.
 - **The game's words inside the sheet's own lines open their rules.** Tap *Dark* in Night Vision's line, *Take 6* on a Skill, or *Pain Level 2* above your Skills, and the rule is right there.
 - **Main shows the combat skills you've trained, and any untrained one you've got something on.** The rest are a tap away under **Show untrained**, and every skill is still on Skills.
@@ -43,6 +48,7 @@ own in the footer.
 
 ### GM mode
 
+- **Help reads more plainly.** Its examples say they are examples, *Cast* says it means NPCs, the **N** key is called a key, and Players says what importing a character again does.
 - **A clock's − and + sit right beside its name**, in one tidy column, instead of across the far side of a wide screen. Close to full reads at a glance.
 - **A thread's Make current and Edit stay close to its title** on a wide screen, lined up down the list.
 
