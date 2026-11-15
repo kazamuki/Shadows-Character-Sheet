@@ -572,6 +572,75 @@ async function tableKeys(browser, file, rows) {
 const dir = mkdtempSync(join(tmpdir(), "shadows-phone-"));
 const file = join(dir, "shadows-character-sheet.html");
 writeFileSync(file, builtFile ? readFileSync(builtFile, "utf8") : buildHtml());
+// E6 (the phone): four floors that need a character the seed isn't. The frame fixture's seed stays as it is, so each brings its own: a
+// Werewolf (SFR, and CRANK switched on) makes seven vitals cards with CRANK alone on the last row; two weapons with attacks of two
+// digits ("1d10 + 20") are the ones that wrapped; a held Disadvantage and Professional's Milestone Points give Progression's spend row its
+// buttons. Each fixture asserts its own state first, in the page, and the floor fails if the state isn't there.
+const floorChar = () => {
+  const { Engine } = loadEngine();
+  const ch = lockedCharacter("werewolf", 10);
+  ch.identity.name = "Floor Check";
+  ch.skills.rifles = { rank: 8, ipe: 0 }; ch.skills.melee = { rank: 8, ipe: 0 };
+  ch.weapons = [{ id: "sg88-siege-breaker", notes: "", mods: [], roundsSpent: 0 }, { id: "combat-knife", notes: "" }];
+  ch.disadvantages.push({ id: "dwarf", rank: 1, notes: "" });
+  const atk = [0, 1].map(i => Engine.weaponLine(JSON.parse(JSON.stringify(ch)), i).attack);
+  if (!atk.every(a => a >= 10)) throw new Error(`phone-check's floor character has attacks ${atk}, two digits wanted`);
+  return ch;
+};
+async function phoneFloors(browser, file, rows) {
+  const ch = floorChar();
+  for (const w of WIDTHS.filter(w => w.width < 640)) {
+    const c = await browser.newContext({ viewport: { width: w.width, height: w.height }, hasTouch: !!w.touch, isMobile: !!w.touch });
+    await c.addInitScript(s => { try { localStorage.setItem("shadows.feature.crank", "on"); localStorage.setItem("shadows.active.v1", s); } catch (e) {} }, JSON.stringify({ ch, section: "main" }));
+    const page = await c.newPage();
+    const errors = [];
+    page.on("pageerror", e => errors.push(e.message));
+    await page.goto(pathToFileURL(file).href);
+    await page.click("[data-open]");
+    await page.waitForSelector("#topnav [data-sec]");
+    const bad = [];
+    // The dice expression of every Attack cell: one line box. Read from the first text node, which holds it with or without a hook.
+    const lines = () => page.evaluate(() => {
+      const out = [];
+      for (const td of document.querySelectorAll("#main td.num")) {
+        const tw = document.createTreeWalker(td, NodeFilter.SHOW_TEXT);
+        let n = null, mt = null;
+        while ((n = tw.nextNode())) { mt = /^\s*(1d10 [+−] \d+)/.exec(n.textContent); if (mt) break; }
+        if (!mt) continue;
+        const r = document.createRange(); r.setStart(n, mt[0].indexOf(mt[1])); r.setEnd(n, mt[0].indexOf(mt[1]) + mt[1].length);
+        const q0 = [...r.getClientRects()]; if (!q0.length) continue;
+        out.push({ text: mt[1], lines: new Set([...r.getClientRects()].map(q => Math.round(q.top))).size });
+      }
+      return out;
+    });
+    const main = await page.evaluate(() => {
+      const cards = [...document.querySelectorAll("#main .cond-grid > .cond")], alone = document.querySelector("#main .cond-grid > .cond.alone");
+      return { cards: cards.length, alone: alone ? { crank: alone.classList.contains("crank"), h: Math.round(alone.getBoundingClientRect().height) } : null };
+    });
+    if (main.cards !== 7 || !main.alone || !main.alone.crank) bad.push(`the fixture isn't seven cards with CRANK alone (${main.cards} cards, alone ${JSON.stringify(main.alone)})`);
+    else if (main.alone.h > 72) bad.push(`the alone card is ${main.alone.h}px tall, 72 at most`);
+    const onMain = await lines();
+    if (onMain.length < 2) bad.push(`Main draws ${onMain.length} attacks, 2 held`);
+    for (const l of onMain) if (l.lines !== 1) bad.push(`Main: "${l.text}" on ${l.lines} lines`);
+    await page.click('#topnav [data-sec="loadout"]');
+    const onLoadout = await lines();
+    if (onLoadout.length < 2) bad.push(`Loadout draws ${onLoadout.length} attacks, 2 held`);
+    for (const l of onLoadout) if (l.lines !== 1) bad.push(`Loadout: "${l.text}" on ${l.lines} lines`);
+    await page.click('#topnav [data-sec="progression"]');
+    const spend = await page.evaluate(() => {
+      const row = document.querySelector("#main .raise-row"), bs = row ? [...row.querySelectorAll(".btn")] : [];
+      const rb = row ? row.getBoundingClientRect() : null, byTop = {};
+      for (const b of bs) { const r = b.getBoundingClientRect(); (byTop[Math.round(r.top)] = byTop[Math.round(r.top)] || []).push(r.width); }
+      const uneven = Object.values(byTop).filter(ws => ws.length === 1 ? ws[0] < rb.width - 1 : Math.max(...ws) - Math.min(...ws) > 1).length;
+      return { n: bs.length, rows: Object.keys(byTop).length, uneven };
+    });
+    if (spend.n < 5) bad.push(`the spend row has ${spend.n} buttons, 5 wanted`);
+    else if (spend.uneven) bad.push(`${spend.uneven} of ${spend.rows} spend rows hold buttons of unequal width`);
+    if (errors.length) bad.push(errors.join("; "));
+    rows.push({ width: w.name, screen: "E6: the alone card, the attack's dice, the spend row", layout: bad.length ? bad.join("; ") : `ok (alone card ${main.alone && main.alone.h}px, ${onMain.length + onLoadout.length} attacks on one line, ${spend.n} spend buttons in ${spend.rows} rows)`, ok: !bad.length });
+    await c.close();
+  }
+}
 const seed = JSON.stringify({ ch: lockedCharacter("arcanist", 0, ["long-lived"], true), section: "main" });
 // A Major unlocks at 10 Milestone Points; the Professional's list has the longest prerequisites.
 const majorSeed = JSON.stringify({ ch: lockedCharacter("professional", 10), section: "main" });
@@ -600,6 +669,8 @@ try {
         // so a palette isn't missed, then closed again.
         const shut = [...document.querySelectorAll("details:not([open])")];
         shut.forEach(d => { d.open = true; });
+        // E6: a fold that opens onto a table wider than the screen pushes the page sideways. Measured here, with every fold open.
+        const overflowOpen = document.documentElement.scrollWidth - document.documentElement.clientWidth;
         const shown = el => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && !el.closest("[hidden]") && (!scope || !!el.closest(scope)); };
         const label = el => `${el.tagName.toLowerCase()}${el.classList.length ? "." + [...el.classList].join(".") : ""}`;
         const small = new Set(), tiny = new Set();
@@ -633,19 +704,19 @@ try {
         const h = document.querySelector("header.top").getBoundingClientRect();
         const de = document.documentElement;
         const brand = document.querySelector("header.top .brand");
-        return { header: Math.round(h.bottom > 0 ? h.height : 0), overflow: de.scrollWidth - de.clientWidth,
+        return { header: Math.round(h.bottom > 0 ? h.height : 0), overflow: de.scrollWidth - de.clientWidth, overflowOpen,
           nameCut: brand.scrollWidth > brand.clientWidth, small: [...small], tiny: [...tiny], inline, bars };
       }, [w.touch ? 44 : 24, scope, INLINE_TERM]);
       const share = m.header / w.height;
       const b = m.bars, rowsOk = b.vbar <= 1 && b.jump <= 1 && (b.sticky == null || b.sticky <= w.height * BAR_MAX_SHARE), hpOk = b.hp == null || w.width >= 640 || b.hp <= w.height * HP_MAX_SHARE;
       rows.push({ width: w.name, screen, header: `${m.header}px (${Math.round(share * 100)}%)`,
-        overflow: m.overflow ? `${m.overflow}px` : "none",
+        overflow: m.overflow ? `${m.overflow}px` : m.overflowOpen > 0 ? `${m.overflowOpen}px with the folds open` : "none",
         name: screen === "home" ? "" : m.nameCut ? "cut" : "fits",
         targets: m.small.length ? m.small.join(", ") : m.inline ? `ok (${m.inline} inline terms exempt)` : "ok",
         text: m.tiny.length ? m.tiny.join(", ") : "ok",
         fold: [b.hp != null ? `HP ${b.hp}px (${Math.round(b.hp / w.height * 100)}%)` : "",
           b.vbar > 1 ? `vitals ${b.vbar} rows` : "", b.jump > 1 ? `jump ${b.jump} rows` : "", b.sticky != null ? `bar ${b.sticky}px (${Math.round(b.sticky / w.height * 100)}%)` : ""].filter(Boolean).join(", ") || "ok",
-        ok: rowsOk && hpOk && share <= HEADER_MAX_SHARE && m.overflow <= 0 && (!mustFit(screen) || !m.nameCut) && !m.small.length && !m.tiny.length });
+        ok: rowsOk && hpOk && share <= HEADER_MAX_SHARE && m.overflow <= 0 && m.overflowOpen <= 0 && (!mustFit(screen) || !m.nameCut) && !m.small.length && !m.tiny.length });
     };
     // The exemption is one rule, so it's checked both ways on a real layout: an inline .term in a sentence is exempt; a .term made
     // a block, a .term alone in its parent, and a plain small button are not.
@@ -740,6 +811,7 @@ try {
     if (errors.length) rows.push({ width: w.name, screen: "(page errors)", header: errors.join("; "), overflow: "", ok: false });
     await ctx.close();
   }
+  await phoneFloors(browser, file, rows);
   // P16 (Decision 246): the Character tab's layout. jsdom has no layout, so this is where it's held.
   for (const w of LAYOUT_WIDTHS) {
     for (const f of characterFixtures()) {

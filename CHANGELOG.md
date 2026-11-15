@@ -24,10 +24,11 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.69.1
+## [Unreleased] — app 0.69.2
 
 ### Character sheet
 
+- **The sheet sits right on a phone.** Attack rolls stay on one line, a spellcaster's reference tables scroll on their own instead of pushing the page sideways, the card alone at the bottom of Main's vitals takes one line, and Progression's buttons line up in pairs.
 - **Colours say one thing each.** A werewolf's form boosts are violet, not the gold of things you spend; armour at 0 Integrity looks broken and shows its RES is gone; and Progression's buttons no longer all shout at once.
 - **The game's words inside the sheet's own lines open their rules.** Tap *Dark* in Night Vision's line, *Take 6* on a Skill, or *Pain Level 2* above your Skills, and the rule is right there.
 - **Main shows the combat skills you've trained, and any untrained one you've got something on.** The rest are a tap away under **Show untrained**, and every skill is still on Skills.

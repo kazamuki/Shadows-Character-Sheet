@@ -427,3 +427,45 @@ test("U4: gm.js has no inline style but a computed transform", () => {
     assert.doesNotMatch(rules.find(r => r.sel === ".theme-toggle:hover").body, /--gold/);
   });
 }
+
+// ── E6: the phone. Whole rules, read the way E4's are; media and container blocks by their prelude. ──
+{
+  const css = readFileSync(join(ROOT, "src/styles/shadows.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  // The rules inside one @media / @container block, found by its prelude.
+  const inBlock = prelude => {
+    const out = [];
+    const re = /(@(?:media|container)[^{]*)\{((?:[^{}]*\{[^{}]*\})*)\s*\}/g;
+    for (const m of css.matchAll(re)) {
+      if (m[1].trim().replace(/\s+/g, " ") !== prelude) continue;
+      for (const r of m[2].matchAll(/([^{}]+)\{([^{}]*)\}/g)) out.push({ sel: r[1].trim().replace(/\s+/g, " "), body: r[2] });
+    }
+    return out;
+  };
+  const val = (rs, sel, prop) => {
+    const hits = rs.filter(r => r.sel.split(",").map(s => s.trim()).includes(sel));
+    const vs = hits.map(r => (new RegExp(`(?:^|;)\\s*${prop}\\s*:\\s*([^;]+)`).exec(r.body) || [])[1]).filter(Boolean).map(v => v.trim());
+    return vs.length ? vs[vs.length - 1] : null;
+  };
+  // Rules outside every @media / @container / @supports block: the one-level blocks are cut out before the rest is read.
+  const topCss = css.replace(/@[a-z-]+[^{}]*\{(?:[^{}]*\{[^{}]*\})*\s*\}/g, "");
+  const top = [...topCss.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(m => ({ sel: m[1].trim().replace(/\s+/g, " "), body: m[2] }));
+
+  test("E6 1: an attack's dice can't break", () => {
+    assert.equal(val(top, ".atk", "white-space"), "nowrap");
+    assert.notEqual(val(top, "table.ref td.num", "white-space"), "nowrap", "nowrap is on every td.num");
+  });
+  test("E6 4: the alone card is one line on a phone, and still takes the row", () => {
+    const rs = inBlock("@container (max-width:415px)");
+    assert.equal(val(rs, ".cond-grid > .cond.alone", "grid-column"), "1/-1");
+    assert.equal(val(rs, ".cond-grid > .cond.alone", "display"), "flex");
+    const wide = top.filter(r => /\.cond\.alone/.test(r.sel));
+    assert.deepEqual(wide, [], "a .cond.alone rule sits outside the container query");
+  });
+  test("E6 6: the spend row's phone grid is scoped", () => {
+    const rs = inBlock("@media (max-width:639px)");
+    assert.equal(val(rs, ".raise-row.spend", "grid-template-columns"), "1fr 1fr");
+    assert.equal(val(rs, ".raise-row.spend", "display"), "grid");
+    assert.equal(val(top, ".raise-row", "display"), "flex", "plain .raise-row lost its flex rule");
+    assert.equal(val(rs, ".raise-row", "grid-template-columns"), null, "the phone grid is on plain .raise-row");
+  });
+}

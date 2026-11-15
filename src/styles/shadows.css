@@ -283,6 +283,8 @@ table.ref th{font-family:var(--mono); font-size:.7rem; letter-spacing:.1em; text
   color:var(--dim); text-align:left; padding:6px 10px; border-bottom:1px solid var(--frame)}
 table.ref td{padding:6px 10px; border-bottom:1px solid rgba(32,63,123,.35)}
 table.ref td.num{font-family:var(--mono); color:var(--cyan)}
+/* E6: an attack's dice never break ("1d10 + 22" on a phone). On the dice, not on td.num: other td.num cells hold long text. */
+.atk{white-space:nowrap}
 
 /* footer nav */
 .wiznav{display:flex; gap:12px; margin-top:30px; align-items:center; flex-wrap:wrap;
@@ -1061,6 +1063,9 @@ details.pick.trait>summary .effects{flex-basis:100%; margin-top:0}
 .tab-links .step-note{margin:0}
 /* Progression (Decision 159): Raise a Stat and Raise a Skill open modals. */
 .raise-row{display:flex; flex-wrap:wrap; gap:10px; margin:14px 0 18px}
+/* E6: on a phone Progression's spend buttons are two even columns, an odd last one taking the row. Not Minor choice's row, which has no .spend. */
+@media (max-width:639px){ .raise-row.spend{display:grid; grid-template-columns:1fr 1fr} }
+@media (max-width:639px){ .raise-row.spend > .btn:last-child:nth-child(odd){grid-column:1/-1} }
 .raise-results{table-layout:fixed; width:100%}
 .raise-results td.num{white-space:nowrap; width:84px}
 .raise-results td:last-child{width:84px; text-align:right}
@@ -1364,6 +1369,8 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 /* W45: in two columns, the card alone on its row takes the whole row (Decision 214: whichever is left over). */
 .cond-grid{container-type:inline-size}
 @container (max-width:415px){ .cond-grid > .cond.alone{grid-column:1/-1} }
+/* E6: the card alone on its row is one line, its label, value and note side by side, not a 102px stack. Still a button, still the whole row. */
+@container (max-width:415px){ .cond-grid > .cond.alone{display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 12px} }
 /* W45: Pin, from Main, where there's no vitals bar: only on a screen wide
    enough to pin (Decision 160), and only until it's pinned. */
 .main-pin{display:none}

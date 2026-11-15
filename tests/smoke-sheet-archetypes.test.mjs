@@ -1012,3 +1012,24 @@ test("Decision 282: Character shows each thing once", () => {
   assert.ok(cards[0].querySelector("[data-pwimprove]"), "the one card has no Improve");
   assert.deepEqual([arc.errors, pro.errors, wi.errors], [[], [], []]);
 });
+
+// ── E6: the phone. A reference's column tables scroll inside their own frame. ──
+test("E6 3: a reference panel's column tables sit in a frame, and its prose tables don't", () => {
+  const ch = lockedCharacter();
+  const arch = D.archetypes.find(a => a.id === ch.identity.archetype);
+  const panel = arch.coreMechanic.panels.find(p => p.type === "reference");
+  assert.ok(panel, "the Arcanist has no reference panel in its data");
+  const app = openSheet(ch, "character");
+  const ref = app.$(`[data-reference="${panel.id}"]`);
+  assert.ok(ref, "the Magic reference didn't draw");
+  const all = [...ref.querySelectorAll("table.ref")];
+  const cols = all.filter(t => t.querySelector("thead")), prose = all.filter(t => !t.querySelector("thead"));
+  assert.ok(cols.length >= 3 && prose.length >= 3, `fixture: ${cols.length} column tables, ${prose.length} prose tables`);
+  for (const t of cols) {
+    const f = t.parentElement;
+    assert.ok(f.matches('.ref-frame[role="region"][tabindex="0"][aria-label]'), "a column table isn't framed");
+    assert.ok(f.getAttribute("aria-label").trim(), "its frame has an empty label");
+  }
+  for (const t of prose) assert.ok(!t.parentElement.classList.contains("ref-frame"), "a prose table is framed");
+  assert.deepEqual(app.errors, []);
+});

@@ -140,7 +140,7 @@
    "9 div.reference 16,4323.4,358,298.8",
    "10 div.tab-links 16,4640.1,358,62"
   ],
-  "deep": "727 boxes, 90375f56"
+  "deep": "732 boxes, 57bb5b70"
  },
  "sheet: trackers @390": {
   "header": [
@@ -195,7 +195,7 @@
    0,
    88.2,
    390,
-   2800.7
+   2768.7
   ],
   "vitals": [
    0,
@@ -212,19 +212,19 @@
    "5 div.sect 16,463.8,358,23.4",
    "6 div.review-block 16,499.1,358,525.3",
    "7 div.trk 16,1038.4,358,153",
-   "8 div.raise-row 16,1205.4,358,186",
-   "9 details.group 16,1409.4,358,30.3",
-   "10 div.sect 16,1463.8,358,23.4",
-   "11 div.trk 16,1499.1,358,150.7",
-   "12 details.group 16,1661.8,358,756.8",
-   "13 details.group 16,2428.6,358,30.3",
-   "14 div.sect 16,2483,358,23.4",
-   "15 p.step-note 16,2518.3,358,23.3",
-   "16 div.sect 16,2565.6,358,23.4",
-   "17 div.trk 16,2601,358,160.7",
-   "18 p.step-note 16,2773.7,358,23.3"
+   "8 div.raise-row.spend 16,1205.4,358,154",
+   "9 details.group 16,1377.4,358,30.3",
+   "10 div.sect 16,1431.8,358,23.4",
+   "11 div.trk 16,1467.1,358,150.7",
+   "12 details.group 16,1629.8,358,756.8",
+   "13 details.group 16,2396.6,358,30.3",
+   "14 div.sect 16,2451,358,23.4",
+   "15 p.step-note 16,2486.3,358,23.3",
+   "16 div.sect 16,2533.6,358,23.4",
+   "17 div.trk 16,2569,358,160.7",
+   "18 p.step-note 16,2741.7,358,23.3"
   ],
-  "deep": "194 boxes, e672e171"
+  "deep": "194 boxes, 24c667f"
  },
  "sheet: loadout @390": {
   "header": [
@@ -987,7 +987,7 @@
    "9 div.reference 16,3091.8,736,298.8",
    "10 div.tab-links 16,3408.5,736,27"
   ],
-  "deep": "727 boxes, f41960e1"
+  "deep": "732 boxes, 6735b206"
  },
  "sheet: trackers @768": {
   "header": [
@@ -1059,7 +1059,7 @@
    "5 div.sect 16,406.1,736,23.4",
    "6 div.review-block 16,441.5,736,488",
    "7 div.trk 16,943.5,736,67",
-   "8 div.raise-row 16,1024.5,736,88",
+   "8 div.raise-row.spend 16,1024.5,736,88",
    "9 details.group 16,1130.5,736,30.3",
    "10 div.sect 16,1184.9,736,23.4",
    "11 div.trk 16,1220.3,736,91.3",
@@ -1071,7 +1071,7 @@
    "17 div.trk 16,2104.1,736,105.7",
    "18 p.step-note 16,2221.8,586.7,23.3"
   ],
-  "deep": "194 boxes, 6e64752f"
+  "deep": "194 boxes, 12872a9f"
  },
  "sheet: loadout @768": {
   "header": [
@@ -1834,7 +1834,7 @@
    "9 div.reference 30,2910.4,1240,298.8",
    "10 div.tab-links 30,3227.1,1240,27"
   ],
-  "deep": "727 boxes, 7f6b4009"
+  "deep": "732 boxes, 14722e35"
  },
  "sheet: trackers @1300": {
   "header": [
@@ -1906,7 +1906,7 @@
    "5 div.sect 30,412.1,1240,23.4",
    "6 div.review-block 30,447.5,1240,338.3",
    "7 div.trk 30,799.8,1240,67",
-   "8 div.raise-row 30,880.8,1240,39",
+   "8 div.raise-row.spend 30,880.8,1240,39",
    "9 details.group 30,937.8,1240,30.3",
    "10 div.sect 30,992.2,1240,23.4",
    "11 div.trk 30,1027.5,1240,91.3",
@@ -1918,7 +1918,7 @@
    "17 div.trk 30,1871.8,1240,105.7",
    "18 p.step-note 30,1989.4,586.7,23.3"
   ],
-  "deep": "194 boxes, 42de2c13"
+  "deep": "194 boxes, dfa2cb3f"
  },
  "sheet: loadout @1300": {
   "header": [
@@ -2108,7 +2108,7 @@
    "9 div.reference 30,2928.4,940,298.8",
    "10 div.tab-links 30,3245.2,940,27"
   ],
-  "deep": "661 boxes, 660d9a6d"
+  "deep": "666 boxes, 63c29b37"
  },
  "sheet: trackers @1300 pinned": {
   "header": [
@@ -2180,7 +2180,7 @@
    "5 div.sect 30,324.2,940,23.4",
    "6 div.review-block 30,359.6,940,338.3",
    "7 div.trk 30,711.9,940,67",
-   "8 div.raise-row 30,792.9,940,39",
+   "8 div.raise-row.spend 30,792.9,940,39",
    "9 details.group 30,849.9,940,30.3",
    "10 div.sect 30,904.3,940,23.4",
    "11 div.trk 30,939.6,940,91.3",
@@ -2192,7 +2192,7 @@
    "17 div.trk 30,1823.5,940,105.7",
    "18 p.step-note 30,1941.2,586.7,23.3"
   ],
-  "deep": "128 boxes, 8e88f483"
+  "deep": "128 boxes, 22ea6673"
  },
  "sheet: loadout @1300 pinned": {
   "header": [
@@ -2955,7 +2955,7 @@
    "9 div.reference 30,2458.5,1920,298.8",
    "10 div.tab-links 30,2775.2,1920,27"
   ],
-  "deep": "727 boxes, 99c62c10"
+  "deep": "732 boxes, 10ad9535"
  },
  "sheet: trackers @1980": {
   "header": [
@@ -3027,7 +3027,7 @@
    "5 div.sect 30,412.1,1920,23.4",
    "6 div.review-block 30,447.5,1920,338.3",
    "7 div.trk 30,799.8,1920,67",
-   "8 div.raise-row 30,880.8,1920,39",
+   "8 div.raise-row.spend 30,880.8,1920,39",
    "9 details.group 30,937.8,1920,30.3",
    "10 div.sect 30,992.2,1920,23.4",
    "11 div.trk 30,1027.5,1920,91.3",
@@ -3039,7 +3039,7 @@
    "17 div.trk 30,1871.8,1920,87.3",
    "18 p.step-note 30,1971.1,586.7,23.3"
   ],
-  "deep": "194 boxes, b53d44e9"
+  "deep": "194 boxes, 9a19dd9"
  },
  "sheet: loadout @1980": {
   "header": [
@@ -3229,7 +3229,7 @@
    "9 div.reference 30,2430.9,1620,298.8",
    "10 div.tab-links 30,2747.6,1620,27"
   ],
-  "deep": "661 boxes, d625c856"
+  "deep": "666 boxes, 1aeca184"
  },
  "sheet: trackers @1980 pinned": {
   "header": [
@@ -3301,7 +3301,7 @@
    "5 div.sect 30,324.2,1620,23.4",
    "6 div.review-block 30,359.6,1620,338.3",
    "7 div.trk 30,711.9,1620,67",
-   "8 div.raise-row 30,792.9,1620,39",
+   "8 div.raise-row.spend 30,792.9,1620,39",
    "9 details.group 30,849.9,1620,30.3",
    "10 div.sect 30,904.3,1620,23.4",
    "11 div.trk 30,939.6,1620,91.3",
@@ -3313,7 +3313,7 @@
    "17 div.trk 30,1783.8,1620,87.3",
    "18 p.step-note 30,1883.2,586.7,23.3"
   ],
-  "deep": "128 boxes, 2b53962a"
+  "deep": "128 boxes, 1b65ffbe"
  },
  "sheet: loadout @1980 pinned": {
   "header": [

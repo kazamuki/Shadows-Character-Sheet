@@ -842,3 +842,22 @@ test("E4 4: Progression's spend buttons are peers, and Log session is the one co
   assert.equal(app.$$("#main [data-seslog].btn.go").length, 1);
   assert.deepEqual(app.errors, []);
 });
+
+// E6: the phone grid is for Progression's spend row; Minor choice's row keeps its own layout.
+test("E6 5: Progression's spend row carries its hook, and Minor choice's row doesn't", () => {
+  const ch = lockedCharacter();
+  ch.disadvantages = [{ id: D.disadvantages[0].id, rank: 1 }];
+  assert.ok(Engine.disById(D.disadvantages[0].id), "the fixture's Disadvantage isn't one the sheet knows");
+  const app = openSheet(ch, "progression");
+  const rows = app.$$("#main .raise-row");
+  assert.equal(rows.length, 1, "Progression draws more than one .raise-row");
+  assert.ok(rows[0].querySelectorAll(".btn").length >= 5, "the fixture's spend row is short of five buttons");
+  assert.ok(rows[0].classList.contains("spend"), "Progression's spend row has no hook");
+  const hurt = p6Char("professional", 5); hurt.trackers.san.loss = 12; hurt.trackers.massiveLevels = 1;
+  const app2 = openSheet(hurt, "progression");
+  app2.click('[data-takeminor="steadied"]');
+  const modalRow = app2.$("#modal .raise-row");
+  assert.ok(modalRow && modalRow.querySelectorAll("[data-mcpick]").length >= 2, "Minor choice's row didn't draw its options");
+  assert.ok(!modalRow.classList.contains("spend"), "Minor choice's row carries the spend hook");
+  assert.deepEqual([app.errors, app2.errors], [[], []]);
+});
