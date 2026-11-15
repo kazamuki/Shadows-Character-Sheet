@@ -285,6 +285,8 @@ table.ref td{padding:6px 10px; border-bottom:1px solid rgba(32,63,123,.35)}
 table.ref td.num{font-family:var(--mono); color:var(--cyan)}
 /* E6: an attack's dice never break ("1d10 + 22" on a phone). On the dice, not on td.num: other td.num cells hold long text. */
 .atk{white-space:nowrap}
+/* E7: Main's weapons table (not Loadout's, which scrolls on purpose) gives up 4px a side of each cell on a phone, so a long-named gun with ammo fits the 343px column. */
+@media (max-width:639px){ table.ref.wpn th, table.ref.wpn td{padding-left:6px; padding-right:6px} }
 
 /* footer nav */
 .wiznav{display:flex; gap:12px; margin-top:30px; align-items:center; flex-wrap:wrap;
@@ -303,9 +305,9 @@ table.ref td.num{font-family:var(--mono); color:var(--cyan)}
 .issues li{color:var(--magenta-text); margin-left:18px; margin-bottom:3px}
 .issues li.warn{color:var(--gold)}
 .issues li.todo{color:var(--dim)}
-.intake{display:flex; align-items:center; gap:10px; margin:2px 0 8px; color:var(--dim)}
+.intake{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:2px 0 8px; color:var(--dim)}
 .intake-bars{flex:none; opacity:.85}
-.intake-no{font-family:var(--mono); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase}
+.intake-no{font-family:var(--mono); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; white-space:nowrap}
 .intake-label{font-family:var(--mono); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--magenta-text)}
 .import-issues{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:14px}
 .import-issues .issues{margin-top:0}
@@ -357,10 +359,10 @@ aside.vitals:empty{display:none}
    reads out on hover, focus or tap; one it doesn't is a plain word. */
 .tags{display:flex; flex-wrap:wrap; gap:4px; margin-top:3px}
 .tag{font:inherit; font-size:.74rem; line-height:1.3; color:var(--dim); background:none; white-space:nowrap;
-  border:0; border-bottom:1px dotted var(--dim); border-radius:0; padding:0 1px; cursor:help}
-.tag:hover, .tag:focus-visible, .tag[aria-describedby]{color:var(--cyan); border-bottom-color:var(--cyan)}
+  border:0; border-radius:0; padding:0 1px; cursor:help; text-decoration:underline dotted; text-underline-offset:.18em}
+.tag:hover, .tag:focus-visible, .tag[aria-describedby]{color:var(--cyan)}
 .tag:focus-visible{outline:2px solid var(--cyan); outline-offset:2px}
-.tag.plain{border-bottom:0; cursor:default}
+.tag.plain{text-decoration:none; cursor:default}
 .tag.plain:hover{color:var(--dim)}
 /* Decision 287 (W133): a game word inside a sentence the sheet writes. It's the word, in the line's own face and colour, with a dotted underline. */
 .term{font:inherit; color:inherit; background:none; border:0; border-radius:0; padding:0; margin:0; display:inline; cursor:help; text-decoration:underline dotted; text-underline-offset:.18em}
@@ -1530,7 +1532,7 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .enc-hit-fields{display:contents}
 .enc-hit .enc-hit-btns{grid-column:1 / -1; margin-bottom:6px}
 .enc-hit [data-ehit-extra]{min-width:0}
-.enc-tied{border-color:var(--magenta)}
+.enc-tied{text-decoration-color:var(--magenta)}
 /* Wave Initiative (Decision 210): the mode toggle wraps under the status, a side is a heading with its best and its tie, and everything a GM typed wraps. */
 .enc-turns{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:0 0 10px}
 .enc-turns .form-toggle{flex-wrap:wrap}
@@ -1658,14 +1660,12 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .ref-text::first-letter{text-transform:uppercase}
 .ref-foot{margin:-8px 0 10px; font-size:.78rem; color:var(--dim); overflow-wrap:anywhere}
 .ref-frame{overflow-x:auto; max-width:100%}
-.ref-frame table.ref{min-width:100%; width:max-content; max-width:none}
+.ref-frame table.ref{min-width:100%; width:100%; max-width:none}
 .ref-frame table.ref td, .ref-frame table.ref th{vertical-align:top}
 .ref-items{margin:0 0 6px; padding-left:20px; overflow-wrap:anywhere}
 .ref-items li{margin:0 0 6px; max-width:70ch}
 .ref-more{display:block; font-size:.82rem; color:var(--dim)}
-@media (min-width:640px){ .ref-frame table.ref{width:100%} }
-/* E6 review: the sheet's own reference tables wrap to the frame at a phone; only one too wide for it (Materials, Enchantment) scrolls. GM's Reference sits in .ref-part, not .ref-body, and keeps max-content. */
-.ref-body .ref-frame table.ref{width:100%}
+/* E7: every reference table (the sheet's and GM's) wraps to its frame; only one too wide for it, Materials or Enchantment or GM's Checks, scrolls inside the frame. */
 
 /* Find and Jot (Decision 208): two words in the header's first row, beside the menu. */
 .hdr-act{background:none; border:1px solid var(--frame); border-radius:6px; color:var(--dim);
@@ -1705,7 +1705,8 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .skill-fx .fx-line{min-width:0}
 .fx-from{color:var(--dim)}
 .attack-note{margin:6px 0 0; font-size:.78rem; line-height:1.35; color:var(--text); overflow-wrap:anywhere}
-.ref td.bd .trait-part{color:var(--green)}
+.ref td.bd .trait-part.pos{color:var(--green)}
+.ref td.bd .trait-part.neg{color:var(--magenta-text)}
 
 /* The City tab (Decisions 242–243). The book's lines and the GM's names wrap; a Territory is a block with a rule above it. */
 .city-terr{border-top:1px solid var(--frame); padding-top:2px}

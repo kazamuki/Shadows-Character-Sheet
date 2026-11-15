@@ -1590,3 +1590,57 @@ test("E8 4b: a check note's light levels are triggers, read from the engine's no
   assert.equal(note.textContent.replace(/\s+/g, " ").trim(), `${want[0].text} · ${want[0].from}`);
   assert.deepEqual(app.errors, []);
 });
+
+// ── E7: a trait part reads its sign ──
+test("E7 4: a trait part reads its sign", () => {
+  const ch = lockedCharacter();
+  ch.advantages = [{ id: "ghost-step", rank: 1, notes: "" }];
+  ch.disadvantages = [{ id: "dwarf", rank: 1, notes: "" }];
+  const app = boot({ storage: { "shadows.active.v1": { ch, section: "skills" } } });
+  // The data has no negative trait part (gear's grants are refused below 1), so Dwarf's grant is made one, unconditional, in the page's own copy of the data, before the sheet draws.
+  app.window.eval(`{ const g = SHADOWS_DATA.disadvantages.find(d => d.id === "dwarf").grants.find(x => x.type === "checkMod"); g.amount = -3; delete g.whenText; }`);
+  const parts = JSON.parse(app.window.eval(`JSON.stringify(Engine.skillLine(JSON.parse(${JSON.stringify(JSON.stringify(ch))}), "stealth").breakdown.traitParts)`));
+  assert.ok(parts.some(p => p.amount === -3) && parts.some(p => p.amount === 3), `traitParts is ${JSON.stringify(parts)}`);
+  app.$$("#main button").find(b => /Open sheet/.test(b.textContent)).dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  app.click('[data-sec="skills"]');
+  const row = app.$('#main [data-skillname="stealth"]').closest("tr");
+  const all = [...row.querySelectorAll(".trait-part")];
+  const neg = all.filter(e => /^[−-]3/.test(e.textContent.trim()));
+  const pos = all.filter(e => /^\+3/.test(e.textContent.trim()));
+  assert.equal(neg.length, 1, `the negative part didn't draw: ${all.map(e => e.textContent)}`);
+  assert.equal(pos.length, 1, "the positive part didn't draw");
+  assert.ok(neg[0].classList.contains("neg") && !neg[0].classList.contains("pos"), "the negative part has no .neg");
+  assert.ok(pos[0].classList.contains("pos") && !pos[0].classList.contains("neg"), "the positive part has no .pos");
+  assert.deepEqual(app.errors, []);
+});
+
+// ── E7 (Ken: "Plain in this PR"): a Major's power pick and "Gained a specialization" are plain until picked, then go ──
+test("E7 6i: a Major's power rows are plain until picked, then go, and the foot keeps primary", () => {
+  const app = openSheet(strigoi(), "progression");
+  app.click('[data-takemajor="splice"]');
+  const rows = () => [...app.$$("#modal [data-mmpick]")].filter(b => !b.disabled);
+  const before = rows();
+  assert.ok(before.length >= 2, `${before.length} pickable powers, two wanted`);
+  for (const b of before) assert.ok(b.classList.contains("sm") && !b.classList.contains("primary") && !b.classList.contains("go"), `${b.dataset.mmpick} is ${b.className}`);
+  const id = before[0].dataset.mmpick;
+  app.click(`#modal [data-mmpick="${id}"]`);
+  assert.ok(app.$(`#modal [data-mmpick="${id}"]`).classList.contains("go"), "a picked power isn't go");
+  for (const b of rows().filter(b => b.dataset.mmpick !== id)) assert.ok(!b.classList.contains("primary") && !b.classList.contains("go"), `${b.dataset.mmpick} is ${b.className}`);
+  assert.ok(app.$("#modal [data-mmtake]").classList.contains("primary"), "the foot's Take lost primary");
+  assert.deepEqual(app.errors, []);
+});
+test("E7 6j: Gained a specialization's rows are plain until picked, then go, and Open keeps primary", () => {
+  const ch = strigoi();
+  ch.progression.ip.earned = 100;
+  const app = openSheet(ch, "character");
+  app.click("[data-gainspec]");
+  const rows = () => [...app.$$("#modal [data-gspick]")];
+  const before = rows();
+  assert.ok(before.length >= 2, `${before.length} rows, two wanted`);
+  for (const b of before) assert.ok(b.classList.contains("sm") && !b.classList.contains("primary") && !b.classList.contains("go"), `${b.dataset.gspick} is ${b.className}`);
+  app.click('#modal [data-gspick="upyr"]');
+  assert.ok(app.$('#modal [data-gspick="upyr"]').classList.contains("go"), "a picked row isn't go");
+  assert.ok(!app.$('#modal [data-gspick="draugur"]').classList.contains("primary") && !app.$('#modal [data-gspick="draugur"]').classList.contains("go"));
+  assert.ok(app.$("#modal [data-gsopen]").classList.contains("primary"), "the foot's Open lost primary");
+  assert.deepEqual(app.errors, []);
+});

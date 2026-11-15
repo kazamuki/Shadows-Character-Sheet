@@ -326,7 +326,7 @@ Engineered at rest, lit on touch.
 ### Chips and badges
 - **Style:** mono caps (.62–.64rem, .08–.12em), 3px radius, a 1px line and text in the same colour, no fill. The colour is the meaning: gold, magenta (pain), green (ok), cyan.
 - **Condition chips:** a panel fill with a magenta line; a bad one takes a faint magenta wash. The palette of Conditions to add opens under a `+` summary.
-- **Tags:** plain words with a dotted underline that turn cyan on hover, focus or tap and read out a tip. A tag the glossary doesn't know is a plain word with no underline.
+- **Tags:** plain words with a dotted underline (a `text-decoration` set `.18em` below the word, as a game term's is, never a border) that turn cyan on hover, focus or tap and read out a tip. A tag the glossary doesn't know is a plain word with no underline.
 
 ### Cards / Containers
 - **Corner Style:** 6px (cards, picks, review blocks), 8px (readout surfaces).

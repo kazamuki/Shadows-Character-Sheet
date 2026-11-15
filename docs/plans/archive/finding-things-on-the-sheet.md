@@ -1,16 +1,16 @@
 # Plan — Finding things on the sheet
 
-**Status:** open, proposed 2026-11-11. Ken's goal for the pass is usability and
+**Status:** **closed 2026-11-14, kept as history** (Ken; E1a–E8 are built, and the closing entry is under §3). Proposed 2026-11-11. Ken's goal for the pass was usability and
 access to information: a player mid-scene should find any number or rule in
-as few moves as possible. Sessions are added here as they come up (§6); the
-plan closes when Ken says the pass is done. Nothing here is a decision until
+as few moves as possible. Sessions were added here as they came up (§6); the
+plan closed when Ken said the pass was done. Nothing here was a decision until
 the session that builds it numbers it in `SCHEMA.md` §4. Its sessions are
 `E`_n_ (E for easy to find) and its questions `EQ`_n_ (§5).
 **Covers:** the 2026-11-11 critique of the running sheet (26/40, snapshot
 `.impeccable/critique/2026-11-12T01-36-16Z__src-ui-sheet-js.md`), every
 finding in it, Ken's ask for a shape-and-distill pass over the tabs, and
 (E1b) making a character as easy as possible for everyone. Its orders are
-in `plans/finding-things-on-the-sheet/`.
+in `plans/archive/finding-things-on-the-sheet/`.
 **Sources:** `src/ui/sheet.js`, `src/ui/shared.js` (`SHEET_SECTIONS`, the
 vitals bar, `importIssuesHtml`), `src/styles/shadows.css`, `PRODUCT.md`,
 `DESIGN.md`; Decisions 140, 151, 156, 158, 160 and 165.
@@ -69,7 +69,7 @@ all correct, but it takes knowing the sheet to find it:
 | E4 | Colour that keeps its one meaning ([order](finding-things-on-the-sheet/E4-colour.md), approved 2026-11-14, **E4 built**, EQ46–EQ50: all Default, EQ51 Ken's contrast check) | `colorize` | Fix | — |
 | E5 | The words: intros, placeholders, the `?` modifiers ([order](finding-things-on-the-sheet/E5-the-words.md), approved 2026-11-13, EQ36–EQ40 answered: all Default; **E5 built**) | `clarify` | Fix | E2 |
 | E6 | The phone ([order](finding-things-on-the-sheet/E6-the-phone.md), approved 2026-11-14, EQ52–EQ57: all Default, **E6 built**, app 0.69.2) | `adapt` | Fix | E3 |
-| E7 | Polish, then measure ([order](finding-things-on-the-sheet/E7-polish.md), approved 2026-11-14, EQ58–EQ66: all Default; it closes the plan) | `polish`, then `critique` | Fix | all |
+| E7 | Polish, then measure ([order](finding-things-on-the-sheet/E7-polish.md), approved 2026-11-14, EQ58–EQ66: all Default; **E7 built**, and it closes the plan) | `polish`, then `critique` | Fix | all |
 | E8 | The game's words a tap away (W133), from E2's shape (EQ22) ([order](finding-things-on-the-sheet/E8-the-games-words.md), approved 2026-11-13, EQ41–EQ45 answered: all Default; **E8 built**) | `clarify` | Rule or shape | E5 |
 
 E1a and E4 stand alone and can run beside anything. E2 decides what each tab
@@ -239,6 +239,18 @@ W133, set apart from E2 by Ken on 2026-11-12 (EQ22): a game term inside a
 sentence the app writes opens its rule on hover or tap, on Decision 139's
 primitive. It comes after E5, which rewrites the same sentences. W133 has
 the shape and what to respect.
+
+### Closing entry (2026-11-14)
+
+The plan is closed and archived; Ken's call, with E7 (EQ58–EQ66, all Default).
+
+**What E7 did.** It took E6's one regression first (Main's weapons table ran past the column on a phone for a long-named gun with ammo, `table.ref.wpn` now gives up 4px a side of each cell below 640px), then the polish: a weapon's tag draws its dotted line as `text-decoration`, as E8's `.term` does; a trait part reads its sign; the five pickers' rows are plain buttons, and the three Pick lists are plain until picked (Ken, from the review); the TAG number wraps whole under the barcode; and every reference table, the sheet's and GM mode's, fills its frame (W158).
+
+**The measure.** The critique (EQ65, the reviewer's) of the merged build, scored against the 26/40 snapshot, run single-context as the snapshot was, so the two compare like for like: **26/40 (2026-11-12, the plan's start) → 30/40 (2026-11-15, after E1a–E8)**, the band moving from Acceptable to Good. Heuristic by heuristic, 26 → 30: Match System / Real World 2 → 3, Consistency and Standards 2 → 3, Aesthetic and Minimalist Design 2 → 3, Error Recovery 2 → 3; the other six held at 3. What moved most: Match (the older-file notice is plain, and terms open their rules), Consistency (one meaning per colour, one primary per surface), Aesthetic (Pain said once, untrained skills folded, rows don't shout) and Error Recovery (each refusal names the next step). Left for Ken to triage, as P2s and not yet wishes: Main's columns end far apart at 1280 (with W159), the Pain card's density, and the light theme's colour fold; and a P3, the name twice above the fold on a phone. The snapshot is `.impeccable/critique/2026-11-15T18-03-48Z__src-ui-sheet-js.md`.
+
+**What's left, as wishes.** W152 to W157 (E4's, E5's and E8's reviews), W159 (Main's vitals row fills its width at 768 and 1280, set aside by EQ64). W158 was granted here. The light theme's fold (gold, magenta and violet as one colour) is a palette question for Ken and Deighton, and a GM's read-only view of a player sheet shows an owed Choose on a disabled button (E1b's leftover, GM mode's own screen).
+
+**Next.** `/impeccable audit` is its own session (Ken, EQ51's twin): the whole app, accessibility, performance and theming, read-only, and Ken triages its report.
 
 ## 4. Kept out
 
