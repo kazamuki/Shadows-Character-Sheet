@@ -671,6 +671,13 @@ try {
         shut.forEach(d => { d.open = true; });
         // E6: a fold that opens onto a table wider than the screen pushes the page sideways. Measured here, with every fold open.
         const overflowOpen = document.documentElement.scrollWidth - document.documentElement.clientWidth;
+        // E6 review: a sheet reference table that would fit its frame at width:100% must not be a one-line-a-sentence strip.
+        // Each is set to 100% here, read, and put back; one that fits there but is wider than its frame as drawn is a strip.
+        const strips = [...document.querySelectorAll("#main .ref-body .ref-frame table.ref")].filter(t => {
+          const f = t.parentElement, was = t.style.width, drawn = t.getBoundingClientRect().width;
+          t.style.width = "100%"; const fits = t.getBoundingClientRect().width <= f.clientWidth + 1; t.style.width = was;
+          return fits && drawn > f.clientWidth + 1;
+        }).length;
         const shown = el => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && !el.closest("[hidden]") && (!scope || !!el.closest(scope)); };
         const label = el => `${el.tagName.toLowerCase()}${el.classList.length ? "." + [...el.classList].join(".") : ""}`;
         const small = new Set(), tiny = new Set();
@@ -704,7 +711,7 @@ try {
         const h = document.querySelector("header.top").getBoundingClientRect();
         const de = document.documentElement;
         const brand = document.querySelector("header.top .brand");
-        return { header: Math.round(h.bottom > 0 ? h.height : 0), overflow: de.scrollWidth - de.clientWidth, overflowOpen,
+        return { header: Math.round(h.bottom > 0 ? h.height : 0), overflow: de.scrollWidth - de.clientWidth, overflowOpen, strips,
           nameCut: brand.scrollWidth > brand.clientWidth, small: [...small], tiny: [...tiny], inline, bars };
       }, [w.touch ? 44 : 24, scope, INLINE_TERM]);
       const share = m.header / w.height;
@@ -715,8 +722,8 @@ try {
         targets: m.small.length ? m.small.join(", ") : m.inline ? `ok (${m.inline} inline terms exempt)` : "ok",
         text: m.tiny.length ? m.tiny.join(", ") : "ok",
         fold: [b.hp != null ? `HP ${b.hp}px (${Math.round(b.hp / w.height * 100)}%)` : "",
-          b.vbar > 1 ? `vitals ${b.vbar} rows` : "", b.jump > 1 ? `jump ${b.jump} rows` : "", b.sticky != null ? `bar ${b.sticky}px (${Math.round(b.sticky / w.height * 100)}%)` : ""].filter(Boolean).join(", ") || "ok",
-        ok: rowsOk && hpOk && share <= HEADER_MAX_SHARE && m.overflow <= 0 && m.overflowOpen <= 0 && (!mustFit(screen) || !m.nameCut) && !m.small.length && !m.tiny.length });
+          b.vbar > 1 ? `vitals ${b.vbar} rows` : "", b.jump > 1 ? `jump ${b.jump} rows` : "", b.sticky != null ? `bar ${b.sticky}px (${Math.round(b.sticky / w.height * 100)}%)` : "", m.strips ? `${m.strips} reference tables wider than their frame though they'd fit it` : ""].filter(Boolean).join(", ") || "ok",
+        ok: rowsOk && hpOk && share <= HEADER_MAX_SHARE && m.overflow <= 0 && m.overflowOpen <= 0 && !m.strips && (!mustFit(screen) || !m.nameCut) && !m.small.length && !m.tiny.length });
     };
     // The exemption is one rule, so it's checked both ways on a real layout: an inline .term in a sentence is exempt; a .term made
     // a block, a .term alone in its parent, and a plain small button are not.

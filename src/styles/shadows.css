@@ -1664,6 +1664,8 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .ref-items li{margin:0 0 6px; max-width:70ch}
 .ref-more{display:block; font-size:.82rem; color:var(--dim)}
 @media (min-width:640px){ .ref-frame table.ref{width:100%} }
+/* E6 review: the sheet's own reference tables wrap to the frame at a phone; only one too wide for it (Materials, Enchantment) scrolls. GM's Reference sits in .ref-part, not .ref-body, and keeps max-content. */
+.ref-body .ref-frame table.ref{width:100%}
 
 /* Find and Jot (Decision 208): two words in the header's first row, beside the menu. */
 .hdr-act{background:none; border:1px solid var(--frame); border-radius:6px; color:var(--dim);

@@ -461,6 +461,10 @@ test("U4: gm.js has no inline style but a computed transform", () => {
     const wide = top.filter(r => /\.cond\.alone/.test(r.sel));
     assert.deepEqual(wide, [], "a .cond.alone rule sits outside the container query");
   });
+  test("E6 8: the sheet's reference tables wrap to their frame, and GM's keep max-content", () => {
+    assert.equal(val(top, ".ref-body .ref-frame table.ref", "width"), "100%");
+    assert.equal(val(top, ".ref-frame table.ref", "width"), "max-content", "GM's reference table lost its max-content");
+  });
   test("E6 6: the spend row's phone grid is scoped", () => {
     const rs = inBlock("@media (max-width:639px)");
     assert.equal(val(rs, ".raise-row.spend", "grid-template-columns"), "1fr 1fr");
