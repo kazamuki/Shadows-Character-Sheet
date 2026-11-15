@@ -2451,3 +2451,27 @@ test("E6 2: every place the sheet draws an attack wraps the dice in the hook", (
     assert.deepEqual(app.errors, []);
   }
 });
+
+// ── E7: Main's weapons table is the one with the phone padding ──
+test("E7 2: Main's weapons table carries its hook, and Loadout's doesn't", () => {
+  const ch = lockedCharacter();
+  ch.skills.handguns = { rank: 8, ipe: 0 };
+  ch.weapons = [{ id: "cheapshot", notes: "", mods: [], roundsSpent: 0 }];
+  assert.ok(ch.weapons.some(w => w.id === "cheapshot"), "the fixture holds no Cheapshot");
+  const l = Engine.weaponLine(ch, 0);
+  assert.ok(l && l.attack >= 10, `Cheapshot's attack is ${l && l.attack}, two digits wanted`);
+  assert.ok(l.capacity, "Cheapshot has no capacity, so no Cap. cell to widen");
+  const main = openSheet(ch, "main");
+  const wpn = main.$$("#main table.ref").find(t => /Cheapshot/.test(t.textContent) && /Weapon/.test(t.textContent));
+  assert.ok(wpn, "Main draws no weapons table");
+  assert.ok(wpn.classList.contains("wpn"), "Main's weapons table has no wpn hook");
+  const skills = main.$$("#main table.ref").filter(t => t !== wpn && /Combat Skill/.test(t.textContent));
+  assert.ok(skills.length, "Main's combat skills table isn't found");
+  for (const t of skills) assert.ok(!t.classList.contains("wpn"), "the combat skills table carries the hook");
+  assert.deepEqual(main.errors, []);
+  const lo = openSheet(ch, "loadout");
+  const lw = lo.$("#main table.lo-weapons");
+  assert.ok(lw && /Cheapshot/.test(lw.textContent), "Loadout's weapons table isn't found");
+  assert.ok(!lw.classList.contains("wpn"), "Loadout's weapons table carries the hook");
+  assert.deepEqual(lo.errors, []);
+});

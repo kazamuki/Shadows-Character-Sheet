@@ -359,7 +359,7 @@ function skillRowPair(ch, l){
     ? [`rank ${b.rank}`, skillStatsHtml(l)]
     : [skillStatsHtml(l), `untrained`];
   // Decision 285: Pain's penalty and a Condition's are said once, above the table; the totals include them.
-  for (const t of b.traitParts||[]) parts.push(`<span class="trait-part">${modText(t.amount)} ${esc(t.name)}</span>`);
+  for (const t of b.traitParts||[]) parts.push(`<span class="trait-part ${t.amount<0?"neg":"pos"}">${modText(t.amount)} ${esc(t.name)}</span>`);
   const ipe = ch.skills[l.def.id] ? ch.skills[l.def.id].ipe : 0;
   const q = `<button class="skill-q" data-skilldesc="${l.def.id}" aria-expanded="${open?"true":"false"}" aria-label="Toggle description" title="Description">?</button>`;
   // Decision 284: an untrained row is dimmed whole (`tr.untrained td`); its chips keep their colours.
@@ -472,7 +472,7 @@ function renderShMain(){
   const natural = formWeaponRowsHtml(ch) + archetypeWeaponRowsHtml(ch);
   if (lines.length || natural){
     h += `<div class="sect">Weapons</div>
-      <table class="ref"><thead><tr><th>Weapon</th><th>Attack</th><th>Dmg</th><th>RoF</th><th>Cap.</th></tr></thead><tbody>` + natural +
+      <table class="ref wpn"><thead><tr><th>Weapon</th><th>Attack</th><th>Dmg</th><th>RoF</th><th>Cap.</th></tr></thead><tbody>` + natural +
       lines.map(l=>{
         if (l.custom){ const w=ch.weapons[l.index];
           return `<tr><td>${esc(w.name)||"—"}${w.features?`<div class="lo-sub">${esc(w.features)}</div>`:""}</td>
@@ -1973,7 +1973,7 @@ function catalogResultsHtml(ch, kind){
         ${catalogCellsHtml(kind, l)}
         <td class="num" data-k="Price">${priceText({cost:l.price})||esc(l.costText||"—")}${l.availability?`<div class="sub">${esc(l.availability)}</div>`:""}</td>
         <td class="cat-act"><button class="btn sm" data-catadd="${esc(l.id)}" title="Add it without paying: found, issued, or already bought">Add</button>
-          <button class="btn sm primary" data-catbuy="${esc(l.id)}" ${l.buy.ok?"":"disabled"} title="${esc(l.buy.ok?`Pay ${priceText({cost:l.price})} from your Çredits`:l.buy.why)}">Buy</button></td></tr>
+          <button class="btn sm" data-catbuy="${esc(l.id)}" ${l.buy.ok?"":"disabled"} title="${esc(l.buy.ok?`Pay ${priceText({cost:l.price})} from your Çredits`:l.buy.why)}">Buy</button></td></tr>
       <tr class="cat-detail" ${open===l.id?"":"hidden"}><td colspan="${cols}">${det.length?det.map(t=>`<p>${esc(t)}</p>`).join(""):"<p>No notes in the catalog.</p>"}</td></tr>`;
     }).join("") + `</tbody></table>`;
 }
@@ -3187,7 +3187,7 @@ function raiseStatusHtml(ch, type){
 function raiseRowHtml({ name, sub, move, cost, btn, key, why }){
   return `<tr class="${why?"off":"pickrow"}"><td><b>${name}</b>${sub?`<div class="sub">${sub}</div>`:""}${why?`<div class="why">${esc(why)}</div>`:""}</td>
     <td class="num" data-k="Raise">${move}</td><td class="num" data-k="Cost">${cost}</td>
-    <td><button class="btn sm primary" data-raise="${key}" ${why?"disabled":""}>${btn}</button></td></tr>`;
+    <td><button class="btn sm" data-raise="${key}" ${why?"disabled":""}>${btn}</button></td></tr>`;
 }
 function raiseResultsHtml(ch, type){
   const ip = Engine.ipState(ch).available;
@@ -3346,7 +3346,7 @@ function ipBuyRowHtml({ name, sub, tags, move, cost, btn, key, why, off, extra }
   // The pick and a Disadvantage's text get a row of their own, the table's full width: a phone's name column is too narrow for a select.
   return `<tr class="${why?"off":"pickrow"}"><td><b>${name}</b>${sub?`<div class="sub">${sub}</div>`:""}${tags||""}${why?`<div class="why">${esc(why)}</div>`:""}</td>
     <td class="num" data-k="Move">${move}</td><td class="num" data-k="Cost">${cost}</td>
-    <td><button class="btn sm primary" data-ipbuy="${key}" ${why||off?"disabled":""}>${btn}</button></td></tr>`
+    <td><button class="btn sm" data-ipbuy="${key}" ${why||off?"disabled":""}>${btn}</button></td></tr>`
     + (extra ? `<tr class="ip-extra ${why?"off":""}"><td colspan="4">${extra}</td></tr>` : "");
 }
 function ipAdvantagesHtml(ch){
@@ -3517,7 +3517,7 @@ function addInPlayRowsHtml(st){
   const left = st.options.filter(o=>!o.missing && !st.chosen.includes(o.id));
   return left.length ? `<table class="ref spell-results raise-results"><tbody>${left.map(o=>
     `<tr class="pickrow"><td><b>${esc(o.name)}</b>${o.description?`<div class="sub">${esc(o.description)}</div>`:""}</td>
-      <td><button class="btn sm primary" data-addpick="${esc(o.id)}">Add</button></td></tr>`).join("")}</tbody></table>`
+      <td><button class="btn sm" data-addpick="${esc(o.id)}">Add</button></td></tr>`).join("")}</tbody></table>`
     : `<p class="step-note">Nothing is left to add.</p>`;
 }
 // Focus never falls to <body>: with nothing left to add the button is gone, so it goes to the row's name cell.
@@ -3572,7 +3572,7 @@ function trainResultsHtml(ch){
     const sub = `rank ${line.rank} · ${(T.teacherStats||[]).includes(s.primaryStat) ? T.teacherText : T.selfText}`;
     return `<tr class="${c.ok?"pickrow":"off"}"><td><b>${esc(s.name)}</b><div class="sub">${esc(sub)}</div>${c.ok?"":`<div class="why">${esc(c.why)}</div>`}</td>
       <td class="num" data-k="Raise">${c.ok ? `${c.from} → ${c.to}` : line.rank}</td><td class="num" data-k="Cost">${c.ok ? crText(c.credits) : "—"}</td>
-      <td><button class="btn sm primary" data-train="${esc(s.id)}" ${c.ok?"":"disabled"}>Train</button></td></tr>`;
+      <td><button class="btn sm" data-train="${esc(s.id)}" ${c.ok?"":"disabled"}>Train</button></td></tr>`;
   });
   return rows.length ? `<table class="ref spell-results raise-results"><tbody>${rows.join("")}</tbody></table>`
     : `<p class="step-note">Training sharpens a Skill you already have. Learn one with IP first, then train it here.</p>`;

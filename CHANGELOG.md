@@ -24,11 +24,16 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.69.2
+## [Unreleased] — app 0.69.3
 
 ### Character sheet
 
 - **The sheet sits right on a phone.** Attack rolls stay on one line, a spellcaster's reference tables scroll on their own instead of pushing the page sideways, the card alone at the bottom of Main's vitals takes one line, and Progression's buttons line up in pairs.
+- **Finishing touches.** Main no longer slides sideways on a phone when you carry a long-named gun, a weapon's tags are underlined like the game's other words, the lists you buy and raise from don't shout on every row, and your TAG number stays in one piece.
+
+### GM mode
+
+- **Reference tables wrap on a phone** instead of running one sentence a line.
 
 ## v0.69.1 — 2026-11-14
 

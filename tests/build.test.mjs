@@ -461,10 +461,7 @@ test("U4: gm.js has no inline style but a computed transform", () => {
     const wide = top.filter(r => /\.cond\.alone/.test(r.sel));
     assert.deepEqual(wide, [], "a .cond.alone rule sits outside the container query");
   });
-  test("E6 8: the sheet's reference tables wrap to their frame, and GM's keep max-content", () => {
-    assert.equal(val(top, ".ref-body .ref-frame table.ref", "width"), "100%");
-    assert.equal(val(top, ".ref-frame table.ref", "width"), "max-content", "GM's reference table lost its max-content");
-  });
+  // E6 8 (the sheet's tables wrap, GM's keep max-content) is replaced by E7 8: one base rule now, 100% for both.
   test("E6 6: the spend row's phone grid is scoped", () => {
     const rs = inBlock("@media (max-width:639px)");
     assert.equal(val(rs, ".raise-row.spend", "grid-template-columns"), "1fr 1fr");
@@ -472,5 +469,70 @@ test("U4: gm.js has no inline style but a computed transform", () => {
     assert.equal(val(top, ".raise-row", "display"), "flex", "plain .raise-row lost its flex rule");
     assert.equal(val(rs, ".raise-row", "grid-template-columns"), null, "the phone grid is on plain .raise-row");
     assert.equal(val(rs, ".raise-row.spend > .btn:last-child:nth-child(odd)", "grid-column"), "1/-1", "an odd last spend button doesn't take the row");
+  });
+}
+
+// ── E7: polish, then measure. The same reading as E6's. ──
+{
+  const css = readFileSync(join(ROOT, "src/styles/shadows.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  const inBlock = prelude => {
+    const out = [];
+    for (const m of css.matchAll(/(@(?:media|container)[^{]*)\{((?:[^{}]*\{[^{}]*\})*)\s*\}/g)) {
+      if (m[1].trim().replace(/\s+/g, " ") !== prelude) continue;
+      for (const r of m[2].matchAll(/([^{}]+)\{([^{}]*)\}/g)) out.push({ sel: r[1].trim().replace(/\s+/g, " "), body: r[2] });
+    }
+    return out;
+  };
+  const val = (rs, sel, prop) => {
+    const hits = rs.filter(r => r.sel.split(",").map(s => s.trim()).includes(sel));
+    const vs = hits.map(r => (new RegExp(`(?:^|;)\\s*${prop}\\s*:\\s*([^;]+)`).exec(r.body) || [])[1]).filter(Boolean).map(v => v.trim());
+    return vs.length ? vs[vs.length - 1] : null;
+  };
+  const topCss = css.replace(/@[a-z-]+[^{}]*\{(?:[^{}]*\{[^{}]*\})*\s*\}/g, "");
+  const top = [...topCss.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(m => ({ sel: m[1].trim().replace(/\s+/g, " "), body: m[2] }));
+
+  test("E7 1: Main's weapons table has phone padding, and Loadout's doesn't", () => {
+    const rs = inBlock("@media (max-width:639px)");
+    assert.equal(val(rs, "table.ref.wpn td", "padding-left"), "6px", "Main's weapons table cells have no phone padding");
+    assert.equal(val(rs, "table.ref.wpn td", "padding-right"), "6px");
+    assert.equal(val(rs, "table.ref.wpn th", "padding-left"), "6px");
+    assert.equal(val(rs, "table.ref.wpn th", "padding-right"), "6px");
+    const wide = rs.filter(r => r.sel.split(",").some(s => /\.lo-weapons/.test(s) || /^table\.ref (td|th)$/.test(s.trim())) && /padding/.test(r.body)).map(r => r.sel);
+    assert.deepEqual(wide, [], "a phone padding rule reaches Loadout's table or every table.ref");
+    assert.equal(val(top, "table.ref.wpn td", "padding-left"), null, "the padding is outside the phone block");
+  });
+  test("E7 3: a tag's underline is a text-decoration, as a term's is", () => {
+    assert.match(val(top, ".tag", "text-decoration") || "", /underline/);
+    assert.match(val(top, ".tag", "text-decoration") || "", /dotted/);
+    assert.equal(val(top, ".tag", "text-underline-offset"), ".18em");
+    assert.ok(["0", "none", null].includes(val(top, ".tag", "border-bottom")), "a tag still draws a border-bottom");
+    assert.equal(val(top, ".tag.plain", "text-decoration"), "none");
+    assert.equal(val(top, ".term", "text-decoration"), "underline dotted");
+    assert.equal(val(top, ".term", "text-underline-offset"), ".18em");
+    // E3's fold: the rule's other properties stay.
+    assert.equal(val(top, ".tag", "font-size"), ".74rem");
+    assert.equal(val(top, ".tag", "line-height"), "1.3");
+    assert.equal(val(top, ".tag", "color"), "var(--dim)");
+    assert.equal(val(top, ".tag", "padding"), "0 1px");
+    assert.equal(val(top, ".tag", "cursor"), "help");
+    assert.equal(val(top, ".tag", "white-space"), "nowrap");
+    assert.equal(val(top, ".tag:hover", "color"), "var(--cyan)");
+    assert.doesNotMatch(top.find(r => r.sel.startsWith(".tag:hover")).body, /border/, "the hover rule still turns a border cyan");
+  });
+  test("E7 5: a trait part's colour is the sign's", () => {
+    assert.equal(val(top, ".ref td.bd .trait-part.neg", "color"), "var(--magenta-text)");
+    assert.equal(val(top, ".ref td.bd .trait-part.pos", "color"), "var(--green)");
+    assert.equal(val(top, ".ref td.bd .trait-part", "color"), null, "a bare .trait-part colour rule is left");
+  });
+  test("E7 7: the TAG number never breaks inside itself, and the row wraps instead", () => {
+    assert.equal(val(top, ".intake-no", "white-space"), "nowrap");
+    assert.equal(val(top, ".intake", "flex-wrap"), "wrap", "nowrap without wrap pushes the page sideways");
+  });
+  test("E7 8: every reference frame's table wraps to its frame", () => {
+    assert.equal(val(top, ".ref-frame table.ref", "width"), "100%");
+    const maxc = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(m => /\.ref-frame/.test(m[1]) && /max-content/.test(m[2])).map(m => m[1].trim());
+    assert.deepEqual(maxc, [], "a reference frame rule still sets max-content");
+    assert.equal(val(top, ".ref-body .ref-frame table.ref", "width"), null, "E6's sheet-only override is still there");
+    assert.equal(val(inBlock("@media (min-width:640px)"), ".ref-frame table.ref", "width"), null, "E6's 640px override is still there");
   });
 }

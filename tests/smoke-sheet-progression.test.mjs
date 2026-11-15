@@ -861,3 +861,69 @@ test("E6 5: Progression's spend row carries its hook, and Minor choice's row doe
   assert.ok(!modalRow.classList.contains("spend"), "Minor choice's row carries the spend hook");
   assert.deepEqual([app.errors, app2.errors], [[], []]);
 });
+
+// ── E7: a list's rows are peers (E4's EQ48, applied to the pickers) ──
+// Five pickers, five separate sites: each is opened on its own and read on its own, so a mutation at one site fails here for that site.
+{
+  const rowsOf = (app, sel) => {
+    const bs = app.$$(`#modal ${sel}`);
+    assert.ok(bs.length >= 2, `${sel}: ${bs.length} rows drew, two wanted`);
+    return bs;
+  };
+  const peers = (app, sel) => {
+    for (const b of rowsOf(app, sel)) {
+      assert.ok(b.classList.contains("btn") && b.classList.contains("sm"), `${sel}: a row button isn't .btn.sm`);
+      assert.ok(!b.classList.contains("primary"), `${sel}: a row button is still primary`);
+    }
+  };
+  test("E7 6a: the catalog's Buy rows are peers", () => {
+    const ch = lockedCharacter(); ch.trackers.credits.current = 1500;
+    const app = openSheet(ch, "loadout");
+    app.click('[data-lobrowse="weapons"]');
+    peers(app, "[data-catbuy]");
+    assert.deepEqual(app.errors, []);
+  });
+  test("E7 6b: Raise a Stat's rows are peers", () => {
+    const ch = p12Char(); const app = openSheet(ch, "progression");
+    app.click('[data-raiseopen="stat"]');
+    peers(app, "[data-raise]");
+    assert.deepEqual(app.errors, []);
+  });
+  test("E7 6c: Buy an Advantage's rows are peers, and the Restore buttons keep primary", () => {
+    const ch = p12Char(); ch.trackers.san.loss = 12; ch.trackers.massiveLevels = 2;
+    const app = openSheet(ch, "progression");
+    app.click('[data-ipopen="advantage"]');
+    peers(app, "[data-ipbuy]");
+    app.click("#modal [data-modalclose]");
+    app.click('[data-ipopen="restore"]');
+    const rs = app.$$("#modal .ip-restore [data-ipbuy]");
+    assert.equal(rs.length, 2, "the SAN and Health Level restore buttons didn't both draw");
+    for (const b of rs) assert.ok(b.classList.contains("primary"), "a Restore button lost primary");
+    assert.deepEqual(app.errors, []);
+  });
+  test("E7 6d: Add a style's rows are peers", () => {
+    const ch = lockedCharacter(); ch.identity.archetype = "professional"; ch.meta.gamedataVersion = D.meta.gamedataVersion;
+    ch.skills["martial-arts"] = { rank: 2, ipe: 0, selections: { style: ["karate"] } };
+    const app = openSheet(ch, "main");
+    app.click('#main [data-addstyle="martial-arts"]');
+    peers(app, "[data-addpick]");
+    assert.deepEqual(app.errors, []);
+  });
+  test("E7 6e: Train a Skill's rows are peers", () => {
+    const c = lockedCharacter(); c.identity.archetype = "professional"; c.meta.gamedataVersion = D.meta.gamedataVersion;
+    c.skills.handguns = { rank: 5, ipe: 0 }; c.skills.melee = { rank: 4, ipe: 0 };
+    c.progression.milestonePoints = 9; c.trackers.credits.current = 1250; c.houseRules.training = true;
+    const app = openSheet(c, "progression");
+    app.click("[data-trainopen]");
+    peers(app, "[data-train]");
+    assert.deepEqual(app.errors, []);
+  });
+  test("E7 6f: a Condition's Add keeps primary once a body part is picked", () => {
+    const app = openSheet(lockedCharacter(), "main");
+    app.click('[data-condquick="injured"]');
+    const add = app.$("[data-condadd]");
+    assert.ok(add, "Injured drew no Add");
+    assert.ok(add.classList.contains("primary"), "Add lost primary");
+    assert.deepEqual(app.errors, []);
+  });
+}

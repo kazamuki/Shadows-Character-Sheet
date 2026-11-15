@@ -264,8 +264,16 @@ const tableMeasure = () => {
   const bar = main.querySelector(".tbl-bar, .enc-bar");
   const hdr = document.querySelector("header.top");
   const on = sel => { const e = document.querySelector(sel); return !!e && getComputedStyle(e).display !== "none"; };
+  // E7 (W158): a Reference table that would fit its frame at width:100% must not be drawn wider. Every fold is opened to read it, then put back.
+  const shut = [...main.querySelectorAll("details:not([open])")]; shut.forEach(d => { d.open = true; });
+  const strips = [...main.querySelectorAll(".ref-frame table.ref")].filter(t => {
+    const f = t.parentElement, was = t.style.width, drawn = box(t).width;
+    t.style.width = "100%"; const fits = box(t).width <= f.clientWidth + 1; t.style.width = was;
+    return fits && drawn > f.clientWidth + 1;
+  }).length;
+  shut.forEach(d => { d.open = false; });
   const worst = prose.filter(shown).map(e => ({ w: box(e).width, ch: chOf(e) })).sort((a, b) => b.w / b.ch - a.w / a.ch)[0] || { w: 0, ch: 0 };
-  return { x: Math.round(mb.x), w: Math.round(mb.width), over, ch75: Math.round(worst.ch),
+  return { x: Math.round(mb.x), w: Math.round(mb.width), over, strips, ch75: Math.round(worst.ch),
     field: widest(fields), area: widest(main.querySelectorAll("textarea")), prose: Math.round(worst.w),
     cards: lis.length, perRow,
     cardMin: lis.length ? Math.round(Math.min(...lis.map(l => box(l).width))) : 0, cardMax: widest(lis),
@@ -347,6 +355,7 @@ async function tableScreens(browser, file, rows, numbers) {
       const m = s.m, bad = [];
       if (m.rail || m.vitals) bad.push("a rail or vitals column is drawn");
       if (m.over) bad.push(`${m.over} elements past the right edge`);
+      if (m.strips) bad.push(`${m.strips} reference tables wider than their frame though they'd fit it`);
       if (m.tabOut !== 0) bad.push(m.tabOut < 0 ? "no open tab in the tab row" : `the open tab is ${m.tabOut}px outside the tab row`);
       if (m.scrollW > 0) bad.push(`the page scrolls sideways by ${m.scrollW}px`);
       if (m.field > FIELD_MAX + 0.5) bad.push(`a field ${m.field}px`);
@@ -641,6 +650,55 @@ async function phoneFloors(browser, file, rows) {
     await c.close();
   }
 }
+// E7: Main's weapons table with a long-named gun that carries ammo ("Cheapshot", a Reload button in Cap.) and an attack of two digits is the
+// case that pushed the page sideways in E6, and the SG-88 and the combat knife above weren't. A Tekko-Kagi gives the tag chips. The frame
+// fixture's seed stays as it is, so this brings its own character, and the fixture asserts its own state in the page first.
+const weaponChar = () => {
+  const { Engine } = loadEngine();
+  const ch = lockedCharacter("arcanist", 0);
+  ch.identity.name = "Weapon Check";
+  ch.skills.handguns = { rank: 8, ipe: 0 }; ch.skills["martial-arts"] = { rank: 4, ipe: 0 };
+  ch.weapons = [{ id: "cheapshot", notes: "", mods: [], roundsSpent: 0 }, { id: "tekko-kagi", notes: "" }];
+  const l = Engine.weaponLine(JSON.parse(JSON.stringify(ch)), 0);
+  if (!l || !(l.attack >= 10)) throw new Error(`phone-check's weapon character has Cheapshot at ${l && l.attack}, two digits wanted`);
+  return ch;
+};
+// Two floors, on Main at the phone widths and at 1024: the page doesn't scroll sideways with that table in it, and a weapon's tag is
+// underlined as a term is (text-decoration, no border), which jsdom can't read.
+async function weaponFloors(browser, file, rows) {
+  const ch = weaponChar();
+  // 375 is a width the table broke at on its own: the track grew to 360px, past the 343 a 375 screen leaves, where 390 leaves 358 and hides 2px of it in the gutter.
+  for (const w of [{ name: "phone, narrow", width: 375, height: 812 }, ...WIDTHS]) {
+    const c = await browser.newContext({ viewport: { width: w.width, height: w.height }, hasTouch: !!w.touch, isMobile: !!w.touch });
+    await c.addInitScript(s => { try { localStorage.setItem("shadows.active.v1", s); } catch (e) {} }, JSON.stringify({ ch, section: "main" }));
+    const page = await c.newPage();
+    const errors = [];
+    page.on("pageerror", e => errors.push(e.message));
+    await page.goto(pathToFileURL(file).href);
+    await page.click("[data-open]");
+    await page.waitForSelector("#topnav [data-sec]");
+    const m = await page.evaluate(() => {
+      const de = document.documentElement, main = document.querySelector("#main");
+      const t = [...main.querySelectorAll("table.ref")].find(x => /Cheapshot/.test(x.textContent) && /Weapon/.test(x.textContent));
+      const row = t && [...t.querySelectorAll("tbody tr")].find(r => /Cheapshot/.test(r.textContent));
+      const name = row && row.cells[0].textContent.trim();
+      const tags = [...main.querySelectorAll(".tags .tag:not(.plain)")].map(e => { const s = getComputedStyle(e); return { text: e.textContent.trim(), line: s.textDecorationLine, border: s.borderBottomWidth, offset: s.textUnderlineOffset }; });
+      return { page: de.scrollWidth - de.clientWidth, main: main.scrollWidth - main.clientWidth, name: name || null, reload: !!(row && row.querySelector("[data-reload]")),
+        table: t ? Math.round(t.getBoundingClientRect().width) : 0, col: t ? Math.round(t.parentElement.clientWidth) : 0, tags,
+        // How far the table runs past the right edge of the page's own column (the gutter hides this from scrollWidth at 390).
+        past: t ? Math.round((t.getBoundingClientRect().right - (main.getBoundingClientRect().right - parseFloat(getComputedStyle(main).paddingRight))) * 10) / 10 : 0 };
+    });
+    const bad = [], badTag = [];
+    if (!m.name || !/^"?Cheapshot"?/.test(m.name) || !m.reload) bad.push(`the fixture isn't a Cheapshot with a Reload button (name ${JSON.stringify(m.name)}, reload ${m.reload})`);
+    else if (w.width < 640 && (m.page > 0 || m.main > 0 || m.past > 0.5)) bad.push(`the weapons table runs ${Math.max(m.past, m.page, m.main)}px past Main's column (${m.table}px in ${m.col}px)`);
+    if (m.tags.length < 2) badTag.push(`the fixture draws ${m.tags.length} weapon tags that open a tip, 2 wanted`);
+    for (const t of m.tags) if (!/underline/.test(t.line) || t.border !== "0px") badTag.push(`"${t.text}" has decoration ${t.line} and a ${t.border} border`);
+    if (errors.length) bad.push(errors.join("; "));
+    rows.push({ width: w.name, screen: "E7: Main's weapons table with a Cheapshot", layout: bad.length ? bad.join("; ") : `ok (table ${m.table}px in ${m.col}px, page overflow ${m.page}px)`, ok: !bad.length });
+    rows.push({ width: w.name, screen: "E7: a weapon's tag is underlined as a term is", layout: badTag.length ? badTag.join("; ") : `ok (${m.tags.length} tags, offset ${m.tags[0].offset})`, ok: !badTag.length });
+    await c.close();
+  }
+}
 const seed = JSON.stringify({ ch: lockedCharacter("arcanist", 0, ["long-lived"], true), section: "main" });
 // A Major unlocks at 10 Milestone Points; the Professional's list has the longest prerequisites.
 const majorSeed = JSON.stringify({ ch: lockedCharacter("professional", 10), section: "main" });
@@ -673,7 +731,7 @@ try {
         const overflowOpen = document.documentElement.scrollWidth - document.documentElement.clientWidth;
         // E6 review: a sheet reference table that would fit its frame at width:100% must not be a one-line-a-sentence strip.
         // Each is set to 100% here, read, and put back; one that fits there but is wider than its frame as drawn is a strip.
-        const strips = [...document.querySelectorAll("#main .ref-body .ref-frame table.ref")].filter(t => {
+        const strips = [...document.querySelectorAll(".ref-frame table.ref")].filter(t => {
           const f = t.parentElement, was = t.style.width, drawn = t.getBoundingClientRect().width;
           t.style.width = "100%"; const fits = t.getBoundingClientRect().width <= f.clientWidth + 1; t.style.width = was;
           return fits && drawn > f.clientWidth + 1;
@@ -819,6 +877,7 @@ try {
     await ctx.close();
   }
   await phoneFloors(browser, file, rows);
+  await weaponFloors(browser, file, rows);
   // P16 (Decision 246): the Character tab's layout. jsdom has no layout, so this is where it's held.
   for (const w of LAYOUT_WIDTHS) {
     for (const f of characterFixtures()) {

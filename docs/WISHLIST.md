@@ -42,7 +42,9 @@ and that Goes with is mutual.
 ### Wizard
 
 **W121 — Type a number into a stepper.** *Claude, from P13 · 💡 · Fix (UI) · raised 2026-10-16*\
-**Plan:** set aside by [finding-things-on-the-sheet](plans/finding-things-on-the-sheet.md) E1b: the order is the first-timer's, and this is the veteran's (EQ10) · **Goes with:** W131
+**Plan:** none yet · **Goes with:** W131
+
+*The finding-things plan (closed; E1b, EQ10) set this aside: its order was the first-timer's, and this is the veteran's.*
 
 Every rank in the wizard is one click: spending the Skill pool alone is about 30, before stats, boosts and Advantages. An experienced player knows the
 targets. The stepper's value could take a typed number and the arrow keys, held to the same caps and pools as + and −.
@@ -57,7 +59,9 @@ Home offers Open, Export and Remove, and no copy, so a second character of the s
 choice someone could make differently: a numbered decision.
 
 **W131 — Expert mode as one long page.** *Ken, after P13 · 💡 · Rule or shape · raised 2026-10-17*\
-**Plan:** set aside by [finding-things-on-the-sheet](plans/finding-things-on-the-sheet.md) E1b: the order is the first-timer's, and this is the veteran's (EQ10) · **Goes with:** W121
+**Plan:** none yet · **Goes with:** W121
+
+*The finding-things plan (closed; E1b, EQ10) set this aside: its order was the first-timer's, and this is the veteran's.*
 
 An experienced player who knows what they want could make a character on one scrolling page: every creation step in order, folded as Expert mode folds
 them, with one sticky bar that jumps between steps and filters, instead of eight screens and seven Continues. P13 and P19 make it plausible: Expert mode
@@ -133,7 +137,7 @@ print renderer for a skill row; the line is `Engine.maneuverChecks`, so print on
 **W156 — Help on the character sheet: what each tab is for, every word it uses, and a switch for the guide lines.** *Ken, 2026-11-14 · 💡 · Rule or shape*\
 **Plan:** none yet
 
-Ken wants this as a plan of its own, after `finding-things-on-the-sheet.md`. GM mode has Help on every page (Decision 278, S31): a **?** in the header and the **?** key open a panel for the page that's open, read from `gmGuide` in the data. It says what the page is for, when it's used, and the words on it. A **Guide lines** switch turns each section's one-line guide off once a GM knows the ground. The player's sheet has no such thing.
+Ken wants this as a plan of its own, after the finding-things plan (`plans/archive/finding-things-on-the-sheet.md`, closed). GM mode has Help on every page (Decision 278, S31): a **?** in the header and the **?** key open a panel for the page that's open, read from `gmGuide` in the data. It says what the page is for, when it's used, and the words on it. A **Guide lines** switch turns each section's one-line guide off once a GM knows the ground. The player's sheet has no such thing.
 
 **What the player feels today.** The sheet now names a lot of the game:
 - E8 made the rules' own words tappable inside the sheet's lines (`gameTerms`).
@@ -154,6 +158,13 @@ But a new player opening Trackers or Progression still has nowhere to ask what t
 - **GM mode's seat sheet draws the player's tabs** (Decision 256). Decide whether a seat shows the player's Help or the table's.
 - **The phone** (E6): S31's review found Help's foot about 530px below the fold on a phone. Learn from that and from W150 before laying it out.
 - **Rules questions go to Deighton.** If a definition has to say something the CRB doesn't, it's a flag, not copy.
+
+**W159 — Main's vitals row fills its width at 768 and 1280.** *Claude, from E7's pre-flight, 2026-11-14 · 💡 · Rule or shape*\
+**Plan:** none yet
+
+*The finding-things plan (closed; E7, EQ64) set this aside: filling the row changes every card's width at 1280, and so its height, which is E3's revisit condition.*
+
+Main's vitals grid has five tracks at 768 and eight of 142px at 1280, so seven cards leave three empty cells at 768 and one at 1280. At 768 it reads as a tablet layout, not a break. Filling the row (for example `auto-fill` to `auto-fit` with a maximum) would widen the cards and change their heights. *To respect:* Decision 140 (the header) and E3's balance at 1280×860 (measured in the plan's E3 order), so measure Main's Combat top and the fight's bottom before and after, and bring it back to Ken as E3's question.
 
 ### Rules in play: powers, rounds, encounters, Sanity
 
@@ -1009,11 +1020,6 @@ CRB 0530 (Visibility) gives each light level a Stealth bonus beside its attack p
 
 E4 struck RES on the sheet for a body piece at Integrity 0, because the engine already stops applying it (CRB 0460 §Integrity). Two places still print it as a number: GM mode's seat line ("RES +6 · INT 0/10 · Scrap", `gm.js` `seatArmorText`; the compromised case already says "RES is gone", and `smoke-table-seat-fight.test.mjs` pins "· Scrap"), and the printed sheet's RES column (`sheet.js` print view, beside "0 / 10 scrap"). *To respect:* Decisions 191 and 257 (the seat reads the sheet's pipeline), and the print sheet's text-only armour row.
 
-**W158 — GM mode's Reference wraps its sentences on a phone.** *Ken, from E6's review (PR #344), 2026-11-14 · 🔧 · Fix*\
-**Plan:** [finding-things-on-the-sheet](plans/finding-things-on-the-sheet.md), [E7's order](plans/finding-things-on-the-sheet/E7-polish.md) (EQ66)
-
-Below 640px a Reference panel's table is `width:max-content` inside its `.ref-frame` (`shadows.css`, the rules E6 left for GM mode), so each sentence is one line. At 375 the *Checks* panel is 1387px wide: a GM reads a rule by scrolling sideways about four screens. E6 gave the player's Magic reference `width:100%` inside its frame (`.ref-body .ref-frame table.ref`), so prose wraps and only a genuinely wide column table scrolls. The same split would serve Reference: sentence tables fill the frame, column tables keep `max-content`. *To respect:* Decision 207 (Reference's panels are rows in the data), so the split is read from the table's shape or a data field, not a panel id in code (Decision 135); `phone-check` should gain the open-panel overflow floor E6 added for the sheet.
-
 ### For the designers
 
 **W56 — A tuning bench: change the game's numbers, see what moves, hand back a change request.** *Ken · ⏭ · shaped with Claude 2026-10-01*\
@@ -1207,7 +1213,7 @@ always" stays true of whoever makes the change.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W159.** Everything above is open. What was built is in
+- **Next free number: W160.** Everything above is open. What was built is in
   [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)

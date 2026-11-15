@@ -46,7 +46,7 @@
    0,
    88.2,
    390,
-   1843.4
+   1855.5
   ],
   "vitals": [
    0,
@@ -57,14 +57,14 @@
   "children": [
    "0 div.import-issues 16,108.2,358,64",
    "1 h1.step-title 16,186.3,358,32.2",
-   "2 div.intake 16,222.5,358,35.7",
-   "3 p.step-note 16,266.2,358,23.3",
+   "2 div.intake 16,222.5,358,47.8",
+   "3 p.step-note 16,278.3,358,23.3",
    "4 div.main-pin 0,0,0,0",
-   "5 div.cond-grid 16,311.4,358,374.1",
-   "6 section.main-conditions 16,709.5,358,94.5",
-   "7 div.main-grid 16,818,358,1043.6"
+   "5 div.cond-grid 16,323.6,358,374.1",
+   "6 section.main-conditions 16,721.7,358,94.5",
+   "7 div.main-grid 16,830.2,358,1043.6"
   ],
-  "deep": "334 boxes, db6348d7"
+  "deep": "334 boxes, 3489dfc0"
  },
  "sheet: skills @390": {
   "header": [
@@ -100,7 +100,7 @@
    "5 div.skill-cols 16,405,358,3699.7",
    "6 details.group 16,4104.7,358,30.3"
   ],
-  "deep": "791 boxes, a8c27e9b"
+  "deep": "791 boxes, 1942b511"
  },
  "sheet: character @390": {
   "header": [
@@ -629,7 +629,7 @@
    0,
    165.6,
    390,
-   1227.9
+   1204.4
   ],
   "vitals": [
    0,
@@ -642,12 +642,12 @@
    "1 h1.step-title 16,207,358,42.2",
    "2 p.step-note 16,255.1,358,23.3",
    "3 div.roll-entry 16,300.4,358,111",
-   "4 div.review-block 16,429.4,358,396.3",
-   "5 div 16,839.7,358,204.1",
+   "4 div.review-block 16,429.4,358,372.8",
+   "5 div 16,816.2,358,204.1",
    "6 div.wiznav 16,698,358,146",
-   "7 p.step-note 16,1231.8,358,69.8"
+   "7 p.step-note 16,1208.3,358,69.8"
   ],
-  "deep": "111 boxes, f38f4883"
+  "deep": "111 boxes, 81480d83"
  },
  "wizard: stats, Expert @390": {
   "header": [
@@ -947,7 +947,7 @@
    "5 div.skill-cols 16,370.6,736,2047.9",
    "6 details.group 16,2418.6,736,30.3"
   ],
-  "deep": "813 boxes, f1427628"
+  "deep": "813 boxes, c3ee99f2"
  },
  "sheet: character @768": {
   "header": [
@@ -1794,7 +1794,7 @@
    "5 div.skill-cols 30,376.6,1240,1499.2",
    "6 details.group 30,1875.8,1240,30.3"
   ],
-  "deep": "813 boxes, 82751da9"
+  "deep": "813 boxes, c7046d63"
  },
  "sheet: character @1300": {
   "header": [
@@ -2068,7 +2068,7 @@
    "5 div.skill-cols 30,288.7,940,2230.4",
    "6 details.group 30,2519.1,940,30.3"
   ],
-  "deep": "747 boxes, ea9f6c11"
+  "deep": "747 boxes, e8dfd9a7"
  },
  "sheet: character @1300 pinned": {
   "header": [
@@ -2915,7 +2915,7 @@
    "5 div.skill-cols 30,376.6,1920,1021.1",
    "6 details.group 30,1397.7,1920,30.3"
   ],
-  "deep": "813 boxes, 23da6f14"
+  "deep": "813 boxes, d81c381a"
  },
  "sheet: character @1980": {
   "header": [
@@ -3189,7 +3189,7 @@
    "5 div.skill-cols 30,288.7,1620,1155.8",
    "6 details.group 30,1444.5,1620,30.3"
   ],
-  "deep": "747 boxes, 522a9e16"
+  "deep": "747 boxes, 7cd7c680"
  },
  "sheet: character @1980 pinned": {
   "header": [

@@ -2,7 +2,7 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
-    "version": "0.69.2",
+    "version": "0.69.3",
     "date": null,
     "intro": [],
     "items": [],
@@ -10,7 +10,14 @@ window.SHADOWS_CHANGELOG = [
       {
         "title": "Character sheet",
         "items": [
-          "**The sheet sits right on a phone.** Attack rolls stay on one line, a spellcaster's reference tables scroll on their own instead of pushing the page sideways, the card alone at the bottom of Main's vitals takes one line, and Progression's buttons line up in pairs."
+          "**The sheet sits right on a phone.** Attack rolls stay on one line, a spellcaster's reference tables scroll on their own instead of pushing the page sideways, the card alone at the bottom of Main's vitals takes one line, and Progression's buttons line up in pairs.",
+          "**Finishing touches.** Main no longer slides sideways on a phone when you carry a long-named gun, a weapon's tags are underlined like the game's other words, the lists you buy and raise from don't shout on every row, and your TAG number stays in one piece."
+        ]
+      },
+      {
+        "title": "GM mode",
+        "items": [
+          "**Reference tables wrap on a phone** instead of running one sentence a line."
         ]
       }
     ]
