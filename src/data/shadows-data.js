@@ -5571,7 +5571,8 @@ window.SHADOWS_DATA = {
               { "term": "Talk", "text": "four words, not four sentences" },
               { "term": "Drop prone", "text": "standing up later costs your Move" },
               { "term": "Let go of something", "text": "" },
-              { "term": "Look", "text": "" }
+              { "term": "Look", "text": "" },
+              { "term": "Activate a Power", "text": "SFR on a utility or support power, up to your Rate of Use", "rulingSource": "2026-11-12 meeting: spending SFR is a free action (Decision 288)" }
             ] },
           { "title": "Fast Action", "text": "one on your turn, one at Reset",
             "items": [
@@ -5586,7 +5587,7 @@ window.SHADOWS_DATA = {
               { "term": "Attack", "text": "anything from a fist to a Hammerlock" },
               { "term": "Combat Maneuver", "text": "Martial Arts skill to Grapple, Knockdown, Disarm, Stun" },
               { "term": "Cast a spell", "text": "Spellcraft check, then an attack roll if it's aimed" },
-              { "term": "Activate a Power", "text": "SFR, up to your Rate of Use" },
+              { "term": "Attack with a Power", "text": "SFR, up to your Rate of Use", "rulingSource": "2026-11-12 meeting: an attack made with a power is the Standard Action (Decision 288)" },
               { "term": "Full-attention work", "text": "breach, hack, drag somebody clear" }
             ] },
           { "title": "Stunt", "text": "once per round, replaces your entire turn",

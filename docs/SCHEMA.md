@@ -584,7 +584,9 @@ window.SHADOWS_DATA = {
   // slotted packs already hold: conditions, packs, pain, hits, recovery,
   // weaponTags or crank. One without carries `parts` quoted verbatim from the
   // CRB section `bookSource` names ("0530 Quick Reference", or "2130"),
-  // which tests/rules.test.mjs checks piece by piece. `id`: letters, digits
+  // which tests/rules.test.mjs checks piece by piece, except an item marked
+  // `rulingSource`: a ruling ahead of the book, named in plans/crb-catch-up.md
+  // (Decision 288). `id`: letters, digits
   // and "-", unique; the jump target is gr-<id>. A cell or term that runs
   // over several lines in the book joins them with " · ".
   gmReference: { panels: [
@@ -4784,6 +4786,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. 185's *Revisit if* (the glossary as a page) is met and its picker stands; 204 kept Next session off the tab row, and the Reference is its own surface.
      - **Revisit if:** GQ29 reorders the panels, a GM asks for the Reference over a running encounter, or the Quick Reference changes shape.
      - **Built:** switched off (173); no data or schema bump; log 2026-10-09 (the Reference).
+     → **Superseded in part by Decision 288** — an item marked `rulingSource` says a ruling ahead of the book, and an open line in `plans/crb-catch-up.md` names it.
 
 208. **A table's header has Find, one search over every record, and Jot, a line kept as a note with the session it was written in.**
      *2026-10-09 · Ken + Claude · Touches: Find, Jot, tableSearch, table notes, note session, addTableNote, editTableNote, removeSession, _sessionOnDay, header, hdractions, table schema 0.10, Decision 140, Decision 171, Decision 203, Decision 187, W85, W86*
@@ -5683,6 +5686,18 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. It extends Decision 139 (a tip kind inside a sentence).
      - **Revisit if:** playtesters miss a term on a phone, or a sentence site outside the list needs terms.
      - **Built:** app 0.69.0 (minor), no game-data or schema bump, PR #338, log 2026-11-13 (E8).
+
+288. **GM mode's Reference may say a ruling before the book does: an item marked `rulingSource` is the one exception to quoting the CRB, and an open line in `plans/crb-catch-up.md` has to name it.**
+     *2026-11-15 · Ken + Claude · Touches: gmReference, parts, items, rulingSource, bookSource, Quick Reference, Actions panel, Free Action, Standard Action, Activate a Power, Attack with a Power, SFR, Rate of Use, plans/crb-catch-up.md, Decision 207*
+     - **Decided:** a Reference item that carries `rulingSource` (maintainer text, never shown) skips the check against the mirror. In exchange, its words must not be the book's, or the marker is stale, and an open ☐ line in `plans/crb-catch-up.md` has to name its term in italics. First use: the 2026-11-12 ruling that spending SFR on a utility or support power is a free action, up to Rate of Use, and an attack made with a power is the Standard Action. *Activate a Power* moves to Free Action, and *Attack with a Power* takes its place under Standard Action.
+     - **Why:** Ken, 2026-11-15: a GM at the table should read the ruling, not the book's stale line, and the catch-up plan already records what the book owes. The test makes that record a condition of the exception.
+     - **Rejected:**
+       - Waiting for the CRB, then syncing the mirror: the GM reads a reversed ruling until then.
+       - Dropping the mirror check for the panel: one ruled line would free every line to drift.
+       - A `name` or override on the whole panel: the exception belongs to the item that's ruled, not its neighbours.
+     - **Replaces:** Decision 207 in part: its `parts` are quoted verbatim from the CRB except where an item says otherwise.
+     - **Revisit if:** the book catches up (take off the marker, which the test then demands), or rulings pile up enough that the Reference stops reading as the book's.
+     - **Built:** app 0.69.4, no game-data or schema bump (68), PR #349, log 2026-11-15.
 
 ## 5. Open Flags
 

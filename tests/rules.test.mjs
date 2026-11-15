@@ -1563,11 +1563,15 @@ test("R16: the Thirst is the book's: 3 SFR a fresh HL, 2 a stored one up to half
 
 // ── The Reference quotes the book (Decision 207) ──────────────────────
 
+// Decision 288: an item with `rulingSource` says a ruling the book hasn't caught up with. It is the one exception,
+// and it has to earn it: it isn't the book's words (or the marker is stale), and an open line in
+// plans/crb-catch-up.md names it, so the book debt is written down.
 test("CRB: the Reference's book panels are quoted verbatim from the mirror", () => {
   const norm = s => String(s).replace(/<[^>]*>/g, " ").replace(/\*\*|\*|\\/g, "").replace(/[‘’]/g, "'").replace(/−/g, "-").replace(/\s+/g, " ").trim();
   const panels = D.gmReference.panels.filter(p => p.bookSource);
   assert.ok(panels.length >= 6, "the data's book panels");
   const names = readdirSync(join(ROOT, "private/crb"));
+  const catchUp = readFileSync(join(ROOT, "docs/plans/crb-catch-up.md"), "utf8").split(/\r?\n/).filter(l => l.startsWith("- ☐"));
   for (const p of panels) {
     const m = /^(\d{4})(?: (.+))?$/.exec(p.bookSource);
     assert.ok(m, `${p.id}: bookSource "${p.bookSource}" is "<4-digit file> <heading>" or "<4-digit file>"`);
@@ -1585,7 +1589,7 @@ test("CRB: the Reference's book panels are quoted verbatim from the mirror", () 
     const pieces = [];
     for (const part of p.parts) {
       pieces.push(part.title, part.text, part.footText, ...(part.columns || []));
-      for (const it of part.items || []) pieces.push(it.term, it.text);
+      for (const it of part.items || []) if (!it.rulingSource) pieces.push(it.term, it.text);
       for (const row of part.rows || []) pieces.push(...row);
     }
     for (const piece of pieces) for (const bit of norm(piece || "").split(" · ")) {
@@ -1610,6 +1614,11 @@ test("CRB: the Reference's book panels are quoted verbatim from the mirror", () 
       for (const row of part.rows || []) assert.ok(have.has(key(row)), `${p.id}: the row ${JSON.stringify(row)} is not a row of the book's`);
       for (const it of part.items || []) {
         const run = noDash([it.term, it.text].filter(Boolean).join(" "));
+        if (it.rulingSource) {
+          assert.ok(!noDash(text).includes(run), `${p.id}: "${run}" is the book's words now: take off its rulingSource`);
+          assert.ok(catchUp.some(l => l.includes(`*${it.term}`)), `${p.id}: "${it.term}" is ahead of the book, and no open line in plans/crb-catch-up.md names it in italics`);
+          continue;
+        }
         assert.ok(noDash(text).includes(run), `${p.id}: "${run}" isn't one item of the book's`);
       }
     }
