@@ -244,7 +244,7 @@ the shape and what to respect.
 
 The plan is closed and archived; Ken's call, with E7 (EQ58–EQ66, all Default).
 
-**What E7 did.** It took E6's one regression first (Main's weapons table ran past the column on a phone for a long-named gun with ammo, `table.ref.wpn` now gives up 4px a side of each cell below 640px), then the polish: a weapon's tag draws its dotted line as `text-decoration`, as E8's `.term` does; a trait part reads its sign; the five pickers' rows are plain buttons; the TAG number wraps whole under the barcode; and every reference table, the sheet's and GM mode's, fills its frame (W158).
+**What E7 did.** It took E6's one regression first (Main's weapons table ran past the column on a phone for a long-named gun with ammo, `table.ref.wpn` now gives up 4px a side of each cell below 640px), then the polish: a weapon's tag draws its dotted line as `text-decoration`, as E8's `.term` does; a trait part reads its sign; the five pickers' rows are plain buttons, and the three Pick lists are plain until picked (Ken, from the review); the TAG number wraps whole under the barcode; and every reference table, the sheet's and GM mode's, fills its frame (W158).
 
 **The measure.** The critique (EQ65, the reviewer's) of the merged build, scored against the 26/40 snapshot: *trend line to follow in the last commit.*
 
