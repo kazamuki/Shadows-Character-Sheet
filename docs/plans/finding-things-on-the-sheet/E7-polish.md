@@ -10,7 +10,7 @@ The conductor added three asks:
 - ask about `/impeccable audit`, which E4's EQ51 left for E7;
 - plan the close of the whole plan.
 
-**Status:** drafted 2026-11-14 by the Opus session that reviewed E6, at the conductor's request. Questions EQ58–EQ66 are for Ken (§4). Not yet approved.
+**Status:** drafted 2026-11-14 by the Opus session that reviewed E6, at the conductor's request. Ken answered EQ58–EQ66 on 2026-11-14 (§4), every one Default, with `/impeccable audit` as its own session after E7 and the plan closed and archived at the end. **Approved by Ken 2026-11-14** (in the conductor's session).
 **Branch:** the builder's own, cut from `main` once this order has merged.
 **Runs beside:** nothing. It comes after every other session (§3 of the plan). Nothing else is open on `shadows.css` or `sheet.js`.
 **Impeccable:** `/impeccable polish`. The pre-flight below is that pass's analysis: done by hand in the dev preview, with the measurements given. The builder doesn't run it again. `/impeccable critique` runs at the end (EQ65).
@@ -205,6 +205,20 @@ Each has a default, and my recommendation is the default unless it says otherwis
   - Ken triages the report into wishes or a new plan. E7 stays the sheet's.
   
   *Alternative:* inside E7, after the polish. Not recommended: it would double E7's size and mix a measure of this pass with a survey of everything.
+
+**Ken's answers, 2026-11-14** (in the conductor's session):
+- EQ58: "E7 fixes it first" (Default). 0.69.2 is not released before E7 merges.
+- EQ59: "6px cell padding <640" (Default).
+- EQ60: "Every .tag like E8's .term" (Default).
+- EQ61: "Plain buttons on rows" (Default).
+- EQ62: "Whole, under the barcode" (Default).
+- EQ63: "Leave it" (Default).
+- EQ64: "Leave it, wish W159" (Default).
+- EQ65: "The reviewer" (Default).
+- EQ66: "E7 takes it" (Default).
+- `/impeccable audit`: "Own session after E7".
+- The plan's close: "Close and archive".
+- Then "Approve E7".
 
 ## 5. The assumption sweep
 
