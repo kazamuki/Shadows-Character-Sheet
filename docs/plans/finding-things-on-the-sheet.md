@@ -69,7 +69,7 @@ all correct, but it takes knowing the sheet to find it:
 | E4 | Colour that keeps its one meaning ([order](finding-things-on-the-sheet/E4-colour.md), approved 2026-11-14, **E4 built**, EQ46–EQ50: all Default, EQ51 Ken's contrast check) | `colorize` | Fix | — |
 | E5 | The words: intros, placeholders, the `?` modifiers ([order](finding-things-on-the-sheet/E5-the-words.md), approved 2026-11-13, EQ36–EQ40 answered: all Default; **E5 built**) | `clarify` | Fix | E2 |
 | E6 | The phone ([order](finding-things-on-the-sheet/E6-the-phone.md), approved 2026-11-14, EQ52–EQ57: all Default, **E6 built**, app 0.69.2) | `adapt` | Fix | E3 |
-| E7 | Polish, then measure | `polish`, then `critique` | Fix | all |
+| E7 | Polish, then measure ([order](finding-things-on-the-sheet/E7-polish.md), drafted 2026-11-14, EQ58–EQ66 for Ken; it closes the plan) | `polish`, then `critique` | Fix | all |
 | E8 | The game's words a tap away (W133), from E2's shape (EQ22) ([order](finding-things-on-the-sheet/E8-the-games-words.md), approved 2026-11-13, EQ41–EQ45 answered: all Default; **E8 built**) | `clarify` | Rule or shape | E5 |
 
 E1a and E4 stand alone and can run beside anything. E2 decides what each tab
@@ -228,7 +228,8 @@ middle, because the first half's answer is *Rule or shape*.
 `/impeccable polish`, then `/impeccable critique load full character sheets at tests/TestCharacters`
 
 - The dashed weapon-tag underlines on the Tekko-Kagi and the Autobaton, and
-  anything left over.
+  anything left over. The order weighs **W158** (GM mode's Reference tables on
+  a phone) as EQ66.
 - The re-run critique is scored against the 26/40 snapshot; its trend line
   goes into this plan's closing entry.
 
