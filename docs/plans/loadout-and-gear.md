@@ -194,12 +194,9 @@ One list, so it can go to him at once:
   launchers.
 - **For L3's flag (LQ4, F49):** which Skills the Hacking Visor, Hacking Gloves and
   PrecisionGrip Gloves add to.
-- **For L4:** the 2026-11-12 meeting answered the Standard Action, Martial
-  Arts and mastery (`reference/meeting-2026-11-12.md`), and two rolls by
-  implication (LQ36). Still his, as the L4 order's one flag: a Combat Maneuver
-  as one of the two; a natural attack beside a carried weapon; two free limbs;
-  worn melee bonuses on natural attacks; and another character's Death Touch
-  against Natural Armor (W107). Also his test of the Werewolf's claw and bite
-  damage (LQ40).
+- **For L4:** nothing blocks it. The 2026-11-12 meeting and Scott's answers of
+  2026-11-15 settled every detail (`reference/meeting-2026-11-12.md`). Still
+  his: his test of the Werewolf's claw and bite damage (LQ40), and, if he wants,
+  a look at Scott's answers. LQ42 is Scott's.
 - **For a later vehicle-damage order:** the 17 follow-ups still open in
   `reference/rulings-2026-10-23.md`.
