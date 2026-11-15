@@ -71,7 +71,7 @@ Each id is defined in exactly one place and referenced everywhere.
 | `GQ`_n_, `S`_n_ | A question GM mode (W29) raises for Scott, Deighton or Ken, and its sessions (S1–S21 the first plan's, S22 on the next one's) | GQ1–GQ30 and S1–S21: `plans/archive/gm-mode.md` §9 and §6 · the open GQs, GQ31 on, and S22 on: `plans/gm-mode-next.md` §5 and §3 |
 | `TQ`_n_ | A question the two-tabs plan (W38) raises for Ken | `plans/two-tabs-one-character.md` §5 |
 | `LQ`_n_, `L`_n_ | A question the vehicles-and-gear plan raises for Ken, and its sessions L1–L7 and L5b | `plans/loadout-and-gear.md` §5 and §3 |
-| `KQ`_n_, `K`_n_ | A question the help-on-the-sheet plan (W156) raises for Ken, and its sessions K1–K3 (K for know the sheet) | `plans/help-on-the-sheet.md` §5 and §3 |
+| `KQ`_n_, `K`_n_ | A question the help-on-the-sheet plan (W156) raises for Ken, and its sessions K1–K3 (K for know the sheet) | `plans/help-on-the-sheet.md` §5 and §3; KQ9–KQ12 in `plans/help-on-the-sheet/K1-one-help.md` §4 |
 | `NQ`_n_, `N`_n_ | A question the accounts-and-sync plan (W138) raises for Ken, and its sessions N0–N6 | `plans/accounts-and-sync.md` §5 and §3 |
 | `BQ`_n_ | A question W143's work order (powers bought with CP) raises for Ken | `plans/archive/w143-powers-bought-with-cp.md` §4 |
 | `HQ`_n_, `H`_n_ | A question the powers-that-run plan (W110, W132) raises for Ken, and its sessions H1–H3 (H for Held: not `R`, which is the audit's) | `plans/archive/powers-that-run.md` §5 and §3; H1's own questions in `plans/archive/powers-that-run/H1-sustained-powers.md` §4 |

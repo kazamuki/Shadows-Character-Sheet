@@ -147,7 +147,7 @@ rev 9's `C1`–`C3` are still forward notes.
   (Powered Armor) wait on Deighton. The 2026-10-23 meeting's natural attacks (two a
   round) are in `reference/meeting-2026-10-23.md`; what 2026-11-12 added is in `reference/meeting-2026-11-12.md`.
   The player sheet's plan (`plans/archive/sheet-wishlist.md`) closed 2026-10-24, P1–P21 built.
-- **Help on the sheet** (`plans/help-on-the-sheet.md`, W156) is approved (Ken, 2026-11-15, KQ1–KQ8 on their defaults): K1 (GM mode's Help panel shared, the sheet's **?** and its Guide lines switch), K2 (Every word), K3 (every guide line under the switch). K1's order is next to draft.
+- **Help on the sheet** (`plans/help-on-the-sheet.md`, W156) is approved (Ken, 2026-11-15, KQ1–KQ8 on their defaults): K1 (GM mode's Help panel shared, the sheet's **?** and its Guide lines switch), K2 (Every word), K3 (every guide line under the switch). K1's order is drafted (`plans/help-on-the-sheet/K1-one-help.md`) and waits on Ken's KQ9–KQ12.
 - **Closed 2026-11-14** (`plans/archive/`): finding-things-on-the-sheet (E1a–E8, Decisions 273–287; its closing entry holds the re-run critique, and its leftovers are W152–W157 and W159).
 - **Closed 2026-11-07** (`plans/archive/`): powers-that-run (H1–H3, 266–268; W132's last two powers wait on the book, `plans/crb-catch-up.md`) and GM-at-the-table (U1–U5).
 - **W90**, cybernetics: six questions before a plan.
