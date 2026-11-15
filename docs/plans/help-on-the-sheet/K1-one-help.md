@@ -2,7 +2,7 @@
 
 **Plan:** [`../help-on-the-sheet.md`](../help-on-the-sheet.md) §3, row K1, and §2's shape. **Wishes:** [W156](../../WISHLIST.md) (Help on the sheet, its first part) and W150 (Help's polish, its layout half). **Built on:** [`../gm-mode-next/S31-help.md`](../gm-mode-next/S31-help.md), the order that built GM mode's Help. Decisions 139, 160, 166, 256, 272, 278, 281, 282, 287.
 
-**Status: drafted 2026-11-15** by Claude (Opus). **Not yet approved.** The plan's KQ1–KQ8 are answered (Ken, 2026-11-15: every default). This order's own questions are KQ9–KQ12 (§4). Ken's standing requirement, from the plan: **the Guide lines switch is a must**, so a veteran player gets a clean sheet.
+**Status: drafted 2026-11-15** by Claude (Opus). **Not yet approved.** The plan's KQ1–KQ8 are answered (Ken, 2026-11-15: every default). **This order's KQ9–KQ12 are answered too (Ken, 2026-11-15, in the drafting session):** KQ10–KQ12 on their defaults, and KQ9 as Ken and Claude reshaped it: from 1280px Help is a column, as on a table, and with vitals pinned it takes their column while it's open, the vitals showing as the bar; it starts closed each visit (§4). Ken's standing requirement, from the plan: **the Guide lines switch is a must**, so a veteran player gets a clean sheet.
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
@@ -56,7 +56,7 @@ Words available    gameTerms ids, read by Engine.term(id, ch, n): bright dim dar
 
 **Done when:**
 1. On a locked sheet, a **?** in the header and the **?** key open Help for the tab that's open (Admin included). It names the tab, says what it's for, shows *When* as chips, lists the words on it (each from its rule, through `Engine.term`) and a tip or two.
-2. Help on the sheet is a flyout with a scrim at every width (KQ9). It closes on Close, Esc, the scrim, a tab press, and when the vitals flyout opens. Focus goes back to what opened it.
+2. **From 1280px, Help on the sheet is a column beside it, as on a table**: nothing is dimmed, the sheet stays live, and Help follows the tab. **With vitals pinned, Help takes their column while it's open**, and the vitals show as the bar at the top, so they never leave the screen; closing Help gives the column back. The pin itself is never changed (KQ9). Help starts closed on every visit. **Below 1280px** it's a flyout with a scrim, as on a table, closing on Close, Esc, the scrim, a tab press, and when the vitals flyout opens. Focus goes back to what opened it.
 3. Every tab has a **guide line** under its title, Main and Trackers included (KQ11). Help's foot has the **Guide lines** On/Off switch. Off hides every guide line on every tab, and keeps the three rule lines (Skills, Progression, Admin). The browser remembers it (`shadows.ui.sheetGuide`). The character file doesn't change.
 4. The **?** key on the sheet follows the same rules as a table's (never in a field, a modal or with ⋮ open), and obeys the browser's keys setting, which sheet Help's foot can turn off (KQ10).
 5. GM mode's Help does what it did: `smoke-table-help.test.mjs` and `smoke-table-keys.test.mjs` pass **without an edit**.
@@ -77,31 +77,32 @@ Paste as is; fill *Built*. About 290 words with *Touches*.
 
 ```
 N. **The sheet has Help: a ? and the ? key open it for the tab that's open, from the data's sheetGuide; every tab has a guide line, and a Guide lines switch hides them all.**
-     *2026-11-?? · Ken + Claude · Touches: Help, ?, data-shelp, sheetGuide, sheetHeader, guide line, rule line, shadows.ui.sheetGuide, shadows.ui.keys, #ghelp, helpHost, syncHelp, helpEscCloses, introCharacter, introLoadout, introNotes, seat sheet, vitals flyout, Decision 160, Decision 166, Decision 256, Decision 278, Decision 287, W156*
-     - **Decided:** Help's panel is shared: the table and the sheet each give it a guide and a context. On the sheet a ? between the tabs and ⋮, and the ? key under the table's rules and the browser's keys setting, open it for the open tab: what it's for, when, its words (by gameTerms id) and a tip. It is a flyout at every width, and one flyout shows at a time. Every tab has a guide line from sheetGuide; a line that states a rule stays in appCopy and always shows. Guide lines, in Help's foot, hides the guide lines for this browser. A seat keeps the table's Help and switch.
-     - **Why:** W156: the sheet explains its words but never its tabs, and a player who knows it can't put the intros away.
+     *2026-11-?? · Ken + Claude · Touches: Help, ?, data-shelp, sheetGuide, sheetHeader, guide line, rule line, shadows.ui.sheetGuide, shadows.ui.keys, #ghelp, helpHost, help-pinned, vitals-pinned, vitals bar, syncHelp, helpEscCloses, introCharacter, introLoadout, introNotes, seat sheet, vitals flyout, Decision 160, Decision 166, Decision 256, Decision 278, Decision 287, W156*
+     - **Decided:** Help's panel is shared: the table and the sheet each give it a guide and a context. On the sheet a ? between the tabs and ⋮, and the ? key under the table's rules and the browser's keys setting, open it for the open tab: what it's for, when, its words (by gameTerms id) and a tip. From 1280px it is a column, as on a table, starting closed each visit; with vitals pinned it takes their column while open and the vitals show as the bar, the pin unchanged. Narrower it is a flyout, one at a time. Every tab has a guide line from sheetGuide; a line that states a rule stays in appCopy and always shows. Guide lines, in Help's foot, hides them for this browser. A seat keeps the table's Help and switch.
+     - **Why:** W156: the sheet explains its words but never its tabs, and a player who knows it can't put the intros away. Help is read against the screen, so nothing it explains is dimmed or taken away.
      - **Rejected:**
        - A second panel in sheet.js: two to keep in step (KQ3).
-       - Pinning beside the sheet: the pinned vitals column is there (160).
-       - One switch for table and sheet (KQ2).
-       - Hiding the rule lines too: Off would hide what a Skill rolls (KQ5).
+       - Two columns, Help beside pinned vitals: the sheet falls to about 640px at 1280.
+       - A flyout over a dimmed sheet: the player can't read the screen Help describes.
+       - Unpinning and re-pinning vitals: every way Help closes must restore it.
+       - One switch for table and sheet (KQ2); hiding the rule lines too (KQ5).
      - **Replaces:** Decision 278 in part (Help's panel serves the sheet as well as a table).
-     - **Revisit if:** players keep Help open while they play (it wants a column), or the wizard asks for the same (KQ7).
+     - **Revisit if:** players want Help to stay open across visits, as a table's does, or the wizard asks for the same (KQ7).
      - **Built:** app 0.7?.0, no game-data or schema bump, PR #?, log 2026-11-??.
 ```
 
 ## 4. Questions for Ken
 
-The plan's KQ1–KQ8 are answered. These four came out of the pre-flight. An unanswered one is answered "Default".
+The plan's KQ1–KQ8 are answered. These four came out of the pre-flight. **All four are answered (Ken, 2026-11-15):** KQ10–KQ12 on their defaults, KQ9 as reshaped below.
 
-| Id | Question | Default |
+| Id | Question | Answer |
 |---|---|---|
-| **KQ9** | **Help beside the sheet at 1280px?** GM Help pins into the right edge. On the sheet that edge is the pinned vitals panel's (Decision 160); both at once leave the sheet about 640px wide. | **A flyout at every width on the sheet.** A player reads Help and goes back to playing; the column is the vitals'. *Alternative:* Help pins, and while it's open it takes the vitals' place (vitals unpin until it closes). It's more moving parts for a panel a player opens now and then. |
+| **KQ9** | **Help beside the sheet at 1280px?** GM Help pins into the right edge. On the sheet that edge is the pinned vitals panel's (Decision 160); both at once leave the sheet about 640px wide. | **Answered (Ken, 2026-11-15): a column from 1280px, as on a table, and it takes the pinned vitals' column while it's open.** The vitals show as the bar at the top while Help is open, so the player can always read Help against what they're seeing. The swap is drawn from Help being open, never by changing the pin, so closing Help gives the column back with nothing to restore. Help **starts closed each visit** on the sheet (a table's stays as the browser left it); if players ask for it to stay open, that's a follow-up. *Considered and dropped in the discussion:* a flyout at every width (the draft's default), and a flyout beside the pinned vitals: both dim the sheet the player is trying to read. Unpinning and re-pinning: every way Help closes would have to restore the pin. |
 | **KQ10** | **The ? key and a way to turn it off.** A one-key shortcut needs an off switch (WCAG 2.1.4); GM mode's is the Keys box, which the sheet doesn't have. | **The sheet's ? key obeys the browser's keys setting** (`shadows.ui.keys`, the table's), and sheet Help's foot has **The ? key** On/Off, which writes the same setting. One keyboard setting per browser. *Alternative:* no key on the sheet, the button only. |
 | **KQ11** | **Main and Trackers have no intro today.** | **Each gets a guide line** (Appendix A), since the switch can take them away. Every tab's guide line moves into `sheetGuide`: Character's, Loadout's and Notes' word for word, from `appCopy`. *Alternative:* the two stay bare. |
 | **KQ12** | **A seat's guide lines.** GM mode's seat sheet draws the player's tabs, intros included (256), under the table's Help (KQ6). | **They follow the table's switch** (`shadows.ui.gmGuide`), since that's the switch on that screen. *Alternative:* they follow the sheet's, which the GM can't reach from there. |
 
-**My recommendation, frankly:** KQ9 is the one with a real cost either way. The flyout is less than GM mode has, but a player pinning both would get a sheet too narrow for its cards, and building the swap costs a review round for little use.
+**Why KQ9 landed here.** Help is read against the screen: a player asks what a word on Trackers means while looking at Trackers. A dimmed sheet defeats that, and so would vitals that vanish while Help is open. The column keeps the sheet live; the bar keeps the vitals in view. The sheet narrows by only about 36px (21rem against 300px), so the swap barely moves it.
 
 ## 5. The assumption sweep
 
@@ -113,13 +114,15 @@ Every reader was found by grep: `helpShown`, `syncHelp`, `openHelp`, `closeHelp`
 | `syncHelp` on a screen change | Empties `#ghelp` when `S.screen!=="table"` (`gm.js:423`) | Empties it when the screen's host changes, and keeps it for the sheet's | `app.js:184` calls it when the screen isn't a table: on the sheet that call must not shut a sheet's open Help mid-draw. Read `releaseMain`'s order there |
 | `helpMd`, `inField`, `keysOn`, `KEYS_PREF` | `gm.js` | `shared.js` (script order: shared before gm and sheet) | Every gm.js use still resolves (classic scripts, one scope). Grep for a second definition left behind |
 | `helpContext()` | Table's, total | Unchanged, now the table host's. The sheet's is `S.admin ? "admin" : normSection(S.section)`, total, falling back to `main` | The walk test (§10, 3) |
-| CSS | `.ghelp`, `.ghelp-scrim`, `.app.help-pinned` under "A GM table's Help" (`shadows.css` ~891) | The same selectors, the comment says both; the pinned rules stay under `.app.table-mode` or `.help-pinned`, which the sheet never sets | phone-check's `tableHelp` (~391) reads `#ghelp` at 1280 for a table. It must still pass |
+| CSS | `.ghelp`, `.ghelp-scrim`, `.app.help-pinned` under "A GM table's Help" (`shadows.css` ~891) | The same selectors, the comment says both; `.app.help-pinned` now set on a sheet too. **New:** with `body.vitals-pinned` and `.app.help-pinned` at once (≥1280), the vitals drawer is hidden and inert, the bar's pills show, `.app`'s right padding is `--help-w` (not both), and the footer and toast follow Help's width, not the pin's | phone-check's `tableHelp` (~391) reads `#ghelp` at 1280 for a table. It must still pass. Every `body.vitals-pinned` rule (~881–888: `.app` padding, `.vdrawer`, `.vbar`, `.footer`, `.toast`) gets a row in the build's check: each has a `help-pinned` counterpart or is shown not to matter |
+| The vitals pin | `body.vitals-pinned`, set from its saved preference (Decision 160) | **Unchanged in storage.** While Help is a column, the swap is CSS off `.help-pinned`; closing Help removes the class and the column is back. No code writes the pin's preference on Help's behalf | Grep the pin's preference key and every writer of `vitals-pinned`: none is in Help's code. The drawer's focusable controls aren't reachable while it's hidden (inert), and focus inside it when Help opens goes to Help's Close |
+| Help's open state across visits | A table: `shadows.ui.gmHelp` (`helpPref`) reopens it at ≥1280 | A sheet: no preference; `S.helpOpen` starts false on every sheet open | The table's `helpPref` stays the table host's only. A sheet opened after a table with Help open starts closed |
 | The header's ? | Table: `[data-thelp]` (gm.js:304) | Sheet: `[data-shelp]`, between the tabs and ⋮, `aria-label="Help"`, `aria-controls="ghelp"`, `aria-expanded` | `helpHandBack` reads `[data-thelp]` (gm.js:408) and `syncHelp` sets its `aria-expanded` (:422): each becomes the host's button. phone-check's name-fits check at 390 |
 | The ? key on the sheet | None | One `keydown` for the sheet, with the table's gates (§9) | The table's listener (gm.js:527) is gated on `S.screen==="table"`, so the two never both run. `smoke-table-keys`' matrix stays green |
 | `appCopy.introCharacter`, `introLoadout`, `introNotes` | Read by `sheet.js:730`, `:2570`, `:2654` | Deleted; their text is `sheetGuide.contexts.<tab>.intro` | Decision 135's unread-key guard (`engine.test`): a key left in `appCopy` with no reader fails. `smoke-sheet-progression:780–829` and `smoke-table-sheet:353` read them: expected breaks (§11) |
 | `appCopy.introSkills`, `introProgression`, `introAdmin` | Read by `sheet.js:517`, `:1710`, `:2665` | **Unchanged** in place and text: the rule lines. Each tab also gets a guide line above it | Same tests. Their text and terms don't move (E8 5's triggers still pass on them) |
 | `sheetHeader(title, note, under)` | One note | A guide line (`data-guide`, from `sheetGuide`, shown while the switch is on) then the rule line, if any | Every caller (sheet.js:406, 517, 730, 1567, 1710, 2570, 2654, 2665). **Main's** note is the archetype line, not an intro: it stays, and Main's guide line goes after it. The seat sheet draws through the same function (256) |
-| The vitals flyout | Closes on a section change (app.js:192) | Also closes when Help opens; Help closes when it opens. Pinned vitals (≥1280) is untouched: Help's flyout covers it with its scrim | `smoke-sheet-play`'s vitals tests (grep `vitalsOpen`, `data-vitals`) stay green |
+| The vitals flyout | Closes on a section change (app.js:192) | Below 1280: also closes when Help opens; Help closes when it opens. From 1280 with vitals unpinned, the vitals flyout opening over a Help column leaves the column open (it's a page column, as a table's is) | `smoke-sheet-play`'s vitals tests (grep `vitalsOpen`, `data-vitals`) stay green |
 | `voice.test`'s corpus | `gmGuide` walked (`:103`) | `sheetGuide` walked too | Constraint 9 on every new string |
 | `engine.test` MAPS (`:326`) | `gmGuide.(contexts\|words\|empty\|ui.when)` | Plus `^sheetGuide\.(contexts\|ui\.when)$` | The key guard |
 
@@ -161,15 +164,18 @@ Every reader was found by grep: `helpShown`, `syncHelp`, `openHelp`, `closeHelp`
 - **`words`** are ids `Engine.term` answers for a plain character (`Engine.term(id, ch)` non-null). A Stat or Condition id counts. An id with a number (`take-x|5`) isn't used in K1. K2 widens the shape; K1's strings stay valid.
 - **`tips`**: at most two.
 - **The rule lines** stay `appCopy.introSkills`, `introProgression`, `introAdmin`, unchanged.
-- **The host** (in `shared.js`, a suggestion, not markup): `{ id, guide(), context(), pins(), button, footHtml(), bindFoot(el), guideOn(), setGuide(on), redraw() }`. The table's host is S31's behaviour exactly; the sheet's returns `pins()` false. The functions other files call keep their names: `syncHelp`, `helpShown`, `openHelp`, `closeHelp`, `toggleHelp`, `helpEscCloses`, `paintHelp`.
+- **The host** (in `shared.js`, a suggestion, not markup): `{ id, guide(), context(), pins(), button, footHtml(), bindFoot(el), guideOn(), setGuide(on), redraw() }`. The table's host is S31's behaviour exactly. The sheet's `pins()` is true from 1280px, as the table's, but it has no open-state preference: it starts closed each visit. The functions other files call keep their names: `syncHelp`, `helpShown`, `openHelp`, `closeHelp`, `toggleHelp`, `helpEscCloses`, `paintHelp`.
 - **Preferences** (this browser's, in try/catch as `keysOn` is):
   - `shadows.ui.sheetGuide`: `"off"` or absent; absent means the guide lines show.
   - `shadows.ui.keys`: unchanged in meaning; now read by the sheet's ? key too (KQ10).
-  - `shadows.ui.gmHelp` and `shadows.ui.gmGuide`: unchanged, the table's.
+  - `shadows.ui.gmHelp` and `shadows.ui.gmGuide`: unchanged, the table's. **No `sheetHelp` preference**: the sheet's Help starts closed each visit (KQ9).
+  - The vitals pin's preference: unchanged, and never written by Help.
 
 ## 9. The UI
 
-**Direction:** nothing new visually. Help on the sheet is GM Help's panel in its flyout form.
+**Direction:** nothing new visually. Help on the sheet is GM Help's panel: a column from 1280px, a flyout below.
+
+**The column and the pinned vitals** (KQ9). From 1280px Help is a column on the right that the sheet makes room for, as on a table: no scrim, the sheet live beside it, the panel following the tab. If the vitals are pinned, Help's column is where theirs was while it's open: the vitals drawer steps out of the way (hidden, inert) and the vitals bar's pills come back at the top, as they look unpinned. Close Help and the pinned column is back, because the pin never changed. The sheet narrows by about 36px (Help's 21rem against the pin's 300px) and nothing else moves.
 
 **The button:** **?**, the header's own button style, between the tab row and ⋮, `aria-label="Help"`, `aria-controls="ghelp"`, `aria-expanded`. While keys are on it carries `aria-keyshortcuts="?"`. If at 390px phone-check finds the character's name loses its room, the button moves into ⋮ as **Help** below 480px (KQ1's fallback) and the key still works; report the measurement in the PR either way.
 
@@ -181,16 +187,21 @@ Every reader was found by grep: `helpShown`, `syncHelp`, `openHelp`, `closeHelp`
 
 | Press | Lands on | Focus | Says |
 |---|---|---|---|
-| **?** button or key, closed | the flyout opens with its scrim; an open vitals flyout closes | the panel's Close | — |
-| **?**, open | the flyout closes | the ? button, or where the key was pressed | — |
-| Close, Esc, the scrim | the flyout closes | the ? button (or, below 480 under KQ1's fallback, ⋮) | — |
-| A tab, a `data-gotab` link, ⋮ → Admin | the new tab; the flyout closes (166) | where the press puts it | — |
-| The vitals toggle | the vitals flyout opens; Help closes | the vitals' Close | — |
-| Guide lines Off / On | the tab's guide line goes or comes back under the scrim; the rule line stays | the pressed half | — |
+| **?** button or key, closed, ≥1280 | the column opens and the sheet makes room; with vitals pinned, Help takes their column and the vitals bar shows | the panel's Close | — |
+| **?**, closed, <1280 | the flyout opens with its scrim; an open vitals flyout closes | the panel's Close | — |
+| **?**, open | Help closes; with vitals pinned, their column is back | the ? button, or where the key was pressed | — |
+| Close or Esc | the same | the ? button (or, below 480 under KQ1's fallback, ⋮) | — |
+| The scrim (<1280) | the flyout closes | the ? button | — |
+| A tab, a `data-gotab` link, ⋮ → Admin, ≥1280 | the new tab; the column repaints for it | where the press puts it, unchanged | — |
+| The same, <1280 | the new tab; the flyout closes (166) | where the press puts it | — |
+| The vitals toggle, <1280 | the vitals flyout opens; Help closes | the vitals' Close | — |
+| A vitals pill in the bar, ≥1280 with Help open | its popover, as an unpinned sheet's pill does | the popover | — |
+| Guide lines Off / On | the tab's guide line goes or comes back beside the panel (or under the scrim); the rule line stays | the pressed half | — |
+| Leaving the sheet, or a reload | Help is closed next time; a pinned vitals column is pinned as before | — | — |
 | The ? key Off / On | the setting changes; with it off, ? does nothing on the sheet or a table | the pressed half | — |
 | A word's term in the panel | its tip, as anywhere (139) | unchanged | — |
 
-**Never:** the panel traps focus (166), shows on the wizard or home screen, or stays open on a screen change. A modal opened from the page sits above it. Esc closes one layer at a time (a tip, then the panel).
+**Never:** the panel traps focus (166), shows on the wizard or home screen, or stays open on a screen change. From 1280px nothing is dimmed. Help never writes the vitals pin, and the vitals are never off the screen while Help is open: the column or the bar shows them. A modal opened from the page sits above it. Esc closes one layer at a time (a tip, then the panel). At 1280 with Help open, the sheet's cards keep the floors they have with vitals pinned (it's 36px narrower, so measure, don't assume).
 
 **The guide line** sits under the title (and under Main's archetype line), above the rule line. It's `step-note`-weight, marked `data-guide`. With the switch off it isn't drawn at all, so it doesn't take a tab stop or a screen reader's time.
 
@@ -206,10 +217,10 @@ The builder writes these first and **shows each failing on `main`**, and pastes 
 |---|---|---|
 | 1 | `K1: ? opens Help for the open tab, and closing it gives focus back` | a locked character on Trackers: `[data-shelp]` → `#ghelp.open`, heading "Trackers", `aria-expanded=true`, focus on Close; *When* reads Appendix A's chips; each of `words` renders its `Engine.term` title; Esc → closed, `inert`, focus on `[data-shelp]` |
 | 2 | `K1: every tab has help, and every word it names resolves` | for each `SHEET_SECTIONS` id and Admin: Help's heading is that context's `title`; every `words` id gives a non-null `Engine.term(id, ch)` for a Professional, an Arcanist, a Vampire and a Werewolf; no context is missing |
-| 3 | `K1: Help on the sheet is a flyout, closed by a tab press` | at 1280 (`boot({ width: 1280 })`) with `shadows.ui.gmHelp` "open" and vitals pinned: Help opens with its scrim, `#app` never carries `help-pinned`, the vitals column stays; a tab press closes it |
+| 3 | `K1: from 1280 Help is a column, and with vitals pinned it takes their place while open` | at 1280 (`boot({ width: 1280 })`), vitals pinned, and `shadows.ui.gmHelp` "open" (a table's, which must not reopen the sheet's): the sheet opens with Help closed. ? → `#app` carries `help-pinned`, no scrim is open, the vitals drawer is `inert` and `aria-hidden`, the vitals bar's pills are in the page (jsdom has no layout: phone-check proves they show), and the pin's preference is byte-for-byte what it was; a tab press keeps Help open and repaints it for the new tab; Close → no `help-pinned`, the drawer is shown and not inert, the preference unchanged. Reopen the sheet → Help closed. At 1024 the same ? opens a flyout with its scrim, and a tab press closes it |
 | 4 | `K1: the ? key opens the sheet's Help, under the table's rules` | `?` (Shift, `Slash`) toggles it; in a text field, with a modal open, with ⋮ open, on a repeat, and with `shadows.ui.keys` "off": nothing happens and the event isn't prevented; on the wizard, nothing |
 | 5 | `K1: Guide lines Off hides every guide line and keeps the rule lines, for this browser` | each tab shows its `intro` (`[data-guide]`); Help → Guide lines Off → no `[data-guide]` on any tab, Skills' and Progression's and Admin's rule lines still equal their `appCopy`; `shadows.ui.sheetGuide` is "off"; reload → still off; the table's `shadows.ui.gmGuide` untouched; On → back |
-| 6 | `K1: one flyout at a time` | open vitals, then ? → vitals closed, Help open; then the vitals toggle → Help closed, vitals open |
+| 6 | `K1: one flyout at a time` | at 1024: open vitals, then ? → vitals closed, Help open; then the vitals toggle → Help closed, vitals open |
 | 7 | `K1: the ? key switch in Help turns keys off for the table too` | Help → The ? key Off → `shadows.ui.keys` "off"; ? on the sheet does nothing; Help's button still opens it |
 | 8 | `K1: a seat keeps the table's Help, and its guide lines follow the table's switch` | Dead Air, a seat's sheet: no `[data-shelp]`; `[data-thelp]` opens the table's `character` context; with `shadows.ui.gmGuide` "off" the seat's tabs show no `[data-guide]`; with `shadows.ui.sheetGuide` "off" and `gmGuide` absent, they do |
 
@@ -220,10 +231,16 @@ The builder writes these first and **shows each failing on `main`**, and pastes 
 - **Voice:** `voice.test.mjs` walks `sheetGuide` into its corpus (constraint 9). No string in `sheet.js` or `shared.js` for Help's labels: they're `sheetGuide.ui`'s.
 - **No game-data change:** `node tools/outputs.mjs` before and after: identical.
 - **GM mode unchanged:** `git diff main -- tests/smoke-table-help.test.mjs tests/smoke-table-keys.test.mjs` is empty, and both pass.
-- **phone-check:** the sheet's header at 390 and 768 with the button: height within its share, the name not cut, no overflow. Add the sheet's Help to phone-check: at 390, open it and assert the foot's switches sit above the fold.
+- **phone-check:** the sheet's header at 390 and 768 with the button: height within its share, the name not cut, no overflow. Add the sheet's Help to phone-check:
+  - at 390, open it and assert the foot's switches sit above the fold;
+  - at 1300 with vitals pinned, open it: the vitals drawer has no visible box, the bar's pills are visible, `main`'s right edge is left of Help's left edge, nothing in `main` runs past it, and no scrim is visible. Close it: the drawer is back and the bar's pills are gone;
+  - at 1300 with Help open, the sheet's cards meet the same floor they meet with vitals pinned (it's 36px narrower).
 - **Mutation-test** (and check each for a second path):
   - Return `"main"` from the sheet's context always → example 2 fails.
-  - Let the sheet's host pin → example 3 fails.
+  - Let the sheet's Help draw its flyout at 1280 → example 3 fails.
+  - Write the vitals pin's preference when Help opens or closes → example 3 fails.
+  - Read `shadows.ui.gmHelp` for the sheet → example 3 fails (it opens on its own).
+  - Drop the `vitals-pinned` + `help-pinned` rule → phone-check's 1300 case fails (jsdom can't see it: say so in the PR).
   - Drop the field gate from the sheet's key → example 4 fails through the key, not the button.
   - Ignore `shadows.ui.sheetGuide` → example 5 fails.
   - Read `sheetGuide`'s switch on a seat → example 8 fails.
@@ -240,7 +257,7 @@ The builder writes these first and **shows each failing on `main`**, and pastes 
 3. Write §10's tests and **run them on `main`: all eight fail**. Paste the run into the PR.
 4. **The lift, with no behaviour change.** Move the panel and its helpers into `shared.js` behind the host; the table's host in `gm.js`. Then `npm run verify`: `smoke-table-help` and `smoke-table-keys` pass unedited, and phone-check's table Help passes. Commit this alone.
 5. `sheetGuide` into the data from Appendix A; the three keys moved; the shape guard; MAPS; voice corpus. Then `npm run verify` (the expected breaks show here; update them).
-6. The sheet's host, the button, the key, the guide lines and both switches, the one-flyout rule, the seat's switch. Then `npm run verify`, and in the dev preview at 390, 1024 and 1280, with vitals pinned at 1280.
+6. The sheet's host, the button, the key, the column and the swap with pinned vitals, the flyout below 1280, the guide lines and both switches, the one-flyout rule, the seat's switch. Then `npm run verify`, and in the dev preview at 390, 1024 and 1280, with vitals pinned and not at 1280.
 7. **Read every help sentence against the sheet**, tab by tab, on a Professional, an Arcanist and a Werewolf in form. List any that aren't true in the PR, and fix the copy to match the sheet, never the sheet to match the copy.
 8. **`/impeccable harden`** on the sheet's panel: a long name at 390, Esc with a tip open, a modal over the flyout, the vitals flyout open when ? is pressed, a resize across 1280 while open. Then `npm run verify` and `npm run phone-check`.
 9. **`/impeccable polish`**, then the close-out (§14).
@@ -252,6 +269,8 @@ The builder writes these first and **shows each failing on `main`**, and pastes 
 - the sheet's `?` needs a change to the table's key listener, or the two listeners can both act on one press;
 - at 390 the button fails phone-check both in the header and with KQ1's fallback;
 - `syncVitals` or the vitals flyout's code has to change beyond closing it when Help opens;
+- the swap can't be drawn from Help being open alone, and needs code that writes or clears the vitals pin;
+- at 1300 with Help open and vitals pinned, the sheet's cards fall under the floor they keep with vitals pinned;
 - a word Appendix A names doesn't resolve through `Engine.term` and no other id in `gameTerms` fits (don't add a `gameTerms` row: that's K2);
 - a help sentence can only be true by changing what a tab does (list it as a lead instead);
 - an Impeccable command wants anything outside §9.
@@ -275,6 +294,7 @@ The builder writes these first and **shows each failing on `main`**, and pastes 
   - every new string as it renders, for the voice pass.
 
 **Review checklist** (beyond the tests passing):
+- [ ] At 1280 with vitals pinned: open Help, and the vitals are in the bar, live (a pill opens its popover); change tabs, and Help follows; close it, and the pinned column is back. Reload with Help open: it comes back closed and the vitals still pinned. Nothing on the sheet is dimmed at any point.
 - [ ] In the dev preview at 390, 1024 and 1280 (vitals pinned and not), read every tab's help against the tab. Every sentence that says what the sheet does is true. Spot-check five against the code.
 - [ ] By keyboard alone: ? opens and closes it, Esc closes it (a tip first, if one is open), focus comes back each time; ? in a Notes field types a ?.
 - [ ] GM mode: open a table, use Help pinned at 1280 and as a flyout at 1024, and the keys. Nothing differs from `main`.
@@ -294,6 +314,8 @@ This order's traps:
 - **Names other files call stay.** `app.js`, `wizard.js` and the Esc handler call `syncHelp`, `helpEscCloses` and `closeHelp` today. Keep them working, by those names.
 - **`syncHelp` empties the panel off a table today** (gm.js:423), and `app.js:184` calls it on every non-table draw. On the sheet that would shut Help on every redraw. Make it follow the host, not `S.screen!=="table"`.
 - **Mirror the vitals flyout, don't reuse it** (S31's trap, still true): 166's setter is the vitals', and Help has its own.
+- **The swap never touches the pin.** It's drawn from `.help-pinned` meeting `body.vitals-pinned`. Code that unpins on open and re-pins on close is the design Ken and Claude dropped (KQ9): every way Help closes would have to remember to restore it.
+- **The sheet's Help starts closed.** Don't read the table's `shadows.ui.gmHelp`, and don't add a sheet one.
 - **A guide line isn't a rule line.** Skills' roll and Progression's IP stay when the switch is off. Hiding them is the KQ5 alternative Ken didn't take.
 - **The words are gameTerms ids in K1.** Don't add a `gameTerms` row or a glossary reader to make a context's list longer; that's K2.
 - **Copy lives in the data.** A Help label in code is a finding.

@@ -2,8 +2,8 @@
 
 **Status:** **approved 2026-11-15** (Ken: every KQ on its default; the
 Guide lines switch is a must, so a veteran player gets a clean sheet, as
-GM mode's switch gives a GM). K1's order is drafted and waits on Ken (its
-KQ9–KQ12). Nothing here is a
+GM mode's switch gives a GM). K1's order is drafted, its KQ9–KQ12
+answered (Ken, 2026-11-15), and waits on Ken's approval to build. Nothing here is a
 decision until the session that builds it numbers it in `SCHEMA.md` §4. Its
 sessions are `K`_n_ (K for know the sheet) and its questions `KQ`_n_ (§5).
 Its orders will be in `plans/help-on-the-sheet/`.
@@ -85,7 +85,7 @@ One Help, two guides:
 
 | Session | What a player gets | Tier · app | Waits on |
 |---|---|---|---|
-| **K1 — One Help, on the sheet too** · order drafted: [`K1-one-help.md`](help-on-the-sheet/K1-one-help.md), KQ9–KQ12 open | A **?** on the sheet and the **?** key open Help for the tab that's open: what it's for, when you use it (making the character, at the table, between sessions), the words on it, a tip or two. The **Guide lines** switch hides the tab intros. GM mode's Help is the same panel, unchanged, and gets W150's polish: the foot within reach on a phone, a stronger heading | *Rule or shape* · minor | Ken's answers (§5) |
+| **K1 — One Help, on the sheet too** · order drafted: [`K1-one-help.md`](help-on-the-sheet/K1-one-help.md), KQ9–KQ12 answered | A **?** on the sheet and the **?** key open Help for the tab that's open: what it's for, when you use it (making the character, at the table, between sessions), the words on it, a tip or two. The **Guide lines** switch hides the tab intros. GM mode's Help is the same panel, unchanged, and gets W150's polish: the foot within reach on a phone, a stronger heading | *Rule or shape* · minor | Ken's answers (§5) |
 | **K2 — Every word** | *Every word* lists the game's words once, each from where its rule lives, A–Z with a filter. The words the sheet uses with no definition get one, quoted from the CRB; a word the CRB doesn't define is a flag to Deighton, not copy. Each context's words widen from `gameTerms` to every source | *Rule or shape* (the engine reader) and *Content* (the new definitions) · minor, game data bump if a definition is added | K1 merged |
 | **K3 — Guide lines everywhere** | The sheet's other guide lines (Milestones' "Each once, in any order…", Admin's, the loadout links, the empty states) move into `sheetGuide.lines` and obey the switch; a line that states the character's state or a rule stays. Help gains the narrower contexts: the owed-pick dialog (273), Expert mode, Admin, the seat sheet (KQ6). W154's read-only intros on a seat come with it | *Rule or shape* · minor | K1 merged; K2 for the words in the new contexts |
 | **Voice** | Deighton's read of the copy, as GQ39 is for `gmGuide`: edits to `sheetGuide` in the data | Content · patch | K1 and K3 merged |
