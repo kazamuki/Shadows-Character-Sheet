@@ -10,14 +10,14 @@ window.SHADOWS_CHANGELOG = [
       {
         "title": "Character sheet",
         "items": [
-          "**Luck says how it really works.** A Boost raises one die by 1, and you can boost the same die again. A boosted 10 doesn't explode and a boosted 1 isn't a Botch. On a Breaker Check, a Boost adds 10 to the target (up to its maximum) and an Explode is a second roll, keeping the better.",
+          "**Luck says how it really works.** A Boost raises one die by 1, and you can boost the same die again. A boosted die never explodes, and a boosted 1 isn't a Botch. On a Breaker Check, a Boost adds 10 to the target (up to its maximum) and an Explode is a second roll, keeping the better.",
           "**Gear's descriptions say EM pulse** for an electromagnetic pulse: the Blackout grenade, EMP Shielding, the EMP weapon tag and Artifacts. EMP means Empathy."
         ]
       },
       {
         "title": "GM mode",
         "items": [
-          "**Spending SFR on a utility or support power is a Free Action** in the Reference's Actions, up to your Rate of Use. Attacking with a power is still the Standard Action."
+          "**Spending SFR on a utility or support power is a Free Action** in the Reference's Actions, on your turn and up to your Rate of Use. Attacking with a power is still the Standard Action."
         ]
       }
     ]

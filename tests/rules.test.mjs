@@ -1565,13 +1565,20 @@ test("R16: the Thirst is the book's: 3 SFR a fresh HL, 2 a stored one up to half
 
 // Decision 288: an item with `rulingSource` says a ruling the book hasn't caught up with. It is the one exception,
 // and it has to earn it: it isn't the book's words (or the marker is stale), and an open line in
-// plans/crb-catch-up.md names it, so the book debt is written down.
+// plans/crb-catch-up.md, under that book file's heading, names it in italics and cites the marker's decision,
+// so the book debt is written down.
 test("CRB: the Reference's book panels are quoted verbatim from the mirror", () => {
   const norm = s => String(s).replace(/<[^>]*>/g, " ").replace(/\*\*|\*|\\/g, "").replace(/[‘’]/g, "'").replace(/−/g, "-").replace(/\s+/g, " ").trim();
   const panels = D.gmReference.panels.filter(p => p.bookSource);
   assert.ok(panels.length >= 6, "the data's book panels");
   const names = readdirSync(join(ROOT, "private/crb"));
-  const catchUp = readFileSync(join(ROOT, "docs/plans/crb-catch-up.md"), "utf8").split(/\r?\n/).filter(l => l.startsWith("- ☐"));
+  // Each open line of the catch-up plan with the book file its section heading names ("## 0530_Combat_Encounters" → "0530").
+  const catchUp = [];
+  let section = null;
+  for (const line of readFileSync(join(ROOT, "docs/plans/crb-catch-up.md"), "utf8").split(/\r?\n/)) {
+    if (line.startsWith("## ")) section = (/^## (\d{4})/.exec(line) || [])[1] || null;
+    else if (line.startsWith("- ☐")) catchUp.push({ section, line });
+  }
   for (const p of panels) {
     const m = /^(\d{4})(?: (.+))?$/.exec(p.bookSource);
     assert.ok(m, `${p.id}: bookSource "${p.bookSource}" is "<4-digit file> <heading>" or "<4-digit file>"`);
@@ -1616,7 +1623,14 @@ test("CRB: the Reference's book panels are quoted verbatim from the mirror", () 
         const run = noDash([it.term, it.text].filter(Boolean).join(" "));
         if (it.rulingSource) {
           assert.ok(!noDash(text).includes(run), `${p.id}: "${run}" is the book's words now: take off its rulingSource`);
-          assert.ok(catchUp.some(l => l.includes(`*${it.term}`)), `${p.id}: "${it.term}" is ahead of the book, and no open line in plans/crb-catch-up.md names it in italics`);
+          // The line has to be this item's: under the book file's own heading, citing the decision the marker cites,
+          // and naming the term in italics, closed (not bold, and not the start of a longer phrase).
+          const cites = /Decision (\d+)/.exec(it.rulingSource);
+          assert.ok(cites, `${p.id}: "${it.term}"'s rulingSource names no Decision`);
+          const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          const named = new RegExp(`(^|[^*])\\*${esc(it.term)}\\*(?!\\*)`);
+          const owed = catchUp.filter(l => l.section === m[1] && named.test(l.line) && new RegExp(`Decision ${cites[1]}\\b`).test(l.line));
+          assert.ok(owed.length, `${p.id}: "${it.term}" is ahead of the book, and no open line under ${m[1]} in plans/crb-catch-up.md names it in italics and cites Decision ${cites[1]}`);
           continue;
         }
         assert.ok(noDash(text).includes(run), `${p.id}: "${run}" isn't one item of the book's`);
@@ -2086,10 +2100,12 @@ test("P18 1: every Advantage and Disadvantage has an effect", () => {
 // The 2026-11-12 meeting (reference/meeting-2026-11-12.md, Luck): explosions are natural, a boosted 1 is no Botch,
 // and on a Breaker Check a Boost is +10 to the target and an Explode a re-roll keeping the better. 0300 still says a
 // boosted 9 explodes; the sheet says the ruling (plans/crb-catch-up.md).
-test("2026-11-12: Luck's spends say a boosted 10 doesn't explode, and what they do on a Breaker Check", () => {
+test("2026-11-12: Luck's spends say a boosted die never explodes, and what they do on a Breaker Check", () => {
   const spend = id => D.resources.luck.spend.find(s => s.id === id).effect;
   assert.doesNotMatch(spend("boost"), /9 to a 10 to explode/, "Boost still says a boosted 9 explodes");
-  assert.match(spend("boost"), /boosted 10 doesn't explode/);
+  // Explosions are natural, whatever face explodes: Refined Skill and Stunt Driver explode on a natural 9 or 10 too.
+  assert.match(spend("boost"), /boosted die never explodes: only a natural roll does/);
+  assert.doesNotMatch(spend("boost"), /only a natural 10/, "Boost says only a 10 explodes, against explodeOn [9, 10]");
   assert.match(spend("boost"), /boosted 1 isn't a Botch/);
   assert.match(spend("boost"), /same die again/);
   assert.match(spend("boost"), /Breaker Check, a Boost adds 10 to the target, up to its maximum/);

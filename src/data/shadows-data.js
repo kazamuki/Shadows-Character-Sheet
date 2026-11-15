@@ -263,7 +263,7 @@ window.SHADOWS_DATA = {
           "id": "boost",
           "action": "Boost the roll",
           "cost": 2,
-          "effect": "Increase the face result of a die by 1, and spend more to raise the same die again. A boosted 1 isn't a Botch, and a boosted 10 doesn't explode: only a natural 10 does. On a Breaker Check, a Boost adds 10 to the target, up to its maximum."
+          "effect": "Increase the face result of a die by 1, and spend more to raise the same die again. A boosted 1 isn't a Botch, and a boosted die never explodes: only a natural roll does. On a Breaker Check, a Boost adds 10 to the target, up to its maximum."
         },
         {
           "id": "explode",
@@ -4292,7 +4292,7 @@ window.SHADOWS_DATA = {
 
     { "id": "fg1-thunderclap", "name": "FG-1 \"Thunderclap\"", "category": "grenades", "skill": "melee", "damage": 10, "flagged": true, "flagNote": "F48: 0460 gives no damage type for this weapon (W69, plans/loadout-and-gear.md L1). Untyped until Deighton rules.", "playerNote": "Its damage type isn't written yet. Until it is, your GM calls what a hit from it counts as.", "radius": "5m", "escalation": { "1x": "+5 dmg", "2x+": "Injured" }, "defense": "TN 8 TH 2", "availability": "Uncommon", "cost": 400, "tags": ["Siege"], "notes": "Frag", "flavorLine": "Hammerlock's standard fragmentation grenade -- the benchmark other frags are measured against." },
     { "id": "sg2-shockwave", "name": "SG-2 \"Shockwave\"", "category": "grenades", "skill": "melee", "radius": "10m", "escalation": { "1x": "Stunned", "2x+": "Unconscious" }, "defense": "TN 8 TH 3", "availability": "Common", "cost": 200, "notes": "Disoriented, Non-lethal", "flavorLine": "Non-lethal concussive grenade for incapacitation and crowd control." },
-    { "id": "eg3-blackout", "name": "EG-3 \"Blackout\"", "category": "grenades", "skill": "melee", "damage": "EM pulse", "flagged": true, "flagNote": "F48: 0460 gives no damage type for this weapon (W69, plans/loadout-and-gear.md L1). Untyped until Deighton rules.", "playerNote": "Its damage type isn't written yet. Until it is, your GM calls what a hit from it counts as.", "radius": "5m", "escalation": { "1x": "DeSync", "2x+": "Cyberware offline until repaired" }, "defense": "TN 8 TH 2", "availability": "Uncommon", "cost": 600, "notes": "EM pulse", "flavorLine": "Precision-engineered to disable electronics and cybernetics without indiscriminate structural damage." },
+    { "id": "eg3-blackout", "name": "EG-3 \"Blackout\"", "category": "grenades", "skill": "melee", "damage": "EM pulse", "flagged": true, "flagNote": "F48: 0460 gives no damage type for this weapon (W69, plans/loadout-and-gear.md L1). Untyped until Deighton rules.", "playerNote": "Its damage type isn't written yet. Until it is, your GM calls what a hit from it counts as.", "radius": "5m", "escalation": { "1x": "DeSync", "2x+": "Cyberware offline until repaired" }, "defense": "TN 8 TH 2", "availability": "Uncommon", "cost": 600, "notes": "EMP", "flavorLine": "Precision-engineered to disable electronics and cybernetics without indiscriminate structural damage." },
     { "id": "vs3-curtain", "name": "VS-3 \"Curtain\"", "category": "grenades", "skill": "melee", "radius": "10m", "escalation": { "1x": "+1 round", "2x+": "+2 rounds" }, "defense": "TN 8 TH 3", "availability": "Common", "cost": 150, "notes": "Smoke, Blinded, 3 rounds", "flavorLine": "A ten-meter obscurement cloud that lasts long enough to matter." },
     { "id": "ig7-cinder", "name": "IG-7 \"Cinder\"", "category": "grenades", "skill": "melee", "damage": "6/round", "flagged": true, "flagNote": "F48: 0460 gives no damage type for this weapon (W69, plans/loadout-and-gear.md L1). Untyped until Deighton rules.", "playerNote": "Its damage type isn't written yet. Until it is, your GM calls what a hit from it counts as.", "radius": "5m", "escalation": { "1x": "+1 round", "2x+": "+2 rounds" }, "defense": "TN 8 TH 2", "availability": "Rare", "cost": 800, "notes": "Incendiary, Burning", "flavorLine": "Creates a sustained burn zone for area denial. Hammerlock recommends against indoor use." },
     { "id": "junk-bomb", "name": "\"Junk Bomb\"", "category": "grenades", "skill": "melee", "damage": "Varies", "flagged": true, "flagNote": "F48: 0460 gives no damage type for this weapon (W69, plans/loadout-and-gear.md L1). Untyped until Deighton rules.", "playerNote": "Its damage type isn't written yet. Until it is, your GM calls what a hit from it counts as.", "radius": "Varies", "escalation": { "1x": "+1d4 dmg", "2x+": "Injured" }, "defense": "TN 8 TH 2", "availability": "Common", "cost": 75, "tags": ["Siege"], "notes": "Unstable -- roll 1d4 (1 Frag DMG8/5m, 2 Stun 10m non-lethal, 3 Smoke 10m, 4 Dud)", "flavorLine": "Somebody's best guess at a grenade, assembled from optimism and scavenged casings." },
@@ -5513,7 +5513,11 @@ window.SHADOWS_DATA = {
      section its `bookSource` names ("<4-digit file> <heading>", or just the
      file), which tests/rules.test.mjs checks piece by piece. A part is
      { title, text, columns, rows, items, footText }; an item is
-     { term, text }. A cell or a term that runs over several lines in the
+     { term, text, rulingSource? }. `rulingSource` (Decision 288, never
+     shown) marks a ruling ahead of the book: the test skips that item, if
+     its words aren't the book's and an open line under the file's heading
+     in plans/crb-catch-up.md names it in italics and cites the decision.
+     A cell or a term that runs over several lines in the
      book joins them with " · ". Read only by GM mode: no character can
      observe it, so it moves no game-data version (Decision 68). */
   "gmReference": {
@@ -5572,7 +5576,7 @@ window.SHADOWS_DATA = {
               { "term": "Drop prone", "text": "standing up later costs your Move" },
               { "term": "Let go of something", "text": "" },
               { "term": "Look", "text": "" },
-              { "term": "Activate a Power", "text": "SFR on a utility or support power, up to your Rate of Use", "rulingSource": "2026-11-12 meeting: spending SFR is a free action (Decision 288)" }
+              { "term": "Activate a Power", "text": "on your turn, SFR on a utility or support power, up to your Rate of Use", "rulingSource": "2026-11-12 meeting: spending SFR is a free action (Decision 288); on your turn until Deighton rules otherwise" }
             ] },
           { "title": "Fast Action", "text": "one on your turn, one at Reset",
             "items": [
