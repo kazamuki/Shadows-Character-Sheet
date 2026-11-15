@@ -519,6 +519,10 @@ test("U4: gm.js has no inline style but a computed transform", () => {
     assert.equal(val(top, ".tag:hover", "color"), "var(--cyan)");
     assert.doesNotMatch(top.find(r => r.sel.startsWith(".tag:hover")).body, /border/, "the hover rule still turns a border cyan");
   });
+  test("E7 3b: a tied initiative tag draws its magenta line as the underline, not a border", () => {
+    assert.equal(val(top, ".enc-tied", "text-decoration-color"), "var(--magenta)");
+    assert.equal(val(top, ".enc-tied", "border-color"), null, "a border-color on a tag that has no border");
+  });
   test("E7 5: a trait part's colour is the sign's", () => {
     assert.equal(val(top, ".ref td.bd .trait-part.neg", "color"), "var(--magenta-text)");
     assert.equal(val(top, ".ref td.bd .trait-part.pos", "color"), "var(--green)");

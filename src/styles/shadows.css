@@ -1532,7 +1532,7 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .enc-hit-fields{display:contents}
 .enc-hit .enc-hit-btns{grid-column:1 / -1; margin-bottom:6px}
 .enc-hit [data-ehit-extra]{min-width:0}
-.enc-tied{border-color:var(--magenta)}
+.enc-tied{text-decoration-color:var(--magenta)}
 /* Wave Initiative (Decision 210): the mode toggle wraps under the status, a side is a heading with its best and its tie, and everything a GM typed wraps. */
 .enc-turns{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:0 0 10px}
 .enc-turns .form-toggle{flex-wrap:wrap}
