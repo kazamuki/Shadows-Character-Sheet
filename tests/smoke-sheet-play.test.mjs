@@ -2427,3 +2427,27 @@ test("E4 2: a healthy worn piece wears none of it, and its text is the same", ()
   app.click('[data-actopen="wear"]');
   assert.equal(app.$$('[data-actpanel="wear"] .down').length, 0);
 });
+
+// ── E6: the phone. An attack's dice never break; the kicker and sub-lines may. ──
+test("E6 2: every place the sheet draws an attack wraps the dice in the hook", () => {
+  const ch = lockedCharacter();
+  ch.weapons = [{ id: "sg88-siege-breaker", notes: "", mods: [], roundsSpent: 0 }, { id: "combat-knife", notes: "" }];
+  assert.equal(ch.weapons.length, 2);
+  const lines = ch.weapons.map((_, i) => Engine.weaponLine(ch, i));
+  for (const l of lines) assert.equal(typeof l.attack, "number", "the fixture's weapon has no attack");
+  const want = lines.map(l => `1d10 ${l.attack < 0 ? "−" : "+"} ${Math.abs(l.attack)}`);
+  for (const sec of ["main", "loadout"]) {
+    const app = openSheet(ch, sec);
+    const cells = app.$$("#main td.num").filter(td => /^1d10 [+−] \d+/.test(td.textContent.trim()));
+    assert.ok(cells.length >= 2, `${sec}: only ${cells.length} Attack cells drew`);
+    for (const w of want) {
+      const hit = cells.find(td => td.textContent.trim().startsWith(w));
+      assert.ok(hit, `${sec}: no Attack cell reads "${w}"`);
+      const atk = hit.querySelector(".atk");
+      assert.ok(atk, `${sec}: "${w}" isn't in the hook`);
+      assert.equal(atk.textContent, w, `${sec}: the hook holds more or less than the dice`);
+      assert.equal(atk.querySelector(".lo-sub, .sub"), null, `${sec}: a sub-line is inside the hook`);
+    }
+    assert.deepEqual(app.errors, []);
+  }
+});

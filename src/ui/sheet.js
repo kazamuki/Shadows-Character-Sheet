@@ -737,6 +737,9 @@ function renderShCharacter(){
 // archetype picks its reference in data and nothing is special-cased on it.
 // A name with no renderer is skipped rather than guessed at.
 const rangeLabel = r => r.max==null ? `${r.min}+` : r.min===r.max ? `${r.min}` : `${r.min}–${r.max}`;
+// E6: a column table scrolls inside its own frame, so a six-column table never pushes the page sideways (GM mode's Reference does the same).
+// Prose tables (a label and a sentence) are not framed: a max-content width would put each sentence on one line.
+const refFrame = (label, table) => `<div class="ref-frame" role="region" tabindex="0" aria-label="${esc(label)}">${table}</div>`;
 const REFERENCE_SECTIONS = {
   spellcraftRules: R => {
     const o = R.outcomes||{}, names = { overflow:"Overflow", manifest:"Manifest", fizzle:"Fizzle", rupture:"Rupture", cascade:"Cascade" };
@@ -746,8 +749,8 @@ const REFERENCE_SECTIONS = {
       ${[R.exhaustion, (R.spellPower||{}).text, (R.spellAttack||{}).text, (R.mastery||{}).text, R.castingRequiresVoice].filter(Boolean).map(t=>`<p>${esc(t)}</p>`).join("")}` }, spellcraftWorkings(R)];
   },
   domains: list => ({ title:"Domains and Glyphs", html:
-    `<table class="ref"><thead><tr><th>Domain</th><th>Glyphs</th><th></th></tr></thead><tbody>${list.map(d=>
-      `<tr><td><b>${esc(d.name)}</b></td><td>${esc((d.glyphs||[]).join(", "))}</td><td>${esc(d.description||"")}</td></tr>`).join("")}</tbody></table>` }),
+    refFrame("Domains and Glyphs", `<table class="ref"><thead><tr><th>Domain</th><th>Glyphs</th><th></th></tr></thead><tbody>${list.map(d=>
+      `<tr><td><b>${esc(d.name)}</b></td><td>${esc((d.glyphs||[]).join(", "))}</td><td>${esc(d.description||"")}</td></tr>`).join("")}</tbody></table>`) }),
   // Enchantment and Alchemy (AQ4 4): the Threshold and time for each tier,
   // what extra time buys, and what each material holds.
   enchantmentMaterialCategories: mats => {
@@ -758,25 +761,25 @@ const REFERENCE_SECTIONS = {
     const tier = id => ((D.spellTiers||[]).find(t=>t.id===id)||{ name:id }).name;
     const cap = Object.entries(X.reductionCapByRank||{}).map(([r,n])=>`rank ${r}: ${n}`).join(" · ");
     return { title:"Enchantment and Alchemy", html:
-      `<table class="ref"><thead><tr><th>Tier</th>${discs.map(k=>`<th>${esc(discName(k))} TH</th>`).join("")}${timed.map(k=>`<th>${esc(discName(k))} time</th>`).join("")}</tr></thead><tbody>${
+      `${refFrame("Enchantment and Alchemy", `<table class="ref"><thead><tr><th>Tier</th>${discs.map(k=>`<th>${esc(discName(k))} TH</th>`).join("")}${timed.map(k=>`<th>${esc(discName(k))} time</th>`).join("")}</tr></thead><tbody>${
         T.map(r=>`<tr><td><b>${esc(tier(r.tier))}</b></td>${discs.map(k=>`<td class="num">${esc((r.th||{})[k]??"—")}</td>`).join("")}${
-          timed.map(k=>`<td>${esc((r.minTime||{})[k]||"—")}</td>`).join("")}</tr>`).join("")}</tbody></table>
+          timed.map(k=>`<td>${esc((r.minTime||{})[k]||"—")}</td>`).join("")}</tr>`).join("")}</tbody></table>`)}
       ${X.note?`<p>${esc(X.note)}${cap?` Most TH off, by rank: ${esc(cap)}.`:""}</p>`:""}
-      <div class="subsect">Materials</div><table class="ref"><thead><tr><th>Material</th><th>Charges</th><th>Used up</th><th>On a Rupture</th><th>Recharging</th></tr></thead><tbody>${
+      <div class="subsect">Materials</div>${refFrame("Materials", `<table class="ref"><thead><tr><th>Material</th><th>Charges</th><th>Used up</th><th>On a Rupture</th><th>Recharging</th></tr></thead><tbody>${
         mats.map(m=>`<tr><td><b>${esc(m.name)}</b><div class="sub">${esc((m.examples||[]).join(", "))}</div></td><td class="num">${esc(m.charges)}</td>
-          <td>${esc(m.onUse||m.onDepletion||"")}</td><td>${esc(m.onRupture||"")}</td><td>${esc(m.recharging||"")}</td></tr>`).join("")}</tbody></table>` };
+          <td>${esc(m.onUse||m.onDepletion||"")}</td><td>${esc(m.onRupture||"")}</td><td>${esc(m.recharging||"")}</td></tr>`).join("")}</tbody></table>`)}` };
   },
   spellTiers: T => ({ title:"Spell tiers", html:
-    `<table class="ref"><thead><tr><th>Tier</th><th>TN</th><th>TH</th><th></th></tr></thead><tbody>${T.map(t=>
-      `<tr><td><b>${esc(t.name)}</b></td><td class="num">${t.tn}</td><td class="num">${t.th}</td><td>${esc(t.description||"")}</td></tr>`).join("")}</tbody></table>` }),
+    refFrame("Spell tiers", `<table class="ref"><thead><tr><th>Tier</th><th>TN</th><th>TH</th><th></th></tr></thead><tbody>${T.map(t=>
+      `<tr><td><b>${esc(t.name)}</b></td><td class="num">${t.tn}</td><td class="num">${t.th}</td><td>${esc(t.description||"")}</td></tr>`).join("")}</tbody></table>`) }),
   cascadeTable: (T, ch) => ({ title:"The Cascade Table", html:
     `<p>${esc(T.rollNote||"")}</p><table class="ref"><tbody>${(T.rows||[]).map(r=>
       `<tr><td class="num">${rangeLabel(r)}</td><td><b>${esc(r.name)}</b></td><td>${spText((Engine.spAmounts(ch, r)||{}).effect, r.effect||"")}</td></tr>`).join("")}</tbody></table>` }),
   aberrationTable: A => {
     const cat = id => ((D.aberrationCategories||[]).find(c=>c.id===id)||{name:id}).name;
     return { title:"The Aberration Table", html:
-      `<p>${esc(A.die||"")}. ${esc(A.note||"")}</p><table class="ref"><thead><tr><th>Roll</th><th>Temporary</th><th>Permanent</th></tr></thead><tbody>${(A.rows||[]).map(r=>
-        `<tr><td class="num">${rangeLabel(r)}</td><td>${esc(cat(r.temporary))}</td><td>${esc(cat(r.permanent))}</td></tr>`).join("")}</tbody></table>` };
+      `<p>${esc(A.die||"")}. ${esc(A.note||"")}</p>${refFrame("The Aberration Table", `<table class="ref"><thead><tr><th>Roll</th><th>Temporary</th><th>Permanent</th></tr></thead><tbody>${(A.rows||[]).map(r=>
+        `<tr><td class="num">${rangeLabel(r)}</td><td>${esc(cat(r.temporary))}</td><td>${esc(cat(r.permanent))}</td></tr>`).join("")}</tbody></table>`)}` };
   },
   aberrations: (list, ch) => {
     const R = D.aberrationRules||{}, power = Engine.spellPower(ch);
@@ -1716,7 +1719,7 @@ function renderShProgression(){
   // Spend (Decision 159): a button each, opening a modal that lists every
   // stat, skill or power with its price, so the Milestones below stay in
   // reach. Powers only when the character holds one with a rank (Decision 194).
-  h += `<div class="raise-row">
+  h += `<div class="raise-row spend">
     <button class="btn" data-raiseopen="stat">Raise a Stat</button>
     <button class="btn" data-raiseopen="skill">Raise a Skill</button>
     ${(ch.houseRules && ch.houseRules.training===true) || ch.progression.training ? `<button class="btn" data-trainopen="1">Train a Skill</button>` : ""}
@@ -1884,7 +1887,9 @@ function auditChip(kind){
 // A catalog piece shows what the catalog and the engine say, and only its
 // notes are editable. A custom piece is typed. Every number on a weapon line
 // comes from Engine.weaponLine(); every armor number from armorState().
-const attackText = n => n==null ? "—" : `1d10 ${n<0?"−":"+"} ${Math.abs(n)}`;
+// E6: the dice sit in a span that never breaks, so on a phone "1d10 + 22" is one line; a kicker or a sub-line after it may wrap.
+// Every caller puts it in HTML, never in an attribute or through esc().
+const attackText = n => n==null ? "—" : `<span class="atk">1d10 ${n<0?"−":"+"} ${Math.abs(n)}</span>`;
 // Decision 263: a Major's kicker sits beside the attack, never in the number.
 const kickerText = l => l.attack==null ? "" : (l.kickers||[]).map(k=>` + ${k.die}`).join("");
 const attackWithKicker = l => attackText(l.attack) + esc(kickerText(l));

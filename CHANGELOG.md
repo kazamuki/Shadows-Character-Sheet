@@ -24,6 +24,12 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.69.2
+
+### Character sheet
+
+- **The sheet sits right on a phone.** Attack rolls stay on one line, a spellcaster's reference tables scroll on their own instead of pushing the page sideways, the card alone at the bottom of Main's vitals takes one line, and Progression's buttons line up in pairs.
+
 ## v0.69.1 — 2026-11-14
 
 ### Character sheet

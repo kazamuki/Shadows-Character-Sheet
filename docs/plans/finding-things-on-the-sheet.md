@@ -68,7 +68,7 @@ all correct, but it takes knowing the sheet to find it:
 | E3 | The Grimoire's read mode ([order](finding-things-on-the-sheet/E3-the-grimoire.md), approved 2026-11-12, **E3 built**, Decision 286, EQ32–EQ35 answered). Main's columns stay as E2b left them (EQ32, Alternative B); revisit if a character's fight runs past the screen under the header by more than a few pixels (today Dax's, by 96px at 1280×860), or E6 changes a skill row's or a card's height. The measurements are in the order's §1 | `layout` | Rule or shape | E2 |
 | E4 | Colour that keeps its one meaning ([order](finding-things-on-the-sheet/E4-colour.md), approved 2026-11-14, **E4 built**, EQ46–EQ50: all Default, EQ51 Ken's contrast check) | `colorize` | Fix | — |
 | E5 | The words: intros, placeholders, the `?` modifiers ([order](finding-things-on-the-sheet/E5-the-words.md), approved 2026-11-13, EQ36–EQ40 answered: all Default; **E5 built**) | `clarify` | Fix | E2 |
-| E6 | The phone ([order](finding-things-on-the-sheet/E6-the-phone.md), approved 2026-11-14, EQ52–EQ57: all Default) | `adapt` | Fix | E3 |
+| E6 | The phone ([order](finding-things-on-the-sheet/E6-the-phone.md), approved 2026-11-14, EQ52–EQ57: all Default, **E6 built**, app 0.69.2) | `adapt` | Fix | E3 |
 | E7 | Polish, then measure | `polish`, then `critique` | Fix | all |
 | E8 | The game's words a tap away (W133), from E2's shape (EQ22) ([order](finding-things-on-the-sheet/E8-the-games-words.md), approved 2026-11-13, EQ41–EQ45 answered: all Default; **E8 built**) | `clarify` | Rule or shape | E5 |
 

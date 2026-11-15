@@ -398,3 +398,23 @@ test("E4 7: the seat sheet shows a form and a broken piece the same way", () => 
   assert.ok(app.$("[data-rosheet] .lo-armor.worn.down.scrap"), "no damaged scrap card");
   assert.ok(app.$("[data-rosheet] .res-off"), "no .res-off");
 });
+
+// E6: the seat sheet draws the same renderers, so it frames the reference and holds the dice.
+test("E6 7: the seat sheet frames an Arcanist's reference and wraps an attack's dice", () => {
+  const ch = arcanist();
+  ch.weapons = [{ id: "combat-knife", notes: "" }];
+  const l = Engine.weaponLine(ch, 0);
+  assert.equal(typeof l.attack, "number", "the fixture's weapon has no attack");
+  const dice = `1d10 ${l.attack < 0 ? "−" : "+"} ${Math.abs(l.attack)}`;
+  const arch = D.archetypes.find(a => a.id === ch.identity.archetype);
+  assert.ok(arch.coreMechanic.panels.some(p => p.type === "reference"), "the Arcanist has no reference panel");
+  const app = open([ch]);
+  openSheet(app, AR_TAG);
+  const atk = app.$$("[data-rosheet] .atk").find(a => a.textContent === dice);
+  assert.ok(atk, `Main has no .atk reading "${dice}"`);
+  goTab(app, "character");
+  const cols = app.$$("[data-rosheet] [data-reference] table.ref").filter(t => t.querySelector("thead"));
+  assert.ok(cols.length >= 3, `only ${cols.length} column tables drew`);
+  for (const t of cols) assert.ok(t.parentElement.matches('.ref-frame[role="region"][tabindex="0"]'), "a seat's column table isn't framed");
+  assert.deepEqual(app.errors, []);
+});

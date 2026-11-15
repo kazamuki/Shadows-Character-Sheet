@@ -2,6 +2,20 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.69.2",
+    "date": null,
+    "intro": [],
+    "items": [],
+    "groups": [
+      {
+        "title": "Character sheet",
+        "items": [
+          "**The sheet sits right on a phone.** Attack rolls stay on one line, a spellcaster's reference tables scroll on their own instead of pushing the page sideways, the card alone at the bottom of Main's vitals takes one line, and Progression's buttons line up in pairs."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.69.1",
     "date": "2026-11-14",
     "intro": [],
