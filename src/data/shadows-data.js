@@ -5004,7 +5004,7 @@ window.SHADOWS_DATA = {
           "before",
           "during"
         ],
-        "intro": "Who's at the table, and a copy of each character to check at a glance.",
+        "intro": "Your crew and the people playing them, with a copy of each character to check at a glance.",
         "for": "The people at your table and copies of their characters, so you can see HP, Awareness and Conditions without asking.",
         "words": [
           "player",
@@ -5012,7 +5012,7 @@ window.SHADOWS_DATA = {
           "benched"
         ],
         "tips": [
-          "Ask for each player's `.shadows.json` after a session and import it, so your copy matches their sheet."
+          "Ask for each player's `.shadows.json` after a session and import it, so your copy matches their sheet. Importing a character again updates the copy you have, and asks first if the file is older."
         ]
       },
       "character": {
@@ -5198,7 +5198,7 @@ window.SHADOWS_DATA = {
           "before",
           "during"
         ],
-        "for": "One entry from a pack, as the book writes it. Add it to the cast to give it a name and a history, or to an encounter to fight it.",
+        "for": "One entry from a pack, as the book writes it. Not everyone here starts as an enemy: add one to the cast to give them a name and a history, or to an encounter once it comes to a fight.",
         "words": [
           "pack",
           "statBlock"
@@ -5338,7 +5338,7 @@ window.SHADOWS_DATA = {
       },
       "thread": {
         "term": "Thread",
-        "text": "A question the story hasn't answered yet: a missing witness, a debt, a contract on someone. Close it as **Resolved** or **Dropped** when it ends."
+        "text": "A question the story hasn't answered yet. Examples include a missing witness, a debt, or a contract on someone. Close it as **Resolved** or **Dropped** when it ends."
       },
       "currentThread": {
         "term": "Current thread",
@@ -5390,7 +5390,7 @@ window.SHADOWS_DATA = {
       },
       "cast": {
         "term": "Cast",
-        "text": "Everyone in the story who isn't a player's character: contacts, rivals, bosses, monsters."
+        "text": "Everyone in the story who isn't a player's character. Examples include contacts, rivals, bosses and monsters. Also known as non-player characters (NPCs)."
       },
       "status": {
         "term": "Status",
@@ -5422,7 +5422,7 @@ window.SHADOWS_DATA = {
       },
       "faction": {
         "term": "Faction",
-        "text": "A group with its own agenda: a gang, a corporation, a precinct."
+        "text": "A group with its own agenda. Examples include a gang, a corporation or a precinct."
       },
       "attention": {
         "term": "Attention",
@@ -5462,11 +5462,11 @@ window.SHADOWS_DATA = {
       },
       "nextTurn": {
         "term": "Next turn",
-        "text": "The **Next** button moves to whoever acts next. **N** does the same on a running fight's page."
+        "text": "The **Next** button moves to whoever acts next. The **N** key does the same on a running fight's page."
       },
       "combatSense": {
         "term": "Combat Sense",
-        "text": "What sets the turn order. In a fight run by waves, each side rolls it again at a round's end if the fight has changed."
+        "text": "What sets turn order in a combat encounter. In a fight run by waves, each side rolls it again at a round's end if the fight has changed."
       },
       "strip": {
         "term": "The strip",
