@@ -2,7 +2,7 @@
 
 **Plan:** [`../loadout-and-gear.md`](../loadout-and-gear.md) §3, row L4, and its *What each order settles* bullet. **Wish:** [W107](../../WISHLIST.md). **The rulings:** [`../../reference/meeting-2026-10-23.md`](../../reference/meeting-2026-10-23.md) (two a round) and [`../../reference/meeting-2026-11-12.md`](../../reference/meeting-2026-11-12.md) (what counts, Martial Arts, mastery, one action). **The handoff:** [`L4-handoff.md`](L4-handoff.md). **The book:** `0530` *Unarmed Attacks* and *Combat Maneuvers* (`private/crb/0530_Combat_Encounters.md` ~520–545), `0460` *Blunt* ("fists, clubs", ~111). Decisions 104, 195, 200, 229, 247, 248, 287.
 
-**Status: drafted 2026-11-15** by Claude (Opus), from the 2026-11-12 meeting. **Not approved.** §4's LQ35–LQ41 are Ken's before the build starts.
+**Status: drafted 2026-11-15** by Claude (Opus), from the 2026-11-12 meeting. **Not yet approved.** **LQ35–LQ41 answered by Ken 2026-11-15 (in the drafting session): every default.** On LQ41, Ken may get Deighton's answers to the five open details directly. Any he answers before the build come out of F-N (§8), and the order is revised to match.
 
 **Why it waited.** Ken held L4 on 2026-10-28 for the 2026-10-29 dev meeting. Natural weapons were finally taken on 2026-11-12, with Deighton's table report. Ken's aim there: "answers today go on the sheet for playtesting." The December playtest (Dec 7–11) is the deadline that matters. Playtesters are running Werewolves and Vampires now.
 
