@@ -2074,6 +2074,19 @@ test("P18 1: every Advantage and Disadvantage has an effect", () => {
   assert.deepEqual(bad, [], "a rule row with no ruleText");
 });
 
+// The 2026-11-12 meeting (reference/meeting-2026-11-12.md, Luck): explosions are natural, a boosted 1 is no Botch,
+// and on a Breaker Check a Boost is +10 to the target and an Explode a re-roll keeping the better. 0300 still says a
+// boosted 9 explodes; the sheet says the ruling (plans/crb-catch-up.md).
+test("2026-11-12: Luck's spends say a boosted 10 doesn't explode, and what they do on a Breaker Check", () => {
+  const spend = id => D.resources.luck.spend.find(s => s.id === id).effect;
+  assert.doesNotMatch(spend("boost"), /9 to a 10 to explode/, "Boost still says a boosted 9 explodes");
+  assert.match(spend("boost"), /boosted 10 doesn't explode/);
+  assert.match(spend("boost"), /boosted 1 isn't a Botch/);
+  assert.match(spend("boost"), /same die again/);
+  assert.match(spend("boost"), /Breaker Check, a Boost adds 10 to the target, up to its maximum/);
+  assert.match(spend("explode"), /Breaker Check, roll again and keep the better/);
+});
+
 test("P18 2: a computed tag is written by its numbers", () => {
   const text = (kind, id) => tagsOf(kind, id).filter(t => t.computed).map(t => t.text);
   assert.deepEqual(text("advantage", "hard-to-kill"), ["+1 max HP on every Health Level per rank"]);

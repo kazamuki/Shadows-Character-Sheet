@@ -2,6 +2,21 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.69.4",
+    "date": null,
+    "intro": [],
+    "items": [],
+    "groups": [
+      {
+        "title": "Character sheet",
+        "items": [
+          "**Luck says how it really works.** A Boost raises one die by 1, and you can boost the same die again. A boosted 10 doesn't explode and a boosted 1 isn't a Botch. On a Breaker Check, a Boost adds 10 to the target (up to its maximum) and an Explode is a second roll, keeping the better.",
+          "**Gear's descriptions say EM pulse** for an electromagnetic pulse: the Blackout grenade, EMP Shielding, the EMP weapon tag and Artifacts. EMP means Empathy."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.69.3",
     "date": "2026-11-15",
     "intro": [],

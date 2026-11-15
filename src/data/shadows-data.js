@@ -263,13 +263,13 @@ window.SHADOWS_DATA = {
           "id": "boost",
           "action": "Boost the roll",
           "cost": 2,
-          "effect": "Increase the face result of a die by 1. Can turn a Botch into a plain failure, or boost a 9 to a 10 to explode the die."
+          "effect": "Increase the face result of a die by 1, and spend more to raise the same die again. A boosted 1 isn't a Botch, and a boosted 10 doesn't explode: only a natural 10 does. On a Breaker Check, a Boost adds 10 to the target, up to its maximum."
         },
         {
           "id": "explode",
           "action": "Explode the roll",
           "cost": 3,
-          "effect": "Roll the die again and add the new result to the total."
+          "effect": "Roll the die again and add the new result to the total. On a Breaker Check, roll again and keep the better."
         }
       ],
       "refresh": "Luck does not refresh during breaks, pauses, or downtime - only when a session truly ends."
@@ -4167,7 +4167,7 @@ window.SHADOWS_DATA = {
     { "id": "Concussive", "description": "Causes the Disoriented condition across its area of effect. Deals no damage. Affects all targets in range including allies." },
     { "id": "Disarming", "description": "Can perform a Disarm maneuver instead of dealing damage. Declare before the attack roll; a hit knocks the target's weapon free, automatically. Choose damage or disarm, not both." },
     { "id": "Disintegration", "description": "On a killing blow, the target leaves no recoverable remains. The damage itself is not necessarily greater -- the permanence of the outcome is." },
-    { "id": "EMP", "description": "Disrupts electronic systems and cybernetic implants on hit. Minimal against standard targets; against heavily augmented targets or electronics, the EMP effect triggers separately from the damage." },
+    { "id": "EMP", "description": "Disrupts electronic systems and cybernetic implants on hit. Minimal against standard targets; against heavily augmented targets or electronics, the EM pulse effect triggers separately from the damage." },
     { "id": "Incendiary", "description": "Sets the impact area on fire, causing Burning to all targets in the affected zone until extinguished." },
     { "id": "Knockdown", "description": "Can knock a target prone instead of dealing damage. Declare before the attack roll; a hit knocks the target down, automatically. Choose damage or knockdown, not both." },
     { "id": "Mounted", "description": "Requires a bipod, hardpoint, or vehicle mount for effective use. Firing without one: BOD Essence Check, success fires at −4 ACC, failure means the weapon is uncontrollable." },
@@ -4292,7 +4292,7 @@ window.SHADOWS_DATA = {
 
     { "id": "fg1-thunderclap", "name": "FG-1 \"Thunderclap\"", "category": "grenades", "skill": "melee", "damage": 10, "flagged": true, "flagNote": "F48: 0460 gives no damage type for this weapon (W69, plans/loadout-and-gear.md L1). Untyped until Deighton rules.", "playerNote": "Its damage type isn't written yet. Until it is, your GM calls what a hit from it counts as.", "radius": "5m", "escalation": { "1x": "+5 dmg", "2x+": "Injured" }, "defense": "TN 8 TH 2", "availability": "Uncommon", "cost": 400, "tags": ["Siege"], "notes": "Frag", "flavorLine": "Hammerlock's standard fragmentation grenade -- the benchmark other frags are measured against." },
     { "id": "sg2-shockwave", "name": "SG-2 \"Shockwave\"", "category": "grenades", "skill": "melee", "radius": "10m", "escalation": { "1x": "Stunned", "2x+": "Unconscious" }, "defense": "TN 8 TH 3", "availability": "Common", "cost": 200, "notes": "Disoriented, Non-lethal", "flavorLine": "Non-lethal concussive grenade for incapacitation and crowd control." },
-    { "id": "eg3-blackout", "name": "EG-3 \"Blackout\"", "category": "grenades", "skill": "melee", "damage": "EMP", "flagged": true, "flagNote": "F48: 0460 gives no damage type for this weapon (W69, plans/loadout-and-gear.md L1). Untyped until Deighton rules.", "playerNote": "Its damage type isn't written yet. Until it is, your GM calls what a hit from it counts as.", "radius": "5m", "escalation": { "1x": "DeSync", "2x+": "Cyberware offline until repaired" }, "defense": "TN 8 TH 2", "availability": "Uncommon", "cost": 600, "notes": "EMP", "flavorLine": "Precision-engineered to disable electronics and cybernetics without indiscriminate structural damage." },
+    { "id": "eg3-blackout", "name": "EG-3 \"Blackout\"", "category": "grenades", "skill": "melee", "damage": "EM pulse", "flagged": true, "flagNote": "F48: 0460 gives no damage type for this weapon (W69, plans/loadout-and-gear.md L1). Untyped until Deighton rules.", "playerNote": "Its damage type isn't written yet. Until it is, your GM calls what a hit from it counts as.", "radius": "5m", "escalation": { "1x": "DeSync", "2x+": "Cyberware offline until repaired" }, "defense": "TN 8 TH 2", "availability": "Uncommon", "cost": 600, "notes": "EM pulse", "flavorLine": "Precision-engineered to disable electronics and cybernetics without indiscriminate structural damage." },
     { "id": "vs3-curtain", "name": "VS-3 \"Curtain\"", "category": "grenades", "skill": "melee", "radius": "10m", "escalation": { "1x": "+1 round", "2x+": "+2 rounds" }, "defense": "TN 8 TH 3", "availability": "Common", "cost": 150, "notes": "Smoke, Blinded, 3 rounds", "flavorLine": "A ten-meter obscurement cloud that lasts long enough to matter." },
     { "id": "ig7-cinder", "name": "IG-7 \"Cinder\"", "category": "grenades", "skill": "melee", "damage": "6/round", "flagged": true, "flagNote": "F48: 0460 gives no damage type for this weapon (W69, plans/loadout-and-gear.md L1). Untyped until Deighton rules.", "playerNote": "Its damage type isn't written yet. Until it is, your GM calls what a hit from it counts as.", "radius": "5m", "escalation": { "1x": "+1 round", "2x+": "+2 rounds" }, "defense": "TN 8 TH 2", "availability": "Rare", "cost": 800, "notes": "Incendiary, Burning", "flavorLine": "Creates a sustained burn zone for area denial. Hammerlock recommends against indoor use." },
     { "id": "junk-bomb", "name": "\"Junk Bomb\"", "category": "grenades", "skill": "melee", "damage": "Varies", "flagged": true, "flagNote": "F48: 0460 gives no damage type for this weapon (W69, plans/loadout-and-gear.md L1). Untyped until Deighton rules.", "playerNote": "Its damage type isn't written yet. Until it is, your GM calls what a hit from it counts as.", "radius": "Varies", "escalation": { "1x": "+1d4 dmg", "2x+": "Injured" }, "defense": "TN 8 TH 2", "availability": "Common", "cost": 75, "tags": ["Siege"], "notes": "Unstable -- roll 1d4 (1 Frag DMG8/5m, 2 Stun 10m non-lethal, 3 Smoke 10m, 4 Dud)", "flavorLine": "Somebody's best guess at a grenade, assembled from optimism and scavenged casings." },
@@ -4410,7 +4410,7 @@ window.SHADOWS_DATA = {
   ],
   "armorUpgradeGlossary": [
     { "id": "Ablative Plating", "minQuality": "Mid", "resAgainst": "energy", "description": "Grants the armor's full RES bonus against Energy damage in addition to its standard Kinetic application." },
-    { "id": "EMP Shielding", "description": "Grants +10% EMP resistance. Reduces cascade failure risk for characters with significant cyberware when hit by EMP sources." },
+    { "id": "EMP Shielding", "description": "Grants +10% resistance to EM pulses. Reduces cascade failure risk for characters with significant cyberware when hit by one." },
     { "id": "HUDsync", "description": "Paired with a HUDsync-compatible helmet, displays real-time armor status, weapon systems, and linked device information in the visor." },
     { "id": "Resistance", "repeatable": true, "retired": true, "description": "An older lining with no type, so it stops nothing. Remove it and install Resistance — Thermal, Electric or Freezing instead." },
     { "id": "Resistance — Thermal", "halves": ["burning"], "description": "Specialized lining granting 50% damage reduction against heat. It halves the damage first, rounding down, then your armor rolls. Each Resistance covers one type." },
@@ -4507,7 +4507,7 @@ window.SHADOWS_DATA = {
     { "id": "charged", "name": "Charged Talismans", "book": "Magic", "note": "Once-Living material. Three charges, recharged by an Arcanist at 1 TOL each after re-inscription." },
     { "id": "durable", "name": "Durable Talismans", "book": "Magic", "note": "Inorganic material. Five charges, recharged with TOL alone." },
     { "id": "wards", "name": "Wards and Traps", "book": "Magic", "note": "Placed rather than carried. Proximity triggers, set at inscription." },
-    { "id": "artifacts", "name": "Artifacts", "book": "Magic", "note": "Artifacts cannot be jammed, shorted, or traced, and an EMP that takes down a crew's tech leaves them working." }
+    { "id": "artifacts", "name": "Artifacts", "book": "Magic", "note": "Artifacts cannot be jammed, shorted, or traced, and an EM pulse that takes down a crew's tech leaves them working." }
   ],
   /* EQUIPMENT -- `grants` on an entry apply while its row is marked in use (Decision 248), read as
      armor's are. */

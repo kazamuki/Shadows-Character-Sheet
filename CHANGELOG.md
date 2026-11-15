@@ -24,6 +24,13 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.69.4
+
+### Character sheet
+
+- **Luck says how it really works.** A Boost raises one die by 1, and you can boost the same die again. A boosted 10 doesn't explode and a boosted 1 isn't a Botch. On a Breaker Check, a Boost adds 10 to the target (up to its maximum) and an Explode is a second roll, keeping the better.
+- **Gear's descriptions say EM pulse** for an electromagnetic pulse: the Blackout grenade, EMP Shielding, the EMP weapon tag and Artifacts. EMP means Empathy.
+
 ## v0.69.3 — 2026-11-15
 
 ### Character sheet
