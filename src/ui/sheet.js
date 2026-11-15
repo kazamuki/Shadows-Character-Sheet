@@ -738,7 +738,7 @@ function renderShCharacter(){
 // A name with no renderer is skipped rather than guessed at.
 const rangeLabel = r => r.max==null ? `${r.min}+` : r.min===r.max ? `${r.min}` : `${r.min}–${r.max}`;
 // E6: a column table scrolls inside its own frame, so a six-column table never pushes the page sideways (GM mode's Reference does the same).
-// Prose tables (a label and a sentence) are not framed: a max-content width would put each sentence on one line.
+// Prose tables (a label and a sentence) are not framed: they wrap to the column and never need a frame's sideways scroll (E7).
 const refFrame = (label, table) => `<div class="ref-frame" role="region" tabindex="0" aria-label="${esc(label)}">${table}</div>`;
 const REFERENCE_SECTIONS = {
   spellcraftRules: R => {

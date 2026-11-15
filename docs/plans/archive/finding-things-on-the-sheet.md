@@ -10,7 +10,7 @@ the session that builds it numbers it in `SCHEMA.md` §4. Its sessions are
 `.impeccable/critique/2026-11-12T01-36-16Z__src-ui-sheet-js.md`), every
 finding in it, Ken's ask for a shape-and-distill pass over the tabs, and
 (E1b) making a character as easy as possible for everyone. Its orders are
-in `plans/finding-things-on-the-sheet/`.
+in `plans/archive/finding-things-on-the-sheet/`.
 **Sources:** `src/ui/sheet.js`, `src/ui/shared.js` (`SHEET_SECTIONS`, the
 vitals bar, `importIssuesHtml`), `src/styles/shadows.css`, `PRODUCT.md`,
 `DESIGN.md`; Decisions 140, 151, 156, 158, 160 and 165.

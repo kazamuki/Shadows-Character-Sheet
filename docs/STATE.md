@@ -137,17 +137,17 @@ rev 9's `C1`–`C3` are still forward notes.
 
 ## 5. Where to start
 
-**The live site is v0.69.1** (data 0.54, schema 0.34), released 2026-11-14.
+**The live site is v0.69.1** (data 0.54, schema 0.34), released 2026-11-14. **0.69.3 is the next release, not yet cut:** 0.69.2 never ships alone, because E7 fixed E6's weapons-table overflow.
 
 **Next is Ken's pick**, each built through a work order (`WORK-ORDERS.md`):
-- **Finding things on the sheet** is closed (2026-11-14, kept as history in `plans/archive/finding-things-on-the-sheet.md`): E1a–E8 are built (Decisions 273–287), and E7 (polish) fixed E6's weapons-table overflow, so **0.69.2 never ships alone: 0.69.3 carries both and is the next release, not yet cut.** Its closing entry holds the re-run critique. The `/impeccable audit` of the whole app is its own session, and Ken triages its report.
+- **The `/impeccable audit`** of the whole app (accessibility, performance, theming; the wizard, GM mode and print too) is its own read-only session, after the finding-things plan, and Ken triages its report.
 - **GM mode, what's next** (`plans/gm-mode-next.md`): Scott's play report first (S22), then S23 (the leftover fixes) is suggested.
 - **The vehicles-and-gear plan** (`plans/loadout-and-gear.md`) is approved (Ken, 2026-10-24, LQ1–LQ10 on their defaults); L1 (weapon damage types), L2 (written-in weapons read like the catalog's), L2b (they tick their fire modes and reload from carried ammo) and L3 (worn armor and gear in use carry modifiers) and L5 (a Major on one weapon or armor row, Decision 263) are built.
   L4 (natural attacks and the unarmed strike) waits on the 2026-10-29 meeting's notes. L5b, the powers half of W136, follows L4 (Ken, 2026-11-01); L6 (vehicles, was P14) and L7
   (Powered Armor) wait on Deighton. The 2026-10-23 meeting's natural attacks (two a
   round) are in `reference/meeting-2026-10-23.md`, with five details for Deighton.
   The player sheet's plan (`plans/archive/sheet-wishlist.md`) closed 2026-10-24, P1–P21 built.
-- **Closed 2026-11-14** (`plans/archive/`): finding-things-on-the-sheet (E1a–E8; its leftovers are W152–W159).
+- **Closed 2026-11-14** (`plans/archive/`): finding-things-on-the-sheet (E1a–E8, Decisions 273–287; its closing entry holds the re-run critique, and its leftovers are W152–W157 and W159).
 - **Closed 2026-11-07** (`plans/archive/`): powers-that-run (H1–H3, 266–268; W132's last two powers wait on the book, `plans/crb-catch-up.md`) and GM-at-the-table (U1–U5).
 - **W90**, cybernetics: six questions before a plan.
 
