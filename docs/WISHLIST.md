@@ -169,7 +169,7 @@ Main's vitals grid has five tracks at 768 and eight of 142px at 1280, so seven c
 ### Rules in play: powers, rounds, encounters, Sanity
 
 **W107 — An unarmed strike line, and Death Touch's AP on it.** *Ken, with Claude · 💡 · Content (if it follows Iron Shirt) · raised 2026-10-15*\
-**Plan:** [loadout-and-gear L4](plans/loadout-and-gear.md) (no order yet)
+**Plan:** [loadout-and-gear L4](plans/loadout-and-gear.md), order drafted: [`L4-natural-attacks.md`](plans/loadout-and-gear/L4-natural-attacks.md)
 
 **Natural attacks, 2026-10-23** (the design meeting, `reference/meeting-2026-10-23.md`): fists, claws and teeth are **natural attacks**, two a round by default in any mix, stopping at two. So the fists' line this item asks for also says that, as do a Vampire's or Werewolf's claws and fangs. Five details are still Deighton's.
 

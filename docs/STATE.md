@@ -143,9 +143,9 @@ rev 9's `C1`–`C3` are still forward notes.
 - **The `/impeccable audit`** of the whole app (accessibility, performance, theming; the wizard, GM mode and print too) is its own read-only session, after the finding-things plan, and Ken triages its report.
 - **GM mode, what's next** (`plans/gm-mode-next.md`): Scott's play report first (S22), then S23 (the leftover fixes) is suggested.
 - **The vehicles-and-gear plan** (`plans/loadout-and-gear.md`) is approved (Ken, 2026-10-24, LQ1–LQ10 on their defaults); L1 (weapon damage types), L2 (written-in weapons read like the catalog's), L2b (they tick their fire modes and reload from carried ammo) and L3 (worn armor and gear in use carry modifiers) and L5 (a Major on one weapon or armor row, Decision 263) are built.
-  L4 (natural attacks and the unarmed strike) waits on the 2026-10-29 meeting's notes. L5b, the powers half of W136, follows L4 (Ken, 2026-11-01); L6 (vehicles, was P14) and L7
+  L4 (natural attacks and the unarmed strike): its order is drafted from the 2026-11-12 meeting (`plans/loadout-and-gear/L4-natural-attacks.md`) and waits on Ken's approval. L5b, the powers half of W136, follows L4 (Ken, 2026-11-01); L6 (vehicles, was P14) and L7
   (Powered Armor) wait on Deighton. The 2026-10-23 meeting's natural attacks (two a
-  round) are in `reference/meeting-2026-10-23.md`, with five details for Deighton.
+  round) are in `reference/meeting-2026-10-23.md`; what 2026-11-12 added is in `reference/meeting-2026-11-12.md`.
   The player sheet's plan (`plans/archive/sheet-wishlist.md`) closed 2026-10-24, P1–P21 built.
 - **Closed 2026-11-14** (`plans/archive/`): finding-things-on-the-sheet (E1a–E8, Decisions 273–287; its closing entry holds the re-run critique, and its leftovers are W152–W157 and W159).
 - **Closed 2026-11-07** (`plans/archive/`): powers-that-run (H1–H3, 266–268; W132's last two powers wait on the book, `plans/crb-catch-up.md`) and GM-at-the-table (U1–U5).
