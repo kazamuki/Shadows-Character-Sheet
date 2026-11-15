@@ -927,3 +927,33 @@ test("E6 5: Progression's spend row carries its hook, and Minor choice's row doe
     assert.deepEqual(app.errors, []);
   });
 }
+
+// ── E7 (Ken: "Plain in this PR"): the Pick lists' buttons are plain until picked, then `go`; the foot keeps primary ──
+const pickClasses = (app, sel, attr) => app.$$(`#modal ${sel}`).filter(b => !b.disabled).map(b => ({ id: b.getAttribute(attr), cls: [...b.classList] }));
+test("E7 6g: a Minor choice's rows are plain until picked, then go", () => {
+  const ch = p6Char("professional", 5); ch.skills.dodge = { rank: 10, ipe: 0 };
+  const app = openSheet(ch, "progression");
+  app.click('[data-takeminor="skilled"]');
+  const before = pickClasses(app, "[data-mcpick]", "data-mcpick");
+  assert.ok(before.length >= 2, `${before.length} pickable rows, two wanted`);
+  for (const b of before) assert.ok(b.cls.includes("sm") && !b.cls.includes("primary") && !b.cls.includes("go"), `${b.id} is ${b.cls}`);
+  app.click(`#modal [data-mcpick="${before[0].id}"]`);
+  const after = pickClasses(app, "[data-mcpick]", "data-mcpick");
+  assert.ok(after.find(b => b.id === before[0].id).cls.includes("go"), "a picked row isn't go");
+  for (const b of after.filter(b => b.id !== before[0].id)) assert.ok(!b.cls.includes("primary") && !b.cls.includes("go"), `${b.id} is ${b.cls}`);
+  assert.ok(app.$("#modal [data-mctake]").classList.contains("primary"), "the foot's Take lost primary");
+  assert.deepEqual(app.errors, []);
+});
+test("E7 6h: a Minor choice's restore buttons are plain until picked, then go", () => {
+  const hurt = p6Char("professional", 5); hurt.trackers.san.loss = 12; hurt.trackers.massiveLevels = 1;
+  const app = openSheet(hurt, "progression");
+  app.click('[data-takeminor="steadied"]');
+  const before = [...app.$$("#modal .raise-row [data-mcpick]")];
+  assert.ok(before.length >= 2, `${before.length} restore buttons, two wanted`);
+  for (const b of before) assert.ok(b.classList.contains("btn") && !b.classList.contains("primary") && !b.classList.contains("go"), `${b.dataset.mcpick} is ${b.className}`);
+  app.click('#modal [data-mcpick="massiveLevel"]');
+  assert.ok(app.$('#modal [data-mcpick="massiveLevel"]').classList.contains("go"), "a picked restore isn't go");
+  assert.ok(!app.$('#modal [data-mcpick="san"]').classList.contains("primary"), "the unpicked restore is primary");
+  assert.ok(app.$("#modal [data-mctake]").classList.contains("primary"), "the foot's Take lost primary");
+  assert.deepEqual(app.errors, []);
+});

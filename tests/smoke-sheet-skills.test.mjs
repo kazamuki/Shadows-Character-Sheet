@@ -1613,3 +1613,34 @@ test("E7 4: a trait part reads its sign", () => {
   assert.ok(pos[0].classList.contains("pos") && !pos[0].classList.contains("neg"), "the positive part has no .pos");
   assert.deepEqual(app.errors, []);
 });
+
+// ── E7 (Ken: "Plain in this PR"): a Major's power pick and "Gained a specialization" are plain until picked, then go ──
+test("E7 6i: a Major's power rows are plain until picked, then go, and the foot keeps primary", () => {
+  const app = openSheet(strigoi(), "progression");
+  app.click('[data-takemajor="splice"]');
+  const rows = () => [...app.$$("#modal [data-mmpick]")].filter(b => !b.disabled);
+  const before = rows();
+  assert.ok(before.length >= 2, `${before.length} pickable powers, two wanted`);
+  for (const b of before) assert.ok(b.classList.contains("sm") && !b.classList.contains("primary") && !b.classList.contains("go"), `${b.dataset.mmpick} is ${b.className}`);
+  const id = before[0].dataset.mmpick;
+  app.click(`#modal [data-mmpick="${id}"]`);
+  assert.ok(app.$(`#modal [data-mmpick="${id}"]`).classList.contains("go"), "a picked power isn't go");
+  for (const b of rows().filter(b => b.dataset.mmpick !== id)) assert.ok(!b.classList.contains("primary") && !b.classList.contains("go"), `${b.dataset.mmpick} is ${b.className}`);
+  assert.ok(app.$("#modal [data-mmtake]").classList.contains("primary"), "the foot's Take lost primary");
+  assert.deepEqual(app.errors, []);
+});
+test("E7 6j: Gained a specialization's rows are plain until picked, then go, and Open keeps primary", () => {
+  const ch = strigoi();
+  ch.progression.ip.earned = 100;
+  const app = openSheet(ch, "character");
+  app.click("[data-gainspec]");
+  const rows = () => [...app.$$("#modal [data-gspick]")];
+  const before = rows();
+  assert.ok(before.length >= 2, `${before.length} rows, two wanted`);
+  for (const b of before) assert.ok(b.classList.contains("sm") && !b.classList.contains("primary") && !b.classList.contains("go"), `${b.dataset.gspick} is ${b.className}`);
+  app.click('#modal [data-gspick="upyr"]');
+  assert.ok(app.$('#modal [data-gspick="upyr"]').classList.contains("go"), "a picked row isn't go");
+  assert.ok(!app.$('#modal [data-gspick="draugur"]').classList.contains("primary") && !app.$('#modal [data-gspick="draugur"]').classList.contains("go"));
+  assert.ok(app.$("#modal [data-gsopen]").classList.contains("primary"), "the foot's Open lost primary");
+  assert.deepEqual(app.errors, []);
+});

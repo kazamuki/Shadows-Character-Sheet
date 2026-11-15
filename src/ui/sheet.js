@@ -859,10 +859,10 @@ function minorChoiceBodyHtml(ch, st){
   const q = String(st.q||"").trim().toLowerCase();
   const rows = o => `<tr class="${o.off?"off":"pickrow"}"><td><b>${esc(o.name)}</b>${o.sub?`<div class="sub">${esc(o.sub)}</div>`:""}${v.type==="advantageRank"?effectsHtml(ch, "advantage", o.id):v.type==="disadvantageRank"?effectsHtml(ch, "disadvantage", o.id):""}${o.off?`<div class="why">${esc(o.off)}</div>`:""}</td>
     <td class="num" data-k="Gets">${esc(o.move||"")}</td>
-    <td><button class="btn sm ${st.picks.includes(o.id)?"go":"primary"}" data-mcpick="${esc(o.id)}" aria-pressed="${st.picks.includes(o.id)}" ${o.off?"disabled":""}>${st.picks.includes(o.id)?"Picked":"Pick"}</button></td></tr>`;
+    <td><button class="btn sm ${st.picks.includes(o.id)?"go":""}" data-mcpick="${esc(o.id)}" aria-pressed="${st.picks.includes(o.id)}" ${o.off?"disabled":""}>${st.picks.includes(o.id)?"Picked":"Pick"}</button></td></tr>`;
   const table = list => `<table class="ref spell-results raise-results"><tbody>${list.map(rows).join("")}</tbody></table>`;
   if (v.type==="restore")
-    return `<div class="raise-row">${v.options.map(o=>`<button class="btn ${st.picks.includes(o.id)?"go":"primary"}" data-mcpick="${esc(o.id)}" aria-pressed="${st.picks.includes(o.id)}" ${o.off?"disabled":""} title="${esc(o.off)}">${esc(o.name)}</button>`).join("")}</div>
+    return `<div class="raise-row">${v.options.map(o=>`<button class="btn ${st.picks.includes(o.id)?"go":""}" data-mcpick="${esc(o.id)}" aria-pressed="${st.picks.includes(o.id)}" ${o.off?"disabled":""} title="${esc(o.off)}">${esc(o.name)}</button>`).join("")}</div>
       ${v.options.filter(o=>o.off).map(o=>`<p class="step-note">${esc(o.name)}: ${esc(o.off)}</p>`).join("")}`;
   if (v.type==="advantageRank"){
     const hit = o => !q || o.name.toLowerCase().includes(q);
@@ -935,7 +935,7 @@ function majorChoiceBodyHtml(ch, st){
   const v = Engine.majorChoice(ch, st.id);
   if (!v.ok) return "";
   const rows = o => `<tr class="${o.off?"off":"pickrow"}"><td><b>${esc(o.name)}</b>${o.cost?`<div class="sub">${esc(o.cost)}</div>`:""}${o.effect?`<div class="sub">${esc(o.effect)}</div>`:""}${o.off?`<div class="why">${esc(o.off)}</div>`:""}</td>
-    <td><button class="btn sm ${st.power===o.id?"go":"primary"}" data-mmpick="${esc(o.id)}" aria-pressed="${st.power===o.id}" ${o.off?"disabled":""}>${st.power===o.id?"Picked":"Pick"}</button></td></tr>`;
+    <td><button class="btn sm ${st.power===o.id?"go":""}" data-mmpick="${esc(o.id)}" aria-pressed="${st.power===o.id}" ${o.off?"disabled":""}>${st.power===o.id?"Picked":"Pick"}</button></td></tr>`;
   return v.groups.map(g=>`<div class="sect">${esc(g.name)}</div><table class="ref spell-results raise-results"><tbody>${g.powers.map(rows).join("")}</tbody></table>`).join("");
 }
 function majorChoiceFootHtml(ch, st){
@@ -1001,7 +1001,7 @@ function openGainSpecialization(){
   S.specPick = { id:null };
   const label = (op.label||"specialization").toLowerCase();
   const body = () => `<p class="pick-status">${esc((op.power||{}).text||"")}</p><table class="ref spell-results raise-results"><tbody>${op.options.map(o=>
-    `<tr class="pickrow"><td><b>${esc(o.name)}</b></td><td><button class="btn sm ${S.specPick.id===o.id?"go":"primary"}" data-gspick="${esc(o.id)}" aria-pressed="${S.specPick.id===o.id}">${S.specPick.id===o.id?"Picked":"Pick"}</button></td></tr>`).join("")}</tbody></table>`;
+    `<tr class="pickrow"><td><b>${esc(o.name)}</b></td><td><button class="btn sm ${S.specPick.id===o.id?"go":""}" data-gspick="${esc(o.id)}" aria-pressed="${S.specPick.id===o.id}">${S.specPick.id===o.id?"Picked":"Pick"}</button></td></tr>`).join("")}</tbody></table>`;
   const foot = () => `<span class="modal-note">${S.specPick.id?"Ready.":"Pick one."}</span><button class="btn" data-modalclose>Cancel</button>
     <button class="btn primary" data-gsopen="1" ${S.specPick.id?"":"disabled"}>Open</button>`;
   openModal({ title: `Gained a ${label}`, html: `<div class="spell-pick raise-pick"><div data-gsresults>${body()}</div></div>`, foot: foot(),
