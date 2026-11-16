@@ -13707,6 +13707,11 @@ test("K2: Engine.word answers every kind, and nothing else", () => {
   assert.match(Engine.word("prot", ch).text, /PROT/, "PROT reads armorRules.protNote");
   assert.ok(Engine.word({ resource: "credits" }, ch).text.length > 0);
   assert.equal(Engine.word({ condition: "bleeding" }, ch).kind, "condition");
+  const pl = Engine.word({ painLevel: "2" }, ch);
+  assert.equal(pl.title, "Pain Level 2");
+  assert.match(pl.text, /Fractures/);
+  assert.ok(pl.more.length > 0, "a Pain Level says what it costs");
+  assert.equal(Engine.words(ch).filter(w => w.kind === "painLevel").length, D.resources.healthLevels.painLevels.length, "every Pain Level is a word");
   for (const bad of [{ nope: "x" }, null, undefined, 42, "", "no-such-word", { stat: "ZZZ" }, {}, [], { stat: 5 }, { tag: "No such tag" }, { damageType: "__proto__" }, { stat: "__proto__" }])
     assert.equal(Engine.word(bad, ch), null, `${JSON.stringify(bad)} is no word`);
 });
@@ -13729,7 +13734,7 @@ test("K2: Engine.words lists each meaning once, A to Z", () => {
   const merged = D.gameTerms.filter(r => r.from && (r.from.derived || r.from.luck || r.from.stats || r.from.conditions || r.from.painLevel)).length;
   const sum = D.stats.length + D.derived.length + D.conditions.length + D.damageTypes.length + D.weaponTagGlossary.length + D.weaponFeatureGlossary.length
     + D.weaponModGlossary.length + D.armorFeatureGlossary.length + D.armorUpgradeGlossary.length + D.spellTagGlossary.length
-    + (D.gameTerms.length - merged) + ["luck", "credits", "crank", "sfr"].length;
+    + (D.gameTerms.length - merged) + D.resources.healthLevels.painLevels.length + ["luck", "credits", "crank", "sfr"].length;
   assert.equal(all.length, sum, "the count is the sources' sum, less the merges");
   assert.equal(new Set(all.map(w => w.kind + "|" + w.id)).size, all.length, "no meaning twice");
   assert.ok(Engine.words(null).length > 100, "no character: the rows without a reading");

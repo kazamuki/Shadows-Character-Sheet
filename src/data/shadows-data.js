@@ -1180,7 +1180,7 @@ window.SHADOWS_DATA = {
     { "id": "tn", "title": "Target Number (TN)", "bookSource": "0300 Core Mechanics, Essence Checks",
       "description": "The minimum value a die must roll to count as a Hit. This is how difficult the task is. Higher numbers mean less room for error. Typically, the TN is 8, unless the GM modifies the value." },
     { "id": "th", "title": "Threshold (TH)", "bookSource": "0300 Core Mechanics, Essence Checks",
-      "description": "Minimum TH is 1. This is the barrier to break through. Meeting the TH means you produced enough results to matter. The GM sets this value, unless otherwise stated on a skill or power." },
+      "description": "Threshold (TH): the number of Hits required to achieve the goal. Minimum TH is 1. This is the barrier to break through. Meeting the TH means you produced enough results to matter. The GM sets this value, unless otherwise stated on a skill or power." },
     { "id": "prot", "title": "PROT", "from": { "rule": "armorRules.protNote" } },
     { "id": "res", "title": "RES", "from": { "rule": "armorRules.resNote" } },
     { "id": "integrity", "title": "Integrity", "from": { "rule": "armorRules.integrityNote" } },
@@ -4942,7 +4942,7 @@ window.SHADOWS_DATA = {
       "filterEmpty": "No word matches.",
       "jumpLabel": "Jump to a letter",
       "kinds": {
-        "stat": "Stat", "derived": "Stat", "term": "Rule", "condition": "Condition", "damageType": "Damage type", "resource": "Resource",
+        "stat": "Stat", "derived": "Stat", "term": "Rule", "condition": "Condition", "painLevel": "Pain Level", "damageType": "Damage type", "resource": "Resource",
         "tag": "Weapon tag", "feature": "Weapon feature", "mod": "Weapon mod", "armorFeature": "Armor feature", "upgrade": "Armor upgrade", "spellTag": "Spell tag"
       },
       "when": {

@@ -2643,7 +2643,7 @@ const Engine = (() => {
   // One reader for the game's words, each read from where its rule already lives: `word` answers a reference to one, `words` lists
   // them all. A reference is a plain string (a gameTerms id) or `{ <kind>: <id> }`. Nothing here keeps text of its own: a `term` is
   // read through `termBody`, a glossary row through its `description`. Neither throws, and neither touches a DOM.
-  const WORD_KINDS = ["stat", "derived", "term", "condition", "damageType", "resource", "tag", "feature", "mod", "armorFeature", "upgrade", "spellTag"];
+  const WORD_KINDS = ["stat", "derived", "term", "condition", "painLevel", "damageType", "resource", "tag", "feature", "mod", "armorFeature", "upgrade", "spellTag"];
   const WORD_LISTS = { tag:"weaponTagGlossary", feature:"weaponFeatureGlossary", mod:"weaponModGlossary", armorFeature:"armorFeatureGlossary", upgrade:"armorUpgradeGlossary", spellTag:"spellTagGlossary" };
   // `from.rule` roots: the data's own rules a word may point at. The path ends at a non-empty string, or an object with a
   // `description` or a `text`.
@@ -2681,6 +2681,11 @@ const Engine = (() => {
       if (k==="stats" || k==="conditions" || k==="painLevel") return null;
       const p = termBody(row, id, ch); return p ? wordRow("term", id, p) : null;
     }
+    if (kind==="painLevel"){
+      // One row per Pain Level: the level's own label and description, and what it costs, read through termBody as a tip reads it.
+      const lvl = Number(id), row = termRows().find(r => termKind(r)==="painLevel" && termReadable(r));
+      const p = row && /^\d+$/.test(id) ? termBody(row, row.id, ch, lvl) : null; return p ? wordRow(kind, id, p) : null;
+    }
     if (kind==="damageType"){
       const d = (D().damageTypes||[]).find(x => x && x.id===id); if (!d) return null;
       const title = d.name || d.id;
@@ -2714,6 +2719,7 @@ const Engine = (() => {
       (D().derived||[]).forEach(d => d && refs.push({ derived:d.id }));
       termRows().forEach(r => { if (termReadable(r) && !["derived", "luck", "stats", "conditions", "painLevel"].includes(termKind(r))) refs.push({ term:r.id }); });
       (D().conditions||[]).forEach(c => c && refs.push({ condition:c.id }));
+      termPainLevels().forEach(p => refs.push({ painLevel:String(p.level) }));
       (D().damageTypes||[]).forEach(d => d && refs.push({ damageType:d.id }));
       if (isPlainObj(D().resources)) Object.keys(D().resources).forEach(k => refs.push({ resource:k }));
       for (const kind of Object.keys(WORD_LISTS)) (D()[WORD_LISTS[kind]]||[]).forEach(g => g && refs.push({ [kind]:g.id }));
