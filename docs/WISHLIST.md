@@ -168,39 +168,6 @@ Main's vitals grid has five tracks at 768 and eight of 142px at 1280, so seven c
 
 ### Rules in play: powers, rounds, encounters, Sanity
 
-**W107 — An unarmed strike line, and Death Touch's AP on it.** *Ken, with Claude · 💡 · Content (if it follows Iron Shirt) · raised 2026-10-15*\
-**Plan:** [loadout-and-gear L4](plans/loadout-and-gear.md), order drafted: [`L4-natural-attacks.md`](plans/loadout-and-gear/L4-natural-attacks.md)
-
-**Natural attacks, 2026-10-23** (the design meeting, `reference/meeting-2026-10-23.md`): fists, claws and teeth are **natural attacks**, two a round by default in any mix, stopping at two. So the fists' line this item asks for also says that, as do a Vampire's or Werewolf's claws and fangs. Five details are still Deighton's.
-
-Raised reviewing P8a. True Warrior's Power Style lists **Death Touch
-[Chi 4]: "Martial Arts attacks are Armor Piercing when not using melee
-weapons."** Today it's a line of text: nothing on the sheet marks a strike
-AP, so the player has to remember. Two gaps sit under it:
-- **There's no unarmed attack on the sheet.** Loadout's attack lines come
-  from carried weapons, and every `martialArts` catalog entry (the bo staff,
-  the kusarigama, the tekko-kagi) is a melee weapon, which is exactly what
-  Death Touch excludes. A Martial Arts character fighting bare-handed has no
-  line to read. That line comes first.
-- **Death Touch has no grant.** Iron Shirt, on the same Power Style, does
-  (`grants: naturalArmor`, with `while`). Death Touch would get one the same
-  way, read by the unarmed line.
-
-**Ken's shape (2026-10-15):** the sheet needs to know the character has the
-Chi ability (the Power Style tweak, already a held specialization), that
-Death Touch is on, and that the attack is a Martial Arts strike.
-**Claude's suggestion for "is on":** don't store it. Decision 104 lists a
-conditional source and never sums it, and the hit modal asks when it
-matters. The strike line reads **"AP with Death Touch"**, and the player
-knows whether they paid the Chi. That keeps it out of the save file (no
-schema bump). Track it only if playtesting shows people forget.
-*To respect:* Decision 104's conditional pattern. Decision 135 (a grant some
-code reads). W39 also wants a Martial Arts strike to hang its style bonus on,
-so build the line once for both. **Separate, and for Deighton:** when someone
-*else's* Death Touch hits a character with Natural Armor, does it pierce it?
-Decision 219 lets only AP from a spell through, and Chi isn't a spell. Ask
-with F42.
-
 **W128 — The sheet knows when an encounter ends.** *Claude, from P18's sign-off · 🔎 · Rule or shape · raised 2026-10-16*\
 **Plan:** none yet
 
@@ -211,6 +178,11 @@ This is the prerequisite for **limited uses**: a counter on an effect with its r
 encounter starts and ends.
 *To respect:* the design first: how an encounter starts and ends on a player's sheet (a button? GM mode's encounters, S10, once seats exist?). Then the
 uses counters as P18-shaped data on the effect. Its own plan, probably two orders.
+
+**W160 — A trained weapon that counts as natural.** *Deighton, at the 2026-11-12 meeting · 💡 · Rule or shape · raised 2026-11-15*\
+**Plan:** none yet
+
+Deighton floated that a weapon a character is trained with (his eskrima sticks) could count as a natural weapon, so it joins the group of natural attacks. Not ruled. L4 builds the group by a data `kind` (Decision 290); a trained weapon would need a rule for which weapons qualify and where the sheet reads the training. Ask him before any plan.
 
 **W132 — Powers that answer a hit, or heal while they run.** *Ken, from re-running P21's pre-flight · 💡 · Rule or shape · raised 2026-10-21*\
 **Plan:** set aside by [crb-catch-up](plans/crb-catch-up.md) (0410–0414): H2 and H3 built the rest (Decisions 267 and 268; `plans/archive/powers-that-run.md`); Battle Hardened and Elemental Blood wait on the book naming their Conditions and elements
@@ -446,6 +418,7 @@ its own numbered decision.
 
 **W90 — Cybernetics.** *Ken, from Brogan; rewritten 2026-10-22 with Deighton's system · 🔎 · Rule or shape · raised 2026-10-10 · needs its own plan; Deighton for the questions below*\
 **Plan:** set aside by [loadout-and-gear §4](plans/loadout-and-gear.md): waits on the cybernetics design (F6, F19) and Deighton's six questions; it needs a plan of its own, built on L6's row shape · **Goes with:** W61, W91, W127, W134
+*Natural weapons (L4, Decision 290):* cyberware on the hands is a natural weapon by the 2026-11-12 ruling, so it joins the natural group through a data `kind`, and a worn melee bonus already reaches it. The tri-claws' ladder is +3 / +6 / +8 (the +12 → +8 change), and stacking adds to BOD once.
 
 Playtesters want chrome, and as of 2026-10-22 there is something to build from. The Cyborg archetype was
 cut (STATE §3); cybernetics are **gear, Professionals only**, and the **Enforcer is the cybernetics
@@ -1213,7 +1186,7 @@ always" stays true of whoever makes the change.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W160.** Everything above is open. What was built is in
+- **Next free number: W161.** Everything above is open. What was built is in
   [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)

@@ -566,7 +566,7 @@ function renderShMain(){
   for (const p of Engine.archPanels(ch).filter(x=>x.type==="toggle"))
     h += `<div class="main-form"><div class="sect">${esc(p.title)}</div>${togglePanelHtml(ch, p)}</div>`;
   const lines = (ch.weapons||[]).map((e,i)=>Engine.weaponLine(ch,i)).filter(Boolean);
-  const natural = formWeaponRowsHtml(ch) + archetypeWeaponRowsHtml(ch);
+  const natural = naturalGroupHtml(ch) + archetypeWeaponRowsHtml(ch);
   if (lines.length || natural){
     h += `<div class="sect">Weapons</div>
       <table class="ref wpn"><thead><tr><th>Weapon</th><th>Attack</th><th>Dmg</th><th>RoF</th><th>Cap.</th></tr></thead><tbody>` + natural +
@@ -2700,13 +2700,23 @@ function togglePanelHtml(ch, p){
   else if (!opts.some(o=>o.does || o.text)) h += `<p class="step-note">${esc(copy("applyFromText"))}</p>`;
   return h;
 }
-// The form's natural weapons as Main's weapon rows, computed like a catalog
-// weapon's: the skill's total to hit, BOD+n to damage.
-function formWeaponRowsHtml(ch){
-  const f = Engine.formView(ch);
-  return f ? f.weapons.map(w=>`<tr><td>${esc(w.name)}<div class="lo-sub">${esc(f.name)} form${w.skill?` · ${esc(w.skill)}`:""}</div>${(w.tags||[]).length?`<div class="tags">${tagChipsHtml(w.tags)}</div>`:""}</td>
-    <td class="num">${w.attack==null?"—":attackText(w.attack)}</td><td class="num">${w.damage!=null?w.damage:esc(w.damageFormula||"—")}</td>
-    <td class="num">—</td><td class="num">—</td></tr>`).join("") : "";
+// The natural group (Decision 290), as Main's weapon rows: one heading with the count and what it means, then every natural
+// line (the form's, the archetype's, Fists), computed like a catalog weapon's: the Skill's total to hit, BOD+n to damage.
+// Everything comes from Engine.naturalAttacks, which print reads too. Its words are data, so a row says "AP while Death Touch is active"
+// only because the engine found the grant; nothing here decides what is natural.
+// A line's sub-line: where it comes from, its rank and Skill, and its kind when the name doesn't already say it.
+function naturalSubParts(w){
+  const kind = ((((D.weaponRules||{}).naturalAttacks||{}).kinds||[]).find(k=>k.id===w.kind)||{}).name || "";
+  const from = w.source==="form" ? `${w.from} form` : w.from;
+  return [from, w.rank!=null ? `rank ${w.rank}` : "", w.skill, ...(w.extra||[]), kind && !w.name.toLowerCase().includes(kind.toLowerCase()) ? kind : ""].filter(Boolean);
+}
+function naturalGroupHtml(ch){
+  const n = Engine.naturalAttacks(ch);
+  if (!n.lines.length) return "";
+  const head = n.heading ? `<tr class="nat-head"><td colspan="5"><b>${termsHtml(n.heading)}</b>${n.each||n.rules?`${n.more?` <button type="button" class="btn sm ghost nat-more" data-natmore aria-expanded="false" aria-controls="nat-rules">${esc(n.more)}</button>`:""}<div class="lo-sub${n.more?" nat-rules":""}" id="nat-rules">${termsHtml([n.each, n.rules].filter(Boolean).join(" "))}</div>`:""}</td></tr>` : "";
+  return head + n.lines.map(w=>`<tr class="nat-row${w.off?" off":""}" data-natural="${esc(w.kind)}"><td>${esc(w.name)}<div class="lo-sub">${naturalSubParts(w).map(esc).join(" · ")}</div>${w.off?`<div class="lo-sub">${esc(w.offText)}</div>`:""}${(w.tags||[]).length?`<div class="tags">${tagChipsHtml(w.tags)}</div>`:""}${(w.conditional||[]).map(c=>`<div class="lo-sub nat-cond">${esc(c.text)}</div>`).join("")}</td>
+    <td class="num">${w.attack==null?"—":attackText(w.attack)}${bonusLinesHtml(w, "acc")}</td><td class="num">${w.damage!=null?w.damage:esc(w.damageFormula||"—")}${bonusLinesHtml(w, "damage")}</td>
+    <td class="num">—</td><td class="num">—</td></tr>`).join("");
 }
 
 // What a chosen specialization's creation choices hold (Decision 200): the
@@ -2723,7 +2733,7 @@ ${esc(f.name)}: ${f.value.trim()?esc(f.value):"—"}`).join("")}</div>`;
 // power's claws and a creation choice's weapon, computed like the form's. One
 // a toggle silences says so instead of a number.
 function archetypeWeaponRowsHtml(ch){
-  return Engine.archetypeWeapons(ch).map(w=>{
+  return Engine.archetypeWeapons(ch).filter(w=>!w.kind).map(w=>{
     const sub = [w.from, w.rank!=null?`rank ${w.rank}`:"", w.skill, ...w.extra].filter(Boolean).map(esc).join(" · ");
     return `<tr class="${w.off?"off":""}"><td>${esc(w.name)}<div class="lo-sub">${sub}</div>${w.off?`<div class="lo-sub">${esc(w.offText)}</div>`:""}${w.tags.length?`<div class="tags">${tagChipsHtml(w.tags)}</div>`:""}</td>
     <td class="num">${w.attack==null?"—":attackText(w.attack)}</td><td class="num">${w.damage!=null?w.damage:esc(w.damageFormula||"—")}</td>
@@ -3024,8 +3034,33 @@ function pDefenseHtml(ch){
 // The Loadout page's weapons: a catalog piece prints its computed line, and a
 // written-in one its picks the same way (Decision 247), the rest as typed.
 const pKickers = l => (l.kickers||[]).map(k=>"+"+k.die).join("");
+// The natural group leads, under its heading (Decision 290, LQ38): the same lines Main shows, from the same reader.
+function pNaturalRows(ch){
+  const n = Engine.naturalAttacks(ch);
+  if (!n.lines.length) return [];
+  const rows = n.heading ? [{ heading:n.heading, note:[n.each, n.rules].filter(Boolean).join(" ") }] : [];
+  return rows.concat(n.lines.map(w=>({ tight:true, name:w.name, attack:w.attack==null?"":"1d10+"+w.attack,
+    damage: w.damage!=null ? String(w.damage)+(w.damageFormula?` (${w.damageFormula})`:"") : (w.damageFormula||""),
+    range:"", rof:"", capacity:"",
+    features:[...(w.tags||[]), ...(w.conditional||[]).map(c=>c.text)].join(", "),
+    notes:naturalSubParts(w).join(" · ") })));
+}
 function pWeaponRows(ch){
   if (!ch) return [];
+  // Rows the group and the archetype's carried weapon take count toward the blank lines a sheet leaves to write on, so the page
+  // never gains a sheet (a heading is a row too). Print matches Main: the Ancient Weapon follows the group, an off one with its words.
+  const nat = pNaturalRows(ch), own = pOwnWeaponRows(ch), carried = pCarriedRows(ch);
+  const used = nat.length + own.length + carried.length;
+  return nat.concat(own, carried, Array.from({ length: Math.max(0, 5 - used) }, () => ({})));
+}
+// The archetype's weapons that aren't natural (the Draugur's Ancient Weapon), as Main lists them after the group.
+function pOwnWeaponRows(ch){
+  return Engine.archetypeWeapons(ch).filter(w=>!w.kind).map(w=>({ tight:true, name:w.name, attack:w.attack==null?"":"1d10+"+w.attack,
+    damage: w.damage!=null ? String(w.damage)+(w.damageFormula?` (${w.damageFormula})`:"") : (w.damageFormula||""),
+    range:"", rof:"", capacity:"", features:(w.tags||[]).join(", "),
+    notes:[w.from, w.rank!=null?`rank ${w.rank}`:"", w.skill, ...w.extra, w.off ? w.offText : ""].filter(Boolean).join(" · ") }));
+}
+function pCarriedRows(ch){
   return ch.weapons.map((e,i)=>Engine.weaponLine(ch,i)).filter(Boolean).map(l=>{
     if (l.custom){ const w=ch.weapons[l.index];
       return { name:[w.name,l.typeText].filter(Boolean).join(" · "), attack:l.attack==null?"":"1d10+"+l.attack+pKickers(l)+(l.acc?` (+${l.acc} ACC)`:""),
@@ -3091,7 +3126,8 @@ function pSkillsTableHtml(ch){
 function pRowsTableHtml(rows, cols, labels, blankRows, cls){
   const data = rows && rows.length ? rows : Array.from({length:blankRows},()=>({}));
   return `<table class="p-table${cls?" "+cls:""}"><thead><tr>${labels.map(l=>`<th>${esc(l)}</th>`).join("")}</tr></thead><tbody>` +
-    data.map(r=>`<tr>${cols.map(c=>`<td>${pLine(r[c])}</td>`).join("")}</tr>`).join("") + `</tbody></table>`;
+    data.map(r=>r.heading!=null ? `<tr class="p-cat"><td colspan="${cols.length}">${esc(r.heading)}${r.note?`<span class="p-small">${esc(r.note)}</span>`:""}</td></tr>`
+      : `<tr${r.tight?` class="p-tight"`:""}>${cols.map(c=>`<td>${pLine(r[c])}</td>`).join("")}</tr>`).join("") + `</tbody></table>`;
 }
 function pTraitsTableHtml(list, lookupFn, label, blankRows){
   const rows = (list && list.length) ? list.map(x=>{
@@ -3127,13 +3163,16 @@ function renderPrintView(ch){
   p2 += `<div class="p-section">Skills</div>${pSkillsTableHtml(ch)}`;
 
   let p3 = pHead(ch, "Loadout");
-  p3 += `<div class="p-section">Weapons</div>${pRowsTableHtml(pWeaponRows(ch), ["name","attack","damage","range","rof","capacity","features","notes"],
+  // Weapons, Gear and Armor share the page's blank write-in lines (Decision 290): weapon rows past the five the table holds come out
+  // of the Gear and Armor blanks first, down to one each, so no real row or copy is cut and the page keeps its sheet count.
+  const wrows = pWeaponRows(ch), gearBlanks = Math.max(1, 5 - Math.max(0, wrows.filter(r=>Object.keys(r).length).length - 5));
+  p3 += `<div class="p-section">Weapons</div>${pRowsTableHtml(wrows, ["name","attack","damage","range","rof","capacity","features","notes"],
     ["Weapon","Attack","Damage","Range","RoF","Capacity","Features","Notes"], 5)}`;
   // Armor sits beside Gear rather than below it: the blank Loadout page had
   // about 68px spare, and a full-width armor table would spill to a 4th sheet.
-  p3 += `<div class="p-cols2"><div><div class="p-section">Gear</div>${pRowsTableHtml(ch&&pGearRows(ch), GEAR_COLS, ["Item","Type","Notes"], 5)}</div>` +
+  p3 += `<div class="p-cols2"><div><div class="p-section">Gear</div>${pRowsTableHtml(ch&&pGearRows(ch), GEAR_COLS, ["Item","Type","Notes"], gearBlanks)}</div>` +
         `<div><div class="p-section">Armor</div>${pRowsTableHtml(pArmorRows(ch), ["name","prot","res","integrity","worn"],
-          ["Armor","PROT","RES","Integrity","Worn"], 5)}</div></div>`;
+          ["Armor","PROT","RES","Integrity","Worn"], gearBlanks)}</div></div>`;
   p3 += `<div class="p-cols2"><div><div class="p-section">Advantages</div>${pTraitsTableHtml(ch&&ch.advantages, Engine.advById, "Advantage", 5)}</div>` +
         `<div><div class="p-section">Disadvantages</div>${pTraitsTableHtml(ch&&ch.disadvantages, Engine.disById, "Disadvantage", 5)}</div></div>`;
   p3 += `<div class="p-section">Notes</div><div class="p-notes small">${ch&&ch.notes?esc(ch.notes):""}</div>`;
@@ -3945,6 +3984,12 @@ function bindSheetReaders(main, goTab){
   // A button that goes to another tab, the way the header's tabs do.
   main.querySelectorAll("[data-gotab]").forEach(b=>b.onclick=()=>goTab(b.dataset.gotab));
   main.querySelectorAll("[data-jump]").forEach(b=>b.onclick=()=>jumpTo(b.dataset.jump));
+  // The natural group's rules (Decision 290): on a phone they sit behind the heading, a tap away; wider screens show them always.
+  main.querySelectorAll("[data-natmore]").forEach(b=>b.onclick=()=>{
+    const el=main.querySelector("#"+b.getAttribute("aria-controls")), open=!(el && el.classList.contains("open"));
+    if (el) el.classList.toggle("open", open);
+    b.setAttribute("aria-expanded", open?"true":"false");
+  });
   // Main's untrained combat skills (Decision 284): flip the hidden rows and the label in place, no re-render.
   main.querySelectorAll("[data-untrainedfold]").forEach(b=>b.onclick=()=>{
     const open=!S.combatUntrained; S.combatUntrained=open;
