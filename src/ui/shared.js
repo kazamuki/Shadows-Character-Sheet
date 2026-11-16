@@ -572,18 +572,21 @@ function closePopover(returnFocus){
 // open modal, as the undo toast does, since the modal's top layer would
 // cover it otherwise. Lighter than openPopover: it holds text, never
 // controls, and it never takes focus.
+// What a score means, as the tip and Every word both say it: the book's range, how the modifier works, and past 10 what changes.
+const statLines = r => [r.range && `${statRangeText(r.range)}: ${r.range.meaning}`, r.rule, r.beyond, r.health].filter(Boolean);
 const statRangeText = r => r.min==null ? `${r.max} or lower` : r.max==null ? `${r.min}+` : r.min===r.max ? `${r.min}` : `${r.min}–${r.max}`;
 // The character a tip reads when it opens: the open one, else the one the GM's read-only sheet last drew
 // (Decision 256), which the table sets after a draw and clears on every other.
 let readOnlyChar = null;
 const tipChar = () => S.ch || readOnlyChar;
+// A line of a term whose numbers the engine leaves for the UI to sign: the minus is written here (Decision 287).
+const signedFill = m => m.signed ? m.text.replace(/\{(\w+)\}/g, (x, k)=> k in m.signed ? signed(m.signed[k]) : x) : m.text;
 const TIPS = {
   tag: term => { const g=Engine.glossary(term); return g && { title:g.term, text:g.text, note:g.note }; },
   spelltag: term => { const g=Engine.glossary(term, "spell"); return g && { title:g.term, text:g.text, note:g.note }; },
   stat: id => {
     const r = tipChar() && Engine.statReading(tipChar(), id); if (!r) return null;
-    return { title:`${r.name} ${r.value}`, text:r.description,
-      more:[r.range && `${statRangeText(r.range)}: ${r.range.meaning}`, r.rule, r.beyond, r.health].filter(Boolean) };
+    return { title:`${r.name} ${r.value}`, text:r.description, more:statLines(r) };
   },
   // Decision 169: what CRANK is and what each tier pays. The playerNote shows
   // only while rep is below zero (F37).
@@ -597,8 +600,7 @@ const TIPS = {
     const i = key.indexOf("|"), id = i<0 ? key : key.slice(0, i), p = Engine.term(id, tipChar(), i<0 ? undefined : Number(key.slice(i+1)));
     if (!p) return null;
     if (p.stat){ const t = TIPS.stat(p.stat); if (t) return t; }
-    const fill = m => m.signed ? m.text.replace(/\{(\w+)\}/g, (x, k)=> k in m.signed ? signed(m.signed[k]) : x) : m.text;
-    return { title:p.title, text:p.text, more:(p.more||[]).map(fill) };
+    return { title:p.title, text:p.text, more:(p.more||[]).map(signedFill) };
   },
 };
 // Tags as chips: one the glossary knows opens its sentence; one it doesn't
@@ -1127,14 +1129,14 @@ const showsStatus = a => !!a && a.status!=="final" && a.status!=="draft";
 // ── Help: one panel, a host each for the screens that have it (Decisions 278, 166) ───────────────────────
 // The panel is `#ghelp` and its scrim `#ghscrim`. What it says and what it does inside is a HOST's: gm.js registers the table's,
 // sheet.js the sheet's. A host is { id, btn (the header's ? as a selector), open() (is it open), setOpen(on), context() (the id of
-// what's on the page, total), bodyHtml(id), bind(el), key?(id) (what makes a repaint needed), back?() (where focus goes when it closes, if not btn), opened?(), left?(), synced?(shown) }. This code holds no Help string.
+// what's on the page, total), bodyHtml(id), bind(el), key?(id) (what makes a repaint needed), keepView?(view) (does this view outlive a change of page), back?() (where focus goes when it closes, if not btn), opened?(), left?(), synced?(shown) }. This code holds no Help string.
 // From 1280px the panel is a column beside the page; narrower it is a flyout over a scrim that shuts at any move, as the vitals
 // flyout does (Decision 166), with its own setter: that one is the vitals'.
 const HELP_HOSTS = {}, HELP_MEDIA = "(min-width:1280px)";
 const helpPinRoom = () => !!(window.matchMedia && window.matchMedia(HELP_MEDIA).matches);
 // The host of the screen that's up, or null: a table's, a locked sheet's. A seat's read-only sheet is a table screen.
 const helpHost = () => S.screen==="table" ? HELP_HOSTS.table : S.screen==="sheet" && S.ch ? HELP_HOSTS.sheet : null;
-let helpKey=null, helpHostId=null;
+let helpKey=null, helpHostId=null, helpPainted=null;
 // The data's marks: **bold** is a button or label as the screen has it, `code` is a file name.
 const helpMd = s => esc(String(s||"")).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/`(.+?)`/g, "<code>$1</code>");
 // ── Keys (Decisions 259, 272): the choice to turn them off is this browser's (`shadows.ui.keys` is "off", or anything else, or nothing, is on)
@@ -1172,14 +1174,14 @@ function syncHelp(){
   if (id!==helpHostId){
     const prev=HELP_HOSTS[helpHostId]; if (prev && prev.left) prev.left();
     el.innerHTML=""; helpKey=null;
-    if (id==="sheet" || helpHostId==="sheet"){ S.helpFrom=null; S.helpCtx=null; S.helpView=null; }   // the sheet's Help never carries into another screen's
+    if (id==="sheet" || helpHostId==="sheet"){ S.helpFrom=null; S.helpCtx=null; S.helpView=null; S.helpQ=""; }   // the sheet's Help never carries into another screen's
     helpHostId=id;
   }
 }
 function openHelp({ viaKey, returnTo }={}){
   const h=helpHost(); if (!h) return;
   S.helpReturn = returnTo || (viaKey && document.activeElement!==document.body ? document.activeElement : null);
-  h.setOpen(true); S.helpView=null; S.helpFrom=helpContext(); S.helpCtx=S.helpFrom;
+  h.setOpen(true); S.helpView=null; S.helpQ=""; S.helpFrom=helpContext(); S.helpCtx=S.helpFrom;
   if (h.opened) h.opened();
   syncHelp(); paintHelp(true);
   const x=$("ghelp").querySelector("[data-help-close]"); if (x) x.focus({ preventScroll:true });
@@ -1200,14 +1202,58 @@ function paintHelp(force){
   const el=$("ghelp"), h=helpHost(); if (!el || !h || !helpShown()) return;
   const id=h.context();
   if (helpPinRoom()) S.helpFrom=id;   // a column follows the page, so a resize to a flyout starts from the page it's on
-  if (S.helpCtx!==id){ S.helpCtx=id; S.helpView=null; }   // a new page gets its own help, not the last view
+  if (S.helpCtx!==id){ S.helpCtx=id; if (!(h.keepView && h.keepView(S.helpView))) S.helpView=null; }   // a new page gets its own help, not the last view, unless the host says the view is about neither
   const key=h.key ? h.key(id) : id + "|" + (S.helpView||"");
   if (!force && helpKey===key && el.firstElementChild) return;
-  const hadFocus=el.contains(document.activeElement);
-  el.innerHTML=h.bodyHtml(id); helpKey=key;
+  const hadFocus=el.contains(document.activeElement), ae=document.activeElement;
+  // The filter box keeps its focus, caret and scroll through a draw it didn't ask for: a sheet redraw beside the column is one.
+  const inQ=!!ae && !!ae.matches && ae.matches("[data-help-q]") && el.contains(ae), sel=inQ ? [ae.selectionStart, ae.selectionEnd] : null;
+  const top=S.helpView && S.helpView===helpPainted ? el.scrollTop : 0;
+  el.innerHTML=h.bodyHtml(id); helpKey=key; helpPainted=S.helpView;
   el.querySelectorAll("[data-help-close]").forEach(b=>b.onclick=closeHelp);
   h.bind(el);
+  bindHelpList(el);
+  if (inQ){ const q=el.querySelector("[data-help-q]"); if (q){ q.focus({ preventScroll:true }); try{ q.setSelectionRange(sel[0], sel[1]); }catch(e){} } }
+  if (top) el.scrollTop=top;
   if (hadFocus && !el.contains(document.activeElement)){ const h2=$("ghelp-h"); if (h2) h2.focus({ preventScroll:true }); }
+}
+
+// ── Every word's list (K2): a filter, a letter row and the words, A to Z. Both hosts draw it, each from its own words; a row is
+// { title, kind (small, "" for none), html (its body, already safe), find (what a title match looks at), text (what a text match looks at) }
+// and arrives sorted. The filter hides rows in place and never draws the panel again, so the box keeps its focus: it is view state
+// (S.helpQ) and is never stored. A title match wins; the text is looked at only when no title matches.
+const helpLetter = t => { const c=String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/g, "").charAt(0).toUpperCase(); return /^[A-Z]$/.test(c) ? c : "#"; };
+function helpListHtml(rows, u){
+  const have=new Set(rows.map(r=>helpLetter(r.title))), letters=[..."ABCDEFGHIJKLMNOPQRSTUVWXYZ", ...(have.has("#") ? ["#"] : [])];
+  return `<div class="help-find"><label class="help-q-label" for="ghelp-q">${esc(u.filterLabel)}</label>
+      <input type="search" id="ghelp-q" class="help-q" data-help-q placeholder="${esc(u.filterLabel)}" autocomplete="off" spellcheck="false" value="${esc(S.helpQ||"")}">
+      <div class="help-jump" role="group" aria-label="${esc(u.jumpLabel)}">${letters.map(L=>`<button type="button" class="help-letter" data-help-letter="${L}"${have.has(L) ? "" : " disabled"}>${L}</button>`).join("")}</div></div>
+    <dl class="help-words help-all">${rows.map(r=>`<div class="help-word" data-hw-letter="${helpLetter(r.title)}" data-hw-title="${esc(String(r.find||r.title).toLowerCase())}" data-hw-text="${esc(String(r.text||"").toLowerCase())}"><dt tabindex="-1">${esc(r.title)}${r.kind ? ` <small class="help-kind">${esc(r.kind)}</small>` : ""}</dt><dd>${r.html}</dd></div>`).join("")}</dl>
+    <p class="step-note help-none" data-help-none data-msg="${esc(u.filterEmpty)}" role="status"></p>`;
+}
+function bindHelpList(el){
+  const q=el.querySelector("[data-help-q]"); if (!q) return;
+  const rows=[...el.querySelectorAll(".help-word")], letters=[...el.querySelectorAll("[data-help-letter]")], none=el.querySelector("[data-help-none]");
+  const apply=()=>{
+    const v=q.value.trim().toLowerCase(); S.helpQ=q.value;
+    let show=rows;
+    if (v){ const t=rows.filter(r=>r.dataset.hwTitle.includes(v)); show = t.length ? t : rows.filter(r=>r.dataset.hwText.includes(v)); }
+    const on=new Set(show), have=new Set(show.map(r=>r.dataset.hwLetter));
+    rows.forEach(r=>{ r.hidden=!on.has(r); });
+    letters.forEach(b=>{ b.disabled=!have.has(b.dataset.helpLetter); });
+    if (none) none.textContent = show.length ? "" : none.dataset.msg;
+  };
+  q.oninput=apply;
+  // Esc clears what's typed and stays; with the box empty it is the panel's, as everywhere.
+  q.onkeydown=e=>{ if (e.key==="Escape" && q.value){ e.preventDefault(); q.value=""; apply(); } };
+  letters.forEach(b=>b.onclick=()=>{
+    const r=rows.find(x=>!x.hidden && x.dataset.hwLetter===b.dataset.helpLetter); if (!r) return;
+    // The panel scrolls, not the page behind it; the sticky find bar (a phone) covers the top of the list, so it is left out of the reach.
+    const bar=q.closest(".help-find"), covered=bar && getComputedStyle(bar).position==="sticky" ? bar.offsetHeight : 0;
+    el.scrollTop=Math.max(0, r.offsetTop - covered);
+    const dt=r.querySelector("dt"); if (dt) dt.focus({ preventScroll:true });
+  });
+  apply();
 }
 
 // ── Editable tables (weapons / gear / archetype panel tables) — shared by

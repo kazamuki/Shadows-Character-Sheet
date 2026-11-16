@@ -2489,7 +2489,7 @@ const Engine = (() => {
   // `gameTerms` lists the words a sentence on the sheet can name and where each one's rule lives. termSpans says where the
   // first of each sits in a string; term says what it means. Both read the data and never touch a DOM, and neither throws.
   // The `from` kinds are a closed set; a row with another kind, or one pointing at what the data doesn't hold, says nothing.
-  const TERM_KINDS = ["visibility", "painLevel", "check", "derived", "luck", "stats", "milestones", "conditions"];
+  const TERM_KINDS = ["visibility", "painLevel", "check", "derived", "luck", "stats", "milestones", "conditions", "rule"];
   const termKind = row => {
     const f = row && row.from;
     return isPlainObj(f) ? TERM_KINDS.find(k => f[k] !== undefined) || null : null;
@@ -2507,6 +2507,7 @@ const Engine = (() => {
     if (k==="luck") return isPlainObj(((D().resources||{}).luck));
     if (k==="stats") return Array.isArray(D().stats);
     if (k==="milestones") return isPlainObj((D().milestones||{}).rules);
+    if (k==="rule") return !!ruleAt(f.rule);
     return Array.isArray(D().conditions);
   }
   // Each readable row's words: [{ id, form, row }]. A `stats` row takes the stat ids, a `conditions` row the names.
@@ -2601,6 +2602,7 @@ const Engine = (() => {
         num(R.majorFirstAt) && num(R.majorEvery) && copyOf("termMilestoneMajor", "", { first:R.majorFirstAt, every:R.majorEvery })].filter(Boolean);
       return { title:title || row.id, text:bits[0]||"", more:bits.slice(1).map(text=>({ text })) };
     }
+    if (k==="rule"){ const t = ruleAt(f.rule); return t ? { title:title || row.id, text:t, more:[] } : null; }
     const c = (D().conditions||[]).find(x=>x && x.id===id); if (!c) return null;
     return { title:c.name||c.id, text:c.effect||"", more:c.recovery && copyOf("termConditionRecovery", "", { text:c.recovery }) ? [{ text:copyOf("termConditionRecovery", "", { text:c.recovery }) }] : [] };
   }
@@ -2613,6 +2615,98 @@ const Engine = (() => {
         || rows.find(r=>termKind(r)==="conditions" && termReadable(r) && (D().conditions||[]).some(c=>c && c.id===id));
       return row ? termBody(row, id, ch, n) : null;
     } catch (e){ return null; }
+  }
+
+  // ── Every word (Decision 290, W156) ─────────────────────────────────────
+  // One reader for the game's words, each read from where its rule already lives: `word` answers a reference to one, `words` lists
+  // them all. A reference is a plain string (a gameTerms id) or `{ <kind>: <id> }`. Nothing here keeps text of its own: a `term` is
+  // read through `termBody`, a glossary row through its `description`. Neither throws, and neither touches a DOM.
+  const WORD_KINDS = ["stat", "derived", "term", "condition", "damageType", "resource", "tag", "feature", "mod", "armorFeature", "upgrade", "spellTag"];
+  const WORD_LISTS = { tag:"weaponTagGlossary", feature:"weaponFeatureGlossary", mod:"weaponModGlossary", armorFeature:"armorFeatureGlossary", upgrade:"armorUpgradeGlossary", spellTag:"spellTagGlossary" };
+  // `from.rule` roots: the data's own rules a word may point at. The path ends at a non-empty string, or an object with a
+  // `description` or a `text`.
+  const RULE_ROOTS = ["armorRules", "weaponRules", "spellcraftRules", "skillCheckRules", "resources", "tag", "ip", "damageRules", "recoveryRules"];
+  function ruleAt(path){
+    if (typeof path!=="string" || !path) return null;
+    const segs = path.split("."); if (!RULE_ROOTS.includes(segs[0])) return null;
+    let v = D()[segs[0]];
+    for (const s of segs.slice(1)){ if (!isPlainObj(v) || !Object.prototype.hasOwnProperty.call(v, s)) return null; v = v[s]; }
+    if (typeof v==="string") return v || null;
+    if (!isPlainObj(v)) return null;
+    return typeof v.description==="string" && v.description ? v.description : typeof v.text==="string" && v.text ? v.text : null;
+  }
+  const wordRow = (kind, id, p, extra) => Object.assign({ kind, id, title:p.title, text:p.text || "", more:Array.isArray(p.more) ? p.more : [], note:null, flagged:false }, extra || {});
+  function wordOf(ref, ch){
+    if (typeof ref==="string") ref = { term:ref };
+    if (!isPlainObj(ref)) return null;
+    const keys = Object.keys(ref); if (keys.length!==1) return null;
+    const kind = keys[0], id = ref[kind];
+    if (!WORD_KINDS.includes(kind) || typeof id!=="string" || !id) return null;
+    if (kind==="stat"){
+      const p = termBody({ id:"stat", from:{ stats:true } }, id, ch); if (!p) return null;
+      // What the score means (the book's range, the modifier rule) is statReading's, read for the open character: the UI words it as the tip does.
+      let reading = null; try { reading = ch && typeof ch==="object" ? statReading(ch, id) : null; } catch (e){ reading = null; }
+      return wordRow(kind, id, p, reading ? { reading } : null);
+    }
+    if (kind==="derived"){ const p = termBody({ id, from:{ derived:id } }, id, ch); return p ? wordRow(kind, id, p) : null; }
+    if (kind==="condition"){ const p = termBody({ id:"condition", from:{ conditions:true } }, id, ch); return p ? wordRow(kind, id, p) : null; }
+    if (kind==="term"){
+      const row = termRows().find(r => r.id===id && termReadable(r)); if (!row) return null;
+      const k = termKind(row), f = row.from || {};
+      // A row that points at another word's rule is that word, not a second one.
+      if (k==="derived") return wordOf({ derived:f.derived }, ch);
+      if (k==="luck") return wordOf({ resource:"luck" }, ch);
+      if (k==="stats" || k==="conditions" || k==="painLevel") return null;
+      const p = termBody(row, id, ch); return p ? wordRow("term", id, p) : null;
+    }
+    if (kind==="damageType"){
+      const d = (D().damageTypes||[]).find(x => x && x.id===id); if (!d) return null;
+      const title = d.name || d.id;
+      if (d.flagged===true || !d.description) return wordRow(kind, id, { title }, { note:typeof d.playerNote==="string" ? d.playerNote : null, flagged:d.flagged===true });
+      return wordRow(kind, id, { title, text:d.description });
+    }
+    if (kind==="resource"){
+      const R = D().resources; if (!isPlainObj(R) || !Object.prototype.hasOwnProperty.call(R, id) || !isPlainObj(R[id])) return null;
+      const r = R[id];
+      if (id==="luck"){ const row = termRows().find(x => termKind(x)==="luck"); const p = row && termBody(row, row.id, ch); return p ? wordRow(kind, id, p) : null; }
+      if (typeof r.description!=="string" || !r.description) return null;
+      const w = wordRow(kind, id, { title:r.name || id, text:r.description });
+      if (Array.isArray(r.tiers)) w.more = r.tiers.filter(isPlainObj).map(t => ({ text:`${t.name} · ${t.rep} rep · ${crankPayText(t)}` }));
+      if (r.flagged===true && typeof r.playerNote==="string"){
+        let st = null; try { st = ch && typeof ch==="object" ? crankState(ch) : null; } catch (e){ st = null; }
+        if (st && st.unsettled){ w.note = r.playerNote; w.flagged = true; }
+      }
+      if (id==="sfr" && ch && typeof ch==="object"){ let s = null; try { s = sfr(ch); } catch (e){ s = null; } if (!s || s.value==null) w.absent = true; }
+      return w;
+    }
+    const g = (D()[WORD_LISTS[kind]]||[]).find(x => x && x.id===id); if (!g) return null;
+    return wordRow(kind, id, { title:g.id, text:typeof g.description==="string" ? g.description : "" }, { note:typeof g.playerNote==="string" ? g.playerNote : null, flagged:g.flagged===true });
+  }
+  function word(ref, ch){ try { return wordOf(ref, ch); } catch (e){ return null; } }
+  // Every word, one row per meaning, A to Z by title. A gameTerms row that points at a rule another source already holds (TOL, WILL,
+  // SAN, LUCK, the Stats, the Conditions) is that source's row, not a second one. Two sources that share a name keep a row each.
+  function words(ch){
+    try {
+      const refs = [];
+      (D().stats||[]).forEach(s => s && refs.push({ stat:s.id }));
+      (D().derived||[]).forEach(d => d && refs.push({ derived:d.id }));
+      termRows().forEach(r => { if (termReadable(r) && !["derived", "luck", "stats", "conditions", "painLevel"].includes(termKind(r))) refs.push({ term:r.id }); });
+      (D().conditions||[]).forEach(c => c && refs.push({ condition:c.id }));
+      (D().damageTypes||[]).forEach(d => d && refs.push({ damageType:d.id }));
+      if (isPlainObj(D().resources)) Object.keys(D().resources).forEach(k => refs.push({ resource:k }));
+      for (const kind of Object.keys(WORD_LISTS)) (D()[WORD_LISTS[kind]]||[]).forEach(g => g && refs.push({ [kind]:g.id }));
+      const rows = [];
+      for (const ref of refs){
+        const w = word(ref, ch); if (!w) continue;
+        const base = String(w.title).normalize("NFD").replace(/[̀-ͯ]/g, "").charAt(0).toUpperCase();
+        rows.push(Object.assign(w, { ref, letter:/^[A-Z]$/.test(base) ? base : "#", homonym:false }));
+      }
+      const names = new Map();
+      for (const w of rows) for (const n of new Set([String(w.id).toLowerCase(), String(w.title).toLowerCase()])){ const s = names.get(n) || new Set(); s.add(w.kind + "|" + w.id); names.set(n, s); }
+      for (const w of rows) w.homonym = [String(w.id).toLowerCase(), String(w.title).toLowerCase()].some(n => names.get(n).size > 1);
+      const order = k => WORD_KINDS.indexOf(k);
+      return rows.sort((a, b) => String(a.title).toLowerCase().localeCompare(String(b.title).toLowerCase()) || order(a.kind) - order(b.kind));
+    } catch (e){ return []; }
   }
 
   // W4 — one catalog entry as the browser shows it, before it's added: the
@@ -10175,7 +10269,7 @@ const Engine = (() => {
     newCharacter, isIntakeId, tagReading, tagNumber, migrate, versionCheck, buildExport,
     statMax, statMaxText, statAtCap, humanMax, statOverCaps, statOverCap, derivedParts, startingCredits,
     // Stats, skills and derived values
-    powerLevel, archetype, classification, canBuyAdvantage, archetypeContent, writeInOptions, addPower, addCustomPower, ownPowers, improvePower, newPower, removePower, statMod, statValue, statTable, baseStatTable, statReading, termSpans, term, archStatBonus, scalingRow,
+    powerLevel, archetype, classification, canBuyAdvantage, archetypeContent, writeInOptions, addPower, addCustomPower, ownPowers, improvePower, newPower, removePower, statMod, statValue, statTable, baseStatTable, statReading, termSpans, term, word, words, archStatBonus, scalingRow,
     derived, health, sfr, skillLine, adjFor, skillRankCap, disciplineCap, disciplineRanks, powerRanks, archetypePowers, powerAllowance,
     powerPool, basePowerState, placeBasePower, powerCpOf, powerCpSpent, powerCpState, buyPowerRank, buyDisciplineRank, optionChoices, setOptionPick, archetypeWeapons, painImmunity,
     feedView, feedGain, feed, goUnfed, goUnrested,

@@ -909,6 +909,20 @@ tr.lo-modrow td{border-top:0; padding-top:0}
 .ghelp .help-tips{margin:0; padding-left:1.1em}
 .ghelp .help-tips li{margin:0 0 6px}
 .ghelp .help-more{margin:4px 0 0; padding-left:1.1em}
+/* Every word (K2): the find bar (a box and the letters), then the list. On a phone the bar sticks to the top of the panel's scroll, so a
+   letter is always one press away. A word's title is a block, so a long one wraps rather than widening the panel. */
+.ghelp .help-find{margin:0 0 6px; padding:0 0 8px; background:var(--panel)}
+.ghelp .help-q-label{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}   /* read by a screen reader; the box says it too (its placeholder) */
+.ghelp .help-q{width:100%; box-sizing:border-box; min-height:36px}
+.ghelp .help-jump{display:flex; flex-wrap:wrap; gap:2px; margin:8px 0 0}
+.ghelp .help-letter{flex:none; min-width:24px; min-height:26px; padding:0 2px; font:inherit; font-family:var(--mono); font-size:.78rem; color:var(--text); background:transparent; border:1px solid var(--frame); border-radius:4px; cursor:pointer}
+.ghelp .help-letter:disabled{opacity:.3; cursor:default}
+.ghelp .help-all .help-word[hidden]{display:none}
+.ghelp .help-all dt, .ghelp .help-all dd{overflow-wrap:anywhere; min-width:0}
+.ghelp .help-all dt:focus{outline:2px solid var(--accent, currentColor); outline-offset:2px}
+.ghelp .help-kind{font-family:var(--mono); font-size:.7rem; font-weight:500; letter-spacing:.1em; text-transform:uppercase; color:var(--dim); margin-left:4px}
+.ghelp .help-none{margin:10px 0 0}
+.ghelp .help-note{margin:6px 0 0}
 .ghelp .help-foot .field{margin:0 0 12px}
 .ghelp .help-secs{display:flex; flex-wrap:wrap; gap:6px; margin:0 0 6px}
 .ghelp .help-foot{margin-top:22px; padding-top:14px; border-top:1px solid var(--frame)}
@@ -937,6 +951,8 @@ tr.lo-modrow td{border-top:0; padding-top:0}
 @media (max-width:639px){ #main [data-guide="main"]{display:none} }
 /* On a phone the sheet's Help draws its switches first, under the heading, so they're in reach without scrolling (W150). */
 @media (max-width:599px){
+  /* The panel has 18px of padding above its content; the bar reaches up over it when it sticks, so nothing scrolls through that strip. */
+  .ghelp .help-find{position:sticky; top:-18px; z-index:1; padding-top:18px}
   .ghelp[data-host="sheet"]{display:flex; flex-direction:column}
   .ghelp[data-host="sheet"] > *{order:2; flex:none}
   .ghelp[data-host="sheet"] > .dhead{order:0}

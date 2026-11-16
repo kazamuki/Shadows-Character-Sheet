@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.54",
+    "gamedataVersion": "0.55",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-11-11"
   },
@@ -275,6 +275,7 @@ window.SHADOWS_DATA = {
       "refresh": "Luck does not refresh during breaks, pauses, or downtime - only when a session truly ends."
     },
     "credits": {
+      "name": "Çredits",
       "symbol": "Ç",
       "description": "A Universal Basic Income keeps you fed, sheltered, and connected. Credits become relevant when you want something beyond survival - gear, favors, transport, information. Tracked as a simple numerical total."
     },
@@ -1142,8 +1143,10 @@ window.SHADOWS_DATA = {
   /* Decision 287 (W133): the game's words a sentence on the sheet can name, and where each one's rule lives. `forms` are exact
      words, case kept; `{n}` stands for a number. A row's tip reads `from` (a rule this file already holds: a light level, a
      Pain Level, a skillCheckRules key, a derived stat, LUCK, the Milestone cadence; `stats` and `conditions` take their forms
-     from those lists) or quotes the CRB (`description`, from `bookSource`). `title` heads the tip. Read by Engine.termSpans and
-     Engine.term. */
+     from those lists), points at a rule the data holds by its path (`from.rule`, one of armorRules, weaponRules, spellcraftRules,
+     skillCheckRules, resources, tag, ip, damageRules, recoveryRules) or quotes the CRB (`description`, from `bookSource`). `title` heads
+     the tip. A row with `forms` is a trigger inside the sheet's sentences; one without is only a word (Every word, Help), K2. Read by
+     Engine.termSpans, Engine.term and Engine.word. */
   "gameTerms": [
     { "id": "bright", "forms": ["Bright"], "from": { "visibility": "bright" } },
     { "id": "dim", "forms": ["Dim"], "from": { "visibility": "dim" } },
@@ -1165,7 +1168,31 @@ window.SHADOWS_DATA = {
     { "id": "LUCK", "title": "LUCK", "forms": ["LUCK"], "from": { "luck": true } },
     { "id": "stat", "from": { "stats": true } },
     { "id": "milestone-point", "title": "Milestone Points", "forms": ["Milestone Points", "Milestone Point"], "from": { "milestones": true } },
-    { "id": "condition", "from": { "conditions": true } }
+    { "id": "condition", "from": { "conditions": true } },
+    /* K2 (Decision 290): the words the sheet uses that had no definition. No `forms`: they answer Every word and Help, and no sentence on
+       the sheet gains a trigger (KQ13). */
+    { "id": "health-levels", "title": "Health Levels (HP)", "bookSource": "0300 Core Mechanics, Hit Points & Health Levels",
+      "description": "Your body has limits. In Shadows, those limits have a number: your Hit Points (HP). To amplify the pressure, HP are placed in buckets called Health Levels (HL). By default, HLs come with 5 HP each. For every point of BOD you have, you gain 1 HL. Since the BOD stat is limited to ten, you can only have 10 HL." },
+    { "id": "ip", "title": "Improvement Points (IP)", "bookSource": "0450 Advancement, Improvement Points",
+      "description": "Improvement Points, or IP, are the currency of practice. Every hour of play earns 5 IP, so a three-hour session puts 15 IP on the sheet. IP is spent between sessions, never during one." },
+    { "id": "difficulty", "title": "Difficulty", "bookSource": "0300 Core Mechanics, Action Risk: Skill Checks",
+      "description": "The number to beat is based on the difficulty of the action, which the GM sets. Typically: 10 for easy, 15 for medium, and 20 for hard difficulty." },
+    { "id": "tn", "title": "Target Number (TN)", "bookSource": "0300 Core Mechanics, Essence Checks",
+      "description": "The minimum value a die must roll to count as a Hit. This is how difficult the task is. Higher numbers mean less room for error. Typically, the TN is 8, unless the GM modifies the value." },
+    { "id": "th", "title": "Threshold (TH)", "bookSource": "0300 Core Mechanics, Essence Checks",
+      "description": "Minimum TH is 1. This is the barrier to break through. Meeting the TH means you produced enough results to matter. The GM sets this value, unless otherwise stated on a skill or power." },
+    { "id": "prot", "title": "PROT", "from": { "rule": "armorRules.protNote" } },
+    { "id": "res", "title": "RES", "from": { "rule": "armorRules.resNote" } },
+    { "id": "integrity", "title": "Integrity", "from": { "rule": "armorRules.integrityNote" } },
+    { "id": "tag", "title": "TAG", "from": { "rule": "tag.text" } },
+    { "id": "acc", "title": "ACC", "bookSource": "0460 Gear, Weapons",
+      "description": "Accuracy bonus applied to attack rolls made at single-shot rate of fire. Burst and full-auto fire do not benefit from Accuracy bonuses." },
+    { "id": "range", "title": "Range", "bookSource": "0460 Gear, Weapons",
+      "description": "Effective range band. Attacks made beyond this range suffer penalties to both accuracy and damage." },
+    { "id": "rof", "title": "RoF", "bookSource": "0460 Gear, Weapons",
+      "description": "Rate of Fire. Available firing modes: S = Single shot, B = Burst (3 rounds), F = Full Auto (10+ rounds)." },
+    { "id": "capacity", "title": "Capacity", "bookSource": "0460 Gear, Weapons",
+      "description": "Magazine or power cell size. The number after +1 represents a chambered round." }
   ],
   /* Decision 232: the same computed tags on a card the character holds, which state its total. `{total}` is the row's
      `perRank` times the held rank (natural and bought ranks summed), `{perRank}` is still the row's own. A type with no
@@ -4705,15 +4732,15 @@ window.SHADOWS_DATA = {
      Injured/Maimed only on Massive, CQ5). `damageRules` holds 0530/0540's
      Massive, Shock, At Zero and Dying numbers. */
   "damageTypes": [
-    { "id": "blade",     "name": "Blade",     "resClass": "kinetic", "inflicts": ["bleeding"] },
-    { "id": "blunt",     "name": "Blunt",     "resClass": "kinetic", "inflicts": ["stunned", "disoriented", "unconscious"] },
-    { "id": "ballistic", "name": "Ballistic", "resClass": "kinetic", "inflicts": ["bleeding"] },
-    { "id": "electric",  "name": "Electric",  "resClass": "energy",  "inflicts": ["stunned", "shocked", "paralyzed"] },
-    { "id": "energy",    "name": "Energy",    "resClass": "energy",  "inflicts": ["agonized"] },
-    { "id": "burning",   "name": "Burning",   "resClass": "energy",  "inflicts": ["agonized", "burning"], "always": ["agonized", "burning"] },
-    { "id": "elemental", "name": "Elemental", "resClass": "elemental", "magical": true, "inflicts": [] },
-    { "id": "spirit",    "name": "Spirit",    "resClass": "spirit",    "magical": true, "inflicts": [] },
-    { "id": "aether",    "name": "Aether",    "resClass": "aether",    "magical": true, "inflicts": [] }
+    { "id": "blade",     "name": "Blade",     "resClass": "kinetic", "description": "Cutting and piercing: knives, swords, claws, monomolecular edges. Can cause Bleeding. Precision strikes risk deeper tissue damage.", "bookSource": "0460 Gear, Damage Types", "inflicts": ["bleeding"] },
+    { "id": "blunt",     "name": "Blunt",     "resClass": "kinetic", "description": "Impact force: fists, clubs, bludgeons, pressure waves. Can cause Stunned and Disoriented. At extremes, Unconscious.", "bookSource": "0460 Gear, Damage Types", "inflicts": ["stunned", "disoriented", "unconscious"] },
+    { "id": "ballistic", "name": "Ballistic", "resClass": "kinetic", "description": "High-velocity projectiles: firearms of all categories. Can cause Bleeding, similar to Blade at range. Standard ballistic fire does not risk Maimed or Injured — that threshold belongs to Massive.", "bookSource": "0460 Gear, Damage Types", "inflicts": ["bleeding"] },
+    { "id": "electric",  "name": "Electric",  "resClass": "energy", "description": "Conducted or directed electrical charge: shock weapons, charge cells, taser discharge. Can cause Stunned/Shocked and Paralyzed. Against targets with significant cyberware, Electric damage may disrupt integrated systems beyond the physical hit — treat as an EMP interaction at the GM's discretion.", "bookSource": "0460 Gear, Damage Types",  "inflicts": ["stunned", "shocked", "paralyzed"] },
+    { "id": "energy",    "name": "Energy",    "resClass": "energy", "description": "Directed energy discharge: lasers, plasma, particle beams. Can cause Agonized. Energy wounds are burns and disfigurements — they hurt at a different register than impact or blade wounds, and the pain compounds any subsequent action.", "bookSource": "0460 Gear, Damage Types",  "inflicts": ["agonized"] },
+    { "id": "burning",   "name": "Burning",   "resClass": "energy", "description": "Sustained fire damage: flamethrowers, incendiary rounds, plasma bleed. Always causes Agonized and applies ongoing damage each round until the fire is extinguished or the source is removed. Burning stacks with Energy damage when both are present.", "bookSource": "0460 Gear, Damage Types",  "inflicts": ["agonized", "burning"], "always": ["agonized", "burning"] },
+    { "id": "elemental", "name": "Elemental", "resClass": "elemental", "magical": true, "flagged": true, "flagNote": "F52: what Elemental damage is. 0480 names it in the Warding rows and the Backlash table and never says. Deighton's.", "playerNote": "The book doesn't say yet what this damage is.", "inflicts": [] },
+    { "id": "spirit",    "name": "Spirit",    "resClass": "spirit",    "magical": true, "flagged": true, "flagNote": "F53: what Spirit damage is. 0480 names it in the Warding rows and the Backlash table and never says. Deighton's.", "playerNote": "The book doesn't say yet what this damage is.", "inflicts": [] },
+    { "id": "aether",    "name": "Aether",    "resClass": "aether",    "magical": true, "flagged": true, "flagNote": "F54: what Aether damage is. 0480 names it in the Warding rows and the Backlash table and never says. Deighton's.", "playerNote": "The book doesn't say yet what this damage is.", "inflicts": [] }
   ],
   "damageCategories": [
     { "id": "regular",   "name": "Regular",   "text": "The everyday kind. Armor answers, and what gets through heals the usual ways." },
@@ -4876,8 +4903,8 @@ window.SHADOWS_DATA = {
   ],
 
   // K1: Help on the sheet, read by shared.js's panel through sheet.js's host (Decision 289). One context per sheet tab and one for Admin.
-  // `intro` is the tab's guide line, `for` what it's for, `when` a subset of ui.when, `words` gameTerms ids (read through Engine.term for the
-  // open character), `tips` at most two. **bold** is a button or label as the screen has it. Introductions that state a rule stay in appCopy.
+  // `intro` is the tab's guide line, `for` what it's for, `when` a subset of ui.when, `words` references, read through Engine.word for the open
+  // character: a gameTerms id, or `{ stat | derived | condition | tag | feature | mod | armorFeature | upgrade | spellTag | damageType | resource | term: id }` (Decision 290), `tips` at most two. **bold** is a button or label as the screen has it. Introductions that state a rule stay in appCopy.
   "sheetGuide": {
     "ui": {
       "title": "Help",
@@ -4890,6 +4917,15 @@ window.SHADOWS_DATA = {
       "tipsLabel": "Try this",
       "guideSwitch": "Guide lines",
       "keySwitch": "The ? key",
+      "wordsLink": "Every word",
+      "back": "Back to this tab",
+      "filterLabel": "Find a word",
+      "filterEmpty": "No word matches.",
+      "jumpLabel": "Jump to a letter",
+      "kinds": {
+        "stat": "Stat", "derived": "Stat", "term": "Rule", "condition": "Condition", "damageType": "Damage type", "resource": "Resource",
+        "tag": "Weapon tag", "feature": "Weapon feature", "mod": "Weapon mod", "armorFeature": "Armor feature", "upgrade": "Armor upgrade", "spellTag": "Spell tag"
+      },
       "when": {
         "before": "Before you play",
         "during": "At the table",
@@ -4902,7 +4938,7 @@ window.SHADOWS_DATA = {
         "intro": "Who you are tonight: your Stats, your health, and the checks you'll roll most.",
         "for": "The tab you play from. Your Stats and what they give, your health and Pain, any Conditions on you, the combat Skills you've trained, and your weapons. **Heal**, **Hurt** and **Take a hit** are here, and so is every on/off switch your character has, like a Werewolf's form.",
         "when": ["during"],
-        "words": ["TOL", "WILL", "LUCK", "skill-check", "defensive-action"],
+        "words": ["TOL", "WILL", "LUCK", "skill-check", "defensive-action", "health-levels"],
         "tips": [
           "Press a Stat or a Condition to read what it does.",
           "Damage goes in with **Take a hit**: it works out armor and Pain for you."
@@ -4913,7 +4949,7 @@ window.SHADOWS_DATA = {
         "intro": "Every Skill you have, and what you add to the roll.",
         "for": "Every Skill, trained or not, with the total you add to a d10. A Skill's **?** says what it covers and what's particular to it.",
         "when": ["during"],
-        "words": ["skill-check", "kicker-die", "explode", "botch"],
+        "words": ["skill-check", "kicker-die", "explode", "botch", "difficulty"],
         "tips": [
           "Pain's penalty is already in these totals. The line above the table says so once."
         ]
@@ -4923,7 +4959,7 @@ window.SHADOWS_DATA = {
         "intro": "What you are and what it gives you, then the Advantages and Disadvantages you carry.",
         "for": "Your archetype and what it lets you do: its powers, its core mechanic and your specialization. Then your Advantages and Disadvantages. What you can do lives here; what you carry is on **Loadout**.",
         "when": ["before", "during"],
-        "words": [],
+        "words": [{ "resource": "sfr" }],
         "tips": [
           "Press a tag on a power or a trait to read what it means."
         ]
@@ -4933,7 +4969,7 @@ window.SHADOWS_DATA = {
         "intro": "Your damage, and the pools you spend and refill as the night goes.",
         "for": "Your damage in full: Health Levels, Pain, your armor's Integrity, **Take a hit** and **Rest**. Then the pools you spend and get back: Sanity, LUCK, Çredits and CRANK, and SFR and your archetype's own if you have them. **Manual Adjustments** is for what the sheet doesn't add up by itself: an item, a ruling, a scar.",
         "when": ["during", "between"],
-        "words": ["SAN", "LUCK"],
+        "words": ["SAN", "LUCK", "health-levels", "prot", "res", "integrity", { "resource": "credits" }, { "resource": "crank" }, { "resource": "sfr" }],
         "tips": [
           "Spend LUCK here when you spend it at the table, so the sheet stays true."
         ]
@@ -4943,7 +4979,7 @@ window.SHADOWS_DATA = {
         "intro": "What the city paid you, and what you spend it on.",
         "for": "Between sessions. **Log a session** when one ends, then spend what it paid: IP on Skills, Stats and powers, and Milestones as you meet them. **History** and the **Activity Log** are below it, and **Undo** takes back your last change.",
         "when": ["between"],
-        "words": ["milestone-point", "LUCK"],
+        "words": ["milestone-point", "LUCK", "ip"],
         "tips": [
           "The jump bar under the title reaches each part in one press."
         ]
@@ -4953,7 +4989,7 @@ window.SHADOWS_DATA = {
         "intro": "Weapons, armor and gear: what you carry into the city.",
         "for": "What you carry: weapons, armor and gear, from the catalog or written in. **Buy** pays the price out of your Çredits in the same step, so one Undo takes back both.",
         "when": ["before", "between"],
-        "words": [],
+        "words": ["acc", "rof", "capacity", "prot", "res", "integrity"],
         "tips": [
           "Ammo is gear: carry it here, and reload from it on the weapon's line."
         ]
@@ -4997,6 +5033,9 @@ window.SHADOWS_DATA = {
       "tipsLabel": "Try this",
       "nightLink": "A night at the table",
       "wordsLink": "Every word",
+      "filterLabel": "Find a word",
+      "filterEmpty": "No word matches.",
+      "jumpLabel": "Jump to a letter",
       "keysLink": "Keys",
       "guideSwitch": "Guide lines",
       "when": {
