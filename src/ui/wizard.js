@@ -499,6 +499,7 @@ function basePowersHtml(ch, sel, creating = true){
     return `<div class="pick ${r.placed?"selected":""}"><div class="head"><h2>${esc(r.name)}</h2>
       ${p.cost?`<span class="cost">${esc(p.cost)}</span>`:""}<span class="cost grant">${r.ranked?"rank 1":"no ranks"}</span>
       <div class="controls">${stepper(r.placed, "bp|"+esc(r.id), r.placed>0, up, "Base Powers in "+r.name)}${why?`<span class="mod" title="${esc(why)}">⛔</span>`:""}</div></div>
+      ${p.flagged?flagHtml(p):""}
       <div class="desc">${esc(p.effect||"")}${p.perRank&&r.ranked?"\nPer rank: "+esc(p.perRank):""}</div></div>`; };
   for (const [title, rows] of groups) if (rows.length) h += `<h3 class="sub-sect">${esc(title)}</h3>` + rows.map(row).join("");
   if (st.stray.length) h += st.stray.map(r=>`<div class="pick"><div class="head"><h2>${esc(r.name)}</h2>
@@ -698,6 +699,7 @@ function renderCP(){
       return `<div class="pick ${r.cp>0?"selected":""}"><div class="head"><h2>${esc(r.name)}</h2>${p.effect?foldBtn("apow|"+r.id, r.name):""}
         <span class="cost">${r.learned?"learned with CP · ":r.start>1||(r.cp&&!r.learned)?`starts at ${r.start} · `:""}rank ${r.rank}${r.cap==null?"":` · cap ${r.cap}`}</span>
         <div class="controls">${stepper(r.rank,"apow|"+r.id, r.cp>0, !why, r.name+" with CP", r.held ? "Raise" : "Learn")}${why?`<span class="mod" title="${esc(why)}">⛔</span>`:""}</div></div>
+        ${p.flagged?flagHtml(p):""}
         <div class="desc"${foldAttr("apow|"+r.id)}>${esc(p.effect||"")}${p.perRank&&r.ranked?"\nPer rank: "+esc(p.perRank):""}</div></div>`; };
     h += secs.sect("Powers", `Powers — ${per} CP per rank`);
     if (heldRows.length && heldRows.every(r=>r.cap!=null && r.start >= r.cap))

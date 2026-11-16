@@ -284,7 +284,7 @@ const Engine = (() => {
     const out = [];
     for (const { def, rank } of grantSources(ch, false)){
       if (!isPlainObj(def) || !Array.isArray(def.grants) || !(rank >= 1)) continue;
-      for (const g of def.grants) if (isPlainObj(g) && g.type===type) out.push({ g, name: txt(def.name), rank: Math.floor(rank) });
+      for (const g of def.grants) if (isPlainObj(g) && g.type===type) out.push({ g, name: txt(def.name), id: txt(def.id), rank: Math.floor(rank) });
     }
     return out;
   }
@@ -2189,6 +2189,61 @@ const Engine = (() => {
     if (index!==null){ const e = list[index]; e.majors = majorsOn(e).concat(id); }
     return { ok:true, moved };
   }
+  // ── A power on a weapon line (Decision 292) ──
+  // A held power's `attackMod` grant reaches the lines whose `kind` it names, or with `class: "melee"` every melee line (Decision
+  // 248's class: the natural lines, the Ancient Weapon, a carried melee weapon) except a category the rules leave out (grenades).
+  // damage and rounds are plus + perRank × (rank − 1). A power that isn't running is a mark and moves nothing (Decision 104); one that
+  // runs (Decision 266) is applied. The one place a power reaches a line. `line` is { kind, melee, category, off }. Total.
+  // The category a weapon row is in (a catalog weapon's, or a written-in one's picked type), or null.
+  function weaponCategory(ch, index){
+    const e = listOf(ch, "weapons")[index];
+    if (!isPlainObj(e)) return null;
+    if (e.custom || !e.id) return customWeaponPick("category", e.category) || null;
+    const def = weaponDefById(e.id);
+    return def && typeof def.category==="string" ? def.category : null;
+  }
+  const weaponReach = (ch, index) => Object.assign({ kind:null, category:weaponCategory(ch, index) }, weaponClass(ch, index));
+  const attackModRules = () => { const r = (D().weaponRules||{}).attackMods; return isPlainObj(r) ? r : {}; };
+  const modAt = (o, rank) => isPlainObj(o) ? finiteOr0(o.plus) + finiteOr0(o.perRank) * Math.max(0, rank - 1) : 0;
+  function attackMods(ch, line){
+    const out = { marks:[], applied:[] };
+    if (!isPlainObj(line) || line.off) return out;
+    const R = attackModRules(), left = Array.isArray(R.excludeCategories) ? R.excludeCategories : [];
+    const held = traitGrants(ch, "attackMod").filter(({ g })=>{
+      const byKind = Array.isArray(g.kinds), byClass = g.class==="melee";
+      if (byKind===(g.class!==undefined)) return false;
+      if (byKind) return typeof line.kind==="string" && g.kinds.includes(line.kind);
+      return byClass && line.melee===true && !(typeof line.category==="string" && left.includes(line.category));
+    });
+    if (!held.length) return out;
+    const running = runningPowers(ch);
+    for (const { g, name, id, rank } of held){
+      const amount = Math.max(0, Math.floor(modAt(g.damage, rank))), n = Math.max(0, Math.floor(modAt(g.rounds, rank)));
+      const rounds = n>=1 ? fillTag(n===1 ? R.roundText : R.roundsText, { n }) : null;
+      const said = typeof g.text==="string" && g.text ? fillTag(g.text, { rounds }) : null;
+      const dmg = amount ? fillTag(R.damageText, { n:amount }) : null;
+      const type = typeof g.damageType==="string" && byDamageTypeName(g.damageType) ? g.damageType : null;
+      if (running.some(r=>r.id===id)){
+        const text = said ? fillTag(R.runningText, { effects:said, from:name }) : null;
+        if (amount || type || text) out.applied.push({ from:name, amount, damageType:type, text });
+      } else {
+        const text = fillTag(R.markText, { effects:[dmg, said].filter(Boolean).join(", "), whenText:txt(g.whenText) });
+        if (text) out.marks.push({ from:name, applies:true, running:false, text });
+      }
+    }
+    return out;
+  }
+  // What a running power does to the line: its damage joins the number and `bonuses`, its type replaces the line's.
+  function applyAttackMods(line, mods){
+    for (const a of mods.applied){
+      if (a.amount){
+        if (typeof line.damage==="number") line.damage += a.amount;
+        line.bonuses = (Array.isArray(line.bonuses) ? line.bonuses : []).concat({ to:"damage", amount:a.amount, from:a.from });
+      }
+      if (a.damageType) line.damageType = a.damageType;
+    }
+    return mods.marks.concat(mods.applied.filter(a=>a.text).map(a=>({ from:a.from, applies:true, running:true, text:a.text })));
+  }
   function weaponLine(ch, index){
     const e = listOf(ch, "weapons")[index];
     if (!e || typeof e!=="object") return null;
@@ -2200,6 +2255,7 @@ const Engine = (() => {
       loadedAndReloadFrom(ch, line, e);
       applyWeaponBonuses(ch, index, line, []);
       applyWeaponMajors(ch, index, line);
+      line.conditional = applyAttackMods(line, attackMods(ch, weaponReach(ch, index)));
       return line;
     }
     const def = weaponDefById(e.id);
@@ -2225,6 +2281,7 @@ const Engine = (() => {
     loadedAndReloadFrom(ch, line, e);
     applyWeaponBonuses(ch, index, line, Array.isArray(def.features) ? def.features : []);
     applyWeaponMajors(ch, index, line);
+    line.conditional = applyAttackMods(line, attackMods(ch, weaponReach(ch, index)));
     return line;
   }
   // W40: specialty rounds in the magazine name themselves, and their tags join
@@ -5052,7 +5109,12 @@ const Engine = (() => {
       out.push({ name:txt(src.name), kind, from:txt(w.from), skill: skill ? skill.def.name : "", skillId: skill ? skill.def.id : null, attack: skill && !off ? skill.checkBonus : null,
                  damageType: txt(src.damageType) || null, damage: off ? null : d.value, damageFormula: off ? null : d.formula, rank: power ? power.rank : null,
                  tags:(Array.isArray(src.tags) ? src.tags : []).filter(t=>typeof t==="string"), extra,
-                 off: !!off, offText: off ? txt(w.offWhen.text) : "" });
+                 off: !!off, offText: off ? txt(w.offWhen.text) : "", bonuses:[], conditional:[] });
+      // A natural row gets its power marks once, in naturalAttacks; the Ancient Weapon (no kind) here.
+      if (!kind){
+        const row = out[out.length-1];
+        row.conditional = applyAttackMods(row, attackMods(ch, { kind:null, melee: skill ? skill.def.melee===true : null, category:null, off:row.off }));
+      }
     }
     return out;
   }
@@ -5094,6 +5156,10 @@ const Engine = (() => {
     out.lines = sources.map(w=>{
       const line = Object.assign({}, w, { tags: Array.isArray(w.tags) ? w.tags.slice() : [] });
       const sk = line.skillId ? skillById(line.skillId) : null;
+      // A power that runs may change the damage type, so it goes first and a worn kinetic bonus no longer reaches a Spirit claw.
+      const mods = attackMods(ch, { kind:line.kind, melee:true, category:null, off:line.off });
+      const swap = mods.applied.find(a=>a.damageType);
+      if (swap) line.damageType = swap.damageType;
       if (!line.off) applyBonusesFor(ch, { melee: sk ? sk.melee===true : null, damageClass: classOfType(byDamageTypeName(line.damageType)) }, line, []);
       else line.bonuses = [];
       // A mark (Death Touch) names the Skills it answers to. On a line rolled with one it just reads; on a line rolled with another
@@ -5105,7 +5171,7 @@ const Engine = (() => {
         const sl = alt ? skillLine(ch, alt) : null, n = sl ? (sl.checkBonus<0 ? `−${Math.abs(sl.checkBonus)}` : `+${sl.checkBonus}`) : null;
         const text = applies ? fillTag(R.markText, { tag:g.tag, from }) : fillTag(R.markAltText, { tag:g.tag, from, skill: sl.def.name, n });
         return text ? { tag:g.tag, from, applies, text } : null;
-      }).filter(Boolean);
+      }).filter(Boolean).concat(applyAttackMods(line, mods));
       return line;
     });
     return out;
@@ -10369,7 +10435,7 @@ const Engine = (() => {
     hlState, armorState, resolveHit, applyHit, hitAsks, naturalArmor, nanomedKit,
     naturalHealing, heal, healStep, resolveReset, applyReset,
     // Loadout: weapons, gear, armor
-    weaponLine, weaponDamage, naturalAttacks, setCustomWeapon, catalogLine, addLoadout, weaponModOptions, addWeaponMod, removeWeaponMod, fireWeapon, reloadWeapon,
+    weaponLine, weaponDamage, naturalAttacks, attackMods, setCustomWeapon, catalogLine, addLoadout, weaponModOptions, addWeaponMod, removeWeaponMod, fireWeapon, reloadWeapon,
     gearLine, carriedGear, useGear, useCharge, rechargeGear, addCustomLoadout, removeLoadout, setWorn, setInUse, weaponClass, majorRows, setMajorRow,
     upgradeOptions, addUpgrade, removeUpgrade, armorWear, repairArmor,
     // Magic: the Cascade, Aberrations, the Grimoire, starting spells

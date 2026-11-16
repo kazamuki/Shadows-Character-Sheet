@@ -13603,7 +13603,7 @@ test("Decision 290: Death Touch marks a Martial Arts natural line AP, conditiona
   const staff = warrior(); const at = l3Have(staff, "weapons", "carbon-fiber-bo-staff");
   const line = Engine.weaponLine(staff, at);
   assert.ok(!line.tags.includes("AP"));
-  assert.equal(line.conditional, undefined);
+  same(line.conditional, []);
   same(natNames(staff), ["Fists"]);
   // The mark is read from the data's grant, not named in code.
   const spec = D.archetypes.find(a => a.id === "professional").specialization.options.find(o => o.id === "true-warrior");
@@ -13785,4 +13785,154 @@ test("K2: word and words are total, and never throw", () => {
   }
   assert.equal(Engine.word({ resource: "sfr" }, k2Char("professional")).absent, true, "a Professional has no SFR: the word says so, for a tab to leave it out");
   assert.ok(!Engine.word({ resource: "sfr" }, k2Char("werewolf")).absent);
+});
+
+// ── L5b: a power on the weapons it changes (Decision 292) ───────────────
+const l5Vamp = (bl, powers, { pl = "heroic", bod = 6 } = {}) => {
+  const ch = vampire(bl, { pl, bod }); ch.archetypeChoices.basePowers = Object.assign({}, powers); return ch;
+};
+const l5Wolf = (origin, powers, ipe = {}) => {
+  const ch = werewolf(origin); ch.creation.powerLevel = "street"; ch.archetypeChoices.basePowers = Object.assign({}, powers);
+  Object.assign(ch.progression.powerIpe, ipe); return ch;
+};
+const marksOf = l => l.conditional.map(c => c.from.replace(/ \(Unmasked\)/, ""));
+const textOf = (l, from) => (l.conditional.find(c => c.from.startsWith(from)) || {}).text;
+
+test("Decision 292: Bone Spines marks every melee line at its rank, and no ranged one", () => {
+  const ch = l5Vamp("strigoi", { "bone-spines": 1 });
+  ch.archetypeChoices.powerCp = { "bone-spines": 1 };          // rank 2
+  const knife = l3Have(ch, "weapons", "combat-knife"), pistol = l3Have(ch, "weapons", "bdf-oni");
+  const before = [naturalOf(ch, "Bite").damage, naturalOf(ch, "Fists").damage];
+  for (const name of ["Bite", "Claws", "Fists"]) {
+    const l = naturalOf(ch, name);
+    assert.equal(l.conditional.filter(c => /Bone Spines/.test(c.from)).length, 1, name);
+    assert.match(textOf(l, "Bone Spines"), /^\+4 damage/, name);
+  }
+  assert.match(textOf(Engine.weaponLine(ch, knife), "Bone Spines"), /^\+4 damage/);
+  same(Engine.weaponLine(ch, pistol).conditional, []);
+  same([naturalOf(ch, "Bite").damage, naturalOf(ch, "Fists").damage], before, "a mark moved a number");
+  // Ken, 2026-11-15: a thrown grenade is melee by its Skill, and Bone Spines don't reach it.
+  const nade = l3Have(ch, "weapons", "fg1-thunderclap");
+  same(Engine.weaponLine(ch, nade).conditional, [], "a grenade took a Bone Spines mark");
+});
+
+test("Decision 292: a power reaches the kinds it names, never a line by its name", () => {
+  const st = l5Vamp("strigoi", { "monstrous-maw": 1, "rending-claws": 1 });
+  same(marksOf(naturalOf(st, "Bite")), ["Monstrous Maw"]);
+  same(marksOf(naturalOf(st, "Claws")), ["Rending Claws"]);
+  same(marksOf(naturalOf(st, "Fists")), []);
+  const up = l5Vamp("upyr", { "rend-and-tear": 1 });
+  same([marksOf(naturalOf(up, "Bite")), marksOf(naturalOf(up, "Claws")), marksOf(naturalOf(up, "Fists"))], [["Rend and Tear"], ["Rend and Tear"], []]);
+  // A Forge Fang's bite is named Fangs: it is reached by its kind.
+  const ff = l5Wolf("forge-fang", { "steel-fangs": 1, "serrated-claws": 1 });
+  assert.ok(Engine.setToggle(ff, "form", "Werewolf").ok);
+  same(marksOf(naturalOf(ff, "Fangs")), ["Steel Fangs"]);
+  same(marksOf(naturalOf(ff, "Claws")), ["Serrated Claws"]);
+  same(marksOf(naturalOf(ff, "Fists")), []);
+});
+
+test("Decision 292: rank moves damage and rounds as plus + perRank × (rank − 1)", () => {
+  const at = (id, rank) => { const ch = l5Vamp("strigoi", { [id]: 1 }); ch.archetypeChoices.powerCp = { [id]: rank - 1 }; return ch; };
+  assert.match(textOf(naturalOf(at("rending-claws", 1), "Claws"), "Rending"), /^\+2 damage, Bleeding for 1 round on this round's claw attacks/);
+  assert.match(textOf(naturalOf(at("rending-claws", 3), "Claws"), "Rending"), /^\+6 damage, Bleeding for 3 rounds/);
+  const up = l5Vamp("upyr", { "rend-and-tear": 1 }); up.archetypeChoices.powerCp = { "rend-and-tear": 2 };
+  assert.match(textOf(naturalOf(up, "Claws"), "Rend"), /^AP 2, Bleeding for 4 rounds/);
+});
+
+test("Decision 292: Blood of Valhalla is a mark while stopped and the line's number while it runs", () => {
+  const ch = l5Vamp("draugur", { "blood-of-valhalla": 1 }, { pl: "wcd", bod: 7 });
+  ch.archetypeChoices.optionPicks = { "ancient-weapon": "blunt" };
+  const knife = l3Have(ch, "weapons", "combat-knife");
+  const blunt = () => Engine.archetypeWeapons(ch).find(w => w.name === "Blunt");
+  const nums = () => ({ bite: naturalOf(ch, "Bite").damage, fists: naturalOf(ch, "Fists").damage, blunt: blunt().damage, knife: Engine.weaponLine(ch, knife).damage });
+  const rows = () => [naturalOf(ch, "Bite"), naturalOf(ch, "Claws"), naturalOf(ch, "Fists"), blunt(), Engine.weaponLine(ch, knife)];
+  const stopped = nums();
+  for (const l of rows()) { assert.match(textOf(l, "Blood of Valhalla"), /^\+2 damage while Blood of Valhalla runs$/); same(l.bonuses.filter(b => b.from === "Blood of Valhalla"), []); }
+  assert.equal(Engine.startPower(ch, "blood-of-valhalla").ok, true);
+  const run = nums();
+  for (const k of Object.keys(stopped)) assert.equal(run[k], stopped[k] + 2, k);
+  for (const l of rows()) { same(l.conditional, []); same(l.bonuses.filter(b => b.from === "Blood of Valhalla"), [{ to: "damage", amount: 2, from: "Blood of Valhalla" }]); }
+  assert.equal(Engine.stopPower(ch, "blood-of-valhalla").ok, true);
+  same(nums(), stopped);
+});
+
+test("Decision 292: Let It Loose running turns claws and fangs to Spirit, and leaves Fists", () => {
+  const ch = l5Wolf("wildblood", { "let-it-loose": 1 }, { "let-it-loose": 1 });
+  ch.progression.ip.earned = 1000;
+  assert.ok(Engine.setToggle(ch, "form", "Werewolf").ok);
+  const rank = Engine.archetypePowers(ch).find(p => p.id === "let-it-loose").rank;
+  assert.ok(rank >= 2, "the test wants a rank past the first");
+  const base = { Claws: naturalOf(ch, "Claws").damage, Fangs: naturalOf(ch, "Fangs").damage, Fists: naturalOf(ch, "Fists").damage };
+  assert.match(textOf(naturalOf(ch, "Claws"), "Let It Loose"), /^\+\d+ damage, Spirit damage, and it strikes Unbodied creatures while Let It Loose runs$/);
+  assert.notEqual(naturalOf(ch, "Claws").damageType, "Spirit", "a stopped power changed the type");
+  assert.equal(Engine.startPower(ch, "let-it-loose").ok, true);
+  for (const name of ["Claws", "Fangs"]) {
+    const l = naturalOf(ch, name);
+    assert.equal(l.damageType, "Spirit", name);
+    assert.equal(l.damage, base[name] + rank - 1, name);
+    assert.match(l.conditional[0].text, /Unbodied/); assert.equal(l.conditional[0].running, true);
+  }
+  const f = naturalOf(ch, "Fists");
+  same([f.damage, f.damageType, f.conditional], [base.Fists, "Blunt", []]);
+});
+
+test("Decision 292: a running power's type goes first, so a worn kinetic bonus no longer reaches a Spirit claw", () => {
+  const build = () => {
+    const ch = l5Wolf("wildblood", { "let-it-loose": 1 }, { "let-it-loose": 1 });
+    ch.creation.locked = true; ch.progression.ip.earned = 1000;
+    assert.ok(Engine.setToggle(ch, "form", "Werewolf").ok); l3Have(ch, "armor", "smartlink-gloves");
+    return ch;
+  };
+  withGloves([{ type: "weaponBonus", to: "damage", amount: 5, class: "kinetic" }], () => {
+    const ch = build();
+    assert.equal(naturalOf(ch, "Claws").bonuses.length, 0, "Claws have no type while stopped");
+    assert.equal(Engine.startPower(ch, "let-it-loose").ok, true);
+    assert.equal(naturalOf(ch, "Claws").bonuses.some(b => b.from === "SMARTLink Gloves"), false);
+    assert.equal(naturalOf(ch, "Fists").bonuses.some(b => b.from === "SMARTLink Gloves"), true);
+  });
+});
+
+test("Decision 292: a Code-broken Ancient Weapon takes no power's mark", () => {
+  const ch = l5Vamp("draugur", { "blood-of-valhalla": 1 }, { pl: "wcd" });
+  ch.archetypeChoices.optionPicks = { "ancient-weapon": "blunt" };
+  const blunt = () => Engine.archetypeWeapons(ch).find(w => w.name === "Blunt");
+  assert.equal(blunt().conditional.length, 1);
+  assert.ok(Engine.setToggle(ch, "code", "Broken").ok);
+  same(blunt().conditional, []);
+});
+
+test("Decision 292: attackMods reads bad data as nothing, and the readers stay total", () => {
+  const base = () => l5Vamp("strigoi", { "bone-spines": 1, "monstrous-maw": 1 });
+  const power = D.archetypes.find(a => a.id === "vampire").powers.find(p => p.id === "bone-spines");
+  const marksAfter = fn => { let out; withData(power, "grants", [fn(power.grants[0])], () => { out = naturalOf(base(), "Fists").conditional.filter(c => /Bone Spines/.test(c.from)); }); return out; };
+  same(marksAfter(g => ({ ...g, kinds: 7, class: undefined })), [], "kinds that isn't a list");
+  same(marksAfter(g => ({ ...g, class: undefined, kinds: ["tail"] })), [], "a kind nothing has");
+  same(marksAfter(g => ({ ...g, kinds: ["fist"] })), [], "both kinds and class");
+  same(marksAfter(g => ({ ...g, class: undefined })), [], "neither");
+  assert.match(marksAfter(g => ({ ...g, damage: { plus: "x" } }))[0].text, /^\+5 while grappling/, "a damage that isn't a number reads as 0");
+  assert.match(marksAfter(g => ({ ...g, damageType: "Plasma" }))[0].text, /^\+3 damage/, "an unknown type is ignored");
+  withData(D.weaponRules, "attackMods", undefined, () => same(naturalOf(base(), "Fists").conditional, []));
+  // Total: each of the eight held and running, in and out of form; and a character migrate() made from nothing.
+  for (const ch of [Engine.migrate({}), l5Vamp("strigoi", { "bone-spines": 1 }), l5Vamp("draugur", { "blood-of-valhalla": 1 }), l5Wolf("wildblood", { "let-it-loose": 1 }), l5Wolf("forge-fang", { "steel-fangs": 1 })]) {
+    for (const form of ["Human", "Werewolf"]) {
+      Engine.setToggle(ch, "form", form);
+      for (const id of ["blood-of-valhalla", "let-it-loose"]) Engine.startPower(ch, id);
+      assert.doesNotThrow(() => { Engine.naturalAttacks(ch); Engine.archetypeWeapons(ch); const at = l3Have(ch, "weapons", "combat-knife"); Engine.weaponLine(ch, at); }, form);
+    }
+  }
+  same(Engine.attackMods(null, null), { marks: [], applied: [] });
+});
+
+test("Decision 292: the Ancient Weapon is reached as melee by its Skill, not by being the archetype's", () => {
+  const ch = l5Vamp("draugur", { "blood-of-valhalla": 1 }, { pl: "wcd" });
+  ch.archetypeChoices.optionPicks = { "ancient-weapon": "blunt" };
+  const blunt = () => Engine.archetypeWeapons(ch).find(w => w.name === "Blunt");
+  assert.equal(blunt().conditional.length, 1);
+  const def = JSON.stringify(D.archetypes).includes('"ancient-weapon"') ? (function find(o) {
+    if (Array.isArray(o)) { for (const x of o) { const r = find(x); if (r) return r; } return null; }
+    if (o && typeof o === "object") { if (o.id === "blunt" && o.skill) return o; for (const k of Object.keys(o)) { const r = find(o[k]); if (r) return r; } }
+    return null; })(D.archetypes) : null;
+  assert.ok(def, "the Blunt option isn't in the data");
+  withData(def, "skill", "handguns", () => same(blunt().conditional, [], "a ranged Skill's Ancient Weapon took a melee power's mark"));
+  assert.equal(blunt().conditional.length, 1);
 });

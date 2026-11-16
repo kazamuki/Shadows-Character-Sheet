@@ -180,7 +180,7 @@ encounter starts and ends.
 uses counters as P18-shaped data on the effect. Its own plan, probably two orders.
 
 **W160 — A trained weapon that counts as natural.** *Deighton, at the 2026-11-12 meeting · 💡 · Rule or shape · raised 2026-11-15*\
-**Plan:** none yet
+**Plan:** [loadout-and-gear L9](plans/loadout-and-gear.md), waiting on Deighton's ruling
 
 Deighton floated that a weapon a character is trained with (his eskrima sticks) could count as a natural weapon, so it joins the group of natural attacks. Not ruled. L4 builds the group by a data `kind` (Decision 290); a trained weapon would need a rule for which weapons qualify and where the sheet reads the training. Ask him before any plan.
 
@@ -288,7 +288,7 @@ against `0450` and Redeemed is an open book question (the CRB folder's HANDOFF f
 ### Loadout & catalog
 
 **W69 — Gear that changes what you can do while you wear it.** *Ken, from Deighton · ⏭ · Rule or shape · raised 2026-10-08 · answered by Deighton 2026-10-10*\
-**Plan:** [loadout-and-gear L1, L3 and L7](plans/loadout-and-gear.md) (L1 merged, PR #252; L3 built, PR #257: [L3-worn-modifiers](plans/loadout-and-gear/L3-worn-modifiers.md); L7 left, so W69 stays open) · **Goes with:** W91
+**Plan:** set aside by [loadout-and-gear §4](plans/loadout-and-gear.md): L1 and L3 built the worn half (PR #252, PR #257: [L3-worn-modifiers](plans/loadout-and-gear/L3-worn-modifiers.md)); the suit half (was L7, Powered Armor's enhancements, PA5–PA8 answered) left the plan 2026-11-15 with vehicles, since a suit is one. It follows W91, whose shelved order is [L6-vehicles](plans/loadout-and-gear/L6-vehicles.md) · **Goes with:** W91
 
 Deighton's ask: powered armor worn over the body should show its bonuses where
 they land. Armor giving +5 to BOD skills and damage should raise Melee and
@@ -325,7 +325,7 @@ and caps (`ipCost`, `canBoost`) must keep reading the rank without the worn
 bonus, or taking armor off would change what the next rank costs.
 
 **W91 — Vehicles you can buy and own, Powered Armor among them.** *Ken, from Brogan · 🔎 · Content, then Rule or shape · raised 2026-10-10*\
-**Plan:** [loadout-and-gear L6](plans/loadout-and-gear/L6-vehicles.md), shelved on Deighton (was sheet-wishlist's P14) · **Goes with:** W69, W90
+**Plan:** set aside by [loadout-and-gear §4](plans/loadout-and-gear.md) on 2026-11-15 (Ken): it waits on Deighton's vehicle follow-ups. Its shelved order is [L6-vehicles](plans/loadout-and-gear/L6-vehicles.md) (was sheet-wishlist's P14), to be re-pre-flighted against `main` if it's revived · **Goes with:** W69, W90
 
 There are no vehicles in the app: only the Pilot skill and Machindo. `0460`
 has the chapter: **Grounders** and **Jumpers** (Seats, PROT, RES, INT, Speed,
@@ -361,15 +361,6 @@ type, so a combined one could be called whole at any count. Questions to settle
 first: what size a combined magazine is; whether specialty rounds can be combined
 with standard ones (they can't share a magazine's tags); and whether it costs an
 action at the table. P9b leaves merging out of scope (its §7).
-
-**W136 — A Major or a power changes one weapon or armor row.** *Claude, from closing the sheet-wishlist plan · 💡 · Rule or shape · raised 2026-10-24*\
-**Plan:** [loadout-and-gear L5 and L5b](plans/loadout-and-gear.md): split by Ken 2026-11-01. The Majors are L5 (built, Decision 263: [L5-major-on-a-row](plans/loadout-and-gear/L5-major-on-a-row.md)); the powers are L5b, after L4
-
-P21's inventory listed these as "later orders" (`plans/archive/sheet-wishlist/P21-inventory.md`, c20 and c22–c34), and the plan closed without them, so nothing covered them. Each is printed on its card and the player does it by hand on the weapon or armor:
-- **A Major on one row the player picks:** Tuned Edge ("it gains +1 to damage", that weapon only), Custom Fit (that armor's damage reduction die a step up, d4 to d6, never past d12), Signature, Iconic and Legendary Weapon (Mod Slots and free Upgrades on one weapon), Weapon Expert ("+1d4 kicker to combat rolls using it; if a +1d4 already applies, it increases to +1d6").
-- **A power on natural weapons or melee, while it runs:** Rend and Tear, Bone Spines, Monstrous Maw, Rending Claws, Blood of Valhalla (Vampire); Let It Loose, Steel Fangs, Serrated Claws (Werewolf).
-
-*To respect:* a Major saves only a `power` today (Decision 223), so a picked row is a schema bump, and the pick has to survive another row being removed (loadout rows are an array). The modifier on the line is W69's, so this follows it. The natural-weapon rows sit beside W107's natural attacks. "Combat rolls" are the attacks (P21's PQ6). Nothing stores that a power is running (W110), so the power rows are conditional marks or they wait (Decision 104's pattern).
 
 ### Cybernetics
 
@@ -436,7 +427,7 @@ buy doesn't change under it). Lands with the Cyborg's retirement, which needs
 its own numbered decision.
 
 **W90 — Cybernetics.** *Ken, from Brogan; rewritten 2026-10-22 with Deighton's system · 🔎 · Rule or shape · raised 2026-10-10 · needs its own plan; Deighton for the questions below*\
-**Plan:** set aside by [loadout-and-gear §4](plans/loadout-and-gear.md): waits on the cybernetics design (F6, F19) and Deighton's six questions; it needs a plan of its own, built on L6's row shape · **Goes with:** W61, W91, W127, W134
+**Plan:** set aside by [loadout-and-gear §4](plans/loadout-and-gear.md): waits on the cybernetics design (F6, F19) and Deighton's six questions; it needs a plan of its own. Its hand cyberware joins the natural group as [loadout-and-gear L10](plans/loadout-and-gear.md), after that plan · **Goes with:** W61, W91, W127, W134
 *Natural weapons (L4, Decision 290):* cyberware on the hands is a natural weapon by the 2026-11-12 ruling, so it joins the natural group through a data `kind`, and a worn melee bonus already reaches it. The tri-claws' ladder is +3 / +6 / +8 (the +12 → +8 change), and stacking adds to BOD once.
 
 Playtesters want chrome, and as of 2026-10-22 there is something to build from. The Cyborg archetype was
@@ -1211,9 +1202,15 @@ Five reads in `tests/rules.test.mjs` (the header comment, and the CRB checks nea
 tests. Point them at `0432_Advantages.md` and `0431_Disadvantages.md`, check each still finds its text, then Ken removes the two files from Shadows-Private.
 *To respect:* the mirror is never edited here; its removal is a Shadows-Private change, and the pointer moves after it.
 
+**W164 — A command that shows which weapon numbers a change moved.** *Ken, from L5b's build · 💡 · Docs, tooling · raised 2026-11-16*\
+**Plan:** none yet
+
+L5b's order asked for a fixture diff: every archetype, specialization and form, holding every power plus a knife, a pistol and a grenade, with `naturalAttacks`, `archetypeWeapons` and `weaponLine` read on `origin/main` and on the branch, and the fields that moved listed. The builder wrote it as a throwaway script, and the next order that touches a weapon line would write it again (the [loadout-and-gear](plans/loadout-and-gear.md) follow-ons, L8 to L10, each do). The ask: a tool in `tools/`, beside `phone-check`, that does it (`node tools/weapon-diff.mjs`) and prints which fields moved and in how many cases, with a switch to run the running powers too. It reads `origin/main` through a `git worktree` and loads the engine by `vm`, as `tests/harness.mjs` does, so it needs no `node_modules` in the second tree.
+*To respect:* it's a report, not a guard; an order says which moves are expected.
+
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W164.** Everything above is open. What was built is in
+- **Next free number: W165.** Everything above is open. What was built is in
   [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)

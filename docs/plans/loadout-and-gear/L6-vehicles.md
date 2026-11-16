@@ -1,5 +1,7 @@
 # Work order L6: Vehicles (was P14, Loadout rows)
 
+**Off the plan 2026-11-15** (Ken): vehicles left `loadout-and-gear.md` and are W91 on the wishlist again. This order is kept as it was, shelved. If it's revived, it's re-pre-flighted against `main` first (`WORK-ORDERS.md`, *An order that waited*): its line numbers, probes and *Carried over* predate L1–L5b.
+
 **Moved 2026-10-24.** This was P14 in the player sheet's plan, now closed
 ([`../archive/sheet-wishlist.md`](../archive/sheet-wishlist.md)). It is L6 in
 [`../loadout-and-gear.md`](../loadout-and-gear.md) §3. The text below still
