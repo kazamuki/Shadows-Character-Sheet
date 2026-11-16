@@ -1127,7 +1127,7 @@ const showsStatus = a => !!a && a.status!=="final" && a.status!=="draft";
 // ── Help: one panel, a host each for the screens that have it (Decisions 278, 166) ───────────────────────
 // The panel is `#ghelp` and its scrim `#ghscrim`. What it says and what it does inside is a HOST's: gm.js registers the table's,
 // sheet.js the sheet's. A host is { id, btn (the header's ? as a selector), open() (is it open), setOpen(on), context() (the id of
-// what's on the page, total), bodyHtml(id), bind(el), key?(id) (what makes a repaint needed), opened?(), left?(), synced?(shown) }. This code holds no Help string.
+// what's on the page, total), bodyHtml(id), bind(el), key?(id) (what makes a repaint needed), back?() (where focus goes when it closes, if not btn), opened?(), left?(), synced?(shown) }. This code holds no Help string.
 // From 1280px the panel is a column beside the page; narrower it is a flyout over a scrim that shuts at any move, as the vitals
 // flyout does (Decision 166), with its own setter: that one is the vitals'.
 const HELP_HOSTS = {}, HELP_MEDIA = "(min-width:1280px)";
@@ -1150,7 +1150,7 @@ const helpShown = () => { const h=helpHost(); return !!h && h.open(); };
 function helpHandBack(){
   const back=S.helpReturn, h=helpHost() || HELP_HOSTS[helpHostId];
   S.helpReturn=null;
-  const to = back && back.isConnected && back!==document.body && !back.closest("#ghelp") ? back : h && document.querySelector(h.btn);
+  const to = back && back.isConnected && back!==document.body && !back.closest("#ghelp") ? back : h && document.querySelector(h.back ? h.back() : h.btn);
   if (to) to.focus({ preventScroll:!!back });
 }
 // One place that says whether the panel is on screen, as the vitals flyout's setter does: shown, it is the panel; otherwise it is

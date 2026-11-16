@@ -233,6 +233,22 @@ test("K1: below 480px the ? is in ⋮ as Help, and focus comes back to ⋮", () 
   assert.deepEqual(app.errors, []);
 });
 
+test("K1: below 480px, Help opened by the key from the page closes back to ⋮, not to the hidden ?", () => {
+  const app = sheet("trackers", { width: 390 });
+  assert.equal(questionMark(app).prevented, true);
+  assert.equal(shown(app), true, "? didn't open Help");
+  app.$("#ghelp [data-help-close]").focus();   // a real press puts focus on Close first
+  app.click("#ghelp [data-help-close]");
+  assert.equal(shown(app), false);
+  assert.equal(app.doc.activeElement, app.$("[data-menu-toggle]"), "focus went to the ? the stylesheet hides below 480px");
+  const wide = sheet("trackers", { width: 1024 });
+  questionMark(wide);
+  wide.$("#ghelp [data-help-close]").focus();
+  wide.click("#ghelp [data-help-close]");
+  assert.equal(wide.doc.activeElement, wide.$("[data-shelp]"), "from 480px focus goes back to the ?");
+  assert.deepEqual(app.errors, []);
+});
+
 test("K1: Main's guide line is drawn, and the stylesheet hides it only below 640px", () => {
   const app = sheet("main");
   const line = app.$("#main [data-guide=\"main\"]");

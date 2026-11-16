@@ -98,6 +98,8 @@ function bindSheetHelp(el){
 let vitalsSwapped=false;
 HELP_HOSTS.sheet = {
   id:"sheet", btn:"[data-shelp]",
+  // Below 480px the ? is hidden and Help is in ⋮ (KQ1's fallback, shadows.css), so focus goes back to ⋮.
+  back:()=>window.matchMedia && !window.matchMedia("(min-width:480px)").matches ? "[data-menu-toggle]" : "[data-shelp]",
   open:()=>!!S.sheetHelpOpen,
   setOpen(on){ S.sheetHelpOpen=on; },
   // One flyout at a time (Decision 166): below 1280px an open vitals flyout gives way. The vitals' own setter does the closing.
