@@ -10,7 +10,9 @@ window.SHADOWS_CHANGELOG = [
       {
         "title": "Character sheet",
         "items": [
-          "Help's **Defensive Actions** reads as the rulebook now does: you parry with a handheld weapon."
+          "Help's **Defensive Actions** reads as the rulebook now does: you parry with a handheld weapon.",
+          "Four Cantrips are TN 7, like every other Cantrip: **Everlight**, **Hearthstone**, **Sure Grip** and **Watchward**. Their slips, pendants, wards and Artifacts follow.",
+          "The FG-1 \"Thunderclap\" hits harder on a 10: one explosion leaves its target **Injured**, two or more **Maimed**."
         ]
       },
       {

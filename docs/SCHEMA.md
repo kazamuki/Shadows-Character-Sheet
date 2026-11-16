@@ -637,7 +637,7 @@ window.SHADOWS_DATA = {
       duration: "Instant",
       overflow: { "1x": "Damage increases by ½ SP.", "2x+": "Damage increases, and the target is Burning." },
       tags: ["Fire"], flavorLine: "..." },
-    { id: "watchward", tier: "cantrip", tn: 8, th: 1, disciplines: ["enchantment"], /* … */ }
+    { id: "watchward", tier: "cantrip", tn: 7, th: 1, disciplines: ["enchantment"], /* … */ }
     // Every tier and Domain of the Book of Known Spells, its Inscribed Spells
     // included. Counterspell has th:null/overflow:null and a `notes` field
     // instead — no Threshold, no Overflow, by design.

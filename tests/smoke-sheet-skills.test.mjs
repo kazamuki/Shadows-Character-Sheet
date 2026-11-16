@@ -336,7 +336,7 @@ test("P1: a grenade reads its column as printed: radius, Defense, what each 10 a
   assert.match(row().textContent, /Radius 5m · Defense TN 8 TH 2/, "the catalog row doesn't show the grenade's Defense");
   app.click('#modal [data-catrow="fg1-thunderclap"] td');
   const detail = row().nextElementSibling.textContent;
-  assert.match(detail, /On a 10: 1x \+5 dmg · 2x\+ Injured\./, "the details don't show the 1x / 2x+ column");
+  assert.match(detail, /On a 10: 1x Injured · 2x\+ Maimed\./, "the details don't show the 1x / 2x+ column");
   assert.match(detail, /Every grenade escalates on the throw/, "the details don't carry the section's rule");
   assert.doesNotMatch(app.$('#modal [data-catrow="combat-knife"]').nextElementSibling.textContent, /escalates|On a 10/, "a knife carries the grenade rule");
   app.click('#modal [data-catadd="sg2-shockwave"]');
