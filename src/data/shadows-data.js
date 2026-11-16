@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.57",
+    "gamedataVersion": "0.58",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-11-11"
   },

@@ -5745,7 +5745,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** a mark on a running power (the sheet knows it runs, LQ43). Reach by name ("Claws"): a Forge Fang's Fangs are a bite. A per-power reader in code (Decision 135). Computing "AP 2" (LQ46). Storing "extended until retracted" (LQ47).
      - **Replaces:** Decision 104 in part (a running power's weapon bonus is summed); LQ5 for running powers. Extends 237, 248, 266, 290.
      - **Revisit if:** the book gives AP a number; W110's "extended until retracted" powers (Steel Fangs, Serrated Claws, Bone Spines) get a stored state; Deighton rules Bone Spines' grappling (F55).
-     - **Built:** app 0.71.0 (joins K2's heading, no bump), game data 0.57, no schema bump, PR (this one), log 2026-11-16 (L5b).
+     - **Built:** app 0.72.0 (minor), game data 0.58, no schema bump, PR (this one), log 2026-11-16 (L5b).
 
 ## 5. Open Flags
 
