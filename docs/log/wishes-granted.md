@@ -587,7 +587,7 @@ A weapon the player writes in is eight text boxes (name, type, damage, rof, capa
 
 *Built as loadout-and-gear L2 (2026-10-25): character schema 0.29, game data 0.49. A saved free-text `type` is kept as text and shown until a type is picked.*
 
-**W107 — An unarmed strike line, and Death Touch's AP on it.** *Ken, with Claude · → Decision 289, app 0.70.0: Fists for every character, one natural count, Death Touch as a conditional AP · raised 2026-10-15*
+**W107 — An unarmed strike line, and Death Touch's AP on it.** *Ken, with Claude · → Decision 290, app 0.70.0: Fists for every character, one natural count, Death Touch as a conditional AP · raised 2026-10-15*
 **Plan:** [loadout-and-gear L4](../plans/loadout-and-gear.md), built: [`L4-natural-attacks.md`](../plans/loadout-and-gear/L4-natural-attacks.md)
 
 **Natural attacks, 2026-10-23** (the design meeting, `reference/meeting-2026-10-23.md`): fists, claws and teeth are **natural attacks**, two a round by default in any mix, stopping at two. So the fists' line this item asks for also says that, as do a Vampire's or Werewolf's claws and fangs. Five details are still Deighton's.

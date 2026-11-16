@@ -182,7 +182,7 @@ uses counters as P18-shaped data on the effect. Its own plan, probably two order
 **W160 — A trained weapon that counts as natural.** *Deighton, at the 2026-11-12 meeting · 💡 · Rule or shape · raised 2026-11-15*\
 **Plan:** none yet
 
-Deighton floated that a weapon a character is trained with (his eskrima sticks) could count as a natural weapon, so it joins the group of natural attacks. Not ruled. L4 builds the group by a data `kind` (Decision 289); a trained weapon would need a rule for which weapons qualify and where the sheet reads the training. Ask him before any plan.
+Deighton floated that a weapon a character is trained with (his eskrima sticks) could count as a natural weapon, so it joins the group of natural attacks. Not ruled. L4 builds the group by a data `kind` (Decision 290); a trained weapon would need a rule for which weapons qualify and where the sheet reads the training. Ask him before any plan.
 
 **W132 — Powers that answer a hit, or heal while they run.** *Ken, from re-running P21's pre-flight · 💡 · Rule or shape · raised 2026-10-21*\
 **Plan:** set aside by [crb-catch-up](plans/crb-catch-up.md) (0410–0414): H2 and H3 built the rest (Decisions 267 and 268; `plans/archive/powers-that-run.md`); Battle Hardened and Elemental Blood wait on the book naming their Conditions and elements
@@ -418,7 +418,7 @@ its own numbered decision.
 
 **W90 — Cybernetics.** *Ken, from Brogan; rewritten 2026-10-22 with Deighton's system · 🔎 · Rule or shape · raised 2026-10-10 · needs its own plan; Deighton for the questions below*\
 **Plan:** set aside by [loadout-and-gear §4](plans/loadout-and-gear.md): waits on the cybernetics design (F6, F19) and Deighton's six questions; it needs a plan of its own, built on L6's row shape · **Goes with:** W61, W91, W127, W134
-*Natural weapons (L4, Decision 289):* cyberware on the hands is a natural weapon by the 2026-11-12 ruling, so it joins the natural group through a data `kind`, and a worn melee bonus already reaches it. The tri-claws' ladder is +3 / +6 / +8 (the +12 → +8 change), and stacking adds to BOD once.
+*Natural weapons (L4, Decision 290):* cyberware on the hands is a natural weapon by the 2026-11-12 ruling, so it joins the natural group through a data `kind`, and a worn melee bonus already reaches it. The tri-claws' ladder is +3 / +6 / +8 (the +12 → +8 change), and stacking adds to BOD once.
 
 Playtesters want chrome, and as of 2026-10-22 there is something to build from. The Cyborg archetype was
 cut (STATE §3); cybernetics are **gear, Professionals only**, and the **Enforcer is the cybernetics

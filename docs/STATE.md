@@ -143,7 +143,7 @@ rev 9's `C1`–`C3` are still forward notes.
 - **The `/impeccable audit`** of the whole app is its own read-only session; Ken triages its report.
 - **GM mode, what's next** (`plans/gm-mode-next.md`): Scott's play report first (S22), then S23 (the leftover fixes) is suggested.
 - **The vehicles-and-gear plan** (`plans/loadout-and-gear.md`) is approved (Ken, 2026-10-24, LQ1–LQ10 on their defaults); L1, L2, L2b, L3 and L5 are built.
-  L4 (natural attacks and the unarmed strike, Decision 289) is built in 0.70.0 (`plans/loadout-and-gear/L4-natural-attacks.md`). L5b, the powers half of W136, is next (Ken, 2026-11-01), and reads L4's `kind`; L6 (vehicles, was P14) and L7
+  L4 (natural attacks and the unarmed strike, Decision 290) is built in 0.70.0 (`plans/loadout-and-gear/L4-natural-attacks.md`). L5b, the powers half of W136, is next (Ken, 2026-11-01), and reads L4's `kind`; L6 (vehicles, was P14) and L7
   (Powered Armor) wait on Deighton.
   The player sheet's plan (`plans/archive/sheet-wishlist.md`) closed 2026-10-24, P1–P21 built.
 - **Help on the sheet** (`plans/help-on-the-sheet.md`, W156): K1 is built (Decision 289); K2 and K3 follow.

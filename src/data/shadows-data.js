@@ -2787,7 +2787,7 @@ window.SHADOWS_DATA = {
                          "stat": "BOD", "plus": 1, "while": "while active" },
                        { "type": "movement", "id": "fleet-of-foot", "name": "Fleet of Foot",
                          "times": 2, "paces": ["run", "sprint"], "while": "while active" },
-                       /* Decision 289: Death Touch. A conditional AP on a natural attack rolled with Martial Arts ("when not using melee weapons"); `natural` keeps it off a carried Martial Arts weapon. Engine.naturalAttacks reads it. */
+                       /* Decision 290: Death Touch. A conditional AP on a natural attack rolled with Martial Arts ("when not using melee weapons"); `natural` keeps it off a carried Martial Arts weapon. Engine.naturalAttacks reads it. */
                        { "type": "attackTag", "id": "death-touch", "name": "Death Touch", "tag": "AP", "skills": ["martial-arts"], "natural": true, "while": "while active" }]
           },
           {
@@ -4235,7 +4235,7 @@ window.SHADOWS_DATA = {
     "reloadNote": "Reloading is a Fast Action: a fresh magazine, a grenade off the belt, an arrow from the quiver.",
     "swap": { "text": "A Reload can swap one kind of rounds for another, once a turn. The magazine you take out goes back in your gear with what's left in it." },
     "modNote": "Mod slots are fixed at purchase. Removing a mod frees its slot, but may damage the mod.",
-    /* Decision 289: a weapon line is natural when it names one of `kinds` (a data row's `kind`). Every character has `fists`. `perRound` plus
+    /* Decision 290: a weapon line is natural when it names one of `kinds` (a data row's `kind`). Every character has `fists`. `perRound` plus
        each `addedBy` Advantage's `perRank` times its rank is the count of natural attacks a round, for the whole group. `skills`: a natural
        line rolls the highest of these (its own wins a tie). Read by Engine.naturalAttacks. Every string is for the voice pass. */
     "naturalAttacks": {

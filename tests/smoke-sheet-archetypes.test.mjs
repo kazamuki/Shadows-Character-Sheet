@@ -508,7 +508,7 @@ test("Main shifts a Forge Fang: the switch names the HL it costs, Claws and Fang
   assert.equal(ch.panelData.form, "Werewolf");
   assert.deepEqual([ch.trackers.damage, ch.trackers.witheringDamage], [7, 7], "the shift didn't spend one shifted HL as Withering");
   const rows = app.$$("#main .main-combat tbody tr").map(r => r.textContent.replace(/\s+/g, " "));
-  assert.match(rows[0], /^ ?Natural attacks: 2 a round/, "the natural group has no heading (Decision 289)");
+  assert.match(rows[0], /^ ?Natural attacks: 2 a round/, "the natural group has no heading (Decision 290)");
   assert.match(rows[1], /^ ?Claws ?Werewolf form · Melee ?1d10 \+ \d+ ?20 ?—/);
   assert.match(rows[2], /^ ?Fangs ?Werewolf form · Melee · Bite ?1d10 \+ \d+ ?22 ?—/, "a fang's kind is named: its name doesn't say Bite");
   assert.match(rows[3], /^ ?Fists ?Martial Arts/);
@@ -1036,7 +1036,7 @@ test("E6 3: a reference panel's column tables sit in a frame, and its prose tabl
   assert.deepEqual(app.errors, []);
 });
 
-// ── L4: natural attacks (Decision 289) ──────────────────────────────────
+// ── L4: natural attacks (Decision 290) ──────────────────────────────────
 const natVampire = () => {
   const ch = lockedCharacter();
   ch.identity.archetype = "vampire"; ch.creation.powerLevel = "wcd"; ch.archetypeChoices.specialization = ["draugur"];

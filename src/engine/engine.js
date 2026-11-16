@@ -687,12 +687,12 @@ const Engine = (() => {
     const opts = toggleOptions(p), pd = ch && ch.panelData && typeof ch.panelData==="object" ? ch.panelData : {};
     return opts.find(o=>o.name===pd[p.id]) || opts[0] || null;
   };
-  // ── Natural attacks (Decision 289) ──
+  // ── Natural attacks (Decision 290) ──
   // A weapon line is natural when its data names a `kind` the rules list (weaponRules.naturalAttacks.kinds). The key a row sits
   // in (`naturalWeapons`) isn't the rule: the Ancient Weapon is in it and is carried. An unknown kind reads as not natural.
   const naturalRules = () => { const r = (D().weaponRules||{}).naturalAttacks; return isPlainObj(r) ? r : null; };
   const naturalKind = k => { const R = naturalRules(); return typeof k==="string" && R && Array.isArray(R.kinds) && R.kinds.some(x=>isPlainObj(x) && x.id===k) ? k : null; };
-  // The line's Skill. A natural line rolls the highest of the rules' `skills`, its own winning a tie (Decision 289, LQ35).
+  // The line's Skill. A natural line rolls the highest of the rules' `skills`, its own winning a tie (Decision 290, LQ35).
   function naturalSkill(ch, ownId, kind){
     let best = skillById(ownId) ? skillLine(ch, ownId) : null;
     const R = naturalRules();
@@ -1927,7 +1927,7 @@ const Engine = (() => {
     if (typeof d==="string" && /^\s*\d+\s*$/.test(d)) return { value:Number(d), formula:null };
     const m = /^\s*([A-Za-z]+)\s*\+\s*(\d+)\s*$/.exec(String(d==null ? "" : d));
     const stat = m && normStat(m[1]);
-    // "BOD+0" reads "BOD" (Decision 289). "+n" stays required: a bare word is text, and "EMP" is a stat (the EG-3's damage).
+    // "BOD+0" reads "BOD" (Decision 290). "+n" stays required: a bare word is text, and "EMP" is a stat (the EG-3's damage).
     if (stat) return { value: statTable(ch)[stat].value + Number(m[2]), formula: Number(m[2])===0 ? stat : `${stat}+${m[2]}` };
     return { value:null, formula: d==null || d==="" ? null : String(d) };
   }
@@ -2028,7 +2028,7 @@ const Engine = (() => {
   function applyWeaponBonuses(ch, index, line, features){
     return applyBonusesFor(ch, weaponClass(ch, index), line, features);
   }
-  // The same reach for a class however it was read: a loadout row's (above) or a natural line's (Decision 289).
+  // The same reach for a class however it was read: a loadout row's (above) or a natural line's (Decision 290).
   function applyBonusesFor(ch, cls, line, features){
     line.bonuses = [];
     if (!cls) return line;
@@ -4957,7 +4957,7 @@ const Engine = (() => {
     return out;
   }
 
-  // ── Natural attacks (Decision 289) ────────────────────────────────────
+  // ── Natural attacks (Decision 290) ────────────────────────────────────
   // One group, one count: a Werewolf's form lines, an archetype's natural lines (a Vampire's bite and claws) and the Fists every
   // character has. Built from formView and archetypeWeapons, never a third computation, so Main and print can't disagree. The
   // Ancient Weapon is in archetypeWeapons with no `kind`: carried, never in the group. Total: any character, always the shape.

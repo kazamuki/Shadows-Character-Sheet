@@ -2700,7 +2700,7 @@ function togglePanelHtml(ch, p){
   else if (!opts.some(o=>o.does || o.text)) h += `<p class="step-note">${esc(copy("applyFromText"))}</p>`;
   return h;
 }
-// The natural group (Decision 289), as Main's weapon rows: one heading with the count and what it means, then every natural
+// The natural group (Decision 290), as Main's weapon rows: one heading with the count and what it means, then every natural
 // line (the form's, the archetype's, Fists), computed like a catalog weapon's: the Skill's total to hit, BOD+n to damage.
 // Everything comes from Engine.naturalAttacks, which print reads too. Its words are data, so a row says "AP while Death Touch is active"
 // only because the engine found the grant; nothing here decides what is natural.
@@ -3034,7 +3034,7 @@ function pDefenseHtml(ch){
 // The Loadout page's weapons: a catalog piece prints its computed line, and a
 // written-in one its picks the same way (Decision 247), the rest as typed.
 const pKickers = l => (l.kickers||[]).map(k=>"+"+k.die).join("");
-// The natural group leads, under its heading (Decision 289, LQ38): the same lines Main shows, from the same reader.
+// The natural group leads, under its heading (Decision 290, LQ38): the same lines Main shows, from the same reader.
 function pNaturalRows(ch){
   const n = Engine.naturalAttacks(ch);
   if (!n.lines.length) return [];
@@ -3163,7 +3163,7 @@ function renderPrintView(ch){
   p2 += `<div class="p-section">Skills</div>${pSkillsTableHtml(ch)}`;
 
   let p3 = pHead(ch, "Loadout");
-  // Weapons, Gear and Armor share the page's blank write-in lines (Decision 289): weapon rows past the five the table holds come out
+  // Weapons, Gear and Armor share the page's blank write-in lines (Decision 290): weapon rows past the five the table holds come out
   // of the Gear and Armor blanks first, down to one each, so no real row or copy is cut and the page keeps its sheet count.
   const wrows = pWeaponRows(ch), gearBlanks = Math.max(1, 5 - Math.max(0, wrows.filter(r=>Object.keys(r).length).length - 5));
   p3 += `<div class="p-section">Weapons</div>${pRowsTableHtml(wrows, ["name","attack","damage","range","rof","capacity","features","notes"],
@@ -3984,7 +3984,7 @@ function bindSheetReaders(main, goTab){
   // A button that goes to another tab, the way the header's tabs do.
   main.querySelectorAll("[data-gotab]").forEach(b=>b.onclick=()=>goTab(b.dataset.gotab));
   main.querySelectorAll("[data-jump]").forEach(b=>b.onclick=()=>jumpTo(b.dataset.jump));
-  // The natural group's rules (Decision 289): on a phone they sit behind the heading, a tap away; wider screens show them always.
+  // The natural group's rules (Decision 290): on a phone they sit behind the heading, a tap away; wider screens show them always.
   main.querySelectorAll("[data-natmore]").forEach(b=>b.onclick=()=>{
     const el=main.querySelector("#"+b.getAttribute("aria-controls")), open=!(el && el.classList.contains("open"));
     if (el) el.classList.toggle("open", open);

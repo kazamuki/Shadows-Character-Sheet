@@ -13509,13 +13509,13 @@ test("E8 5: the tips' sentences come from appCopy, and the engine hands back the
   assert.deepEqual(J(e.term("dark").more), []);
 });
 
-// ── L4: natural attacks (Decision 289) ──────────────────────────────────
+// ── L4: natural attacks (Decision 290) ──────────────────────────────────
 const natNames = ch => Engine.naturalAttacks(ch).lines.map(l => l.name);
 const naturalOf = (ch, name) => Engine.naturalAttacks(ch).lines.find(l => l.name === name);
 const warrior = (bod = 8) => { const ch = subject({ bod }); ch.identity.archetype = "professional"; ch.archetypeChoices.specialization = ["true-warrior"]; return ch; };
 const withMelee = (ch, id, rank) => { ch.advantages = [{ id, rank, notes: "" }]; return ch; };
 
-test("Decision 289: every character has Fists — Martial Arts, BOD damage, Blunt — and two natural attacks a round", () => {
+test("Decision 290: every character has Fists — Martial Arts, BOD damage, Blunt — and two natural attacks a round", () => {
   const ch = subject({ bod: 5 });
   const n = Engine.naturalAttacks(ch);
   assert.equal(n.lines.length, 1);
@@ -13528,7 +13528,7 @@ test("Decision 289: every character has Fists — Martial Arts, BOD damage, Blun
   assert.match(n.rules, /^Two different natural weapons/);
 });
 
-test("Decision 289: Melee Master adds one natural attack a rank, not a pair", () => {
+test("Decision 290: Melee Master adds one natural attack a rank, not a pair", () => {
   const ch = withMelee(subject(), "melee-master", 2);
   ch.identity.archetype = "professional";
   const n = Engine.naturalAttacks(ch);
@@ -13539,7 +13539,7 @@ test("Decision 289: Melee Master adds one natural attack a rank, not a pair", ()
   assert.equal(Engine.naturalAttacks(subject()).addedBy.length, 0);
 });
 
-test("Decision 289: a Vampire's bite and claws are natural; the Ancient Weapon is not", () => {
+test("Decision 290: a Vampire's bite and claws are natural; the Ancient Weapon is not", () => {
   const ch = vampire("draugur", { pl: "wcd", bod: 7 });
   ch.archetypeChoices.optionPicks = { "ancient-weapon": "blunt" };
   same(natNames(ch), ["Bite", "Claws", "Fists"]);
@@ -13554,7 +13554,7 @@ test("Decision 289: a Vampire's bite and claws are natural; the Ancient Weapon i
   same(natNames(ch), ["Bite", "Claws", "Fists"]);
 });
 
-test("Decision 289: a Werewolf's claws and fangs join the group only in form", () => {
+test("Decision 290: a Werewolf's claws and fangs join the group only in form", () => {
   const ch = werewolf("trueborn");
   same(natNames(ch), ["Fists"]);
   assert.ok(Engine.setToggle(ch, "form", "Werewolf").ok);
@@ -13565,7 +13565,7 @@ test("Decision 289: a Werewolf's claws and fangs join the group only in form", (
   same(natNames(ch), ["Fists"]);
 });
 
-test("Decision 289: a natural line rolls the higher of Melee and Martial Arts and names it", () => {
+test("Decision 290: a natural line rolls the higher of Melee and Martial Arts and names it", () => {
   const ch = werewolf("trueborn", { base: 8 });
   assert.ok(Engine.setToggle(ch, "form", "Werewolf").ok);
   ch.skills.melee = { rank: 2, ipe: 0 }; ch.skills["martial-arts"] = { rank: 2, ipe: 0 };
@@ -13589,7 +13589,7 @@ test("Decision 289: a natural line rolls the higher of Melee and Martial Arts an
   assert.equal(Engine.archetypeWeapons(v).find(w => w.name === "Blunt").skill, "Melee");
 });
 
-test("Decision 289: Death Touch marks a Martial Arts natural line AP, conditional, never on a carried weapon", () => {
+test("Decision 290: Death Touch marks a Martial Arts natural line AP, conditional, never on a carried weapon", () => {
   const ch = warrior();
   const f = naturalOf(ch, "Fists");
   same(f.conditional, [{ tag: "AP", from: "Death Touch", applies: true, text: "AP while Death Touch is active" }]);
@@ -13611,7 +13611,7 @@ test("Decision 289: Death Touch marks a Martial Arts natural line AP, conditiona
   withData(spec, "grants", spec.grants.map(g => g.type === "attackTag" ? { ...g, natural: false } : g), () => same(naturalOf(warrior(), "Fists").conditional, []));
 });
 
-test("Decision 289: a worn melee bonus reaches every natural line, a ranged one none", () => {
+test("Decision 290: a worn melee bonus reaches every natural line, a ranged one none", () => {
   const build = () => {
     const ch = l3Char(); ch.identity.archetype = "vampire"; ch.creation.powerLevel = "wcd";
     ch.archetypeChoices.specialization = ["draugur"];
@@ -13637,7 +13637,7 @@ test("Decision 289: a worn melee bonus reaches every natural line, a ranged one 
   assert.deepEqual([feature.fists.bonuses, feature.bite.bonuses], [[], []], "a feature bonus reached a natural line");
 });
 
-test("Decision 289: weaponDamage shows BOD+0 as BOD and never computes a bare word", () => {
+test("Decision 290: weaponDamage shows BOD+0 as BOD and never computes a bare word", () => {
   const ch = subject({ bod: 6 });
   same(Engine.weaponDamage(ch, "BOD+0"), { value: 6, formula: "BOD" });
   same(Engine.weaponDamage(ch, "BOD+3"), { value: 9, formula: "BOD+3" });
@@ -13649,7 +13649,7 @@ test("Decision 289: weaponDamage shows BOD+0 as BOD and never computes a bare wo
   same(Engine.weaponDamage(ch, eg3), { value: null, formula: eg3 });
 });
 
-test("Decision 289: naturalAttacks is total, and its data reads as it should when wrong", () => {
+test("Decision 290: naturalAttacks is total, and its data reads as it should when wrong", () => {
   for (const [label, ch] of Object.entries(degenerates())) {
     let n;
     assert.doesNotThrow(() => { n = Engine.naturalAttacks(ch); }, label);
