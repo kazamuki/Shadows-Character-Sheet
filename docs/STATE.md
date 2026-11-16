@@ -137,7 +137,7 @@ rev 9's `C1`–`C3` are still forward notes.
 
 ## 5. Where to start
 
-**The live site is v0.69.3** (data 0.54, schema 0.34), released 2026-11-15. 0.69.2 never shipped alone: E7 fixed E6's weapons-table overflow, so both went out in 0.69.3.
+**The live site is v0.71.0** (data 0.56, schema 0.34), released 2026-11-16.
 
 **Next is Ken's pick**, each built through a work order (`WORK-ORDERS.md`):
 - **The `/impeccable audit`** of the whole app is its own read-only session; Ken triages its report.
