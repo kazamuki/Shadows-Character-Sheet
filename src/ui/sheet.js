@@ -603,13 +603,13 @@ function renderShMain(){
       <table class="ref wpn"><thead><tr><th>Weapon</th><th>Attack</th><th>Dmg</th><th>RoF</th><th>Cap.</th></tr></thead><tbody>` + natural +
       lines.map(l=>{
         if (l.custom){ const w=ch.weapons[l.index];
-          return `<tr><td>${esc(w.name)||"—"}${w.features?`<div class="lo-sub">${esc(w.features)}</div>`:""}</td>
-            <td class="num">${attackWithKicker(l)}${l.acc?`<div class="lo-sub">+${l.acc} ACC Single</div>`:""}</td>
-            <td class="num">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}</td>
+          return `<tr><td>${esc(w.name)||"—"}${w.features?`<div class="lo-sub">${esc(w.features)}</div>`:""}${condLinesHtml(l)}</td>
+            <td class="num">${attackWithKicker(l)}${l.acc?`<div class="lo-sub">+${l.acc} ACC Single</div>`:""}${bonusLinesHtml(l, "acc")}</td>
+            <td class="num">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}${bonusLinesHtml(l, "damage")}</td>
             <td class="num">${esc(l.rof||"—")}</td><td class="num lo-rounds">${roundsHtml(l, w.capacity)}${w.ammo?` (${esc(w.ammo)})`:""}</td></tr>`; }
-        return `<tr><td>${esc(l.name)}${(l.tags||[]).length+(l.features||[]).length?`<div class="tags">${tagChipsHtml([...(l.tags||[]), ...(l.features||[])])}</div>`:""}</td>
-          <td class="num">${attackWithKicker(l)}${l.acc?`<div class="lo-sub">+${l.acc} ACC Single</div>`:""}${aimedHtml(l)}</td>
-          <td class="num">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}</td>
+        return `<tr><td>${esc(l.name)}${(l.tags||[]).length+(l.features||[]).length?`<div class="tags">${tagChipsHtml([...(l.tags||[]), ...(l.features||[])])}</div>`:""}${condLinesHtml(l)}</td>
+          <td class="num">${attackWithKicker(l)}${l.acc?`<div class="lo-sub">+${l.acc} ACC Single</div>`:""}${bonusLinesHtml(l, "acc")}${aimedHtml(l)}</td>
+          <td class="num">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}${bonusLinesHtml(l, "damage")}</td>
           <td class="num">${esc(l.rof||"—")}</td><td class="num lo-rounds">${roundsHtml(l, l.capacity)}</td></tr>`;
       }).join("") + `</tbody></table>` + attackNotesHtml(ch);
   }
@@ -743,6 +743,7 @@ function renderShCharacter(){
       `<div class="pick" ${p.gainsSpecialization?`data-powercard="${esc(p.id)}" tabindex="-1"`:""}><div class="head"><h2>${esc(p.name)}</h2>
         ${p.origin&&!specIds.includes(p.origin)?`<span class="chip">${esc(specNameOf(ch, p.origin))}</span>`:""}
         ${p.rank!=null?`<span class="cost">rank ${p.rank}</span>`:""}${p.cost&&!p.custom?`<span class="cost">${esc(p.cost)}</span>`:""}${p.drain?`<span class="cost">drain ${esc(p.drain)}</span>`:""}${p.uses?`<span class="cost">uses ${esc(p.uses)}</span>`:""}</div>
+        ${p.flagged?flagHtml(p):""}
         <div class="desc">${esc(p.description||p.effect||"")}${p.perRank?"\nPer rank: "+esc(p.perRank):""}${p.notes?"\n— "+esc(p.notes):""}${[p.damage&&"Damage "+p.damage,p.range&&"Range "+p.range,p.duration&&"Duration "+p.duration].filter(Boolean).map(x=>"\n"+esc(x)).join("")}</div>${runCardHtml(runnable.get(p.id))}${surgeHtml(ch, p.id)}${p.gainsSpecialization?openingHtml(opening):""}</div>`))
       + (content.powersText ? `<p class="step-note">${esc(content.powersText)}</p>` : ""));
     if (vulns.length) parts.push(secs.sect("Vulnerabilities") + cardsOf(vulns.map(v=>
@@ -2296,6 +2297,8 @@ function gearRowsHtml(ch){
   return h + loadoutAddHtml("gear");
 }
 // Decision 248: what a worn piece or a tool in use added to a weapon's line, one sub line each.
+// A power's marks on a weapon line (Decision 292): a stopped power is a conditional line, a running one a plain line.
+const condLinesHtml = l => (l.conditional||[]).map(c=>`<div class="lo-sub${c.running?"":" nat-cond"}">${esc(c.text)}</div>`).join("");
 const bonusLinesHtml = (l, to) => (l.bonuses||[]).filter(b=>b.to===to).map(b=>`<div class="lo-sub">+${b.amount} from ${esc(b.from)}</div>`).join("");
 // Decision 263: the kicker a Major puts beside the attack, with the die it grows to while a condition holds.
 const kickerLinesHtml = l => (l.kickers||[]).map(k=>`<div class="lo-sub">${esc(k.die)} from ${esc(k.from)}</div>` +
@@ -2425,7 +2428,7 @@ function weaponRowsHtml(ch){
         const range = [l.reach ? `Reach ${l.reach}` : l.range, l.radius ? `Radius ${l.radius}` : null, l.parry ? `Parry ${l.parry}` : null].filter(Boolean).join(" · ");
         const def = (D.weapons||[]).find(w=>w.id===l.id);
         const mods = weaponModsHtml(ch, l) + (def && def.flagged ? flagHtml(def) : "") + majorsLineHtml(ch, "weapons", l.index);
-        return `<tr data-weaponrow="${l.index}"><td><b>${esc(l.name)}</b><div class="lo-sub">${esc(sub.join(" · "))}</div>${(l.tags||[]).length+(l.features||[]).length?`<div class="tags">${tagChipsHtml([...(l.tags||[]), ...(l.features||[])])}</div>`:""}</td>
+        return `<tr data-weaponrow="${l.index}"><td><b>${esc(l.name)}</b><div class="lo-sub">${esc(sub.join(" · "))}</div>${(l.tags||[]).length+(l.features||[]).length?`<div class="tags">${tagChipsHtml([...(l.tags||[]), ...(l.features||[])])}</div>`:""}${condLinesHtml(l)}</td>
           <td class="num">${attackWithKicker(l)}${l.acc?`<div class="lo-sub">+${l.acc} ACC on Single</div>`:""}${bonusLinesHtml(l, "acc")}${kickerLinesHtml(l)}${aimedHtml(l)}</td>
           <td class="num">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}${l.damage!=null&&l.damageFormula?`<div class="lo-sub">${esc(l.damageFormula)}</div>`:""}${
             l.damageBonus?`<div class="lo-sub">+${l.damageBonus} from mods</div>`:""}${bonusLinesHtml(l, "damage")}</td>
@@ -2435,7 +2438,7 @@ function weaponRowsHtml(ch){
           mods?`<tr class="lo-modrow"><td colspan="8">${mods}</td></tr>`:""}`;
       }).join("") + folded.map(l=>{ const r=ch.weapons[l.index], t=c=>String(r[c]||"");
         const sub = [l.skill ? l.skill.name : l.typeText, l.damageType].filter(Boolean);
-        return `<tr data-weaponrow="${l.index}"><td><b>${esc(l.name)}</b>${sub.length?`<div class="lo-sub">${esc(sub.join(" · "))}</div>`:""}${t("features")?`<div class="lo-sub">${esc(t("features"))}</div>`:""}</td>
+        return `<tr data-weaponrow="${l.index}"><td><b>${esc(l.name)}</b>${sub.length?`<div class="lo-sub">${esc(sub.join(" · "))}</div>`:""}${t("features")?`<div class="lo-sub">${esc(t("features"))}</div>`:""}${condLinesHtml(l)}</td>
           <td class="num">${attackWithKicker(l)}${l.acc?`<div class="lo-sub">+${l.acc} ACC on Single</div>`:""}${bonusLinesHtml(l, "acc")}${kickerLinesHtml(l)}</td>
           <td class="num">${l.damage!=null?l.damage:esc(l.damageFormula||"—")}${l.damage!=null&&l.damageFormula?`<div class="lo-sub">${esc(l.damageFormula)}</div>`:""}${bonusLinesHtml(l, "damage")}</td>
           <td>${esc(l.range||"—")}</td><td class="num">${esc(l.rof||"—")}</td>
@@ -2745,7 +2748,7 @@ function naturalGroupHtml(ch){
   const n = Engine.naturalAttacks(ch);
   if (!n.lines.length) return "";
   const head = n.heading ? `<tr class="nat-head"><td colspan="5"><b>${termsHtml(n.heading)}</b>${n.each||n.rules?`${n.more?` <button type="button" class="btn sm ghost nat-more" data-natmore aria-expanded="false" aria-controls="nat-rules">${esc(n.more)}</button>`:""}<div class="lo-sub${n.more?" nat-rules":""}" id="nat-rules">${termsHtml([n.each, n.rules].filter(Boolean).join(" "))}</div>`:""}</td></tr>` : "";
-  return head + n.lines.map(w=>`<tr class="nat-row${w.off?" off":""}" data-natural="${esc(w.kind)}"><td>${esc(w.name)}<div class="lo-sub">${naturalSubParts(w).map(esc).join(" · ")}</div>${w.off?`<div class="lo-sub">${esc(w.offText)}</div>`:""}${(w.tags||[]).length?`<div class="tags">${tagChipsHtml(w.tags)}</div>`:""}${(w.conditional||[]).map(c=>`<div class="lo-sub nat-cond">${esc(c.text)}</div>`).join("")}</td>
+  return head + n.lines.map(w=>`<tr class="nat-row${w.off?" off":""}" data-natural="${esc(w.kind)}"><td>${esc(w.name)}<div class="lo-sub">${naturalSubParts(w).map(esc).join(" · ")}</div>${w.off?`<div class="lo-sub">${esc(w.offText)}</div>`:""}${(w.tags||[]).length?`<div class="tags">${tagChipsHtml(w.tags)}</div>`:""}${condLinesHtml(w)}</td>
     <td class="num">${w.attack==null?"—":attackText(w.attack)}${bonusLinesHtml(w, "acc")}</td><td class="num">${w.damage!=null?w.damage:esc(w.damageFormula||"—")}${bonusLinesHtml(w, "damage")}</td>
     <td class="num">—</td><td class="num">—</td></tr>`).join("");
 }
@@ -2766,8 +2769,8 @@ ${esc(f.name)}: ${f.value.trim()?esc(f.value):"—"}`).join("")}</div>`;
 function archetypeWeaponRowsHtml(ch){
   return Engine.archetypeWeapons(ch).filter(w=>!w.kind).map(w=>{
     const sub = [w.from, w.rank!=null?`rank ${w.rank}`:"", w.skill, ...w.extra].filter(Boolean).map(esc).join(" · ");
-    return `<tr class="${w.off?"off":""}"><td>${esc(w.name)}<div class="lo-sub">${sub}</div>${w.off?`<div class="lo-sub">${esc(w.offText)}</div>`:""}${w.tags.length?`<div class="tags">${tagChipsHtml(w.tags)}</div>`:""}</td>
-    <td class="num">${w.attack==null?"—":attackText(w.attack)}</td><td class="num">${w.damage!=null?w.damage:esc(w.damageFormula||"—")}</td>
+    return `<tr class="${w.off?"off":""}"><td>${esc(w.name)}<div class="lo-sub">${sub}</div>${w.off?`<div class="lo-sub">${esc(w.offText)}</div>`:""}${w.tags.length?`<div class="tags">${tagChipsHtml(w.tags)}</div>`:""}${condLinesHtml(w)}</td>
+    <td class="num">${w.attack==null?"—":attackText(w.attack)}</td><td class="num">${w.damage!=null?w.damage:esc(w.damageFormula||"—")}${bonusLinesHtml(w, "damage")}</td>
     <td class="num">—</td><td class="num">—</td></tr>`; }).join("");
 }
 // Feeding (Decision 201): what the hunger says at RoU or under, the kinds of
@@ -3066,6 +3069,9 @@ function pDefenseHtml(ch){
 // written-in one its picks the same way (Decision 247), the rest as typed.
 const pKickers = l => (l.kickers||[]).map(k=>"+"+k.die).join("");
 // The natural group leads, under its heading (Decision 290, LQ38): the same lines Main shows, from the same reader.
+// A row's Features on paper: its tags, then each power's mark after them. Tags join with ", "; a mark holds commas itself, so
+// marks join with "; " and you can tell where one power ends (Decision 292).
+const pFeatures = (tags, marks) => [(tags||[]).join(", "), ...(marks||[]).map(c=>c.text)].filter(Boolean).join("; ");
 function pNaturalRows(ch){
   const n = Engine.naturalAttacks(ch);
   if (!n.lines.length) return [];
@@ -3073,7 +3079,7 @@ function pNaturalRows(ch){
   return rows.concat(n.lines.map(w=>({ tight:true, name:w.name, attack:w.attack==null?"":"1d10+"+w.attack,
     damage: w.damage!=null ? String(w.damage)+(w.damageFormula?` (${w.damageFormula})`:"") : (w.damageFormula||""),
     range:"", rof:"", capacity:"",
-    features:[...(w.tags||[]), ...(w.conditional||[]).map(c=>c.text)].join(", "),
+    features:pFeatures(w.tags, w.conditional),
     notes:naturalSubParts(w).join(" · ") })));
 }
 function pWeaponRows(ch){
@@ -3088,7 +3094,7 @@ function pWeaponRows(ch){
 function pOwnWeaponRows(ch){
   return Engine.archetypeWeapons(ch).filter(w=>!w.kind).map(w=>({ tight:true, name:w.name, attack:w.attack==null?"":"1d10+"+w.attack,
     damage: w.damage!=null ? String(w.damage)+(w.damageFormula?` (${w.damageFormula})`:"") : (w.damageFormula||""),
-    range:"", rof:"", capacity:"", features:(w.tags||[]).join(", "),
+    range:"", rof:"", capacity:"", features:pFeatures(w.tags, w.conditional),
     notes:[w.from, w.rank!=null?`rank ${w.rank}`:"", w.skill, ...w.extra, w.off ? w.offText : ""].filter(Boolean).join(" · ") }));
 }
 function pCarriedRows(ch){
@@ -3096,11 +3102,11 @@ function pCarriedRows(ch){
     if (l.custom){ const w=ch.weapons[l.index];
       return { name:[w.name,l.typeText].filter(Boolean).join(" · "), attack:l.attack==null?"":"1d10+"+l.attack+pKickers(l)+(l.acc?` (+${l.acc} ACC)`:""),
                damage: l.damage!=null ? String(l.damage)+(l.damageFormula?` (${l.damageFormula})`:"") : (l.damageFormula||""), range:l.range||"", rof:l.rof||"",
-               capacity:[w.capacity, w.ammo?`(${w.ammo})`:""].filter(Boolean).join(" "), features:w.features, notes:w.notes }; }
+               capacity:[w.capacity, w.ammo?`(${w.ammo})`:""].filter(Boolean).join(" "), features:pFeatures([w.features].filter(Boolean), l.conditional), notes:w.notes }; }
     return { name:l.name, attack:l.attack==null?"":"1d10+"+l.attack+pKickers(l)+(l.acc?` (+${l.acc} ACC)`:""),
              damage: l.damage!=null ? String(l.damage)+(l.damageFormula?` (${l.damageFormula})`:"") : (l.damageFormula||""),
              range: l.reach ? `Reach ${l.reach}` : (l.range||""), rof:l.rof||"", capacity:l.capacity||"",
-             features:[...(l.tags||[]), ...(l.features||[]), ...(l.mods||[]).map(m=>m.id)].join(", "), notes:l.notes };
+             features:pFeatures([...(l.tags||[]), ...(l.features||[]), ...(l.mods||[]).map(m=>m.id)], l.conditional), notes:l.notes };
   });
 }
 // Gear on paper: a catalog row prints its count or charges as its type.

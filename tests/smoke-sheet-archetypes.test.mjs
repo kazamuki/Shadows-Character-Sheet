@@ -1143,3 +1143,63 @@ test("Main: with no moreText in the data, the natural group's rules aren't folde
   assert.match(app.$(".nat-head").textContent, /Two different natural weapons/);
   assert.deepEqual(app.errors, []);
 });
+
+// ── L5b: a power's mark on the weapons it changes (Decision 292) ──
+const l5Strigoi = () => {
+  const ch = natVampire(); ch.archetypeChoices.specialization = ["strigoi"];
+  ch.archetypeChoices.basePowers = { "bone-spines": 1, "monstrous-maw": 1 };
+  ch.archetypeChoices.optionPicks = {};
+  return ch;
+};
+const printWeaponRows = (app, ch) => {
+  const box = app.doc.createElement("div"); box.innerHTML = app.window.renderPrintView(ch);
+  return [...[...box.querySelectorAll(".p-page")][2].querySelectorAll("table.p-table")[0].querySelectorAll("tbody tr")];
+};
+
+test("Main, Loadout and print show a power's mark on the same lines", () => {
+  const ch = l5Strigoi();
+  const app = openSheet(ch, "main");
+  const mark = /\+3 damage, \+5 while grappling with your Bone Spines out/;
+  const rows = [...app.doc.querySelectorAll(".wpn tbody tr")];
+  const byName = n => rows.find(r => r.cells[0].textContent.trim().startsWith(n));
+  for (const n of ["Bite", "Claws", "Fists", "Combat Knife"]) assert.match(byName(n).cells[0].textContent, mark, `Main's ${n}`);
+  assert.match(byName("Bite").cells[0].textContent, /Monstrous Maw/);
+  assert.doesNotMatch(byName("Claws").cells[0].textContent, /Monstrous Maw/);
+  const pr = printWeaponRows(app, activeChar(app));
+  for (const n of ["Bite", "Claws", "Fists", "Combat Knife"]) assert.match(pr.find(r => r.cells[0].textContent.trim().startsWith(n)).textContent, mark, `print's ${n}`);
+  app.click('[data-sec="loadout"]');
+  const knife = [...app.doc.querySelectorAll("tr[data-weaponrow]")].find(r => /Combat Knife/.test(r.cells[0].textContent));
+  assert.match(knife.cells[0].textContent, mark, "Loadout's knife");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Main's carried row lists a running power's bonus under its damage, as Loadout's does", () => {
+  const ch = natVampire(); ch.archetypeChoices.basePowers = { "blood-of-valhalla": 1 };
+  const app = openSheet(ch, "main");
+  const knife = () => [...app.doc.querySelectorAll(".wpn tbody tr")].find(r => /Combat Knife/.test(r.cells[0].textContent));
+  assert.match(knife().cells[0].textContent, /while Blood of Valhalla runs/);
+  assert.doesNotMatch(knife().cells[2].textContent, /from Blood of Valhalla/);
+  const ch2 = natVampire(); ch2.archetypeChoices.basePowers = { "blood-of-valhalla": 1 }; ch2.trackers.running = [{ id: "blood-of-valhalla" }];
+  const run = openSheet(ch2, "main");
+  const rk = () => [...run.doc.querySelectorAll(".wpn tbody tr")].find(r => /Combat Knife/.test(r.cells[0].textContent));
+  assert.match(rk().cells[2].textContent, /\+2 from Blood of Valhalla/, "Main's carried row dropped the bonus");
+  assert.doesNotMatch(rk().cells[0].textContent, /while Blood of Valhalla runs/, "the mark stayed on a running power");
+  run.click('[data-sec="loadout"]');
+  const lo = [...run.doc.querySelectorAll("tr[data-weaponrow]")].find(r => /Combat Knife/.test(r.cells[0].textContent));
+  assert.match(lo.cells[2].textContent, /\+2 from Blood of Valhalla/, "Loadout's row dropped the bonus");
+  assert.deepEqual(run.errors, []);
+});
+
+test("Bone Spines' flag note shows on the Character card and the wizard's pick, and print tells one power's mark from the next", () => {
+  const note = /How the \+5 while grappling stacks with the \+3 isn't written yet/;
+  const ch = l5Strigoi();
+  const app = openSheet(ch, "character");
+  assert.match(app.$("#main").textContent, note, "the Character tab's Bone Spines card says nothing of the flag");
+  const pr = printWeaponRows(app, activeChar(app));
+  const claws = pr.find(r => r.cells[0].textContent.trim().startsWith("Bite"));
+  assert.match(claws.textContent, /\+3 damage, \+5 while grappling with your Bone Spines out; \+10 damage, AP 3/, "print joins a row's marks with commas");
+  const wiz = onStep("vampire", "heroic", "archetype", c => { c.archetypeChoices.specialization = ["strigoi"]; });
+  assert.match(wiz.$("#main").textContent, note, "the wizard's Base Power row says nothing of the flag");
+  const cp = onStep("vampire", "heroic", "character-points", c => { c.archetypeChoices.specialization = ["strigoi"]; c.archetypeChoices.basePowers = { "bone-spines": 1 }; });
+  assert.match(cp.$("#main").textContent, note, "the wizard's CP row says nothing of the flag");
+});

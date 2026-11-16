@@ -24,13 +24,16 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.71.1
+## [Unreleased] — app 0.72.0
 
 ### Character sheet
 
 - Help's **Defensive Actions** reads as the rulebook now does: you parry with a handheld weapon.
 - Four Cantrips are TN 7, like every other Cantrip: **Everlight**, **Hearthstone**, **Sure Grip** and **Watchward**. Their slips, pendants, wards and Artifacts follow.
 - The FG-1 "Thunderclap" hits harder on a 10: one explosion leaves its target **Injured**, two or more **Maimed**.
+- A Vampire's and a Werewolf's powers show on the weapons they change: Bone Spines on every melee attack, Monstrous Maw on your bite, Serrated Claws on your claws, and the rest.
+- Blood of Valhalla and Let It Loose change your numbers while they run: +2 damage on every melee attack, or claws and fangs that deal Spirit damage.
+- Main lists what's adding to a carried weapon's damage, as Loadout does.
 
 ### GM mode
 

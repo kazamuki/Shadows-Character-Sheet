@@ -1,7 +1,7 @@
 # State of the build
 
 **Updated:** 2026-11-15
-**Versions:** app `0.71.1` · game data `0.57` · character schema `0.34` · table schema `0.19` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.72.0` · game data `0.58` · character schema `0.34` · table schema `0.19` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -143,8 +143,8 @@ rev 9's `C1`–`C3` are still forward notes.
 - **The `/impeccable audit`** of the whole app is its own read-only session; Ken triages its report.
 - **GM mode, what's next** (`plans/gm-mode-next.md`): Scott's play report first (S22), then S23 (the leftover fixes) is suggested.
 - **The vehicles-and-gear plan** (`plans/loadout-and-gear.md`) is approved (Ken, 2026-10-24, LQ1–LQ10 on their defaults); L1, L2, L2b, L3 and L5 are built.
-  L4 (natural attacks and the unarmed strike, Decision 290) is built in 0.70.0 (`plans/loadout-and-gear/L4-natural-attacks.md`). L5b, the powers half of W136, is next (Ken, 2026-11-01), and reads L4's `kind`; L6 (vehicles, was P14) and L7
-  (Powered Armor) wait on Deighton.
+  L4 (Decision 290) and L5b (Decision 292) are built, in 0.70.0 and 0.72.0; Bone Spines' grappling waits on Deighton (F55).
+  Vehicles and Powered Armor (were L6, L7) left the plan 2026-11-15 (W91, W69). The plan ends with natural-weapon follow-ons, each waiting on an answer: L8 the Werewolf's damage (LQ40), L9 a trained weapon as natural (W160), L10 hand cyberware (W90).
   The player sheet's plan (`plans/archive/sheet-wishlist.md`) closed 2026-10-24, P1–P21 built.
 - **Help on the sheet** (`plans/help-on-the-sheet.md`, W156): K1 and K2 are built (289, 291); K3 follows.
 - **Closed 2026-11-14** (`plans/archive/`): finding-things-on-the-sheet (E1a–E8, Decisions 273–287; its closing entry holds the re-run critique, and its leftovers are W152–W157 and W159).
@@ -158,10 +158,10 @@ GM mode is launched (260): a GM session is an ordinary batch now, with its chang
 
 **Waiting on others:**
 - **Deighton** answered every open rules question on 2026-10-10 (`reference/rulings-2026-10-10.md`). Still his: what a rank of Educated bought in play gives (F44: the IP buy refuses it until then), the TN and TH of the WILL check that keeps a held spell (F43), and whether a Supernatural's Skills and Powers share its stats' headroom past 10 (Ken asked). **One ruling on kickers may clear F46 and F47 together:** do dice stack, and which one is "your Kicker Die"; F45 is Concierge's appraising Skill. **F48** is which damage type the book's ten untyped weapons deal (bows, damaging grenades, the HRL-1 and HXC-1). **CRANK** is kept and back on for everyone (239, 2026-10-23); Scott answered GQ7, F37 and GQ28 on 2026-11-03, and each is now a build (`plans/gm-mode-next.md`, S25).
-- **Deighton, on vehicles:** 17 of the 28 follow-up questions
-  (`reference/rulings-2026-10-23.md`). L6 waits on SH3 (a typed vehicle),
-  VK1b (the Mods number), and his in-person talk on vehicles without PROT and RES.
-  The plan's §6 lists everything else it asks him.
+- **Deighton, on vehicles (W91, off the plan):** 17 of the 28 follow-up questions
+  (`reference/rulings-2026-10-23.md`), SH3 (a typed vehicle), VK1b (the Mods number),
+  and his in-person talk on vehicles without PROT and RES. The loadout plan's §6
+  lists everything else it asks him.
 - **GM mode's open questions** (`GQ`_n_) and who holds each: `plans/gm-mode-next.md` §5.
 - **Scott:** no questions left. He answered his page on 2026-11-03 (the Cantrips keep TN 7; he fixes the Book of Known Spells). What's his now is to-dos, listed in `plans/gm-mode-next.md` §4, a session on the live version first: he tells Ken when one is done, and nobody asks him to reopen the page. His TOL rewrite is in 0200 and 0400.
 

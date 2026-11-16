@@ -5,16 +5,22 @@ closed ([`archive/sheet-wishlist.md`](archive/sheet-wishlist.md)). **Approved by
 Ken 2026-10-24**, with LQ1–LQ7 on their defaults (§5) and W136 kept. **Widened
 the same day** (Ken): custom weapons that read like the catalog's (W137, now
 L2), and the meeting's natural attacks in the unarmed strike's session (now
-L4), with LQ8–LQ10 on their defaults. Each session's status is its row in §3; the next step
-is L1's work order.
+L4), with LQ8–LQ10 on their defaults. Each session's status is its row in §3.
+**Narrowed 2026-11-15** (Ken, once L4 merged): vehicles (L6) and Powered Armor
+(L7) are off the plan and back on the wishlist (W91, W69's suit half), because
+they wait on Deighton for a long time and two shelved rows made the plan read as
+active. The plan finishes with what can be built: **L5b**, then the
+natural-weapon follow-ons (L8–L10), each as its holder answers. L5b is built
+(Decision 292): [`L5b-powers-on-natural-weapons.md`](loadout-and-gear/L5b-powers-on-natural-weapons.md).
 **Tier of this document:** *Docs*. Each session names its own tier.
 
 Ken, 2026-10-24: close the sheet-wishlist plan, which "has done a lot of good
 work", and start a smaller one for **vehicles and worn gear modifiers**, plus
 the wishes that would augment them or sit in the same code. Deighton's vehicle
-data is days away, so the point of this plan is the split in §3: **five
+data is days away, so the point of this plan was the split in §3: **five
 sessions Deighton doesn't block**, which can be built while the vehicle
-follow-ups are outstanding, and two that wait on him.
+follow-ups are outstanding, and two that wait on him. The vehicle data didn't
+come, and the two that waited on him left the plan on 2026-11-15 (above).
 
 Sessions are `L1`… (L for Loadout). Questions are `LQ`_n_.
 
@@ -97,9 +103,10 @@ LQ1–LQ7 below are rewritten to the new numbers; Ken's answers stand.
 | **L2b** | Written-in weapons fire and reload like the catalog's | W109's written-in weapon part (Ken, 2026-10-28): its fire modes are ticked from `rofModes`, and with a weapon type it reloads from carried ammunition that fits the type, as a catalog weapon does (part-used magazines, specialty rounds). Reopens L2's LQ14 | Rule or shape, character schema (`rofModes` on a written-in row; `loaded` kept on one) | Nothing from Deighton. LQ23–LQ28 answered (Default) | Merged · PR #259, app 0.56.0, game data 0.50, character schema 0.31, Decision 249: [`L2b-custom-weapon-fire-and-reload.md`](loadout-and-gear/L2b-custom-weapon-fire-and-reload.md) |
 | **L4** | Natural attacks and the unarmed strike | W107: a fists line (Martial Arts) on Loadout and Main, and Death Touch's grant on it. The meeting's two natural attacks a round, said once for the fists and the claws and fangs | Rule or shape (a numbered decision for natural attacks; Content if the line needs no data shape) | The two-a-round rule is settled. Its five details are Deighton's (§6), and the order stubs each one it can't skip. Whether another character's Death Touch pierces Natural Armor doesn't block | **Built 2026-11-15** (app 0.70.0, game data 0.55, Decision 290): [`L4-natural-attacks.md`](loadout-and-gear/L4-natural-attacks.md) |
 | **L5** | One weapon or armor row, changed by a Major | W136's Majors half: Tuned Edge, Custom Fit, Signature, Iconic and Legendary Weapon, Weapon Expert (split from the powers by Ken, 2026-11-01) | Rule or shape, character schema (the row keeps the Major's id, LQ29) | Nothing from Deighton: Weapon Expert's text says how its kicker meets a 1d4, and P21's PQ6 answered "combat rolls" (the attacks). Reuses L3's line modifier. Ken: LQ29–LQ34 | **Built** (Decision 263; app 0.60.0, game data 0.51, character schema 0.32): [`L5-major-on-a-row.md`](loadout-and-gear/L5-major-on-a-row.md) |
-| **L5b** | Powers that change natural weapons while they run | W136's powers half (LQ5): Rend and Tear, Bone Spines, Monstrous Maw, Rending Claws, Blood of Valhalla (Vampire); Let It Loose, Steel Fangs, Serrated Claws (Werewolf) | Rule or shape (a natural line needs a kind: bite, claw) | **L4** and the 2026-10-29 meeting: which natural line is a bite or a claw, and whether "melee damage" reaches natural attacks. LQ5 is answered (conditional marks, never summed). Note for whoever drafts it: L5's six Majors are General, the Professional's alone (F9, `majorGeneralNote`), so these powers are the half most players at the table see | Split from L5 by Ken 2026-11-01 · after L4, drafted from the meeting's notes beside or after it |
-| **L6** | Vehicles, first cut | W91 (Powered Armor included): the order was P14, [`L6-vehicles.md`](loadout-and-gear/L6-vehicles.md) | Rule or shape (a save shape: `vehicles`, a schema bump) | **Deighton:** SH3 (a typed vehicle), VK1b (the Mods number), VD1 (vehicles without PROT and RES, his in-person talk). Then the order is revised to his rulings, as its Status lists | ⏸ Shelved 2026-10-23 (Ken), until Deighton answers |
-| **L7** | Powered Armor's enhancements | W69's suit half: Chipped Skill's +3 ranks (PA6), BOD-based Skills as Athletics and Survival (PA7), Enhanced Mobility doubling after every other bonus (PA8), changed between scenes (PA5) | Rule or shape | L6 (a suit is a vehicle) and L3 (the modifier). The rulings are in (PA5–PA8, both rounds) | ⏸ After L6 |
+| **L5b** | Powers that change natural weapons and melee | W136's powers half (LQ5): Rend and Tear, Bone Spines, Monstrous Maw, Rending Claws, Blood of Valhalla (Vampire); Let It Loose, Steel Fangs, Serrated Claws (Werewolf) | Rule or shape (an `attackMod` grant, a decision) | Nothing blocking. LQ43–LQ48 are Ken's; Bone Spines' grappling and the book's "AP 2" go to Deighton and Ken's CRB pass, and neither blocks | **Built 2026-11-16** (Decision 292, app 0.72.0): [`L5b-powers-on-natural-weapons.md`](loadout-and-gear/L5b-powers-on-natural-weapons.md) |
+| **L8** | The Werewolf's claw and bite damage | LQ40: Deighton is testing BOD+4/+5 against straight BOD with SFR adding the bonus, at his table | Content (two numbers in the form's `naturalWeapons`; `gamedataVersion`) | **Deighton**, his table report | Waits on Deighton |
+| **L9** | A trained weapon that counts as natural | W160: Deighton's eskrima sticks join the natural group | Rule or shape (which weapons qualify, and where the sheet reads the training) | **Deighton**, a ruling: floated, not ruled | Waits on Deighton |
+| **L10** | Hand cyberware as natural weapons | W90's natural-weapon part: knuckle studs +3, punch spike +6, tri-claws +8 (proposed), stacking adds to BOD once; each a data `kind`, so it joins L4's group and a worn melee bonus reaches it | Rule or shape, with W90's own plan | **W90**: Deighton's six cybernetics questions, F6 and F19. Built inside W90's plan or after it | Waits on W90 |
 
 **Why this order.** L1 is a data edit that L2 and L3 read, and it's small
 enough to ship on its own. That way the Content change doesn't wait on a
@@ -110,12 +117,17 @@ mechanism: one modifier, read where it lands, with the rules Deighton set on
 2026-10-10. L4 depends on nothing and could run beside L2 or L3. It's fourth
 only because L3 is the plan's reason. Playtesters are fighting with Vampires
 now (the meeting's case), so it can move up if Ken wants it sooner. L5 reuses
-L3's weapon-line modifier, so it follows L3. L6 and L7 are last because
-Deighton holds them.
+L3's weapon-line modifier, so it follows L3. L5b reads L4's `kind` and H1's
+running powers, so it follows both. L8–L10 are last because each waits on an
+answer: Deighton's table report, his ruling, W90's questions. Vehicles (L6) and
+Powered Armor (L7) were last for the same reason, and left the plan on
+2026-11-15: they're W91 and W69's suit half again, and their shelved order is
+[`L6-vehicles.md`](loadout-and-gear/L6-vehicles.md), which needs a fresh
+pre-flight if it's revived. Their ids aren't reused.
 
 **Dependencies.** L2 after L1 (a custom weapon picks from L1's damage types).
 L3 after L2 (its class address reads `damageType`, on catalog and custom rows).
-L5 after L3. L5b after L4 (its powers name a bite or a claw, which L4 gives a natural line). L7 after L6 and L3. L2b after L2 (it reloads by L2's weapon type); Ken put it
+L5 after L3. L5b after L4 (its powers name a bite or a claw, which L4 gives a natural line). L8, L9 and L10 after L4 (each changes or adds a natural line); L10 also after W90's plan. L2b after L2 (it reloads by L2's weapon type); Ken put it
 before L4 (2026-10-28). L4 can move anywhere. If L2 lands after L4,
 a custom weapon can't claim to be a natural one. If L4 lands first, it doesn't
 need to.
@@ -152,7 +164,15 @@ builder never decides them):
   default), so removing the row loses it.
 - **L5b:** which natural line a power reaches (a bite, a claw, every natural
   weapon, or "melee"), from L4's natural-attack shape and the 2026-10-29
-  meeting, and where the conditional marks sit (LQ5).
+  meeting, and where the conditional marks sit (LQ5). *Settled by the L5b
+  order:* a power reaches by `kind` or by Decision 248's melee class; a mark
+  sits under every line it reaches, on Main, Loadout and print; a running power
+  is applied instead (LQ43, reopening LQ5 now that H1 stores running).
+- **L8:** nothing to settle: Deighton's numbers are two data edits.
+- **L9:** which weapons count, and where the sheet reads that a character is
+  trained with one (W160). Deighton's to rule first.
+- **L10:** whether a cyberware row is a loadout row, a new list or a trait,
+  which W90's plan decides; L10 then gives it a `kind`.
 
 ## 4. Not scheduled
 
@@ -163,8 +183,8 @@ Plan line says the same.
 |---|---|
 | W108 magazines sized by the weapon, and combining part-used ones | Starts with the CRB: Gear would have to price magazines per weapon or say they fit by capacity (Decision 145's *Revisit if*). That's Ken's book change first, and he wanted thinking time |
 | W109 a custom row opts into what a book row does | Wider than gear (spells, powers). L2 gives a custom weapon the fields a catalog weapon has, and L3's LQ6 decides whether a custom gear row carries modifiers. L2b (Ken, 2026-10-28) takes a written-in weapon's fire modes and reload. The behaviour switches W109 is about stay on their own |
-| W90 cybernetics, W61 a retired Cyborg, W127 Cyber-Prophetical | Cybernetics are gear and will be loadout rows, but they need their own plan and Deighton's six questions (W90) first, with F6 and F19. W90 builds on L6's row shape, and its fist blades add to L4's natural attacks |
-| W91's later half: a vehicle's damage | Integrity, Systems and the System Failure table wait on the 17 follow-ups still open (VD2c–VD6b, VK1a–VK4, VO3–VO5b, `reference/rulings-2026-10-23.md`). An order after L6, once they're answered |
+| W90 cybernetics, W61 a retired Cyborg, W127 Cyber-Prophetical | Cybernetics are gear and will be loadout rows, but they need their own plan and Deighton's six questions (W90) first, with F6 and F19. Its hand cyberware is a natural weapon (L10) |
+| W91 vehicles, Powered Armor among them (was L6), and W69's suit half (was L7) | Off the plan 2026-11-15 (Ken): they wait on Deighton's vehicle follow-ups (SH3, VK1b, VD1 and the 17 still open in `reference/rulings-2026-10-23.md`). The shelved order is [`L6-vehicles.md`](loadout-and-gear/L6-vehicles.md); revived, it's re-pre-flighted against `main` first |
 | A third natural attack (claw, claw, bite), and moving between targets | The meeting left both to later Milestones (Ken, Scott). Nothing is ruled yet, so there's no wish until there is |
 | Consumables with a timed bonus (Veloxin, Somatrex, Cerebryx, Aurexa, Quickstitch) | Not worn, and "+3 then −3" breaks W69's "never negative". No wish yet: LQ7 |
 
@@ -176,7 +196,7 @@ Plan line says the same.
 | LQ2 | L1: the 13 weapons `0460` gives no damage type (3 bows, 8 grenades, the two launchers). Flag them for Deighton, or type them yourself from the book's descriptions as its author? | **One flag for Deighton.** Until he rules they stay untyped, no class modifier reaches them, and their line says nothing new. **Ken, 2026-10-24: Default** |
 | LQ3 | L3: a Smart Deck is carried, not worn. Does a carried tool's bonus count while it's "in use"? | **Yes:** a gear row with modifiers gets an In use toggle; armor keeps Worn. One stored boolean either way. **Ken, 2026-10-24: Default** |
 | LQ4 | L3: which Skills are "electronic interface and hacking checks" (Hacking Visor, Hacking Gloves) and "precision skill checks" (PrecisionGrip Gloves)? Interface alone, or Interface, Programming and Security? | **A flag for Deighton.** The Smart Decks (Interface, named) are computed; these three keep their text, with a `playerNote` that the GM rules. **Ken, 2026-10-24: Default** |
-| LQ5 | L5: the powers that change natural weapons or melee damage while they run (Bone Spines, Rending Claws, Steel Fangs and five more, inventory c27–c34). Nothing stores that a power is running (W110). Show them as conditional marks on the line, as Decision 104 does for Natural Armor, or wait for W110? | **Conditional marks:** "+3 melee damage while Bone Spines runs", never summed. **Ken, 2026-10-24: Default** |
+| LQ5 | L5: the powers that change natural weapons or melee damage while they run (Bone Spines, Rending Claws, Steel Fangs and five more, inventory c27–c34). Nothing stores that a power is running (W110). Show them as conditional marks on the line, as Decision 104 does for Natural Armor, or wait for W110? | **Conditional marks:** "+3 melee damage while Bone Spines runs", never summed. **Ken, 2026-10-24: Default.** H1 (Decision 266) now stores which powers run, so L5b's LQ43 asks again for the two with `run` |
 | LQ6 | L3: can a custom gear or armor row carry modifiers the player types, or only catalog entries? | **Catalog only** in the first cut. A typed modifier is W109's question, and balance stays the table's. A custom *weapon* still receives modifiers through its class (L2). **Ken, 2026-10-24: Default** |
 | LQ7 | Raise a wish for the timed consumables (a bonus for the scene, then a penalty)? | **Not yet.** It's a timer, which W128 (the sheet knows when an encounter ends) would give it. **Ken, 2026-10-24: Default** |
 | LQ8 | L2: a custom weapon's Skill. Does it come from the weapon type the player picks (Handguns → Handguns, Beam Sidearms → Beam Weapons), or does the player pick the Skill? | **From the type.** Each `weaponCategories` row gets its Skill as data, read the same way for the catalog. One pick, and the attack number follows it. A type that could take either of two Skills is named in the order. **Ken, 2026-10-24: Default** |
@@ -187,13 +207,17 @@ Plan line says the same.
 
 One list, so it can go to him at once:
 
-- **For L6:** SH3 (can a player type in a vehicle of their own), VK1b (does
-  the sheet show a vehicle's Mods number), VD1 (vehicles without PROT and
-  RES, which he wants to talk through in person).
 - **For L1's flag (LQ2):** the damage type of the 3 bows, 8 grenades and 2
   launchers.
 - **For L3's flag (LQ4, F49):** which Skills the Hacking Visor, Hacking Gloves and
   PrecisionGrip Gloves add to.
-- **For L4:** built. Still his: his test of the Werewolf's claw and bite damage (LQ40), and, if he wants, a look at Scott's answers. LQ42 is Scott's.
-- **For a later vehicle-damage order:** the 17 follow-ups still open in
+- **For L4:** built. If he wants, a look at Scott's answers. LQ42 is Scott's.
+- **For L5b** (neither blocks it): Bone Spines' "+5 while grappling" (instead of
+  +3 or on top, and does a rank add to it), and, after Ken's CRB pass, what the
+  book's "AP 2" and "AP 3" mean (LQ46).
+- **For L8:** his table's verdict on the Werewolf's claw and bite damage (LQ40).
+- **For L9:** whether a trained weapon counts as natural, and which (W160).
+- **For L10:** W90's six cybernetics questions.
+- **Off the plan, for W91:** SH3 (a typed vehicle), VK1b (the Mods number), VD1
+  (vehicles without PROT and RES, in person), and the 17 follow-ups in
   `reference/rulings-2026-10-23.md`.

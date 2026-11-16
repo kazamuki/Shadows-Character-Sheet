@@ -813,14 +813,22 @@ async function printFloors(browser, file, rows) {
   const withKnives = (ch, n) => { ch.weapons = Array.from({ length: n }, () => ({ id: "combat-knife", notes: "" })); return ch; };
   const shiftedTwo = base("werewolf", "trueborn"); Engine.setToggle(shiftedTwo, "form", "Werewolf"); withKnives(shiftedTwo, 2);
   const draugurTwo = base("vampire", "draugur"); draugurTwo.archetypeChoices.optionPicks = { "ancient-weapon": "blunt" }; withKnives(draugurTwo, 2);
+  // L5b: marks add text to the Features column of a weapon row. A Strigoi holding four powers with two knives, and a Draugur running
+  // Blood of Valhalla with Blunt and two knives, print on the sheets `main` printed them on (measured without the marks: 5 and 5); the Strigoi's three powers and two knives take a sixth (L5b, Decision 292).
+  const strigoi = base("vampire", "strigoi"); strigoi.creation.powerLevel = "heroic"; withKnives(strigoi, 2);
+  strigoi.archetypeChoices.basePowers = { "bone-spines": 1, "monstrous-maw": 1, "rending-claws": 1 };
+  const runner = base("vampire", "draugur"); runner.archetypeChoices.optionPicks = { "ancient-weapon": "blunt" }; withKnives(runner, 2);
+  runner.archetypeChoices.basePowers = { "blood-of-valhalla": 1 }; runner.trackers.running = [{ id: "blood-of-valhalla" }];
   const cases = [["a bare Arcanist", base("arcanist"), 4], ["a Werewolf in form", shifted, 4],
     ["a True Warrior", base("professional", "true-warrior"), 4], ["a Draugur with Blunt and a knife", draugur, 5],
     ["a Werewolf in form with two knives", shiftedTwo, 4], ["a Draugur with Blunt and two knives", draugurTwo, 5],
-    ["a mortal with four knives", withKnives(base("arcanist"), 4), 4]];
+    ["a mortal with four knives", withKnives(base("arcanist"), 4), 4],
+    ["L5b: a Strigoi with three powers and two knives", strigoi, 6], ["L5b: a Draugur running Blood of Valhalla, Blunt and two knives", runner, 5]];
   for (const [name, ch, budget] of cases) {
     const c = await browser.newContext({ viewport: { width: 1280, height: 900 } });
     const page = await c.newPage();
     await page.goto(pathToFileURL(file).href);
+    if (process.env.L5B_NO_MARKS) await page.evaluate(() => { delete window.SHADOWS_DATA.weaponRules.attackMods; });
     await page.evaluate(j => { const el = document.getElementById("printSheet"); el.innerHTML = window.renderPrintView(JSON.parse(j)); }, JSON.stringify(JSON.parse(JSON.stringify(ch))));
     await page.emulateMedia({ media: "print" });
     const pdf = await page.pdf({ format: "Letter", landscape: true, printBackground: true });

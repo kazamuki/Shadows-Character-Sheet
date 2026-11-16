@@ -2930,6 +2930,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
     → **Superseded in part by Decision 199** — `grants()` now reads taken Major Milestones too (types `rou`, `sfrMax`, `form`); Natural Armor keeps its own scan, through `majorById`.
     → **Superseded in part by Decision 219** — AP on a hit marked as a spell pierces it; F25 closed.
     → **Superseded in part by Decision 266** — a conditional source on a running power starts on.
+    → **Superseded in part by Decision 292** — a running power's weapon bonus is summed into the line and listed; a stopped one stays a mark.
 105. **(Nanomed Kit — combat plan cleanup, CQ12, data + engine + app)**
     **054's "With Çredits" list is the master: a Nanomed Kit clears
     Agonized, Bleeding, Paralyzed and Poisoned and stabilizes the Dying.**
@@ -5737,6 +5738,14 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 289 in part (a context's words are references, not only gameTerms ids). Decision 287 in part (gameTerms gains a `rule` kind).
      - **Revisit if:** players want the new words found inside sentences (forms), or a GM wants the game's words on the table's Every word (KQ15).
      - **Built:** app 0.71.0 (minor), game data 0.56, no schema bump, PR (this one), log 2026-11-15 (K2).
+292. **A power that changes natural weapons or melee says so on the lines it reaches, by kind (claw, bite, fist) or by the melee class, at its rank, as a conditional mark; one that runs is applied while it runs.**
+     *2026-11-16 · Ken + Claude · Touches: attackMod, weaponRules.attackMods, naturalAttacks, archetypeWeapons, weaponLine, conditional, bonuses, damageType, runningPowers, Rend and Tear, Bone Spines, Monstrous Maw, Rending Claws, Blood of Valhalla, Let It Loose, Steel Fangs, Serrated Claws, Main's Weapons table, Loadout's weapon rows, pNaturalRows, LQ5, W136*
+     - **Decided:** A power's `attackMod` grant reaches the lines whose `kind` it names, or with `class: "melee"` every melee line (Decision 248's class), except grenades (`excludeCategories`, Ken: spines don't make a thrown grenade hit harder). Its damage and rounds are `plus` + `perRank` × (rank − 1). On a power that isn't running it's a conditional mark, never summed (Decision 104). On a running power (Decision 266) its damage is added and listed in `bonuses`, and its `damageType` replaces the line's. Main, Loadout and print show the same marks. Nothing is stored.
+     - **Why:** W136; LQ5 (marks); L4 gave every natural line a `kind` so a power can name "your bite"; H1 made running a stored input, so a running power's number can be the line's.
+     - **Rejected:** a mark on a running power (the sheet knows it runs, LQ43). Reach by name ("Claws"): a Forge Fang's Fangs are a bite. A per-power reader in code (Decision 135). Computing "AP 2" (LQ46). Storing "extended until retracted" (LQ47).
+     - **Replaces:** Decision 104 in part (a running power's weapon bonus is summed); LQ5 for running powers. Extends 237, 248, 266, 290.
+     - **Revisit if:** the book gives AP a number; W110's "extended until retracted" powers (Steel Fangs, Serrated Claws, Bone Spines) get a stored state; Deighton rules Bone Spines' grappling (F55).
+     - **Built:** app 0.72.0 (minor), game data 0.58, no schema bump, PR (this one), log 2026-11-16 (L5b).
 
 ## 5. Open Flags
 
@@ -5773,5 +5782,6 @@ here are in `log/archive.md`.
 | F52 | **What Elemental damage is.** 0480 names Elemental in its Warding rows and its Backlash table and never says what it is. Stubbed (K2, Decision 291): the damage type has no description, is `flagged`, and shows its `playerNote` on Every word | Deighton | Doesn't block K2 |
 | F53 | **What Spirit damage is.** 0480 names Spirit in its Warding rows and its Backlash table and never says what it is. Stubbed (K2, Decision 291): the damage type has no description, is `flagged`, and shows its `playerNote` on Every word | Deighton | Doesn't block K2 |
 | F54 | **What Aether damage is.** 0480 names Aether in its Warding rows and its Backlash table and never says what it is. Stubbed (K2, Decision 291): the damage type has no description, is `flagged`, and shows its `playerNote` on Every word | Deighton | Doesn't block K2 |
+| F55 | **Does Bone Spines' "+5 while grappling" replace the +3 or add to it, and does a rank add to the +5?** `0413`: "+3 melee damage, +5 while grappling", "+1 damage (max 5)" a rank. Stubbed (L5b, Decision 292): the mark computes the +3 with its rank and prints "+5 while grappling" as the book writes it; the power is `flagged` with a `playerNote` that the GM rules it | Deighton | Doesn't block L5b |
 F42 and F43 go to Deighton, and F37 with Scott, who wrote CRANK.
 

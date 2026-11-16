@@ -417,6 +417,15 @@ P11 (Decision 225) counts the SFR a player spends each round, but a sustained po
 
 ### Loadout & catalog
 
+**W136 — A Major or a power changes one weapon or armor row.** *Claude, from closing the sheet-wishlist plan · → Decision 263 (Majors, L5) and Decision 292 (powers, L5b, app 0.71.0)*\
+**Plan:** [loadout-and-gear L5 and L5b](plans/loadout-and-gear.md): split by Ken 2026-11-01. The Majors are L5 (built, Decision 263: [L5-major-on-a-row](plans/loadout-and-gear/L5-major-on-a-row.md)); the powers are L5b, its order drafted 2026-11-15: [L5b-powers-on-natural-weapons](plans/loadout-and-gear/L5b-powers-on-natural-weapons.md)
+
+P21's inventory listed these as "later orders" (`plans/archive/sheet-wishlist/P21-inventory.md`, c20 and c22–c34), and the plan closed without them, so nothing covered them. Each is printed on its card and the player does it by hand on the weapon or armor:
+- **A Major on one row the player picks:** Tuned Edge ("it gains +1 to damage", that weapon only), Custom Fit (that armor's damage reduction die a step up, d4 to d6, never past d12), Signature, Iconic and Legendary Weapon (Mod Slots and free Upgrades on one weapon), Weapon Expert ("+1d4 kicker to combat rolls using it; if a +1d4 already applies, it increases to +1d6").
+- **A power on natural weapons or melee, while it runs:** Rend and Tear, Bone Spines, Monstrous Maw, Rending Claws, Blood of Valhalla (Vampire); Let It Loose, Steel Fangs, Serrated Claws (Werewolf).
+
+*To respect:* a Major saves only a `power` today (Decision 223), so a picked row is a schema bump, and the pick has to survive another row being removed (loadout rows are an array). The modifier on the line is W69's, so this follows it. The natural-weapon rows sit beside W107's natural attacks. "Combat rolls" are the attacks (P21's PQ6). Nothing stores that a power is running (W110), so the power rows are conditional marks or they wait (Decision 104's pattern).
+
 **W4 — Search, filter, and a full view for the weapon/armor catalog.** *Ken · → Decision 118, app 0.22.0: a modal with search, section, afford and sort, the numbers before Add/Buy*
 The pickers are native `<select>`s: 55 weapons in 14 groups, 37 armor pieces,
 type-a-letter to jump, no search. And each option shows only name and price —
