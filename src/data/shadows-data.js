@@ -1176,7 +1176,7 @@ window.SHADOWS_DATA = {
     { "id": "ip", "title": "Improvement Points (IP)", "bookSource": "0450 Advancement, Improvement Points",
       "description": "Improvement Points, or IP, are the currency of practice. Every hour of play earns 5 IP, so a three-hour session puts 15 IP on the sheet. IP is spent between sessions, never during one." },
     { "id": "difficulty", "title": "Difficulty", "bookSource": "0300 Core Mechanics, Action Risk: Skill Checks",
-      "description": "The number to beat is based on the difficulty of the action, which the GM sets. Typically: 10 for easy, 15 for medium, and 20 for hard difficulty." },
+      "description": "The number to beat is based on the difficulty of the action, which the GM sets." },
     { "id": "tn", "title": "Target Number (TN)", "bookSource": "0300 Core Mechanics, Essence Checks",
       "description": "The minimum value a die must roll to count as a Hit. This is how difficult the task is. Higher numbers mean less room for error. Typically, the TN is 8, unless the GM modifies the value." },
     { "id": "th", "title": "Threshold (TH)", "bookSource": "0300 Core Mechanics, Essence Checks",

@@ -510,8 +510,12 @@ async function sheetHelp(browser, file, rows) {
     if (!help || !help.shown) bad.push("#ghelp has no box");
     if (!q || !q.shown) bad.push("the filter box has no box");
     if (main && help && main.right > help.left + 1) bad.push(`main runs ${main.right - help.left}px under the column`);
+    // The find bar sticks at every width: after the list scrolls it is still at the top of the column.
+    await page.evaluate(() => { document.querySelector("#ghelp").scrollTop = 900; });
+    const stuck = await box(page, "#ghelp .help-find");
+    if (!stuck || !stuck.shown || stuck.top > 40 || stuck.top < -1) bad.push(`the find bar left the top of the column when the list scrolled (top ${stuck && stuck.top}px)`);
     if (errors.length) bad.push(errors.join("; "));
-    rows.push({ width: `sheet ${width}`, screen: "K2: Every word, vitals pinned", layout: bad.length ? bad.join("; ") : `ok (main ends ${main && main.right}, column starts ${help && help.left})`, ok: !bad.length });
+    rows.push({ width: `sheet ${width}`, screen: "K2: Every word, vitals pinned, the find bar sticks", layout: bad.length ? bad.join("; ") : `ok (main ends ${main && main.right}, column starts ${help && help.left})`, ok: !bad.length });
     await c.close();
   }
   // From 1280: the column, with the vitals pinned and not.
