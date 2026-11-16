@@ -30,6 +30,12 @@ own in the footer.
 
 - **Every tab of your sheet has Help.** Press **?** (the button in the header or the key) for what the tab is for, when you'd use it, and what its words mean. From 1280px wide it opens as a column beside the sheet; with your vitals pinned it takes their column while it's open, and the vitals show as the bar. Narrower, it's a panel over the sheet.
 - **Each tab has a one-line guide under its title.** Know the sheet already? Help's **Guide lines** switch turns them off, and the lines that state a rule stay. **The ? key** switch is there too.
+- Everyone can throw a punch now: Main lists your Fists, rolled with Martial Arts, for your BOD in damage.
+- Claws, fangs and fists sit together under one line that says how many natural attacks you get a round. That's two, plus one for each rank of Melee Master.
+- A True Warrior's bare-handed strikes show when Death Touch makes them armor-piercing.
+- Gear that adds to melee weapons adds to your claws, fangs and fists too.
+- Your claws, fangs and fists are on the printed sheet now.
+- Claws, fangs and fists roll whichever is better, Melee or Martial Arts.
 - **Luck says how it really works.** A Boost raises one die by 1, and you can boost the same die again. A boosted die never explodes, and a boosted 1 isn't a Botch. On a Breaker Check, a Boost adds 10 to the target (up to its maximum) and an Explode is a second roll, keeping the better.
 - **Gear's descriptions say EM pulse** for an electromagnetic pulse: the Blackout grenade, EMP Shielding, the EMP weapon tag and Artifacts. EMP means Empathy.
 

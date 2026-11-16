@@ -587,6 +587,39 @@ A weapon the player writes in is eight text boxes (name, type, damage, rof, capa
 
 *Built as loadout-and-gear L2 (2026-10-25): character schema 0.29, game data 0.49. A saved free-text `type` is kept as text and shown until a type is picked.*
 
+**W107 — An unarmed strike line, and Death Touch's AP on it.** *Ken, with Claude · → Decision 289, app 0.70.0: Fists for every character, one natural count, Death Touch as a conditional AP · raised 2026-10-15*
+**Plan:** [loadout-and-gear L4](../plans/loadout-and-gear.md), built: [`L4-natural-attacks.md`](../plans/loadout-and-gear/L4-natural-attacks.md)
+
+**Natural attacks, 2026-10-23** (the design meeting, `reference/meeting-2026-10-23.md`): fists, claws and teeth are **natural attacks**, two a round by default in any mix, stopping at two. So the fists' line this item asks for also says that, as do a Vampire's or Werewolf's claws and fangs. Five details are still Deighton's.
+
+Raised reviewing P8a. True Warrior's Power Style lists **Death Touch
+[Chi 4]: "Martial Arts attacks are Armor Piercing when not using melee
+weapons."** Today it's a line of text: nothing on the sheet marks a strike
+AP, so the player has to remember. Two gaps sit under it:
+- **There's no unarmed attack on the sheet.** Loadout's attack lines come
+  from carried weapons, and every `martialArts` catalog entry (the bo staff,
+  the kusarigama, the tekko-kagi) is a melee weapon, which is exactly what
+  Death Touch excludes. A Martial Arts character fighting bare-handed has no
+  line to read. That line comes first.
+- **Death Touch has no grant.** Iron Shirt, on the same Power Style, does
+  (`grants: naturalArmor`, with `while`). Death Touch would get one the same
+  way, read by the unarmed line.
+
+**Ken's shape (2026-10-15):** the sheet needs to know the character has the
+Chi ability (the Power Style tweak, already a held specialization), that
+Death Touch is on, and that the attack is a Martial Arts strike.
+**Claude's suggestion for "is on":** don't store it. Decision 104 lists a
+conditional source and never sums it, and the hit modal asks when it
+matters. The strike line reads **"AP with Death Touch"**, and the player
+knows whether they paid the Chi. That keeps it out of the save file (no
+schema bump). Track it only if playtesting shows people forget.
+*To respect:* Decision 104's conditional pattern. Decision 135 (a grant some
+code reads). W39 also wants a Martial Arts strike to hang its style bonus on,
+so build the line once for both. **Separate, and for Deighton:** when someone
+*else's* Death Touch hits a character with Natural Armor, does it pierce it?
+Decision 219 lets only AP from a spell through, and Chi isn't a spell. Ask
+with F42.
+
 ### Theme & polish
 
 **W7 — Primary buttons are unreadable in light mode.** *Ken · → Decision 107, app 0.16.0, with a contrast guard in `build.test.mjs`*

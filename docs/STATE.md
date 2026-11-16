@@ -1,7 +1,7 @@
 # State of the build
 
 **Updated:** 2026-11-15
-**Versions:** app `0.70.0` · game data `0.54` · character schema `0.34` · table schema `0.19` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.70.0` · game data `0.55` · character schema `0.34` · table schema `0.19` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -140,11 +140,11 @@ rev 9's `C1`–`C3` are still forward notes.
 **The live site is v0.69.3** (data 0.54, schema 0.34), released 2026-11-15. 0.69.2 never shipped alone: E7 fixed E6's weapons-table overflow, so both went out in 0.69.3.
 
 **Next is Ken's pick**, each built through a work order (`WORK-ORDERS.md`):
-- **The `/impeccable audit`** of the whole app (accessibility, performance, theming; the wizard, GM mode and print too) is its own read-only session, after the finding-things plan, and Ken triages its report.
+- **The `/impeccable audit`** of the whole app is its own read-only session; Ken triages its report.
 - **GM mode, what's next** (`plans/gm-mode-next.md`): Scott's play report first (S22), then S23 (the leftover fixes) is suggested.
-- **The vehicles-and-gear plan** (`plans/loadout-and-gear.md`) is approved (Ken, 2026-10-24, LQ1–LQ10 on their defaults); L1 (weapon damage types), L2 (written-in weapons read like the catalog's), L2b (they tick their fire modes and reload from carried ammo) and L3 (worn armor and gear in use carry modifiers) and L5 (a Major on one weapon or armor row, Decision 263) are built.
-  L4 (natural attacks and the unarmed strike): its order is drafted (`plans/loadout-and-gear/L4-natural-attacks.md`). L5b, the powers half of W136, follows L4; L6 (vehicles, was P14) and L7
-  (Powered Armor) wait on Deighton. The meetings' natural-attack rulings are in `reference/meeting-2026-10-23.md` and `-11-12.md`.
+- **The vehicles-and-gear plan** (`plans/loadout-and-gear.md`) is approved (Ken, 2026-10-24, LQ1–LQ10 on their defaults); L1, L2, L2b, L3 and L5 are built.
+  L4 (natural attacks and the unarmed strike, Decision 289) is built in 0.70.0 (`plans/loadout-and-gear/L4-natural-attacks.md`). L5b, the powers half of W136, is next (Ken, 2026-11-01), and reads L4's `kind`; L6 (vehicles, was P14) and L7
+  (Powered Armor) wait on Deighton.
   The player sheet's plan (`plans/archive/sheet-wishlist.md`) closed 2026-10-24, P1–P21 built.
 - **Help on the sheet** (`plans/help-on-the-sheet.md`, W156): K1 is built (Decision 289); K2 and K3 follow.
 - **Closed 2026-11-14** (`plans/archive/`): finding-things-on-the-sheet (E1a–E8, Decisions 273–287; its closing entry holds the re-run critique, and its leftovers are W152–W157 and W159).

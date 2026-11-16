@@ -5714,6 +5714,15 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** players want Help to stay open across visits, as a table's does, or the wizard asks for the same (KQ7).
      - **Built:** app 0.70.0 (minor), no game-data or schema bump, PR #351, log 2026-11-15 (K1).
 
+290. **Natural attacks are one group with one count: two a round from two different natural weapons, plus one a rank of Melee Master. Every character has Fists, and a natural line has a kind.**
+     *2026-11-15 · Ken + Deighton + Scott + Claude · Touches: weaponRules.naturalAttacks, naturalAttacks, kind, fist, claw, bite, Fists, Melee Master, Death Touch, attackTag, naturalWeapons, archetypeWeapons, formView, weaponDamage, weaponBonus, Main's Weapons table, pWeaponRows*
+     - **Decided:** A line is natural when its data names a `kind` (fist, claw, bite). Every character has Fists (Martial Arts, BOD+0, Blunt). The form's, the archetype's and the Fists line are one group under one count, `perRound` plus a rank of each `addedBy` Advantage, shown once above them with the rule: two different natural weapons, never beside a held weapon's attack. A natural line rolls the higher of its Skills. A worn melee `weaponBonus` reaches it. Death Touch is a conditional AP `attackTag`. Nothing is stored.
+     - **Why:** Deighton (2026-11-12): one Standard Action, Martial Arts applies, a mastery adds one. Scott (2026-11-15): a Maneuver can be one, never beside a carried weapon, two different weapons (no legs). Ken: natural weapons are melee. L5b needs a bite told from a claw.
+     - **Rejected:** "×2" on each line (LQ10). Natural by the key `naturalWeapons` (the Ancient Weapon is carried). Parsing a bare "BOD" (EMP is Empathy). Storing Death Touch as on (Decision 104).
+     - **Replaces:** nothing. Extends 104, 195, 200, 229, 247 and 248 (a class bonus reaches a natural line).
+     - **Revisit if:** Deighton revises Scott's answers, LQ42 is answered otherwise, or a Milestone adds a natural attack.
+     - **Built:** app 0.70.0 (minor), game data 0.55, no schema bump, PR #350, log 2026-11-15 (L4).
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data
