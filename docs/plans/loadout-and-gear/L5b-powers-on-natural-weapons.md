@@ -2,7 +2,7 @@
 
 **Plan:** [`../loadout-and-gear.md`](../loadout-and-gear.md) §3, row L5b, and its *What each order settles* bullet. **Wish:** [W136](../../WISHLIST.md), its powers half (L5 built the Majors half, Decision 263). **Builds on:** L4's natural group and `kind` (Decision 290), L3's weapon class and `bonuses` (Decision 248), H1's running powers (Decision 266). **The book:** `0413` (Upyr, Strigoi and Draugur powers, ~197–391) and `0414` (Wildblood and Forge Fang powers, ~290–323). Decisions 104, 237, 248, 266, 290.
 
-**Status: drafted 2026-11-15** by Claude (Opus), the L4 reviewer, from `main` with L4 merged. Not approved. LQ43–LQ48 below, each with a default; an unanswered one is answered "Default". Two book questions go to Deighton (§4, *For Deighton*); neither blocks the build.
+**Status: drafted 2026-11-15** by Claude (Opus), the L4 reviewer, from `main` with L4 merged. **Approved by Ken 2026-11-15**, in the conductor session: "Defaults, no grenades". Every default in LQ43–LQ48 stands, except that grenades are left out of LQ44's melee reach (§4, *Ken's answers*). Two book questions go to Deighton (§4, *For Deighton*); neither blocks the build.
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
@@ -92,6 +92,8 @@ LQ5 settled marks for powers when nothing stored that a power runs. H1 (Decision
 | **LQ46** | **"AP 2" and "AP 3"** (Rend and Tear, Monstrous Maw): the book's AP has no number. | **Shown as the book prints it,** "AP 2", in the mark, and no number computed (a mark computes nothing anyway). A line in `plans/crb-catch-up.md` (0413) asks what the number means, for Ken's CRB pass. |
 | **LQ47** | **Extended powers:** Steel Fangs and Serrated Claws last "until retracted or the scene ends", Bone Spines "for the encounter". The sheet could store "extended" like a running power. | **Not here:** they stay marks. Storing it is W110's ground (a start and stop for a power with no `run`) and touches Turn Reset. Raise a W id at close-out if you want it. |
 | **LQ48** | **Let It Loose and Fists:** "the spirit pours into your claws and fangs. Your natural weapons deal Spirit damage". Fists too? | **Claws and fangs only** (`kinds: ["claw", "bite"]`): the first sentence names them, and in Werewolf form the claws are the hands. Say if fists count, and it's `"fist"` added to the list. |
+
+**Ken's answers (2026-11-15):** "Defaults, no grenades". LQ43, LQ45, LQ46, LQ47 and LQ48 take their defaults. **LQ44:** every melee line by Decision 248's class, **except grenades** (`category: "grenades"`): Bone Spines and Blood of Valhalla don't reach a thrown grenade. The conductor's reason, which Ken took: spines on your arm don't make a grenade hit harder, and the book already keeps BOD out of a grenade's damage (`weaponRules` grenades note). A carried knife, the Ancient Weapon and the natural lines are reached as drafted. Pin it in a test: a grenade on the same character as example 1 has no Bone Spines mark. Put it in the decision's **Decided** too.
 
 **For Deighton** (through the conductor; neither blocks the build):
 - **Bone Spines:** "+3 melee damage, +5 while grappling", with "+1 damage (max 5)" a rank. Is +5 instead of +3 or on top of it, and does a rank add to the +5? **Stub:** the mark computes the +3 with its rank and keeps the grappling clause as the book prints it ("+5 while grappling"). If he hasn't answered by the build, it's a flag (F N, `flagNote`, a `playerNote` saying the GM rules it).
