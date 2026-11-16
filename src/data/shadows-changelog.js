@@ -12,7 +12,10 @@ window.SHADOWS_CHANGELOG = [
         "items": [
           "Help's **Defensive Actions** reads as the rulebook now does: you parry with a handheld weapon.",
           "Four Cantrips are TN 7, like every other Cantrip: **Everlight**, **Hearthstone**, **Sure Grip** and **Watchward**. Their slips, pendants, wards and Artifacts follow.",
-          "The FG-1 \"Thunderclap\" hits harder on a 10: one explosion leaves its target **Injured**, two or more **Maimed**."
+          "The FG-1 \"Thunderclap\" hits harder on a 10: one explosion leaves its target **Injured**, two or more **Maimed**.",
+          "A Vampire's and a Werewolf's powers show on the weapons they change: Bone Spines on every melee attack, Monstrous Maw on your bite, Serrated Claws on your claws, and the rest.",
+          "Blood of Valhalla and Let It Loose change your numbers while they run: +2 damage on every melee attack, or claws and fangs that deal Spirit damage.",
+          "Main lists what's adding to a carried weapon's damage, as Loadout does."
         ]
       },
       {
@@ -40,9 +43,6 @@ window.SHADOWS_CHANGELOG = [
           "Gear that adds to melee weapons adds to your claws, fangs and fists too.",
           "Your claws, fangs and fists are on the printed sheet now.",
           "Claws, fangs and fists roll whichever is better, Melee or Martial Arts.",
-          "A Vampire's and a Werewolf's powers show on the weapons they change: Bone Spines on every melee attack, Monstrous Maw on your bite, Serrated Claws on your claws, and the rest.",
-          "Blood of Valhalla and Let It Loose change your numbers while they run: +2 damage on every melee attack, or claws and fangs that deal Spirit damage.",
-          "Main lists what's adding to a carried weapon's damage, as Loadout does.",
           "**Luck says how it really works.** A Boost raises one die by 1, and you can boost the same die again. A boosted die never explodes, and a boosted 1 isn't a Botch. On a Breaker Check, a Boost adds 10 to the target (up to its maximum) and an Explode is a second roll, keeping the better.",
           "**Gear's descriptions say EM pulse** for an electromagnetic pulse: the Blackout grenade, EMP Shielding, the EMP weapon tag and Artifacts. EMP means Empathy.",
           "**Help has Every word.** Every word the game uses, A to Z, with a box to find one and a letter to jump to. Each reads from its rule, for your character, and it stays open as you move between tabs.",
