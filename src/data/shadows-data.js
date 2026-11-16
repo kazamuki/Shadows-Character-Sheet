@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.55",
+    "gamedataVersion": "0.56",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-11-11"
   },
@@ -1169,7 +1169,7 @@ window.SHADOWS_DATA = {
     { "id": "stat", "from": { "stats": true } },
     { "id": "milestone-point", "title": "Milestone Points", "forms": ["Milestone Points", "Milestone Point"], "from": { "milestones": true } },
     { "id": "condition", "from": { "conditions": true } },
-    /* K2 (Decision 290): the words the sheet uses that had no definition. No `forms`: they answer Every word and Help, and no sentence on
+    /* K2 (Decision 291): the words the sheet uses that had no definition. No `forms`: they answer Every word and Help, and no sentence on
        the sheet gains a trigger (KQ13). */
     { "id": "health-levels", "title": "Health Levels (HP)", "bookSource": "0300 Core Mechanics, Hit Points & Health Levels",
       "description": "Your body has limits. In Shadows, those limits have a number: your Hit Points (HP). To amplify the pressure, HP are placed in buckets called Health Levels (HL). By default, HLs come with 5 HP each. For every point of BOD you have, you gain 1 HL. Since the BOD stat is limited to ten, you can only have 10 HL." },
@@ -2813,7 +2813,9 @@ window.SHADOWS_DATA = {
                        { "type": "naturalArmor", "id": "iron-shirt", "name": "Iron Shirt",
                          "stat": "BOD", "plus": 1, "while": "while active" },
                        { "type": "movement", "id": "fleet-of-foot", "name": "Fleet of Foot",
-                         "times": 2, "paces": ["run", "sprint"], "while": "while active" }]
+                         "times": 2, "paces": ["run", "sprint"], "while": "while active" },
+                       /* Decision 290: Death Touch. A conditional AP on a natural attack rolled with Martial Arts ("when not using melee weapons"); `natural` keeps it off a carried Martial Arts weapon. Engine.naturalAttacks reads it. */
+                       { "type": "attackTag", "id": "death-touch", "name": "Death Touch", "tag": "AP", "skills": ["martial-arts"], "natural": true, "while": "while active" }]
           },
           {
             "id": "wheelman",
@@ -2972,8 +2974,8 @@ window.SHADOWS_DATA = {
          past the first), and one a creation choice names (`choice`), silent
          while a toggle is on `offWhen`'s option. */
       "naturalWeapons": [
-        { "name": "Bite", "from": "Fangs of the Fallen", "skill": "melee", "damage": "BOD+3" },
-        { "name": "Claws", "from": "with Bestial Blessings", "power": "bestial-blessings", "perRank": 1, "skill": "melee", "damage": "BOD+3", "tags": ["AP"] },
+        { "name": "Bite", "kind": "bite", "from": "Fangs of the Fallen", "skill": "melee", "damage": "BOD+3" },
+        { "name": "Claws", "kind": "claw", "from": "with Bestial Blessings", "power": "bestial-blessings", "perRank": 1, "skill": "melee", "damage": "BOD+3", "tags": ["AP"] },
         { "choice": "ancient-weapon", "from": "The Ancient Weapon", "offWhen": { "panel": "code", "option": "Broken", "text": "It doesn't answer while your Code is broken." } }
       ],
       "specialization": {
@@ -3386,8 +3388,8 @@ window.SHADOWS_DATA = {
                   { "stat": "BOD", "plus": 4 }
                 ],
                 "naturalWeapons": [
-                  { "name": "Claws", "skill": "melee", "damage": "BOD+8" },
-                  { "name": "Fangs", "skill": "melee", "damage": "BOD+10" }
+                  { "name": "Claws", "kind": "claw", "skill": "melee", "damage": "BOD+8" },
+                  { "name": "Fangs", "kind": "bite", "skill": "melee", "damage": "BOD+10" }
                 ],
                 "bars": { "stat": "TECH", "name": "Feral Mind" },
                 "costFrom": "shiftCost",
@@ -4259,7 +4261,24 @@ window.SHADOWS_DATA = {
     "rangeBands": ["Close", "Short", "Medium", "Long", "Extreme"],
     "reloadNote": "Reloading is a Fast Action: a fresh magazine, a grenade off the belt, an arrow from the quiver.",
     "swap": { "text": "A Reload can swap one kind of rounds for another, once a turn. The magazine you take out goes back in your gear with what's left in it." },
-    "modNote": "Mod slots are fixed at purchase. Removing a mod frees its slot, but may damage the mod."
+    "modNote": "Mod slots are fixed at purchase. Removing a mod frees its slot, but may damage the mod.",
+    /* Decision 290: a weapon line is natural when it names one of `kinds` (a data row's `kind`). Every character has `fists`. `perRound` plus
+       each `addedBy` Advantage's `perRank` times its rank is the count of natural attacks a round, for the whole group. `skills`: a natural
+       line rolls the highest of these (its own wins a tie). Read by Engine.naturalAttacks. Every string is for the voice pass. */
+    "naturalAttacks": {
+      "kinds": [ { "id": "fist", "name": "Fist" }, { "id": "claw", "name": "Claw" }, { "id": "bite", "name": "Bite" } ],
+      "perRound": 2,
+      "addedBy": [ { "advantage": "melee-master", "perRank": 1 } ],
+      "skills": ["melee", "martial-arts"],
+      "fists": { "name": "Fists", "kind": "fist", "skill": "martial-arts", "damage": "BOD+0", "damageType": "Blunt" },
+      "headingText": "Natural attacks: {n} a round",
+      "addedText": "({added})",
+      "eachText": "Roll each one on its own. Together they take your Standard Action.",
+      "rulesText": "Two different natural weapons: both hands, or a claw and a bite. Not in a round you attack with a held weapon. Either can be a Combat Maneuver.",
+      "moreText": "How it works",
+      "markText": "{tag} while {from} is active",
+      "markAltText": "{tag} while {from} is active, when rolled with {skill} ({n})"
+    }
   },
 
 
@@ -4904,7 +4923,7 @@ window.SHADOWS_DATA = {
 
   // K1: Help on the sheet, read by shared.js's panel through sheet.js's host (Decision 289). One context per sheet tab and one for Admin.
   // `intro` is the tab's guide line, `for` what it's for, `when` a subset of ui.when, `words` references, read through Engine.word for the open
-  // character: a gameTerms id, or `{ stat | derived | condition | tag | feature | mod | armorFeature | upgrade | spellTag | damageType | resource | term: id }` (Decision 290), `tips` at most two. **bold** is a button or label as the screen has it. Introductions that state a rule stay in appCopy.
+  // character: a gameTerms id, or `{ stat | derived | condition | tag | feature | mod | armorFeature | upgrade | spellTag | damageType | resource | term: id }` (Decision 291), `tips` at most two. **bold** is a button or label as the screen has it. Introductions that state a rule stay in appCopy.
   "sheetGuide": {
     "ui": {
       "title": "Help",

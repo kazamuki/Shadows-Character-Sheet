@@ -687,6 +687,23 @@ const Engine = (() => {
     const opts = toggleOptions(p), pd = ch && ch.panelData && typeof ch.panelData==="object" ? ch.panelData : {};
     return opts.find(o=>o.name===pd[p.id]) || opts[0] || null;
   };
+  // ── Natural attacks (Decision 290) ──
+  // A weapon line is natural when its data names a `kind` the rules list (weaponRules.naturalAttacks.kinds). The key a row sits
+  // in (`naturalWeapons`) isn't the rule: the Ancient Weapon is in it and is carried. An unknown kind reads as not natural.
+  const naturalRules = () => { const r = (D().weaponRules||{}).naturalAttacks; return isPlainObj(r) ? r : null; };
+  const naturalKind = k => { const R = naturalRules(); return typeof k==="string" && R && Array.isArray(R.kinds) && R.kinds.some(x=>isPlainObj(x) && x.id===k) ? k : null; };
+  // The line's Skill. A natural line rolls the highest of the rules' `skills`, its own winning a tie (Decision 290, LQ35).
+  function naturalSkill(ch, ownId, kind){
+    let best = skillById(ownId) ? skillLine(ch, ownId) : null;
+    const R = naturalRules();
+    if (!kind || !R || !Array.isArray(R.skills)) return best;
+    for (const id of R.skills){
+      if (id===ownId || typeof id!=="string" || !skillById(id)) continue;
+      const sl = skillLine(ch, id);
+      if (!best || sl.checkBonus > best.checkBonus) best = sl;
+    }
+    return best;
+  }
   const hasForm = o => !!o && ["stats","naturalWeapons","bars"].some(k=>o[k]!=null);
   // The form the character is in, or null when none of its toggles is on an
   // option that does anything. Stored nowhere but the toggle (constraint 7).
@@ -725,9 +742,9 @@ const Engine = (() => {
     const f = formState(ch);
     if (!f) return null;
     const weapons = f.naturalWeapons.map(w=>{
-      const d = weaponDamage(ch, w.damage), skill = skillById(w.skill) ? skillLine(ch, w.skill) : null;
-      return { name:txt(w.name), skill: skill ? skill.def.name : "", attack: skill ? skill.checkBonus : null,
-               damage:d.value, damageFormula:d.formula, tags:f.weaponTags };
+      const d = weaponDamage(ch, w.damage), kind = naturalKind(w.kind), skill = naturalSkill(ch, w.skill, kind);
+      return { name:txt(w.name), kind, skill: skill ? skill.def.name : "", skillId: skill ? skill.def.id : null, attack: skill ? skill.checkBonus : null,
+               damage:d.value, damageFormula:d.formula, damageType: txt(w.damageType) || null, tags:f.weaponTags };
     });
     const hs = hlState(ch), withering = nonNegInt((ch.trackers||{}).witheringDamage);
     const ended = !!f.endsAtWithering && hs.total>0 && withering >= hs.total * f.endsAtWithering;
@@ -1910,7 +1927,8 @@ const Engine = (() => {
     if (typeof d==="string" && /^\s*\d+\s*$/.test(d)) return { value:Number(d), formula:null };
     const m = /^\s*([A-Za-z]+)\s*\+\s*(\d+)\s*$/.exec(String(d==null ? "" : d));
     const stat = m && normStat(m[1]);
-    if (stat) return { value: statTable(ch)[stat].value + Number(m[2]), formula: `${stat}+${m[2]}` };
+    // "BOD+0" reads "BOD" (Decision 290). "+n" stays required: a bare word is text, and "EMP" is a stat (the EG-3's damage).
+    if (stat) return { value: statTable(ch)[stat].value + Number(m[2]), formula: Number(m[2])===0 ? stat : `${stat}+${m[2]}` };
     return { value:null, formula: d==null || d==="" ? null : String(d) };
   }
 
@@ -1976,6 +1994,8 @@ const Engine = (() => {
   // `damageType` is the book's word, so it is read as a damage type's NAME; one that names none reads its `style`
   // instead (each word, split on "/", a type's name, all of one class). A written-in weapon stores the type's id
   // and its Skill is its weapon type's. `melee` is null with no Skill; null for a row that isn't there.
+  const byDamageTypeName = n => (D().damageTypes||[]).find(t=>isPlainObj(t) && t.name===n) || null;
+  const classOfType = type => { const c = isPlainObj(type) ? type.resClass : null; return c==="kinetic" || c==="energy" ? c : null; };
   function weaponClass(ch, index){
     const e = listOf(ch, "weapons")[index];
     if (!isPlainObj(e)) return null;
@@ -1989,7 +2009,7 @@ const Engine = (() => {
       const def = weaponDefById(e.id);
       if (!def) return null;
       skillId = def.skill;
-      const byName = n => (D().damageTypes||[]).find(t=>isPlainObj(t) && t.name===n) || null;
+      const byName = byDamageTypeName;
       type = typeof def.damageType==="string" ? byName(def.damageType) : null;
       if (!type && typeof def.style==="string"){
         const words = def.style.split("/").map(w=>byName(w.trim()));
@@ -1997,8 +2017,7 @@ const Engine = (() => {
       }
     }
     const sk = skillId ? skillById(skillId) : null;
-    const cls = isPlainObj(type) ? type.resClass : null;
-    return { melee: sk ? sk.melee===true : null, damageClass: cls==="kinetic" || cls==="energy" ? cls : null };
+    return { melee: sk ? sk.melee===true : null, damageClass: classOfType(type) };
   }
   // The worn and in-use `weaponBonus`es that reach this weapon (Decision 248), each { to, amount, from }. It reaches by
   // `class` (melee, ranged, kinetic, energy), by `feature` (a string a catalog weapon's features carry, matched whole;
@@ -2007,8 +2026,11 @@ const Engine = (() => {
   // `damage`; a text damage keeps its text and the bonus is still listed.
   const BONUS_CLASSES = ["melee", "ranged", "kinetic", "energy"];
   function applyWeaponBonuses(ch, index, line, features){
+    return applyBonusesFor(ch, weaponClass(ch, index), line, features);
+  }
+  // The same reach for a class however it was read: a loadout row's (above) or a natural line's (Decision 290).
+  function applyBonusesFor(ch, cls, line, features){
     line.bonuses = [];
-    const cls = weaponClass(ch, index);
     if (!cls) return line;
     for (const { def } of wornGrants(ch)) for (const g of def.grants){
       if (g.type!=="weaponBonus" || (g.to!=="acc" && g.to!=="damage")) continue;
@@ -2617,7 +2639,7 @@ const Engine = (() => {
     } catch (e){ return null; }
   }
 
-  // ── Every word (Decision 290, W156) ─────────────────────────────────────
+  // ── Every word (Decision 291, W156) ─────────────────────────────────────
   // One reader for the game's words, each read from where its rule already lives: `word` answers a reference to one, `words` lists
   // them all. A reference is a plain string (a gameTerms id) or `{ <kind>: <id> }`. Nothing here keeps text of its own: a `term` is
   // read through `termBody`, a glossary row through its `description`. Neither throws, and neither touches a DOM.
@@ -5017,15 +5039,69 @@ const Engine = (() => {
       let dmg = src.damage;
       const m = /^\s*([A-Za-z]+)\s*\+\s*(\d+)\s*$/.exec(String(dmg==null ? "" : dmg));
       if (power && m && Number(w.perRank)) dmg = `${m[1]}+${Number(m[2]) + Number(w.perRank) * Math.max(0, power.rank - 1)}`;
-      const d = weaponDamage(ch, dmg), skill = skillById(src.skill) ? skillLine(ch, src.skill) : null;
+      const kind = naturalKind(src.kind), d = weaponDamage(ch, dmg), skill = naturalSkill(ch, src.skill, kind);
       const off = isPlainObj(w.offWhen) && (()=>{ const p = archPanels(ch).find(x=>x.id===w.offWhen.panel && x.type==="toggle");
         const cur = p && toggleCurrent(ch, p); return !!cur && cur.name===w.offWhen.option; })();
       const extra = [src.reach && `Reach ${src.reach}`, src.parry && `Parry ${src.parry}`].filter(Boolean).map(txt);
-      out.push({ name:txt(src.name), from:txt(w.from), skill: skill ? skill.def.name : "", attack: skill && !off ? skill.checkBonus : null,
-                 damage: off ? null : d.value, damageFormula: off ? null : d.formula, rank: power ? power.rank : null,
+      out.push({ name:txt(src.name), kind, from:txt(w.from), skill: skill ? skill.def.name : "", skillId: skill ? skill.def.id : null, attack: skill && !off ? skill.checkBonus : null,
+                 damageType: txt(src.damageType) || null, damage: off ? null : d.value, damageFormula: off ? null : d.formula, rank: power ? power.rank : null,
                  tags:(Array.isArray(src.tags) ? src.tags : []).filter(t=>typeof t==="string"), extra,
                  off: !!off, offText: off ? txt(w.offWhen.text) : "" });
     }
+    return out;
+  }
+
+  // ── Natural attacks (Decision 290) ────────────────────────────────────
+  // One group, one count: a Werewolf's form lines, an archetype's natural lines (a Vampire's bite and claws) and the Fists every
+  // character has. Built from formView and archetypeWeapons, never a third computation, so Main and print can't disagree. The
+  // Ancient Weapon is in archetypeWeapons with no `kind`: carried, never in the group. Total: any character, always the shape.
+  function naturalAttacks(ch){
+    const R = naturalRules() || {};
+    const out = { perRound:2, addedBy:[], heading:"", each:"", rules:"", more:"", lines:[] };
+    let n = Number.isInteger(R.perRound) && R.perRound>=1 ? R.perRound : 2;
+    for (const a of Array.isArray(R.addedBy) ? R.addedBy : []){
+      const def = isPlainObj(a) && typeof a.advantage==="string" ? advById(a.advantage) : null;
+      const rank = def ? nonNegInt(heldRank(ch, "advantage", def.id)) : 0, per = isPlainObj(a) ? nonNegInt(a.perRank) : 0;
+      if (!def || !rank || !per) continue;
+      out.addedBy.push({ name:txt(def.name), rank, plus:rank*per });
+      n += rank*per;
+    }
+    out.perRound = n;
+    if (Array.isArray(R.kinds)){
+      const added = out.addedBy.map(a=>`${a.name} +${a.plus}`).join(", ");
+      const head = fillTag(R.headingText, { n }), tail = added ? fillTag(R.addedText, { added }) : null;
+      out.heading = head ? (tail ? `${head} ${tail}` : head) : "";
+      out.each = txt(R.eachText); out.rules = txt(R.rulesText); out.more = txt(R.moreText);
+    }
+    const sources = [];
+    const f = formView(ch);
+    if (f) f.weapons.filter(w=>w.kind).forEach(w=>sources.push(Object.assign({ source:"form", from:txt(f.name), off:false, offText:"", extra:[], rank:null }, w)));
+    archetypeWeapons(ch).filter(w=>w.kind).forEach(w=>sources.push(Object.assign({ source:"archetype" }, w)));
+    const fx = isPlainObj(R.fists) ? R.fists : null, fk = fx && naturalKind(fx.kind);
+    if (fk){
+      const d = weaponDamage(ch, fx.damage), sk = naturalSkill(ch, fx.skill, fk);
+      sources.push({ source:"fists", name:txt(fx.name), kind:fk, from:"", skill: sk ? sk.def.name : "", skillId: sk ? sk.def.id : null,
+        attack: sk ? sk.checkBonus : null, damage:d.value, damageFormula:d.formula, damageType: txt(fx.damageType) || null,
+        tags:[], extra:[], rank:null, off:false, offText:"" });
+    }
+    const marks = traitGrants(ch, "attackTag").filter(({ g })=>g.natural===true && typeof g.tag==="string" && g.tag && Array.isArray(g.skills));
+    out.lines = sources.map(w=>{
+      const line = Object.assign({}, w, { tags: Array.isArray(w.tags) ? w.tags.slice() : [] });
+      const sk = line.skillId ? skillById(line.skillId) : null;
+      if (!line.off) applyBonusesFor(ch, { melee: sk ? sk.melee===true : null, damageClass: classOfType(byDamageTypeName(line.damageType)) }, line, []);
+      else line.bonuses = [];
+      // A mark (Death Touch) names the Skills it answers to. On a line rolled with one it just reads; on a line rolled with another
+      // it still shows, saying what it takes: the Skill and what that Skill would total (Ken, 2026-11-15).
+      line.conditional = line.off ? [] : marks.map(({ g, name })=>{
+        const from = txt(g.name) || name, applies = g.skills.includes(line.skillId);
+        const alt = applies ? null : g.skills.find(id=>typeof id==="string" && skillById(id));
+        if (!applies && !alt) return null;
+        const sl = alt ? skillLine(ch, alt) : null, n = sl ? (sl.checkBonus<0 ? `−${Math.abs(sl.checkBonus)}` : `+${sl.checkBonus}`) : null;
+        const text = applies ? fillTag(R.markText, { tag:g.tag, from }) : fillTag(R.markAltText, { tag:g.tag, from, skill: sl.def.name, n });
+        return text ? { tag:g.tag, from, applies, text } : null;
+      }).filter(Boolean);
+      return line;
+    });
     return out;
   }
 
@@ -10287,7 +10363,7 @@ const Engine = (() => {
     hlState, armorState, resolveHit, applyHit, hitAsks, naturalArmor, nanomedKit,
     naturalHealing, heal, healStep, resolveReset, applyReset,
     // Loadout: weapons, gear, armor
-    weaponLine, weaponDamage, setCustomWeapon, catalogLine, addLoadout, weaponModOptions, addWeaponMod, removeWeaponMod, fireWeapon, reloadWeapon,
+    weaponLine, weaponDamage, naturalAttacks, setCustomWeapon, catalogLine, addLoadout, weaponModOptions, addWeaponMod, removeWeaponMod, fireWeapon, reloadWeapon,
     gearLine, carriedGear, useGear, useCharge, rechargeGear, addCustomLoadout, removeLoadout, setWorn, setInUse, weaponClass, majorRows, setMajorRow,
     upgradeOptions, addUpgrade, removeUpgrade, armorWear, repairArmor,
     // Magic: the Cascade, Aberrations, the Grimoire, starting spells

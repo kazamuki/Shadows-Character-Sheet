@@ -3601,7 +3601,7 @@ test("CRB 0413/0414 and Aberrations: the heals say what the data does", () => {
 test("E8 3: a term's quoted rule is the book's, word for word", () => {
   const quoted = [...(D.gameTerms || []).filter(r => r.description).map(r => ({ id: r.id, text: r.description, source: r.bookSource })),
     ...D.visibility.filter(v => v.description).map(v => ({ id: v.id, text: v.description, source: "0530 Combat Encounters, Visibility" })),
-    // K2 (Decision 290): a damage type says what the book says it is; the three the book never defines are flagged, not written.
+    // K2 (Decision 291): a damage type says what the book says it is; the three the book never defines are flagged, not written.
     ...D.damageTypes.filter(d => d.description).map(d => ({ id: "damage type " + d.id, text: d.description, source: d.bookSource }))];
   assert.ok((D.gameTerms || []).filter(r => r.description).length >= 3, "gameTerms has no quoted rows");
   assert.equal(D.visibility.filter(v => v.description).length, D.visibility.length, "a light level has no description");

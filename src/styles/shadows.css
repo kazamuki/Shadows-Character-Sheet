@@ -484,6 +484,9 @@ h2 > .term:only-child::after{content:""; position:absolute; left:0; top:50%; wid
 .lo-gives.off{opacity:.7}
 .lo-gear-ctl .check{white-space:nowrap}
 .ref tr.off td{opacity:.6}
+.ref tr.nat-head td{white-space:normal; overflow-wrap:anywhere}
+.nat-more{display:none; margin-left:6px}
+@media (max-width:639px){ .nat-more{display:inline-block} .nat-rules:not(.open){display:none} }
 .feed-row{flex-wrap:wrap; gap:8px; align-items:center}
 .lo-scroll{overflow-x:auto; max-width:100%}
 .lo-picks .hitrow{position:sticky; left:0; max-width:calc(100vw - 40px)}   /* L2: the picks stay on screen while the typed cells scroll */

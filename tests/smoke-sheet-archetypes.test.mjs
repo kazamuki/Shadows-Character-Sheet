@@ -508,8 +508,10 @@ test("Main shifts a Forge Fang: the switch names the HL it costs, Claws and Fang
   assert.equal(ch.panelData.form, "Werewolf");
   assert.deepEqual([ch.trackers.damage, ch.trackers.witheringDamage], [7, 7], "the shift didn't spend one shifted HL as Withering");
   const rows = app.$$("#main .main-combat tbody tr").map(r => r.textContent.replace(/\s+/g, " "));
-  assert.match(rows[0], /^ ?Claws ?Werewolf form · Melee ?1d10 \+ \d+ ?20 ?—/);
-  assert.match(rows[1], /^ ?Fangs ?Werewolf form · Melee ?1d10 \+ \d+ ?22 ?—/);
+  assert.match(rows[0], /^ ?Natural attacks: 2 a round/, "the natural group has no heading (Decision 290)");
+  assert.match(rows[1], /^ ?Claws ?Werewolf form · Melee ?1d10 \+ \d+ ?20 ?—/);
+  assert.match(rows[2], /^ ?Fangs ?Werewolf form · Melee · Bite ?1d10 \+ \d+ ?22 ?—/, "a fang's kind is named: its name doesn't say Bite");
+  assert.match(rows[3], /^ ?Fists ?Martial Arts/);
   assert.match(app.$("#main .main-form").textContent, /\+2 REF, \+2 MOB and \+4 BOD/);
   const bod = app.$$("#main .statcell").find(c => c.querySelector(".sid").textContent === "BOD");
   assert.match(bod.textContent, /12.*\+4 form/s, "the stat block doesn't show the shifted BOD");
@@ -1031,5 +1033,113 @@ test("E6 3: a reference panel's column tables sit in a frame, and its prose tabl
     assert.ok(f.getAttribute("aria-label").trim(), "its frame has an empty label");
   }
   for (const t of prose) assert.ok(!t.parentElement.classList.contains("ref-frame"), "a prose table is framed");
+  assert.deepEqual(app.errors, []);
+});
+
+// ── L4: natural attacks (Decision 290) ──────────────────────────────────
+const natVampire = () => {
+  const ch = lockedCharacter();
+  ch.identity.archetype = "vampire"; ch.creation.powerLevel = "wcd"; ch.archetypeChoices.specialization = ["draugur"];
+  ch.weapons.push({ id: "combat-knife", notes: "", mods: [], roundsSpent: 0 });
+  return ch;
+};
+const firstText = r => r.cells[0].firstChild.textContent.trim();
+
+test("Main: the natural group leads the Weapons table, under one heading", () => {
+  const app = openSheet(natVampire(), "main");
+  const rows = [...app.$$(".main-combat table.ref.wpn tbody tr")];
+  const names = rows.map(r => r.classList.contains("nat-head") ? "[heading]" : firstText(r));
+  assert.deepEqual(names, ["[heading]", "Bite", "Claws", "Fists", "Combat Knife"], "the natural group isn't first, under one heading");
+  assert.equal(app.$$(".nat-head").length, 1);
+  assert.match(rows[0].textContent, /Natural attacks: 2 a round/);
+  assert.match(rows[0].textContent, /Two different natural weapons/);
+  assert.doesNotMatch(app.$(".main-combat").textContent, /×\s?2/, "a ×2 is on a line");
+  assert.match(rows[3].textContent, /Martial Arts/);
+  assert.ok(app.$$(".main-combat .sect").some(s => s.textContent === "Combat skills"));
+  assert.deepEqual(app.errors, []);
+});
+
+test("Main: a bare Arcanist sees Fists; a True Warrior's say AP with Death Touch; Melee Master names itself", () => {
+  let app = openSheet(lockedCharacter(), "main");
+  assert.deepEqual([...app.$$("tr.nat-row")].map(firstText), ["Fists"]);
+  assert.doesNotMatch(app.$(".main-combat").textContent, /with Death Touch/);
+  const tw = lockedCharacter(); tw.identity.archetype = "professional"; tw.archetypeChoices.specialization = ["true-warrior"];
+  tw.advantages = [{ id: "melee-master", rank: 1, notes: "" }];
+  app = openSheet(tw, "main");
+  assert.match(app.$("tr.nat-row").textContent, /AP while Death Touch is active/);
+  assert.equal([...app.$$("tr.nat-row .tags .tag")].some(t => t.textContent === "AP"), false, "AP shown as a tag it always has");
+  assert.match(app.$(".nat-head").textContent, /Natural attacks: 3 a round \(Melee Master \+1\)/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Print: a Werewolf in form prints its claws and fangs", () => {
+  const ww = lockedCharacter(); ww.identity.archetype = "werewolf"; ww.archetypeChoices.specialization = ["trueborn"];
+  const app = openSheet(ww, "main");
+  const loadout = ch => { const box = app.doc.createElement("div"); box.innerHTML = app.window.renderPrintView(ch); return [...box.querySelectorAll(".p-page")][2]; };
+  const names = pg => [...pg.querySelectorAll("table.p-table")[0].querySelectorAll("tbody tr")].map(r => r.cells[0].textContent.trim());
+  assert.match(names(loadout(ww))[0], /^Natural attacks: 2 a round/);
+  assert.equal(names(loadout(ww))[1], "Fists", "Human form prints Fists alone");
+  const shifted = activeChar(app);
+  assert.ok(Engine.setToggle(shifted, "form", "Werewolf").ok);
+  const pg = loadout(shifted), n = names(pg);
+  assert.match(n[0], /^Natural attacks: 2 a round/);
+  assert.deepEqual(n.slice(1, 4), ["Claws", "Fangs", "Fists"]);
+  assert.match(pg.textContent, /Two different natural weapons/);
+  assert.doesNotMatch(pg.textContent, /×\s?2/);
+  assert.equal(pg.querySelectorAll("tr.p-cat").length >= 1, true);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Main and print: a natural row shows a worn ACC bonus, and print's Death Touch says when, as Main's does", () => {
+  const ch = lockedCharacter(); ch.identity.archetype = "professional"; ch.archetypeChoices.specialization = ["true-warrior"];
+  assert.equal(Engine.addLoadout(ch, "armor", "smartlink-gloves").ok, true);
+  const app = openSheet(ch, "main");
+  // No catalog item has a class ACC bonus yet (Decision 248), so the app's own data is given one.
+  app.window.SHADOWS_DATA.armor.find(a => a.id === "smartlink-gloves").grants = [{ type: "weaponBonus", to: "acc", amount: 2, class: "melee" }];
+  app.click('[data-sec="skills"]'); app.click('[data-sec="main"]');
+  const fists = app.$("tr.nat-row");
+  assert.match(fists.cells[1].textContent, /\+2 from SMARTLink Gloves/, "the natural row dropped its ACC bonus");
+  assert.match(fists.cells[0].textContent, /AP while Death Touch is active/);
+  const box = app.doc.createElement("div"); box.innerHTML = app.window.renderPrintView(activeChar(app));
+  const pg = [...box.querySelectorAll(".p-page")][2];
+  assert.match(pg.textContent, /AP while Death Touch is active/, "print's mark doesn't say when, as Main's does");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Print: a Draugur's Ancient Weapon follows the natural group, off when the Code is broken, as on Main", () => {
+  const ch = natVampire(); ch.archetypeChoices.optionPicks = { "ancient-weapon": "blunt" };
+  const app = openSheet(ch, "main");
+  const rowsOf = c => { const box = app.doc.createElement("div"); box.innerHTML = app.window.renderPrintView(c); return [...[...box.querySelectorAll(".p-page")][2].querySelectorAll("table.p-table")[0].querySelectorAll("tbody tr")].map(r => r.cells[0].textContent.trim()); };
+  const kept = rowsOf(activeChar(app));
+  assert.deepEqual([kept.slice(1, 5), kept[5]].flat().map(n => n.replace(/^Natural.*/, "[heading]")), ["Bite", "Claws", "Fists", "Blunt", "Combat Knife"]);
+  const broken = activeChar(app); assert.ok(Engine.setToggle(broken, "code", "Broken").ok);
+  const box = app.doc.createElement("div"); box.innerHTML = app.window.renderPrintView(broken);
+  const blunt = [...box.querySelectorAll("tr.p-tight")].find(r => /^Blunt/.test(r.cells[0].textContent.trim()));
+  assert.ok(blunt, "the Ancient Weapon isn't printed");
+  assert.match(blunt.textContent, /doesn't answer/, "a broken Code isn't said");
+});
+
+test("Main: under 640px the natural group's rules sit behind its heading, a tap away; wider, they show", () => {
+  const app = openSheet(natVampire(), "main", { width: 375 });
+  const btn = app.$("[data-natmore]"), rules = app.$("#nat-rules");
+  assert.ok(btn && rules, "no fold on the heading");
+  assert.equal(btn.getAttribute("aria-expanded"), "false");
+  assert.equal(rules.classList.contains("open"), false);
+  assert.match(rules.textContent, /Roll each one on its own/);
+  app.click("[data-natmore]");
+  assert.equal(app.$("[data-natmore]").getAttribute("aria-expanded"), "true");
+  assert.equal(app.$("#nat-rules").classList.contains("open"), true);
+  app.click("[data-natmore]");
+  assert.equal(app.$("#nat-rules").classList.contains("open"), false);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Main: with no moreText in the data, the natural group's rules aren't folded away behind a button nobody wrote", () => {
+  const app = openSheet(lockedCharacter(), "main");
+  delete app.window.SHADOWS_DATA.weaponRules.naturalAttacks.moreText;
+  app.click('[data-sec="skills"]'); app.click('[data-sec="main"]');
+  assert.equal(app.$("[data-natmore]"), null, "a fold button with no label in data");
+  assert.equal(app.$(".nat-rules"), null, "the rules are folded with no way to open them");
+  assert.match(app.$(".nat-head").textContent, /Two different natural weapons/);
   assert.deepEqual(app.errors, []);
 });

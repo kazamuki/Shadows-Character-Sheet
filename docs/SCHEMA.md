@@ -5687,7 +5687,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. It extends Decision 139 (a tip kind inside a sentence).
      - **Revisit if:** playtesters miss a term on a phone, or a sentence site outside the list needs terms.
      - **Built:** app 0.69.0 (minor), no game-data or schema bump, PR #338, log 2026-11-13 (E8).
-     → **Superseded in part by Decision 290** — `gameTerms` gains a `rule` kind (`from.rule`, a path into a rule the data holds) and rows with no `forms`, which answer Every word and Help but are never a trigger in a sentence.
+     → **Superseded in part by Decision 291** — `gameTerms` gains a `rule` kind (`from.rule`, a path into a rule the data holds) and rows with no `forms`, which answer Every word and Help but are never a trigger in a sentence.
 
 288. **GM mode's Reference may say a ruling before the book does: an item marked `rulingSource` is the one exception to quoting the CRB, and an open line in `plans/crb-catch-up.md` has to name it.**
      *2026-11-15 · Ken + Claude · Touches: gmReference, parts, items, rulingSource, bookSource, Quick Reference, Actions panel, Free Action, Standard Action, Activate a Power, Attack with a Power, SFR, Rate of Use, plans/crb-catch-up.md, Decision 207*
@@ -5714,9 +5714,18 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 278 in part (Help's panel serves the sheet as well as a table).
      - **Revisit if:** players want Help to stay open across visits, as a table's does, or the wizard asks for the same (KQ7).
      - **Built:** app 0.70.0 (minor), no game-data or schema bump, PR #351, log 2026-11-15 (K1).
-     → **Superseded in part by Decision 290** — a context's `words` are references (a gameTerms id or `{ kind: id }`) read through `Engine.word`, and Help gains *Every word*.
+     → **Superseded in part by Decision 291** — a context's `words` are references (a gameTerms id or `{ kind: id }`) read through `Engine.word`, and Help gains *Every word*.
 
-290. **Every word: the game's words in one list, each read from where its rule lives, A–Z with a filter and a jump to a letter; a word the sheet uses with no rule gets one from the data or the CRB, or a flag.**
+290. **Natural attacks are one group with one count: two a round from two different natural weapons, plus one a rank of Melee Master. Every character has Fists, and a natural line has a kind.**
+     *2026-11-15 · Ken + Deighton + Scott + Claude · Touches: weaponRules.naturalAttacks, naturalAttacks, kind, fist, claw, bite, Fists, Melee Master, Death Touch, attackTag, naturalWeapons, archetypeWeapons, formView, weaponDamage, weaponBonus, Main's Weapons table, pWeaponRows*
+     - **Decided:** A line is natural when its data names a `kind` (fist, claw, bite). Every character has Fists (Martial Arts, BOD+0, Blunt). The form's, the archetype's and the Fists line are one group under one count, `perRound` plus a rank of each `addedBy` Advantage, shown once above them with the rule: two different natural weapons, never beside a held weapon's attack. A natural line rolls the higher of its Skills. A worn melee `weaponBonus` reaches it. Death Touch is a conditional AP `attackTag`. Nothing is stored.
+     - **Why:** Deighton (2026-11-12): one Standard Action, Martial Arts applies, a mastery adds one. Scott (2026-11-15): a Maneuver can be one, never beside a carried weapon, two different weapons (no legs). Ken: natural weapons are melee. L5b needs a bite told from a claw.
+     - **Rejected:** "×2" on each line (LQ10). Natural by the key `naturalWeapons` (the Ancient Weapon is carried). Parsing a bare "BOD" (EMP is Empathy). Storing Death Touch as on (Decision 104).
+     - **Replaces:** nothing. Extends 104, 195, 200, 229, 247 and 248 (a class bonus reaches a natural line).
+     - **Revisit if:** Deighton revises Scott's answers, LQ42 is answered otherwise, or a Milestone adds a natural attack.
+     - **Built:** app 0.70.0 (minor), game data 0.55, no schema bump, PR #350, log 2026-11-15 (L4).
+
+291. **Every word: the game's words in one list, each read from where its rule lives, A–Z with a filter and a jump to a letter; a word the sheet uses with no rule gets one from the data or the CRB, or a flag.**
      *2026-11-15 · Ken + Claude · Touches: Every word, Engine.word, Engine.words, Engine.term, Engine.glossary, gameTerms, from.rule, damageTypes, weaponModGlossary, armorFeatureGlossary, armorUpgradeGlossary, spellTagGlossary, sheetGuide, words, gmGuide.words, filter, letter jump, helpView, TIPS, PROT, RES, Integrity, TN, TH, IP, Health Levels, EMP, AP, Decision 116, Decision 135, Decision 139, Decision 278, Decision 287, Decision 289, W150, W156*
      - **Decided:** One reader, `Engine.word(ref, ch)`, answers a reference to any of the game's words (a gameTerms id, a Stat, a Condition, a tag, a damage type, a resource and the rest); `Engine.words(ch)` lists them, one row per meaning, A–Z. A context's words are references. The sheet's Help gains *Every word*, with a filter and letter jump that GM mode's shares. A word with no rule gets a gameTerms row pointing at the data's own rule (`from.rule`), or a quoted description, or a flag. New rows carry no forms, so no sentence changes.
      - **Why:** W156: about 140 words, each reachable only by tripping over it. One reader keeps each definition where its rule is (135).
@@ -5727,7 +5736,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - The catalog on Every word: it buries the words (KQ4).
      - **Replaces:** Decision 289 in part (a context's words are references, not only gameTerms ids). Decision 287 in part (gameTerms gains a `rule` kind).
      - **Revisit if:** players want the new words found inside sentences (forms), or a GM wants the game's words on the table's Every word (KQ15).
-     - **Built:** app 0.71.0 (minor), game data 0.55, no schema bump, PR (this one), log 2026-11-15 (K2).
+     - **Built:** app 0.71.0 (minor), game data 0.56, no schema bump, PR (this one), log 2026-11-15 (K2).
 
 ## 5. Open Flags
 
@@ -5761,8 +5770,8 @@ here are in `log/archive.md`.
 | F49 | **Which Skills do "electronic interface and hacking checks" and "precision skill checks" add to?** 0460 gives the Hacking Visor +5 and the Hacking Gloves +2 to "electronic interface and hacking checks", and the PrecisionGrip Gloves +2 to "precision skill checks", and names no Skill. Interface alone, or Interface, Programming and Security; and for precision, which Skills. Stubbed (L3): the three keep their text and compute nothing; the Loadout card says the GM rules it | Deighton | Doesn't block L3 |
 | F50 | **Does Bleeding tick at the Reset Quick Clot ends it?** "Bleeding ends on its own at the next Reset" (Appendix Aberrations). Stubbed (H3, Decision 268): it ticks once, then ends, and Turn Reset says so. The alternative ends it without a tick | Deighton | Doesn't block H3 |
 | F51 | **Does Regeneration stop when a Werewolf is knocked unconscious?** `0414` ends the form "when you are knocked unconscious". Stubbed (H3, Decision 268): the sheet stops Regeneration only when Withering has ended the form (`formView.ended`), because the player owns the toggle and no Condition ends it | Deighton | Doesn't block H3 |
-| F52 | **What Elemental damage is.** 0480 names Elemental in its Warding rows and its Backlash table and never says what it is. Stubbed (K2, Decision 290): the damage type has no description, is `flagged`, and shows its `playerNote` on Every word | Deighton | Doesn't block K2 |
-| F53 | **What Spirit damage is.** 0480 names Spirit in its Warding rows and its Backlash table and never says what it is. Stubbed (K2, Decision 290): the damage type has no description, is `flagged`, and shows its `playerNote` on Every word | Deighton | Doesn't block K2 |
-| F54 | **What Aether damage is.** 0480 names Aether in its Warding rows and its Backlash table and never says what it is. Stubbed (K2, Decision 290): the damage type has no description, is `flagged`, and shows its `playerNote` on Every word | Deighton | Doesn't block K2 |
+| F52 | **What Elemental damage is.** 0480 names Elemental in its Warding rows and its Backlash table and never says what it is. Stubbed (K2, Decision 291): the damage type has no description, is `flagged`, and shows its `playerNote` on Every word | Deighton | Doesn't block K2 |
+| F53 | **What Spirit damage is.** 0480 names Spirit in its Warding rows and its Backlash table and never says what it is. Stubbed (K2, Decision 291): the damage type has no description, is `flagged`, and shows its `playerNote` on Every word | Deighton | Doesn't block K2 |
+| F54 | **What Aether damage is.** 0480 names Aether in its Warding rows and its Backlash table and never says what it is. Stubbed (K2, Decision 291): the damage type has no description, is `flagged`, and shows its `playerNote` on Every word | Deighton | Doesn't block K2 |
 F42 and F43 go to Deighton, and F37 with Scott, who wrote CRANK.
 

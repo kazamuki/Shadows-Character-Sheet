@@ -46,7 +46,7 @@
    0,
    88.2,
    390,
-   1855.5
+   2179.2
   ],
   "vitals": [
    0,
@@ -63,9 +63,9 @@
    "5 div.main-pin 0,0,0,0",
    "6 div.cond-grid 16,323.6,358,374.1",
    "7 section.main-conditions 16,721.7,358,94.5",
-   "8 div.main-grid 16,830.2,358,1043.6"
+   "8 div.main-grid 16,830.2,358,1367.3"
   ],
-  "deep": "334 boxes, 3489dfc0"
+  "deep": "365 boxes, 77c93354"
  },
  "sheet: skills @390": {
   "header": [
@@ -897,7 +897,7 @@
    0,
    88.2,
    768,
-   1439.2
+   1762.2
   ],
   "vitals": [
    0,
@@ -914,9 +914,9 @@
    "5 div.main-pin 0,0,0,0",
    "6 div.cond-grid 16,315.9,736,268.3",
    "7 section.main-conditions 16,608.2,736,94.5",
-   "8 div.main-grid 16,716.7,736,740.8"
+   "8 div.main-grid 16,716.7,736,1063.8"
   ],
-  "deep": "346 boxes, 939a0363"
+  "deep": "377 boxes, 88aa366"
  },
  "sheet: skills @768": {
   "header": [
@@ -1748,7 +1748,7 @@
    0,
    88.2,
    1300,
-   1113.3
+   1227
   ],
   "vitals": [
    0,
@@ -1765,9 +1765,9 @@
    "5 div.main-pin 30,317.9,1240,39",
    "6 div.cond-grid 30,364.9,1240,156.2",
    "7 section.main-conditions 30,545,1240,94.5",
-   "8 div.main-grid 30,653.5,1240,468.1"
+   "8 div.main-grid 30,653.5,1240,581.7"
   ],
-  "deep": "348 boxes, f28eedc9"
+  "deep": "379 boxes, aac0e12e"
  },
  "sheet: skills @1300": {
   "header": [
@@ -2026,7 +2026,7 @@
    0,
    88.2,
    1000,
-   1070.3
+   1252.3
   ],
   "vitals": [
    0,
@@ -2043,9 +2043,9 @@
    "5 div.main-pin 0,0,0,0",
    "6 div.cond-grid 30,321.9,940,156.2",
    "7 section.main-conditions 30,502,940,94.5",
-   "8 div.main-grid 30,610.5,940,468.1"
+   "8 div.main-grid 30,610.5,940,650.1"
   ],
-  "deep": "346 boxes, 1d5e8960"
+  "deep": "377 boxes, cb9acfe1"
  },
  "sheet: skills @1300 pinned": {
   "header": [
@@ -2877,7 +2877,7 @@
    0,
    88.2,
    1980,
-   1113.3
+   1193.3
   ],
   "vitals": [
    0,
@@ -2894,9 +2894,9 @@
    "5 div.main-pin 30,317.9,1920,39",
    "6 div.cond-grid 30,364.9,1920,156.2",
    "7 section.main-conditions 30,545,1920,94.5",
-   "8 div.main-grid 30,653.5,1920,468.1"
+   "8 div.main-grid 30,653.5,1920,548"
   ],
-  "deep": "348 boxes, d2a14b72"
+  "deep": "379 boxes, 81674088"
  },
  "sheet: skills @1980": {
   "header": [
@@ -3155,7 +3155,7 @@
    0,
    88.2,
    1680,
-   1070.3
+   1150.3
   ],
   "vitals": [
    0,
@@ -3172,9 +3172,9 @@
    "5 div.main-pin 0,0,0,0",
    "6 div.cond-grid 30,321.9,1620,156.2",
    "7 section.main-conditions 30,502,1620,94.5",
-   "8 div.main-grid 30,610.5,1620,468.1"
+   "8 div.main-grid 30,610.5,1620,548"
   ],
-  "deep": "346 boxes, 1ddde800"
+  "deep": "377 boxes, 26d05a81"
  },
  "sheet: skills @1980 pinned": {
   "header": [

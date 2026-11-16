@@ -792,6 +792,39 @@ const weaponChar = () => {
 };
 // Two floors, on Main at the phone widths and at 1024: the page doesn't scroll sideways with that table in it, and a weapon's tag is
 // underlined as a term is (text-decoration, no border), which jsdom can't read.
+// L4: the natural group prints on the Loadout page, where the blank rows were, so no character's printout gains a sheet. (The page
+// holds about five weapon rows: a Draugur with two carried weapons spills to another sheet, as six carried weapons did before L4.) The
+// budgets are the pages `main` printed for each (Letter landscape, the app's own print view through Chromium's PDF).
+async function printFloors(browser, file, rows) {
+  const { Engine } = loadEngine();
+  const base = (arch, spec) => {
+    const ch = lockedCharacter(arch, 0); ch.identity.name = "Print Check";
+    if (spec) ch.archetypeChoices.specialization = [spec];
+    if (arch === "vampire") ch.creation.powerLevel = "wcd";
+    return ch;
+  };
+  const shifted = base("werewolf", "trueborn"); Engine.setToggle(shifted, "form", "Werewolf");
+  const draugur = base("vampire", "draugur"); draugur.archetypeChoices.optionPicks = { "ancient-weapon": "blunt" };
+  draugur.weapons = [{ id: "combat-knife", notes: "" }];
+  const withKnives = (ch, n) => { ch.weapons = Array.from({ length: n }, () => ({ id: "combat-knife", notes: "" })); return ch; };
+  const shiftedTwo = base("werewolf", "trueborn"); Engine.setToggle(shiftedTwo, "form", "Werewolf"); withKnives(shiftedTwo, 2);
+  const draugurTwo = base("vampire", "draugur"); draugurTwo.archetypeChoices.optionPicks = { "ancient-weapon": "blunt" }; withKnives(draugurTwo, 2);
+  const cases = [["a bare Arcanist", base("arcanist"), 4], ["a Werewolf in form", shifted, 4],
+    ["a True Warrior", base("professional", "true-warrior"), 4], ["a Draugur with Blunt and a knife", draugur, 5],
+    ["a Werewolf in form with two knives", shiftedTwo, 4], ["a Draugur with Blunt and two knives", draugurTwo, 5],
+    ["a mortal with four knives", withKnives(base("arcanist"), 4), 4]];
+  for (const [name, ch, budget] of cases) {
+    const c = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    const page = await c.newPage();
+    await page.goto(pathToFileURL(file).href);
+    await page.evaluate(j => { const el = document.getElementById("printSheet"); el.innerHTML = window.renderPrintView(JSON.parse(j)); }, JSON.stringify(JSON.parse(JSON.stringify(ch))));
+    await page.emulateMedia({ media: "print" });
+    const pdf = await page.pdf({ format: "Letter", landscape: true, printBackground: true });
+    const pages = (pdf.toString("latin1").match(/\/Type\s*\/Page[^s]/g) || []).length;
+    rows.push({ width: "print", screen: `L4: ${name} prints on ${budget} sheets`, layout: pages <= budget ? `ok (${pages} sheets)` : `${pages} sheets, ${budget} at most`, ok: pages <= budget });
+    await c.close();
+  }
+}
 async function weaponFloors(browser, file, rows) {
   const ch = weaponChar();
   // 375 is a width the table broke at on its own: the track grew to 360px, past the 343 a 375 screen leaves, where 390 leaves 358 and hides 2px of it in the gutter.
@@ -1006,6 +1039,7 @@ try {
   await phoneFloors(browser, file, rows);
   await weaponFloors(browser, file, rows);
   await sheetHelp(browser, file, rows);
+  await printFloors(browser, file, rows);
   // P16 (Decision 246): the Character tab's layout. jsdom has no layout, so this is where it's held.
   for (const w of LAYOUT_WIDTHS) {
     for (const f of characterFixtures()) {

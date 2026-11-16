@@ -135,7 +135,7 @@ print renderer for a skill row; the line is `Engine.maneuverChecks`, so print on
 *To respect:* Decision 229. Player-visible: a CHANGELOG line and a patch bump.
 
 **W156 — Help on the character sheet: what each tab is for, every word it uses, and a switch for the guide lines.** *Ken, 2026-11-14 · 💡 · Rule or shape*\
-**Plan:** [help-on-the-sheet K1–K3](plans/help-on-the-sheet.md), approved 2026-11-15; K1 built in 0.70.0 ([`K1-one-help.md`](plans/help-on-the-sheet/K1-one-help.md)); K2 built in 0.71.0 (*Every word*, Decision 290): [`K2-every-word.md`](plans/help-on-the-sheet/K2-every-word.md)
+**Plan:** [help-on-the-sheet K1–K3](plans/help-on-the-sheet.md), approved 2026-11-15; K1 built in 0.70.0 ([`K1-one-help.md`](plans/help-on-the-sheet/K1-one-help.md)); K2 built in 0.71.0 (*Every word*, Decision 291): [`K2-every-word.md`](plans/help-on-the-sheet/K2-every-word.md)
 
 Ken wants this as a plan of its own, after the finding-things plan (`plans/archive/finding-things-on-the-sheet.md`, closed). GM mode has Help on every page (Decision 278, S31): a **?** in the header and the **?** key open a panel for the page that's open, read from `gmGuide` in the data. It says what the page is for, when it's used, and the words on it. A **Guide lines** switch turns each section's one-line guide off once a GM knows the ground. The player's sheet has no such thing.
 
@@ -168,39 +168,6 @@ Main's vitals grid has five tracks at 768 and eight of 142px at 1280, so seven c
 
 ### Rules in play: powers, rounds, encounters, Sanity
 
-**W107 — An unarmed strike line, and Death Touch's AP on it.** *Ken, with Claude · 💡 · Content (if it follows Iron Shirt) · raised 2026-10-15*\
-**Plan:** [loadout-and-gear L4](plans/loadout-and-gear.md), order drafted: [`L4-natural-attacks.md`](plans/loadout-and-gear/L4-natural-attacks.md)
-
-**Natural attacks, 2026-10-23** (the design meeting, `reference/meeting-2026-10-23.md`): fists, claws and teeth are **natural attacks**, two a round by default in any mix, stopping at two. So the fists' line this item asks for also says that, as do a Vampire's or Werewolf's claws and fangs. Five details are still Deighton's.
-
-Raised reviewing P8a. True Warrior's Power Style lists **Death Touch
-[Chi 4]: "Martial Arts attacks are Armor Piercing when not using melee
-weapons."** Today it's a line of text: nothing on the sheet marks a strike
-AP, so the player has to remember. Two gaps sit under it:
-- **There's no unarmed attack on the sheet.** Loadout's attack lines come
-  from carried weapons, and every `martialArts` catalog entry (the bo staff,
-  the kusarigama, the tekko-kagi) is a melee weapon, which is exactly what
-  Death Touch excludes. A Martial Arts character fighting bare-handed has no
-  line to read. That line comes first.
-- **Death Touch has no grant.** Iron Shirt, on the same Power Style, does
-  (`grants: naturalArmor`, with `while`). Death Touch would get one the same
-  way, read by the unarmed line.
-
-**Ken's shape (2026-10-15):** the sheet needs to know the character has the
-Chi ability (the Power Style tweak, already a held specialization), that
-Death Touch is on, and that the attack is a Martial Arts strike.
-**Claude's suggestion for "is on":** don't store it. Decision 104 lists a
-conditional source and never sums it, and the hit modal asks when it
-matters. The strike line reads **"AP with Death Touch"**, and the player
-knows whether they paid the Chi. That keeps it out of the save file (no
-schema bump). Track it only if playtesting shows people forget.
-*To respect:* Decision 104's conditional pattern. Decision 135 (a grant some
-code reads). W39 also wants a Martial Arts strike to hang its style bonus on,
-so build the line once for both. **Separate, and for Deighton:** when someone
-*else's* Death Touch hits a character with Natural Armor, does it pierce it?
-Decision 219 lets only AP from a spell through, and Chi isn't a spell. Ask
-with F42.
-
 **W128 — The sheet knows when an encounter ends.** *Claude, from P18's sign-off · 🔎 · Rule or shape · raised 2026-10-16*\
 **Plan:** none yet
 
@@ -211,6 +178,11 @@ This is the prerequisite for **limited uses**: a counter on an effect with its r
 encounter starts and ends.
 *To respect:* the design first: how an encounter starts and ends on a player's sheet (a button? GM mode's encounters, S10, once seats exist?). Then the
 uses counters as P18-shaped data on the effect. Its own plan, probably two orders.
+
+**W160 — A trained weapon that counts as natural.** *Deighton, at the 2026-11-12 meeting · 💡 · Rule or shape · raised 2026-11-15*\
+**Plan:** none yet
+
+Deighton floated that a weapon a character is trained with (his eskrima sticks) could count as a natural weapon, so it joins the group of natural attacks. Not ruled. L4 builds the group by a data `kind` (Decision 290); a trained weapon would need a rule for which weapons qualify and where the sheet reads the training. Ask him before any plan.
 
 **W132 — Powers that answer a hit, or heal while they run.** *Ken, from re-running P21's pre-flight · 💡 · Rule or shape · raised 2026-10-21*\
 **Plan:** set aside by [crb-catch-up](plans/crb-catch-up.md) (0410–0414): H2 and H3 built the rest (Decisions 267 and 268; `plans/archive/powers-that-run.md`); Battle Hardened and Elemental Blood wait on the book naming their Conditions and elements
@@ -446,6 +418,7 @@ its own numbered decision.
 
 **W90 — Cybernetics.** *Ken, from Brogan; rewritten 2026-10-22 with Deighton's system · 🔎 · Rule or shape · raised 2026-10-10 · needs its own plan; Deighton for the questions below*\
 **Plan:** set aside by [loadout-and-gear §4](plans/loadout-and-gear.md): waits on the cybernetics design (F6, F19) and Deighton's six questions; it needs a plan of its own, built on L6's row shape · **Goes with:** W61, W91, W127, W134
+*Natural weapons (L4, Decision 290):* cyberware on the hands is a natural weapon by the 2026-11-12 ruling, so it joins the natural group through a data `kind`, and a worn melee bonus already reaches it. The tri-claws' ladder is +3 / +6 / +8 (the +12 → +8 change), and stacking adds to BOD once.
 
 Playtesters want chrome, and as of 2026-10-22 there is something to build from. The Cyborg archetype was
 cut (STATE §3); cybernetics are **gear, Professionals only**, and the **Enforcer is the cybernetics
@@ -970,7 +943,7 @@ Build it only if hand entry drifts, or when live sync starts: [accounts-and-sync
 dispatches to a player's inbox, posted instead of saved, and builds on this. Its open question is GQ3 (one file per table).
 
 **W150 — Help's polish: the foot links, an A–Z jump in Every word, a stronger heading.** *Claude, from S31's re-critique (PR #323), 2026-11-12; Ken: one W item · 💡 · Fix*\
-**Plan:** [help-on-the-sheet K1](plans/help-on-the-sheet.md), built in 0.70.0 ([`K1-one-help.md`](plans/help-on-the-sheet/K1-one-help.md); the foot's switches lead on a phone for the sheet's Help); the A–Z jump, with a filter, for both panels' Every word was built in K2 (0.71.0, Decision 290): [`K2-every-word.md`](plans/help-on-the-sheet/K2-every-word.md). What's left is the stronger heading
+**Plan:** [help-on-the-sheet K1](plans/help-on-the-sheet.md), built in 0.70.0 ([`K1-one-help.md`](plans/help-on-the-sheet/K1-one-help.md); the foot's switches lead on a phone for the sheet's Help); the A–Z jump, with a filter, for both panels' Every word was built in K2 (0.71.0, Decision 291): [`K2-every-word.md`](plans/help-on-the-sheet/K2-every-word.md). What's left is the stronger heading
 
 Not planned: best done after Deighton's read of Help's words (S31, GQ39) is in, since his answers may move the copy these sit around. S31's Help panel works, and its review found three things that read poorly. On a phone the foot (A night at the table, Every word,
 Keys and the Guide lines switch) is about 530px below the fold, so a GM has to scroll the whole page's help to reach the one link
@@ -1213,7 +1186,7 @@ always" stays true of whoever makes the change.
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W160.** Everything above is open. What was built is in
+- **Next free number: W161.** Everything above is open. What was built is in
   [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)

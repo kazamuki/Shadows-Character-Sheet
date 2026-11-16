@@ -747,7 +747,7 @@ test("no exported reader throws on any character migrate() can return", () => {
                    "luckSpent","boostSpent","disciplineSpent","cp","painState","conditionState","hlState","armorState","naturalArmor","naturalHealing","resolveReset","luckState",
                    "sanState","crankState","focusedSkillIds","focusedSkillSpec","focusedPicks","ipState","milestoneState","archPanels",
                    "specializationNeed","specializationIds","specializationChosen","specializationLabel",
-                   "disciplineRanks","buildExport","versionCheck","nextMilestoneAt","aberrationState","spellAttack","spellPower","grimoire","heldSpells","castingPool","movement","startingCredits","statOverCaps"];
+                   "disciplineRanks","naturalAttacks","buildExport","versionCheck","nextMilestoneAt","aberrationState","spellAttack","spellPower","grimoire","heldSpells","castingPool","movement","startingCredits","statOverCaps"];
   const failures = [];
   for (const [label, ch] of Object.entries(degenerates())){
     for (const fn of readers){
@@ -13509,7 +13509,175 @@ test("E8 5: the tips' sentences come from appCopy, and the engine hands back the
   assert.deepEqual(J(e.term("dark").more), []);
 });
 
-// ── K2: Every word (help-on-the-sheet, Decision 290) ──────────────────
+// ── L4: natural attacks (Decision 290) ──────────────────────────────────
+const natNames = ch => Engine.naturalAttacks(ch).lines.map(l => l.name);
+const naturalOf = (ch, name) => Engine.naturalAttacks(ch).lines.find(l => l.name === name);
+const warrior = (bod = 8) => { const ch = subject({ bod }); ch.identity.archetype = "professional"; ch.archetypeChoices.specialization = ["true-warrior"]; return ch; };
+const withMelee = (ch, id, rank) => { ch.advantages = [{ id, rank, notes: "" }]; return ch; };
+
+test("Decision 290: every character has Fists — Martial Arts, BOD damage, Blunt — and two natural attacks a round", () => {
+  const ch = subject({ bod: 5 });
+  const n = Engine.naturalAttacks(ch);
+  assert.equal(n.lines.length, 1);
+  const f = n.lines[0];
+  assert.deepEqual([f.name, f.kind, f.damage, f.damageFormula, f.skill, f.source], ["Fists", "fist", 5, "BOD", "Martial Arts", "fists"]);
+  assert.equal(f.attack, Engine.skillLine(ch, "martial-arts").checkBonus);
+  assert.equal(n.perRound, 2);
+  assert.equal(n.heading, "Natural attacks: 2 a round");
+  assert.match(n.each, /Standard Action/);
+  assert.match(n.rules, /^Two different natural weapons/);
+});
+
+test("Decision 290: Melee Master adds one natural attack a rank, not a pair", () => {
+  const ch = withMelee(subject(), "melee-master", 2);
+  ch.identity.archetype = "professional";
+  const n = Engine.naturalAttacks(ch);
+  assert.equal(n.perRound, 4);
+  assert.deepEqual(plain(n.addedBy), [{ name: "Melee Master", rank: 2, plus: 2 }]);
+  assert.equal(n.heading, "Natural attacks: 4 a round (Melee Master +2)");
+  assert.deepEqual(plain(Engine.naturalAttacks(withMelee(subject(), "melee-master", 1)).addedBy), [{ name: "Melee Master", rank: 1, plus: 1 }]);
+  assert.equal(Engine.naturalAttacks(subject()).addedBy.length, 0);
+});
+
+test("Decision 290: a Vampire's bite and claws are natural; the Ancient Weapon is not", () => {
+  const ch = vampire("draugur", { pl: "wcd", bod: 7 });
+  ch.archetypeChoices.optionPicks = { "ancient-weapon": "blunt" };
+  same(natNames(ch), ["Bite", "Claws", "Fists"]);
+  same(Engine.naturalAttacks(ch).lines.map(l => l.kind), ["bite", "claw", "fist"]);
+  const blunt = Engine.archetypeWeapons(ch).find(w => w.name === "Blunt");
+  assert.ok(blunt, "the Ancient Weapon is still in archetypeWeapons");
+  assert.equal(blunt.kind, null);
+  // Kept, Broken and none picked: never in the group.
+  assert.ok(Engine.setToggle(ch, "code", "Broken").ok);
+  same(natNames(ch), ["Bite", "Claws", "Fists"]);
+  delete ch.archetypeChoices.optionPicks;
+  same(natNames(ch), ["Bite", "Claws", "Fists"]);
+});
+
+test("Decision 290: a Werewolf's claws and fangs join the group only in form", () => {
+  const ch = werewolf("trueborn");
+  same(natNames(ch), ["Fists"]);
+  assert.ok(Engine.setToggle(ch, "form", "Werewolf").ok);
+  same(natNames(ch), ["Claws", "Fangs", "Fists"]);
+  same(Engine.naturalAttacks(ch).lines.map(l => l.kind), ["claw", "bite", "fist"]);
+  same(Engine.naturalAttacks(ch).lines.map(l => l.source), ["form", "form", "fists"]);
+  assert.ok(Engine.setToggle(ch, "form", "Human").ok);
+  same(natNames(ch), ["Fists"]);
+});
+
+test("Decision 290: a natural line rolls the higher of Melee and Martial Arts and names it", () => {
+  const ch = werewolf("trueborn", { base: 8 });
+  assert.ok(Engine.setToggle(ch, "form", "Werewolf").ok);
+  ch.skills.melee = { rank: 2, ipe: 0 }; ch.skills["martial-arts"] = { rank: 2, ipe: 0 };
+  const melee = Engine.skillLine(ch, "melee").checkBonus, ma = Engine.skillLine(ch, "martial-arts").checkBonus;
+  assert.equal(melee, ma, "the fixture needs the two to tie");
+  same([naturalOf(ch, "Claws").skill, naturalOf(ch, "Claws").attack], ["Melee", melee], "a tie goes to the line's own Skill");
+  same([naturalOf(ch, "Fists").skill], ["Martial Arts"]);
+  ch.skills["martial-arts"].rank = 5;
+  const total = Engine.skillLine(ch, "martial-arts").checkBonus;
+  assert.ok(total > melee);
+  same([naturalOf(ch, "Claws").skill, naturalOf(ch, "Claws").attack, naturalOf(ch, "Fangs").skill], ["Martial Arts", total, "Martial Arts"]);
+  // The same Skill from the form's own reader, so Main's rows and the group can't disagree.
+  same(Engine.formView(ch).weapons.map(w => [w.skill, w.attack]), [["Martial Arts", total], ["Martial Arts", total]]);
+  ch.skills.melee.rank = 8;
+  same([naturalOf(ch, "Claws").skill, naturalOf(ch, "Fists").skill], ["Melee", "Melee"], "Fists roll Melee too when it's higher");
+  // A Vampire's bite does the same, and the Ancient Weapon keeps its own Skill.
+  const v = vampire("draugur", { pl: "wcd", bod: 7 });
+  v.archetypeChoices.optionPicks = { "ancient-weapon": "blunt" };
+  v.skills["martial-arts"] = { rank: 6, ipe: 0 };
+  assert.equal(naturalOf(v, "Bite").skill, "Martial Arts");
+  assert.equal(Engine.archetypeWeapons(v).find(w => w.name === "Blunt").skill, "Melee");
+});
+
+test("Decision 290: Death Touch marks a Martial Arts natural line AP, conditional, never on a carried weapon", () => {
+  const ch = warrior();
+  const f = naturalOf(ch, "Fists");
+  same(f.conditional, [{ tag: "AP", from: "Death Touch", applies: true, text: "AP while Death Touch is active" }]);
+  assert.ok(!f.tags.includes("AP"), "stored as always on");
+  assert.deepEqual(plain(naturalOf(subject(), "Fists").conditional), []);
+  // Rolled with Melee, the mark stays and says what it takes: Martial Arts, and what that would total.
+  ch.skills.melee = { rank: 9, ipe: 0 };
+  const ma = Engine.skillLine(ch, "martial-arts").checkBonus;
+  same(naturalOf(ch, "Fists").conditional, [{ tag: "AP", from: "Death Touch", applies: false, text: `AP while Death Touch is active, when rolled with Martial Arts (+${ma})` }]);
+  // A carried Martial Arts weapon has no natural line and no conditional.
+  const staff = warrior(); const at = l3Have(staff, "weapons", "carbon-fiber-bo-staff");
+  const line = Engine.weaponLine(staff, at);
+  assert.ok(!line.tags.includes("AP"));
+  assert.equal(line.conditional, undefined);
+  same(natNames(staff), ["Fists"]);
+  // The mark is read from the data's grant, not named in code.
+  const spec = D.archetypes.find(a => a.id === "professional").specialization.options.find(o => o.id === "true-warrior");
+  withData(spec, "grants", spec.grants.filter(g => g.type !== "attackTag"), () => same(naturalOf(warrior(), "Fists").conditional, []));
+  withData(spec, "grants", spec.grants.map(g => g.type === "attackTag" ? { ...g, natural: false } : g), () => same(naturalOf(warrior(), "Fists").conditional, []));
+});
+
+test("Decision 290: a worn melee bonus reaches every natural line, a ranged one none", () => {
+  const build = () => {
+    const ch = l3Char(); ch.identity.archetype = "vampire"; ch.creation.powerLevel = "wcd";
+    ch.archetypeChoices.specialization = ["draugur"];
+    l3Have(ch, "weapons", "combat-knife"); l3Have(ch, "armor", "smartlink-gloves");
+    return ch;
+  };
+  const gloves = grant => withGloves([grant], () => {
+    const ch = build();
+    return { fists: plain(naturalOf(ch, "Fists")), bite: plain(naturalOf(ch, "Bite")), knife: plain(Engine.weaponLine(ch, 0)) };
+  });
+  const base = withGloves([], () => { const ch = build(); return { fists: naturalOf(ch, "Fists"), bite: naturalOf(ch, "Bite"), knife: Engine.weaponLine(ch, 0) }; });
+  const melee = gloves({ type: "weaponBonus", to: "damage", amount: 2, class: "melee" });
+  for (const k of ["fists", "bite", "knife"]) {
+    assert.equal(melee[k].damage, base[k].damage + 2, `${k} didn't take +2`);
+    assert.deepEqual(melee[k].bonuses, [{ to: "damage", amount: 2, from: "SMARTLink Gloves" }]);
+  }
+  const ranged = gloves({ type: "weaponBonus", to: "damage", amount: 2, class: "ranged" });
+  for (const k of ["fists", "bite", "knife"]) assert.deepEqual([ranged[k].damage, ranged[k].bonuses], [base[k].damage, []], k);
+  const kinetic = gloves({ type: "weaponBonus", to: "damage", amount: 2, class: "kinetic" });
+  assert.equal(kinetic.fists.damage, base.fists.damage + 2, "Fists are Blunt, so kinetic");
+  assert.equal(kinetic.bite.damage, base.bite.damage, "a bite has no damage type");
+  const feature = gloves({ type: "weaponBonus", to: "damage", amount: 2, feature: "SMART Link" });
+  assert.deepEqual([feature.fists.bonuses, feature.bite.bonuses], [[], []], "a feature bonus reached a natural line");
+});
+
+test("Decision 290: weaponDamage shows BOD+0 as BOD and never computes a bare word", () => {
+  const ch = subject({ bod: 6 });
+  same(Engine.weaponDamage(ch, "BOD+0"), { value: 6, formula: "BOD" });
+  same(Engine.weaponDamage(ch, "BOD+3"), { value: 9, formula: "BOD+3" });
+  same(Engine.weaponDamage(ch, "EMP"), { value: null, formula: "EMP" });
+  same(Engine.weaponDamage(ch, "BOD"), { value: null, formula: "BOD" });
+  // The EG-3's damage is text, whatever the book calls it ("EM pulse" since the 2026-11-12 copy; "EMP" before): it never computes.
+  const eg3 = D.weapons.find(w => w.id === "eg3-blackout").damage;
+  assert.equal(typeof eg3, "string");
+  same(Engine.weaponDamage(ch, eg3), { value: null, formula: eg3 });
+});
+
+test("Decision 290: naturalAttacks is total, and its data reads as it should when wrong", () => {
+  for (const [label, ch] of Object.entries(degenerates())) {
+    let n;
+    assert.doesNotThrow(() => { n = Engine.naturalAttacks(ch); }, label);
+    assert.ok(Array.isArray(n.lines) && Number.isInteger(n.perRound) && Array.isArray(n.addedBy), label);
+  }
+  for (const arch of D.archetypes) for (const o of [null, ...(((arch.specialization || {}).options) || [])]) {
+    const ch = subject(); ch.identity.archetype = arch.id; ch.archetypeChoices.specialization = o ? [o.id] : [];
+    for (const form of [null, ...((arch.panels || []).filter(p => p.type === "toggle").flatMap(p => p.options.map(x => [p.id, x.name])))]) {
+      if (form) Engine.setToggle(ch, form[0], form[1]);
+      assert.doesNotThrow(() => Engine.naturalAttacks(ch), `${arch.id}/${o && o.id}/${form}`);
+    }
+  }
+  const R = D.weaponRules.naturalAttacks, ch = werewolf("trueborn");
+  Engine.setToggle(ch, "form", "Werewolf");
+  const claws = Engine.formState(ch).naturalWeapons[0];
+  withData(claws, "kind", 7, () => same(natNames(ch), ["Fangs", "Fists"]));
+  withData(claws, "kind", "tail", () => same(natNames(ch), ["Fangs", "Fists"]));
+  withData(R, "perRound", -1, () => assert.equal(Engine.naturalAttacks(ch).perRound, 2));
+  withData(R, "perRound", 1.5, () => assert.equal(Engine.naturalAttacks(ch).perRound, 2));
+  withData(R, "perRound", 3, () => assert.equal(Engine.naturalAttacks(ch).perRound, 3));
+  withData(R, "addedBy", [{}, null, 7, { advantage: "no-such", perRank: 1 }], () => assert.equal(Engine.naturalAttacks(withMelee(ch, "melee-master", 2)).perRound, 2));
+  withData(R, "fists", null, () => same(natNames(ch), ["Claws", "Fangs"]));
+  withData(R, "fists", { name: "Fists", kind: "tail", skill: "martial-arts", damage: "BOD+0" }, () => same(natNames(ch), ["Claws", "Fangs"]));
+  withData(D.weaponRules, "naturalAttacks", undefined, () => {
+    const n = Engine.naturalAttacks(ch);
+    same([n.perRound, n.lines, n.heading, n.each, n.rules], [2, [], "", "", ""]);
+  });
+// ── K2: Every word (help-on-the-sheet, Decision 291) ──────────────────
 // One reader, `Engine.word`, answers a reference to any of the game's words; `Engine.words` lists them, one row per meaning.
 const k2Char = (arch = "professional") => { const ch = subject(); ch.identity.archetype = arch; return Engine.migrate(JSON.parse(JSON.stringify(ch))); };
 const k2Rows = id => D.gameTerms.find(r => r.id === id);
