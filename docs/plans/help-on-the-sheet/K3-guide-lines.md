@@ -2,7 +2,7 @@
 
 **Plan:** [`../help-on-the-sheet.md`](../help-on-the-sheet.md) §3, row K3, and K3's pre-flight line. **Wishes:** [W156](../../WISHLIST.md) (Help on the sheet: the guide lines beyond the tab intros) and W154 (the seat sheet's intros). **Built on:** [`K1-one-help.md`](K1-one-help.md) (the switch, the tab intros, Decision 289) and [`K2-every-word.md`](K2-every-word.md) (`Engine.word`, Decision 291). Decisions 68, 135, 139, 201, 215, 256, 273, 278, 282, 287, 289, 291.
 
-**Status: drafted 2026-11-16** by Claude (Opus), the K2 reviewer, at the conductor's request. **Not approved.** The plan's KQ1–KQ8 are answered (Ken, 2026-11-15: every default). This order's KQ19–KQ22 (§4) wait on Ken.
+**Status: drafted 2026-11-16** by Claude (Opus), the K2 reviewer, at the conductor's request. **Not approved.** The plan's KQ1–KQ8 are answered (Ken, 2026-11-15: every default). This order's KQ19–KQ22 (§4) are **answered (Ken, 2026-11-16, in the conductor's session): Default on all four** ("No Help in it", "No guide lines on a seat", "Hides with guide lines", "Out of K3").
 
 **Branch:** cut from `origin/main` at the pre-flight commit. PR to `main`. Nothing ships switched off.
 
