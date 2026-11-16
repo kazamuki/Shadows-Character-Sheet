@@ -324,7 +324,7 @@ const MAPS = [/\.byPowerLevel$/, /^statRules\.(modifiers|raiseCost)$/, /^spells\
   /\.starterPower$/, /\.starterPower\.\*\[\]$/,
   /\.sp(\.\*)?$/, // W32: keyed by the text an amount sits beside, read by spAmounts
   /^gmGuide\.(contexts|words|empty|ui\.when)$/, // keyed by a page, a word, a section's empty state and a part of a night, read by gm.js's Help (Decision 278)
-  /^sheetGuide\.(contexts|ui\.when)$/, // keyed by a sheet tab and a part of a night, read by sheet.js's Help (K1)
+  /^sheetGuide\.(contexts|ui\.when|ui\.kinds)$/, // keyed by a sheet tab and a part of a night, read by sheet.js's Help (K1)
   /^appCopy\.statusLabel$/, // keyed by an archetype's `status`, read by statusLabel()
   /^skillRowText$/, // keyed by what a Skill's row says (a Take X, a die face, a light level), read by skillLine and attackNotes (Decision 233)
   /\.grants\[\]\.(shift|mod)$/, // a `visibility` row's maps, keyed by a light level's id, read by visShifts and visModText (Decision 237)
@@ -428,7 +428,7 @@ test("sheetGuide is shaped: every tab has help, and every word it names resolves
     if (!Array.isArray(c.words)) bad.push(id + ": no `words`");
     else for (const w of c.words) for (const arch of ["professional", "arcanist", "vampire", "werewolf"]) {
       const ch = Engine.newCharacter(); ch.identity.archetype = arch;
-      if (!Engine.term(w, ch)) bad.push(id + ": " + w + " doesn't resolve for a " + arch);
+      if (!Engine.word(w, ch)) bad.push(id + ": " + JSON.stringify(w) + " doesn't resolve for a " + arch);
     }
     if (!Array.isArray(c.tips) || c.tips.length > 2) bad.push(id + ": `tips` is not a list of at most two");
   }
@@ -13677,4 +13677,112 @@ test("Decision 290: naturalAttacks is total, and its data reads as it should whe
     const n = Engine.naturalAttacks(ch);
     same([n.perRound, n.lines, n.heading, n.each, n.rules], [2, [], "", "", ""]);
   });
+});
+
+// ── K2: Every word (help-on-the-sheet, Decision 291) ──────────────────
+// One reader, `Engine.word`, answers a reference to any of the game's words; `Engine.words` lists them, one row per meaning.
+const k2Char = (arch = "professional") => { const ch = subject(); ch.identity.archetype = arch; return Engine.migrate(JSON.parse(JSON.stringify(ch))); };
+const k2Rows = id => D.gameTerms.find(r => r.id === id);
+
+test("K2: Engine.word answers every kind, and nothing else", () => {
+  const ch = k2Char("arcanist");
+  assert.equal(Engine.word("TOL", ch).title, "Tolerance");
+  const bod = Engine.word({ stat: "BOD" }, ch);
+  assert.match(bod.title, /^Body/);
+  assert.match(bod.title, /\d/, "a Stat carries its score for the open character");
+  assert.notEqual(Engine.word({ tag: "EMP" }).text, Engine.word({ stat: "EMP" }, ch).text, "EMP the tag and EMP the Stat are two words");
+  assert.equal(Engine.word({ tag: "EMP" }).kind, "tag");
+  assert.equal(Engine.word({ stat: "EMP" }, ch).kind, "stat");
+  assert.equal(Engine.word({ spellTag: "EMP" }).kind, "spellTag");
+  const mod = Engine.word({ mod: "Scope" }), feat = Engine.word({ feature: "Scope" });
+  assert.equal(mod.kind, "mod");
+  assert.equal(mod.text, D.weaponModGlossary.find(m => m.id === "Scope").description, "the mod Scope, which glossary can't reach");
+  assert.notEqual(mod.text, feat.text, "the mod and the feature differ");
+  const blunt = Engine.word({ damageType: "blunt" });
+  assert.match(blunt.text, /^Impact force: fists, clubs, bludgeons, pressure waves\./);
+  const aether = Engine.word({ damageType: "aether" });
+  assert.equal(aether.flagged, true);
+  assert.equal(aether.text, "");
+  assert.ok(aether.note && aether.note.length > 0, "a flagged word shows its playerNote");
+  assert.match(Engine.word("prot", ch).text, /PROT/, "PROT reads armorRules.protNote");
+  assert.ok(Engine.word({ resource: "credits" }, ch).text.length > 0);
+  assert.equal(Engine.word({ condition: "bleeding" }, ch).kind, "condition");
+  const pl = Engine.word({ painLevel: "2" }, ch);
+  assert.equal(pl.title, "Pain Level 2");
+  assert.match(pl.text, /Fractures/);
+  assert.ok(pl.more.length > 0, "a Pain Level says what it costs");
+  assert.equal(Engine.words(ch).filter(w => w.kind === "painLevel").length, D.resources.healthLevels.painLevels.length, "every Pain Level is a word");
+  for (const bad of [{ nope: "x" }, null, undefined, 42, "", "no-such-word", { stat: "ZZZ" }, {}, [], { stat: 5 }, { tag: "No such tag" }, { damageType: "__proto__" }, { stat: "__proto__" }])
+    assert.equal(Engine.word(bad, ch), null, `${JSON.stringify(bad)} is no word`);
+});
+
+test("K2: Engine.words lists each meaning once, A to Z", () => {
+  const ch = k2Char("arcanist"), all = Engine.words(ch);
+  const rows = id => all.filter(w => w.id.toLowerCase() === id.toLowerCase());
+  assert.equal(all.filter(w => w.id === "TOL").length, 1, "TOL is one row: gameTerms' TOL is Tolerance");
+  assert.equal(all.filter(w => w.title === "Tolerance").length, 1);
+  assert.equal(all.filter(w => w.id.toLowerCase() === "luck").length, 1, "LUCK is one row");
+  assert.deepEqual([...rows("EMP").map(w => w.kind).sort()], ["spellTag", "stat", "tag"]);
+  assert.deepEqual([...rows("AP").map(w => w.kind).sort()], ["spellTag", "tag"]);
+  for (const id of ["Bleeding", "Burning", "Conceal", "Scope"]) assert.ok(rows(id).length >= 2, `${id} has two meanings`);
+  assert.ok(rows("EMP").every(w => w.homonym === true), "a name with two meanings says so");
+  assert.ok(rows("TOL").every(w => !w.homonym));
+  const sorted = [...all].sort((a, b) => a.title.toLowerCase().localeCompare(b.title.toLowerCase()));
+  assert.deepEqual([...all.map(w => w.title)], [...sorted.map(w => w.title)], "A to Z by title, case-insensitive");
+  assert.ok(all.every(w => /^([A-Z]|#)$/.test(w.letter)), "a letter is A to Z or #");
+  assert.equal(all.find(w => w.kind === "resource" && w.id === "credits").letter, "C", "Çredits files under C, not #");
+  const merged = D.gameTerms.filter(r => r.from && (r.from.derived || r.from.luck || r.from.stats || r.from.conditions || r.from.painLevel)).length;
+  const sum = D.stats.length + D.derived.length + D.conditions.length + D.damageTypes.length + D.weaponTagGlossary.length + D.weaponFeatureGlossary.length
+    + D.weaponModGlossary.length + D.armorFeatureGlossary.length + D.armorUpgradeGlossary.length + D.spellTagGlossary.length
+    + (D.gameTerms.length - merged) + D.resources.healthLevels.painLevels.length + ["luck", "credits", "crank", "sfr"].length;
+  assert.equal(all.length, sum, "the count is the sources' sum, less the merges");
+  assert.equal(new Set(all.map(w => w.kind + "|" + w.id)).size, all.length, "no meaning twice");
+  assert.ok(Engine.words(null).length > 100, "no character: the rows without a reading");
+});
+
+test("K2: the data a word reads is shaped", () => {
+  const roots = ["armorRules", "weaponRules", "spellcraftRules", "skillCheckRules", "resources", "tag", "ip", "damageRules", "recoveryRules"];
+  let rules = 0;
+  for (const r of D.gameTerms) {
+    if (r.from && r.from.rule !== undefined) {
+      rules++;
+      assert.ok(roots.includes(String(r.from.rule).split(".")[0]), `${r.id}: ${r.from.rule} starts outside the closed list`);
+      assert.ok(Engine.term(r.id), `${r.id}: its rule ${r.from.rule} says nothing`);
+      assert.equal(r.forms, undefined, `${r.id}: a K2 row carries no forms (KQ13)`);
+    }
+    if (r.description) assert.ok(r.bookSource, `${r.id} quotes the book and names no bookSource`);
+  }
+  assert.ok(rules >= 4, "the gap words read the data's own rules");
+  for (const d of D.damageTypes) {
+    if (d.flagged) assert.ok(d.playerNote && /F\d+/.test(d.flagNote), `${d.id}: a flagged damage type has a playerNote and a flagNote naming its F-number`);
+    else { assert.ok(d.description, `${d.id} has no description`); assert.ok(d.bookSource, `${d.id} names no bookSource`); }
+  }
+  assert.deepEqual([...D.damageTypes.filter(d => d.flagged).map(d => d.id).sort()], ["aether", "elemental", "spirit"]);
+  for (const id of ["prot", "res", "integrity", "tn", "th", "difficulty", "ip", "health-levels", "acc", "rof", "capacity", "range", "tag"])
+    assert.ok(k2Rows(id), `gameTerms has no ${id}`);
+});
+
+test("K2: every context's words resolve, for each archetype", () => {
+  const bad = [];
+  for (const [id, c] of Object.entries(D.sheetGuide.contexts)) for (const w of c.words) for (const arch of ["professional", "arcanist", "vampire", "werewolf"]) {
+    if (!Engine.word(w, k2Char(arch))) bad.push(`${id}: ${JSON.stringify(w)} doesn't resolve for a ${arch}`);
+  }
+  assert.deepEqual([...bad], []);
+  const named = new Set(Object.values(D.sheetGuide.contexts).flatMap(c => c.words).map(w => typeof w === "string" ? w : Object.values(w)[0]));
+  for (const id of ["prot", "ip", "health-levels", "difficulty", "acc"]) assert.ok(named.has(id), `${id} is on no tab`);
+});
+
+test("K2: word and words are total, and never throw", () => {
+  const junk = [null, undefined, 0, "x", [], {}, { stats: null }, { stats: { BOD: null }, trackers: 5, armor: "x", conditions: [null] }];
+  const refs = ["TOL", "LUCK", "prot", { stat: "BOD" }, { derived: "SAN" }, { condition: "bleeding" }, { tag: "AP" }, { feature: "Scope" }, { mod: "Scope" },
+    { armorFeature: "Rapid Repair" }, { upgrade: "Tri-Weave" }, { spellTag: "AP" }, { damageType: "aether" }, { resource: "crank" }, { resource: "sfr" }, { term: "ip" },
+    { stat: { toString() { throw new Error("boom"); } } }, { get tag() { throw new Error("boom"); } }, new Proxy({}, { get() { throw new Error("boom"); } }),
+    "__proto__", { stat: "__proto__" }, { resource: "constructor" }];
+  const chars = [...junk, ...["professional", "arcanist", "vampire", "werewolf"].map(k2Char), Engine.newCharacter()];
+  for (const ch of chars) {
+    for (const r of refs) assert.doesNotThrow(() => Engine.word(r, ch));
+    assert.doesNotThrow(() => Engine.words(ch));
+  }
+  assert.equal(Engine.word({ resource: "sfr" }, k2Char("professional")).absent, true, "a Professional has no SFR: the word says so, for a tab to leave it out");
+  assert.ok(!Engine.word({ resource: "sfr" }, k2Char("werewolf")).absent);
 });

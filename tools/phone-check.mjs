@@ -476,6 +476,48 @@ async function sheetHelp(browser, file, rows) {
     rows.push({ width: w.name, screen: "K1: sheet Help's foot above the fold, the name beside the ?", layout: bad.length ? bad.join("; ") : `ok (${w.width < 480 ? "Help in ⋮" : `? ${hdr.bw}x${hdr.bh}`}, name ${hdr.nw}, foot ends ${foot && foot.bottom} of ${w.height})`, ok: !bad.length });
     await c.close();
   }
+  // K2: Every word on a phone. #ghelp is a block with overflow (unlike K1's inline span), so its scrollWidth means something; the filter box and
+  // the letter row are in the first screen and stay there while the list scrolls (they stick); each is a box with a size, not a name.
+  for (const w of WIDTHS.filter(w => w.width < 640)) {
+    const { c, page, errors } = await open(w.width, w.height, false, "trackers", !!w.touch);
+    const bad = [];
+    if (w.width < 480) { await page.click("[data-menu-toggle]"); await page.click("[data-shelp-menu]"); } else await page.click("[data-shelp]");
+    await page.click("#ghelp [data-hwords]");
+    const q = await box(page, "#ghelp .help-q"), jump = await box(page, "#ghelp .help-jump"), find = await box(page, "#ghelp .help-find");
+    if (!q || !q.shown) bad.push("the filter box has no box");
+    if (!jump || !jump.shown) bad.push("the letter row has no box");
+    if (q && q.bottom > w.height) bad.push(`the filter box ends at ${q.bottom}px of ${w.height}`);
+    if (jump && jump.bottom > w.height) bad.push(`the letter row ends at ${jump.bottom}px of ${w.height}`);
+    const wide = await page.evaluate(() => { const p = document.querySelector("#ghelp"); return p.scrollWidth - p.clientWidth; });
+    if (wide > 0) bad.push(`#ghelp is ${wide}px wider than it shows`);
+    await page.evaluate(() => { document.querySelector("#ghelp").scrollTop = 900; });
+    const stuck = await box(page, "#ghelp .help-find"), jumpAfter = await box(page, "#ghelp .help-jump");
+    if (!stuck || !find || stuck.top > 40 || stuck.top < -1) bad.push(`the find bar left the first screen when the list scrolled (top ${stuck.top}px)`);
+    if (jumpAfter && jumpAfter.bottom > w.height) bad.push(`the letter row left the first screen when the list scrolled (bottom ${jumpAfter.bottom}px)`);
+    const sw = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    if (sw > 0) bad.push(`the page scrolls sideways by ${sw}px`);
+    if (errors.length) bad.push(errors.join("; "));
+    rows.push({ width: w.name, screen: "K2: Every word, the find bar sticks", layout: bad.length ? bad.join("; ") : `ok (box ends ${q && q.bottom}, letters end ${jump && jump.bottom}, stuck at ${stuck && stuck.top}, #ghelp ${wide}px over)`, ok: !bad.length });
+    await c.close();
+  }
+  // K2: from 1280 with the vitals pinned, Every word is the column, and main still ends where the column starts.
+  for (const width of [1280, 1300]) {
+    const { c, page, errors } = await open(width, 900, true, "trackers");
+    const bad = [];
+    await page.click("[data-shelp]");
+    await page.click("#ghelp [data-hwords]");
+    const help = await box(page, "#ghelp"), main = await box(page, "main"), q = await box(page, "#ghelp .help-q");
+    if (!help || !help.shown) bad.push("#ghelp has no box");
+    if (!q || !q.shown) bad.push("the filter box has no box");
+    if (main && help && main.right > help.left + 1) bad.push(`main runs ${main.right - help.left}px under the column`);
+    // The find bar sticks at every width: after the list scrolls it is still at the top of the column.
+    await page.evaluate(() => { document.querySelector("#ghelp").scrollTop = 900; });
+    const stuck = await box(page, "#ghelp .help-find");
+    if (!stuck || !stuck.shown || stuck.top > 40 || stuck.top < -1) bad.push(`the find bar left the top of the column when the list scrolled (top ${stuck && stuck.top}px)`);
+    if (errors.length) bad.push(errors.join("; "));
+    rows.push({ width: `sheet ${width}`, screen: "K2: Every word, vitals pinned, the find bar sticks", layout: bad.length ? bad.join("; ") : `ok (main ends ${main && main.right}, column starts ${help && help.left})`, ok: !bad.length });
+    await c.close();
+  }
   // From 1280: the column, with the vitals pinned and not.
   for (const pinned of [true, false]) {
     for (const width of [1280, 1300, 1980]) {

@@ -406,7 +406,8 @@ function helpBodyHtml(id){
     return head(u.nightLink, true) + g.night.map(p=>`<h3 class="ref-sub dos-l">${esc(u.when[p.when])}</h3><p class="dos-p">${helpMd(p.text)}</p>
       <p class="help-secs">${p.sections.map(sid=>{ const sec=TABLE_SECTIONS.find(s=>s.id===sid); return sec ? `<button type="button" class="btn sm" data-hsec="${esc(sid)}">${esc(sec.label)}</button>` : ""; }).join(" ")}</p>`).join("");
   if (S.helpView==="words")
-    return head(u.wordsLink, true) + helpWordsHtml(Object.keys(g.words).sort((a, b)=>g.words[a].term.toLowerCase().localeCompare(g.words[b].term.toLowerCase())));
+    return head(u.wordsLink, true) + helpListHtml(Object.keys(g.words).sort((a, b)=>g.words[a].term.toLowerCase().localeCompare(g.words[b].term.toLowerCase()))
+      .map(w=>({ title:g.words[w].term, kind:"", html:helpMd(g.words[w].text), find:g.words[w].term, text:g.words[w].text })), u);
   return head(c.title) + `<h3 class="ref-sub dos-l">${esc(u.forLabel)}</h3><p class="dos-p">${helpMd(c.for)}</p>
     <h3 class="ref-sub dos-l">${esc(u.whenLabel)}</h3><ul class="help-when">${c.when.map(w=>`<li class="tag plain">${esc(u.when[w])}</li>`).join("")}</ul>
     ${c.words.length ? `<h3 class="ref-sub dos-l">${esc(u.wordsLabel)}</h3>${helpWordsHtml(c.words)}` : ""}
@@ -418,9 +419,9 @@ function helpBodyHtml(id){
 }
 // What a press in the table's panel does, once the shared panel has drawn it.
 function bindTableHelp(el){
-  const go = (sel, view) => { const b=el.querySelector(sel); if (b) b.onclick=()=>{ S.helpView=view; S.helpWas=sel; paintHelp(); const h=$("ghelp-h"); if (h) h.focus({ preventScroll:true }); }; };
+  const go = (sel, view) => { const b=el.querySelector(sel); if (b) b.onclick=()=>{ S.helpView=view; S.helpWas=sel; S.helpQ=""; paintHelp(); const h=$("ghelp").querySelector("[data-help-q]") || $("ghelp-h"); if (h) h.focus({ preventScroll:true }); }; };
   go("[data-hnight]", "night"); go("[data-hwords]", "words");
-  const back=el.querySelector("[data-help-back]"); if (back) back.onclick=()=>{ S.helpView=null; paintHelp(); const w=S.helpWas && el.querySelector(S.helpWas); if (w) w.focus({ preventScroll:true }); };
+  const back=el.querySelector("[data-help-back]"); if (back) back.onclick=()=>{ S.helpView=null; S.helpQ=""; paintHelp(); const w=S.helpWas && el.querySelector(S.helpWas); if (w) w.focus({ preventScroll:true }); };
   const keys=el.querySelector("[data-hkeys]"); if (keys) keys.onclick=()=>openKeys({ returnTo:"[data-hkeys]" });
   el.querySelectorAll("[data-hsec]").forEach(b=>b.onclick=()=>{
     // The page is where the GM is going: a flyout is done, and a column shows that page's help, not this view.

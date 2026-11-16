@@ -354,3 +354,27 @@ test("S31: a click on the scrim closes the flyout and focus returns to the ? but
   assert.equal(app.doc.activeElement, app.$("[data-thelp]"));
   assert.deepEqual(app.errors, []);
 });
+
+// ── K2: the table's Every word takes the shared filter and letter jump ──
+test("K2: a table's Every word filters and jumps too, and keeps its own words", () => {
+  const app = helpApp("sessions", { width: 1024 });
+  app.click("[data-thelp]");
+  app.click("#ghelp [data-hwords]");
+  const q = app.$("#ghelp [data-help-q]");
+  assert.ok(q, "no filter box on the table's Every word");
+  assert.equal(app.doc.activeElement, q);
+  assert.equal(app.$("#ghelp label[for='ghelp-q']").textContent, G.ui.filterLabel);
+  assert.equal(app.$$("#ghelp .help-word").length, Object.keys(G.words).length, "the table's own words, and no others");
+  const live = () => app.$$("#ghelp .help-word").filter(r => !r.hidden).map(r => r.querySelector("dt").textContent);
+  q.value = "clock"; q.dispatchEvent(new app.window.Event("input", { bubbles: true }));
+  const hit = live();
+  assert.ok(hit.length > 0 && hit.length < Object.keys(G.words).length);
+  assert.ok(hit.every(t => /clock/i.test(t)), "a title match stayed in the list with no 'clock' in its title");
+  q.value = ""; q.dispatchEvent(new app.window.Event("input", { bubbles: true }));
+  const firstS = app.$$("#ghelp .help-word").find(r => r.dataset.hwLetter === "S");
+  app.click('#ghelp [data-help-letter="S"]');
+  assert.equal(app.doc.activeElement, firstS.querySelector("dt"), "the S letter didn't land on the first S word");
+  app.click("#ghelp [data-help-back]");
+  assert.equal(app.doc.activeElement, app.$("#ghelp [data-hwords]"));
+  assert.deepEqual(app.errors, []);
+});

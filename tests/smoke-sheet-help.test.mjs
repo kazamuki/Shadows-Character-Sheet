@@ -27,7 +27,7 @@ const press = (app, key, init = {}, target) => {
 };
 const questionMark = (app, target, init = {}) => press(app, "?", { shiftKey: true, code: "Slash", ...init }, target);
 const pressEsc = app => (app.doc.activeElement || app.doc).dispatchEvent(new app.window.KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
-const term = (app, id) => app.window.eval(`TIPS.term(${JSON.stringify(id)})`);
+const term = (app, id) => app.window.eval(`Engine.word(${JSON.stringify(id)}, S.ch)`);
 const sheet = (section, opts = {}) => openSheet(lockedCharacter(), section, opts);
 
 test("K1: ? opens Help for the open tab, and closing it gives focus back", () => {
@@ -48,7 +48,8 @@ test("K1: ? opens Help for the open tab, and closing it gives focus back", () =>
   assert.equal(app.$("[data-shelp]").getAttribute("aria-expanded"), "true");
   assert.equal(app.doc.activeElement, panel(app).querySelector("[data-help-close]"), "focus didn't go to Close");
   assert.deepEqual([...app.$$("#ghelp .help-when li")].map(li => li.textContent), [...c.when].map(w => SG().ui.when[w]));
-  for (const id of c.words) assert.ok(panel(app).textContent.includes(term(app, id).title), `${id}'s title isn't in the panel`);
+  // A word the character can't have (SFR on an Arcanist) is left out of the tab's list; every other is in it.
+  for (const id of c.words) { const w = term(app, id); assert.equal(panel(app).textContent.includes(w.title), !w.absent, `${JSON.stringify(id)}'s title ${w.absent ? "is" : "isn't"} in the panel`); }
   pressEsc(app);
   assert.equal(shown(app), false, "Esc left it open");
   assert.ok(panel(app).hasAttribute("inert"));
@@ -70,7 +71,7 @@ test("K1: every tab has help, and every word it names resolves", () => {
   assert.equal(heading(app), G.contexts.admin.title, "Admin's Help heading");
   for (const arch of ["professional", "arcanist", "vampire", "werewolf"]) {
     const ch = lockedCharacter(); ch.identity.archetype = arch;
-    for (const [sec, c] of Object.entries(G.contexts)) for (const id of c.words) assert.ok(Engine.term(id, Engine.migrate(JSON.parse(JSON.stringify(ch)))), `${id} (${sec}) doesn't resolve for a ${arch}`);
+    for (const [sec, c] of Object.entries(G.contexts)) for (const id of c.words) assert.ok(Engine.word(id, Engine.migrate(JSON.parse(JSON.stringify(ch)))), `${JSON.stringify(id)} (${sec}) doesn't resolve for a ${arch}`);
   }
   assert.deepEqual(app.errors, []);
 });
@@ -260,4 +261,152 @@ test("K1: Main's guide line is drawn, and the stylesheet hides it only below 640
   assert.ok(m, "no rule hides Main's guide line on a phone");
   assert.equal(m[1], "639", "the rule must stop at 640px");
   assert.equal(/\[data-guide="(?!main)/.test(css.replace(/\[data-guide="main"\]/g, "")), false, "a rule hides another tab's guide line");
+});
+
+// ── K2: Every word, from the sheet's Help ─────────────────────────────
+const typeQ = (app, v) => { const q = app.$("#ghelp [data-help-q]"); q.focus(); q.value = v; q.dispatchEvent(new app.window.Event("input", { bubbles: true })); return q; };
+const liveRows = app => app.$$("#ghelp .help-word").filter(r => !r.hidden);
+const liveTitles = app => liveRows(app).map(r => r.querySelector("dt").firstChild.textContent.trim());
+const letterBtn = (app, L) => app.$(`#ghelp [data-help-letter="${L}"]`);
+
+test("K2: Every word opens from the sheet's Help, filters and jumps", () => {
+  const app = sheet("main");
+  app.click("[data-shelp]");
+  app.click("#ghelp [data-hwords]");
+  assert.equal(heading(app), SG().ui.wordsLink);
+  const q = app.$("#ghelp [data-help-q]");
+  assert.ok(q && q.type === "search", "no filter box");
+  assert.equal(app.doc.activeElement, q, "focus didn't go to the filter box");
+  assert.equal(app.$("#ghelp label[for='ghelp-q']").textContent, SG().ui.filterLabel);
+  const all = Engine.words(Engine.migrate(JSON.parse(JSON.stringify(lockedCharacter()))));
+  assert.equal(app.$$("#ghelp .help-word").length, all.length, "not every word is listed");
+  assert.equal(liveRows(app).length, all.length, "the list starts unfiltered");
+  // A title match wins: RES and the Resistance linings stay, and Blunt (whose text says "pressure") goes.
+  typeQ(app, "res");
+  const t = liveTitles(app);
+  assert.ok(t.includes("RES"), "RES is gone");
+  assert.ok(t.some(x => /^Resistance/.test(x)), "Resistance is gone");
+  assert.ok(!t.includes("Blunt"), "Blunt matched on its text while titles matched");
+  assert.equal(letterBtn(app, "B").disabled, true, "a letter with no word is pressable");
+  assert.equal(letterBtn(app, "R").disabled, false);
+  const where = app.doc.activeElement;
+  letterBtn(app, "B").click();
+  assert.equal(app.doc.activeElement, where, "a disabled letter moved focus");
+  // No title matches: the text is looked at. Nothing matches: it says so.
+  typeQ(app, "pressure waves");
+  assert.ok(liveTitles(app).includes("Blunt"), "a text match found nothing");
+  typeQ(app, "zzzzzz");
+  assert.equal(liveRows(app).length, 0);
+  assert.equal(app.$("#ghelp [data-help-none]").textContent, SG().ui.filterEmpty);
+  // Esc: the box with text clears and stays; the box empty is the panel's.
+  const key = () => app.$("#ghelp [data-help-q]").dispatchEvent(new app.window.KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
+  key();
+  assert.equal(shown(app), true, "Esc with text in the box closed the panel");
+  assert.equal(app.$("#ghelp [data-help-q]").value, "");
+  assert.equal(liveRows(app).length, all.length);
+  assert.equal(app.doc.activeElement, app.$("#ghelp [data-help-q]"));
+  // A letter jumps to the first row under it, and its title takes focus.
+  letterBtn(app, "B").click();
+  const first = app.$$("#ghelp .help-word").find(r => r.dataset.hwLetter === "B");
+  assert.equal(app.doc.activeElement, first.querySelector("dt"), "focus didn't land on the first B word");
+  // Back, and the link is where focus returns.
+  app.click("#ghelp [data-help-back]");
+  assert.equal(heading(app), SG().contexts.main.title);
+  assert.equal(app.doc.activeElement, app.$("#ghelp [data-hwords]"), "focus didn't return to the Every word link");
+  // Closing clears the filter.
+  app.click("#ghelp [data-hwords]"); typeQ(app, "tol");
+  app.click("#ghelp [data-help-close]"); app.click("[data-shelp]"); app.click("#ghelp [data-hwords]");
+  assert.equal(app.$("#ghelp [data-help-q]").value, "", "the filter outlived the panel");
+  assert.deepEqual(app.errors, []);
+});
+
+test("K2: a name with two meanings says which, and a word nobody has ruled on says so", () => {
+  const app = sheet("main");
+  app.click("[data-shelp]"); app.click("#ghelp [data-hwords]");
+  typeQ(app, "emp");
+  const emp = liveRows(app).filter(r => r.dataset.hwTitle.split(" ").includes("emp"));
+  assert.deepEqual([...emp.map(r => r.querySelector(".help-kind")).filter(Boolean).map(k => k.textContent).sort()], ["Spell tag", "Stat", "Weapon tag"]);
+  typeQ(app, "tolerance");
+  assert.equal(liveRows(app).length, 1);
+  assert.equal(liveRows(app)[0].querySelector(".help-kind"), null, "TOL is one meaning and carries no label");
+  typeQ(app, "aether");
+  const aether = liveRows(app).find(r => r.querySelector("dt").textContent.startsWith("Aether"));
+  assert.match(aether.textContent, /doesn't say yet what this damage is/);
+  assert.match(aether.textContent, new RegExp(D.appCopy.unsettledLabel));
+  assert.deepEqual(app.errors, []);
+});
+
+test("K2: the filter keeps its focus through a sheet redraw", () => {
+  const app = sheet("main", { width: 1280 });
+  app.click("[data-shelp]"); app.click("#ghelp [data-hwords]");
+  const q = typeQ(app, "pro");
+  const row = app.$("#ghelp .help-word");
+  const before = liveTitles(app);
+  assert.ok(before.length > 0 && before.length < app.$$("#ghelp .help-word").length);
+  app.click('#main [data-dmg="1"]');   // Hurt 1: the page redraws beside the column
+  assert.equal(app.$("#ghelp [data-help-q]"), q, "the box was drawn again");
+  assert.equal(app.$("#ghelp .help-word"), row, "the list was drawn again");
+  assert.equal(app.doc.activeElement, q, "the box lost focus");
+  assert.equal(q.value, "pro");
+  assert.deepEqual(liveTitles(app), before, "the list lost its filter");
+  // A draw that does change the words (a forced repaint) still keeps the box, its text and its filter.
+  app.window.eval("paintHelp(true)");
+  const q2 = app.$("#ghelp [data-help-q]");
+  assert.equal(app.doc.activeElement, q2, "a forced repaint dropped focus from the box");
+  assert.equal(q2.value, "pro");
+  assert.deepEqual(liveTitles(app), before);
+  assert.deepEqual(app.errors, []);
+});
+
+test("K2: a tab press keeps Every word open in the column, and closes the flyout", () => {
+  const wide = sheet("main", { width: 1280 });
+  wide.click("[data-shelp]"); wide.click("#ghelp [data-hwords]");
+  typeQ(wide, "luck");
+  const kept = liveTitles(wide);
+  wide.click('[data-sec="skills"]');
+  assert.equal(shown(wide), true);
+  assert.equal(heading(wide), SG().ui.wordsLink, "a tab press took Every word back to the tab's help");
+  assert.equal(wide.$("#ghelp [data-help-q]").value, "luck");
+  assert.deepEqual(liveTitles(wide), kept);
+  // Admin is a mode that outlives its tab: the words are no more Admin's than Skills'.
+  wide.click("[data-menu-toggle]"); wide.click("[data-admin]");
+  assert.equal(heading(wide), SG().ui.wordsLink);
+  wide.click("#ghelp [data-help-back]");
+  assert.equal(heading(wide), SG().contexts.admin.title);
+  wide.click('[data-sec="notes"]');
+  assert.equal(heading(wide), SG().contexts.notes.title, "Back left the words on a tab");
+  const narrow = sheet("main", { width: 1024 });
+  narrow.click("[data-shelp]"); narrow.click("#ghelp [data-hwords]");
+  narrow.click('[data-sec="skills"]');
+  assert.equal(shown(narrow), false, "a tab press left the flyout open");
+  // A resize across 1280 with Every word open: the same panel, nothing thrown, the filter kept.
+  const rz = sheet("main", { width: 1280 });
+  rz.click("[data-shelp]"); rz.click("#ghelp [data-hwords]");
+  typeQ(rz, "luck");
+  rz.resize(1024);
+  assert.equal(shown(rz), true);
+  assert.equal(rz.$("#ghelp [data-help-q]").value, "luck");
+  assert.deepEqual(wide.errors.concat(narrow.errors, rz.errors), []);
+});
+
+test("K2: the tabs' words are drawn from where their rules live, and a tab leaves out what the character can't have", () => {
+  const app = sheet("trackers");
+  app.click("[data-shelp]");
+  const text = () => app.$("#ghelp").textContent;
+  for (const t of ["Health Levels (HP)", "PROT", "RES", "Integrity", "Çredits", "CRANK rep"]) assert.ok(text().includes(t), `${t} isn't on Trackers' Help`);
+  const prof = lockedCharacter(); prof.identity.archetype = "professional";
+  const p = openSheet(prof, "trackers"); p.click("[data-shelp]");
+  assert.ok(!p.$("#ghelp").textContent.includes("Spiritual Force Rating"), "a Professional is shown SFR");
+  const w = lockedCharacter(); w.identity.archetype = "werewolf";
+  const ww = openSheet(w, "trackers"); ww.click("[data-shelp]");
+  assert.ok(ww.$("#ghelp").textContent.includes("Spiritual Force Rating"), "a Werewolf isn't");
+  assert.deepEqual(app.errors.concat(p.errors, ww.errors), []);
+});
+
+test("K2: no sentence on the sheet changed: the new words carry no forms", () => {
+  const before = ["bright", "dim", "dark", "blind", "pain-level", "kicker-die", "take-x", "explode", "botch", "defensive-action", "skill-check", "TOL", "WILL", "SAN", "LUCK", "milestone-point"];
+  const withForms = D.gameTerms.filter(r => Array.isArray(r.forms)).map(r => r.id);
+  assert.deepEqual([...withForms], before, "a gameTerms row gained forms: every sentence that names it grows a trigger (KQ13)");
+  const text = "IP HP PROT RES TN TH ACC RoF Capacity Integrity TAG Range Difficulty Health Levels Improvement Points Target Number Threshold";
+  assert.deepEqual([...Engine.termSpans(text)], [], "a K2 word became a trigger");
 });

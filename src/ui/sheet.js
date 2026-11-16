@@ -56,14 +56,36 @@ function sheetHelpContext(){
   const id = normSection(S.section);
   return sheetGuide().contexts[id] ? id : "main";
 }
-// Each word the tab names, as its tip reads it for the open character: title, text and the lines under it.
-function sheetHelpWordsHtml(ids){
-  const rows=ids.map(id=>{
-    const t=TIPS.term(id); if (!t) return "";
-    return `<dt>${esc(t.title)}</dt><dd>${esc(t.text)}${(t.more||[]).length ? `<ul class="help-more">${t.more.map(m=>`<li>${esc(m)}</li>`).join("")}</ul>` : ""}</dd>`;
+// A word as Help reads it for the open character (Engine.word, K2): its text, the lines under it and, for a word nobody has ruled on,
+// the note that says so. A game word inside any of it is a tip trigger, as anywhere.
+function sheetWordBodyHtml(w){
+  const more=[...(w.reading ? statLines(w.reading) : []), ...(w.more||[]).map(signedFill)];
+  return `${w.text ? termsHtml(w.text) : ""}${more.length ? `<ul class="help-more">${more.map(m=>`<li>${termsHtml(m)}</li>`).join("")}</ul>` : ""}${w.note ? `<p class="help-note"><b>${esc(copy("unsettledLabel"))}.</b> ${esc(w.note)}</p>` : ""}`;
+}
+// Each word the tab names: title, text and the lines under it. A reference is a gameTerms id or { kind: id }; one the character can't
+// have (SFR on a Professional) is left out.
+function sheetHelpWordsHtml(refs){
+  const rows=refs.map(ref=>{
+    const w=Engine.word(ref, S.ch); if (!w || w.absent) return "";
+    return `<dt>${esc(w.title)}</dt><dd>${sheetWordBodyHtml(w)}</dd>`;
   }).join("");
   return rows ? `<dl class="help-words">${rows}</dl>` : "";
 }
+// Every word (K2): the game's words in one list, from where each rule lives. A name with more than one meaning says which.
+function sheetWordRows(){
+  const u=sheetGuide().ui;
+  return Engine.words(S.ch).map(w=>({ title:w.title, kind:w.homonym ? u.kinds[w.kind] : "", html:sheetWordBodyHtml(w),
+    find:`${w.title} ${w.id}`, text:[w.text, ...(w.reading ? statLines(w.reading) : []), ...(w.more||[]).map(m=>m.text), w.note].filter(Boolean).join(" ") }));
+}
+function sheetWordsHtml(){
+  const u=sheetGuide().ui;
+  return `<div class="dhead"><h2 id="ghelp-h" tabindex="-1">${esc(u.wordsLink)}</h2>
+      <button type="button" class="btn sm" data-help-close aria-label="${esc(u.close)} ${esc(u.title.toLowerCase())}">${esc(u.close)}</button></div>
+    <p><button type="button" class="btn sm" data-help-back>${esc(u.back)}</button></p>${helpListHtml(sheetWordRows(), u)}`;
+}
+// What the panel is made of: the tab's help, or Every word. The words' key (below) is their content, never the filter.
+function sheetPanelHtml(id){ return S.helpView==="words" ? sheetWordsHtml() : sheetHelpHtml(id); }
+function sheetPanelKey(id){ return S.helpView==="words" ? "words|" + JSON.stringify(Engine.words(S.ch).map(w=>[w.kind, w.id, w.title, w.text, w.more, w.note, w.reading])) : sheetHelpHtml(id); }
 function sheetHelpToggleHtml(label, attr, on){
   const u=sheetGuide().ui;
   return `<div class="form-toggle" role="group" aria-label="${esc(label)}">
@@ -79,6 +101,7 @@ function sheetHelpHtml(id){
     ${words ? `<h3 class="ref-sub dos-l">${esc(u.wordsLabel)}</h3>${words}` : ""}
     ${c.tips.length ? `<h3 class="ref-sub dos-l">${esc(u.tipsLabel)}</h3><ul class="help-tips">${c.tips.map(t=>`<li>${helpMd(t)}</li>`).join("")}</ul>` : ""}
     <div class="help-foot">
+      <p class="help-links"><button type="button" class="btn sm" data-hwords>${esc(u.wordsLink)}</button></p>
       <div class="field tag-choice"><span>${esc(u.guideSwitch)}</span><div data-help-guideswitch>${sheetHelpToggleHtml(u.guideSwitch, "guide", sheetGuideOn())}</div></div>
       <div class="field tag-choice"><span>${esc(u.keySwitch)}</span><div data-help-keyswitch>${sheetHelpToggleHtml(u.keySwitch, "keys", keysOn())}</div></div></div>`;
 }
@@ -90,6 +113,11 @@ function bindSheetHelp(el){
       if (b) b.onclick=()=>{ set(on); repaint(); const again=$("ghelp") && $("ghelp").querySelector(`[data-help-${attr}-${on?"on":"off"}]`); if (again) again.focus({ preventScroll:true }); };
     }
   };
+  // Every word swaps the panel's view and Back swaps it home; the filter is cleared by leaving, never stored.
+  const words=el.querySelector("[data-hwords]");
+  if (words) words.onclick=()=>{ S.helpView="words"; S.helpQ=""; paintHelp(); const q=$("ghelp") && $("ghelp").querySelector("[data-help-q]"); if (q) q.focus({ preventScroll:true }); };
+  const back=el.querySelector("[data-help-back]");
+  if (back) back.onclick=()=>{ S.helpView=null; S.helpQ=""; paintHelp(); const w=$("ghelp") && $("ghelp").querySelector("[data-hwords]"); if (w) w.focus({ preventScroll:true }); };
   // A guide line is drawn with the page, so the page draws again; the panel repaints itself because its switch changed.
   wire("[data-help-guideswitch]", "guide", setSheetGuide, ()=>{ renderMain(); });
   wire("[data-help-keyswitch]", "keys", setKeys, ()=>{ paintHelp(true); });
@@ -114,8 +142,11 @@ HELP_HOSTS.sheet = {
     } else if (vitalsSwapped){ vitalsSwapped=false; syncVitals(); }
   },
   context:sheetHelpContext,
+  // Every word is about neither tab: it stays open across a tab press, filter and all, until Back or Close (KQ18). A flyout is shut by
+  // the press itself (Decision 166), as it always was.
+  keepView:view=>view==="words",
   // The words are read for the character, so a repaint is due whenever what it would say changes.
-  key:sheetHelpHtml, bodyHtml:sheetHelpHtml, bind:bindSheetHelp,
+  key:sheetPanelKey, bodyHtml:sheetPanelHtml, bind:bindSheetHelp,
 };
 // The ? key, under the table's rules (Decision 272): never in a field, under a modal or with ⋮ open, and the browser's keys setting
 // turns it off. The table's listener (gm.js) is gated on a table screen, so the two never both act on a press.

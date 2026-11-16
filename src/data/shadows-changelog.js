@@ -2,7 +2,7 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
-    "version": "0.70.0",
+    "version": "0.71.0",
     "date": null,
     "intro": [],
     "items": [],
@@ -19,12 +19,16 @@ window.SHADOWS_CHANGELOG = [
           "Your claws, fangs and fists are on the printed sheet now.",
           "Claws, fangs and fists roll whichever is better, Melee or Martial Arts.",
           "**Luck says how it really works.** A Boost raises one die by 1, and you can boost the same die again. A boosted die never explodes, and a boosted 1 isn't a Botch. On a Breaker Check, a Boost adds 10 to the target (up to its maximum) and an Explode is a second roll, keeping the better.",
-          "**Gear's descriptions say EM pulse** for an electromagnetic pulse: the Blackout grenade, EMP Shielding, the EMP weapon tag and Artifacts. EMP means Empathy."
+          "**Gear's descriptions say EM pulse** for an electromagnetic pulse: the Blackout grenade, EMP Shielding, the EMP weapon tag and Artifacts. EMP means Empathy.",
+          "**Help has Every word.** Every word the game uses, A to Z, with a box to find one and a letter to jump to. Each reads from its rule, for your character, and it stays open as you move between tabs.",
+          "**Damage types say what they are.** Blunt, Blade, Ballistic, Electric, Energy and Burning, in the book's words. Elemental, Spirit and Aether say the book doesn't say yet.",
+          "**More of the sheet's words have a definition:** Health Levels, IP, PROT, RES, Integrity, TN, TH, ACC, RoF and the rest, on the tabs that show them."
         ]
       },
       {
         "title": "GM mode",
         "items": [
+          "**Every word in Help has a box to find a word and a letter to jump to.**",
           "**Spending SFR on a utility or support power is a Free Action** in the Reference's Actions, on your turn and up to your Rate of Use. Attacking with a power is still the Standard Action."
         ]
       }
