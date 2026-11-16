@@ -70,7 +70,7 @@ Each id is defined in exactly one place and referenced everywhere.
 | `AQ`_n_ | A question the 2026-09-24 audit raises for Ken | `plans/archive/audit-2026-09-remediation.md` §5 |
 | `GQ`_n_, `S`_n_ | A question GM mode (W29) raises for Scott, Deighton or Ken, and its sessions (S1–S21 the first plan's, S22 on the next one's) | GQ1–GQ30 and S1–S21: `plans/archive/gm-mode.md` §9 and §6 · the open GQs, GQ31 on, and S22 on: `plans/gm-mode-next.md` §5 and §3 |
 | `TQ`_n_ | A question the two-tabs plan (W38) raises for Ken | `plans/two-tabs-one-character.md` §5 |
-| `KQ`_n_, `K`_n_ | A question the help-on-the-sheet plan (W156) raises for Ken, and its sessions K1–K3 (K for know the sheet) | `plans/help-on-the-sheet.md` §5 and §3; KQ9–KQ12 in `plans/help-on-the-sheet/K1-one-help.md` §4; KQ13–KQ18 in `K2-every-word.md` §4 |
+| `KQ`_n_, `K`_n_ | A question the help-on-the-sheet plan (W156) raises for Ken, and its sessions K1–K3 (K for know the sheet) | `plans/help-on-the-sheet.md` §5 and §3; KQ9–KQ12 in `plans/help-on-the-sheet/K1-one-help.md` §4; KQ13–KQ18 in `K2-every-word.md` §4; KQ19–KQ22 in `K3-guide-lines.md` §4 |
 | `LQ`_n_, `L`_n_ | A question the vehicles-and-gear plan raises for Ken, and its sessions L1–L5b and L8–L10 (L6 and L7 left it 2026-11-15) | `plans/loadout-and-gear.md` §5 and §3 |
 | `NQ`_n_, `N`_n_ | A question the accounts-and-sync plan (W138) raises for Ken, and its sessions N0–N6 | `plans/accounts-and-sync.md` §5 and §3 |
 | `BQ`_n_ | A question W143's work order (powers bought with CP) raises for Ken | `plans/archive/w143-powers-bought-with-cp.md` §4 |
