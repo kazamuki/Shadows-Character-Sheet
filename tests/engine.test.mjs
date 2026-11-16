@@ -324,6 +324,7 @@ const MAPS = [/\.byPowerLevel$/, /^statRules\.(modifiers|raiseCost)$/, /^spells\
   /\.starterPower$/, /\.starterPower\.\*\[\]$/,
   /\.sp(\.\*)?$/, // W32: keyed by the text an amount sits beside, read by spAmounts
   /^gmGuide\.(contexts|words|empty|ui\.when)$/, // keyed by a page, a word, a section's empty state and a part of a night, read by gm.js's Help (Decision 278)
+  /^sheetGuide\.(contexts|ui\.when)$/, // keyed by a sheet tab and a part of a night, read by sheet.js's Help (K1)
   /^appCopy\.statusLabel$/, // keyed by an archetype's `status`, read by statusLabel()
   /^skillRowText$/, // keyed by what a Skill's row says (a Take X, a die face, a light level), read by skillLine and attackNotes (Decision 233)
   /\.grants\[\]\.(shift|mod)$/, // a `visibility` row's maps, keyed by a light level's id, read by visShifts and visModText (Decision 237)
@@ -410,6 +411,30 @@ test("gmGuide is shaped: every page has help, every word it names is defined, an
   for (const p of G.night) if (!order.includes(p.when) || !p.sections.every(s => sections.includes(s))) bad.push("night part " + p.when);
   assert.equal(G.night.length, 3);
   assert.deepEqual(Object.keys(G.empty).sort(), ["cast", "encounters", "factions", "notes", "places", "players", "sessions", "sessionsList", "threads", "threats"]);
+  assert.deepEqual(bad, []);
+});
+
+// K1: the sheet's Help is one block of data, and it has a shape. The tab ids come from shared.js's SHEET_SECTIONS, plus Admin, so a new
+// tab with no help entry fails here.
+test("sheetGuide is shaped: every tab has help, and every word it names resolves (K1)", () => {
+  const G = D.sheetGuide, sh = readFileSync(join(ROOT, "src/ui/shared.js"), "utf8");
+  const tabs = [...(/const SHEET_SECTIONS = \[([^\]]*)\];/.exec(sh)[1]).matchAll(/id:"([a-z]+)"/g)].map(m => m[1]);
+  assert.ok(tabs.length >= 7, "found only " + tabs.length + " tabs");
+  const order = ["before", "during", "between"], bad = [];
+  assert.deepEqual(Object.keys(G.contexts).sort(), [...tabs, "admin"].sort());
+  for (const [id, c] of Object.entries(G.contexts)) {
+    for (const k of ["title", "intro", "for"]) if (typeof c[k] !== "string" || !c[k]) bad.push(id + ": no " + k);
+    if (!Array.isArray(c.when) || !c.when.length || c.when.some(w => !order.includes(w)) || c.when.some((w, i) => i && order.indexOf(w) <= order.indexOf(c.when[i - 1]))) bad.push(id + ": `when` is not a subset of before, during, between in order");
+    if (!Array.isArray(c.words)) bad.push(id + ": no `words`");
+    else for (const w of c.words) for (const arch of ["professional", "arcanist", "vampire", "werewolf"]) {
+      const ch = Engine.newCharacter(); ch.identity.archetype = arch;
+      if (!Engine.term(w, ch)) bad.push(id + ": " + w + " doesn't resolve for a " + arch);
+    }
+    if (!Array.isArray(c.tips) || c.tips.length > 2) bad.push(id + ": `tips` is not a list of at most two");
+  }
+  assert.deepEqual(Object.keys(G.ui.when).sort(), [...order].sort());
+  for (const k of ["title", "close", "on", "off", "forLabel", "whenLabel", "wordsLabel", "tipsLabel", "guideSwitch", "keySwitch"]) if (!G.ui[k]) bad.push("ui." + k);
+  for (const k of ["introCharacter", "introLoadout", "introNotes"]) if (k in D.appCopy) bad.push("appCopy." + k + " is a guide line now: it lives in sheetGuide");
   assert.deepEqual(bad, []);
 });
 

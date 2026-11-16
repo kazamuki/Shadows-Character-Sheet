@@ -1127,7 +1127,7 @@ const showsStatus = a => !!a && a.status!=="final" && a.status!=="draft";
 // ── Help: one panel, a host each for the screens that have it (Decisions 278, 166) ───────────────────────
 // The panel is `#ghelp` and its scrim `#ghscrim`. What it says and what it does inside is a HOST's: gm.js registers the table's,
 // sheet.js the sheet's. A host is { id, btn (the header's ? as a selector), open() (is it open), setOpen(on), context() (the id of
-// what's on the page, total), bodyHtml(id), bind(el), key?(id) (what makes a repaint needed) }. This code holds no Help string.
+// what's on the page, total), bodyHtml(id), bind(el), key?(id) (what makes a repaint needed), opened?(), left?(), synced?(shown) }. This code holds no Help string.
 // From 1280px the panel is a column beside the page; narrower it is a flyout over a scrim that shuts at any move, as the vitals
 // flyout does (Decision 166), with its own setter: that one is the vitals'.
 const HELP_HOSTS = {}, HELP_MEDIA = "(min-width:1280px)";
@@ -1168,7 +1168,9 @@ function syncHelp(){
   if (sc){ sc.classList.toggle("open", shown); sc.onclick=closeHelp; }   // a click on the scrim shuts the flyout, as the vitals scrim does
   if (app) app.classList.toggle("help-pinned", shown);
   const b=host && document.querySelector(host.btn); if (b) b.setAttribute("aria-expanded", shown?"true":"false");
+  if (host && host.synced) host.synced(shown);
   if (id!==helpHostId){
+    const prev=HELP_HOSTS[helpHostId]; if (prev && prev.left) prev.left();
     el.innerHTML=""; helpKey=null;
     if (id==="sheet" || helpHostId==="sheet"){ S.helpFrom=null; S.helpCtx=null; S.helpView=null; }   // the sheet's Help never carries into another screen's
     helpHostId=id;

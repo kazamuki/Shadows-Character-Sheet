@@ -4097,10 +4097,7 @@ window.SHADOWS_DATA = {
     "orphanChip": "not in the current rules",
     "orphanNote": "This {kind} isn't in the current rules.",
     "introSkills": "A trained Skill rolls 1d10 + its Rank, its Primary Stat and its Synergy. An untrained one rolls 1d10 + its Primary Stat, and nothing else.",
-    "introCharacter": "What you are and what it gives you, then the Advantages and Disadvantages you carry.",
     "introProgression": "Log a session when it truly ends. It pays {perHour} IP an hour of play (your table can change the rate below), 1 Milestone Point, and refreshes your LUCK.",
-    "introLoadout": "Weapons, armor and gear: what you carry into the city.",
-    "introNotes": "Freeform. The city keeps receipts — so should you.",
     "introAdmin": "Change any number directly, past creation's caps and pools. It's for fixing mistakes: every change is logged in the Activity Log on Progression and can be undone."
   },
   "ip": {
@@ -4884,6 +4881,109 @@ window.SHADOWS_DATA = {
      `night` is A night at the table; `empty` is the sections' empty states; `ui` is the panel's own labels. **bold** is a button
      or label as the screen has it, and `code` is a file name. Read only by GM mode: no character can observe it, so it moves no
      game-data version (Decision 68). */
+  // K1: Help on the sheet, read by shared.js's panel through sheet.js's host (Decision N). One context per sheet tab and one for Admin.
+  // `intro` is the tab's guide line, `for` what it's for, `when` a subset of ui.when, `words` gameTerms ids (read through Engine.term for the
+  // open character), `tips` at most two. **bold** is a button or label as the screen has it. Introductions that state a rule stay in appCopy.
+  "sheetGuide": {
+    "ui": {
+      "title": "Help",
+      "close": "Close",
+      "on": "On",
+      "off": "Off",
+      "forLabel": "What it's for",
+      "whenLabel": "When",
+      "wordsLabel": "On this tab",
+      "tipsLabel": "Try this",
+      "guideSwitch": "Guide lines",
+      "keySwitch": "The ? key",
+      "when": {
+        "before": "Before you play",
+        "during": "At the table",
+        "between": "Between sessions"
+      }
+    },
+    "contexts": {
+      "main": {
+        "title": "Main",
+        "intro": "Who you are tonight: your Stats, your health, and the checks you'll roll most.",
+        "for": "The tab you play from. Your Stats and what they give, your health and Pain, any Conditions on you, the combat Skills you've trained, and your weapons. **Heal**, **Hurt** and **Take a hit** are here, and so is every on/off switch your character has, like a Werewolf's form.",
+        "when": ["during"],
+        "words": ["TOL", "WILL", "LUCK", "skill-check", "defensive-action"],
+        "tips": [
+          "Press a Stat or a Condition to read what it does.",
+          "Damage goes in with **Take a hit**: it works out armor and Pain for you."
+        ]
+      },
+      "skills": {
+        "title": "Skills",
+        "intro": "Every Skill you have, and what you add to the roll.",
+        "for": "Every Skill, trained or not, with the total you add to a d10. A Skill's **?** says what it covers and what's particular to it.",
+        "when": ["during"],
+        "words": ["skill-check", "kicker-die", "explode", "botch"],
+        "tips": [
+          "Pain's penalty is already in these totals. The line above the table says so once."
+        ]
+      },
+      "character": {
+        "title": "Character",
+        "intro": "What you are and what it gives you, then the Advantages and Disadvantages you carry.",
+        "for": "Your archetype and what it lets you do: its powers, its core mechanic and your specialization. Then your Advantages and Disadvantages. What you can do lives here; what you carry is on **Loadout**.",
+        "when": ["before", "during"],
+        "words": [],
+        "tips": [
+          "Press a tag on a power or a trait to read what it means."
+        ]
+      },
+      "trackers": {
+        "title": "Trackers",
+        "intro": "The pools you spend and refill as the night goes.",
+        "for": "The pools you spend and get back: Sanity, LUCK, Çredits and CRANK. **Manual Adjustments** is for what the sheet doesn't add up by itself: an item, a ruling, a scar.",
+        "when": ["during", "between"],
+        "words": ["SAN", "LUCK"],
+        "tips": [
+          "Spend LUCK here when you spend it at the table, so the sheet stays true."
+        ]
+      },
+      "progression": {
+        "title": "Progression",
+        "intro": "What the city paid you, and what you spend it on.",
+        "for": "Between sessions. **Log a session** when one ends, then spend what it paid: IP on Skills, Stats and powers, and Milestones as you meet them. **History** and the **Activity Log** are below it, and **Undo** takes back your last change.",
+        "when": ["between"],
+        "words": ["milestone-point", "LUCK"],
+        "tips": [
+          "The jump bar under the title reaches each part in one press."
+        ]
+      },
+      "loadout": {
+        "title": "Loadout",
+        "intro": "Weapons, armor and gear: what you carry into the city.",
+        "for": "What you carry: weapons, armor and gear, from the catalog or written in. **Buy** pays the price out of your Çredits in the same step, so one Undo takes back both.",
+        "when": ["before", "between"],
+        "words": [],
+        "tips": [
+          "Ammo is gear: carry it here, and reload from it on the weapon's line."
+        ]
+      },
+      "notes": {
+        "title": "Notes",
+        "intro": "Freeform. The city keeps receipts — so should you.",
+        "for": "Free text for what the sheet has no place for: names, debts, what you saw. It's saved with your character.",
+        "when": ["during", "between"],
+        "words": [],
+        "tips": []
+      },
+      "admin": {
+        "title": "Admin",
+        "intro": "Free edit, for when the sheet has something wrong.",
+        "for": "Free edit, for fixing a mistake. Change any number, past creation's caps and pools. Every change is in the Activity Log and can be undone. Leave it from ⋮: **Exit admin mode**.",
+        "when": ["between"],
+        "words": [],
+        "tips": [
+          "Use Progression's spends for what you earned. Admin is for what's wrong."
+        ]
+      }
+    }
+  },
   "gmGuide": {
     "ui": {
       "title": "Help",

@@ -888,8 +888,8 @@ tr.lo-modrow td{border-top:0; padding-top:0}
   body.vitals-pinned .toast{left:calc((100vw - var(--pin-w)) / 2)}
 }
 
-/* A GM table's Help (Decision 278): the vitals flyout's format, with its own element. Below 1280px a flyout over the page with a scrim;
-   from 1280px, while it is open, a column beside the page (`.help-pinned` on #app) that pushes it. Prose at the table's measure. */
+/* Help, a GM table's and the sheet's (Decision 278, K1): the vitals flyout's format, with its own element. Below 1280px a flyout over the
+   page with a scrim; from 1280px, while it is open, a column beside the page (`.help-pinned` on #app) that pushes it. Prose at the table's measure. */
 :root{--help-w:21rem}
 .ghelp{position:fixed; top:0; right:0; height:100vh; width:var(--help-w); max-width:92vw; z-index:80;
   border-left:1px solid var(--frame); background:var(--panel); box-shadow:-18px 0 44px rgba(0,0,0,.45);
@@ -908,6 +908,8 @@ tr.lo-modrow td{border-top:0; padding-top:0}
 .ghelp .help-words dd{margin:2px 0 0; color:var(--dim)}
 .ghelp .help-tips{margin:0; padding-left:1.1em}
 .ghelp .help-tips li{margin:0 0 6px}
+.ghelp .help-more{margin:4px 0 0; padding-left:1.1em}
+.ghelp .help-foot .field{margin:0 0 12px}
 .ghelp .help-secs{display:flex; flex-wrap:wrap; gap:6px; margin:0 0 6px}
 .ghelp .help-foot{margin-top:22px; padding-top:14px; border-top:1px solid var(--frame)}
 .ghelp .help-links{display:flex; flex-wrap:wrap; gap:6px; margin:0 0 12px}
@@ -917,9 +919,25 @@ tr.lo-modrow td{border-top:0; padding-top:0}
   .ghelp-scrim{display:none}
   .app.help-pinned ~ .footer{right:var(--help-w)}
   body:has(.app.help-pinned) .toast{left:calc((100vw - var(--help-w)) / 2)}
+  /* The sheet's Help takes the pinned vitals' column while it's open (K1): the drawer steps out of the way, the bar's pills come back
+     (its toggle has nothing to open), and the page makes room for one column, not both. Closing Help removes the class and the pin is
+     back; nothing here, or in the code, writes the pin. */
+  body.vitals-pinned .app.help-pinned{padding-right:var(--help-w)}
+  body.vitals-pinned:has(.app.help-pinned) .vdrawer{visibility:hidden}
+  body.vitals-pinned:has(.app.help-pinned) .vbar{display:flex}
+  body.vitals-pinned:has(.app.help-pinned) .vbar > .vpill.toggle{display:none}
   /* The column takes 21rem, so the cards keep their 20rem floor (258) by dropping a column until there is room for three. */
   .app.table-mode.help-pinned .roster-list{grid-template-columns:repeat(2, minmax(0, 1fr))}
   .app.table-mode.help-pinned .roster-list.sess-list{grid-template-columns:minmax(0, 1fr)}
+}
+/* Main's guide line gives its room to the Health card on a phone: Main is read at a glance, and Help says the same (K1). */
+@media (max-width:639px){ #main [data-guide="main"]{display:none} }
+/* On a phone the sheet's Help draws its switches first, under the heading, so they're in reach without scrolling (W150). */
+@media (max-width:599px){
+  .ghelp[data-host="sheet"]{display:flex; flex-direction:column}
+  .ghelp[data-host="sheet"] > *{order:2; flex:none}
+  .ghelp[data-host="sheet"] > .dhead{order:0}
+  .ghelp[data-host="sheet"] > .help-foot{order:1; margin:0 0 18px; padding:0 0 12px; border-top:0; border-bottom:1px solid var(--frame)}
 }
 @media (min-width:1400px){ .app.table-mode.help-pinned .roster-list:not(.sess-list){grid-template-columns:repeat(3, minmax(0, 1fr))} }
 

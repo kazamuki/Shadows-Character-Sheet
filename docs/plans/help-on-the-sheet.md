@@ -3,7 +3,7 @@
 **Status:** **approved 2026-11-15** (Ken: every KQ on its default; the
 Guide lines switch is a must, so a veteran player gets a clean sheet, as
 GM mode's switch gives a GM). K1's order is drafted, its KQ9–KQ12
-answered and the order approved (Ken, 2026-11-15); K1 is building. Nothing here is a
+answered and the order approved (Ken, 2026-11-15); K1 is built (0.70.0, Decision 288). Nothing here is a
 decision until the session that builds it numbers it in `SCHEMA.md` §4. Its
 sessions are `K`_n_ (K for know the sheet) and its questions `KQ`_n_ (§5).
 Its orders will be in `plans/help-on-the-sheet/`.

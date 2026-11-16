@@ -427,6 +427,91 @@ async function tableHelp(browser, file, rows, numbers) {
   }
 }
 
+// K1: Help on the sheet. At a phone width its switches are above the fold, and the character's name keeps its room beside the ?. From 1280px
+// it is a column; with vitals pinned it takes their column while open (the drawer has no box, the bar's pills show, main stops at its left
+// edge, no scrim), and closing it gives the pinned column back. jsdom can't see any of that: this is where it's held.
+async function sheetHelp(browser, file, rows) {
+  const ch = floorChar();
+  const open = async (width, height, pinned, section = "trackers", touch = false) => {
+    const c = await browser.newContext({ viewport: { width, height }, hasTouch: touch, isMobile: touch });
+    await c.addInitScript(([s, pin]) => { try {
+      localStorage.setItem("shadows.feature.crank", "on"); localStorage.setItem("shadows.active.v1", s);
+      if (pin) localStorage.setItem("shadows.ui.vitalsPinned", "pinned");
+    } catch (e) {} }, [JSON.stringify({ ch, section }), pinned]);
+    const page = await c.newPage();
+    const errors = [];
+    page.on("pageerror", e => errors.push(e.message));
+    await page.goto(pathToFileURL(file).href);
+    await page.click("[data-open]");
+    await page.waitForSelector("#topnav [data-sec]");
+    return { c, page, errors };
+  };
+  const box = (page, sel) => page.evaluate(s => { const e = document.querySelector(s); if (!e) return null; const r = e.getBoundingClientRect(), cs = getComputedStyle(e);
+    return { left: Math.round(r.left), right: Math.round(r.right), top: Math.round(r.top), bottom: Math.round(r.bottom), w: Math.round(r.width), h: Math.round(r.height), shown: cs.visibility !== "hidden" && cs.display !== "none" && r.width > 0 && r.height > 0 }; }, sel);
+  // A phone: the button is a real target, the name isn't cut, and the foot's switches are in the first screen.
+  for (const w of WIDTHS.filter(w => w.width < 640)) {
+    const { c, page, errors } = await open(w.width, w.height, false, "trackers", !!w.touch);
+    const bad = [];
+    const hdr = await page.evaluate(() => { const n = document.querySelector("#brandctx"), b = document.querySelector("[data-shelp]"), r = b.getBoundingClientRect();
+      return { cut: n.scrollWidth > n.clientWidth + 1, bw: Math.round(r.width), bh: Math.round(r.height), name: n.textContent }; });
+    if (hdr.cut) bad.push(`the name "${hdr.name}" is cut beside the ?`);
+    // The box is the header's own (.hdr-act, as the table's ?); its ::after carries the 44px target on a touch phone.
+    if (hdr.bw < (w.touch ? 44 : 24) || hdr.bh < 24) bad.push(`the ? is ${hdr.bw}x${hdr.bh}`);
+    // Ken: Main's guide line is hidden below 640px (Main's Health card has to stay in the first screen), and the other tabs' stay.
+    const guideShown = async sec => { await page.click(`#topnav [data-sec="${sec}"]`); return page.evaluate(() => { const g = document.querySelector("#main [data-guide]"); return !!g && g.getBoundingClientRect().height > 0; }); };
+    if (await guideShown("main")) bad.push("Main's guide line shows on a phone");
+    if (!(await guideShown("trackers"))) bad.push("Trackers' guide line is hidden on a phone");
+    await page.click("[data-shelp]");
+    const foot = await box(page, "#ghelp .help-foot"), close = await box(page, "#ghelp [data-help-close]");
+    if (!foot) bad.push("no foot");
+    else if (foot.bottom > w.height) bad.push(`the foot's switches end at ${foot.bottom}px of ${w.height}`);
+    if (foot && close && foot.top < close.bottom) bad.push("the foot isn't under the heading");
+    const sw = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    if (sw > 0) bad.push(`the page scrolls sideways by ${sw}px`);
+    if (errors.length) bad.push(errors.join("; "));
+    rows.push({ width: w.name, screen: "K1: sheet Help's foot above the fold, the name beside the ?", layout: bad.length ? bad.join("; ") : `ok (? ${hdr.bw}x${hdr.bh}, foot ends ${foot && foot.bottom} of ${w.height})`, ok: !bad.length });
+    await c.close();
+  }
+  // From 1280: the column, with the vitals pinned and not.
+  for (const pinned of [true, false]) {
+    for (const width of [1280, 1300, 1980]) {
+      const { c, page, errors } = await open(width, 900, pinned, "trackers");
+      const bad = [], tag = `${width}, vitals ${pinned ? "pinned" : "not pinned"}`;
+      const was = { drawer: await box(page, "#vdrawer"), main: await box(page, "main"), bar: await box(page, ".vbar .vpill") };
+      if (pinned && !(was.drawer && was.drawer.shown && was.drawer.w > 250)) bad.push("the pinned column isn't there before Help opens");
+      await page.click('#topnav [data-sec="main"]');
+      if (!(await page.evaluate(() => { const g = document.querySelector("#main [data-guide=\"main\"]"); return !!g && g.getBoundingClientRect().height > 0; }))) bad.push("Main's guide line is hidden at a width of 640 or more");
+      await page.click('#topnav [data-sec="trackers"]');
+      await page.click("[data-shelp]");
+      const help = await box(page, "#ghelp"), drawer = await box(page, "#vdrawer"), main = await box(page, "main"), pill = await box(page, ".vbar .vpill");
+      const foot = await box(page, "#footer"), scrim = await page.evaluate(() => { const s = document.querySelector("#ghscrim"); return s && getComputedStyle(s).display !== "none" && getComputedStyle(s).visibility !== "hidden"; });
+      if (!help || help.w < 300 || help.w > 360) bad.push(`the column is ${help && help.w}px`);
+      if (help && help.right < width - 1) bad.push(`the column ends at ${help.right}, not at the right edge`);
+      if (main && help && main.right > help.left + 1) bad.push(`main runs ${main.right - help.left}px under the column`);
+      if (scrim) bad.push("a scrim is showing: the sheet is dimmed");
+      if (pinned && drawer && drawer.shown) bad.push("the vitals drawer still has a visible box under Help");
+      if (!pill || !pill.shown) bad.push("the vitals bar's pills aren't showing");
+      const sw = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      if (sw > 0) bad.push(`the page scrolls sideways by ${sw}px`);
+      // The pinned column's cards (Character's) keep what they had, less the 36px Help is wider by.
+      await page.click('#topnav [data-sec="character"]');
+      const cards = await page.evaluate(() => { const w = [...document.querySelectorAll("#main .arch-flow .pick")].map(e => e.getBoundingClientRect().width); return w.length ? Math.round(Math.min(...w)) : 0; });
+      await page.click("#ghelp [data-help-close]");
+      const after = { drawer: await box(page, "#vdrawer"), pill: await box(page, ".vbar .vpill"), main: await box(page, "main") };
+      const cardsBack = await page.evaluate(() => { const w = [...document.querySelectorAll("#main .arch-flow .pick")].map(e => e.getBoundingClientRect().width); return w.length ? Math.round(Math.min(...w)) : 0; });
+      if (cards && cardsBack && cards < cardsBack - 40) bad.push(`Character's cards are ${cards}px with Help open, ${cardsBack}px without`);
+      if (pinned) {
+        if (!(after.drawer && after.drawer.shown && after.drawer.w > 250)) bad.push("closing Help didn't give the pinned column back");
+        if (after.pill && after.pill.shown) bad.push("the bar's pills stayed after Help closed");
+        const pin = await page.evaluate(() => localStorage.getItem("shadows.ui.vitalsPinned"));
+        if (pin !== "pinned") bad.push(`the pin's preference is "${pin}" after Help closed`);
+      }
+      if (errors.length) bad.push(errors.join("; "));
+      rows.push({ width: `sheet ${width}`, screen: `K1: Help column, ${tag}`, layout: bad.length ? bad.join("; ") : `ok (column ${help && help.w}px, main ends ${main && main.right}, cards ${cards}/${cardsBack}px)`, ok: !bad.length });
+      await c.close();
+    }
+  }
+}
 // L2: the read-only sheet lays out as the player's own sheet of the same file. L8: from 1280px a member's stat block is a
 // panel on the right that stays put under the bar; below that it is the last block of the page.
 async function tableExtras(browser, file, rows, numbers) {
@@ -878,6 +963,7 @@ try {
   }
   await phoneFloors(browser, file, rows);
   await weaponFloors(browser, file, rows);
+  await sheetHelp(browser, file, rows);
   // P16 (Decision 246): the Character tab's layout. jsdom has no layout, so this is where it's held.
   for (const w of LAYOUT_WIDTHS) {
     for (const f of characterFixtures()) {

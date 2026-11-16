@@ -970,7 +970,7 @@ Build it only if hand entry drifts, or when live sync starts: [accounts-and-sync
 dispatches to a player's inbox, posted instead of saved, and builds on this. Its open question is GQ3 (one file per table).
 
 **W150 — Help's polish: the foot links, an A–Z jump in Every word, a stronger heading.** *Claude, from S31's re-critique (PR #323), 2026-11-12; Ken: one W item · 💡 · Fix*\
-**Plan:** [help-on-the-sheet K1](plans/help-on-the-sheet.md), order drafted: [`K1-one-help.md`](plans/help-on-the-sheet/K1-one-help.md) (the panel's layout; the A–Z jump waits for K2)
+**Plan:** [help-on-the-sheet K1](plans/help-on-the-sheet.md), built in 0.70.0 ([`K1-one-help.md`](plans/help-on-the-sheet/K1-one-help.md); the foot's switches lead on a phone for the sheet's Help; the A–Z jump waits for K2)
 
 Not planned: best done after Deighton's read of Help's words (S31, GQ39) is in, since his answers may move the copy these sit around. S31's Help panel works, and its review found three things that read poorly. On a phone the foot (A night at the table, Every word,
 Keys and the Guide lines switch) is about 530px below the fold, so a GM has to scroll the whole page's help to reach the one link

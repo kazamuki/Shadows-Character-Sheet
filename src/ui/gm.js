@@ -330,7 +330,7 @@ function setKeys(on){ try{ if (on) localStorage.removeItem(KEYS_PREF); else loca
 function keyHints(){
   const on=keysOn();
   const hint=(b, key)=>{ if (!b) return; if (on) b.setAttribute("aria-keyshortcuts", key); else b.removeAttribute("aria-keyshortcuts"); };
-  for (const [sel, key] of [["[data-tfind]","F"],["[data-tjot]","J"],["[data-thelp]","?"],["[data-tactivity]","A"],["#main [data-enext]","N"]]) hint(document.querySelector(sel), key);
+  for (const [sel, key] of [["[data-tfind]","F"],["[data-tjot]","J"],["[data-thelp]","?"],["[data-shelp]","?"],["[data-tactivity]","A"],["#main [data-enext]","N"]]) hint(document.querySelector(sel), key);
   TABLE_SECTIONS.forEach((sec, i)=>hint(document.querySelector(attrSel("data-tsec", sec.id)), String(i+1)));
 }
 function openKeys({ viaKey, returnTo }={}){

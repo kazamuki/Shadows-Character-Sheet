@@ -24,6 +24,13 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.70.0
+
+### Character sheet
+
+- **Every tab of your sheet has Help.** Press **?** (the button in the header or the key) for what the tab is for, when you'd use it, and what its words mean. From 1280px wide it opens as a column beside the sheet; with your vitals pinned it takes their column while it's open, and the vitals show as the bar. Narrower, it's a panel over the sheet.
+- **Each tab has a one-line guide under its title.** Know the sheet already? Help's **Guide lines** switch turns them off, and the lines that state a rule stay. **The ? key** switch is there too.
+
 ## v0.69.3 — 2026-11-15
 
 ### Character sheet

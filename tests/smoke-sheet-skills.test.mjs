@@ -1368,7 +1368,10 @@ test("Decision 285: no skill row says pain or conditions, and the line above say
 test("E2b: Trackers has no intro, and Skills' doesn't describe the software", () => {
   const trackers = openSheet(lockedCharacter(), "trackers");
   const h1 = trackers.$("#main h1.step-title");
-  assert.ok(!h1.nextElementSibling || !h1.nextElementSibling.matches(".step-note"), "Trackers still has an intro under its title");
+  // K1: it has a guide line (data-guide) now; what E2b removed was a rule line, so nothing but the guide line sits under the title.
+  const under = h1.nextElementSibling;
+  assert.ok(under && under.hasAttribute("data-guide"), "Trackers has no guide line under its title");
+  assert.ok(!under.nextElementSibling || !under.nextElementSibling.matches(".step-note"), "Trackers still has an intro under its title");
   const skills = openSheet(lockedCharacter(), "skills");
   assert.doesNotMatch(skills.$("#main .step-note").textContent, /grouped by category/);
   for (const sec of ["character", "main", "skills", "trackers", "progression", "loadout", "notes"]) {

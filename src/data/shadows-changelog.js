@@ -2,6 +2,21 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.70.0",
+    "date": null,
+    "intro": [],
+    "items": [],
+    "groups": [
+      {
+        "title": "Character sheet",
+        "items": [
+          "**Every tab of your sheet has Help.** Press **?** (the button in the header or the key) for what the tab is for, when you'd use it, and what its words mean. From 1280px wide it opens as a column beside the sheet; with your vitals pinned it takes their column while it's open, and the vitals show as the bar. Narrower, it's a panel over the sheet.",
+          "**Each tab has a one-line guide under its title.** Know the sheet already? Help's **Guide lines** switch turns them off, and the lines that state a rule stay. **The ? key** switch is there too."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.69.3",
     "date": "2026-11-15",
     "intro": [],
