@@ -209,6 +209,15 @@ book. Minor Insanity "gained this way" is a band effect, not a held Disadvantage
 again (P20a's cut) and leaves when SAN climbs out. A failed spell charge on a failed SAN check is
 Decision 224's hold. Severity buttons go through `commit()` like every SAN change.
 
+**W162 — Parry's bonuses reach Martial Arts.** *Ken + Claude, from moving the mirror to 2026-11-15 · 💡 · Content · raised 2026-11-16*\
+**Plan:** none yet
+
+`0530` now rolls a Parry on "Melee/Martial Arts" with a handheld weapon of either skill (it was Melee alone). Two grants that mean "on a Parry" still name
+Melee only: Preternatural Speed's +2 "on defensive actions (Dodge and Parry)" (`skills: ["dodge", "melee"]`) and a once-per-encounter 1d4 kicker "on a
+Defensive Action (such as Dodge or Parry)". A Martial Arts character's Parry misses both. Adding `martial-arts` to each would also show them on Martial Arts
+attack checks (the `whenText` says when), as it already does on Melee's.
+*To respect:* a computed value moves, so `gamedataVersion` (Decision 68). Ask Deighton first whether the bonuses follow the Parry or stay with Melee.
+
 ### Advantages & Disadvantages
 
 Most of these came from P18's sign-off (2026-10-16), with Deighton's words in
@@ -265,6 +274,16 @@ condition's numbers), Age (MOB out of its caps; how it meets Werewolves and Vamp
 words in `reference/rulings-2026-10-16.md`.
 *To respect:* rules changes, so a design talk first, then the book (`crb-catch-up.md`), then the data and P18's tags in one pass each. Age's MOB bears
 on P20's stat caps: ask before P20 is written.
+
+**W161 — Reputation and Burned, as CRANK rep.** *Ken + Claude, from moving the mirror to 2026-11-15 · 💡 · Content · raised 2026-11-16*\
+**Plan:** none yet
+
+The book rewrote Reputation on 2026-11-01: it runs on CRANK rep, max rank 3, and its ranks start CRANK rep at 5 / 12 / 20 (`0432`). It added **Burned**
+(`0431`: 1 point, max 3, −2 CRANK rep a rank, removed only by earning CRANK rep back to 0). Each says it "can't be taken with" the other. The sheet's
+Reputation is still the fame version (cost 4, max rank 4, a neighborhood to whole territories) and it has no Burned. The CRANK rep resource exists already.
+*To respect:* a cost and a max rank move, so `gamedataVersion` (Decision 68), and a saved rank-4 Reputation needs somewhere to land. The pair is the second
+`excludes` (after Dwarf and Giant, Decision 235). Starting CRANK rep from a rank is a value the sheet computes, never stores (constraint 7). Burned's buy-off
+against `0450` and Redeemed is an open book question (the CRB folder's HANDOFF flag 1): ask before building that half.
 
 ### Loadout & catalog
 
@@ -1184,9 +1203,17 @@ the reviewer prompt in `docs/WORK-ORDERS.md` and the `run-a-work-order`
 skill's step 6. CLAUDE.md's "after a change, the full `npm run verify`,
 always" stays true of whoever makes the change.
 
+**W163 — The tests read `0431` and `0432`, and the retired chapters leave the mirror.** *Ken + Claude, from moving the mirror to 2026-11-15 · 💡 · Fix · raised 2026-11-16*\
+**Plan:** none yet
+
+Five reads in `tests/rules.test.mjs` (the header comment, and the CRB checks near the Advantages, Stealth, Disadvantages and exclusion tests) still open
+`0430_Advantages.md` and `0440_Disadvantages.md`, names the book retired when Ken split the chapter on 2026-11-01. The mirror keeps both only for these
+tests. Point them at `0432_Advantages.md` and `0431_Disadvantages.md`, check each still finds its text, then Ken removes the two files from Shadows-Private.
+*To respect:* the mirror is never edited here; its removal is a Shadows-Private change, and the pointer moves after it.
+
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W161.** Everything above is open. What was built is in
+- **Next free number: W164.** Everything above is open. What was built is in
   [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)

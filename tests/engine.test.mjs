@@ -9851,7 +9851,7 @@ test("242: the gazetteer holds every Territory, Zone, Site, Business, Faction an
   eq([sum("zones"), count("zone")], [34, 34]);
   eq([sum("sites"), count("site")], [17, 17]);
   eq([sum("businesses"), count("business")], [42, 42]);
-  eq([sum("factions"), count("faction")], [23, 23]);
+  eq([sum("factions"), count("faction")], [24, 24]);
   eq([book.beyond.length, count("region")], [11, 11]);
   // by name, kind, Territory, zone and real-world place, in the book's order, with no extras. Ids are not compared:
   // they are permanent (constraint 6), so a rename in the book changes a name here and never an id.

@@ -24,6 +24,18 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.71.1
+
+### Character sheet
+
+- Help's **Defensive Actions** reads as the rulebook now does: you parry with a handheld weapon.
+- Four Cantrips are TN 7, like every other Cantrip: **Everlight**, **Hearthstone**, **Sure Grip** and **Watchward**. Their slips, pendants, wards and Artifacts follow.
+- The FG-1 "Thunderclap" hits harder on a 10: one explosion leaves its target **Injured**, two or more **Maimed**.
+
+### GM mode
+
+- The city guide adds **ForgeKor**, the weapons outfit that sells everything but the final trigger pull.
+
 ## v0.71.0 — 2026-11-16
 
 ### Character sheet

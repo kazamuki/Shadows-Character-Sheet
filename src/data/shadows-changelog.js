@@ -2,6 +2,28 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.71.1",
+    "date": null,
+    "intro": [],
+    "items": [],
+    "groups": [
+      {
+        "title": "Character sheet",
+        "items": [
+          "Help's **Defensive Actions** reads as the rulebook now does: you parry with a handheld weapon.",
+          "Four Cantrips are TN 7, like every other Cantrip: **Everlight**, **Hearthstone**, **Sure Grip** and **Watchward**. Their slips, pendants, wards and Artifacts follow.",
+          "The FG-1 \"Thunderclap\" hits harder on a 10: one explosion leaves its target **Injured**, two or more **Maimed**."
+        ]
+      },
+      {
+        "title": "GM mode",
+        "items": [
+          "The city guide adds **ForgeKor**, the weapons outfit that sells everything but the final trigger pull."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.71.0",
     "date": "2026-11-16",
     "intro": [],

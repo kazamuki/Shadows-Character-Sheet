@@ -1132,7 +1132,9 @@ test("R14: every spell in the Book of Known Spells is in the catalog, as the boo
     const lines = text.split("\n").map(l => l.replace(/^>\s?/, "").replace(/\\$/, "").trim()), out = [];
     for (let i = 0; i < lines.length; i++) {
       const name = lines[i].match(/^\*\*([^*]+)\*\*$/);
-      const head = name && lines.slice(i + 1).find(l => l);
+      // A number retyped in Word converts as its own italic run ("*Insight · TN* *7* *· TH 3 …*",
+      // the 2026-11-15 pull), so the head line's runs are joined back into one before it's read.
+      const head = name && lines.slice(i + 1).find(l => l)?.replace(/\*\s+\*/g, " ");
       if (!head || !/^\*[^*].*TN \d/.test(head)) continue;
       const sp = { name: name[1], head: head.replace(/^\*|\*$/g, "").split("·").map(s => s.trim()), overflow: {}, tags: [] };
       for (let j = i + 2; j < lines.length && !/^\*\*[^*:]+\*\*$/.test(lines[j]); j++) {
@@ -1394,7 +1396,7 @@ test("CRB 0460: every grenade carries its 1x / 2x+ column and its Defense as pri
   for (const [name, , , esc, radius, defense] of rows) {
     const w = grenades.find(g => norm(g.name) === norm(name));
     assert.ok(w, `no grenade in the data for the book's ${name}`);
-    const [x1, x2] = esc.split(" / ");
+    const [x1, x2] = esc.split(/\s*\/\s*/); // the 2026-11-15 pull prints "Injured/ Maimed"
     assert.deepEqual({ ...w.escalation }, { "1x": x1, "2x+": x2 }, `${name}'s 1x / 2x+ isn't the book's`);
     assert.equal(w.defense, defense, `${name}'s Defense isn't the book's`);
     assert.equal(w.radius, radius, `${name}'s radius isn't the book's`);
