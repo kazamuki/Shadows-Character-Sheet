@@ -13677,6 +13677,8 @@ test("Decision 290: naturalAttacks is total, and its data reads as it should whe
     const n = Engine.naturalAttacks(ch);
     same([n.perRound, n.lines, n.heading, n.each, n.rules], [2, [], "", "", ""]);
   });
+});
+
 // ── K2: Every word (help-on-the-sheet, Decision 291) ──────────────────
 // One reader, `Engine.word`, answers a reference to any of the game's words; `Engine.words` lists them, one row per meaning.
 const k2Char = (arch = "professional") => { const ch = subject(); ch.identity.archetype = arch; return Engine.migrate(JSON.parse(JSON.stringify(ch))); };
