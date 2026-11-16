@@ -163,6 +163,7 @@ This chapter carries most of the creation economy, and almost none of it is writ
 
 - ✅ **Counterspell and Silence are back** (Counterspell under Advanced › Soul).
 - ✅ *(11-15)* The four inscribed Cantrips' TN 8 → **TN 7** (see 0480 above).
+- ☐ **Those four TN lines, retyped** (found moving the pointer, 2026-11-16). The 7 came through Word as its own italic run, so the mirror reads `*Insight · TN* *7* *· TH 3 …*` (`:2300`, `:2342`, `:2406`, `:2426`) and the sheet's spells test can't parse the four spells. Retype each line as one italic run (or clear its formatting) and re-sync. Then the data's TN moves, with its Decision.
 - ☐ **Consecration (inscribed)** still says "cyborgs" (`:2452`); see the Cyborg list below.
 - ℹ️ Mastering an inscribed spell prices off the form's TH, so Warding — Aether (TH 9) costs **270 IP** to Master. That isn't a mistake, but Scott may want to see the number.
 
