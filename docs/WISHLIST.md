@@ -135,7 +135,7 @@ print renderer for a skill row; the line is `Engine.maneuverChecks`, so print on
 *To respect:* Decision 229. Player-visible: a CHANGELOG line and a patch bump.
 
 **W156 — Help on the character sheet: what each tab is for, every word it uses, and a switch for the guide lines.** *Ken, 2026-11-14 · 💡 · Rule or shape*\
-**Plan:** [help-on-the-sheet K1–K3](plans/help-on-the-sheet.md), approved 2026-11-15; K1 built in 0.70.0 ([`K1-one-help.md`](plans/help-on-the-sheet/K1-one-help.md)); K2 built in 0.71.0 (*Every word*, Decision 291): [`K2-every-word.md`](plans/help-on-the-sheet/K2-every-word.md); K3's order drafted 2026-11-16, not approved (*Guide lines everywhere*: every guide sentence obeys the switch, KQ19–KQ22): [`K3-guide-lines.md`](plans/help-on-the-sheet/K3-guide-lines.md)
+**Plan:** [help-on-the-sheet K1–K3](plans/help-on-the-sheet.md), approved 2026-11-15; K1 built in 0.70.0 ([`K1-one-help.md`](plans/help-on-the-sheet/K1-one-help.md)); K2 built in 0.71.0 (*Every word*, Decision 291): [`K2-every-word.md`](plans/help-on-the-sheet/K2-every-word.md); K3's order drafted and approved 2026-11-16, not yet building (*Guide lines everywhere*: every guide sentence obeys the switch, KQ19–KQ22): [`K3-guide-lines.md`](plans/help-on-the-sheet/K3-guide-lines.md)
 
 Ken wants this as a plan of its own, after the finding-things plan (`plans/archive/finding-things-on-the-sheet.md`, closed). GM mode has Help on every page (Decision 278, S31): a **?** in the header and the **?** key open a panel for the page that's open, read from `gmGuide` in the data. It says what the page is for, when it's used, and the words on it. A **Guide lines** switch turns each section's one-line guide off once a GM knows the ground. The player's sheet has no such thing.
 
@@ -987,7 +987,7 @@ a player reads on a sheet, and this is the one place left. It's a screen only se
 plain, short, and saying what to do. *To respect:* it can't use `appCopy`, since that lives in the data that didn't load.
 
 **W154 — GM mode's seat sheet reads as read-only in its intros.** *Ken, from E5's review, 2026-11-13 · 🔧 · Fix*\
-**Plan:** [help-on-the-sheet K3](plans/help-on-the-sheet.md), order drafted 2026-11-16, not approved: [`K3-guide-lines.md`](plans/help-on-the-sheet/K3-guide-lines.md). A seat's copy draws no guide line, and Progression's rule line has a seat version (KQ20)
+**Plan:** [help-on-the-sheet K3](plans/help-on-the-sheet.md), order drafted and approved 2026-11-16, not yet building: [`K3-guide-lines.md`](plans/help-on-the-sheet/K3-guide-lines.md). A seat's copy draws no guide line, and Progression's rule line has a seat version (KQ20)
 
 The seat sheet draws the player's tabs, so its Progression intro says "Log a session when it truly ends…" on a sheet nobody can
 log on. A seat's intro could read as what the table sees, not what the player does. *To respect:* the seat sheet draws the same
