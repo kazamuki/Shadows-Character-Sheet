@@ -1,6 +1,6 @@
 # State of the build
 
-**Updated:** 2026-11-14
+**Updated:** 2026-11-15
 **Versions:** app `0.70.0` · game data `0.54` · character schema `0.34` · table schema `0.19` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
@@ -110,7 +110,7 @@ is the authority on a flag's full text.
 | **Werewolf** — `0414` | ✅ built (Decisions 195–197, 199, 215, 240, 264, 266): Origins, Form, Call of the Wild, its own Majors; Base Powers and CP as the book prints; its powers run only in Werewolf Form | Nobody. As the Vampire: `draft` is Ken's call |
 | **Arcanist / Magic** | 🔶 spells, Cascade, Aberrations, magic on the sheet, holding a spell (Decision 224), Disciplines as Boosts with their prerequisites (Decision 265) all built · Origins still `draft` | Deighton: **F43** (the held spell's check). Deighton + Scott + Bill + Ken: Origins and spheres/implements, after the four-way comparison; not blocking |
 | **GM mode** — `plans/gm-mode-next.md` | 🔶 **launched in 0.57.0** (260); its first plan (S1–S21) and GM-at-the-table (U1–U5: the encounter row, the Tonight strip, records that open to read, keys; 269–272, in 0.63.0–0.66.0) are built and archived, and **S31** (Help on every table page, 278) is built in 0.67.0. A GM session ships visible, with changelog lines and an app bump | Scott: a session on the live version first (S22), then his to-dos (the plan's §4: Codex v2 for S12a and S17, the Site Profiles, the print files). Then Ken's pick from S23–S30. **Deighton's read of Help's words** (GQ39) arrives as edits to `gmGuide` in the data |
-| **The book** — `plans/crb-catch-up.md` | 📋 what the CRB still needs from the sheet, by chapter | Ken. The sheet-from-book syncs are closed (`plans/archive/`); the next mirror refresh gets a new one |
+| **The book** — `plans/crb-catch-up.md` | 📋 what the CRB still needs from the sheet, by chapter. The 2026-11-12 rulings on Luck, spending SFR and "EM pulse" are in it; the sheet says the first two already, the GM Reference's SFR line ahead of the book (Decision 288) | Ken. The sheet-from-book syncs are closed (`plans/archive/`); the next mirror refresh gets a new one. Ken: the EMP *names* (the tag `EMP`, `EMP Shielding`, the EMP Tip, Forge Fang's weakness) wait on the book and on a `name` beside a glossary id. Deighton: whether a power that prints its own action (Vitality Surge's Fast Action, Odin's Aegis as a reaction, changing shape) keeps it under the free-SFR ruling |
 | **Print sheet — visual system** — `plans/print-sheet-scotts-look.md` | 📋 Scott's export landed 2026-09-23 (landscape) · front-page restyle proposed and mocked up · one known cosmetic defect | Ken: approve the plan. Scott said yes to PQ1 (embed Cerulean Nights) and PQ2 (all his artwork) and answered PQ4, 2026-11-03; he still has to send the files. Deighton: PQ3 (do the stat groups mean anything). The frame/texture print defect blocks on no one |
 
 F5 (Cyber-Prophetical) isn't its own row — it waits wholly on the cybernetics mini-game; don't ask it separately.
@@ -143,11 +143,10 @@ rev 9's `C1`–`C3` are still forward notes.
 - **The `/impeccable audit`** of the whole app (accessibility, performance, theming; the wizard, GM mode and print too) is its own read-only session, after the finding-things plan, and Ken triages its report.
 - **GM mode, what's next** (`plans/gm-mode-next.md`): Scott's play report first (S22), then S23 (the leftover fixes) is suggested.
 - **The vehicles-and-gear plan** (`plans/loadout-and-gear.md`) is approved (Ken, 2026-10-24, LQ1–LQ10 on their defaults); L1 (weapon damage types), L2 (written-in weapons read like the catalog's), L2b (they tick their fire modes and reload from carried ammo) and L3 (worn armor and gear in use carry modifiers) and L5 (a Major on one weapon or armor row, Decision 263) are built.
-  L4 (natural attacks and the unarmed strike): its order is drafted from the 2026-11-12 meeting (`plans/loadout-and-gear/L4-natural-attacks.md`) and waits on Ken's approval. L5b, the powers half of W136, follows L4 (Ken, 2026-11-01); L6 (vehicles, was P14) and L7
-  (Powered Armor) wait on Deighton. The 2026-10-23 meeting's natural attacks (two a
-  round) are in `reference/meeting-2026-10-23.md`; what 2026-11-12 added is in `reference/meeting-2026-11-12.md`.
+  L4 (natural attacks and the unarmed strike): its order is drafted (`plans/loadout-and-gear/L4-natural-attacks.md`). L5b, the powers half of W136, follows L4; L6 (vehicles, was P14) and L7
+  (Powered Armor) wait on Deighton. The meetings' natural-attack rulings are in `reference/meeting-2026-10-23.md` and `-11-12.md`.
   The player sheet's plan (`plans/archive/sheet-wishlist.md`) closed 2026-10-24, P1–P21 built.
-- **Help on the sheet** (`plans/help-on-the-sheet.md`, W156) is approved (Ken, 2026-11-15, KQ1–KQ8 on their defaults): K1 (GM mode's Help panel shared, the sheet's **?** and its Guide lines switch), K2 (Every word), K3 (every guide line under the switch). K1 (the sheet's Help, Decision 288) is built in 0.70.0 (`plans/help-on-the-sheet/K1-one-help.md`); K2 and K3 follow, and Deighton's read of `sheetGuide`'s copy arrives as edits to it in the data.
+- **Help on the sheet** (`plans/help-on-the-sheet.md`, W156): K1 is built (Decision 289); K2 and K3 follow.
 - **Closed 2026-11-14** (`plans/archive/`): finding-things-on-the-sheet (E1a–E8, Decisions 273–287; its closing entry holds the re-run critique, and its leftovers are W152–W157 and W159).
 - **Closed 2026-11-07** (`plans/archive/`): powers-that-run (H1–H3, 266–268; W132's last two powers wait on the book, `plans/crb-catch-up.md`) and GM-at-the-table (U1–U5).
 - **W90**, cybernetics: six questions before a plan.

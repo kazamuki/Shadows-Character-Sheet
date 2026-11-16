@@ -584,7 +584,9 @@ window.SHADOWS_DATA = {
   // slotted packs already hold: conditions, packs, pain, hits, recovery,
   // weaponTags or crank. One without carries `parts` quoted verbatim from the
   // CRB section `bookSource` names ("0530 Quick Reference", or "2130"),
-  // which tests/rules.test.mjs checks piece by piece. `id`: letters, digits
+  // which tests/rules.test.mjs checks piece by piece, except an item marked
+  // `rulingSource`: a ruling ahead of the book, named in plans/crb-catch-up.md under its file, citing 288
+  // (Decision 288). `id`: letters, digits
   // and "-", unique; the jump target is gr-<id>. A cell or term that runs
   // over several lines in the book joins them with " · ".
   gmReference: { panels: [
@@ -4784,6 +4786,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. 185's *Revisit if* (the glossary as a page) is met and its picker stands; 204 kept Next session off the tab row, and the Reference is its own surface.
      - **Revisit if:** GQ29 reorders the panels, a GM asks for the Reference over a running encounter, or the Quick Reference changes shape.
      - **Built:** switched off (173); no data or schema bump; log 2026-10-09 (the Reference).
+     → **Superseded in part by Decision 288** — an item marked `rulingSource` says a ruling ahead of the book, and an open line in `plans/crb-catch-up.md` names it and cites 288.
 
 208. **A table's header has Find, one search over every record, and Jot, a line kept as a note with the session it was written in.**
      *2026-10-09 · Ken + Claude · Touches: Find, Jot, tableSearch, table notes, note session, addTableNote, editTableNote, removeSession, _sessionOnDay, header, hdractions, table schema 0.10, Decision 140, Decision 171, Decision 203, Decision 187, W85, W86*
@@ -5597,7 +5600,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 272 in part (`?` opens Help, not Keys; Keys lists it as Help). Decision 258 in part (from 1280px a table can have a column on the right: Help's).
      - **Revisit if:** GMs keep Help open all night (it wants another shape), or a player's sheet asks for the same.
      - **Built:** app 0.67.0; PR #323; log 2026-11-12 (S31).
-    → **Superseded in part by Decision 288** — Help's panel is shared with the sheet: a second host registers its own guide, context and body.
+    → **Superseded in part by Decision 289** — Help's panel is shared with the sheet: a second host registers its own guide, context and body.
 
 279. **Character Points' Disadvantage and Advantage lists show what's taken, and the rest a press away.**
      *2026-11-12 · Ken + Claude · Touches: renderCP, details.group, Disadvantages list, Advantages list, applyPickFilter, data-filterable, data-cp-list, Held only, S.cpAll, data-cp-all, showAllOptions, E1c*
@@ -5685,7 +5688,19 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** playtesters miss a term on a phone, or a sentence site outside the list needs terms.
      - **Built:** app 0.69.0 (minor), no game-data or schema bump, PR #338, log 2026-11-13 (E8).
 
-288. **The sheet has Help: a ? and the ? key open it for the tab that's open, from the data's sheetGuide; every tab has a guide line, and a Guide lines switch hides them all.**
+288. **GM mode's Reference may say a ruling before the book does: an item marked `rulingSource` is the one exception to quoting the CRB, and an open line in `plans/crb-catch-up.md` has to name it.**
+     *2026-11-15 · Ken + Claude · Touches: gmReference, parts, items, rulingSource, bookSource, Quick Reference, Actions panel, Free Action, Standard Action, Activate a Power, Attack with a Power, SFR, Rate of Use, plans/crb-catch-up.md, Decision 207*
+     - **Decided:** a Reference item that carries `rulingSource` (maintainer text, never shown) skips the check against the mirror. In exchange, its words must not be the book's, or the marker is stale, and an open ☐ line under the book file's heading in `plans/crb-catch-up.md` has to name its term in italics and cite the decision the marker cites. First use: the 2026-11-12 ruling that spending SFR on a utility or support power is a free action, up to Rate of Use, and an attack made with a power is the Standard Action. *Activate a Power* moves to Free Action, saying *on your turn* until Deighton rules on another's turn, and *Attack with a Power* takes its place under Standard Action.
+     - **Why:** Ken, 2026-11-15: a GM at the table should read the ruling, not the book's stale line, and the catch-up plan already records what the book owes. The test makes that record a condition of the exception.
+     - **Rejected:**
+       - Waiting for the CRB, then syncing the mirror: the GM reads a reversed ruling until then.
+       - Dropping the mirror check for the panel: one ruled line would free every line to drift.
+       - A `name` or override on the whole panel: the exception belongs to the item that's ruled, not its neighbours.
+     - **Replaces:** Decision 207 in part: its `parts` are quoted verbatim from the CRB except where an item says otherwise.
+     - **Revisit if:** the book catches up (take off the marker, which the test then demands), or rulings pile up enough that the Reference stops reading as the book's.
+     - **Built:** app 0.69.4, no game-data or schema bump (68), PR #349, log 2026-11-15.
+
+289. **The sheet has Help: a ? and the ? key open it for the tab that's open, from the data's sheetGuide; every tab has a guide line, and a Guide lines switch hides them all.**
      *2026-11-15 · Ken + Claude · Touches: Help, data-shelp, sheetGuide, sheetHeader, guide line, rule line, shadows.ui.sheetGuide, HELP_HOSTS, help-pinned, vitals-pinned, introCharacter, introLoadout, introNotes, seat sheet, Decision 160, Decision 166, Decision 256, Decision 278, W156*
      - **Decided:** Help's panel is shared: the table and the sheet each register a host. On the sheet a ? before ⋮ and the ? key (the table's rules, the browser's keys setting) open it for the open tab, from `sheetGuide`. From 1280px it is a column that starts closed each visit; with vitals pinned it takes their column while open and the vitals show as the bar, the pin unchanged. Narrower it is a flyout, one at a time with the vitals'. Every tab has a guide line; a rule line stays in `appCopy` and always shows. Help's **Guide lines** switch hides the guide lines for this browser (`shadows.ui.sheetGuide`). A seat keeps the table's Help and switch.
      - **Why:** W156: the sheet explains its words but never its tabs, and a player who knows it can't put the intros away.
