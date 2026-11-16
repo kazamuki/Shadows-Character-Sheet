@@ -36,6 +36,7 @@ function renderTopChrome(){
       act.innerHTML = `<button type="button" class="hdr-act" data-shelp aria-label="Help" aria-controls="ghelp" aria-expanded="${helpShown()}"${keysOn() ? ' aria-keyshortcuts="?"' : ""}>?</button>
         <button class="kebab" data-menu-toggle aria-haspopup="true" aria-expanded="false" aria-label="Sheet actions">⋮</button>
         <div class="hdr-menu" id="hdrmenu" hidden>
+          <button data-shelp-menu="1">Help</button>
           <button data-admin="1">${S.admin?"Exit admin mode":"Admin mode (free edit)"}</button>
           <button data-export="1">Export .shadows.json</button>
           <button data-print="1">Print sheet</button>
@@ -45,6 +46,8 @@ function renderTopChrome(){
       const menu=$("hdrmenu"), kb=act.querySelector("[data-menu-toggle]");
       kb.onclick=(e)=>{ e.stopPropagation(); const willOpen=menu.hidden; menu.hidden=!willOpen; kb.setAttribute("aria-expanded", willOpen?"true":"false"); };
       act.querySelector("[data-shelp]").onclick=()=>toggleHelp();
+      // Below 480px the ? gives its room to the name and Help is in ⋮ (K1's fallback); focus comes back to ⋮.
+      act.querySelector("[data-shelp-menu]").onclick=()=>{ menu.hidden=true; kb.setAttribute("aria-expanded","false"); toggleHelp({ returnTo:kb }); };
       act.querySelectorAll("[data-admin]").forEach(b=>b.onclick=()=>{
         menu.hidden=true; S.admin=!S.admin;
         if (S.admin) S.section="admin"; else if (S.section==="admin") S.section="main";

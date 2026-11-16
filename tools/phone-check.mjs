@@ -432,6 +432,7 @@ async function tableHelp(browser, file, rows, numbers) {
 // edge, no scrim), and closing it gives the pinned column back. jsdom can't see any of that: this is where it's held.
 async function sheetHelp(browser, file, rows) {
   const ch = floorChar();
+  ch.identity.name = "Dex Villanueva";   // a long name: the header has to give it room beside the ?
   const open = async (width, height, pinned, section = "trackers", touch = false) => {
     const c = await browser.newContext({ viewport: { width, height }, hasTouch: touch, isMobile: touch });
     await c.addInitScript(([s, pin]) => { try {
@@ -452,16 +453,19 @@ async function sheetHelp(browser, file, rows) {
   for (const w of WIDTHS.filter(w => w.width < 640)) {
     const { c, page, errors } = await open(w.width, w.height, false, "trackers", !!w.touch);
     const bad = [];
-    const hdr = await page.evaluate(() => { const n = document.querySelector("#brandctx"), b = document.querySelector("[data-shelp]"), r = b.getBoundingClientRect();
-      return { cut: n.scrollWidth > n.clientWidth + 1, bw: Math.round(r.width), bh: Math.round(r.height), name: n.textContent }; });
+    // The name is cut where `header .brand` (the box that clips it) scrolls wider than it shows; #brandctx is an inline span with no width of its own.
+    const hdr = await page.evaluate(() => { const n = document.querySelector("header .brand"), b = document.querySelector("[data-shelp]"), r = b.getBoundingClientRect();
+      return { cut: n.scrollWidth > n.clientWidth + 1, bw: Math.round(r.width), bh: Math.round(r.height), gone: getComputedStyle(b).display === "none", item: !!document.querySelector("#hdrmenu [data-shelp-menu]"), name: document.querySelector("#brandctx").textContent, nw: `${n.scrollWidth}/${n.clientWidth}` }; });
     if (hdr.cut) bad.push(`the name "${hdr.name}" is cut beside the ?`);
     // The box is the header's own (.hdr-act, as the table's ?); its ::after carries the 44px target on a touch phone.
-    if (hdr.bw < (w.touch ? 44 : 24) || hdr.bh < 24) bad.push(`the ? is ${hdr.bw}x${hdr.bh}`);
+    // Below 480px the ? is in ⋮ as Help (KQ1's fallback): the button is gone and the menu item is there.
+    if (w.width < 480) { if (!hdr.gone || !hdr.item) bad.push(`below 480px the ? should be in ⋮ (button gone ${hdr.gone}, item ${hdr.item})`); }
+    else if (hdr.bw < (w.touch ? 44 : 24) || hdr.bh < 24) bad.push(`the ? is ${hdr.bw}x${hdr.bh}`);
     // Ken: Main's guide line is hidden below 640px (Main's Health card has to stay in the first screen), and the other tabs' stay.
     const guideShown = async sec => { await page.click(`#topnav [data-sec="${sec}"]`); return page.evaluate(() => { const g = document.querySelector("#main [data-guide]"); return !!g && g.getBoundingClientRect().height > 0; }); };
     if (await guideShown("main")) bad.push("Main's guide line shows on a phone");
     if (!(await guideShown("trackers"))) bad.push("Trackers' guide line is hidden on a phone");
-    await page.click("[data-shelp]");
+    if (w.width < 480) { await page.click("[data-menu-toggle]"); await page.click("[data-shelp-menu]"); } else await page.click("[data-shelp]");
     const foot = await box(page, "#ghelp .help-foot"), close = await box(page, "#ghelp [data-help-close]");
     if (!foot) bad.push("no foot");
     else if (foot.bottom > w.height) bad.push(`the foot's switches end at ${foot.bottom}px of ${w.height}`);
@@ -469,7 +473,7 @@ async function sheetHelp(browser, file, rows) {
     const sw = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     if (sw > 0) bad.push(`the page scrolls sideways by ${sw}px`);
     if (errors.length) bad.push(errors.join("; "));
-    rows.push({ width: w.name, screen: "K1: sheet Help's foot above the fold, the name beside the ?", layout: bad.length ? bad.join("; ") : `ok (? ${hdr.bw}x${hdr.bh}, foot ends ${foot && foot.bottom} of ${w.height})`, ok: !bad.length });
+    rows.push({ width: w.name, screen: "K1: sheet Help's foot above the fold, the name beside the ?", layout: bad.length ? bad.join("; ") : `ok (${w.width < 480 ? "Help in ⋮" : `? ${hdr.bw}x${hdr.bh}`}, name ${hdr.nw}, foot ends ${foot && foot.bottom} of ${w.height})`, ok: !bad.length });
     await c.close();
   }
   // From 1280: the column, with the vitals pinned and not.

@@ -204,6 +204,35 @@ test("K1: the ? key switch in Help turns keys off for the table too", () => {
   assert.deepEqual(app.errors, []);
 });
 
+test("K1: admin mode left on doesn't make every tab Admin's: Help and the guide line follow the tab", () => {
+  const app = sheet("main");
+  app.click("[data-menu-toggle]"); app.click("[data-admin]");
+  assert.equal(app.$("#main [data-guide]").textContent, SG().contexts.admin.intro);
+  app.click('[data-sec="skills"]');   // admin mode is still on
+  assert.equal(app.window.eval("S.admin"), true, "the fixture isn't in admin mode");
+  assert.equal(app.$("#main [data-guide]").textContent, SG().contexts.skills.intro, "Skills draws Admin's guide line");
+  app.click("[data-shelp]");
+  assert.equal(heading(app), SG().contexts.skills.title, "Skills' Help is headed Admin");
+  assert.deepEqual(app.errors, []);
+});
+
+test("K1: below 480px the ? is in ⋮ as Help, and focus comes back to ⋮", () => {
+  const app = sheet("trackers");
+  const item = app.$("#hdrmenu [data-shelp-menu]");
+  assert.ok(item, "no Help item in ⋮");
+  app.click("[data-menu-toggle]");
+  app.click("[data-shelp-menu]");
+  assert.equal(shown(app), true);
+  assert.equal(app.$("#hdrmenu").hidden, true, "the menu stayed open");
+  assert.equal(heading(app), SG().contexts.trackers.title);
+  app.click("#ghelp [data-help-close]");
+  assert.equal(shown(app), false);
+  assert.equal(app.doc.activeElement, app.$("[data-menu-toggle]"), "focus didn't return to ⋮");
+  const css = readFileSync(new URL("../src/styles/shadows.css", import.meta.url), "utf8");
+  assert.match(css, /@media \(max-width:479px\)\{ \.hdr-actions \[data-shelp\]\{display:none\} \.hdr-menu \[data-shelp-menu\]\{display:block\} \}/, "no rule swaps the button for the menu item below 480px");
+  assert.deepEqual(app.errors, []);
+});
+
 test("K1: Main's guide line is drawn, and the stylesheet hides it only below 640px", () => {
   const app = sheet("main");
   const line = app.$("#main [data-guide=\"main\"]");

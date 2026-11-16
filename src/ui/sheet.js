@@ -52,7 +52,8 @@ function sheetGuideOn(){
 function setSheetGuide(on){ try{ if (on) localStorage.removeItem(SHEET_GUIDE_PREF); else localStorage.setItem(SHEET_GUIDE_PREF, "off"); }catch(e){} }
 // The id of the tab on the page: a key of sheetGuide.contexts. Total: a section it doesn't know is Main's.
 function sheetHelpContext(){
-  const id = S.admin ? "admin" : normSection(S.section);
+  // normSection answers "admin" only for the Admin tab itself: S.admin stays on while the player visits other tabs.
+  const id = normSection(S.section);
   return sheetGuide().contexts[id] ? id : "main";
 }
 // Each word the tab names, as its tip reads it for the open character: title, text and the lines under it.

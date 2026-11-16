@@ -4930,8 +4930,8 @@ window.SHADOWS_DATA = {
       },
       "trackers": {
         "title": "Trackers",
-        "intro": "The pools you spend and refill as the night goes.",
-        "for": "The pools you spend and get back: Sanity, LUCK, Çredits and CRANK. **Manual Adjustments** is for what the sheet doesn't add up by itself: an item, a ruling, a scar.",
+        "intro": "Your damage, and the pools you spend and refill as the night goes.",
+        "for": "Your damage in full: Health Levels, Pain, your armor's Integrity, **Take a hit** and **Rest**. Then the pools you spend and get back: Sanity, LUCK, Çredits and CRANK, and SFR and your archetype's own if you have them. **Manual Adjustments** is for what the sheet doesn't add up by itself: an item, a ruling, a scar.",
         "when": ["during", "between"],
         "words": ["SAN", "LUCK"],
         "tips": [

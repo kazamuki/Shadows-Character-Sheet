@@ -161,7 +161,7 @@
    0,
    88.2,
    390,
-   2670.4
+   2693.7
   ],
   "vitals": [
    0,
@@ -173,13 +173,13 @@
    "0 div.vbar 16,108.2,358,59.9",
    "1 div.import-issues 16,182.1,358,64",
    "2 h1.step-title 16,260.2,358,32.2",
-   "3 p.step-note.guide-line 16,296.4,358,23.3",
-   "4 div.trk-grid 16,341.7,358,1978.8",
-   "5 div.sect 16,2344.5,358,23.4",
-   "6 p.step-note 16,2379.9,358,116.3",
-   "7 div.trk 16,2518.1,358,158.6"
+   "3 p.step-note.guide-line 16,296.4,358,46.5",
+   "4 div.trk-grid 16,364.9,358,1978.8",
+   "5 div.sect 16,2367.8,358,23.4",
+   "6 p.step-note 16,2403.1,358,116.3",
+   "7 div.trk 16,2541.4,358,158.6"
   ],
-  "deep": "188 boxes, ebc68af9"
+  "deep": "188 boxes, 984bd97d"
  },
  "sheet: progression @390": {
   "header": [

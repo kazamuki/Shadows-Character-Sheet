@@ -1176,9 +1176,9 @@ function syncHelp(){
     helpHostId=id;
   }
 }
-function openHelp({ viaKey }={}){
+function openHelp({ viaKey, returnTo }={}){
   const h=helpHost(); if (!h) return;
-  S.helpReturn = viaKey && document.activeElement!==document.body ? document.activeElement : null;
+  S.helpReturn = returnTo || (viaKey && document.activeElement!==document.body ? document.activeElement : null);
   h.setOpen(true); S.helpView=null; S.helpFrom=helpContext(); S.helpCtx=S.helpFrom;
   if (h.opened) h.opened();
   syncHelp(); paintHelp(true);
