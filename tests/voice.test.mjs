@@ -101,7 +101,9 @@ function renderedCorpus() {
 
 // S31 (Decision 278): GM mode's Help is data a GM reads, not rendered in any screen this corpus boots, so its strings go in as they are.
 const gmGuideText = () => { const out = []; (function walk(v) { if (typeof v === "string") out.push(v); else if (v && typeof v === "object") Object.values(v).forEach(walk); })(D.gmGuide); return out.join("\n"); };
-const CORPUS = renderedCorpus() + "\n" + gmGuideText();
+// K1: the sheet's Help is drawn only when a player opens it, so its strings go in as they are, with the rest of the walk.
+const sheetGuideText = () => { const out = []; (function walk(v) { if (typeof v === "string") out.push(v); else if (v && typeof v === "object") Object.values(v).forEach(walk); })(D.sheetGuide); return out.join("\n"); };
+const CORPUS = renderedCorpus() + "\n" + gmGuideText() + "\n" + sheetGuideText();
 
 test("the corpus actually rendered something", () => {
   // Guards the guard: if boot silently failed, every assertion below passes.

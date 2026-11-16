@@ -12,7 +12,7 @@
 //   minor — a capability a player can use that wasn't there before
 //   major — existing character files or the workflow break
 // The other three versions have their own triggers; see CLAUDE.md.
-const APP_VERSION = "0.69.4";
+const APP_VERSION = "0.70.0";
 
 // ── Main render + events ─────────────────────────────────────────────
 // Header chrome: brand context + the section tabs (which now live in the
@@ -33,8 +33,10 @@ function renderTopChrome(){
     });
     showActiveTab(nav);
     if (act){
-      act.innerHTML = `<button class="kebab" data-menu-toggle aria-haspopup="true" aria-expanded="false" aria-label="Sheet actions">⋮</button>
+      act.innerHTML = `<button type="button" class="hdr-act" data-shelp aria-label="Help" aria-controls="ghelp" aria-expanded="${helpShown()}"${keysOn() ? ' aria-keyshortcuts="?"' : ""}>?</button>
+        <button class="kebab" data-menu-toggle aria-haspopup="true" aria-expanded="false" aria-label="Sheet actions">⋮</button>
         <div class="hdr-menu" id="hdrmenu" hidden>
+          <button data-shelp-menu="1">Help</button>
           <button data-admin="1">${S.admin?"Exit admin mode":"Admin mode (free edit)"}</button>
           <button data-export="1">Export .shadows.json</button>
           <button data-print="1">Print sheet</button>
@@ -43,6 +45,9 @@ function renderTopChrome(){
         </div>`;
       const menu=$("hdrmenu"), kb=act.querySelector("[data-menu-toggle]");
       kb.onclick=(e)=>{ e.stopPropagation(); const willOpen=menu.hidden; menu.hidden=!willOpen; kb.setAttribute("aria-expanded", willOpen?"true":"false"); };
+      act.querySelector("[data-shelp]").onclick=()=>toggleHelp();
+      // Below 480px the ? gives its room to the name and Help is in ⋮ (K1's fallback); focus comes back to ⋮.
+      act.querySelector("[data-shelp-menu]").onclick=()=>{ menu.hidden=true; kb.setAttribute("aria-expanded","false"); toggleHelp({ returnTo:kb }); };
       act.querySelectorAll("[data-admin]").forEach(b=>b.onclick=()=>{
         menu.hidden=true; S.admin=!S.admin;
         if (S.admin) S.section="admin"; else if (S.section==="admin") S.section="main";
@@ -120,6 +125,7 @@ function syncVitals(){
   if (sc) sc.classList.toggle("open", !!S.vitalsOpen);
 }
 function openVitals(){
+  if (S.sheetHelpOpen && !helpPinRoom()) closeHelp();   // one flyout at a time (K1): Help's own setter does the closing
   S.vitalsOpen=true; S.vitalsFrom=S.section;
   syncVitals();
   const x=$("vdrawer") && $("vdrawer").querySelector("[data-vitals-close]"); if (x) x.focus();
@@ -190,6 +196,8 @@ function renderMain(){
     // W58: the flyout is a look from the tab it opened on; a move to another
     // tab closes it (Main has no toggle to hand focus back to).
     if (S.vitalsOpen && S.vitalsFrom!==S.section) S.vitalsOpen=false;
+    // K1: Help's flyout is a look from the tab it opened on, as the vitals' is; a column follows the tab.
+    if (S.sheetHelpOpen && !helpPinRoom() && S.helpFrom && S.helpFrom!==sheetHelpContext()) S.sheetHelpOpen=false;
     landedNow = S.landed || null; S.landed = null;     // W15: flash once
     issuedNow = !!S.issued; S.issued = false;          // W46: the TAG prints once
     const body = SHEET_RENDER[S.section] ? SHEET_RENDER[S.section]() : SHEET_RENDER.main();
@@ -200,6 +208,7 @@ function renderMain(){
     landedNow = null; issuedNow = false;
     renderDrawer();
     bindMain(); bindSheet();
+    syncHelp(); paintHelp();   // K1: after the drawer, so a column's swap with the pinned vitals is the last word
     refreshPopover(); refreshFocusedPicker();
     return;
   }

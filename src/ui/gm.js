@@ -85,8 +85,6 @@ let tableBase = null;   // { table, copy }
 // A copy of a seat's character isn't a record the log holds (Decision 254), so the baseline leaves the copies out.
 const tableCopy = t => clone(Object.assign({}, t, { audit:undefined, copies:undefined }));
 function rebaseTable(){ tableBase = S.table ? { table:S.table, copy:tableCopy(S.table) } : null; }
-// Typing is an `input` event on a field; a press that happens while a field still has focus isn't.
-const isTextField = el => !!el && (el.tagName==="TEXTAREA" || (el.tagName==="INPUT" && !/^(checkbox|radio|button|submit|reset|range|color|file)$/.test(el.type)));
 function typingNow(){
   const ev=lastEvent, el=ev && ev.target;
   if (!ev || ev.type!=="input" || !el || !el.tagName) return false;
@@ -325,17 +323,14 @@ function renderTableChrome(){
   act.querySelector("[data-tkeys]").onclick=()=>{ menu.hidden=true; kb.setAttribute("aria-expanded","false"); kb.focus(); openKeys(); };
   act.querySelector("[data-thome]").onclick=()=>{ lastTableSaved=null; goHome(); };
 }
-// ── Keys (Decision 259) ────────────────────────────────────────────────
-// F opens Find and J opens Jot on a table's screen. The choice to turn them off is this browser's
-// (`shadows.ui.keys` is "off", or anything else, or nothing, is on), not the table file's.
-const KEYS_PREF="shadows.ui.keys";
-function keysOn(){ try{ return localStorage.getItem(KEYS_PREF)!=="off"; }catch(e){ return true; } }
+// ── Keys (Decisions 259, 272) ──────────────────────────────────────────
+// F opens Find and J opens Jot on a table's screen; the preference that turns them off (`shadows.ui.keys`) is shared.js's.
 function setKeys(on){ try{ if (on) localStorage.removeItem(KEYS_PREF); else localStorage.setItem(KEYS_PREF, "off"); }catch(e){} keyHints(); }
 // The header's buttons, the tabs, Next turn and Activity say their key to a screen reader while the keys are on.
 function keyHints(){
   const on=keysOn();
   const hint=(b, key)=>{ if (!b) return; if (on) b.setAttribute("aria-keyshortcuts", key); else b.removeAttribute("aria-keyshortcuts"); };
-  for (const [sel, key] of [["[data-tfind]","F"],["[data-tjot]","J"],["[data-thelp]","?"],["[data-tactivity]","A"],["#main [data-enext]","N"]]) hint(document.querySelector(sel), key);
+  for (const [sel, key] of [["[data-tfind]","F"],["[data-tjot]","J"],["[data-thelp]","?"],["[data-shelp]","?"],["[data-tactivity]","A"],["#main [data-enext]","N"]]) hint(document.querySelector(sel), key);
   TABLE_SECTIONS.forEach((sec, i)=>hint(document.querySelector(attrSel("data-tsec", sec.id)), String(i+1)));
 }
 function openKeys({ viaKey, returnTo }={}){
@@ -367,25 +362,23 @@ function openKeys({ viaKey, returnTo }={}){
 }
 // ── Help (Decision 278) ────────────────────────────────────────────────
 // A ? in the header and the ? key open a panel for the page that's open: what it's for, when in a night you'd use it, the words
-// on it and a tip or two. Every string is the data's `gmGuide`; this code holds none. From 1280px the panel is a column beside
-// the page and stays as the browser left it (`shadows.ui.gmHelp`); narrower it is a flyout over the page that shuts at any move,
-// as the vitals flyout does (Decision 166), with its own element and setter: that panel is the sheet's, and a table never shows it.
+// on it and a tip or two. Every string is the data's `gmGuide`; this code holds none. The panel itself (open, close, focus, the
+// column and the flyout) is shared.js's, and a table is one host of it; this is the table's: its context, its body and its
+// switch. From 1280px the panel is a column beside the page and stays as the browser left it (`shadows.ui.gmHelp`); narrower it
+// is a flyout over the page that shuts at any move, as the vitals flyout does (Decision 166), with its own element and setter.
 // `shadows.ui.gmGuide` is "off" or nothing: it turns the one-line guides under each section's list off for this browser. Neither
 // is stored in the table. The panel's state is view state on S (helpOpen, helpView, helpFrom).
-const HELP_PREF="shadows.ui.gmHelp", GUIDE_PREF="shadows.ui.gmGuide", HELP_MEDIA="(min-width:1280px)";
+const HELP_PREF="shadows.ui.gmHelp", GUIDE_PREF="shadows.ui.gmGuide";
 const gmGuide = () => D.gmGuide;
-const helpPinRoom = () => !!(window.matchMedia && window.matchMedia(HELP_MEDIA).matches);
 function helpPref(){ try{ return localStorage.getItem(HELP_PREF)==="open"; }catch(e){ return false; } }
 function setHelpPref(on){ try{ if (on) localStorage.setItem(HELP_PREF, "open"); else localStorage.removeItem(HELP_PREF); }catch(e){} }
 function guideOn(){ try{ return localStorage.getItem(GUIDE_PREF)!=="off"; }catch(e){ return true; } }
 function setGuide(on){ try{ if (on) localStorage.removeItem(GUIDE_PREF); else localStorage.setItem(GUIDE_PREF, "off"); }catch(e){} }
-// The data's marks: **bold** is a button or label as the screen has it, `code` is a file name.
-const helpMd = s => esc(String(s||"")).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/`(.+?)`/g, "<code>$1</code>");
 // A section's empty state is the data's line. `mark` says it stands for the whole section being empty (no guide line then).
 const emptyHtml = (key, mark) => `<p class="step-note"${mark ? " data-sec-empty" : ""}>${helpMd(gmGuide().empty[key])}</p>`;
 // The context id of whatever is on the page: a key of gmGuide.contexts, and the section's own when nothing narrower matches.
 // Total: a state it doesn't know is the section's, and it never throws (constraint 8's shape, for a view).
-function helpContext(){
+function tableHelpContext(){
   const G=gmGuide().contexts, sec = TABLE_SECTIONS.some(s=>s.id===S.tsection) ? S.tsection : TABLE_SECTIONS[0].id;
   let id=sec;
   try{
@@ -399,47 +392,6 @@ function helpContext(){
   }catch(e){ id=sec; }
   return G[id] ? id : sec;
 }
-const helpShown = () => S.screen==="table" && !!S.table && !!S.helpOpen;
-let helpKey=null;
-// Where focus goes when the panel leaves: where ? was pressed if it was a key, else the ? button.
-function helpHandBack(){
-  const back=S.helpReturn;
-  S.helpReturn=null;
-  const to = back && back.isConnected && back!==document.body && !back.closest("#ghelp") ? back : document.querySelector("[data-thelp]");
-  if (to) to.focus({ preventScroll:!!back });
-}
-// One place that says whether the panel is on screen, as the vitals flyout's setter does: shown, it is the panel; otherwise it is
-// out of sight and inert so Tab can't walk into it. Focus leaves before inert lands.
-function syncHelp(){
-  const el=$("ghelp"), sc=$("ghscrim"), app=$("app"); if (!el) return;
-  const shown=helpShown();
-  if (!shown && el.contains(document.activeElement)) helpHandBack();
-  el.classList.toggle("open", shown);
-  el.setAttribute("aria-hidden", shown?"false":"true");
-  el.toggleAttribute("inert", !shown);
-  if (sc){ sc.classList.toggle("open", shown); sc.onclick=closeHelp; }   // a click on the scrim shuts the flyout, as the vitals scrim does
-  if (app) app.classList.toggle("help-pinned", shown);
-  const b=document.querySelector("[data-thelp]"); if (b) b.setAttribute("aria-expanded", shown?"true":"false");
-  if (S.screen!=="table"){ el.innerHTML=""; helpKey=null; }
-}
-function openHelp({ viaKey }={}){
-  S.helpReturn = viaKey && document.activeElement!==document.body ? document.activeElement : null;
-  S.helpOpen=true; S.helpView=null; S.helpFrom=helpContext(); S.helpCtx=S.helpFrom;
-  if (helpPinRoom()) setHelpPref(true);
-  syncHelp(); paintHelp(true);
-  const x=$("ghelp").querySelector("[data-help-close]"); if (x) x.focus({ preventScroll:true });
-}
-function closeHelp(){
-  S.helpOpen=false;
-  if (helpPinRoom()) setHelpPref(false);
-  syncHelp();
-  // Closed by the button or a click on the scrim, with focus nowhere: it goes back to what opens it.
-  if (!document.activeElement || document.activeElement===document.body) helpHandBack();
-}
-function toggleHelp(opts){ if (helpShown()) closeHelp(); else openHelp(opts); }
-// Esc closes one layer. A flyout covers the page, so it answers Esc anywhere; a column answers it only from inside itself,
-// since Esc in the page beside it is the page's.
-function helpEscCloses(){ const el=$("ghelp"); return helpShown() && !!el && (!helpPinRoom() || el.contains(document.activeElement)); }
 const helpWordsHtml = ids => `<dl class="help-words">${ids.map(w=>{ const x=gmGuide().words[w]; return x ? `<dt>${esc(x.term)}</dt><dd>${helpMd(x.text)}</dd>` : ""; }).join("")}</dl>`;
 function helpSwitchHtml(){
   const u=gmGuide().ui, on=guideOn();
@@ -464,17 +416,8 @@ function helpBodyHtml(id){
       <button type="button" class="btn sm" data-hkeys>${esc(u.keysLink)}</button></p>
       <div class="field tag-choice"><span>${esc(u.guideSwitch)}</span><div data-help-switch>${helpSwitchHtml()}</div></div></div>`;
 }
-// Drawn again only when the page it is for, or its view, has changed: a press inside it must keep its focus.
-function paintHelp(force){
-  const el=$("ghelp"); if (!el || !helpShown()) return;
-  const id=helpContext();
-  if (helpPinRoom()) S.helpFrom=id;   // a column follows the page, so a resize to a flyout starts from the page it's on
-  if (S.helpCtx!==id){ S.helpCtx=id; S.helpView=null; }   // a new page gets its own help, not the last view
-  const key=id + "|" + (S.helpView||"");
-  if (!force && helpKey===key && el.firstElementChild) return;
-  const hadFocus=el.contains(document.activeElement);
-  el.innerHTML=helpBodyHtml(id); helpKey=key;
-  el.querySelectorAll("[data-help-close]").forEach(b=>b.onclick=closeHelp);
+// What a press in the table's panel does, once the shared panel has drawn it.
+function bindTableHelp(el){
   const go = (sel, view) => { const b=el.querySelector(sel); if (b) b.onclick=()=>{ S.helpView=view; S.helpWas=sel; paintHelp(); const h=$("ghelp-h"); if (h) h.focus({ preventScroll:true }); }; };
   go("[data-hnight]", "night"); go("[data-hwords]", "words");
   const back=el.querySelector("[data-help-back]"); if (back) back.onclick=()=>{ S.helpView=null; paintHelp(); const w=S.helpWas && el.querySelector(S.helpWas); if (w) w.focus({ preventScroll:true }); };
@@ -491,10 +434,14 @@ function paintHelp(force){
     const set = on => { setGuide(on); sw.innerHTML=helpSwitchHtml(); wire(); renderTable(); const b=sw.querySelector(on ? "[data-help-guide-on]" : "[data-help-guide-off]"); if (b) b.focus({ preventScroll:true }); };
     wire();
   }
-  if (hadFocus && !el.contains(document.activeElement)){ const h=$("ghelp-h"); if (h) h.focus({ preventScroll:true }); }
 }
-// A field is typingNow's list plus select, contenteditable and an IME mid-word.
-const inField = el => !!el && (isTextField(el) || el.tagName==="SELECT" || !!(el.closest && el.closest('[contenteditable]:not([contenteditable="false"])')));
+// The table's host of the shared panel (shared.js): its button, its state, its context and its body.
+HELP_HOSTS.table = {
+  id:"table", btn:"[data-thelp]",
+  open:()=>!!S.table && !!S.helpOpen,
+  setOpen(on){ S.helpOpen=on; if (helpPinRoom()) setHelpPref(on); },
+  context:tableHelpContext, bodyHtml:helpBodyHtml, bind:bindTableHelp,
+};
 // What a key does, if it is one of ours (Decisions 259, 272). Each carries its own modifier rule; a key that is
 // none of these, or whose rule the press breaks, returns null and is the browser's.
 function keyAction(e){

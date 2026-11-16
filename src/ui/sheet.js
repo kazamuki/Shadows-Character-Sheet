@@ -35,12 +35,109 @@ function holdingHtml(ch){
 }
 
 // ════ LIVE SHEET ══════════════════════════════════════════════════════
+// ── Help on the sheet (K1) ─────────────────────────────────────────────
+// The sheet is a host of shared.js's Help panel: a ? in the header and the ? key open it for the tab that's open, from the data's
+// `sheetGuide`; this code holds none of its words. It starts closed on every visit (no preference of its own), and from 1280px it
+// is a column that takes the pinned vitals' column while it's open: the vitals drawer steps out of the way (CSS, from `.help-pinned`
+// meeting `body.vitals-pinned`) and the bar's pills come back. The pin is never written. Below 1280px it is a flyout, one at a time
+// with the vitals flyout. `shadows.ui.sheetGuide` is "off" or nothing: it hides each tab's guide line for this browser (a rule line,
+// the three that state a rule, stays). A seat's read-only sheet is drawn on a table screen, under the table's Help, so its guide
+// lines follow the table's switch (`shadows.ui.gmGuide`) instead.
+const SHEET_GUIDE_PREF="shadows.ui.sheetGuide";
+const sheetGuide = () => D.sheetGuide;
+function sheetGuideOn(){
+  if (S.screen==="table") return guideOn();
+  try{ return localStorage.getItem(SHEET_GUIDE_PREF)!=="off"; }catch(e){ return true; }
+}
+function setSheetGuide(on){ try{ if (on) localStorage.removeItem(SHEET_GUIDE_PREF); else localStorage.setItem(SHEET_GUIDE_PREF, "off"); }catch(e){} }
+// The id of the tab on the page: a key of sheetGuide.contexts. Total: a section it doesn't know is Main's.
+function sheetHelpContext(){
+  // normSection answers "admin" only for the Admin tab itself: S.admin stays on while the player visits other tabs.
+  const id = normSection(S.section);
+  return sheetGuide().contexts[id] ? id : "main";
+}
+// Each word the tab names, as its tip reads it for the open character: title, text and the lines under it.
+function sheetHelpWordsHtml(ids){
+  const rows=ids.map(id=>{
+    const t=TIPS.term(id); if (!t) return "";
+    return `<dt>${esc(t.title)}</dt><dd>${esc(t.text)}${(t.more||[]).length ? `<ul class="help-more">${t.more.map(m=>`<li>${esc(m)}</li>`).join("")}</ul>` : ""}</dd>`;
+  }).join("");
+  return rows ? `<dl class="help-words">${rows}</dl>` : "";
+}
+function sheetHelpToggleHtml(label, attr, on){
+  const u=sheetGuide().ui;
+  return `<div class="form-toggle" role="group" aria-label="${esc(label)}">
+    <button type="button" data-help-${attr}-on class="${on?"on":""}" aria-pressed="${on}">${esc(u.on)}</button>
+    <button type="button" data-help-${attr}-off class="${on?"":"on"}" aria-pressed="${!on}">${esc(u.off)}</button></div>`;
+}
+function sheetHelpHtml(id){
+  const g=sheetGuide(), u=g.ui, c=g.contexts[id], words=sheetHelpWordsHtml(c.words);
+  return `<div class="dhead"><h2 id="ghelp-h" tabindex="-1">${esc(c.title)}</h2>
+      <button type="button" class="btn sm" data-help-close aria-label="${esc(u.close)} ${esc(u.title.toLowerCase())}">${esc(u.close)}</button></div>
+    <h3 class="ref-sub dos-l">${esc(u.forLabel)}</h3><p class="dos-p">${helpMd(c.for)}</p>
+    <h3 class="ref-sub dos-l">${esc(u.whenLabel)}</h3><ul class="help-when">${c.when.map(w=>`<li class="tag plain">${esc(u.when[w])}</li>`).join("")}</ul>
+    ${words ? `<h3 class="ref-sub dos-l">${esc(u.wordsLabel)}</h3>${words}` : ""}
+    ${c.tips.length ? `<h3 class="ref-sub dos-l">${esc(u.tipsLabel)}</h3><ul class="help-tips">${c.tips.map(t=>`<li>${helpMd(t)}</li>`).join("")}</ul>` : ""}
+    <div class="help-foot">
+      <div class="field tag-choice"><span>${esc(u.guideSwitch)}</span><div data-help-guideswitch>${sheetHelpToggleHtml(u.guideSwitch, "guide", sheetGuideOn())}</div></div>
+      <div class="field tag-choice"><span>${esc(u.keySwitch)}</span><div data-help-keyswitch>${sheetHelpToggleHtml(u.keySwitch, "keys", keysOn())}</div></div></div>`;
+}
+function bindSheetHelp(el){
+  const wire = (sel, attr, set, repaint) => {
+    const sw=el.querySelector(sel); if (!sw) return;
+    for (const on of [true, false]){
+      const b=sw.querySelector(`[data-help-${attr}-${on?"on":"off"}]`);
+      if (b) b.onclick=()=>{ set(on); repaint(); const again=$("ghelp") && $("ghelp").querySelector(`[data-help-${attr}-${on?"on":"off"}]`); if (again) again.focus({ preventScroll:true }); };
+    }
+  };
+  // A guide line is drawn with the page, so the page draws again; the panel repaints itself because its switch changed.
+  wire("[data-help-guideswitch]", "guide", setSheetGuide, ()=>{ renderMain(); });
+  wire("[data-help-keyswitch]", "keys", setKeys, ()=>{ paintHelp(true); });
+}
+// The pinned vitals' column is Help's while Help is a column: the drawer is out of reach, as well as out of sight (CSS).
+let vitalsSwapped=false;
+HELP_HOSTS.sheet = {
+  id:"sheet", btn:"[data-shelp]",
+  // Below 480px the ? is hidden and Help is in ⋮ (KQ1's fallback, shadows.css), so focus goes back to ⋮.
+  back:()=>window.matchMedia && !window.matchMedia("(min-width:480px)").matches ? "[data-menu-toggle]" : "[data-shelp]",
+  open:()=>!!S.sheetHelpOpen,
+  setOpen(on){ S.sheetHelpOpen=on; },
+  // One flyout at a time (Decision 166): below 1280px an open vitals flyout gives way. The vitals' own setter does the closing.
+  opened(){ if (!helpPinRoom() && S.vitalsOpen) closeVitals(); },
+  left(){ S.sheetHelpOpen=false; vitalsSwapped=false; },
+  synced(shown){
+    const dr=$("vdrawer"); if (!dr) return;
+    const swap = shown && helpPinRoom() && vitalsPinned();
+    if (swap){
+      if (dr.contains(document.activeElement)){ const x=$("ghelp") && $("ghelp").querySelector("[data-help-close]"); if (x) x.focus({ preventScroll:true }); else document.activeElement.blur(); }
+      dr.setAttribute("inert", ""); dr.setAttribute("aria-hidden", "true"); vitalsSwapped=true;
+    } else if (vitalsSwapped){ vitalsSwapped=false; syncVitals(); }
+  },
+  context:sheetHelpContext,
+  // The words are read for the character, so a repaint is due whenever what it would say changes.
+  key:sheetHelpHtml, bodyHtml:sheetHelpHtml, bind:bindSheetHelp,
+};
+// The ? key, under the table's rules (Decision 272): never in a field, under a modal or with ⋮ open, and the browser's keys setting
+// turns it off. The table's listener (gm.js) is gated on a table screen, so the two never both act on a press.
+document.addEventListener("keydown", e=>{
+  if (typeof e.key!=="string" || e.key!=="?" || S.screen!=="sheet" || !S.ch || !keysOn()) return;
+  if (e.repeat || e.isComposing || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (inField(e.target) || inField(document.activeElement)) return;
+  if (document.querySelector("dialog.modal[open]")) return;
+  const menu=$("hdrmenu"); if (menu && !menu.hidden) return;
+  e.preventDefault();   // held back before the panel opens: focus moves during this keydown
+  toggleHelp({ viaKey:true });
+});
 // `under` is HTML that sits beneath the title: Main puts the intake number there.
+// K1: every tab has a guide line from the data's sheetGuide, under the title (Main's under its archetype line) and above the tab's
+// rule line, if it has one. A rule line states a rule and stays when the guide lines are off; a guide line only says what a tab is.
 function sheetHeader(title, note, under){
+  const id=sheetHelpContext(), c=sheetGuide().contexts[id];
+  const guide = c && sheetGuideOn() ? `<p class="step-note guide-line" data-guide="${id}">${termsHtml(c.intro)}</p>` : "";
+  const noteHtml = note ? `<p class="step-note">${note}</p>` : "";   // HTML: a caller escapes what it took from appCopy
   let h = importIssuesHtml() + focusedOwedHtml(S.ch);
   h += `<h1 class="step-title">${esc(title)}</h1>${under||""}`;
-  if (note) h += `<p class="step-note">${note}</p>`;   // HTML: a caller escapes what it took from appCopy
-  return h;
+  return h + (id==="main" ? noteHtml + guide : guide + noteHtml);
 }
 // Pain on top of Health Levels, from Conditions (Agonized) and Aberrations (Phantom Pain).
 const painExtra = pain => (pain.fromConditions||0) + (pain.fromAberrations||0) + (pain.fromTraits||0);
@@ -727,7 +824,7 @@ function renderShCharacter(){
     <span class="step-note">The pools you spend are on <button class="btn sm" data-gotab="trackers">Trackers</button>.</span></div>`;
 
   const toggle = any ? `<button class="jump jump-end" data-traits-all aria-pressed="${open}">${open?"Collapse all":"Expand all"}</button>` : "";
-  return sheetHeader("Character", termsHtml(copy("introCharacter")))
+  return sheetHeader("Character")
     + jumpBarHtml(secs.list, { sticky:true, extra:toggle, row:true }) + h;
 }
 
@@ -2567,7 +2664,7 @@ function grimoireHtml(ch, p){
 // ── Sheet: loadout ──────────────────────────────────────────
 function renderShLoadout(){
   const ch=S.ch;
-  const head = sheetHeader("Loadout", termsHtml(copy("introLoadout")));
+  const head = sheetHeader("Loadout");
   // W5: a jump to each section, from the sections this page drew. Anchors
   // and scroll rather than sub-tabs, so print and Ctrl-F see the whole page.
   const secs = sectionList("lo");
@@ -2651,7 +2748,7 @@ function feedPanelHtml(ch, p){
 
 // ── Sheet: notes ─────────────────────────────────────────────────────
 function renderShNotes(){
-  let h = sheetHeader("Notes", termsHtml(copy("introNotes")));
+  let h = sheetHeader("Notes");
   h += `<label class="field"><span>Character notes</span>
     <textarea data-notes style="min-height:340px" placeholder="Contacts. Debts. The thing you saw that no one believes.">${esc(S.ch.notes)}</textarea></label>`;
   return h;

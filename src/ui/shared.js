@@ -1124,6 +1124,92 @@ const statusLabel = s => ((D.appCopy||{}).statusLabel||{})[s] || s;
 // write-in, says so where it's chosen.
 const showsStatus = a => !!a && a.status!=="final" && a.status!=="draft";
 
+// ── Help: one panel, a host each for the screens that have it (Decisions 278, 166) ───────────────────────
+// The panel is `#ghelp` and its scrim `#ghscrim`. What it says and what it does inside is a HOST's: gm.js registers the table's,
+// sheet.js the sheet's. A host is { id, btn (the header's ? as a selector), open() (is it open), setOpen(on), context() (the id of
+// what's on the page, total), bodyHtml(id), bind(el), key?(id) (what makes a repaint needed), back?() (where focus goes when it closes, if not btn), opened?(), left?(), synced?(shown) }. This code holds no Help string.
+// From 1280px the panel is a column beside the page; narrower it is a flyout over a scrim that shuts at any move, as the vitals
+// flyout does (Decision 166), with its own setter: that one is the vitals'.
+const HELP_HOSTS = {}, HELP_MEDIA = "(min-width:1280px)";
+const helpPinRoom = () => !!(window.matchMedia && window.matchMedia(HELP_MEDIA).matches);
+// The host of the screen that's up, or null: a table's, a locked sheet's. A seat's read-only sheet is a table screen.
+const helpHost = () => S.screen==="table" ? HELP_HOSTS.table : S.screen==="sheet" && S.ch ? HELP_HOSTS.sheet : null;
+let helpKey=null, helpHostId=null;
+// The data's marks: **bold** is a button or label as the screen has it, `code` is a file name.
+const helpMd = s => esc(String(s||"")).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/`(.+?)`/g, "<code>$1</code>");
+// ── Keys (Decisions 259, 272): the choice to turn them off is this browser's (`shadows.ui.keys` is "off", or anything else, or nothing, is on)
+const KEYS_PREF="shadows.ui.keys";
+function keysOn(){ try{ return localStorage.getItem(KEYS_PREF)!=="off"; }catch(e){ return true; } }
+// Typing is an `input` event on a field; a press that happens while a field still has focus isn't.
+const isTextField = el => !!el && (el.tagName==="TEXTAREA" || (el.tagName==="INPUT" && !/^(checkbox|radio|button|submit|reset|range|color|file)$/.test(el.type)));
+// A field is isTextField's list plus select and contenteditable.
+const inField = el => !!el && (isTextField(el) || el.tagName==="SELECT" || !!(el.closest && el.closest('[contenteditable]:not([contenteditable="false"])')));
+const helpContext = () => { const h=helpHost(); return h ? h.context() : null; };
+const helpShown = () => { const h=helpHost(); return !!h && h.open(); };
+// Where focus goes when the panel leaves: where ? was pressed if it was a key, else the ? button.
+function helpHandBack(){
+  const back=S.helpReturn, h=helpHost() || HELP_HOSTS[helpHostId];
+  S.helpReturn=null;
+  const to = back && back.isConnected && back!==document.body && !back.closest("#ghelp") ? back : h && document.querySelector(h.back ? h.back() : h.btn);
+  if (to) to.focus({ preventScroll:!!back });
+}
+// One place that says whether the panel is on screen, as the vitals flyout's setter does: shown, it is the panel; otherwise it is
+// out of sight and inert so Tab can't walk into it. Focus leaves before inert lands. The panel is emptied when the screen's host
+// changes, not when a redraw happens: the sheet's draws call this too.
+function syncHelp(){
+  const el=$("ghelp"), sc=$("ghscrim"), app=$("app"); if (!el) return;
+  const host=helpHost(), id=host ? host.id : null;
+  const shown=helpShown();
+  if (!shown && el.contains(document.activeElement)) helpHandBack();
+  el.classList.toggle("open", shown);
+  el.setAttribute("aria-hidden", shown?"false":"true");
+  el.toggleAttribute("inert", !shown);
+  if (id) el.setAttribute("data-host", id); else el.removeAttribute("data-host");
+  if (sc){ sc.classList.toggle("open", shown); sc.onclick=closeHelp; }   // a click on the scrim shuts the flyout, as the vitals scrim does
+  if (app) app.classList.toggle("help-pinned", shown);
+  const b=host && document.querySelector(host.btn); if (b) b.setAttribute("aria-expanded", shown?"true":"false");
+  if (host && host.synced) host.synced(shown);
+  if (id!==helpHostId){
+    const prev=HELP_HOSTS[helpHostId]; if (prev && prev.left) prev.left();
+    el.innerHTML=""; helpKey=null;
+    if (id==="sheet" || helpHostId==="sheet"){ S.helpFrom=null; S.helpCtx=null; S.helpView=null; }   // the sheet's Help never carries into another screen's
+    helpHostId=id;
+  }
+}
+function openHelp({ viaKey, returnTo }={}){
+  const h=helpHost(); if (!h) return;
+  S.helpReturn = returnTo || (viaKey && document.activeElement!==document.body ? document.activeElement : null);
+  h.setOpen(true); S.helpView=null; S.helpFrom=helpContext(); S.helpCtx=S.helpFrom;
+  if (h.opened) h.opened();
+  syncHelp(); paintHelp(true);
+  const x=$("ghelp").querySelector("[data-help-close]"); if (x) x.focus({ preventScroll:true });
+}
+function closeHelp(){
+  const h=helpHost(); if (!h) return;
+  h.setOpen(false);
+  syncHelp();
+  // Closed by the button or a click on the scrim, with focus nowhere: it goes back to what opens it.
+  if (!document.activeElement || document.activeElement===document.body) helpHandBack();
+}
+function toggleHelp(opts){ if (helpShown()) closeHelp(); else openHelp(opts); }
+// Esc closes one layer. A flyout covers the page, so it answers Esc anywhere; a column answers it only from inside itself,
+// since Esc in the page beside it is the page's.
+function helpEscCloses(){ const el=$("ghelp"); return helpShown() && !!el && (!helpPinRoom() || el.contains(document.activeElement)); }
+// Drawn again only when the page it is for, or its view, has changed: a press inside it must keep its focus.
+function paintHelp(force){
+  const el=$("ghelp"), h=helpHost(); if (!el || !h || !helpShown()) return;
+  const id=h.context();
+  if (helpPinRoom()) S.helpFrom=id;   // a column follows the page, so a resize to a flyout starts from the page it's on
+  if (S.helpCtx!==id){ S.helpCtx=id; S.helpView=null; }   // a new page gets its own help, not the last view
+  const key=h.key ? h.key(id) : id + "|" + (S.helpView||"");
+  if (!force && helpKey===key && el.firstElementChild) return;
+  const hadFocus=el.contains(document.activeElement);
+  el.innerHTML=h.bodyHtml(id); helpKey=key;
+  el.querySelectorAll("[data-help-close]").forEach(b=>b.onclick=closeHelp);
+  h.bind(el);
+  if (hadFocus && !el.contains(document.activeElement)){ const h2=$("ghelp-h"); if (h2) h2.focus({ preventScroll:true }); }
+}
+
 // ── Editable tables (weapons / gear / archetype panel tables) — shared by
 // the Loadout tab's renderer and the sheet's event bindings. ─────────────
 const WEAPON_COLS=["name","damage","capacity","ammo","features","notes"];

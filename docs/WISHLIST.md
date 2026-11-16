@@ -135,7 +135,7 @@ print renderer for a skill row; the line is `Engine.maneuverChecks`, so print on
 *To respect:* Decision 229. Player-visible: a CHANGELOG line and a patch bump.
 
 **W156 — Help on the character sheet: what each tab is for, every word it uses, and a switch for the guide lines.** *Ken, 2026-11-14 · 💡 · Rule or shape*\
-**Plan:** none yet
+**Plan:** [help-on-the-sheet K1–K3](plans/help-on-the-sheet.md), approved 2026-11-15; K1's order drafted: [`K1-one-help.md`](plans/help-on-the-sheet/K1-one-help.md)
 
 Ken wants this as a plan of its own, after the finding-things plan (`plans/archive/finding-things-on-the-sheet.md`, closed). GM mode has Help on every page (Decision 278, S31): a **?** in the header and the **?** key open a panel for the page that's open, read from `gmGuide` in the data. It says what the page is for, when it's used, and the words on it. A **Guide lines** switch turns each section's one-line guide off once a GM knows the ground. The player's sheet has no such thing.
 
@@ -169,7 +169,7 @@ Main's vitals grid has five tracks at 768 and eight of 142px at 1280, so seven c
 ### Rules in play: powers, rounds, encounters, Sanity
 
 **W107 — An unarmed strike line, and Death Touch's AP on it.** *Ken, with Claude · 💡 · Content (if it follows Iron Shirt) · raised 2026-10-15*\
-**Plan:** [loadout-and-gear L4](plans/loadout-and-gear.md) (no order yet)
+**Plan:** [loadout-and-gear L4](plans/loadout-and-gear.md), order drafted: [`L4-natural-attacks.md`](plans/loadout-and-gear/L4-natural-attacks.md)
 
 **Natural attacks, 2026-10-23** (the design meeting, `reference/meeting-2026-10-23.md`): fists, claws and teeth are **natural attacks**, two a round by default in any mix, stopping at two. So the fists' line this item asks for also says that, as do a Vampire's or Werewolf's claws and fangs. Five details are still Deighton's.
 
@@ -970,7 +970,7 @@ Build it only if hand entry drifts, or when live sync starts: [accounts-and-sync
 dispatches to a player's inbox, posted instead of saved, and builds on this. Its open question is GQ3 (one file per table).
 
 **W150 — Help's polish: the foot links, an A–Z jump in Every word, a stronger heading.** *Claude, from S31's re-critique (PR #323), 2026-11-12; Ken: one W item · 💡 · Fix*\
-**Plan:** none yet
+**Plan:** [help-on-the-sheet K1](plans/help-on-the-sheet.md), built in 0.70.0 ([`K1-one-help.md`](plans/help-on-the-sheet/K1-one-help.md); the foot's switches lead on a phone for the sheet's Help; the A–Z jump waits for K2)
 
 Not planned: best done after Deighton's read of Help's words (S31, GQ39) is in, since his answers may move the copy these sit around. S31's Help panel works, and its review found three things that read poorly. On a phone the foot (A night at the table, Every word,
 Keys and the Guide lines switch) is about 530px below the fold, so a GM has to scroll the whole page's help to reach the one link
@@ -1004,7 +1004,7 @@ a player reads on a sheet, and this is the one place left. It's a screen only se
 plain, short, and saying what to do. *To respect:* it can't use `appCopy`, since that lives in the data that didn't load.
 
 **W154 — GM mode's seat sheet reads as read-only in its intros.** *Ken, from E5's review, 2026-11-13 · 🔧 · Fix*\
-**Plan:** none yet
+**Plan:** [help-on-the-sheet K3](plans/help-on-the-sheet.md): the seat's intros move with the guide lines
 
 The seat sheet draws the player's tabs, so its Progression intro says "Log a session when it truly ends…" on a sheet nobody can
 log on. A seat's intro could read as what the table sees, not what the player does. *To respect:* the seat sheet draws the same

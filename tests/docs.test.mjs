@@ -178,6 +178,10 @@ test("the game-data and character-schema versions agree with the docs", () => {
   const esc = app.replace(/\./g, "\\.");
   assert.match(log, new RegExp(`^## (\\[Unreleased\\] — app ${esc}|v${esc})\\b`, "m"),
     `CHANGELOG.md has no section for app ${app} — add its lines under "## [Unreleased] — app ${app}"`);
+  // One unreleased heading: `npm run bump` renames it and release:prep dates it, and each touches only the first, so a
+  // second (a merge that kept both, as K1's did) is left behind undated, its lines never released under their version.
+  const unreleased = log.match(/^## \[Unreleased\]/gm) || [];
+  assert.ok(unreleased.length <= 1, `CHANGELOG.md has ${unreleased.length} [Unreleased] headings — fold them into one, under the current app version`);
 });
 
 test("every document CLAUDE.md points at exists", () => {

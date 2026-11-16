@@ -777,20 +777,32 @@ test("Decision 281: opening every tab, a saved Session Log included, writes noth
 });
 
 // E5: the intros are the city's lines, from appCopy, not a second copy in sheet.js.
-const INTROS = { skills: "introSkills", character: "introCharacter", progression: "introProgression", loadout: "introLoadout", notes: "introNotes" };
+// K1: Character's, Loadout's and Notes' intros moved into sheetGuide as their tab's guide line, word for word. The three that state a
+// rule keep their appCopy line (a rule line), which now sits under the guide line.
+const INTROS = { skills: "introSkills", progression: "introProgression" };
+const GUIDE_ONLY = { character: "What you are and what it gives you, then the Advantages and Disadvantages you carry.", loadout: "Weapons, armor and gear: what you carry into the city.", notes: "Freeform. The city keeps receipts — so should you." };
 const introOf = (key) => D.appCopy[key].replace("{perHour}", String(D.ip.perHour));
-test("E5: each tab's intro is its appCopy line", () => {
+const RULE = "#main h1.step-title + [data-guide] + .step-note";
+test("E5: each tab's intro is its appCopy line, or the guide line it moved into", () => {
   const app = openSheet(lockedCharacter(), "main");
   for (const [sec, key] of Object.entries(INTROS)) {
     app.click(`[data-sec="${sec}"]`);
-    const note = app.$("#main h1.step-title + .step-note");
-    assert.ok(note, `${sec} has no intro under its title`);
-    assert.equal(note.textContent, introOf(key), `${sec}'s intro isn't appCopy.${key}`);
+    const note = app.$(RULE);
+    assert.ok(note, `${sec} has no rule line under its guide line`);
+    assert.equal(note.textContent, introOf(key), `${sec}'s rule line isn't appCopy.${key}`);
+    assert.doesNotMatch(note.textContent, /\bTap\b/, `${sec}'s intro tells the player how to use the app`);
+  }
+  for (const [sec, text] of Object.entries(GUIDE_ONLY)) {
+    app.click(`[data-sec="${sec}"]`);
+    const note = app.$("#main h1.step-title + [data-guide]");
+    assert.ok(note, `${sec} has no guide line under its title`);
+    assert.equal(note.textContent, D.sheetGuide.contexts[sec].intro, `${sec}'s guide line isn't sheetGuide's`);
+    assert.equal(note.textContent, text, `${sec}'s line moved a word`);
     assert.doesNotMatch(note.textContent, /\bTap\b/, `${sec}'s intro tells the player how to use the app`);
   }
   // Admin isn't a [data-sec] tab: the menu opens it
   app.click("[data-menu-toggle]"); app.click("[data-admin]");
-  const admin = app.$("#main h1.step-title + .step-note");
+  const admin = app.$(RULE);
   assert.equal(admin && admin.textContent, introOf("introAdmin"), "Admin's intro isn't appCopy.introAdmin");
   assert.doesNotMatch(admin.textContent, /\bTap\b/, "Admin's intro tells the player how to use the app");
   assert.deepEqual(app.errors, []);
@@ -817,14 +829,14 @@ test("E8 5: the intros' terms are triggers, and their text is still appCopy's", 
   const want = { skills: ["Rank"], progression: ["Milestone Point", "LUCK"] };
   for (const [sec, key] of Object.entries(INTROS)) {
     app.click(`[data-sec="${sec}"]`);
-    const note = app.$("#main h1.step-title + .step-note");
+    const note = app.$(RULE);
     assert.equal(note.textContent, introOf(key), `${sec}'s text moved`);
     if (want[sec]) assert.deepEqual(triggers(note), want[sec], `${sec}'s triggers`);
   }
   app.click('[data-sec="skills"]');
-  assert.equal(app.$$('#main h1.step-title + .step-note [data-tip="term"][data-term^="skill-check"]').length, 1, "Skills' intro has one skill-check trigger");
+  assert.equal(app.$$(`${RULE} [data-tip="term"][data-term^="skill-check"]`).length, 1, "Skills' intro has one skill-check trigger");
   app.click("[data-menu-toggle]"); app.click("[data-admin]");
-  const admin = app.$("#main h1.step-title + .step-note");
+  const admin = app.$(RULE);
   assert.equal(admin.textContent, introOf("introAdmin"));
   assert.deepEqual(app.errors, []);
 });

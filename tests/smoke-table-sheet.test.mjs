@@ -350,15 +350,39 @@ test("E5: the seat sheet reads the same intros, and the same chip for what the r
   const app = open([ch, arcanist()]);
   openSheet(app);
   const intro = k => D.appCopy[k].replace("{perHour}", String(D.ip.perHour));
-  for (const [tab, key] of [["skills", "introSkills"], ["character", "introCharacter"], ["progression", "introProgression"], ["loadout", "introLoadout"], ["notes", "introNotes"]]) {
+  // K1: Character's, Loadout's and Notes' lines are the tab's guide line now; Skills' and Progression's are rule lines under it.
+  for (const tab of ["skills", "character", "progression", "loadout", "notes"]) {
     goTab(app, tab);
-    assert.ok([...app.$$("#main .step-note")].some(n => n.textContent === intro(key)), `the seat sheet's ${tab} intro`);
+    const line = { skills: intro("introSkills"), progression: intro("introProgression") }[tab] || D.sheetGuide.contexts[tab].intro;
+    assert.ok([...app.$$("#main .step-note")].some(n => n.textContent === line), `the seat sheet's ${tab} intro`);
+    assert.ok(app.$("#main .ro-sheet [data-guide]"), `the seat sheet's ${tab} has no guide line`);
   }
   goTab(app, "loadout");
   assert.equal(app.$("#main").textContent.split(D.appCopy.orphanChip).length - 1, 3, "the seat's weapon, armor and gear wear the chip");
   goTab(app, "character");
   assert.ok(app.$("#main").textContent.includes(D.appCopy.orphanChip), "the seat's specialization wears the chip");
   assert.doesNotMatch(app.$("#main").textContent, /game data/);
+});
+
+// K1: the seat sheet has no sheet Help, and its guide lines go with the table's switch (KQ12).
+test("K1: a seat keeps the table's Help, and its guide lines follow the table's switch", () => {
+  const app = open();
+  openSheet(app);
+  assert.equal(app.$("[data-shelp]"), null, "a seat has the sheet's ? button");
+  assert.ok(app.$("[data-thelp]"), "the table's ? is gone");
+  app.click("[data-thelp]");
+  assert.equal(app.$("#ghelp h2").textContent, D.gmGuide.contexts.character.title, "the table's Help isn't on its character context");
+  app.click("#ghelp [data-help-close]");
+  goTab(app, "skills");
+  assert.ok(app.$("#main .ro-sheet [data-guide]"), "the seat's tab has no guide line");
+  app.window.localStorage.setItem("shadows.ui.gmGuide", "off");
+  goTab(app, "loadout");
+  assert.equal(app.$$("#main .ro-sheet [data-guide]").length, 0, "the table's switch didn't hide the seat's guide lines");
+  app.window.localStorage.removeItem("shadows.ui.gmGuide");
+  app.window.localStorage.setItem("shadows.ui.sheetGuide", "off");
+  goTab(app, "notes");
+  assert.equal(app.$$("#main .ro-sheet [data-guide]").length, 1, "the sheet's switch hid a seat's guide line");
+  assert.deepEqual(app.errors, []);
 });
 
 // ── E8: a term on the seat sheet opens its tip, read-only (W133) ──────
