@@ -3,7 +3,7 @@
     "kind": "shadows-table",
     "id": "TBL-8E8Z-R2TG-6C8Z",
     "name": "Dead Air",
-    "tableSchemaVersion": "0.19",
+    "tableSchemaVersion": "0.20",
     "created": "2026-07-18T17:00:00.000Z",
     "updated": "2026-10-31T21:10:00.000Z"
   },
@@ -147,6 +147,7 @@
       "status": "alive",
       "block": null,
       "ally": true,
+      "wounds": null,
       "from": null,
       "created": "2026-07-18T22:00:00.000Z",
       "updated": "2026-10-17T23:00:00.000Z"
@@ -174,6 +175,7 @@
       "status": "dead",
       "block": null,
       "ally": false,
+      "wounds": null,
       "from": null,
       "created": "2026-07-18T22:00:00.000Z",
       "updated": "2026-10-17T23:00:00.000Z"
@@ -261,6 +263,10 @@
         ]
       },
       "ally": false,
+      "wounds": {
+        "damage": 8,
+        "massive": 0
+      },
       "from": null,
       "created": "2026-07-18T22:00:00.000Z",
       "updated": "2026-10-17T23:00:00.000Z"
@@ -337,6 +343,7 @@
         ]
       },
       "ally": false,
+      "wounds": null,
       "from": null,
       "created": "2026-08-01T22:00:00.000Z",
       "updated": "2026-10-17T23:00:00.000Z"
@@ -364,6 +371,7 @@
       "status": "alive",
       "block": null,
       "ally": true,
+      "wounds": null,
       "from": null,
       "created": "2026-08-01T22:00:00.000Z",
       "updated": "2026-10-17T23:00:00.000Z"
@@ -446,6 +454,7 @@
         ]
       },
       "ally": false,
+      "wounds": null,
       "from": null,
       "created": "2026-08-01T22:00:00.000Z",
       "updated": "2026-10-17T23:00:00.000Z"
@@ -537,6 +546,7 @@
         ]
       },
       "ally": false,
+      "wounds": null,
       "from": null,
       "created": "2026-08-01T22:00:00.000Z",
       "updated": "2026-10-17T23:00:00.000Z"
@@ -564,6 +574,7 @@
       "status": "gone",
       "block": null,
       "ally": false,
+      "wounds": null,
       "from": null,
       "created": "2026-08-22T22:00:00.000Z",
       "updated": "2026-10-31T21:05:00.000Z"
@@ -640,6 +651,7 @@
         ]
       },
       "ally": false,
+      "wounds": null,
       "from": null,
       "created": "2026-08-22T22:00:00.000Z",
       "updated": "2026-10-17T23:00:00.000Z"
@@ -667,6 +679,7 @@
       "status": "alive",
       "block": null,
       "ally": true,
+      "wounds": null,
       "from": null,
       "created": "2026-07-18T22:00:00.000Z",
       "updated": "2026-10-17T23:00:00.000Z"
@@ -694,6 +707,7 @@
       "status": "alive",
       "block": null,
       "ally": true,
+      "wounds": null,
       "from": null,
       "created": "2026-07-18T22:00:00.000Z",
       "updated": "2026-10-17T23:00:00.000Z"
@@ -721,6 +735,7 @@
       "status": "alive",
       "block": null,
       "ally": false,
+      "wounds": null,
       "from": null,
       "created": "2026-09-12T22:00:00.000Z",
       "updated": "2026-10-17T23:00:00.000Z"
@@ -748,6 +763,7 @@
       "status": "missing",
       "block": null,
       "ally": false,
+      "wounds": null,
       "from": null,
       "created": "2026-08-22T22:00:00.000Z",
       "updated": "2026-10-17T23:00:00.000Z"
@@ -772,6 +788,7 @@
       "status": "alive",
       "block": null,
       "ally": false,
+      "wounds": null,
       "from": null,
       "created": "2026-09-12T22:00:00.000Z",
       "updated": "2026-10-17T23:00:00.000Z"

@@ -1035,6 +1035,7 @@ function castStatBlockHtml(n){
   const num = (attr, v, label) => `<input type="number" step="1" inputmode="numeric" ${attr} value="${numAttr(v)}" aria-label="${esc(label)}">`;
   const stats = D.stats.map(s=>`<div class="cast-stat"><span class="cast-stat-id">${esc(s.id)}</span>${num(`data-cstat="${esc(s.id)}"`, st[s.id], s.name||s.id)}<span class="cast-fig" data-cbonus="${esc(s.id)}"></span>${packs ? `<span class="cast-fig cast-mod" data-cmod="${esc(s.id)}"></span>` : ""}</div>`).join("");
   const authored = D.derived.filter(d=>d.type==="sumOfModifiers").map(d=>`<div class="cast-stat"><span class="cast-stat-id">${esc(d.id)}</span>${num(`data-cauth="${esc(d.id)}"`, au[d.id], d.name||d.id)}<span class="cast-fig" data-cformula="${esc(d.id)}"></span></div>`).join("");
+  const authoredErrs = D.derived.filter(d=>d.type==="sumOfModifiers").map(d=>`<p class="enc-err" data-cauth-err="${esc(d.id)}" hidden></p>`).join("");
   const skills = (b.skills||[]).map((k,i)=>`<div class="cast-row" data-cskill="${i}">
       <input type="text" data-cskname="${i}" value="${esc(k.name)}" placeholder="Skill" aria-label="Skill name" autocomplete="off">
       <input type="number" step="1" inputmode="numeric" data-csktotal="${i}" value="${numAttr(k.total)}" aria-label="Total" class="cast-total">
@@ -1050,7 +1051,7 @@ function castStatBlockHtml(n){
   return `<h2 class="cast-h sec-h">Stat block</h2>
     <p class="cast-health" data-chealth-row hidden>Health <b data-chealth></b></p>
     ${packs ? `<p class="cast-guide" data-cmodnote hidden></p><p class="cast-guide" data-cstatguide hidden></p>` : ""}
-    <div class="cast-stats">${stats}${authored}</div>
+    <div class="cast-stats">${stats}${authored}</div>${authoredErrs}
     <div class="cast-lines"><span class="cast-sub">Skills</span>${skills}<button class="btn sm" data-cskadd>Add a skill</button></div>
     ${lines("armor","Armor")}${lines("gear","Gear")}
     <div class="cast-lines"><span class="cast-sub">Traits</span>${packs ? `<p class="cast-guide" data-ctcount hidden></p><p class="cast-guide" data-ctguide hidden></p>` : ""}${traits}
@@ -1119,6 +1120,20 @@ function castClocksHtml(n){
   }
   return rows.length ? `<h2 class="cast-h sec-h">Clocks</h2><ul class="int-list clock-lines">${rows.join("")}</ul>` : "";
 }
+// A member's wounds and how the GM heals them (Decision 294). Drawn only when they are hurt.
+function castWoundsHtml(n){
+  const w=n.wounds; if (!w) return "";
+  const h=Engine.castHealth(S.table, n.id), name=n.name.trim() || "They";
+  const e=Engine.runningEncounter(S.table), inFight=!!e && (Array.isArray(e.rows) ? e.rows : []).some(r=>r && r.kind==="cast" && r.cast && r.cast.id===n.id);
+  const hurt = h && h.total!==null ? `Hurt: ${h.left} of ${h.total} HP left` : `Hurt: ${w.damage} damage`;
+  const massive = w.massive ? `, ${w.massive} level${w.massive===1 ? "" : "s"} gone to Massive` : "";
+  return `<div class="cast-wounds" data-cwounds><h2 class="cast-h sec-h">Wounds</h2>
+    <p class="cast-health" data-cwounds-text>${esc(hurt + massive)}</p>
+    <div class="cast-heal"><label class="field"><span>Heal</span><input type="number" step="1" min="1" inputmode="numeric" data-cheal autocomplete="off"></label>
+      <button type="button" class="btn sm" data-cheal-go>Heal</button><button type="button" class="btn sm" data-cheal-all>Heal all</button></div>
+    <p class="enc-err" data-cheal-err hidden></p>
+    ${inFight ? `<p class="step-note">In a fight now: this heals ${esc(name)} after it, unless the wrap-up says otherwise.</p>` : ""}</div>`;
+}
 function castReadHtml(n){
   const name=n.name.trim() || "Unnamed", b=n.block, panel=b ? readBlockHtml(b) : "";
   const keyTo=castKeyToHtml(n), clocks=castClocksHtml(n);
@@ -1127,7 +1142,7 @@ function castReadHtml(n){
   const aff=n.affiliations.length ? `<h2 class="ref-sub dos-l">Affiliations</h2><p class="dos-p">${n.affiliations.map(esc).join(" / ")}</p>` : "";
   return `${castBarHtml(n, false)}
     <div class="cast-layout${panel ? " read" : " solo"}"><div class="cast-col">
-    ${recHeadHtml(`<h1 class="step-title tbl-title cast-title" data-ctitle>${esc(name)}</h1>`, "member", n.id, name)}
+    ${recHeadHtml(`<h1 class="step-title tbl-title cast-title" data-ctitle tabindex="-1">${esc(name)}</h1>`, "member", n.id, name)}
     ${n.status!=="alive" ? `<p class="dos-tags"><span class="tag plain">${esc(castStatusLabel(n.status))}</span></p>` : ""}
     ${castFromHtml(n)}
     ${String(n.flavor||"").trim() ? `<p class="dos-sum">${esc(n.flavor)}</p>` : ""}
@@ -1135,6 +1150,7 @@ function castReadHtml(n){
     ${proseHtml("What they want", n.motivation)}${proseHtml("If pushed", n.ifPushed)}
     ${String(n.line||"").trim() ? `<h2 class="ref-sub dos-l">Their line</h2><blockquote class="dos-quote">${esc(n.line)}</blockquote>` : ""}
     ${clocks}
+    ${castWoundsHtml(n)}
     </div>${panel ? `<div class="cast-panel">${panel}</div><div class="cast-col cast-rest">` : `<div class="cast-col cast-rest">`}
     ${proseHtml("What they've got", n.resources)}${proseHtml("Description", n.description)}
     ${codex ? `<p class="dos-meta">${codex}</p>` : ""}
@@ -1247,10 +1263,19 @@ function bindCastList(main){
   bindCastCards(main);
 }
 // The figures beside the fields: worked out from the block, never stored.
+// What sits beside an NPC's TOL or WILL (Decision 293): the formula, an override of it, or a floor that held.
+function authoredNote(a){
+  if (!a || a.formula===null) return "";
+  if (a.below) return "below its formula";
+  if (a.override) return "override · formula " + a.formula;
+  return "formula " + a.formula;
+}
 function castFigures(main, n){
   const r=Engine.npc(n.block);
   main.querySelectorAll("[data-cbonus]").forEach(el=>{ const s=r.stats[el.dataset.cbonus]; el.textContent = s && s.mod!==null ? castSigned(s.mod) : ""; });
-  main.querySelectorAll("[data-cformula]").forEach(el=>{ const a=r.authored[el.dataset.cformula]; el.textContent = a && a.formula!==null ? `book: ${a.formula}` : ""; });
+  main.querySelectorAll("[data-cformula]").forEach(el=>{ const a=r.authored[el.dataset.cformula]; el.textContent = a && a.formula!==null && !a.below ? authoredNote(a) : ""; });
+  main.querySelectorAll("[data-cauth]").forEach(el=>{ const a=r.authored[el.dataset.cauth]; el.placeholder = a && a.formula!==null ? String(a.formula) : ""; });
+  main.querySelectorAll("[data-cauth-err]").forEach(el=>{ const a=r.authored[el.dataset.cauthErr]; el.hidden = !(a && a.below); if (a && a.below) el.setAttribute("role", "alert"); else el.removeAttribute("role"); el.textContent = a && a.below ? `${el.dataset.cauthErr} can't be below ${a.formula}, its formula.` : ""; });
   const row=main.querySelector("[data-chealth-row]");
   if (row){
     row.hidden = !r.health;
@@ -1413,6 +1438,19 @@ function bindCastPage(main, n){
   const ally=main.querySelector("[data-cally]");
   if (ally) ally.onclick=()=>{ const on=!own().ally; tableChange(()=>Engine.editCastMember(S.table, id, { ally:on }), false); ally.classList.toggle("on", on); ally.setAttribute("aria-pressed", String(on)); };
   bindInteractions(main, n);
+  // Heal: some HP, or all of it. One recorded change either way, so Undo takes it back.
+  const healGo=main.querySelector("[data-cheal-go]"), healAll=main.querySelector("[data-cheal-all]"), healIn=main.querySelector("[data-cheal]");
+  if (healGo){
+    const err=msg=>{ const el=main.querySelector("[data-cheal-err]"); el.textContent=msg; el.hidden=!msg; if (msg) el.setAttribute("role", "alert"); else el.removeAttribute("role"); };
+    const who=()=>own().name.trim() || "Unnamed";
+    healGo.onclick=()=>{
+      const hp=Number(healIn.value);
+      if (!(hp>=1)){ err("Heal at least 1."); healIn.focus(); return; }
+      tableChange(()=>{ Engine.healCast(S.table, id, { hp }); }, true, `Healed ${who()}`);
+      const f=$("main").querySelector(own().wounds ? "[data-cheal]" : "[data-ctitle]"); if (f){ if ("value" in f) f.value=""; f.focus(); } };
+    healIn.addEventListener("keydown", ev=>{ if (ev.key==="Enter"){ ev.preventDefault(); healGo.click(); } });
+    healAll.onclick=()=>{ tableChange(()=>{ Engine.healCast(S.table, id, { all:true }); }, true, `Healed ${who()} fully`); const f=$("main").querySelector("[data-ctitle]"); if (f) f.focus(); };
+  }
   const fromBtn=main.querySelector("[data-tfrom]");
   if (fromBtn) fromBtn.onclick=()=>openThreat(fromBtn.dataset.tfrom, null, n.id);
   // A change to the block: `redraw` for a row added or removed, else the
@@ -1455,7 +1493,7 @@ function bindCastPage(main, n){
     if (el.dataset.cstat) return (b.stats||{})[el.dataset.cstat];
     if (el.dataset.cauth) return (b.authored||{})[el.dataset.cauth];
     const k=(b.skills||[])[+el.dataset.csktotal]; return k ? k.total : null; };
-  main.querySelectorAll('input[type=number]').forEach(el=>el.addEventListener("change", ()=>{
+  main.querySelectorAll('input[type=number]:not([data-cheal])').forEach(el=>el.addEventListener("change", ()=>{
     const v=stored(el); el.value = typeof v==="number" ? v : ""; castFigures(main, own()); }));
   castFigures(main, n);
   castGuide(main, n);
@@ -3157,7 +3195,7 @@ function readBlockHtml(block){
   if (!block) return "";
   const r=Engine.npc(block), b=block, rows=[];
   for (const s of D.stats){ const v=r.stats[s.id]; if (v.value!==null) rows.push([s.id, v.value, castSigned(v.mod)]); }
-  for (const d of D.derived.filter(x=>x.type==="sumOfModifiers")){ const a=r.authored[d.id]; if (a && a.value!==null) rows.push([d.id, a.value, a.formula!==null ? `book: ${a.formula}` : ""]); }
+  for (const d of D.derived.filter(x=>x.type==="sumOfModifiers")){ const a=r.authored[d.id]; if (a && a.used!==null) rows.push([d.id, a.used, authoredNote(a)]); }
   const stats=rows.map(([id, v, fig])=>`<div class="cast-stat"><span class="cast-stat-id">${esc(id)}</span><b class="threat-val">${esc(v)}</b><span class="cast-fig">${esc(fig)}</span></div>`).join("");
   const skills=b.skills.filter(k=>k.name.trim() || k.total!==null).map(k=>`<li>${esc(k.name.trim() || "Skill")}${k.total!==null ? " "+esc(k.total) : ""}</li>`).join("");
   const list=(label, items)=>{ const l=items.filter(x=>x.trim()); return l.length ? `<div class="cast-lines"><span class="cast-sub">${esc(label)}</span><ul class="threat-list">${l.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>` : ""; };
@@ -3588,6 +3626,8 @@ function encRowHtml(v, e, sides){
   const name = r.kind==="cast" && r.cast && !v.gone ? `<button type="button" class="cast-open enc-name" data-eopencast="${esc(r.cast.id)}">${esc(v.label)}</button>`
     : v.gone ? `<s class="enc-name">${esc(v.label)}</s><span class="vh">, removed</span>`
     : seat ? `<button type="button" class="cast-open enc-name" data-eopenseat="${esc(v.seat.tag)}">${esc(v.label)}</button>` : `<b class="enc-name">${esc(v.label)}</b>`;
+  const hurtM = e.status==="planned" && r.kind==="cast" && r.cast && !v.gone ? S.table.cast.find(n=>n.id===r.cast.id) : null;
+  const hurt = hurtM && hurtM.wounds ? `<span class="enc-hurt">Hurt: ${esc(hurtM.wounds.damage)} HP${hurtM.wounds.massive ? `, ${esc(hurtM.wounds.massive)} Massive` : ""}</span>` : "";
   const mark = r.kind==="pc" ? `<span class="tag plain">PC</span>` : r.kind==="cast" ? `<span class="tag plain">Cast</span>` : ref;
   const num = (attr, val, label) => ended ? `${esc(label)} ${val===null ? "—" : esc(val)}`
     : `<label class="enc-num"><span>${esc(label)}</span><input type="number" step="1" inputmode="numeric" ${attr}="${id}" value="${numAttr(val)}"></label>`;
@@ -3633,7 +3673,7 @@ function encRowHtml(v, e, sides){
   const kept = v.kept ? `<p class="enc-kept">Kept as ${v.kept.gone ? `<s>${esc(v.kept.name)}</s><span class="vh">, removed</span>`
     : `<button type="button" class="cast-open enc-name" data-eopencast="${esc(r.kept.id)}">${esc(v.kept.name)}</button>`}</p>` : "";
   return `<li class="enc-row${v.active?" active":""}${r.out?" out":""}" data-erow="${id}" tabindex="-1"${v.active ? ` aria-current="step"` : ""}>
-    <div class="enc-head"${running && !r.out ? ` data-eturn="${id}"` : ""}>${name} ${mark}${v.active ? ` <span class="tag plain enc-now">Now</span>` : ""}${r.out ? ` <span class="tag plain">Out</span>` : ""}${v.acted && !waiting ? ` <span class="tag plain">Done</span>` : ""}${openTag ? ` <span class="tag plain enc-open-tag">${esc(openTag)}</span>` : ""}${r.last ? ` <span class="tag plain">Goes last</span>` : ""}
+    <div class="enc-head"${running && !r.out ? ` data-eturn="${id}"` : ""}>${name} ${mark}${hurt ? " "+hurt : ""}${v.active ? ` <span class="tag plain enc-now">Now</span>` : ""}${r.out ? ` <span class="tag plain">Out</span>` : ""}${v.acted && !waiting ? ` <span class="tag plain">Done</span>` : ""}${openTag ? ` <span class="tag plain enc-open-tag">${esc(openTag)}</span>` : ""}${r.last ? ` <span class="tag plain">Goes last</span>` : ""}
       ${e.by==="wave" ? "" : csText ? `<span class="enc-cs"><span class="enc-cs-k">CS</span> <span class="enc-cs-v">${r.order===null ? "—" : esc(r.order)}</span></span>` : num("data-eorder", r.order, "Combat Sense")}${v.ties ? `<span class="tag enc-tied">Tied: reroll</span>` : ""}${aware ? ` ${aware}` : ""}</div>
     ${waiting ? `<p class="enc-wait">Waiting${waiting.until.trim() ? `: ${esc(waiting.until)}` : ""}</p>` : ""}${kept}${seatLine}${encHealthHtml(v)}${encSegsHtml(v)}${encArmorHtml(v)}${pcFields}${encTraitsHtml(v, running)}
     ${v.conditions.length ? `<ul class="enc-conds">${v.conditions.map(c=>encCondHtml(v, c, ended)).join("")}</ul>` : ""}
@@ -3726,9 +3766,13 @@ function encWrapRowHtml(u, e, crew, labels){
       ${st.keep ? `<label class="field"><span>Name</span><input type="text" data-ew-name="${id}" value="${esc(st.name ?? u.row.name)}" autocomplete="off"></label>
         ${statusSel(st.status ?? "alive")}${lineBox}` : ""}`;
   }
+  // Wounds go with the member out of the fight (Decision 294): a cast row's, and a Kept copy's.
+  const c=u.carries, hurtBits=c ? [c.damage>0 ? `${c.damage} damage` : "", c.massive>0 ? `${c.massive} Massive level${c.massive===1 ? "" : "s"}` : ""].filter(Boolean).join(" and ") : "";
+  const carries = !hurtBits || u.gone ? "" : u.kind==="cast" ? `<p class="step-note" data-ew-carries="${id}">Carries ${esc(hurtBits)} into the next fight</p>`
+    : st.keep ? `<p class="step-note" data-ew-carries="${id}">Kept, carrying ${esc(hurtBits)}</p>` : "";
   return `<li class="enc-row" data-ewrow="${id}"><div class="enc-head"><b class="enc-name">${u.gone ? `<s>${name}</s>` : name}</b>
       <span class="tag plain">${u.kind==="cast" ? "Cast" : "Codex"}</span></div>
-    <p class="enc-health">${esc(encEndedWords(u))}</p>${body}</li>`;
+    <p class="enc-health">${esc(encEndedWords(u))}</p>${carries}${body}</li>`;
 }
 // What the players are told about armor wear: the die for the fight, and who rolls it.
 function encWearHtml(w){

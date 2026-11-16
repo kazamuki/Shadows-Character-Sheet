@@ -354,9 +354,9 @@ test("Decision 175: BOD 6 shows Health as it's typed without the field being red
   assert.equal(app.$('[data-cformula="TOL"]').textContent, "", "a formula shows with COOL blank");
   type(app, '[data-cstat="COOL"]', "5");
   const want = Engine.npc({ stats: { BOD: 6, INT: 5, COOL: 5 } }).authored.TOL.formula;
-  type(app, '[data-cauth="TOL"]', "1");
-  assert.equal(app.$('[data-cformula="TOL"]').textContent, `book: ${want}`);
-  assert.equal(app.window.eval("S.table.cast[0].block.authored.TOL"), 1);
+  type(app, '[data-cauth="TOL"]', "0");
+  assert.equal(app.$('[data-cformula="TOL"]').textContent, `override · formula ${want}`);
+  assert.equal(app.window.eval("S.table.cast[0].block.authored.TOL"), 0);
   assert.deepEqual(app.errors, []);
 });
 
@@ -546,14 +546,14 @@ test("Decision 174: a saved 0.1 table opens as the current schema with its notes
   t.meta.tableSchemaVersion = "0.1"; delete t.cast;
   const app = boot({ storage: { ["shadows.table.v1." + t.meta.id]: { table: t, section: "notes", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app, "Old one").querySelector("[data-topen]").click();
-  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.19");
+  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.20");
   assert.equal(app.window.eval("S.table.cast.length"), 0);
   editNote(app);
   assert.equal(app.$("[data-ntitle]").value, "Kept");
   app.click('[data-tsec="cast"]');
   castAdd(app, "Dez");
   const saved = tableEntryOf(app, t.meta.id).table;
-  assert.equal(saved.meta.tableSchemaVersion, "0.19");
+  assert.equal(saved.meta.tableSchemaVersion, "0.20");
   assert.equal(saved.cast.length, 1); assert.equal(saved.notes[0].title, "Kept");
   tableHome(app);
   tableCard(app, "Old one").querySelector("[data-tremove]").click();
@@ -907,7 +907,7 @@ test("Decisions 177–179: export and import keep every interaction and affiliat
   const file = await tableFile(downloads[0]);
   assert.equal(JSON.stringify(file.interactions), JSON.stringify(before.interactions));
   assert.equal(JSON.stringify(file.cast.map(n => n.affiliations)), JSON.stringify(before.cast.map(n => n.affiliations)));
-  assert.equal(file.meta.tableSchemaVersion, "0.19");
+  assert.equal(file.meta.tableSchemaVersion, "0.20");
   const fresh = boot({ storage: GM_ON });
   withDownloads(fresh);
   await importFile(fresh, file);
@@ -919,7 +919,7 @@ test("Decisions 177–179: export and import keep every interaction and affiliat
   delete old.interactions; old.meta.tableSchemaVersion = "0.2"; for (const n of old.cast) delete n.affiliations;
   const app2 = boot({ storage: { ["shadows.table.v1." + old.meta.id]: { table: old, section: "notes", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app2, "Saved 0.2").querySelector("[data-topen]").click();
-  assert.equal(app2.window.eval("S.table.meta.tableSchemaVersion"), "0.19");
+  assert.equal(app2.window.eval("S.table.meta.tableSchemaVersion"), "0.20");
   assert.equal(app2.window.eval("S.table.interactions.length"), 0);
   editNote(app2);
   assert.equal(app2.$("[data-ntitle]").value, "Kept");
@@ -1288,7 +1288,7 @@ test("Decision 182: Use copies the entry into the cast and opens it, name select
   assert.equal(app.$("[data-chealth]").textContent.length > 0, true);
   app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
   const file = await tableFile(downloads[0]);
-  assert.equal(file.meta.tableSchemaVersion, "0.19");
+  assert.equal(file.meta.tableSchemaVersion, "0.20");
   assert.deepEqual(file.cast[0].from, { kind: "entry", pack: PACK_ID, id: "gull", name: "Gull" });
   const json = JSON.stringify(file);
   for (const w of ["Entry 01", "Lives high", "Test Pack", "Pier Watch", "Wren", "rooftop runner", "Moss", "Quiet money"]) assert.ok(!json.includes(w), `the exported table carries pack content: ${w}`);
@@ -1385,7 +1385,7 @@ test("Decision 182: a saved 0.3 table opens as 0.4, its cast kept and every memb
   delete t.cast[0].from; t.meta.tableSchemaVersion = "0.3";
   const app = boot({ storage: { ["shadows.table.v1." + t.meta.id]: { table: t, section: "cast", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app, "Three").querySelector("[data-topen]").click();
-  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.19");
+  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.20");
   assert.equal(app.window.eval("S.table.cast[0].from"), null);
   assert.deepEqual(castNames(app), ["Dez"]);
   assert.deepEqual(app.errors, []);
@@ -1797,7 +1797,7 @@ test("U4: Home's card leads with sessions and cast", () => {
 test("U3: a member opens to read, and Edit opens today's form", () => {
   const app = deadAirApp("cast");
   app.click('[data-copen="C-8FGP6RCT"]');
-  const fields = app.$$("#main input, #main select, #main textarea").filter(el => !el.closest(".tbl-bar, .clock-lines, .int-add, .int-list"));
+  const fields = app.$$("#main input, #main select, #main textarea").filter(el => !el.closest(".tbl-bar, .clock-lines, .int-add, .int-list, .cast-wounds"));   // Heal is the one field a read view has (Decision 294), drawn only when hurt
   assert.deepEqual(fields.map(f => f.outerHTML.slice(0, 60)), [], "a field is in the read view");
   assert.equal(app.$("[data-cf]"), null, "a member's field is in the read view");
   assert.equal(app.$("[data-cdel]"), null, "Delete is outside Edit");
@@ -1867,5 +1867,50 @@ test("U3: Find on a member's GM note opens Edit and lands on the field", () => {
   hit.click();
   assert.ok(app.$("[data-edit-done]"), "the form is open");
   assert.equal(app.doc.activeElement, app.$('[data-cf="gmNote"]'));
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 293: the builder's TOL placeholder is its formula, an override says so, and a WILL below its formula shows an error that clears", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Rules");
+  castAdd(app, "Marta");
+  app.click("[data-copen]");
+  edit(app);
+  for (const [k, v] of [["BOD", "5"], ["INT", "5"], ["COOL", "7"], ["EMP", "8"]]) type(app, `[data-cstat="${k}"]`, v);
+  assert.equal(app.$('[data-cauth="TOL"]').placeholder, "2");
+  assert.equal(app.$('[data-cauth="WILL"]').placeholder, "3");
+  assert.equal(app.$('[data-cformula="TOL"]').textContent, "formula 2");
+  type(app, '[data-cauth="TOL"]', "0");
+  assert.equal(app.$('[data-cformula="TOL"]').textContent, "override · formula 2");
+  type(app, '[data-cauth="WILL"]', "2");
+  const err = app.$('[data-cauth-err="WILL"]');
+  assert.equal(err.hidden, false);
+  assert.equal(err.textContent, "WILL can't be below 3, its formula.");
+  assert.equal(app.window.eval("S.table.cast[0].block.authored.WILL"), 2, "the typed number is kept");
+  type(app, '[data-cauth="WILL"]', "3");
+  assert.equal(app.$('[data-cauth-err="WILL"]').hidden, true);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 294: a hurt member's page says so; Heal takes HP and keeps focus, Heal all clears it and moves to the heading", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Heal");
+  castAdd(app, "Dez");
+  app.click("[data-copen]");
+  type(app, '[data-cstat="BOD"]', "5");
+  app.window.eval("S.table.cast[0].wounds = { damage: 10, massive: 1 }");
+  done(app);
+  assert.match(app.$("[data-cwounds-text]").textContent, /^Hurt: \d+ of \d+ HP left, 1 level gone to Massive$/);
+  assert.equal(app.$("[data-cwounds] .step-note"), null, "no fight, no fight note");
+  type(app, "[data-cheal]", "0"); app.click("[data-cheal-go]");
+  assert.equal(app.$("[data-cheal-err]").textContent, "Heal at least 1.");
+  type(app, "[data-cheal]", "3"); app.click("[data-cheal-go]");
+  assert.deepEqual(JSON.parse(JSON.stringify(app.window.eval("S.table.cast[0].wounds"))), { damage: 7, massive: 1 });
+  assert.equal(app.doc.activeElement, app.$("[data-cheal]"));
+  assert.equal(app.$("[data-cheal]").value, "");
+  app.click("[data-cheal-all]");
+  assert.equal(app.window.eval("S.table.cast[0].wounds"), null);
+  assert.equal(app.$("[data-cwounds]"), null, "healed, the Wounds line goes");
+  assert.equal(app.doc.activeElement, app.$("[data-ctitle]"));
   assert.deepEqual(app.errors, []);
 });

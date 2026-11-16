@@ -351,3 +351,22 @@ test("U4: a delete says Undo brings it back", () => {
   app.click("#modal [data-modalclose]");
   assert.deepEqual(app.errors, []);
 });
+
+test("Decision 294: a planned row says how hurt the member is, and the wrap-up says what they carry out", () => {
+  const app = encApp("Dock");
+  app.window.eval(`(function(){ const t = S.table, e = t.encounters[0], id = Engine.addCastMember(t, { name: "Dez" }).id;
+    Engine.setCastBlock(t, id, { stats: { BOD: 5 } });
+    t.cast[0].wounds = { damage: 10, massive: 0 };
+    Engine.addParticipant(t, e.id, { kind: "cast", id });
+    Engine.addParticipant(t, e.id, { kind: "pc", name: "Wren" });
+    renderTable(); })()`);
+  assert.match(app.$(".enc-hurt").textContent, /^Hurt: 10 HP$/);
+  app.click("[data-enc-start]");
+  assert.equal(app.$(".enc-hurt"), null, "running, the row has its own numbers");
+  app.window.eval(`(function(){ const t = S.table, e = t.encounters[0]; Engine.participantDamage(t, e.id, e.rows.find(r => r.kind === "cast").id, 3); renderTable(); })()`);
+  app.click("[data-enc-end]");
+  assert.match(app.$("[data-ew-carries]").textContent, /^Carries 13 damage into the next fight$/);
+  app.click("[data-ew-end]");
+  assert.deepEqual(JSON.parse(app.window.eval("JSON.stringify(S.table.cast[0].wounds)")), { damage: 13, massive: 0 });
+  assert.deepEqual(app.errors, []);
+});

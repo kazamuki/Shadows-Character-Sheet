@@ -804,7 +804,7 @@ function hostileSessionsTable() {
 test("a hostile table's sessions and threads come out of the gate typed: ids unique, numbers numbers, links null, one current", () => {
   const J = x => JSON.parse(JSON.stringify(x));
   const m = Engine.migrateTable(hostileSessionsTable());
-  assert.equal(m.meta.tableSchemaVersion, "0.19");
+  assert.equal(m.meta.tableSchemaVersion, "0.20");
   const ids = m.sessions.map(s => s.id);
   assert.equal(new Set(ids).size, ids.length, "session ids repeat");
   assert.ok(ids.every(id => /^SE-[0-9A-HJKMNP-TV-Z]{8}$/.test(id)));
@@ -1043,7 +1043,7 @@ test("a side named markup, and a row named the same on it, render as text in wav
 test("261: a side's roll is read as a whole number or none, the crew's included; a hostile wave file opens", () => {
   const hostile = [["14", 14], [-3, -3], [1e309, null], ["1e3", null], [{}, null], [[], null], [true, null]];
   const mk = roll => Engine.migrateTable({
-    meta: { kind: "shadows-table", id: Engine.newTable().meta.id, name: "T", tableSchemaVersion: "0.19" },
+    meta: { kind: "shadows-table", id: Engine.newTable().meta.id, name: "T", tableSchemaVersion: "0.20" },
     encounters: [{ id: "EN-AAAAAAAA", name: "E", status: "planned", by: "wave",
       sides: [{ id: "crew", name: "", roll }, { id: "SD-AAAAAAAA", name: "", roll }], rows: [] }] }).encounters[0];
   for (const [raw, want] of hostile) {
@@ -1089,7 +1089,7 @@ test("a table file's trail draws its labels as text, drops every crafted entry, 
     ["__proto__", "polluted"], ["meta", "id"], ["meta", "tableSchemaVersion"], ["audit", 0, "label"], ["evil"], ["constructor", "prototype", "polluted"],
   ].map((path, i) => ({ seq: 10 + i, date: null, label: `crafted ${i}`, patch: [{ path, type: "scalar", before: "PWNED" }] }));
   const t = Engine.migrateTable({
-    meta: { kind: "shadows-table", id, name: "T", tableSchemaVersion: "0.19" },
+    meta: { kind: "shadows-table", id, name: "T", tableSchemaVersion: "0.20" },
     cast: [{ id: "C-AAAAAAAA", name: "After" }],
     audit: [...crafted, good],
   });
@@ -1487,7 +1487,7 @@ test("a table file's players, seats and copies are gated, and draw as text on th
     return Object.assign(ch, extra);
   };
   const raw = {
-    meta: { kind: "shadows-table", id, name: "T", tableSchemaVersion: "0.19" },
+    meta: { kind: "shadows-table", id, name: "T", tableSchemaVersion: "0.20" },
     players: [
       { id: "PY-AAAAAAAA", name: P("player"), seats: [
         { tag: DEZ, status: {}, names: [P("n1"), 5, null] }, { tag: "__proto__", status: "active", names: [] }, { tag: "<img>", status: "active", names: [] },
@@ -1645,4 +1645,17 @@ test("E8 8: a sentence with markup in it stays text, wrapped or not", () => {
   assert.deepEqual([...f.querySelectorAll('[data-tip="term"]')].map(e => e.textContent), ["Kicker Die"]);
   for (const v of [null, 42, undefined, ""]) assert.equal(app.window.eval(`termsHtml(${JSON.stringify(v)})`), "");
   assert.deepEqual(app.errors, []);
+});
+
+test("a cast member's wounds are coerced", () => {
+  const id = Engine.newTable().meta.id;
+  const wounds = [
+    "x", 7, [], [3], { damage: "9" }, { damage: -4, massive: -1 }, { damage: NaN, massive: Infinity }, { damage: 1.9, massive: 2.5 },
+    { damage: 5000, massive: 1e9 }, { damage: null, massive: {} }, { damage: 0, massive: 0 },
+  ];
+  const t = Engine.migrateTable({
+    meta: { kind: "shadows-table", id, name: "T", tableSchemaVersion: "0.20" },
+    cast: wounds.map((w, i) => ({ id: `C-AAAAAAA${i < 10 ? i : "A"}`, name: `N${i}`, wounds: w })),
+  });
+  assert.deepEqual(JSON.parse(JSON.stringify(t.cast.map(n => n.wounds))), [null, null, null, null, null, null, null, { damage: 1, massive: 2 }, { damage: 999, massive: 999 }, null, null]);
 });

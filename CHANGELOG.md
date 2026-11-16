@@ -37,6 +37,8 @@ own in the footer.
 
 ### GM mode
 
+- An NPC's TOL is its formula unless you type an override, and a WILL below its formula shows as an error.
+- Cast members carry their wounds from one fight to the next. Heal them from their page.
 - The city guide adds **ForgeKor**, the weapons outfit that sells everything but the final trigger pull.
 
 ## v0.71.0 — 2026-11-16

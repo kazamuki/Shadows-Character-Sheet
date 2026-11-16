@@ -105,7 +105,7 @@ const BLOCKS = {
 const cast = [];
 const member = (key, first, f) => cast.push({
   id: C(key), name: "", flavor: "", description: "", origin: "", npcRoles: [], enemyRole: "", affiliations: [], tier: null,
-  motivation: "", resources: "", line: "", ifPushed: "", gmNote: "", status: "alive", block: null, ally: false, from: null,
+  motivation: "", resources: "", line: "", ifPushed: "", gmNote: "", status: "alive", block: null, ally: false, wounds: null, from: null,
   created: ts(DAY[first], 22), updated: ts(DAY[6], 23), ...f,
 });
 
@@ -139,7 +139,7 @@ member("ibarra", 1, {
   line: "Will not kill a child or a priest. Everything else is on the menu.",
   ifPushed: "Sends flowers. Then sends Nine. Then, if the crew is lucky, sends nothing and lets them wonder.",
   gmNote: "His clock is 'Ibarra's patience'. When it fills he does not attack the crew; he burns Suds & Duds with Pearl in it and lets them find out from the news. He would be relieved to be talked out of this.",
-  block: BLOCKS.ibarra, affiliations: ["Eclipse"],
+  block: BLOCKS.ibarra, wounds: { damage: 8, massive: 0 }, affiliations: ["Eclipse"],
 });
 member("nine", 2, {
   name: "Ines \"Nine\" Baptiste", flavor: "Ibarra's right hand and left fist. Counts her fights, hence the name.",
@@ -960,7 +960,7 @@ const audit = [
 // ── the table ───────────────────────────────────────────────────────
 const table = {
   meta: {
-    kind: "shadows-table", id: tableId(), name: "Dead Air", tableSchemaVersion: "0.19",
+    kind: "shadows-table", id: tableId(), name: "Dead Air", tableSchemaVersion: "0.20",
     created: ts(DAY[1], 17), updated: ts(DAY[7], 21, 10),
   },
   audit,
