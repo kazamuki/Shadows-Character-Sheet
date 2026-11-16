@@ -2720,7 +2720,7 @@ const Engine = (() => {
       const rows = [];
       for (const ref of refs){
         const w = word(ref, ch); if (!w) continue;
-        const base = String(w.title).normalize("NFD").replace(/[̀-ͯ]/g, "").charAt(0).toUpperCase();
+        const base = String(w.title).normalize("NFD").replace(/[\u0300-\u036f]/g, "").charAt(0).toUpperCase();
         rows.push(Object.assign(w, { ref, letter:/^[A-Z]$/.test(base) ? base : "#", homonym:false }));
       }
       const names = new Map();

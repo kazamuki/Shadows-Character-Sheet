@@ -13725,6 +13725,7 @@ test("K2: Engine.words lists each meaning once, A to Z", () => {
   const sorted = [...all].sort((a, b) => a.title.toLowerCase().localeCompare(b.title.toLowerCase()));
   assert.deepEqual([...all.map(w => w.title)], [...sorted.map(w => w.title)], "A to Z by title, case-insensitive");
   assert.ok(all.every(w => /^([A-Z]|#)$/.test(w.letter)), "a letter is A to Z or #");
+  assert.equal(all.find(w => w.kind === "resource" && w.id === "credits").letter, "C", "Çredits files under C, not #");
   const merged = D.gameTerms.filter(r => r.from && (r.from.derived || r.from.luck || r.from.stats || r.from.conditions || r.from.painLevel)).length;
   const sum = D.stats.length + D.derived.length + D.conditions.length + D.damageTypes.length + D.weaponTagGlossary.length + D.weaponFeatureGlossary.length
     + D.weaponModGlossary.length + D.armorFeatureGlossary.length + D.armorUpgradeGlossary.length + D.spellTagGlossary.length
