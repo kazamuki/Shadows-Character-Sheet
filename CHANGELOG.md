@@ -24,6 +24,16 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.71.1
+
+### Character sheet
+
+- Help's **Defensive Actions** reads as the rulebook now does: you parry with a handheld weapon.
+
+### GM mode
+
+- The city guide adds **ForgeKor**, the weapons outfit that sells everything but the final trigger pull.
+
 ## v0.71.0 — 2026-11-16
 
 ### Character sheet

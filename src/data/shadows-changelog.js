@@ -2,6 +2,26 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.71.1",
+    "date": null,
+    "intro": [],
+    "items": [],
+    "groups": [
+      {
+        "title": "Character sheet",
+        "items": [
+          "Help's **Defensive Actions** reads as the rulebook now does: you parry with a handheld weapon."
+        ]
+      },
+      {
+        "title": "GM mode",
+        "items": [
+          "The city guide adds **ForgeKor**, the weapons outfit that sells everything but the final trigger pull."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.71.0",
     "date": "2026-11-16",
     "intro": [],
