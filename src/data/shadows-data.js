@@ -4875,13 +4875,7 @@ window.SHADOWS_DATA = {
       "helpless": true, "counter": { "max": 3, "label": "Death Marks", "atMax": "Three Death Marks. You're dead, and your options are seriously limited." } }
   ],
 
-  /* GM mode's Help (Decision 278): the words the ? panel, the guide lines and
-     the empty states read, so Deighton and Scott edit them here and nowhere else. `contexts` has one entry per section and per
-     page a table can show (`helpContext()` in gm.js names it); `words` defines each term once and a context lists them by id;
-     `night` is A night at the table; `empty` is the sections' empty states; `ui` is the panel's own labels. **bold** is a button
-     or label as the screen has it, and `code` is a file name. Read only by GM mode: no character can observe it, so it moves no
-     game-data version (Decision 68). */
-  // K1: Help on the sheet, read by shared.js's panel through sheet.js's host (Decision N). One context per sheet tab and one for Admin.
+  // K1: Help on the sheet, read by shared.js's panel through sheet.js's host (Decision 289). One context per sheet tab and one for Admin.
   // `intro` is the tab's guide line, `for` what it's for, `when` a subset of ui.when, `words` gameTerms ids (read through Engine.term for the
   // open character), `tips` at most two. **bold** is a button or label as the screen has it. Introductions that state a rule stay in appCopy.
   "sheetGuide": {
@@ -4984,6 +4978,12 @@ window.SHADOWS_DATA = {
       }
     }
   },
+  /* GM mode's Help (Decision 278): the words the ? panel, the guide lines and
+     the empty states read, so Deighton and Scott edit them here and nowhere else. `contexts` has one entry per section and per
+     page a table can show (`tableHelpContext()` in gm.js names it); `words` defines each term once and a context lists them by id;
+     `night` is A night at the table; `empty` is the sections' empty states; `ui` is the panel's own labels. **bold** is a button
+     or label as the screen has it, and `code` is a file name. Read only by GM mode: no character can observe it, so it moves no
+     game-data version (Decision 68). */
   "gmGuide": {
     "ui": {
       "title": "Help",
