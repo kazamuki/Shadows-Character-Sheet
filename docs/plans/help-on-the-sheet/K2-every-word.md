@@ -2,7 +2,7 @@
 
 **Plan:** [`../help-on-the-sheet.md`](../help-on-the-sheet.md) §3, row K2, and K2's pre-flight line. **Wishes:** [W156](../../WISHLIST.md) (Help on the sheet, its *Every word* part) and W150 (Help's polish, its A–Z jump). **Built on:** [`K1-one-help.md`](K1-one-help.md), the order that built the sheet's Help (Decision 289). Decisions 68, 71, 116, 135, 139, 207, 278, 287, 289.
 
-**Status: drafted 2026-11-15** by Claude (Opus), the K1 reviewer, at the conductor's request. **Not approved.** The plan's KQ1–KQ8 are answered (Ken, 2026-11-15: every default); this order's KQ13–KQ18 (§4) are **answered (Ken, 2026-11-15, in the conductor's session): Default on all six** ("Not in K2", "A row per meaning", "It stays open", "Defaults on all three" for KQ15–KQ17).
+**Status: drafted 2026-11-15** by Claude (Opus), the K1 reviewer, at the conductor's request. **Approved by Ken 2026-11-15, in the conductor's session: "Approved, build it".** The plan's KQ1–KQ8 are answered (Ken, 2026-11-15: every default); this order's KQ13–KQ18 (§4) are **answered (Ken, 2026-11-15, in the conductor's session): Default on all six** ("Not in K2", "A row per meaning", "It stays open", "Defaults on all three" for KQ15–KQ17).
 
 **Branch:** cut from `origin/main` at the pre-flight commit; PR to `main`. Nothing ships switched off.
 
