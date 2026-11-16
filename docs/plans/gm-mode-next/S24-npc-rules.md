@@ -3,8 +3,8 @@
 **Plan:** [`../gm-mode-next.md`](../gm-mode-next.md), session S24. **Rulings:** GQ6 and GQ26, Scott 2026-11-03
 (`archive/gm-mode.md` §9). **Reopens:** Decision 175 (TOL and WILL as authored) and Decision 193 (a member starts
 their next encounter unhurt).
-**Status:** **drafted 2026-11-16** by Claude (Opus), the L4/L5b conductor, at Ken's pick ("Draft S24"). Not approved.
-GQ43–GQ47 below, each with a default; an unanswered one is answered "Default".
+**Status:** **drafted 2026-11-16** by Claude (Opus), the L4/L5b conductor, at Ken's pick ("Draft S24"). **Approved by Ken
+2026-11-16**, in the conductor session: "All defaults". GQ43–GQ47 each take their default.
 **Branch:** from `main`; PR to `main`. Nothing ships switched off: GM mode is launched (260), so this is an ordinary
 batch with changelog lines and an app bump.
 **Runs beside:** L5b (PR #355) may merge first. It touches the weapon readers, the data's powers and the player
