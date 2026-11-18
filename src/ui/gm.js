@@ -1446,7 +1446,7 @@ function bindCastPage(main, n){
     healGo.onclick=()=>{
       const hp=Number(healIn.value);
       if (!(hp>=1)){ err("Heal at least 1."); healIn.focus(); return; }
-      tableChange(()=>{ Engine.healCast(S.table, id, { hp }); }, true, `Healed ${who()}`);
+      tableChange(()=>{ Engine.healCast(S.table, id, { hp }); }, true, `Healed ${who()} ${Math.floor(hp)}`);
       const f=$("main").querySelector(own().wounds ? "[data-cheal]" : "[data-ctitle]"); if (f){ if ("value" in f) f.value=""; f.focus(); } };
     healIn.addEventListener("keydown", ev=>{ if (ev.key==="Enter"){ ev.preventDefault(); healGo.click(); } });
     healAll.onclick=()=>{ tableChange(()=>{ Engine.healCast(S.table, id, { all:true }); }, true, `Healed ${who()} fully`); const f=$("main").querySelector("[data-ctitle]"); if (f) f.focus(); };

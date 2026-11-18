@@ -1906,6 +1906,7 @@ test("Decision 294: a hurt member's page says so; Heal takes HP and keeps focus,
   assert.equal(app.$("[data-cheal-err]").textContent, "Heal at least 1.");
   type(app, "[data-cheal]", "3"); app.click("[data-cheal-go]");
   assert.deepEqual(JSON.parse(JSON.stringify(app.window.eval("S.table.cast[0].wounds"))), { damage: 7, massive: 1 });
+  assert.equal(app.window.eval("S.table.audit.at(-1).label"), "Healed Dez 3", "Activity says how much, as a row's Heal does (U4)");
   assert.equal(app.doc.activeElement, app.$("[data-cheal]"));
   assert.equal(app.$("[data-cheal]").value, "");
   app.click("[data-cheal-all]");
