@@ -29,7 +29,7 @@ own in the footer.
 ### Character sheet
 
 - **Reputation** sets your CRANK rep when you lock: 5, 12 or 20, a rank at a time, and it tops out at rank 3.
-- New Disadvantage: **Burned**. Each rank starts you 2 rep under, and you pay it back on the job, and IP can't buy it off. Below 0 you're a Novice and every payout is halved.
+- New Disadvantage: **Burned**. Each rank starts you 2 rep under. You pay it back on the job, and IP can't buy it off. Below 0 you're a Novice and every payout is halved.
 - Walking out on a client can't take your rep below 0.
 
 ### GM mode
