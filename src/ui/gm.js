@@ -2857,8 +2857,11 @@ function closeDraftNew(id, written){
   // The jobs come back as written, so a redo never pays one twice. A crew name no longer present is let go.
   if (written) c.jobs=(written.jobs||[]).map(j=>{
     const h=(S.table.threads||[]).find(x=>x.id===j.thread);
+    const crew=j.crew.filter(m=>c.lines.some(l=>l.present && coKey(l.name)===coKey(m.name)));
+    // As for IP: a written share that is still the even split is the app's, so a changed payout moves it; any other is the GM's.
+    const even=j.pay!==null && crew.length ? Math.floor(j.pay/crew.length) : null;
     return { thread:h ? h.id : "", other:!h, title:j.title, outcome:j.outcome, tier:j.tier||"", pay:coNum(j.pay),
-      crew:j.crew.filter(m=>c.lines.some(l=>l.present && coKey(l.name)===coKey(m.name))).map(m=>({ name:m.name, share:coNum(m.share), typed:true })) };
+      crew:crew.map(m=>({ name:m.name, share:coNum(m.share), typed:m.share!==null && m.share!==even })) };
   });
   // What was written stays as typed, but an IP that still matches the hours is the app's: changing Hours should move it.
   if (written){

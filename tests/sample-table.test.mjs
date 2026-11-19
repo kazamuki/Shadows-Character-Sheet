@@ -187,3 +187,16 @@ test("a CRANK job at a close-out has a crew of that session's present names, and
     assert.deepEqual(JSON.parse(JSON.stringify(Engine.migrateTable(JSON.parse(JSON.stringify(fresh))).sessions.find(x => x.id === s.id).close.jobs)), s.close.jobs, "the gate changes nothing");
   }
 });
+
+test("a character's Çredits ledger carries every share the logs give them, as a line's Çredits do (Decision 302)", () => {
+  const fresh = JSON.parse(readFileSync(file, "utf8"));
+  let checked = 0;
+  for (const s of fresh.sessions) for (const j of s.close ? s.close.jobs : []) for (const m of j.crew) {
+    const copy = fresh.copies.find(c => c.character.identity.name === m.name);
+    if (!copy || copy.character.meta.updated.slice(0, 10) < s.date) continue;
+    checked++;
+    const rows = copy.character.trackers.credits.ledger.filter(r => r.note === `Session ${s.number}`).map(r => r.amount);
+    assert.ok(rows.includes(m.share), `${m.name}'s ledger lacks the ${m.share} from ${j.title}`);
+  }
+  assert.ok(checked >= 3, "the sample's crew have the job's shares");
+});

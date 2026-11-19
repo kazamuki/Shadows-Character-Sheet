@@ -2223,7 +2223,7 @@
             "title": "CRANK: Infiltrate the NeuroNet Hub",
             "thread": null,
             "outcome": "done",
-            "tier": "skilled",
+            "tier": null,
             "pay": 4500,
             "crew": [
               {
@@ -5542,7 +5542,7 @@
           "witheringDamage": 0,
           "aberrations": [],
           "credits": {
-            "current": 4800,
+            "current": 6300,
             "ledger": [
               {
                 "date": "2026-07-18T23:40:00.000Z",
@@ -5565,6 +5565,11 @@
                 "note": "Session 4"
               },
               {
+                "date": "2026-09-26T23:44:00.000Z",
+                "amount": 1500,
+                "note": "Session 5"
+              },
+              {
                 "date": "2026-10-17T23:45:00.000Z",
                 "amount": 400,
                 "note": "Session 6"
@@ -5572,7 +5577,7 @@
             ]
           },
           "crank": {
-            "rep": 3,
+            "rep": 2,
             "ledger": [
               {
                 "date": "2026-08-22T23:45:00.000Z",
@@ -5581,7 +5586,7 @@
               },
               {
                 "date": "2026-09-26T23:45:00.000Z",
-                "amount": 2,
+                "amount": 1,
                 "note": "The Hub, clean exit"
               }
             ]
@@ -5876,7 +5881,7 @@
           "witheringDamage": 0,
           "aberrations": [],
           "credits": {
-            "current": 4600,
+            "current": 6100,
             "ledger": [
               {
                 "date": "2026-07-18T23:40:00.000Z",
@@ -5897,6 +5902,11 @@
                 "date": "2026-09-12T23:43:00.000Z",
                 "amount": 900,
                 "note": "Session 4"
+              },
+              {
+                "date": "2026-09-26T23:44:00.000Z",
+                "amount": 1500,
+                "note": "Session 5"
               },
               {
                 "date": "2026-10-17T23:45:00.000Z",
@@ -6187,7 +6197,7 @@
           "witheringDamage": 0,
           "aberrations": [],
           "credits": {
-            "current": 3400,
+            "current": 4900,
             "ledger": [
               {
                 "date": "2026-07-18T23:40:00.000Z",
@@ -6203,6 +6213,11 @@
                 "date": "2026-08-22T23:42:00.000Z",
                 "amount": 600,
                 "note": "Session 3"
+              },
+              {
+                "date": "2026-09-26T23:44:00.000Z",
+                "amount": 1500,
+                "note": "Session 5"
               }
             ]
           },

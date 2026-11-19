@@ -3004,3 +3004,17 @@ test("Decision 302: walked out says −2 with the true minus, the client's breac
   assert.equal(log.at(-1), "Jobs: Dock <b>job</b>, walked out; Second, the client broke it.");
   assert.deepEqual(app.errors, []);
 });
+
+test("Decision 302: on a Redo a share that was still the even split moves with the payout, and one typed differently stays", () => {
+  const { app, ids } = jobApp();
+  closeSheet(app, ids.id);
+  setJobBasics(app, ids.th);
+  jobIn(app, '[data-co-job="0"] [data-cj-key="mara"] [data-cj="share"]', "1000");
+  assert.deepEqual(shares(app), ["1000", "800", "800"]);
+  app.click("[data-co-write]"); app.click("[data-coend-done]");
+  app.click("[data-co-redo]"); app.click("#modal [data-askyes]");
+  assert.deepEqual(shares(app), ["1000", "800", "800"]);
+  jobIn(app, '[data-co-job="0"] [data-cj="pay"]', "3000");
+  assert.deepEqual(shares(app), ["1000", "1000", "1000"], "Dex and Juno were the even split, so they follow; Mara typed hers");
+  assert.deepEqual(app.errors, []);
+});
