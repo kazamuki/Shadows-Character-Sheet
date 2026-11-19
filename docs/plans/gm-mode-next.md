@@ -43,7 +43,7 @@ suggestion, not a queue.
 | **S31** | **Help on every page.** A **?** in the header and the `?` key open a panel for the page that's open: what it's for, when in a night you'd use it, its words and a tip; *A night at the table*; every word GM mode uses, defined once; a guide line under each section; empty states that teach. Deighton's ask (via Ken, 2026-11-11): he couldn't tell how, why or when to use much of GM mode. The help's words go to Deighton as a page before the build | Rule or shape | **Deighton**: his read of the help's words (GQ39), which land on the PR before it merges | **Built** in app 0.67.0 (Decision 278): [`gm-mode-next/S31-help.md`](gm-mode-next/S31-help.md) |
 | **S12a** | **Supernatural Orders:** the seven Orders and their modifiers in the builder (GQ17 approved 2026-10-10) | Content | **Scott**: the Orders table, with its Profile and Formation columns, moved from `WIP_Threat_Codex_v2` into the mirrored `2610` | Waiting on Scott |
 | **S17** | **The Codex's Shared Rules and card format:** a swarm takes at most 1 from a single-target attack; an NPC parries with the weapon's skill plus its Parry; social checks against Difficulty 15, and the Free, Fast and full Action, as a Reference panel; and each entry's Tag line, Role line and Hook on its Threats card. GQ22's trait names ride with it | Content + shape | **Scott**: `2612`'s entries in v2's format. The pack builder follows first (a Fix in `private/`, Y0's size), then this | Waiting on Scott |
-| **S11** | **CRANK work:** the generator and the jobs board (`2625` revised). The payout goes in the award log, not a dispatch (GQ20); the board is the GM's, not a list players browse | Content + shape | Scott ticked `2625` sent (2026-11-03): confirm it's in `private/` before the pre-flight | No order yet |
+| **S11** | **CRANK work,** split 2026-11-18. **S11a, the Job Generator:** `2625`'s five d10 tables, rolled or picked in the Sessions tab, a contract saved as a thread, and the tables on the Reference (Ken, 2026-11-18). **S11b, the jobs board:** a job record, its payout in the award log, not a dispatch (GQ20), and the walk-out a client caused; the board is the GM's, not a list players browse | Rule or shape (S11a); Content + shape (S11b) | `2625` confirmed: the 2026-10-22 mirror is the revision, unchanged in the 11-15 refresh | **S11a drafted 2026-11-18**, waiting on Ken's GQ54–GQ59: [`gm-mode-next/S11a-job-generator.md`](gm-mode-next/S11a-job-generator.md). S11b: no order yet (GQ59) |
 
 Each session's order goes in `plans/gm-mode-next/` when it's drafted, through the loop in
 `WORK-ORDERS.md`. The first plan's session drafts (S11, S12, S17) are in `archive/gm-mode.md` §6, *What's left*.
@@ -58,7 +58,7 @@ Things to do, not questions; he tells Ken when one is done, and the session that
 | Move the Orders table, with its Profile and Formation columns, from `WIP_Threat_Codex_v2` into the mirrored `2610` | S12a | |
 | Bring the entries in `2612` into v2's format (Tag, Role and Hook lines, the Shared Rules section); fix GQ22's eight trait names while he's there, or say they stay | S17 | |
 | Approve the fifteen Site Profiles, or say what changes (2026-11-03: not yet; the pack keeps its draft label) | the label comes off | |
-| Send the revised `2625` | S11 | Ticked on his page 2026-11-03; check it's in `private/` |
+| Send the revised `2625` | S11 | Ticked on his page 2026-11-03; confirmed 2026-11-18: the 10-22 mirror is the revision |
 | Send Cerulean Nights (the font file) and his artwork: the wordmark with its text outlined, the LUCK glyph, the silhouettes | the print restyle (PQ1, PQ2) | |
 | Revise the Book of Known Spells to TN 7 on Watchword, Sure Grip, Everlight and Hearthstone (the app already uses 7) | nothing in the app | |
 | Origins, spheres and implements: the four-way talk with Deighton, Bill and Ken | the Arcanist's Origins leaving `draft`; not blocking | |
@@ -75,6 +75,7 @@ The first plan's GQ table stays in `archive/gm-mode.md` §9 with every answer as
 | **GQ31** | **Should a cast member record how well they know each of the crew** (a face, a regular, a name: W68)? It's a new stored field | Ken | Ask with S28's order; not built by default |
 | **GQ43–GQ47** | S24's: the roster's low TOLs, a WILL below its floor, what carries, how the GM heals, when a row takes its wounds | Ken | **Answered** 2026-11-16, each on its default (Ken), in [`gm-mode-next/S24-npc-rules.md`](gm-mode-next/S24-npc-rules.md) §4 |
 | **GQ48–GQ53** | S25's: rep's floor against Burned, how the start is written, old Reputation ranks, the close-out's absent line, halved payouts, Reputation after creation | Ken | **Answered** 2026-11-18, each on its default (Ken), in [`gm-mode-next/S25-crank.md`](gm-mode-next/S25-crank.md) §4 |
+| **GQ54–GQ59** | S11a's: whether the app rolls, where the generator lives, one contract or several, a contract as a thread, a tier on it, and S11b | Ken | Open, in [`gm-mode-next/S11a-job-generator.md`](gm-mode-next/S11a-job-generator.md) §4 |
 
 ## 6. S23's leads
 
