@@ -163,6 +163,10 @@ window.SHADOWS_DATA = {
      `{ stat, times, plus }` is stat × times + plus (Decision 135), the same
      shape as a Werewolf's `startingSFR`. `inputs` and `formula.stat` must be
      valid stat ids. TOL and WILL cannot be raised directly by IP (see `ip`).
+     A "sumOfModifiers" entry also names its rule for an NPC, read only by
+     Engine.npc (Decision 293): `npcRule` "override" (a blank is the formula; a
+     typed number is used as typed) or "floor" (a blank is the formula; a typed
+     number below it is an error and the formula is used). Missing reads "override".
      To add a derived attribute, copy a block and pick the matching `type`. */
   "derived": [
     {
@@ -171,6 +175,7 @@ window.SHADOWS_DATA = {
       "type": "sumOfModifiers",
       "base": 1,
       "floor": 1,
+      "npcRule": "override",
       "inputs": [
         "INT",
         "BOD",
@@ -184,6 +189,7 @@ window.SHADOWS_DATA = {
       "type": "sumOfModifiers",
       "base": 1,
       "floor": 1,
+      "npcRule": "floor",
       "inputs": [
         "BOD",
         "INT",

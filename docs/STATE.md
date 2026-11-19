@@ -1,7 +1,7 @@
 # State of the build
 
 **Updated:** 2026-11-15
-**Versions:** app `0.72.0` · game data `0.58` · character schema `0.34` · table schema `0.19` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.73.0` · game data `0.58` · character schema `0.34` · table schema `0.20` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -153,7 +153,6 @@ rev 9's `C1`–`C3` are still forward notes.
 
 **Ken alone:** F12 and F32, W38's plan (`plans/two-tabs-one-character.md`,
 TQ1–TQ3), and the print plan (`plans/print-sheet-scotts-look.md`). GM mode's
-S24 (TOL and WILL, 175 reopened) is unblocked: Scott says WILL is a floor (GQ6).
 GM mode is launched (260): a GM session is an ordinary batch now, with its changelog lines and an app bump.
 
 **Waiting on others:**

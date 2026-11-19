@@ -24,6 +24,13 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.73.0
+
+### GM mode
+
+- An NPC's TOL is its formula unless you type an override, and a WILL below its formula shows as an error.
+- Cast members carry their wounds from one fight to the next. Heal them from their page.
+
 ## v0.72.0 — 2026-11-16
 
 ### Character sheet

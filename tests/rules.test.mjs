@@ -3617,3 +3617,14 @@ test("E8 3: a term's quoted rule is the book's, word for word", () => {
     assert.doesNotMatch(q.text, /(^|[^A-Za-z0-9])-\d/, `${q.id} carries a hyphen-minus number`);
   }
 });
+
+test("Decision 293: Marta's printed WILL 2 is below its formula 3, and her TOL 2 is no override", () => {
+  // Marta (2611): BOD 5, INT 5, COOL 7, EMP 8, printed TOL 2 and WILL 2. Inline, so it runs without private/.
+  const b = Engine.npc({ stats: { BOD: 5, INT: 5, COOL: 7, EMP: 8 }, authored: { TOL: 2, WILL: 2 } }).authored;
+  assert.equal(b.WILL.formula, 3);
+  assert.equal(b.WILL.below, true);
+  assert.equal(b.WILL.used, 3);
+  assert.equal(b.WILL.value, 2, "the stored number is kept");
+  assert.equal(b.TOL.formula, 2);
+  assert.equal(b.TOL.override, false);
+});

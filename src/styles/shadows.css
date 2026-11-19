@@ -1879,3 +1879,7 @@ h2.city-name{font-size:1.15rem}
   /* the wrapped bar is two lines (113px), so a row scrolled to the actor clears it */
   .enc-row{scroll-margin-top:calc(var(--hdr-off) + 128px)}
 }
+/* A cast member's wounds and the planned row's note (Decision 294) */
+.cast-heal{display:flex; flex-wrap:wrap; gap:8px; align-items:flex-end; margin:0 0 10px}
+.cast-heal .field{max-width:7rem}
+.enc-hurt{font-family:var(--mono); font-size:.8rem; color:var(--magenta-text)}

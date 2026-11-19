@@ -6836,8 +6836,17 @@ const Engine = (() => {
     if (!(typeof f.id==="string" && RECORD_ID_RE.test(f.id))) return null;
     return f;
   }
+  // Wounds a member carries between fights (Decision 294): damage and Massive levels,
+  // two whole non-negative numbers capped at 999, or null when both are 0. Anything else is 0.
+  function _wounds(v){
+    if (!_isObj(v)) return null;
+    const n = x => typeof x==="number" && Number.isFinite(x) && x>0 ? Math.min(999, Math.floor(x)) : 0;
+    const damage = n(v.damage), massive = n(v.massive);
+    return damage || massive ? { damage, massive } : null;
+  }
   // One cast member, coerced the way a note is. `used` holds the ids taken.
   function _castMember(n, used){
+    n.wounds = _wounds(n.wounds);
     for (const k of CAST_TEXT) n[k] = _str(n[k]);
     n.npcRoles = _roleList(n.npcRoles);
     n.affiliations = _roleList(n.affiliations);
@@ -7051,7 +7060,7 @@ const Engine = (() => {
     x.updated = _isoOrNull(x.updated);
   }
   // The table file's shape. A bump needs a migrateTable() step in the same change.
-  const TABLE_SCHEMA_VERSION = "0.19";
+  const TABLE_SCHEMA_VERSION = "0.20";
   function newTable(name){
     const now = new Date().toISOString();
     return { meta:{ kind:"shadows-table", id:newTableId(), name:String(name ?? ""),
@@ -7173,6 +7182,9 @@ const Engine = (() => {
       if (!Array.isArray(c.players)) c.players = [];
       if (!Array.isArray(c.copies)) c.copies = [];
     }
+    //   Schema 0.20 (Decision 294): a cast member carries wounds. Nothing is converted (203): every member is unhurt.
+    if (typeof arrived!=="string" || _versionNewer("0.20", arrived))
+      for (const n of (Array.isArray(c.cast) ? c.cast : [])) if (_isObj(n)) n.wounds = null;
     //   Schema 0.19 (Decision 261): a side keeps its Combat Sense roll. A wave fight not ended takes each side's best
     //   as 210 read it, so a fight saved mid-round opens in the order it had; everything else starts with none.
     //   The seed reads the gated rows, so the gate does it (_encounters).
@@ -7487,8 +7499,15 @@ const Engine = (() => {
       const mods = d.inputs.map(id=>stats[id] ? stats[id].mod : null);
       let formula = mods.some(m=>m===null) ? null : d.base + mods.reduce((a,m)=>a+m, 0);
       if (formula!==null && d.floor!=null) formula = Math.max(d.floor, formula);
-      authored[d.id] = { value:b.authored[d.id], formula };
-      if (b.authored[d.id]===null) blanks.push(d.id);
+      // Decision 293: the data says which rule each follows. A blank is the formula; a "floor"
+      // (WILL) never reads below it; anything else is an "override" (TOL), used as typed.
+      const value = b.authored[d.id], floor = d.npcRule==="floor";
+      const both = typeof value==="number" && formula!==null;
+      const below = floor && both && value < formula;
+      const override = !floor && both && value !== formula;
+      const used = value===null ? formula : below ? formula : value;
+      authored[d.id] = { value, formula, used, override, below };
+      if (used===null) blanks.push(d.id);
     }
     // Rows are kept while a GM is mid-edit, so a list is blank when no row has content.
     const filled = {
@@ -7503,7 +7522,7 @@ const Engine = (() => {
     const used = new Set(t.cast.map(n=>n.id));
     const n = { id:newCastId(used), name:_str((f||{}).name), flavor:_str((f||{}).line), description:"",
                 origin:"", npcRoles:[], affiliations:[], enemyRole:"", tier:null, motivation:"", resources:"", line:"",
-                ifPushed:"", gmNote:"", status:"alive", block:null, from:null, ally:false, created:now, updated:now };
+                ifPushed:"", gmNote:"", status:"alive", block:null, from:null, ally:false, wounds:null, created:now, updated:now };
     t.cast.unshift(n);
     _tableStamp(t);
     return { ok:true, id:n.id };
@@ -9187,7 +9206,7 @@ const Engine = (() => {
                 affiliations:[], enemyRole:found.enemyRole ? _str(found.enemyRole.name) : "", tier:_tier(e.tier),
                 motivation:_str(e.motivation), resources:_str(e.resources), line:_str(e.line), ifPushed:_str(e.ifPushed),
                 gmNote:_str(e.gmNote), status:"alive", block:_block(block),
-                from:{ kind:"entry", pack:pack.meta.id, id:e.id, name:_str(e.name) }, ally:false, created:now, updated:now };
+                from:{ kind:"entry", pack:pack.meta.id, id:e.id, name:_str(e.name) }, ally:false, wounds:null, created:now, updated:now };
   }
   function castFromEntry(t, pack, id){
     const found = _isObj(pack) && _isObj(pack.meta) ? packEntry([pack], pack.meta.id, id) : null;
@@ -9591,6 +9610,7 @@ const Engine = (() => {
       const name = _str(m.name).trim() || "Unnamed";
       row.kind = "cast"; row.name = name; row.cast = { kind:"cast", id:m.id, name };
       if (m.ally!==true) row.side = _otherSide(l.e);
+      if (l.e.status==="running") _castStart(t, row);
     } else {
       const name = _str(f.name).trim();
       if (!name) return { ok:false, why:"Name them first." };
@@ -9789,6 +9809,7 @@ const Engine = (() => {
     if (!first && e.opening && _pick(Object.assign({}, e, { acted:[], opening:null }))) return { ok:false, why:`${sideTitle(e, e.opening.side)} has nobody who can act.` };
     if (!first) return { ok:false, why:"Add someone to the encounter first." };
     e.status = "running"; e.round = 1; e.turn = first.id; e.acted = [];
+    for (const r of _rowList(e)) _castStart(t, r);
     _tableStamp(t, e);
     return { ok:true };
   }
@@ -9978,6 +9999,7 @@ const Engine = (() => {
       const ended = { left:h.left, levels:h.levels, levelsLeft:h.levelsLeft, down:h.down, gone:h.gone, conditions:v.conditions.map(c=>c.name) };
       const m = r.kind==="cast" && _isObj(r.cast) ? (Array.isArray(t.cast) ? t.cast : []).find(n=>_isObj(n) && n.id===r.cast.id) : null;
       out.rows.push({ row:r, kind:r.kind, name:v.name, gone:r.kind==="cast" && !m, ended,
+                      carries:{ damage:nonNegInt(r.damage), massive:nonNegInt(r.massive) },
                       status:m ? m.status : "alive", line:_endLine(t, e, ended) });
     }
     return out;
@@ -9994,7 +10016,7 @@ const Engine = (() => {
       let block = null;
       try { block = _isObj(r.block) ? JSON.parse(JSON.stringify(r.block)) : null; } catch (x) {}
       n = { id:newCastId(used), name:"", flavor:"", description:"", origin:"", npcRoles:[], affiliations:[], enemyRole:"", tier:null,
-            motivation:"", resources:"", line:"", ifPushed:"", gmNote:"", status:"alive", block:_block(block), from, created:now, updated:now };
+            motivation:"", resources:"", line:"", ifPushed:"", gmNote:"", status:"alive", block:_block(block), from, ally:false, wounds:null, created:now, updated:now };
     }
     n.name = _str(name).trim() || _str(r.name).trim();
     n.from = from;
@@ -10029,6 +10051,8 @@ const Engine = (() => {
     e.status = "ended"; e.turn = null;
     for (const r of _rowList(e)) r.delay = null;
     const out = { ok:true, kept:[], lines:[] };
+    // Decision 294: the row is the fight's record and the member is the person, so the end hands the wounds across,
+    // whether or not the GM wrote a line. A Kept copy carries them too (below).
     const date = _today();
     for (const p of plan){
       const r = p.u.row;
@@ -10037,6 +10061,7 @@ const Engine = (() => {
         member = castFromRow(t, packs, r, p.w.name);
         if (p.status) member.status = p.status;
         killed = member.status==="dead";
+        member.wounds = _wounds(p.u.carries);
         r.kept = { kind:"cast", id:member.id, name:member.name };
         out.kept.push(member.id);
       } else if (p.u.kind==="cast" && !p.u.gone){
@@ -10049,8 +10074,51 @@ const Engine = (() => {
         if (a.ok) out.lines.push(a.id);
       }
     }
+    for (const u of ups.rows){
+      if (u.kind!=="cast" || u.gone) continue;
+      const member = t.cast.find(n=>n.id===u.row.cast.id);
+      const w = _wounds(u.carries);
+      if (member && JSON.stringify(member.wounds)!==JSON.stringify(w)){ member.wounds = w; _tableStamp(t, member); }
+    }
     _tableStamp(t, e);
     return out;
+  }
+  // ── A member's wounds (Decision 294) ────────────────────────────────────
+  // A cast member's row starts with the wounds they carry, once, on a row nothing has happened to
+  // (the test Decision 257 uses for a claimed PC row). Conditions don't carry.
+  function _castStart(t, r){
+    if (!_isObj(r) || r.kind!=="cast" || !_isObj(r.cast)) return;
+    if (r.struck || r.damage>0 || r.massive>0 || r.conditions.length || r.armorId!==null || r.armorLoss>0 || r.scrapped) return;
+    const m = (Array.isArray(t.cast) ? t.cast : []).find(n=>_isObj(n) && n.id===r.cast.id), w = m ? _wounds(m.wounds) : null;
+    if (w){ r.damage = w.damage; r.massive = w.massive; }
+  }
+  // How hurt a member is, read off the same stand-in a row uses (Decision 191). Total.
+  function castHealth(t, id){
+    try {
+      const m = _isTable(t) ? t.cast.find(n=>_isObj(n) && n.id===id) : null;
+      if (!m) return null;
+      const w = _wounds(m.wounds) || { damage:0, massive:0 };
+      const stand = _standIn(t, { kind:"cast", cast:{ kind:"cast", id }, damage:w.damage, massive:w.massive, conditions:[], armorId:null, armorLoss:0, scrapped:false });
+      if (!stand) return null;
+      const hs = hlState(stand);
+      return { total:hs.total, left:hs.hpLeft, levels:hs.levels, levelsLeft:hs.levels - hs.lost, gone:hs.massive, down:hs.down, damage:w.damage, massive:w.massive };
+    } catch (e) { return null; }
+  }
+  // The GM heals a member between fights: some HP, or all of it (Massive too). Nothing heals on its own.
+  function healCast(t, id, f){
+    const m = _isTable(t) ? (Array.isArray(t.cast) ? t.cast : []).find(n=>_isObj(n) && n.id===id) : null;
+    if (!m) return { ok:false, why:"No such cast member." };
+    const w = _wounds(m.wounds);
+    if (!w) return { ok:false, why:"They aren't hurt." };
+    if (_isObj(f) && f.all===true) m.wounds = null;
+    else {
+      const hp = _isObj(f) && typeof f.hp==="number" && Number.isFinite(f.hp) ? Math.floor(f.hp) : 0;
+      if (hp < 1) return { ok:false, why:"Heal at least 1." };
+      if (w.damage < 1) return { ok:false, why:"Only Heal all clears Massive." };
+      m.wounds = _wounds({ damage:Math.max(0, w.damage - hp), massive:w.massive });
+    }
+    _tableStamp(t, m);
+    return { ok:true };
   }
 
   // ── The hit (Decisions 191–192) ─────────────────────────────────────────
@@ -10474,7 +10542,7 @@ const Engine = (() => {
     ENCOUNTER_OBJECTIVES, ENCOUNTER_PROMPTS, addEncounter, editEncounter, addSide, renameSide, setSideRoll, removeSide, sideTitle, removeEncounter, runningEncounter, encounterFor, addToEncounter, encounterTitle, addParticipant, participantFromEntry,
     participantsFromGroup, editParticipant, removeParticipant, participantDamage, participantAddCondition,
     participantRemoveCondition, participantConditionMarks, rowCharacter, startEncounter, nextTurn, setTurn, setOpening, delayTurn, actNow, resolveEncounterReset,
-    applyEncounterReset, endEncounter, encounterWrapUp, encounterView, painFor,
+    applyEncounterReset, endEncounter, encounterWrapUp, castHealth, healCast, encounterView, painFor,
     // The hit: an encounter row takes damage the way a character does
     encounterArmor, resolveEncounterHit, applyEncounterHit };
 })();

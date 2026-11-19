@@ -4351,6 +4351,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. It is a deliberate exception to constraint 7's letter for TOL and WILL, which the Codex authors.
      - **Revisit if:** GQ6 is answered as a formula or a floor, or S10 needs armor numbers.
      - **Built:** as 174.
+    → **Superseded in part by Decision 293** — a blank TOL or WILL reads its formula, and WILL has a floor; the stored number is still what the GM or the pack typed.
 
 176. **The table opens on its Cast tab: quick-add at the top, a filtered list, and a page per member; a cast still has no undo, and Delete asks.**
      *2026-10-05 · Ken + Claude · Touches: Cast tab, TABLE_SECTIONS, quick-add, cast list, cast filters, member page, data-cast, Delete, table undo, Decision 171, W29, GQ1*
@@ -4609,6 +4610,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** GQ26 says wounds carry, S5's sessions give downtime, or a GM wants to keep someone after the fact.
      - **Built:** table schema 0.7, switched off (173); PR #130; log 2026-10-07 (the encounter's end).
     → **Superseded in part by Decision 241** — the fight's line keeps the figures and links its encounter.
+    → **Superseded in part by Decision 294** — a cast member no longer starts their next encounter unhurt: their wounds carry.
 
 194. **Every power a character holds has a rank, and Progression raises it with IP at `0450`'s prices; a new power in play costs the book's flat price.**
      *2026-10-08 · Ken + Claude · Touches: powerRanks, progression.powerIpe, disciplineRanks, ipCost, spendIP, ip.powerIncreaseCost, ip.rankCap, Max Power Rank, Raise a Power, IP journal, addPower, removePower, versionCheck, Disciplines, written power, character schema 0.18, W71, VQ5*
@@ -5746,6 +5748,24 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 104 in part (a running power's weapon bonus is summed); LQ5 for running powers. Extends 237, 248, 266, 290.
      - **Revisit if:** the book gives AP a number; W110's "extended until retracted" powers (Steel Fangs, Serrated Claws, Bone Spines) get a stored state; Deighton rules Bone Spines' grappling (F55).
      - **Built:** app 0.72.0 (minor), game data 0.58, no schema bump, PR (this one), log 2026-11-16 (L5b).
+
+293. **An NPC's TOL is its formula unless the GM overrides it, and its WILL is its formula or higher; the data says which rule each follows.**
+     *2026-11-16 · Ken + Claude, from Scott (GQ6, 2026-11-03) · Touches: stat block, block.authored, Engine.npc, TOL, WILL, derived npcRule, the cast builder, the cast page, the cast's print, GQ6, GQ43, GQ44, Decision 175*
+     - **Decided:** Each `sumOfModifiers` derived stat names its NPC rule in the data: `npcRule: "override"` (TOL) or `"floor"` (WILL). `Engine.npc` returns, for each, `value` (stored), `formula`, `used`, `override` and `below`. A blank is the formula. An override is used as typed. A value below a floor is kept, shown as an error, and the floor is used. A blank with a formula is not a blank.
+     - **Why:** Scott's ruling: TOL is the formula with an override where an entry means it (the Wight's 0), and WILL is a floor. Keeping a too-low WILL stored, not rewritten, keeps a pack's or a GM's number visible until someone fixes it.
+     - **Rejected:** Refusing a WILL below the floor at the field: a pack copy arrives with one (Marta), and the gate can't ask (GQ44). Rewriting stored TOLs that differ from the formula: changes Scott's numbers without asking (GQ43). The rule keyed by id in code (Decision 135).
+     - **Replaces:** Decision 175 in part: TOL and WILL are no longer stored only as authored; a blank reads the formula, and WILL has a floor.
+     - **Revisit if:** Scott says the roster's low TOLs are mistakes, not overrides, or a third derived stat needs a rule.
+     - **Built:** table schema 0.20, app 0.73.0, PR (this one), log 2026-11-16 (S24).
+
+294. **A cast member carries their wounds out of a fight and into the next one; the GM heals them between fights.**
+     *2026-11-16 · Ken + Claude, from Scott (GQ26, 2026-11-03) · Touches: cast member, wounds, endEncounter, encounterWrapUp, the wrap-up, addParticipant, startEncounter, a cast row's start, Kept, healCast, castHealth, the cast page, table schema 0.20, GQ26, GQ45, GQ46, GQ47, Decision 191, Decision 193, Decision 257*
+     - **Decided:** A cast member stores `wounds`: `{ damage, massive }`, or null when unhurt. The wrap-up writes each cast row's damage and Massive to its member, and a Kept copy's to the new member. A cast row takes its member's wounds when its encounter starts, or when it's added to one that's running, if nothing has happened to it yet (as 257's PC rows). Conditions don't carry. The cast page shows the wounds and heals them: a number of HP, or all.
+     - **Why:** Scott: wounds carry and have to be healed, and the GM says how much heals between fights; fights back to back heal nothing. The row is the fight's record and the member is the person, so the wrap-up is where one hands to the other (193 already writes there).
+     - **Rejected:** A row reading its member live: a running fight's numbers would change when the GM heals someone on another page. Healing by the book's natural rate: the GM decides (GQ26), and an NPC has no rest clock. Carrying Conditions: they're the fight's (GQ45). Wounds at every end, the quick end too: a planned encounter has no wounds.
+     - **Replaces:** Decision 193 in part: a member no longer starts their next encounter unhurt.
+     - **Revisit if:** NPC downtime arrives (S5's), Scott wants Conditions to carry, or armor wear on the cast is wanted (193's other half).
+     - **Built:** as 293.
 
 ## 5. Open Flags
 

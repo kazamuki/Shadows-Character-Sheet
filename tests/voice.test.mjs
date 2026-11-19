@@ -292,7 +292,8 @@ test("P18 7: the effect tags and their templates are player copy (Decision 231)"
 test("U4: the software words are gone", () => {
   const src = readdirSync(new URL("../src/ui/", import.meta.url)).filter(n => n.endsWith(".js"))
     .map(n => readFileSync(new URL("../src/ui/" + n, import.meta.url), "utf8")).join("\n");
-  for (const old of ["not in the Gear tables", "formula ${", "Slot in a pack with site profiles to use one here.",
+  // "formula ${" left this list with Decision 293: an NPC's builder and read view say "formula N" on purpose.
+  for (const old of ["not in the Gear tables", "Slot in a pack with site profiles to use one here.",
     "No pack slotted in. A pack is a file of threats your GM material came with.", "isn't kept anywhere else unless you've exported the table",
     "aren't kept anywhere else unless you've exported the table"])
     assert.equal(src.includes(old), false, "\"" + old + "\" is back in src/ui");
