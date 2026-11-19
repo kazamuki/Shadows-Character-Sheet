@@ -4,8 +4,9 @@
 Decision 297) is built. **The ask:** Ken, 2026-11-18, after S11a merged: draft S11b, "the jobs board". **The book:**
 `2625` (CRANK and Bank), *How CRANK Works* and *Reputation*. **The first plan's sketch:** `archive/gm-mode.md` §4c
 (`jobs: [JobRecord]`) and §4i (client, tier, payout, status, crew). **Reopens:** Decision 205 in part (the award log).
-**Status:** **drafted 2026-11-18** by Claude (Opus), S11a's reviewer, at Ken's ask through the conductor. **Not
-approved.** GQ67–GQ74 wait on Ken.
+**Status:** **drafted 2026-11-18** by Claude (Opus), S11a's reviewer, at Ken's ask through the conductor. **Approved
+by Ken 2026-11-18**, in the conductor session: "All defaults". GQ67–GQ74 each take their default. **Builds after S23
+merges** (Ken: no more than one build at a time).
 **Branch:** from `main`; PR to `main`. Nothing ships switched off: GM mode is on for everyone (Decision 239).
 **Runs beside:** S23's order (#366, docs only) and K3 (#365, the sheet's help). Neither touches the close-out. K3
 edits `sheet.js` and the data, so expect a small merge there (§9's sheet line). **Say N everywhere.**
