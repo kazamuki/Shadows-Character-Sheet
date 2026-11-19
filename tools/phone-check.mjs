@@ -565,9 +565,10 @@ async function tableExtras(browser, file, rows, numbers) {
   const cols = () => (document.querySelector(".main-grid") ? getComputedStyle(document.querySelector(".main-grid")).gridTemplateColumns.split(" ").map(parseFloat) : []);
   // The widest field, textarea and prose block: a measure written into the read-only sheet would cap one of them.
   // The read-only sheet sits in .ro-sheet under the table's own bar and title; the player's sheet is all of main.
+  // K3 (KQ20): a seat draws no guide line, so the player's own are left out of the measure.
   const widest = root => {
     const w = sel => Math.round(Math.max(0, ...[...document.querySelectorAll(sel.split(",").map(x => root + " " + x.trim()).join(","))].filter(e => e.getBoundingClientRect().height > 0).map(e => e.getBoundingClientRect().width)));
-    return [w("input:not([type=hidden]):not([type=checkbox]):not([type=radio]), select"), w("textarea"), w("p, dd")];
+    return [w("input:not([type=hidden]):not([type=checkbox]):not([type=radio]), select"), w("textarea"), w("p:not(.guide-line), dd")];
   };
   const TABS = ["main", "skills", "character", "trackers", "progression", "loadout", "notes"];
   const ctx = async (z, init) => { const c = await browser.newContext({ viewport: { width: z.width, height: z.height } }); await c.addInitScript(init.fn, init.arg); return c; };

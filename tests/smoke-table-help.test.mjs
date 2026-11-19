@@ -378,3 +378,22 @@ test("K2: a table's Every word filters and jumps too, and keeps its own words", 
   assert.equal(app.doc.activeElement, app.$("#ghelp [data-hwords]"));
   assert.deepEqual(app.errors, []);
 });
+
+// K3 (KQ6, Decision 298): Help on a seat names the open tab and lists its words, for the seat's copy.
+test("K3: a seat's Help names the open tab and lists its words", () => {
+  const app = helpApp("players");
+  app.click(`[data-seat="${app.$("[data-seat]").getAttribute("data-seat")}"]`);
+  app.click("[data-thelp]");
+  assert.equal(shown(app), true);
+  const SGc = D.sheetGuide.contexts;
+  const wordsOf = tab => app.window.eval(`(()=>{ const ch=Engine.seatCharacter(S.table, S.seatOpen); return ${JSON.stringify(SGc[tab].words)}.map(r=>Engine.word(r, ch)).filter(w=>w && !w.absent).map(w=>w.title); })()`);
+  for (const [tab, label] of [["main", "Main"], ["loadout", "Loadout"], ["skills", "Skills"]]) {
+    if (tab !== "main") app.click(`[data-rotab="${tab}"]`);
+    assert.equal(heading(app), `${G.contexts.character.title}: ${label}`, `${tab}: the heading`);
+    const text = panel(app).textContent, words = wordsOf(tab);
+    assert.ok(words.length > 0, `${tab} has no words to list`);
+    for (const w of words) assert.ok(text.includes(w), `${tab}: ${w} isn't listed`);
+    assert.equal(shown(app), true, "a tab press closed Help");
+  }
+  assert.deepEqual(app.errors, []);
+});

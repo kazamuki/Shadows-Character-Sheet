@@ -157,7 +157,7 @@ test("the app never narrates its own build state", () => {
 
 test("state copy lives in appCopy, so the voice is a data edit (Decision 71)", () => {
   for (const k of ["unsettledLabel", "unsettledRule", "statusLabel",
-                   "specializationUnwritten", "applyFromText", "ranksAdvanceInPlay"]) {
+                   "specializationUnwritten", "applyFromText"]) {
     assert.ok(D.appCopy[k], `appCopy.${k} is missing`);
   }
   // A raw status must never be what the player reads.

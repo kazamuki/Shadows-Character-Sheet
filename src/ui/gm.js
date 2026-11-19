@@ -399,8 +399,16 @@ function helpSwitchHtml(){
     <button type="button" data-help-guide-on class="${on?"on":""}" aria-pressed="${on}">${esc(u.on)}</button>
     <button type="button" data-help-guide-off class="${on?"":"on"}" aria-pressed="${!on}">${esc(u.off)}</button></div>`;
 }
+// K3 (KQ6): Help on a seat's sheet names the tab that's open and lists that tab's words, read for the seat's copy. null for any other page.
+function seatHelpTab(id){
+  try{
+    if (id!=="character") return null;
+    const tab=RO_SECTIONS.find(s=>s.id===S.seatSheet), c=tab && sheetGuide().contexts[tab.id], ch=tab && Engine.seatCharacter(S.table, S.seatOpen);
+    return c && ch ? { label:tab.label, words:c.words||[], ch } : null;
+  }catch(e){ return null; }
+}
 function helpBodyHtml(id){
-  const g=gmGuide(), u=g.ui, c=g.contexts[id], head = (title, back) => `<div class="dhead"><h2 id="ghelp-h" tabindex="-1">${esc(title)}</h2>
+  const g=gmGuide(), u=g.ui, c=g.contexts[id], seat=seatHelpTab(id), head = (title, back) => `<div class="dhead"><h2 id="ghelp-h" tabindex="-1">${esc(title)}</h2>
       <button type="button" class="btn sm" data-help-close aria-label="${esc(u.close)} ${esc(u.title.toLowerCase())}">${esc(u.close)}</button></div>${back ? `<p><button type="button" class="btn sm" data-help-back>${esc(u.back)}</button></p>` : ""}`;
   if (S.helpView==="night")
     return head(u.nightLink, true) + g.night.map(p=>`<h3 class="ref-sub dos-l">${esc(u.when[p.when])}</h3><p class="dos-p">${helpMd(p.text)}</p>
@@ -408,9 +416,10 @@ function helpBodyHtml(id){
   if (S.helpView==="words")
     return head(u.wordsLink, true) + helpListHtml(Object.keys(g.words).sort((a, b)=>g.words[a].term.toLowerCase().localeCompare(g.words[b].term.toLowerCase()))
       .map(w=>({ title:g.words[w].term, kind:"", html:helpMd(g.words[w].text), find:g.words[w].term, text:g.words[w].text })), u);
-  return head(c.title) + `<h3 class="ref-sub dos-l">${esc(u.forLabel)}</h3><p class="dos-p">${helpMd(c.for)}</p>
+  const seatWords = seat ? sheetHelpWordsHtml(seat.words, seat.ch) : "";
+  return head(seat ? u.seatTab.replace("{title}", c.title).replace("{tab}", seat.label) : c.title) + `<h3 class="ref-sub dos-l">${esc(u.forLabel)}</h3><p class="dos-p">${helpMd(c.for)}</p>
     <h3 class="ref-sub dos-l">${esc(u.whenLabel)}</h3><ul class="help-when">${c.when.map(w=>`<li class="tag plain">${esc(u.when[w])}</li>`).join("")}</ul>
-    ${c.words.length ? `<h3 class="ref-sub dos-l">${esc(u.wordsLabel)}</h3>${helpWordsHtml(c.words)}` : ""}
+    ${seat ? (seatWords ? `<h3 class="ref-sub dos-l">${esc(u.wordsLabel)}</h3>${seatWords}` : "") : c.words.length ? `<h3 class="ref-sub dos-l">${esc(u.wordsLabel)}</h3>${helpWordsHtml(c.words)}` : ""}
     ${c.tips.length ? `<h3 class="ref-sub dos-l">${esc(u.tipsLabel)}</h3><ul class="help-tips">${c.tips.map(t=>`<li>${helpMd(t)}</li>`).join("")}</ul>` : ""}
     <div class="help-foot"><p class="help-links"><button type="button" class="btn sm" data-hnight>${esc(u.nightLink)}</button>
       <button type="button" class="btn sm" data-hwords>${esc(u.wordsLink)}</button>
@@ -442,6 +451,8 @@ HELP_HOSTS.table = {
   open:()=>!!S.table && !!S.helpOpen,
   setOpen(on){ S.helpOpen=on; if (helpPinRoom()) setHelpPref(on); },
   context:tableHelpContext, bodyHtml:helpBodyHtml, bind:bindTableHelp,
+  // A seat's tab press keeps the context "character", so the open tab is part of what the panel was painted from (K3).
+  key:id=>id + "|" + (S.helpView||"") + (id==="character" ? "|" + (S.seatSheet||"") : ""),
 };
 // What a key does, if it is one of ours (Decisions 259, 272). Each carries its own modifier rule; a key that is
 // none of these, or whose rule the press breaks, returns null and is the browser's.

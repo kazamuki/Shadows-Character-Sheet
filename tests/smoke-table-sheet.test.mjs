@@ -342,20 +342,20 @@ test("Decision 286: the seat sheet reads an own spell whole, and its Edit is dea
   assert.deepEqual(app.errors, []);
 });
 
-// E5: the seat sheet draws the same intros and chips as the player's own.
-test("E5: the seat sheet reads the same intros, and the same chip for what the rules dropped", () => {
+// E5: the seat sheet draws the same rule lines and chips as the player's own. K3 (KQ20): its guide lines are gone, and Progression says the player logs.
+test("E5: the seat sheet reads the same rule lines, and the same chip for what the rules dropped", () => {
   const ch = cyborg();
   ch.weapons = [{ id: "gone-gun" }]; ch.armor = [{ id: "gone-vest" }]; ch.gear = [{ id: "gone-kit", qty: 1 }];
   ch.archetypeChoices.specialization = ["gone-origin"];
   const app = open([ch, arcanist()]);
   openSheet(app);
   const intro = k => D.appCopy[k].replace("{perHour}", String(D.ip.perHour));
-  // K1: Character's, Loadout's and Notes' lines are the tab's guide line now; Skills' and Progression's are rule lines under it.
+  // K1: Skills' and Progression's lines are rule lines. K3: a seat's Progression is the seat's own, and no tab has a guide line.
   for (const tab of ["skills", "character", "progression", "loadout", "notes"]) {
     goTab(app, tab);
-    const line = { skills: intro("introSkills"), progression: intro("introProgression") }[tab] || D.sheetGuide.contexts[tab].intro;
-    assert.ok([...app.$$("#main .step-note")].some(n => n.textContent === line), `the seat sheet's ${tab} intro`);
-    assert.ok(app.$("#main .ro-sheet [data-guide]"), `the seat sheet's ${tab} has no guide line`);
+    const line = { skills: intro("introSkills"), progression: D.sheetGuide.seat.introProgression.replace("{perHour}", String(D.ip.perHour)) }[tab];
+    if (line) assert.ok([...app.$$("#main .step-note")].some(n => n.textContent === line), `the seat sheet's ${tab} rule line`);
+    assert.equal(app.$$("#main .ro-sheet [data-guide], #main .ro-sheet [data-guide-line]").length, 0, `the seat sheet's ${tab} has a guide line`);
   }
   goTab(app, "loadout");
   assert.equal(app.$("#main").textContent.split(D.appCopy.orphanChip).length - 1, 3, "the seat's weapon, armor and gear wear the chip");
@@ -364,24 +364,25 @@ test("E5: the seat sheet reads the same intros, and the same chip for what the r
   assert.doesNotMatch(app.$("#main").textContent, /game data/);
 });
 
-// K1: the seat sheet has no sheet Help, and its guide lines go with the table's switch (KQ12).
-test("K1: a seat keeps the table's Help, and its guide lines follow the table's switch", () => {
+// K1: the seat sheet has no sheet Help. K3 (KQ20): it draws no guide line, whichever switch is on.
+test("K1: a seat keeps the table's Help, and no switch brings a guide line back", () => {
   const app = open();
   openSheet(app);
   assert.equal(app.$("[data-shelp]"), null, "a seat has the sheet's ? button");
   assert.ok(app.$("[data-thelp]"), "the table's ? is gone");
   app.click("[data-thelp]");
-  assert.equal(app.$("#ghelp h2").textContent, D.gmGuide.contexts.character.title, "the table's Help isn't on its character context");
+  assert.equal(app.$("#ghelp h2").textContent, D.gmGuide.contexts.character.title + ": Main", "the table's Help isn't on its character context");
   app.click("#ghelp [data-help-close]");
   goTab(app, "skills");
-  assert.ok(app.$("#main .ro-sheet [data-guide]"), "the seat's tab has no guide line");
+  const guides = () => app.$$("#main .ro-sheet [data-guide], #main .ro-sheet [data-guide-line]").length;
+  assert.equal(guides(), 0, "the seat's tab has a guide line");
   app.window.localStorage.setItem("shadows.ui.gmGuide", "off");
   goTab(app, "loadout");
-  assert.equal(app.$$("#main .ro-sheet [data-guide]").length, 0, "the table's switch didn't hide the seat's guide lines");
-  app.window.localStorage.removeItem("shadows.ui.gmGuide");
+  assert.equal(guides(), 0);
+  app.window.localStorage.setItem("shadows.ui.gmGuide", "on");
   app.window.localStorage.setItem("shadows.ui.sheetGuide", "off");
   goTab(app, "notes");
-  assert.equal(app.$$("#main .ro-sheet [data-guide]").length, 1, "the sheet's switch hid a seat's guide line");
+  assert.equal(guides(), 0);
   assert.deepEqual(app.errors, []);
 });
 
@@ -440,5 +441,21 @@ test("E6 7: the seat sheet frames an Arcanist's reference and wraps an attack's 
   const cols = app.$$("[data-rosheet] [data-reference] table.ref").filter(t => t.querySelector("thead"));
   assert.ok(cols.length >= 3, `only ${cols.length} column tables drew`);
   for (const t of cols) assert.ok(t.parentElement.matches('.ref-frame[role="region"][tabindex="0"]'), "a seat's column table isn't framed");
+  assert.deepEqual(app.errors, []);
+});
+
+// K3 (KQ20, Decision 298): a seat's copy reads as a copy.
+test("K3: a seat's copy draws no guide line, and its Progression says the player logs", () => {
+  const app = open();
+  openSheet(app);
+  app.window.localStorage.removeItem("shadows.ui.gmGuide");   // the table's switch is on
+  for (const tab of SECTIONS) {
+    goTab(app, tab);
+    assert.equal(app.$$("#main .ro-sheet [data-guide], #main .ro-sheet [data-guide-line]").length, 0, `the seat's ${tab} draws a guide line`);
+  }
+  goTab(app, "progression");
+  const seat = D.sheetGuide.seat.introProgression.replace("{perHour}", String(D.ip.perHour)).replace(/\*\*/g, "");
+  assert.ok([...app.$$("#main .step-note")].some(n => n.textContent === seat), "Progression's seat line");
+  assert.doesNotMatch(app.$("#main").textContent, /Log a session when it truly ends/);
   assert.deepEqual(app.errors, []);
 });

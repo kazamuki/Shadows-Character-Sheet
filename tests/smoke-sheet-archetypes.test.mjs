@@ -851,7 +851,7 @@ test("Decision 215: A day without rest on Main takes half RoU and 2 more, Undo p
   const ch = lockedVampire("upyr");   // Heroic: RoU 6, so −5
   const app = openSheet(ch, "main");
   assert.match(app.$("#main .main-feed").textContent, /A day without rest \(−5\)/);
-  assert.match(app.$("#main .main-feed").textContent, /Instead of A day unfed: the day's Thirst and 2 more\./);
+  assert.match(app.$("#main .main-feed").textContent, /A day without rest: instead of A day unfed, the day's Thirst and 2 more\./);
   app.click('[data-unrested="thirst"]');
   assert.equal(stored(app, { locked: true }).trackers.sfr.spent, 5);
   assert.match(app.$("[data-toastundo]").parentElement.textContent, /A day without rest: −5 SFR/);
@@ -1202,4 +1202,13 @@ test("Bone Spines' flag note shows on the Character card and the wizard's pick, 
   assert.match(wiz.$("#main").textContent, note, "the wizard's Base Power row says nothing of the flag");
   const cp = onStep("vampire", "heroic", "character-points", c => { c.archetypeChoices.specialization = ["strigoi"]; c.archetypeChoices.basePowers = { "bone-spines": 1 }; });
   assert.match(cp.$("#main").textContent, note, "the wizard's CP row says nothing of the flag");
+});
+
+test("K3: A day without rest's line names its button", () => {
+  const app = openSheet(lockedVampire("upyr"), "main");
+  const btn = app.$('[data-unrested="thirst"]'), label = btn.textContent.replace(/\s*\(.*$/, "").trim();
+  const line = [...app.$$("#main .main-feed .step-note")].find(n => /Thirst and 2 more/.test(n.textContent));
+  assert.ok(line, "no line under the Thirst buttons");
+  assert.ok(line.textContent.startsWith(label), `the line doesn't begin with the button's label "${label}": ${line.textContent}`);
+  assert.equal(btn.getAttribute("title"), line.textContent, "the button's title is the same sentence");
 });

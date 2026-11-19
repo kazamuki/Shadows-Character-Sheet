@@ -41,13 +41,27 @@ function holdingHtml(ch){
 // is a column that takes the pinned vitals' column while it's open: the vitals drawer steps out of the way (CSS, from `.help-pinned`
 // meeting `body.vitals-pinned`) and the bar's pills come back. The pin is never written. Below 1280px it is a flyout, one at a time
 // with the vitals flyout. `shadows.ui.sheetGuide` is "off" or nothing: it hides each tab's guide line for this browser (a rule line,
-// the three that state a rule, stays). A seat's read-only sheet is drawn on a table screen, under the table's Help, so its guide
-// lines follow the table's switch (`shadows.ui.gmGuide`) instead.
+// the three that state a rule, stays). A seat's read-only sheet is drawn on a table screen, under the table's Help, and draws no guide
+// line at all (K3, KQ20): sheetLine and sheetHeader check S.screen themselves.
 const SHEET_GUIDE_PREF="shadows.ui.sheetGuide";
 const sheetGuide = () => D.sheetGuide;
 function sheetGuideOn(){
-  if (S.screen==="table") return guideOn();
   try{ return localStorage.getItem(SHEET_GUIDE_PREF)!=="off"; }catch(e){ return true; }
+}
+// K3 (Decision 298): every guide sentence the sheet writes besides a tab's intro is a `sheetGuide.lines` key drawn here, and goes when Guide lines is
+// off. A seat's copy is drawn on a table screen, where this is "" whatever the table's switch says: a seat draws no sheet guide line (KQ20).
+// {tab:id} is that tab's button, {gmChip} the GM chip, any other {x} a value from `vars`. `inline` draws a span, for a row of them; `cls` is its style (a `sub` beside a control). Total: a missing key,
+// a line that isn't text and a tab it doesn't know are "" or plain text, never a throw.
+function sheetLine(key, vars, opts){
+  if (S.screen==="table" || !sheetGuideOn()) return "";
+  const lines=sheetGuide().lines, t = lines && lines[key];
+  if (typeof t!=="string" || !t) return "";
+  const body=helpMd(t)
+    .replace(/\{tab:(\w+)\}/g, (m, id)=>{ const sec=SHEET_SECTIONS.find(x=>x.id===id); return sec ? `<button class="btn sm" data-gotab="${sec.id}">${esc(sec.label)}</button>` : m; })
+    .replace(/\{gmChip\}/g, '<span class="chip gold">GM</span>')
+    .replace(/\{(\w+)\}/g,(m, k)=>vars && Object.prototype.hasOwnProperty.call(vars, k) ? esc(String(vars[k])) : m);
+  const tag = opts && opts.inline ? "span" : "p";
+  return `<${tag} class="${opts && opts.cls || "step-note"} guide-line" data-guide-line="${esc(key)}">${body}</${tag}>`;
 }
 function setSheetGuide(on){ try{ if (on) localStorage.removeItem(SHEET_GUIDE_PREF); else localStorage.setItem(SHEET_GUIDE_PREF, "off"); }catch(e){} }
 // The id of the tab on the page: a key of sheetGuide.contexts. Total: a section it doesn't know is Main's.
@@ -64,9 +78,9 @@ function sheetWordBodyHtml(w){
 }
 // Each word the tab names: title, text and the lines under it. A reference is a gameTerms id or { kind: id }; one the character can't
 // have (SFR on a Professional) is left out.
-function sheetHelpWordsHtml(refs){
+function sheetHelpWordsHtml(refs, ch){
   const rows=refs.map(ref=>{
-    const w=Engine.word(ref, S.ch); if (!w || w.absent) return "";
+    const w=Engine.word(ref, ch || S.ch); if (!w || w.absent) return "";
     return `<dt>${esc(w.title)}</dt><dd>${sheetWordBodyHtml(w)}</dd>`;
   }).join("");
   return rows ? `<dl class="help-words">${rows}</dl>` : "";
@@ -164,7 +178,7 @@ document.addEventListener("keydown", e=>{
 // rule line, if it has one. A rule line states a rule and stays when the guide lines are off; a guide line only says what a tab is.
 function sheetHeader(title, note, under){
   const id=sheetHelpContext(), c=sheetGuide().contexts[id];
-  const guide = c && sheetGuideOn() ? `<p class="step-note guide-line" data-guide="${id}">${termsHtml(c.intro)}</p>` : "";
+  const guide = c && S.screen!=="table" && sheetGuideOn() ? `<p class="step-note guide-line" data-guide="${id}">${termsHtml(c.intro)}</p>` : "";
   const noteHtml = note ? `<p class="step-note">${note}</p>` : "";   // HTML: a caller escapes what it took from appCopy
   let h = importIssuesHtml() + focusedOwedHtml(S.ch);
   h += `<h1 class="step-title">${esc(title)}</h1>${under||""}`;
@@ -781,7 +795,7 @@ function renderShCharacter(){
         ? `<table class="ref"><tbody>` + dr.map(d=>
           `<tr><td>${esc(d.name)}</td><td class="num">rank ${d.rank}</td>
            <td class="disc-desc">${esc(d.description||"")}</td></tr>`).join("") + `</tbody></table>
-          <p class="step-note">${esc(copy("ranksAdvanceInPlay"))}</p>`
+          ${sheetLine("ranksOnProgression")}`
         : `<p class="step-note">Nothing here yet.</p>`) + `</div>`);
     } else if (dr.length){
       parts.push(secs.sect("Disciplines") + `<table class="ref"><thead><tr><th>Discipline</th><th>Rank</th></tr></thead><tbody>` +
@@ -852,8 +866,8 @@ function renderShCharacter(){
   if (a) for (const p of Engine.archPanels(ch).filter(x=>x.type==="reference")) h += referencePanelHtml(ch, p, secs.sect);
 
   // One span a sentence, its button inline, so a full stop never parts from its button.
-  h += `<div class="tab-links"><span class="step-note">What you carry is on <button class="btn sm" data-gotab="loadout">Loadout</button>.</span>
-    <span class="step-note">The pools you spend are on <button class="btn sm" data-gotab="trackers">Trackers</button>.</span></div>`;
+  const links = sheetLine("carryOnLoadout", null, { inline:true }) + sheetLine("poolsOnTrackers", null, { inline:true });
+  if (links) h += `<div class="tab-links">${links}</div>`;
 
   const toggle = any ? `<button class="jump jump-end" data-traits-all aria-pressed="${open}">${open?"Collapse all":"Expand all"}</button>` : "";
   return sheetHeader("Character")
@@ -1617,7 +1631,8 @@ const crankControlsHtml = () => { const R=D.resources.crank, up=R.jobDone, down=
 const crankSubHtml = st => st.next ? `${st.toNext} to ${esc(st.next.name)}` : "Top tier";
 // Decision 296: below 0 a character is a Novice at half pay (only Burned goes there); a held Burned at 0 or more is paid off.
 const crankNote = st => st.below ? D.resources.crank.belowText : st.paidOff ? D.resources.crank.paidOffText : "";
-const crankNoteHtml = st => crankNote(st) ? `<p class="step-note crank-note">${esc(crankNote(st))}</p>` : "";
+// "Remove it on Admin." is a guide sentence (K3): the note is what's true, the line beside it is where to go.
+const crankNoteHtml = st => crankNote(st) ? `<p class="step-note crank-note">${esc(crankNote(st))}</p>${st.paidOff && !st.below ? sheetLine("burnedRemove") : ""}` : "";
 const crankCardMeta = st => st.below ? crankNote(st) : [st.tier ? st.tier.name : "", st.paidOff ? crankNote(st) : ""].filter(Boolean).join(" · ");
 
 // Decision 225: SFR spent this round. The pool's tracker panel is found by its resource, not its id;
@@ -1729,8 +1744,8 @@ function renderShTrackers(){
     ? `<span class="hitarmor${armorDownCls(worn)}">${esc(worn.name)} · ${armorStatLine(worn)}</span>
        <div class="lo-armor-int" style="flex-basis:100%">${intBar(worn)}</div>${armorDownNote(worn, "span")}
        <button class="btn sm" data-actopen="wear" ${open?"disabled":""}>After the fight</button>
-       <span class="sub">${esc((D.armorRules||{}).wearNote||"")} Repairs are on Loadout.</span>`
-    : `<span class="sub">No body armor worn. Pick it up or put it on under Loadout.</span>`)
+       <span class="sub">${esc((D.armorRules||{}).wearNote||"")}</span>${sheetLine("armorRepairs", null, { inline:true, cls:"sub" })}`
+    : `<span class="sub">No body armor worn.</span>${sheetLine("armorPutOn", null, { inline:true, cls:"sub" })}`)
     + (naturalArmorText(ch) ? `<span class="hitarmor" style="flex-basis:100%">${esc(naturalArmorText(ch))}</span>` : "") + `</div>`;
   if (S.act && S.act.kind==="wear") h += actPanelHtml(ch);
   h += `<div class="pick ${pain.level?"":"selected"}${landedCls("pain")}"><div class="head"><h2>${termsHtml(pain.label)}</h2>
@@ -1811,7 +1826,8 @@ ${esc(painIgnoredText(pain))}: ${signed(-pain.ignored)} Pain Level${pain.ignored
 
   // Manual adjustments
   h += `<div class="sect">Manual Adjustments</div>
-    <p class="step-note">For what the sheet doesn't add up by itself: an item, a ruling, a scar the city left. A Stat moves everything worked out from it. TOL, WILL and the maximums take the amount as it is, and the Stats they come from don't move.</p>
+    ${sheetLine("manualAdjustmentsFor")}
+    <p class="step-note">A Stat moves everything worked out from it. TOL, WILL and the maximums take the amount as it is, and the Stats they come from don't move.</p>
     <div class="trk"><h2>Add</h2>
     <select data-adjtarget aria-label="adjustment target">
       ${D.stats.map(s=>`<option value="${s.id}">${s.id} (cascades)</option>`).join("")}
@@ -1840,7 +1856,9 @@ function renderShProgression(){
   const ch=S.ch, ip=Engine.ipState(ch), ms=Engine.milestoneState(ch), secs=sectionList("pr");
   // Decision 281: what happens between sessions, in one page: log one, spend
   // what it earned, read the history, and Undo, each reached from the jump bar.
-  const head = sheetHeader("Progression", termsHtml(copyFill("introProgression", { perHour: D.ip.perHour })));
+  // A seat's copy can't log a session: its rule line says the player does (KQ20, Decision 298).
+  const seatRule = S.screen==="table" && sheetGuide().seat && sheetGuide().seat.introProgression;
+  const head = sheetHeader("Progression", termsHtml(seatRule ? seatRule.replace("{perHour}", String(D.ip.perHour)) : copyFill("introProgression", { perHour: D.ip.perHour })));
   let h = logSessionHtml(ch, secs);
 
   h += `<div class="trk" ${secs.at("IP")}><h2>IP</h2><span class="big ${ip.available<0?"bad":""}">${numText(ip.available)}</span>
@@ -1875,7 +1893,7 @@ function renderShProgression(){
     return `<div class="jrow"><span class="d">${esc(String(e.date).slice(0,10))}</span>
       <span class="amt ${e.kind==="grant"?"grant":"spend"}">${e.kind==="grant"?"+":"−"}${e.amount}</span>
       <span class="what">${esc(what)}</span><span class="note">${esc(e.note)}</span></div>`;
-  }).join("") + `</div>` : `<p class="step-note">Nothing yet. Log sessions to earn IP.</p>`;
+  }).join("") + `</div>` : `<p class="step-note">Nothing yet.</p>${sheetLine("ipFromSessions")}`;
   h += `</details>`;
 
   // Milestones
@@ -1918,7 +1936,7 @@ function renderShProgression(){
   const offered = Engine.majorOffered(ch), shared = new Set((D.milestones.majorGeneral||[]).map(m=>m.id));
   const own = offered.filter(m=>!shared.has(m.id)), arch = D.archetypes.find(a=>a.id===ch.identity.archetype);
   h += `<details class="group" ${ms.majorLeft>0?"open":""}><summary>Major Milestones ${ms.majorLeft>0?`— <b style="color:var(--green)">${ms.majorLeft} to pick</b>`:""}</summary>
-    <p class="step-note">Each once, in any order, when you meet what it asks. Where the book leaves it to judgement, your table decides: taking one marked <span class="chip gold">GM</span> asks you to confirm.</p>`;
+    <p class="step-note">Each once, in any order, when you meet what it asks.</p>${sheetLine("majorGmChip")}`;
   const majorHtml = m=>{
     const taken = ms.majorTaken.some(t=>t.id===m.id);
     const pre = Engine.majorPrereqs(ch, m);
@@ -1986,14 +2004,14 @@ function sessionHistoryHtml(ch, secs){
       <span class="cost">${esc(s.date)} · +${s.ipEarned} IP${s.milestonePoint?" · +1 MP":""}</span>
       <div class="controls"><button class="x" data-sesdel="${i}" title="delete" style="background:none;border:0;color:var(--dim);cursor:pointer">✕</button></div></div>
       ${s.notes?`<div class="desc">${esc(s.notes)}</div>`:""}</div>`).reverse().join("")
-    : `<p class="step-note">No sessions yet. NYTE City is patient.</p>`;
+    : `<p class="step-note">No sessions yet.</p>${sheetLine("sessionsPatient")}`;
 
   // Activity Log — the full audit trail. Undo is last-in-first-out.
   const log=ch.audit||[];
   h += secs.sect("Activity Log", `Activity Log — ${log.length} action${log.length===1?"":"s"}`);
   h += `<div class="trk"><h2>Undo</h2>
     <button class="btn sm danger" data-undolast ${log.length?"":"disabled"}>Undo last action</button>
-    <span class="sub">Peels back the most recent action — damage, IP, milestones, credits, and admin edits all land here. To fix an <em>older</em> mistake, switch on Admin mode (⋮ menu) and edit the value directly; that edit is logged here too and is itself undoable.</span></div>`;
+    <span class="sub">Peels back the most recent action — damage, IP, milestones, credits, and admin edits all land here.</span>${sheetLine("undoOlder", null, { inline:true, cls:"sub" })}</div>`;
   if (log.length){
     h += `<div class="journal auditlog">` + log.slice().reverse().map((e,ri)=>
       `<div class="jrow"><span class="d">${esc(String(e.date).slice(0,16).replace("T"," "))}</span>
@@ -2184,7 +2202,8 @@ function adminWriteInHtml(ch){
     <label class="field"><span>What they are</span><input type="text" data-admin-wi="name" value="${esc(w.name)}"></label>
     <label class="field"><span>Description</span><textarea rows="2" data-admin-wi="description">${esc(w.description||"")}</textarea></label>
     ${cls && cls.writeIn ? `<label class="field"><span>${esc(cls.name)}: in their words</span><input type="text" data-admin-wi="classificationText" value="${esc(w.classificationText)}"></label>` : ""}
-    <p class="step-note">Classification: <b>${esc(cls ? cls.name : "none")}</b>. It stays as it was at lock. Powers are edited, added and removed on Character.</p>
+    <p class="step-note">Classification: <b>${esc(cls ? cls.name : "none")}</b>. It stays as it was at lock.</p>
+    ${sheetLine("powersOnCharacter")}
     <div class="sect">Baseline traits</div>${rows("traits", "Trait")}
     <div class="sect">Vulnerabilities</div>${rows("vulnerabilities", "Vulnerability")}`;
 }
@@ -2695,7 +2714,8 @@ function grimoireHtml(ch, p){
     }).join("");
   }
   h += `<button class="btn sm" data-spellown="1">+ Add your own</button>
-    <p class="step-note">Spells you improvised, or settled with your GM. Their numbers are yours, not the book's.</p>`;
+    ${sheetLine("customSpells")}
+    <p class="step-note">Their numbers are yours, not the book's.</p>`;
   return h;
 }
 
@@ -2854,7 +2874,7 @@ function renderShAdmin(){
         <button class="btn sm" data-admin-stat="${s.id}|ipe|-1">−</button><button class="btn sm" data-admin-stat="${s.id}|ipe|1">+</button>
       </div><span class="mod"></span></div>`;
   }
-  h += `</div><p class="step-note">TOL and WILL are worked out from other Stats, so they don't change here. Change the Stats they come from, or add a Manual Adjustment on Trackers.</p>`;
+  h += `</div><p class="step-note">TOL and WILL are worked out from other Stats, so they don't change here.</p>${sheetLine("tolWillWhere")}`;
 
   // Skills — rank + IP
   h += `<div class="sect">Skills — rank + IP</div><div class="alloc">`;
@@ -2918,10 +2938,10 @@ function renderShAdmin(){
   h += `<div class="sect">Resources</div>
     <div class="trk"><h2>LUCK bonus</h2><span class="big gold">${ch.trackers.luck.bonus}</span>
     <button class="btn sm" data-admin-luck="-1">−1</button><button class="btn sm" data-admin-luck="1">+1</button>
-    <span class="sub">Buy-ups above the base of ${D.resources.luck.startingValue}. Current LUCK during play is tracked on the Trackers tab.</span></div>
+    <span class="sub">Buy-ups above the base of ${D.resources.luck.startingValue}.</span>${sheetLine("luckOnTrackers", null, { inline:true, cls:"sub" })}</div>
     ${crankOn()?`<div class="trk"><h2>CRANK rep</h2><span class="big">${Engine.crankState(ch).rep}</span>
     <button class="btn sm" data-admin-crank="-1">−1</button><button class="btn sm" data-admin-crank="1">+1</button>
-    <span class="sub">Corrections only. Jobs done and walked out are on Main and Trackers.</span></div>`:""}`;
+    <span class="sub">Corrections only.</span>${sheetLine("crankJobsWhere", null, { inline:true, cls:"sub" })}</div>`:""}`;
   return h;
 }
 
@@ -3752,7 +3772,7 @@ function trainResultsHtml(ch){
       <td><button class="btn sm" data-train="${esc(s.id)}" ${c.ok?"":"disabled"}>Train</button></td></tr>`;
   });
   return rows.length ? `<table class="ref spell-results raise-results"><tbody>${rows.join("")}</tbody></table>`
-    : `<p class="step-note">Training sharpens a Skill you already have. Learn one with IP first, then train it here.</p>`;
+    : `<p class="step-note">Training sharpens a Skill you already have.</p>${sheetLine("trainLearnFirst")}`;
 }
 function openTrainPicker(){
   const ch = S.ch; if (!ch || !D.ip.training) return;

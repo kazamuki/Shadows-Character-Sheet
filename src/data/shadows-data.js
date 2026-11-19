@@ -291,7 +291,7 @@ window.SHADOWS_DATA = {
       "jobDone": 1,
       "jobWalkedOut": -2,
       "belowText": "Below 0: Novice, and every payout is halved.",
-      "paidOffText": "Burned is paid off. Remove it on Admin.",
+      "paidOffText": "Burned is paid off.",
       "jobs": {
         "text": "Roll d10 on each column or choose manually. Five rolls give you a complete contract — a job type, a client, a target, a location, and a complication that will make it interesting. Not every element needs to drive the scene equally. Sometimes the complication is the whole job. Sometimes the location tells you everything.",
         "tierText": "The tables don't know the crew's tier, but you do, and the client column does most of the scaling for you. A small business owner's extraction pulls a cousin out of a bad apartment; a megacorp executive's pulls a defector out of a tower. Read every entry at the size the client can afford, and reroll anything that doesn't fit.",
@@ -1249,7 +1249,7 @@ window.SHADOWS_DATA = {
     { "id": "ip", "title": "Improvement Points (IP)", "bookSource": "0450 Advancement, Improvement Points",
       "description": "Improvement Points, or IP, are the currency of practice. Every hour of play earns 5 IP, so a three-hour session puts 15 IP on the sheet. IP is spent between sessions, never during one." },
     { "id": "difficulty", "title": "Difficulty", "bookSource": "0300 Core Mechanics, Action Risk: Skill Checks",
-      "description": "The number to beat is based on the difficulty of the action, which the GM sets." },
+      "description": "The number to beat is based on the difficulty of the action, which the GM sets. Typically: 10 for easy, 15 for average, and 20 for challenging difficulty." },
     { "id": "tn", "title": "Target Number (TN)", "bookSource": "0300 Core Mechanics, Essence Checks",
       "description": "The minimum value a die must roll to count as a Hit. This is how difficult the task is. Higher numbers mean less room for error. Typically, the TN is 8, unless the GM modifies the value." },
     { "id": "th", "title": "Threshold (TH)", "bookSource": "0300 Core Mechanics, Essence Checks",
@@ -3160,7 +3160,7 @@ window.SHADOWS_DATA = {
               { "id": "stored", "name": "Stored", "text": "blood bags, the recently dead", "perHL": 2, "upToShare": 0.5 }
             ],
             "unfed": { "label": "A day unfed", "share": 0.5 },
-            "unrested": { "label": "A day without rest", "share": 0.5, "plus": 2, "text": "Instead of A day unfed: the day's Thirst and 2 more." },
+            "unrested": { "label": "A day without rest", "share": 0.5, "plus": 2, "text": "A day without rest: instead of A day unfed, the day's Thirst and 2 more." },
             "low": { "at": "rou", "name": "Hunger", "text": "Your SFR is at your RoU or lower. Make a WILL Essence check (TN 7, TH 1) or fall into a Blood Frenzy." }
           },
           {
@@ -4211,7 +4211,6 @@ window.SHADOWS_DATA = {
     "powerImproveNote": "Rewording a power costs IP; your GM names it. Rewrite what changed. Its rank rises on Progression. Your notes stay yours.",
     "specializationUnwritten": "The {label} options aren't written yet. Your character file remembers that.",
     "applyFromText": "Apply these from their text.",
-    "ranksAdvanceInPlay": "Ranks rise with IP, on Progression.",
     "lockIssued": "NYTE City knows your name now. {tag}. Your copy is {file}.",
     "lockIssuedTagless": "NYTE City doesn't know your name. Keep it that way. Your copy is {file}.",
     "statMaxBy": "Max {max} ({by}).",
@@ -5136,6 +5135,31 @@ window.SHADOWS_DATA = {
           "Use Progression's spends for what you earned. Admin is for what's wrong."
         ]
       }
+    },
+    // K3 (Decision 298): every guide sentence the sheet writes outside a tab's intro, drawn by sheet.js's sheetLine and gone when Guide lines is off.
+    // {tab:id} is that tab's button, {gmChip} the GM chip, **bold** as anywhere. A paragraph that holds a rule keeps it in the code and splits the guide sentence out.
+    "lines": {
+      "ranksOnProgression": "Ranks rise with IP, on {tab:progression}.",
+      "carryOnLoadout": "What you carry is on {tab:loadout}.",
+      "poolsOnTrackers": "The pools you spend are on {tab:trackers}.",
+      "manualAdjustmentsFor": "For what the sheet doesn't add up by itself: an item, a ruling, a scar the city left.",
+      "ipFromSessions": "Log sessions to earn IP.",
+      "majorGmChip": "Where the book leaves it to judgement, your table decides: taking one marked {gmChip} asks you to confirm.",
+      "sessionsPatient": "NYTE City is patient.",
+      "powersOnCharacter": "Powers are edited, added and removed on {tab:character}.",
+      "customSpells": "Spells you improvised, or settled with your GM.",
+      "tolWillWhere": "Change the Stats they come from, or add a Manual Adjustment on {tab:trackers}.",
+      "trainLearnFirst": "Learn one with IP first, then train it here.",
+      "armorRepairs": "Repairs are on {tab:loadout}.",
+      "armorPutOn": "Pick it up or put it on under {tab:loadout}.",
+      "undoOlder": "To fix an older mistake, switch on Admin mode (⋮ menu) and edit the value directly; that edit is logged here too and is itself undoable.",
+      "luckOnTrackers": "Current LUCK during play is tracked on {tab:trackers}.",
+      "crankJobsWhere": "Jobs done and walked out are on {tab:main} and {tab:trackers}.",
+      "burnedRemove": "Remove it on Admin."
+    },
+    // A seat's copy (KQ20): the rule line that tells the player to act, said to the GM. Keyed by the line's appCopy key.
+    "seat": {
+      "introProgression": "The player logs sessions on their own sheet. Each pays {perHour} IP an hour of play, 1 Milestone Point, and refreshes their LUCK."
     }
   },
   /* GM mode's Help (Decision 278): the words the ? panel, the guide lines and
@@ -5148,6 +5172,7 @@ window.SHADOWS_DATA = {
     "ui": {
       "title": "Help",
       "close": "Close",
+      "seatTab": "{title}: {tab}",
       "back": "Back to this page",
       "on": "On",
       "off": "Off",

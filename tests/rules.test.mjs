@@ -3783,3 +3783,8 @@ test("Decision 297: the Job Generator's tables are 2625's, word for word", () =>
   });
   assert.deepEqual([...jobs.columns.map(c => c.id)], ["type", "client", "target", "location", "complication"]);
 });
+
+test("K3: Difficulty quotes 0300 whole", () => {
+  const d = D.gameTerms.find(r => r.id === "difficulty").description;
+  assert.match(d, /Typically: 10 for easy, 15 for average, and 20 for challenging difficulty\./);
+});
