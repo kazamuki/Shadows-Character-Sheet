@@ -441,8 +441,20 @@ function k3Read(arch, full, off) {
   return { out, app };
 }
 
+// The rule or state half of each split paragraph: the code's own sentences, which stay with the switch off (never part of a line).
+// [sentence, tab, archetype it needs (or null), state it needs: "empty" | null]
+const KEPT = [
+  ["A Stat moves everything worked out from it.", "trackers", null, null],
+  ["Each once, in any order, when you meet what it asks.", "progression", null, null],
+  ["Their numbers are yours, not the book's.", "character", "arcanist", null],
+  ["TOL and WILL are worked out from other Stats, so they don't change here.", "admin", null, null],
+  ["No sessions yet.", "progression", null, "empty"],
+  ["Nothing yet.", "progression", null, "empty"],
+  ["It stays as it was at lock.", "admin", "writein", null],
+];
 test("K3: Guide lines off takes exactly the guide lines", () => {
-  const lines = SG().lines || {}, drawn = new Set();
+  const lines = SG().lines || {}, drawn = new Set(), keptSeen = new Set();
+  for (const [sentence] of KEPT) for (const [k, t] of Object.entries(lines)) assert.ok(!lineSaid(t).includes(sentence), `lines.${k} holds a rule or state sentence: ${sentence}`);
   assert.ok(Object.keys(lines).length > 0, "sheetGuide.lines is empty");
   for (const arch of ["professional", "arcanist", "vampire", "werewolf", "writein"]) for (const full of [true, false]) {
     const on = k3Read(arch, full, false).out, off = k3Read(arch, full, true).out;
@@ -450,6 +462,10 @@ test("K3: Guide lines off takes exactly the guide lines", () => {
       const where = `${arch} ${full ? "full" : "empty"} ${tab}`;
       assert.equal(off[tab].guides.length, 0, `${where}: a guide line is drawn with the switch off`);
       assert.equal(off[tab].text, on[tab].text, `${where}: more than the guide lines changed`);
+      for (const [sentence, kt, ka, ks] of KEPT) if (kt === tab && (!ka || ka === arch) && (ks !== "empty" || !full)) {
+        assert.ok(off[tab].text.includes(sentence), `${where}: "${sentence}" went with the guide lines`);
+        keptSeen.add(sentence);
+      }
       for (const g of on[tab].guides) {
         if (g.key === "intro") continue;
         assert.ok(lines[g.key], `${where}: ${g.key} is no sheetGuide line`);
@@ -468,6 +484,7 @@ test("K3: Guide lines off takes exactly the guide lines", () => {
     if (!off) drawn.add("trainLearnFirst");
   }
   assert.deepEqual(Object.keys(lines).filter(k => !drawn.has(k)).sort(), [], "a guide line the matrix never draws");
+  assert.deepEqual(KEPT.map(k => k[0]).filter(x => !keptSeen.has(x)), [], "a kept sentence the matrix never reads");
 });
 
 test("K3: a line's tab button goes to the tab", () => {
