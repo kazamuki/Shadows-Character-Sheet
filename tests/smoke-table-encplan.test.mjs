@@ -360,9 +360,15 @@ test("Decision 294: a planned row says how hurt the member is, and the wrap-up s
     Engine.addParticipant(t, e.id, { kind: "cast", id });
     Engine.addParticipant(t, e.id, { kind: "pc", name: "Wren" });
     renderTable(); })()`);
-  assert.match(app.$(".enc-hurt").textContent, /^Hurt: 10 HP$/);
+  assert.match(app.$(".enc-hurt").textContent, /^Hurt: 10 damage$/);
   app.click("[data-enc-start]");
   assert.equal(app.$(".enc-hurt"), null, "running, the row has its own numbers");
+  // A member in a running fight is healed on their row: the cast page points there and has no Heal (K2).
+  app.window.eval("S.tsection = 'cast'; S.castOpen = S.table.cast[0].id; renderTable()");
+  assert.match(app.$("[data-cwounds-fight]").textContent, /^In a fight now\. Heal them on their row in .+\.$/);
+  assert.equal(app.$("[data-cheal]"), null); assert.equal(app.$("[data-cheal-all]"), null);
+  app.click("[data-cwounds-enc]");
+  assert.ok(app.$("[data-enc-end]"), "the link opens the running encounter");
   app.window.eval(`(function(){ const t = S.table, e = t.encounters[0]; Engine.participantDamage(t, e.id, e.rows.find(r => r.kind === "cast").id, 3); renderTable(); })()`);
   app.click("[data-enc-end]");
   assert.match(app.$("[data-ew-carries]").textContent, /^Carries 13 damage into the next fight$/);

@@ -164,8 +164,9 @@ print (~3160). `tests/smoke-table-cast.test.mjs`, `smoke-table-seat-fight.test.m
   same stand-in a row uses (Decision 191), or null when the member has no BOD or doesn't exist. It never throws.
 - **`Engine.healCast(t, id, { hp })` or `{ all:true }`** → `{ ok:true }`, or `{ ok:false, why }`. The refusals:
   "No such cast member.", "They aren't hurt." and "Heal at least 1.". `hp` lowers `damage`, floored at 0. `all`
-  clears `wounds`. It stamps the member. A member in a running encounter can still be healed: the row has its own
-  numbers, and the next wrap-up writes over them. The cast page says so (§9).
+  clears `wounds`. It stamps the member. The engine doesn't refuse a member in a running fight, but the cast page offers no Heal
+  there (Ken, S24 review K2): the row has its own numbers and the wrap-up writes them back, so mid-fight healing is
+  the row's own Heal (a negative `participantDamage`) and the wrap-up carries what's left (§9).
 - **Start:** a helper `_castStart(t, r)` for cast rows, as `_claimStart`. If `!r.struck` and the row's damage,
   Massive and Conditions are all empty, it copies `wounds`. It's called from `startEncounter` for every cast row, and
   from `addParticipant` when the encounter is running.
@@ -183,17 +184,18 @@ Copy is drafted for the voice pass.
   - Beside it: `formula N` when blank or equal; `override · formula N` when a TOL differs.
   - For a WILL below its floor, an error under the field, in the builder's error style: "WILL can't be below N, its
     formula." It updates as the GM types, the way the other builder numbers do.
-- **The cast page's stat block.** It shows `used`. An override reads "TOL 0 (override)", and a WILL below its floor
-  shows the floor with "(below its formula)".
+- **The cast page's stat block.** It shows `used`. An override reads "TOL 0 · override · formula N", and a WILL below its floor
+  shows the floor with "printed N" beside it (Ken, K3: "WILL 3 · printed 2").
 - **Print** (~3160) shows `used`, with the same words.
 - **The cast page's Wounds** (when `wounds` isn't null):
   - "Hurt: 14 of 24 HP left", and "1 level gone to Massive" when there are any.
   - Below it, a number field labelled "Heal", and a **Heal** button and a **Heal all** button.
   - After Heal, focus stays on the field, emptied. After Heal all, the Wounds line goes and focus moves to the page's
     heading.
-  - A member in a running encounter gets one more line: "In a fight now: this heals them after it, unless the wrap-up
-    says otherwise." It gets a voice pass.
-- **A planned encounter's cast row** for a hurt member: "Hurt: 10 HP" beside the name.
+  - A member in a **running** encounter has no Heal or Heal all (Ken, K2: a werewolf regenerating each round is healed
+    on its row). In their place: "In a fight now. Heal them on their row in <encounter title>.", the title a link to
+    that encounter. It gets a voice pass.
+- **A planned encounter's cast row** for a hurt member: "Hurt: 10 damage" beside the name (Ken, K3).
 - **The wrap-up:** each row that carries wounds gets the line "Carries 10 damage into the next fight" ("and 1
   Massive level" when there are any). A Kept row's line says "Kept, carrying 10 damage".
 

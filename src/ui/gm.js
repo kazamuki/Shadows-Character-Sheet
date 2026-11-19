@@ -1123,16 +1123,19 @@ function castClocksHtml(n){
 // A member's wounds and how the GM heals them (Decision 294). Drawn only when they are hurt.
 function castWoundsHtml(n){
   const w=n.wounds; if (!w) return "";
-  const h=Engine.castHealth(S.table, n.id), name=n.name.trim() || "They";
+  const h=Engine.castHealth(S.table, n.id);
   const e=Engine.runningEncounter(S.table), inFight=!!e && (Array.isArray(e.rows) ? e.rows : []).some(r=>r && r.kind==="cast" && r.cast && r.cast.id===n.id);
   const hurt = h && h.total!==null ? `Hurt: ${h.left} of ${h.total} HP left` : `Hurt: ${w.damage} damage`;
   const massive = w.massive ? `, ${w.massive} level${w.massive===1 ? "" : "s"} gone to Massive` : "";
+  // In a running fight the row has the numbers and the wrap-up writes them back, so the heal is the row's own (Decision 294).
+  const controls = inFight
+    ? `<p class="step-note" data-cwounds-fight>In a fight now. Heal them on their row in <button type="button" class="cast-open" data-cwounds-enc="${esc(e.id)}">${esc(Engine.encounterTitle(e))}</button>.</p>`
+    : `<div class="cast-heal">${w.damage>0 ? `<label class="field"><span>Heal</span><input type="number" step="1" min="1" inputmode="numeric" data-cheal autocomplete="off"></label>
+      <button type="button" class="btn sm" data-cheal-go>Heal</button>` : ""}<button type="button" class="btn sm" data-cheal-all>Heal all</button></div>
+    <p class="enc-err" data-cheal-err hidden></p>`;
   return `<div class="cast-wounds" data-cwounds><h2 class="cast-h sec-h">Wounds</h2>
     <p class="cast-health" data-cwounds-text>${esc(hurt + massive)}</p>
-    <div class="cast-heal">${w.damage>0 ? `<label class="field"><span>Heal</span><input type="number" step="1" min="1" inputmode="numeric" data-cheal autocomplete="off"></label>
-      <button type="button" class="btn sm" data-cheal-go>Heal</button>` : ""}<button type="button" class="btn sm" data-cheal-all>Heal all</button></div>
-    <p class="enc-err" data-cheal-err hidden></p>
-    ${inFight ? `<p class="step-note">In a fight now: this heals ${esc(name)} after it, unless the wrap-up says otherwise.</p>` : ""}</div>`;
+    ${controls}</div>`;
 }
 function castReadHtml(n){
   const name=n.name.trim() || "Unnamed", b=n.block, panel=b ? readBlockHtml(b) : "";
@@ -1266,9 +1269,9 @@ function bindCastList(main){
 // What sits beside an NPC's TOL or WILL (Decision 293): the formula, an override of it, or a floor that held.
 function authoredNote(a){
   if (!a || a.formula===null) return "";
-  if (a.below) return "below its formula";
-  if (a.override) return "override · formula " + a.formula;
-  return "formula " + a.formula;
+  if (a.below) return a.value===null ? "" : `printed ${a.value}`;
+  if (a.override) return `override · formula ${a.formula}`;
+  return `formula ${a.formula}`;
 }
 function castFigures(main, n){
   const r=Engine.npc(n.block);
@@ -1452,6 +1455,8 @@ function bindCastPage(main, n){
       const f=$("main").querySelector(own().wounds ? "[data-cheal], [data-cheal-all]" : "[data-ctitle]"); if (f){ if ("value" in f) f.value=""; f.focus(); } };
     healIn.addEventListener("keydown", ev=>{ if (ev.key==="Enter"){ ev.preventDefault(); healGo.click(); } });
   }
+  const wEnc=main.querySelector("[data-cwounds-enc]");
+  if (wEnc) wEnc.onclick=()=>openFound("encounter", wEnc.dataset.cwoundsEnc);
   const fromBtn=main.querySelector("[data-tfrom]");
   if (fromBtn) fromBtn.onclick=()=>openThreat(fromBtn.dataset.tfrom, null, n.id);
   // A change to the block: `redraw` for a row added or removed, else the
@@ -3628,7 +3633,7 @@ function encRowHtml(v, e, sides){
     : v.gone ? `<s class="enc-name">${esc(v.label)}</s><span class="vh">, removed</span>`
     : seat ? `<button type="button" class="cast-open enc-name" data-eopenseat="${esc(v.seat.tag)}">${esc(v.label)}</button>` : `<b class="enc-name">${esc(v.label)}</b>`;
   const hurtM = e.status==="planned" && r.kind==="cast" && r.cast && !v.gone ? S.table.cast.find(n=>n.id===r.cast.id) : null;
-  const hurt = hurtM && hurtM.wounds ? `<span class="enc-hurt">Hurt: ${esc(hurtM.wounds.damage)} HP${hurtM.wounds.massive ? `, ${esc(hurtM.wounds.massive)} Massive` : ""}</span>` : "";
+  const hurt = hurtM && hurtM.wounds ? `<span class="enc-hurt">Hurt: ${esc(hurtM.wounds.damage)} damage${hurtM.wounds.massive ? `, ${esc(hurtM.wounds.massive)} Massive` : ""}</span>` : "";
   const mark = r.kind==="pc" ? `<span class="tag plain">PC</span>` : r.kind==="cast" ? `<span class="tag plain">Cast</span>` : ref;
   const num = (attr, val, label) => ended ? `${esc(label)} ${val===null ? "—" : esc(val)}`
     : `<label class="enc-num"><span>${esc(label)}</span><input type="number" step="1" inputmode="numeric" ${attr}="${id}" value="${numAttr(val)}"></label>`;

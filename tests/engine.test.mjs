@@ -14090,3 +14090,12 @@ test("Table schema 0.20: a 0.19 file's members get wounds null, and nothing is c
   w.cast[0].wounds = { damage: 9, massive: 2 };
   eq(Engine.migrateTable(w).cast[0].wounds, { damage: 9, massive: 2 });
 });
+
+test("Decision 294: a cast row healed mid-fight carries what's left, not what it started with", () => {
+  const { t, e, dez, dezRow } = endTable();
+  Engine.participantDamage(t, e, dezRow, 10);
+  Engine.participantDamage(t, e, dezRow, -6);   // the row's own Heal (U1): a werewolf regenerating
+  assert.equal(rowOf(t, e, dezRow).damage, 4);
+  assert.ok(Engine.endEncounter(t, e, { rows: {} }).ok);
+  eq(castOf(t, dez.id).wounds, { damage: 4, massive: 0 });
+});
