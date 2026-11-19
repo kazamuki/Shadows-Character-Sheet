@@ -1177,6 +1177,8 @@ L5b's order asked for a fixture diff: every archetype, specialization and form, 
 
 A character with no name is a seat called by its raw TAG (`TAG-…`) on the card, the page, Find and Activity. The engine's `seatView.name` falls back to the TAG, and crew-by-name matching reads it, so a relabel in the UI alone would disagree with those. *Ask:* should it read "Unnamed" with the TAG beneath, and does matching keep the TAG? *To respect:* Decision 255 (a seat answers to names).
 
+*Ken's answer, 2026-11-19: build it as W171.*
+
 **W166 — "formula" beside an NPC's TOL and WILL is unexplained.** *Ken + Claude, from S23's build and review · 💡 · Fix · raised 2026-11-19*\
 **Plan:** [gm-mode-next](plans/gm-mode-next.md) S23's verdicts, left over
 
@@ -1202,9 +1204,14 @@ The empty Threats tab's button says "Slot in a pack". A voice pass (`VOICE-APP.m
 
 S23 keeps Down on a tab's own bar at 375px (it fits there). On a page's bar the strip holds a fixed 14rem for the lead and Unexported, and a third chip cut both to stubs (measured at 375px). At 1024px four chips and Back still don't all fit beside Add to encounter, though the button now gives way first (13rem). *Ask:* a second row, or a shorter Add, for a page's bar. *To respect:* Fight first (Ken), Decision 270.
 
+**W171 — An unnamed character's seat reads "<player>'s character", with its TAG beneath.** *Ken, from S23's review · 💡 · Rule or shape · raised 2026-11-19*\
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S23's verdicts, left over
+
+Today `seatView.name` falls back to the raw TAG. Change it in the engine so the card, the page, Find, Activity and crew-by-name matching all agree on "<player>'s character", the TAG shown beneath it. It's a shape change to what a seat answers to (Decision 255), so it takes a decision and a sweep of every reader of the name. Answers W165.
+
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W171.** Everything above is open. What was built is in
+- **Next free number: W172.** Everything above is open. What was built is in
   [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)

@@ -2333,7 +2333,7 @@ function memberRoute(key){
 }
 function castKeyToHtml(n){
   const of=Engine.factionsKeyFor(S.table, n.id);
-  return of.length ? `<h2 class="cast-h sec-h">Key to</h2><p class="step-note">The factions that count them a key NPC.</p><ul class="int-list">${of.map(f=>
+  return of.length ? `<h2 class="cast-h sec-h">Key to</h2><p class="step-note">The factions that count them as a key NPC.</p><ul class="int-list">${of.map(f=>
     `<li class="int-line"><button class="cast-open int-who" data-fopen="${esc(f.id)}">${esc(Engine.factionTitle(S.table, f))}</button></li>`).join("")}</ul>` : "";
 }
 function openFactionPage(id, route){

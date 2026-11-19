@@ -165,6 +165,6 @@ re-critiques) and U5's review. Line numbers are `main` after #313. S23's pre-fli
 - **Left, by Decision 270:** "Close to full" counting 2 of 4 (270: within two segments).
 - **Left, the builder's own call:** the strip's `.74rem`. Not changed: 11.1px passes phone-check's 11px floor, and a larger size
   widens chips that already cut.
-- **Moved, each to a wish:** a raw TAG as a seat's name (**W165**; reproduced); "formula" under TOL and WILL (**W166**); the read
+- **Moved, each to a wish:** a raw TAG as a seat's name (**W165**, reproduced; Ken's answer, "<player>'s character" with the TAG beneath, is **W171**); "formula" under TOL and WILL (**W166**); the read
   view's field order and Debrief against Close-out (**W167**, which reopens 271); modal titles in the display face (**W168**, shared
   with the sheet's dialogs); Threats' "Slot in a pack" (**W169**, voice).

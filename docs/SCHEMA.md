@@ -5531,6 +5531,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** 176, 204, 208, 243, 244, 258, each in part; cites 179, 245, 270.
      - **Revisit if:** a GM edits mid-scene more than reads, or W140 reshapes Notes.
      - **Built:** app 0.65.0, no schema move, PR #311, log 2026-11-06 (U3).
+     → **Superseded in part by Decision 301** — Cast's quick-add no longer stays at the top: it sits below the list, as Players' does.
 
 272. **On a table, 1–8 open the sections, N runs Next turn on a running encounter's page, Ctrl/⌘+Z takes back the last change, A opens Activity and ? lists every key; the open section's tab is aria-current.**
      *2026-11-07 · Ken + Claude · Touches: keyboard shortcuts, keydown, inField, keysOn, shadows.ui.keys, Keys, openKeys, keyHints, aria-keyshortcuts, 1–8, section tabs, tableTabButtonsHtml, pickTableTab, aria-current, showActiveTab, N, Next turn, data-enext, Ctrl+Z, Cmd+Z, undoTableEntry, showTableDone, nothing to undo, A, Activity, openActivity, ?, phone-check, Decision 259, Decision 271*
@@ -5826,6 +5827,15 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 179 in part: the add row is folded on the read view.
      - **Revisit if:** GMs add lines from a member's page more than they read it.
      - **Built:** as 299.
+
+301. **The list tabs lead with their list: Cast's and Players' Add sit below it, Sessions says one line when a session is open, and the table's name block is Sessions' alone.**
+     *2026-11-19 · Ken + Claude · Touches: castTabHtml, playersTabHtml, cast-add, quick-add, sessionsTabHtml, data-sess-live, Open tag, renderTable head, name block, tbl-title, sr-only h1, Next session, Decision 270, Decision 271, UQ7, GQ63, GQ65, GQ66*
+     - **Decided:** **Cast's quick-add and Players' Add form sit below their lists**, as every other Add does. **While a session is open**, Sessions' first line reads "Session N is open" with an **Open** button, above Next session, and the list marks that session **Open**. **The table's name and its created date lead Sessions only**, the table's first tab; every other tab starts at its own list, and keeps an unseen h1 that names the section, so a heading jump and the heading focus on opening still land.
+     - **Why:** On a phone every list tab began with chrome (the name block, then Add), so Cast's first card started near 850px. Ken ruled Add below the content in 271; Cast and Players were the two it missed. The open session was the one thing Sessions didn't say it had.
+     - **Rejected:** A live block at the top of Sessions (270's UQ7): it repeated the tab-hunting, a card of the night's state above the tab. This is one line, a pointer to the page that holds the night, with no state of its own and nothing to keep current; the strip stays the live view. Keeping Cast's quick-add on top (271): the cost is paid on every read. Hiding the name block with no heading: a heading jump would land on nothing.
+     - **Replaces:** Decision 271 in part: "Cast's quick-add stays" no longer holds. Cites 270 (its UQ7).
+     - **Revisit if:** GMs add cast faster than they read the list, or a phone GM can't find which session is open.
+     - **Built:** app 0.73.0, no game-data or schema move, PR #368, log 2026-11-19 (S23).
 
 ## 5. Open Flags
 
