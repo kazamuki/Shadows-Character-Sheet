@@ -1152,7 +1152,7 @@ scripts would give each session a smaller file to hold.
 with no DOM, so both halves have to load that way.
 
 **W145 — GM tabs with their own icons.** *Ken · 🔎 · Fix · raised 2026-11-06*\
-**Plan:** [gm-mode-next](plans/gm-mode-next.md) S23 leaves it out until Scott's icons arrive (GQ60 in [`S23-leftovers.md`](plans/gm-mode-next/S23-leftovers.md))
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S23, folded into its order with Lucide icons for now (GQ60, Ken 2026-11-18): [`S23-leftovers.md`](plans/gm-mode-next/S23-leftovers.md)
 
 U4 (UQ16) kept the borrowed icons until Scott's set arrives. The GM's section tabs borrow the player sheet's icons (`TABLE_SECTIONS[].ui` → `uiIcon()`, `gm.js`): Players has
 Main's, Encounters has Trackers'. Scott is to draw six of the GM's own; when they come they go into `src/data/`

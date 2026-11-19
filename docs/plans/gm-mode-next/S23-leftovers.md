@@ -1,11 +1,12 @@
 # Work order S23: at the table, the leftovers
 
 **Plan:** [`../gm-mode-next.md`](../gm-mode-next.md), session S23, and its §6 (*S23's leads*), with **W141**
-(`.form-toggle`'s dark-mode frame) folded in. **W145** (the GM's own tab icons) stays out: Scott's icons haven't
-arrived (GQ60). **The leads** come from the GM-at-the-table reviews (U2's and U4's re-critiques, U3's and U5's reviews).
+(`.form-toggle`'s dark-mode frame) and **W145** (the GM's own tab icons, from Lucide: GQ60) folded in. **The leads** come from the GM-at-the-table reviews (U2's and U4's re-critiques, U3's and U5's reviews).
 **Reopens:** Decision 272 in part (the Reset's key), and 179 in part (a member's line add, open by default).
-**Status:** **drafted 2026-11-18** by Claude (Opus), the conductor, at Ken's pick ("we could draft S23"). Not approved.
-GQ60–GQ66 wait on Ken.
+**Status:** **drafted 2026-11-18** by Claude (Opus), the conductor, at Ken's pick ("we could draft S23"). **Approved by
+Ken 2026-11-18**, in the conductor session: GQ61–GQ66 on their defaults ("the other defaults are good"). **GQ60
+answered otherwise:** "Pick Lucide icons now". S23 gives each GM tab a Lucide icon of its own, and Scott's set can
+replace them later.
 **Branch:** from `main`; PR to `main`. GM mode is on for everyone (Decision 239), so nothing ships switched off.
 **Runs beside:** **K3** (#365, the sheet's guide lines), being built in another session. Both may touch `shadows.css`
 and `shared.js`. **Rebase after K3 merges, and don't touch `sheetGuide` or the sheet's Help.** **Say N everywhere.**
@@ -58,7 +59,9 @@ real. Plus Ken's calls on five behaviours (§4).
 
    Each is mutation-tested.
 7. **Each *critique* lead** in §5 is either reproduced and fixed, or reported as not reproduced, with how it was checked.
-8. **Ken's calls** (GQ61–GQ66) are built as answered.
+8. **Ken's calls** (GQ60–GQ66) are built as answered.
+9. **W145:** no GM tab borrows a sheet tab's icon. Each has a Lucide icon that fits it, and the sheet's tabs are
+   unchanged.
 
 ## 2. Tier, versions, numbers
 
@@ -69,7 +72,7 @@ real. Plus Ken's calls on five behaviours (§4).
 - **Decisions:** **N** (GQ61, the Reset's key), and **N+1** (GQ64, a member's line add folded), if Ken takes those
   defaults. A GQ answered "leave it" makes no decision.
 - **Flags:** none.
-- **Wishes:** W141 granted. W145 stays open, waiting on Scott.
+- **Wishes:** W141 and W145 granted. Scott's own set, if it comes, is a Fix that swaps the strings.
 
 ## 3. The decisions, drafted
 
@@ -99,7 +102,7 @@ N+1. **A cast member's crew-line add sits behind "Add a line", below the lines.*
 
 | Id | Question | Default |
 |---|---|---|
-| **GQ60** | **W145, the GM's own tab icons.** Scott is to draw six. They haven't arrived. | **Out of S23.** W145 stays on the wishlist. When the icons come, they go in as a Fix with no layout change. |
+| **GQ60** | **W145, the GM's own tab icons.** Scott is to draw six. They haven't arrived. | Default was "out of S23". **Answered (Ken, 2026-11-18): "Pick Lucide icons now".** Each GM tab gets a Lucide icon of its own (§5). |
 | **GQ61** | **At a round's Reset, `N` does nothing.** On a phone, Finish the round is below the fold. | **Finish the round takes Next's place, and `N` presses it** (Decision N). |
 | **GQ62** | **The Hit panel's Apply sits above its modifiers** (UQ24's order). A critique flagged it. | **Leave it.** UQ24 chose it so a plain hit is one tap, and nothing new has come up. |
 | **GQ63** | **Cast and Players open on their Add form above the list** (critique). U3 put Add below the content elsewhere. | **Reproduce it first.** Wherever Add still sits above the list, move it below, as U3 did. This needs no decision: it follows U3's. |
@@ -147,6 +150,21 @@ N+1. **A cast member's crew-line add sits behind "Add a line", below the lines.*
 - **A member clock's owner link** loses the member page you came from. Back returns to that member.
 - **"Attention: Active"** is a plain tag. Make it a Mono Caps label over a value. Also explain "Key to".
 
+**W145 (GQ60): the GM's tab icons, from Lucide.** The sheet's `ui` set is Lucide (ISC, `shadows-icons.js`'s header).
+For each GM tab that borrows a sheet tab's icon, add a Lucide icon to `ui` under a new `gmtab_*` key, and point
+`TABLE_SECTIONS[].ui` at it. Copy each icon's SVG from Lucide's published source, at the version the set already uses,
+if the header names one. Keep the stroke, weight and viewBox of the rest. The sheet's tabs keep theirs. Suggestions,
+for the builder to confirm against Lucide's names:
+- Players: `users`
+- Cast: `contact`
+- City: `map`
+- Threats: `skull`
+- Encounters: `swords`
+- Reference: `book-open`
+
+Sessions (`tab_sessions`) and Notes (`tab_notes`) keep theirs if no sheet tab uses them. Grep first. Every new key must
+be read (Decision 135). Show all eight tabs in the preview at desktop and 375px, in both themes.
+
 **Ken's calls:** GQ61–GQ66, as answered.
 
 A lead that turns out larger than a fix, because it needs a new pattern, a data shape, or a decision nobody has made:
@@ -162,7 +180,6 @@ Caps). `gm.js`: `keepPlace`, the clock lines, `encResetHtml`, the encounter bar,
 
 ## 7. Out of scope
 
-- **W145** (GQ60).
 - **The cast's stat blocks at a glance** (S28, W78).
 - **Home's empty column** (S29, W80).
 - **A filter fold on Cast** (GQ66).
@@ -240,7 +257,7 @@ The `close-the-session` skill for *Rule or shape*:
 - STATE rewritten.
 - The log, and a `shipped.md` row.
 - The plan's S23 row set to built, and §6's leads marked built, not reproduced, or moved, one by one.
-- W141 granted.
+- W141 and W145 granted.
 
 **CHANGELOG** (drafted, GM voice):
 - "Undo puts you back on the clock you changed."
@@ -248,14 +265,15 @@ The `close-the-session` skill for *Rule or shape*:
 - "A cast member's page folds its Add a line."
 - "Sessions shows which one is open."
 - "Toggles are easier to see in the dark theme." (Players see this too.)
+- "GM mode's tabs have icons of their own."
 
-**PR title:** `fix(gm): at the table, the leftovers (S23, W141, Decisions N and N+1)`.
+**PR title:** `fix(gm): at the table, the leftovers (S23, W141, W145, Decisions N and N+1)`.
 
 **PR body:** the template's sections, plus **Leads: fixed, not reproduced, moved** (a table) and **New strings as
 rendered**.
 
 **Review checklist:**
-- §1's eight checks.
+- §1's nine checks.
 - Each *critique* lead's verdict, re-checked.
 - Every new guard mutation-tested.
 - W141 in both themes, on every screen with a toggle.
