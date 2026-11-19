@@ -1172,7 +1172,7 @@ tests. Point them at `0432_Advantages.md` and `0431_Disadvantages.md`, check eac
 L5b's order asked for a fixture diff: every archetype, specialization and form, holding every power plus a knife, a pistol and a grenade, with `naturalAttacks`, `archetypeWeapons` and `weaponLine` read on `origin/main` and on the branch, and the fields that moved listed. The builder wrote it as a throwaway script, and the next order that touches a weapon line would write it again (the [loadout-and-gear](plans/loadout-and-gear.md) follow-ons, L8 to L10, each do). The ask: a tool in `tools/`, beside `phone-check`, that does it (`node tools/weapon-diff.mjs`) and prints which fields moved and in how many cases, with a switch to run the running powers too. It reads `origin/main` through a `git worktree` and loads the engine by `vm`, as `tests/harness.mjs` does, so it needs no `node_modules` in the second tree.
 *To respect:* it's a report, not a guard; an order says which moves are expected.
 
-**W165 — An unnamed character seats under its TAG.** *Ken + Claude, from S23's build and review · 💡 · Fix · raised 2026-11-19*\
+**W165 — An unnamed character seats under its TAG.** *Ken + Claude, from S23's build and review · 💡 · Rule or shape · raised 2026-11-19*\
 **Plan:** [gm-mode-next](plans/gm-mode-next.md) S23's verdicts, left over
 
 A character with no name is a seat called by its raw TAG (`TAG-…`) on the card, the page, Find and Activity. The engine's `seatView.name` falls back to the TAG, and crew-by-name matching reads it, so a relabel in the UI alone would disagree with those. *Ask:* should it read "Unnamed" with the TAG beneath, and does matching keep the TAG? *To respect:* Decision 255 (a seat answers to names).
@@ -1182,7 +1182,7 @@ A character with no name is a seat called by its raw TAG (`TAG-…`) on the card
 
 Decision 293's note (`formula 12`, `override · formula 12`) has no tip. It wants a tip and its copy, through the voice pass. *To respect:* it is the rule's word, so Deighton reads the copy.
 
-**W167 — A member's read view orders its fields as its form does, and a session's Debrief and Close-out agree.** *Ken + Claude, from S23's build and review · 💡 · Fix · raised 2026-11-19*\
+**W167 — A member's read view orders its fields as its form does, and a session's Debrief and Close-out agree.** *Ken + Claude, from S23's build and review · 💡 · Rule or shape · raised 2026-11-19*\
 **Plan:** [gm-mode-next](plans/gm-mode-next.md) S23's verdicts, left over
 
 The read view runs want, pushed, line, clocks, got; the form runs want, got, line, pushed. A session reads Close-out before Debrief and edits Debrief first. Making them agree **reopens Decision 271** (the dossier's order), so it needs a ruling on which order wins.
