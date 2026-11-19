@@ -136,7 +136,7 @@ rev 9's `C1`–`C3` are still forward notes.
 
 ## 5. Where to start
 
-**The live site is v0.72.0** (data 0.56, schema 0.34), released 2026-11-16.
+**The live site is v0.73.0** (data 0.56, schema 0.34), released 2026-11-19.
 
 **Next is Ken's pick**, each built through a work order (`WORK-ORDERS.md`):
 - **The `/impeccable audit`** of the whole app is its own read-only session; Ken triages its report.
