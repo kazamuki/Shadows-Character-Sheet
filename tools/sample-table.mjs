@@ -443,9 +443,10 @@ const session = (n, f) => {
     created: ts(day, 17), updated: ts(day, 23), ...f,
   });
 };
-const closeOf = (n, lines, hours) => ({
+const closeOf = (n, lines, hours, jobs = []) => ({
   at: ts(DAY[n], 23, 30),
   lines: lines.map(l => ({ present: true, ip: null, milestone: false, credits: null, tier: null, note: "", ...l })),
+  jobs,
 });
 
 session(1, {
@@ -510,7 +511,10 @@ session(5, {
     reflection: "The Hub was the best set piece of the campaign. The Ports was the best scene.",
     seed: "Joss hears Cord is in the Ports. The Listener repeats a name only Mara knows.",
   },
-  close: closeOf(5, [{ name: MARA, ip: 5, credits: 1500 }, { name: DEX, ip: 5, credits: 1500 }, { name: JUNO, ip: 5, milestone: true, credits: 1500, note: "Answered the Listener." }], 4),
+  // The Hub was a CRANK job (Decision 302): its Ç4,500 is the job's, split three ways, so the lines carry none.
+  close: closeOf(5, [{ name: MARA, ip: 5 }, { name: DEX, ip: 5 }, { name: JUNO, ip: 5, milestone: true, note: "Answered the Listener." }], 4, [
+    { title: "CRANK: Infiltrate the NeuroNet Hub", thread: null, outcome: "done", tier: "skilled", pay: 4500, crew: [MARA, DEX, JUNO].map(name => ({ name, share: 1500 })) },
+  ]),
 });
 session(6, {
   hours: 4,
@@ -960,7 +964,7 @@ const audit = [
 // ── the table ───────────────────────────────────────────────────────
 const table = {
   meta: {
-    kind: "shadows-table", id: tableId(), name: "Dead Air", tableSchemaVersion: "0.20",
+    kind: "shadows-table", id: tableId(), name: "Dead Air", tableSchemaVersion: "0.21",
     created: ts(DAY[1], 17), updated: ts(DAY[7], 21, 10),
   },
   audit,

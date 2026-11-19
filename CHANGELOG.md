@@ -31,6 +31,7 @@ own in the footer.
 - **Guide lines** off now clears every line that only explains the sheet, not just the tab intros. What's true and what the rules say stays.
 - A Vampire's Thirst names **A day without rest** in the line under it.
 - Help's **Difficulty** reads the rulebook's whole sentence, with its usual numbers.
+- CRANK's tip says it: walking away from a client who broke the contract first costs no rep.
 - **Reputation** sets your CRANK rep when you lock: 5, 12 or 20, a rank at a time, and it tops out at rank 3.
 - New Disadvantage: **Burned**. Each rank starts you 2 rep under. You pay it back on the job, and IP can't buy it off. Below 0 you're a Novice and every payout is halved.
 - Walking out on a client can't take your rep below 0.
@@ -43,6 +44,7 @@ own in the footer.
 - An NPC's TOL is its formula unless you type an override, and a WILL below its formula shows as an error.
 - Cast members carry their wounds from one fight to the next. Heal them from their page.
 - Roll a CRANK job. The book's five tables, rolled or picked, and saved as a thread.
+- Close out a CRANK job: how it ended, what it paid and who was on it. The award log gives each of the crew their share and their rep.
 - The Reference's CRANK panel has the Job Generator's tables.
 - Undo puts you back on the clock you changed.
 - At a round's Reset, **N** finishes the round. Finish the round sits where Next does.

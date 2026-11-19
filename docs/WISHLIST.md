@@ -1209,9 +1209,14 @@ S23 keeps Down on a tab's own bar at 375px (it fits there). On a page's bar the 
 
 Today `seatView.name` falls back to the raw TAG. Change it in the engine so the card, the page, Find, Activity and crew-by-name matching all agree on "<player>'s character", the TAG shown beneath it. It's a shape change to what a seat answers to (Decision 255), so it takes a decision and a sweep of every reader of the name. Answers W165.
 
+**W172 — A jobs board: CRANK jobs posted before they run.** *Ken + Claude, from S11b · 💡 · Rule or shape · raised 2026-11-19*\
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S11b, GQ74
+
+A GM who wants to post jobs, see which the crew has taken and keep the ones nobody did could use a board on the Sessions tab. S11b (Decision 302) settles a job at the close-out and keeps no jobs record: a contract is a thread, and Next session lists the open ones. A board would point at the same threads, adding a posted, taken and done state, and who the crew took it for. Worth building if Scott's play (S22) asks for it.
+
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W172.** Everything above is open. What was built is in
+- **Next free number: W173.** Everything above is open. What was built is in
   [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)

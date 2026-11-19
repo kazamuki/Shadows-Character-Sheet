@@ -900,7 +900,7 @@ test("Decisions 203–204: export and import keep sessions and threads, and a 0.
   const before = JSON.parse(JSON.stringify(app.window.eval("({ s: S.table.sessions, t: S.table.threads })")));
   app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
   const file = await tableFile(downloads[0]);
-  assert.equal(file.meta.tableSchemaVersion, "0.20");
+  assert.equal(file.meta.tableSchemaVersion, "0.21");
   assert.deepEqual(file.sessions, before.s); assert.deepEqual(file.threads, before.t);
   const fresh = boot({ storage: GM_ON });
   withDownloads(fresh);
@@ -913,7 +913,7 @@ test("Decisions 203–204: export and import keep sessions and threads, and a 0.
   const older = boot({ storage: GM_ON });
   withDownloads(older);
   await importFile(older, old);
-  assert.equal(older.window.eval("S.table.meta.tableSchemaVersion"), "0.20");
+  assert.equal(older.window.eval("S.table.meta.tableSchemaVersion"), "0.21");
   assert.equal(older.window.eval("S.table.sessions.length + S.table.threads.length"), 0);
   assert.equal(older.window.eval("S.table.interactions[0].session"), null);
   assert.deepEqual([...app.errors, ...fresh.errors, ...older.errors], []);
@@ -2901,5 +2901,106 @@ test("S23: the table's name block shows on Sessions only", () => {
     assert.ok(title() && title().classList.contains("sr-only"), `${id}: the heading stays for a jump to land on, not shown`);
     assert.equal(title().textContent, app.window.eval(`TABLE_SECTIONS.find(s => s.id === "${id}").label`), `${id}: and it names the section, not the table`);
   }
+  assert.deepEqual(app.errors, []);
+});
+
+// ── A CRANK job at the close-out (S11b, Decision 302) ───────────────────
+const jobApp = (extra = () => {}) => closeApp(t => {
+  const th = Engine.addThread(t, { title: "CRANK: Courier for a Street Gang" }).id;
+  const id = mkSession(t, 4, "2026-09-08", ["Mara", "Dex", "Juno"], 3);
+  extra(t, id);
+  return { id, th };
+});
+const jobCard = (app, i = 0) => app.$(`[data-co-job="${i}"]`);
+const jobF = (app, f, i = 0) => jobCard(app, i).querySelector(`[data-cj="${f}"]`);
+const crewRow = (app, name, i = 0) => [...jobCard(app, i).querySelectorAll("[data-cj-key]")].find(r => r.querySelector(".co-crew-name").textContent === name);
+const shares = app => ["Mara", "Dex", "Juno"].map(n => { const r = crewRow(app, n), s = r.querySelector('[data-cj="share"]'); return s ? s.value : null; });
+const jobIn = (app, sel, v) => { const el = app.$(sel); el.value = v; el.dispatchEvent(new app.window.Event("input", { bubbles: true })); };
+const setJobBasics = (app, th) => {
+  app.click("[data-cj-add]");
+  typeChange(app, '[data-co-job="0"] [data-cj="thread"]', th);
+  jobIn(app, '[data-co-job="0"] [data-cj="pay"]', "2400");
+};
+const leftText = app => jobCard(app).querySelector("[data-cj-left]").textContent;
+
+test("Decision 302: a job is added, split, re-split, written and undone whole", () => {
+  const { app, ids } = jobApp();
+  closeSheet(app, ids.id);
+  assert.equal(app.$("[data-co-jobs-h]").textContent, "CRANK jobs");
+  setJobBasics(app, ids.th);
+  assert.deepEqual(shares(app), ["800", "800", "800"]);
+  assert.equal(leftText(app), "");
+  app.click('[data-co-job="0"] [data-cj-key="juno"] [data-cj="on"]');
+  assert.deepEqual(shares(app), ["1200", "1200", null]);
+  jobIn(app, '[data-co-job="0"] [data-cj-key="mara"] [data-cj="share"]', "1000");
+  assert.deepEqual(shares(app), ["1000", "1200", null], "typing a share re-splits nothing");
+  assert.equal(leftText(app), "Ç200 not split");
+  jobIn(app, '[data-co-job="0"] [data-cj="pay"]', "2000");
+  assert.deepEqual(shares(app), ["1000", "1000", null], "Dex re-splits, Mara's typed share stays");
+  assert.equal(leftText(app), "");
+  jobIn(app, '[data-co-job="0"] [data-cj="pay"]', "1500");
+  assert.equal(leftText(app), "Ç250 over the payout");
+  jobIn(app, '[data-co-job="0"] [data-cj="pay"]', "2000");
+  typeChange(app, '[data-co-job="0"] [data-cj="tier"]', "skilled");
+  assert.match(jobCard(app).textContent, /Pays Ç1,000–3,000/);
+  app.click("[data-co-write]");
+  const log = app.$$(".co-log li").map(l => l.textContent);
+  assert.match(log[0], /^Mara: .*From CRANK: Courier for a Street Gang, seen through: \+Ç1,000 and \+1 CRANK rep\.$/);
+  assert.match(log[1], /^Dex: .*seen through: \+Ç1,000 and \+1 CRANK rep\.$/);
+  assert.doesNotMatch(log[2], /CRANK/, "Juno wasn't on it");
+  assert.equal(log[3], "Jobs: CRANK: Courier for a Street Gang, seen through, Ç2,000 (a Skilled job).");
+  assert.equal(app.window.eval("S.table.sessions[0].close.jobs.length"), 1);
+  app.window.eval("Engine.undoTableAction(S.table)");
+  assert.equal(app.window.eval("S.table.sessions[0].close"), null, "one undo takes the log and its job");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 302: Redo brings the job back as written, and a name leaving Who was there leaves the crew", () => {
+  const { app, ids } = jobApp();
+  closeSheet(app, ids.id);
+  setJobBasics(app, ids.th);
+  writeLog(app);
+  app.click("[data-co-redo]"); app.click("#modal [data-askyes]");
+  assert.equal(app.$$("[data-co-job]").length, 1, "the job came back, once");
+  assert.equal(jobF(app, "pay").value, "2400");
+  assert.deepEqual(shares(app), ["800", "800", "800"]);
+  assert.equal(jobF(app, "thread").value, ids.th);
+  app.click("[data-co-write]");
+  assert.equal(app.window.eval("S.table.sessions[0].close.jobs.length"), 1, "written again, not twice");
+  app.click("[data-coend-done]");
+  app.click("[data-co-redo]"); app.click("#modal [data-askyes]");
+  app.window.eval("S.table.sessions[0].present = ['Mara', 'Juno']; closeSync(); renderTable()");
+  assert.equal(crewRow(app, "Dex"), undefined, "Dex is off the crew card");
+  assert.equal(app.window.eval("S.closeOut.jobs[0].crew.map(m => m.name).join()"), "Mara,Juno");
+  app.window.eval("S.table.sessions[0].present = ['Mara', 'Dex', 'Juno']; closeSync(); renderTable()");
+  assert.equal(app.window.eval("S.closeOut.jobs[0].crew.map(m => m.name).join()"), "Mara,Juno", "Dex isn't put back");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 302: walked out says −2 with the true minus, the client's breach says no rep lost, markup is text, and Write refuses a job with no name", () => {
+  const { app, ids } = jobApp();
+  closeSheet(app, ids.id);
+  app.click("[data-cj-add]");
+  app.click("[data-co-write]");
+  assert.ok(app.$("[data-co-write]"), "still on the sheet");
+  assert.equal(app.doc.activeElement, jobF(app, "thread"), "focus goes to the job's own field");
+  typeChange(app, '[data-co-job="0"] [data-cj="thread"]', "*");
+  assert.equal(app.doc.activeElement, jobF(app, "title"));
+  jobIn(app, '[data-co-job="0"] [data-cj="title"]', "Dock <b>job</b>");
+  typeChange(app, '[data-co-job="0"] [data-cj="outcome"]', "walked");
+  assert.equal(jobF(app, "pay"), null, "a walk-out has no payout");
+  app.click("[data-cj-add]");
+  typeChange(app, '[data-co-job="1"] [data-cj="thread"]', "*");
+  jobIn(app, '[data-co-job="1"] [data-cj="title"]', "Second");
+  typeChange(app, '[data-co-job="1"] [data-cj="outcome"]', "broken");
+  app.click('[data-co-job="1"] [data-cj-key="dex"] [data-cj="on"]');
+  app.click('[data-co-job="1"] [data-cj-key="juno"] [data-cj="on"]');
+  app.click("[data-co-write]");
+  const log = app.$$(".co-log li").map(l => l.textContent);
+  assert.match(log[0], /From Dock <b>job<\/b>, walked out: −2 CRANK rep\./, "markup is text");
+  assert.match(log[0], /From Second, the client broke it: no rep lost\./);
+  assert.doesNotMatch(log[1], /Second/);
+  assert.equal(app.$(".co-log b"), null, "no markup rendered");
+  assert.equal(log.at(-1), "Jobs: Dock <b>job</b>, walked out; Second, the client broke it.");
   assert.deepEqual(app.errors, []);
 });

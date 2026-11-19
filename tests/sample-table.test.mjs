@@ -176,3 +176,14 @@ test("the Activity trail undoes, newest first, back to where tonight started", (
   assert.equal(t.audit.length, 0);
   assert.equal(Engine.tableCheck(t).length, 0);
 });
+
+test("a CRANK job at a close-out has a crew of that session's present names, and the gate keeps it whole (Decision 302)", () => {
+  const fresh = JSON.parse(readFileSync(file, "utf8")); // other tests here edit `sample` in place
+
+  const jobs = fresh.sessions.flatMap(s => (s.close ? s.close.jobs : []).map(j => [s, j]));
+  assert.ok(jobs.length >= 1, "the sample carries a job");
+  for (const [s, j] of jobs) {
+    for (const m of j.crew) assert.ok(s.present.includes(m.name) && s.close.lines.some(l => l.name === m.name && l.present), `${m.name} on ${j.title}`);
+    assert.deepEqual(JSON.parse(JSON.stringify(Engine.migrateTable(JSON.parse(JSON.stringify(fresh))).sessions.find(x => x.id === s.id).close.jobs)), s.close.jobs, "the gate changes nothing");
+  }
+});

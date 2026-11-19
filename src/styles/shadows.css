@@ -1709,6 +1709,10 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .co-range{color:var(--dim); align-self:center; overflow-wrap:anywhere}
 .co-folded{align-items:center}
 .co-folded .co-name{flex:1 1 auto}
+.co-crew{list-style:none; margin:0; padding:0; flex:1 1 100%; display:flex; flex-direction:column; gap:6px; min-width:0}
+.co-crew-row{display:flex; align-items:flex-end; justify-content:space-between; gap:4px 10px; min-width:0; max-width:28rem}
+.co-crew-name{overflow-wrap:anywhere}
+.co-job .co-note{flex:1 1 200px}
 .co-arc{margin:10px 0; overflow-wrap:anywhere}
 .co-new{background:var(--panel); border:1px solid var(--frame); border-radius:6px; padding:8px 12px; margin-bottom:8px; min-width:0}
 .co-new-fields{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:0 14px}

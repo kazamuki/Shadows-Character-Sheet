@@ -3788,3 +3788,15 @@ test("K3: Difficulty quotes 0300 whole", () => {
   const d = D.gameTerms.find(r => r.id === "difficulty").description;
   assert.match(d, /Typically: 10 for easy, 15 for average, and 20 for challenging difficulty\./);
 });
+
+// ── A job's rep (S11b, Decision 302) ───────────────────────────────────
+// Source: 2625, *Reputation*: +1 for a job seen through, -2 for abandoning a contract, nothing for a failure,
+// and a client who broke the contract first isn't abandonment.
+test("Decision 302: a job's rep is the book's", () => {
+  const o = Object.fromEntries(D.resources.crank.outcomes.map(e => [e.id, e]));
+  assert.deepEqual(Object.keys(o), ["done", "failed", "walked", "broken"]);
+  assert.equal(o.done.rep, D.resources.crank.jobDone);
+  assert.equal(o.walked.rep, D.resources.crank.jobWalkedOut);
+  assert.deepEqual([o.failed.rep, o.broken.rep], [0, 0]);
+  assert.deepEqual(Object.values(o).map(e => e.paid), [true, false, false, false]);
+});

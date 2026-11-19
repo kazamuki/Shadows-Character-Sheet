@@ -2818,7 +2818,9 @@ function bindSessionPage(main, s){
 // ── The close-out (Decisions 205–206) ──────────────────────────────────
 // The sheet edits a draft on S before it writes anything, as the encounter's
 // wrap-up does (Decision 193), but Back keeps it: S.closeOut = { id, view,
-// lines, typed, newcomers } until the log is written or the table closes.
+// lines, jobs, typed, newcomers } until the log is written or the table closes.
+// A job (Decision 302) is { thread, other, title, outcome, tier, pay, crew:[{ name, share, typed }] }: crew are
+// present names only, and a share the GM typed is theirs, so a re-split leaves it be.
 // A line is { name, present, ip, milestone, credits, note } or, for someone
 // away, { name, present:false, took, tier, credits, note }; numbers are the
 // field's text. `typed` holds `<name>|<field>` for what the GM has typed, so
@@ -2836,7 +2838,7 @@ function closeSheetNow(s){ return !!(S.closeOut && S.closeOut.view && S.closeOut
 // A new draft from the engine's proposal, or one from what was written.
 function closeDraftNew(id, written){
   const d=Engine.closeOutDraft(S.table, id); if (!d) return null;
-  const c={ id, view:true, lines:[], typed:{}, newcomers:d.newcomers.map(n=>n.id) };
+  const c={ id, view:true, lines:[], jobs:[], typed:{}, newcomers:d.newcomers.map(n=>n.id) };
   const done=new Map(written ? written.lines.map(l=>[coKey(l.name), l]) : []);
   for (const p of d.present){
     const w=done.get(coKey(p.name));
@@ -2852,6 +2854,12 @@ function closeDraftNew(id, written){
   if (written) for (const w of written.lines) if (!c.lines.some(l=>coKey(l.name)===coKey(w.name)))
     c.lines.push(w.present ? { name:w.name, present:true, ip:coNum(w.ip), milestone:w.milestone, credits:coNum(w.credits), note:w.note }
       : { name:w.name, present:false, took:true, tier:w.tier||"", credits:coNum(w.credits), note:w.note });
+  // The jobs come back as written, so a redo never pays one twice. A crew name no longer present is let go.
+  if (written) c.jobs=(written.jobs||[]).map(j=>{
+    const h=(S.table.threads||[]).find(x=>x.id===j.thread);
+    return { thread:h ? h.id : "", other:!h, title:j.title, outcome:j.outcome, tier:j.tier||"", pay:coNum(j.pay),
+      crew:j.crew.filter(m=>c.lines.some(l=>l.present && coKey(l.name)===coKey(m.name))).map(m=>({ name:m.name, share:coNum(m.share), typed:true })) };
+  });
   // What was written stays as typed, but an IP that still matches the hours is the app's: changing Hours should move it.
   if (written){
     const mine=new Map(d.present.map(p=>[coKey(p.name), p.ip]));
@@ -2885,13 +2893,37 @@ function closeSync(){
   for (const o of old.values()) if (!o.present && !lines.some(l=>side(l)===side(o)) && !d.present.some(p=>coKey(p.name)===coKey(o.name))) lines.push(o);
   c.gone=Object.fromEntries([...old].filter(([k])=>!lines.some(l=>side(l)===k)));
   c.lines=lines;
+  // A name that left Who was there leaves every crew; one that comes back isn't put back.
+  for (const j of (c.jobs||[])){ j.crew=j.crew.filter(m=>lines.some(l=>l.present && coKey(l.name)===coKey(m.name))); coResplit(j); }
 }
-function coLogLine(l){
+const crankOutcomes = () => (((D.resources||{}).crank||{}).outcomes)||[];
+const crankOutcome = id => crankOutcomes().find(o=>o.id===id) || null;
+const coAn = w => /^[aeiou]/i.test(w) ? "an" : "a";
+// What a written job did for one name: their share and the ending's rep, in the log's words (Decision 302).
+function coJobClauses(c, name){
+  const out=[];
+  for (const j of ((c && c.jobs) || [])){
+    const m=j.crew.find(e=>coKey(e.name)===coKey(name)), o=crankOutcome(j.outcome); if (!m || !o) continue;
+    const bits=[ m.share ? `+Ç${coMoney(m.share)}` : "", o.rep>0 ? `+${o.rep} CRANK rep` : o.rep<0 ? `−${-o.rep} CRANK rep` : "" ].filter(Boolean);
+    out.push(`From <em>${esc(j.title)}</em>, ${esc(o.name.toLowerCase())}: ${bits.length ? bits.join(" and ") : "no rep lost"}.`);
+  }
+  return out;
+}
+// The jobs once, at the foot of the log.
+function coJobsLine(c){
+  const jobs=(c && c.jobs) || []; if (!jobs.length) return "";
+  const one=j=>{
+    const o=crankOutcome(j.outcome), t=crankTierName(j.tier);
+    return `<em>${esc(j.title)}</em>, ${esc(o ? o.name.toLowerCase() : j.outcome)}${j.pay ? `, Ç${coMoney(j.pay)}` : ""}${t ? ` (${coAn(t)} ${esc(t)} job)` : ""}`;
+  };
+  return `<li class="int-line co-jobs-log">Jobs: ${jobs.map(one).join("; ")}.</li>`;
+}
+function coLogLine(l, c){
   const who=esc(l.name), note=l.note ? esc(l.note) : "";
   if (l.present){
     const head=(l.ip!==null || l.milestone) ? `log a session${l.ip!==null ? ` with <strong>${l.ip} IP</strong>` : ""}${l.milestone ? `${l.ip!==null ? " and" : " with"} the Milestone Point` : ""}` : "";
     const bits=[ head, l.credits!==null ? `+${coMoney(l.credits)} Çredits` : "" ].filter(Boolean).join("; ");
-    return `${who}: ${[bits ? bits + "." : "", note].filter(Boolean).join(" ") || "nothing this time."}`;
+    return `${who}: ${[bits ? bits + "." : "", note, ...coJobClauses(c, l.name)].filter(Boolean).join(" ") || "nothing this time."}`;
   }
   const job=`an off-screen job${crankTierName(l.tier) ? `, ${esc(crankTierName(l.tier))}` : ""}`;
   return `${who} (away): no session to log; ${job}${l.credits!==null ? `; +${coMoney(l.credits)} Çredits` : ""}.${note ? ` ${note}` : ""}`;
@@ -2907,7 +2939,7 @@ function closeOutSectionHtml(s){
   const day=writtenDay(c.at);
   return `<h2 class="cast-h sec-h" tabindex="-1" data-sco-h>Close-out</h2>
     <p class="step-note">${day ? `Written ${esc(day)}.` : "Written."}</p>
-    ${c.lines.length ? `<ul class="int-list co-log">${c.lines.map(l=>`<li class="int-line">${coLogLine(l)}</li>`).join("")}</ul>` : `<p class="step-note">It said nothing.</p>`}
+    ${c.lines.length ? `<ul class="int-list co-log">${c.lines.map(l=>`<li class="int-line">${coLogLine(l, c)}</li>`).join("")}${coJobsLine(c)}</ul>` : `<p class="step-note">It said nothing.</p>`}
     <p><button type="button" class="btn" data-co-redo>Redo the close-out</button></p>`;
 }
 function coTotalsHtml(t){
@@ -2943,6 +2975,46 @@ function coAwayRows(c){
         <label class="field co-note"><span>Note</span><input type="text" data-co="note" value="${esc(l.note)}" autocomplete="off"></label></li>`;
     }).join("")}</ul>`;
 }
+// A payout split evenly across the crew, rounded down, into every share the GM hasn't typed.
+function coResplit(j){
+  const pay=j.pay==="" ? NaN : Number(j.pay), n=j.crew.length;
+  for (const m of j.crew) if (!m.typed) m.share = Number.isFinite(pay) && pay>=0 && n ? String(Math.floor(pay/n)) : "";
+}
+// What's left of the payout once the shares are counted: positive is unsplit, negative is over.
+function coLeft(j){
+  const pay=j.pay==="" ? NaN : Number(j.pay); if (!Number.isFinite(pay)) return 0;
+  return pay - j.crew.reduce((a, m)=>a + (Number(m.share)||0), 0);
+}
+const coLeftText = j => { const n=coLeft(j); return n>0 ? `Ç${coMoney(n)} not split` : n<0 ? `Ç${coMoney(-n)} over the payout` : ""; };
+// The open threads, those closed in this session, and the one this job already names.
+const coJobThreads = (c, j) => Engine.threadList(S.table).filter(h=>h.status==="open" || h.closed===c.id || h.id===j.thread);
+function coJobCard(c, j, i){
+  const o=crankOutcome(j.outcome), paid=!!(o && o.paid), tier=crankTiers().find(k=>k.id===j.tier);
+  const present=c.lines.filter(l=>l.present), pick=j.other ? "*" : j.thread;
+  return `<li class="co-row co-job" data-co-job="${i}">
+    <label class="field"><span>Job</span><select data-cj="thread">${pick ? "" : `<option value="" selected>Choose a job</option>`}${coJobThreads(c, j).map(h=>
+      `<option value="${esc(h.id)}"${h.id===pick ? " selected" : ""}>${esc(threadTitle(h))}</option>`).join("")}<option value="*"${pick==="*" ? " selected" : ""}>Something else…</option></select></label>
+    ${j.other ? `<label class="field co-note"><span>Job name</span><input type="text" data-cj="title" value="${esc(j.title)}" autocomplete="off"></label>` : ""}
+    <label class="field"><span>How it ended</span><select data-cj="outcome">${crankOutcomes().map(e=>
+      `<option value="${esc(e.id)}"${e.id===j.outcome ? " selected" : ""}>${esc(e.name)}</option>`).join("")}</select></label>
+    <label class="field"><span>Tier</span><select data-cj="tier"><option value=""${j.tier ? "" : " selected"}>No tier</option>${crankTiers().map(k=>
+      `<option value="${esc(k.id)}"${k.id===j.tier ? " selected" : ""}>${esc(k.name)}</option>`).join("")}</select></label>
+    ${tier ? `<span class="co-range">Pays ${esc(Engine.crankPayText(tier))}</span>` : ""}
+    ${paid ? `<label class="field"><span>Payout</span><input type="number" min="0" step="1" inputmode="numeric" data-cj="pay" value="${esc(j.pay)}"></label>` : ""}
+    <ul class="co-crew" aria-label="Crew">${present.map(l=>{
+      const m=j.crew.find(e=>coKey(e.name)===coKey(l.name));
+      return `<li class="co-crew-row" data-cj-key="${esc(coKey(l.name))}"><label class="co-check"><input type="checkbox" data-cj="on"${m ? " checked" : ""}> <span class="co-crew-name">${esc(l.name)}</span></label>${m && paid ?
+        `<label class="field"><span>Share</span><input type="number" min="0" step="1" inputmode="numeric" data-cj="share" value="${esc(m.share)}"></label>` : ""}</li>`; }).join("")}</ul>
+    ${paid ? `<span class="co-range" data-cj-left aria-live="polite">${esc(coLeftText(j))}</span>` : ""}
+    <button type="button" class="btn sm" data-cj-remove>Remove this job</button></li>`;
+}
+function coJobs(c){
+  const present=c.lines.some(l=>l.present);
+  return `<h2 class="cast-h sec-h" tabindex="-1" data-co-jobs-h>CRANK jobs</h2>
+    <p class="field-hint">A job the crew finished, failed or walked out of tonight. Each name on it gets their share and their rep in the log.</p>
+    ${c.jobs.length ? `<ul class="int-list co-rows">${c.jobs.map((j, i)=>coJobCard(c, j, i)).join("")}</ul>` : ""}
+    ${present ? `<p><button type="button" class="btn" data-cj-add>Add a job</button></p>` : `<p class="step-note">Add who was there to put a job on the crew.</p>`}`;
+}
 function coThreads(){
   const open=Engine.threadList(S.table).filter(h=>h.status==="open");
   return `<h2 class="cast-h sec-h" tabindex="-1" data-co-threads-h>Threads</h2>
@@ -2970,7 +3042,7 @@ function coArcHtml(s){
 }
 function coListsHtml(s){
   const c=S.closeOut;
-  return `${coIpRows(c)}${coAwayRows(c)}${coArcHtml(s)}${coThreads()}${coNewcomers(c)}`;
+  return `${coIpRows(c)}${coAwayRows(c)}${coJobs(c)}${coArcHtml(s)}${coThreads()}${coNewcomers(c)}`;
 }
 function closeSheetHtml(s){
   const hasNumber=Number.isFinite(s.number), title=Engine.sessionTitle(s);
@@ -2990,7 +3062,7 @@ function closeEndHtml(s){
   const title=Engine.sessionTitle(s), lines=(s.close && s.close.lines) || [];
   return `<div class="tbl-bar scroll-row" data-row="tblbar"><button type="button" class="btn sm" data-coend-back>Back to ${esc(title)}</button></div>
     <h1 class="step-title tbl-title" tabindex="-1" data-coend-h>${esc(title)} is closed out</h1>
-    ${lines.length ? `<ul class="int-list co-log">${lines.map(l=>`<li class="int-line">${coLogLine(l)}</li>`).join("")}</ul>` : `<p class="step-note">It said nothing.</p>`}
+    ${lines.length ? `<ul class="int-list co-log">${lines.map(l=>`<li class="int-line">${coLogLine(l, s.close)}</li>`).join("")}${coJobsLine(s.close)}</ul>` : `<p class="step-note">It said nothing.</p>`}
     <p class="co-end-btns"><button type="button" class="btn primary" data-coend-export>Export the table</button> <button type="button" class="btn" data-coend-done>Done</button></p>`;
 }
 function bindCloseEnd(main, s){
@@ -3029,9 +3101,19 @@ function bindCloseOut(main, s){
       ? { name:l.name, present:true, ip:l.ip, milestone:l.milestone, credits:l.credits, note:l.note }
       : { name:l.name, present:false, ip:null, milestone:false, credits:l.credits, tier:l.tier, note:l.note });
     const sess=S.table.sessions.find(x=>x.id===id);
-    let r; tableChange(()=>{ r=Engine.writeCloseOut(S.table, id, { lines }); }, false, `Closed out ${Engine.sessionTitle(sess)}`);
+    // A job names its thread as the thread is titled now, so the log reads the same whatever the thread becomes.
+    const jobs=c.jobs.map(j=>{ const o=crankOutcome(j.outcome), paid=!!(o && o.paid), h=j.other ? null : (S.table.threads||[]).find(x=>x.id===j.thread);
+      return { title:h ? threadTitle(h) : j.title, thread:h ? h.id : null, outcome:j.outcome, tier:j.tier||null, pay:paid ? j.pay : null,
+        crew:j.crew.map(m=>({ name:m.name, share:paid ? m.share : null })) }; });
+    let r; tableChange(()=>{ r=Engine.writeCloseOut(S.table, id, { lines, jobs }); }, false, `Closed out ${Engine.sessionTitle(sess)}`);
     if (!r.ok){
       notice(r.why);
+      if (Number.isInteger(r.job)){
+        const card=main.querySelector(`[data-co-job="${r.job}"]`);
+        const el=card && (r.field==="crew" ? card.querySelector('[data-cj="on"]') : card.querySelector(`[data-cj="${r.field}"]`) || card.querySelector('[data-cj="thread"]'));
+        if (el) el.focus();
+        return;
+      }
       const at = r.field ? c.lines.findIndex(l=>l.name===r.name) : -1;
       const el = at>=0 && main.querySelector(`[data-co-row="${at}"] [data-co="${r.field}"]`);
       if (el) el.focus(); else focus('[data-crew-seat], [data-crew-name], [data-crew-add]');
@@ -3051,6 +3133,49 @@ function bindCloseOut(main, s){
       } else {
         el.oninput=()=>{ const l=lineOf(el); l[f]=el.value; c.typed[`${coKey(l.name)}|${f}`]=true; };
       }
+    });
+    // CRANK jobs (Decision 302). A payout or a tick re-splits the shares nobody typed; typing a share re-splits nothing.
+    const jobSel = (i, f) => `[data-co-job="${i}"] [data-cj="${f}"]`;
+    const paintShares = (card, j) => {
+      card.querySelectorAll("[data-cj-key]").forEach(row=>{
+        const m=j.crew.find(e=>coKey(e.name)===row.dataset.cjKey), inp=row.querySelector('[data-cj="share"]');
+        if (m && inp && document.activeElement!==inp) inp.value=m.share;
+      });
+      const left=card.querySelector("[data-cj-left]"); if (left) left.textContent=coLeftText(j);
+    };
+    const addJob=box.querySelector("[data-cj-add]");
+    if (addJob) addJob.onclick=()=>{
+      const crew=c.lines.filter(l=>l.present).map(l=>({ name:l.name, share:"", typed:false }));
+      c.jobs.push({ thread:"", other:false, title:"", outcome:((crankOutcomes()[0])||{}).id||"", tier:"", pay:"", crew });
+      drawLists(); focus(jobSel(c.jobs.length-1, "thread"));
+    };
+    box.querySelectorAll("[data-cj-remove]").forEach(b=>b.onclick=()=>{
+      c.jobs.splice(+b.closest("[data-co-job]").dataset.coJob, 1);
+      drawLists(); if (!focus("[data-cj-add]")) focus("[data-co-jobs-h]");
+    });
+    box.querySelectorAll("[data-cj]").forEach(el=>{
+      const f=el.dataset.cj, card=el.closest("[data-co-job]"), i=+card.dataset.coJob, j=c.jobs[i];
+      if (f==="thread") el.onchange=()=>{
+        if (el.value==="*"){ j.other=true; j.thread=""; }
+        else { const h=S.table.threads.find(x=>x.id===el.value); j.other=false; j.thread=h ? h.id : ""; j.title=h ? threadTitle(h) : ""; }
+        drawLists(); focus(jobSel(i, j.other ? "title" : "thread"));
+      };
+      else if (f==="title") el.oninput=()=>{ j.title=el.value; };
+      else if (f==="outcome") el.onchange=()=>{ j.outcome=el.value; drawLists(); focus(jobSel(i, "outcome")); };
+      else if (f==="tier") el.onchange=()=>{ j.tier=el.value; drawLists(); focus(jobSel(i, "tier")); };
+      else if (f==="pay") el.oninput=()=>{ j.pay=el.value; coResplit(j); paintShares(card, j); };
+      else if (f==="share") el.oninput=()=>{
+        const m=j.crew.find(e=>coKey(e.name)===el.closest("[data-cj-key]").dataset.cjKey);
+        if (m){ m.share=el.value; m.typed=true; paintShares(card, j); }
+      };
+      else if (f==="on") el.onchange=()=>{
+        const row=el.closest("[data-cj-key]"), key=row.dataset.cjKey, at=[...card.querySelectorAll("[data-cj-key]")].indexOf(row);
+        // The crew stays in the order of Who was there.
+        const keep=new Set(j.crew.map(m=>coKey(m.name))); if (el.checked) keep.add(key); else keep.delete(key);
+        j.crew=c.lines.filter(l=>l.present && keep.has(coKey(l.name))).map(l=>j.crew.find(m=>coKey(m.name)===coKey(l.name)) || { name:l.name, share:"", typed:false });
+        coResplit(j); drawLists();
+        const back=box.querySelectorAll(`[data-co-job="${i}"] [data-cj="on"]`)[at]; if (back) back.focus();
+      };
     });
     box.querySelectorAll("[data-co-cur]").forEach(b=>b.onclick=()=>{
       const tid=b.dataset.coCur, h=S.table.threads.find(x=>x.id===tid); if (!h) return;
