@@ -889,7 +889,7 @@ function openCrankJob({ opened }={}){
   const rollAll=()=>{ for (const c of cols) S.crankJob[c.id]=rollD(c.rows.length); };
   rollAll();
   openModal({ title:"A CRANK job", returnTo:"[data-crankjob]",
-    html:`<p class="step-note">${esc(jobData().text)}</p>${cols.map(jobRowHtml).join("")}`,
+    html:`<p class="step-note">${esc(jobData().text)}</p><p class="step-note" data-jobtier>${esc(jobData().tierText)}</p>${cols.map(jobRowHtml).join("")}`,
     foot:`<button type="button" class="btn" data-jobrollall>Roll all</button> <button type="button" class="btn primary" data-jobadd>Add as a thread</button> <button type="button" class="btn" data-modalclose>Close</button>`,
     onClose(){ delete S.crankJob; },
     bind(body, foot){

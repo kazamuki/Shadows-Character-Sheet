@@ -165,6 +165,7 @@ Copy is drafted for the voice pass. Every line is checked against the engine bef
 - **The generator** (a modal, `openModal`):
   - **Title:** "A CRANK job".
   - **Lead:** the book's line, from the data: "Roll d10 on each column or choose manually…".
+  - **Sizing:** the book's second paragraph (`tierText`, "The tables don't know the crew's tier…") under the lead, too (Ken, 2026-11-18, on #364).
   - **Five rows,** each with:
     - the column's name;
     - a picker ("—", then "1 · Courier" … "10 · Blacksite Raid");

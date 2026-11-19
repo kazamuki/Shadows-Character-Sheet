@@ -2746,6 +2746,7 @@ test("Decision 297: CRANK job opens a generator with all five rows rolled; a row
   assert.deepEqual(jobAll(app), ["1 · Courier", "2 · Street Gang", "10 · Unknown Package", "5 · Neon Nightclub", "1 · Double-Cross"]);
   assert.match(app.$("#modal").textContent, /Move something from one place to another/);
   assert.match(app.$("#modal").textContent, /Roll d10 on each column or choose manually/);
+  assert.match(app.$("#modal [data-jobtier]").textContent, /The tables don.t know the crew.s tier/, "the sizing paragraph shows where the GM rolls");
   app.click('#modal [data-jobroll="client"]');
   assert.deepEqual(jobAll(app), ["1 · Courier", "7 · Government Agency", "10 · Unknown Package", "5 · Neon Nightclub", "1 · Double-Cross"]);
   assert.equal(app.$('#modal [data-jobroll="client"]').getAttribute("aria-label"), "Roll Client");
