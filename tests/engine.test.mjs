@@ -14174,3 +14174,11 @@ test("Decision 297: a pick's bound is the column's own row count, not a fixed 10
     assert.equal(Engine.crankJob({ a: 0 }).parts[0].roll, null);
   } finally { D.resources.crank.jobs = keep; }
 });
+
+test("Decision 297: the title's article follows the client: an Underground Resistance, an Unknown Entity, a Street Gang", () => {
+  const titles = D.resources.crank.jobs.columns[1].rows.map((_, i) => Engine.crankJob({ type: 1, client: i + 1 }).title);
+  assert.equal(titles[5], "CRANK: Courier for an Underground Resistance");
+  assert.equal(titles[9], "CRANK: Courier for an Unknown Entity");
+  assert.equal(titles.filter(t => t.includes(" for an ")).length, 2, "only the two vowel clients take an");
+  assert.equal(titles[1], "CRANK: Courier for a Street Gang");
+});
