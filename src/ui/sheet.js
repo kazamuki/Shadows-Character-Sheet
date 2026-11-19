@@ -50,7 +50,7 @@ function sheetGuideOn(){
 }
 // K3 (Decision 297): every guide sentence the sheet writes besides a tab's intro is a `sheetGuide.lines` key drawn here, and goes when Guide lines is
 // off. A seat's copy is drawn on a table screen, where this is "" whatever the table's switch says: a seat draws no sheet guide line (KQ20).
-// {tab:id} is that tab's button, {gmChip} the GM chip, any other {x} a value from `vars`. `inline` draws a span, for a row of them. Total: a missing key,
+// {tab:id} is that tab's button, {gmChip} the GM chip, any other {x} a value from `vars`. `inline` draws a span, for a row of them; `cls` is its style (a `sub` beside a control). Total: a missing key,
 // a line that isn't text and a tab it doesn't know are "" or plain text, never a throw.
 function sheetLine(key, vars, opts){
   if (S.screen==="table" || !sheetGuideOn()) return "";
@@ -61,7 +61,7 @@ function sheetLine(key, vars, opts){
     .replace(/\{gmChip\}/g, '<span class="chip gold">GM</span>')
     .replace(/\{(\w+)\}/g,(m, k)=>vars && Object.prototype.hasOwnProperty.call(vars, k) ? esc(String(vars[k])) : m);
   const tag = opts && opts.inline ? "span" : "p";
-  return `<${tag} class="step-note guide-line" data-guide-line="${esc(key)}">${body}</${tag}>`;
+  return `<${tag} class="${opts && opts.cls || "step-note"} guide-line" data-guide-line="${esc(key)}">${body}</${tag}>`;
 }
 function setSheetGuide(on){ try{ if (on) localStorage.removeItem(SHEET_GUIDE_PREF); else localStorage.setItem(SHEET_GUIDE_PREF, "off"); }catch(e){} }
 // The id of the tab on the page: a key of sheetGuide.contexts. Total: a section it doesn't know is Main's.
@@ -1631,7 +1631,8 @@ const crankControlsHtml = () => { const R=D.resources.crank, up=R.jobDone, down=
 const crankSubHtml = st => st.next ? `${st.toNext} to ${esc(st.next.name)}` : "Top tier";
 // Decision 296: below 0 a character is a Novice at half pay (only Burned goes there); a held Burned at 0 or more is paid off.
 const crankNote = st => st.below ? D.resources.crank.belowText : st.paidOff ? D.resources.crank.paidOffText : "";
-const crankNoteHtml = st => crankNote(st) ? `<p class="step-note crank-note">${esc(crankNote(st))}</p>` : "";
+// "Remove it on Admin." is a guide sentence (K3): the note is what's true, the line beside it is where to go.
+const crankNoteHtml = st => crankNote(st) ? `<p class="step-note crank-note">${esc(crankNote(st))}</p>${st.paidOff && !st.below ? sheetLine("burnedRemove") : ""}` : "";
 const crankCardMeta = st => st.below ? crankNote(st) : [st.tier ? st.tier.name : "", st.paidOff ? crankNote(st) : ""].filter(Boolean).join(" · ");
 
 // Decision 225: SFR spent this round. The pool's tracker panel is found by its resource, not its id;
@@ -1743,8 +1744,8 @@ function renderShTrackers(){
     ? `<span class="hitarmor${armorDownCls(worn)}">${esc(worn.name)} · ${armorStatLine(worn)}</span>
        <div class="lo-armor-int" style="flex-basis:100%">${intBar(worn)}</div>${armorDownNote(worn, "span")}
        <button class="btn sm" data-actopen="wear" ${open?"disabled":""}>After the fight</button>
-       <span class="sub">${esc((D.armorRules||{}).wearNote||"")} Repairs are on Loadout.</span>`
-    : `<span class="sub">No body armor worn. Pick it up or put it on under Loadout.</span>`)
+       <span class="sub">${esc((D.armorRules||{}).wearNote||"")}</span>${sheetLine("armorRepairs", null, { inline:true, cls:"sub" })}`
+    : `<span class="sub">No body armor worn.</span>${sheetLine("armorPutOn", null, { inline:true, cls:"sub" })}`)
     + (naturalArmorText(ch) ? `<span class="hitarmor" style="flex-basis:100%">${esc(naturalArmorText(ch))}</span>` : "") + `</div>`;
   if (S.act && S.act.kind==="wear") h += actPanelHtml(ch);
   h += `<div class="pick ${pain.level?"":"selected"}${landedCls("pain")}"><div class="head"><h2>${termsHtml(pain.label)}</h2>
@@ -2010,7 +2011,7 @@ function sessionHistoryHtml(ch, secs){
   h += secs.sect("Activity Log", `Activity Log — ${log.length} action${log.length===1?"":"s"}`);
   h += `<div class="trk"><h2>Undo</h2>
     <button class="btn sm danger" data-undolast ${log.length?"":"disabled"}>Undo last action</button>
-    <span class="sub">Peels back the most recent action — damage, IP, milestones, credits, and admin edits all land here. To fix an <em>older</em> mistake, switch on Admin mode (⋮ menu) and edit the value directly; that edit is logged here too and is itself undoable.</span></div>`;
+    <span class="sub">Peels back the most recent action — damage, IP, milestones, credits, and admin edits all land here.</span>${sheetLine("undoOlder", null, { inline:true, cls:"sub" })}</div>`;
   if (log.length){
     h += `<div class="journal auditlog">` + log.slice().reverse().map((e,ri)=>
       `<div class="jrow"><span class="d">${esc(String(e.date).slice(0,16).replace("T"," "))}</span>
@@ -2937,10 +2938,10 @@ function renderShAdmin(){
   h += `<div class="sect">Resources</div>
     <div class="trk"><h2>LUCK bonus</h2><span class="big gold">${ch.trackers.luck.bonus}</span>
     <button class="btn sm" data-admin-luck="-1">−1</button><button class="btn sm" data-admin-luck="1">+1</button>
-    <span class="sub">Buy-ups above the base of ${D.resources.luck.startingValue}. Current LUCK during play is tracked on the Trackers tab.</span></div>
+    <span class="sub">Buy-ups above the base of ${D.resources.luck.startingValue}.</span>${sheetLine("luckOnTrackers", null, { inline:true, cls:"sub" })}</div>
     ${crankOn()?`<div class="trk"><h2>CRANK rep</h2><span class="big">${Engine.crankState(ch).rep}</span>
     <button class="btn sm" data-admin-crank="-1">−1</button><button class="btn sm" data-admin-crank="1">+1</button>
-    <span class="sub">Corrections only. Jobs done and walked out are on Main and Trackers.</span></div>`:""}`;
+    <span class="sub">Corrections only.</span>${sheetLine("crankJobsWhere", null, { inline:true, cls:"sub" })}</div>`:""}`;
   return h;
 }
 

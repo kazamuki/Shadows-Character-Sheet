@@ -291,7 +291,7 @@ window.SHADOWS_DATA = {
       "jobDone": 1,
       "jobWalkedOut": -2,
       "belowText": "Below 0: Novice, and every payout is halved.",
-      "paidOffText": "Burned is paid off. Remove it on Admin.",
+      "paidOffText": "Burned is paid off.",
       "tiers": [
         { "id": "novice",    "name": "Novice",    "rep": 0,  "pay": { "min": 50,    "max": 200 } },
         { "id": "competent", "name": "Competent", "rep": 5,  "pay": { "min": 300,   "max": 800 } },
@@ -5083,7 +5083,13 @@ window.SHADOWS_DATA = {
       "powersOnCharacter": "Powers are edited, added and removed on {tab:character}.",
       "customSpells": "Spells you improvised, or settled with your GM.",
       "tolWillWhere": "Change the Stats they come from, or add a Manual Adjustment on {tab:trackers}.",
-      "trainLearnFirst": "Learn one with IP first, then train it here."
+      "trainLearnFirst": "Learn one with IP first, then train it here.",
+      "armorRepairs": "Repairs are on {tab:loadout}.",
+      "armorPutOn": "Pick it up or put it on under {tab:loadout}.",
+      "undoOlder": "To fix an older mistake, switch on Admin mode (⋮ menu) and edit the value directly; that edit is logged here too and is itself undoable.",
+      "luckOnTrackers": "Current LUCK during play is tracked on {tab:trackers}.",
+      "crankJobsWhere": "Jobs done and walked out are on {tab:main} and {tab:trackers}.",
+      "burnedRemove": "Remove it on Admin."
     },
     // A seat's copy (KQ20): the rule line that tells the player to act, said to the GM. Keyed by the line's appCopy key.
     "seat": {

@@ -422,7 +422,12 @@ function k3Char(arch, full) {
   const ch = arch === "vampire" ? lockedVampire("upyr") : arch === "writein" ? writtenInCharacter() : lockedCharacter();
   if (arch !== "writein") ch.identity.archetype = arch;
   ch.meta.id = "TAG-K3K3-K3K3-K3K3";
-  if (full) { Engine.logSession(ch, { title: "The job", ipEarned: 4 }); ch.houseRules = { training: true }; }
+  if (full) {
+    Engine.logSession(ch, { title: "The job", ipEarned: 4 }); ch.houseRules = { training: true };
+    ch.armor.push({ id: "kevlar-vest", integrityLoss: 0, notes: "", worn: true, scrapped: false, upgrades: [] });   // a worn vest: Trackers' wear note and its repairs line
+    ch.disadvantages.push({ id: "burned", rank: 1, notes: "" });   // Burned at rep 0: paid off, and its note says where to remove it
+    ch.trackers.crank.rep = 0; ch.trackers.crank.ledger.push({ date: "2026-10-01T00:00:00.000Z", amount: 0, note: "Start: Burned rank 1", start: "burned" });
+  }
   return ch;
 }
 /** Every tab (Admin last), read with the switch on or off: { tab: { text, guides: [{ key, text }] } }. */
@@ -451,6 +456,12 @@ const KEPT = [
   ["No sessions yet.", "progression", null, "empty"],
   ["Nothing yet.", "progression", null, "empty"],
   ["It stays as it was at lock.", "admin", "writein", null],
+  ["Anyone who took a hit rolls once for wear after the fight", "trackers", null, "full"],
+  ["No body armor worn.", "trackers", null, "empty"],
+  ["Peels back the most recent action", "progression", null, null],
+  ["Burned is paid off.", "trackers", null, "full"],
+  ["Buy-ups above the base of", "admin", null, null],
+  ["Corrections only.", "admin", null, null],
 ];
 test("K3: Guide lines off takes exactly the guide lines", () => {
   const lines = SG().lines || {}, drawn = new Set(), keptSeen = new Set();
@@ -462,7 +473,7 @@ test("K3: Guide lines off takes exactly the guide lines", () => {
       const where = `${arch} ${full ? "full" : "empty"} ${tab}`;
       assert.equal(off[tab].guides.length, 0, `${where}: a guide line is drawn with the switch off`);
       assert.equal(off[tab].text, on[tab].text, `${where}: more than the guide lines changed`);
-      for (const [sentence, kt, ka, ks] of KEPT) if (kt === tab && (!ka || ka === arch) && (ks !== "empty" || !full)) {
+      for (const [sentence, kt, ka, ks] of KEPT) if (kt === tab && (!ka || ka === arch) && (ks === "empty" ? !full : ks === "full" ? full : true)) {
         assert.ok(off[tab].text.includes(sentence), `${where}: "${sentence}" went with the guide lines`);
         keptSeen.add(sentence);
       }
