@@ -4762,6 +4762,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** S3b's seats arrive (the lines name seats), S2's dispatch carries the log, or GQ8 says the GM awards Milestones.
      - **Built:** table schema 0.9, switched off (173); log 2026-10-09 (the close-out).
      → **Superseded in part by Decision 254** — the award log's lines stay typed, and its totals fold a seat's names.
+     → **Superseded in part by Decision 302** — the award log also keeps the night's CRANK jobs (`close.jobs`), and rep reaches it through them, not as a field on a line.
 
 206. **The close-out works it out: IP at 5 an hour rounded up, the absent at an off-screen job's pay, the Milestone reminder by session number, and tonight's new faces.**
      *2026-10-09 · Ken + Claude · Touches: closeOutDraft, ip.perHour, IP rounding, absent, off-screen job, offScreenPay, offScreenMax, CRANK tier, Legendary, arc reminder, Minor Milestone, Major Milestone, anyone new, editThread closed, Decision 11, Decision 13, Decision 169, Decision 204, GQ28*
@@ -5836,6 +5837,15 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 271 in part: "Cast's quick-add stays" no longer holds. Cites 270 (its UQ7).
      - **Revisit if:** GMs add cast faster than they read the list, or a phone GM can't find which session is open.
      - **Built:** app 0.73.0, no game-data or schema move, PR #368, log 2026-11-19 (S23).
+
+302. **A CRANK job is settled at the close-out: how it ended, its payout and its crew, kept on the session's award log. A table keeps no jobs record and no board.**
+     *2026-11-19 · Ken + Claude · Touches: close-out, award log, close.jobs, writeCloseOut, awardTotals, resources.crank.outcomes, table schema 0.21, migrateTable, JobRecord, Decision 205, Decision 295, Decision 297, GQ52*
+     - **Decided:** A written close-out is `{ at, lines, jobs }`. A job is `{ title, thread, outcome, tier, pay, crew:[{ name, share }] }`. The crew are present lines only. The outcome is one of the data's four (`resources.crank.outcomes`), and each says its rep: +1 seen through, 0 failed, −2 walked out, 0 the client broke it. The log gives each crew member their share and that rep, to enter on their own sheet. Contracts stay threads (297); a job doesn't change its thread.
+     - **Why:** `2625`: one payout split however the crew splits it, +1 for all who see it through, −2 for a walk-out. The close-out is where awards are already written (205). A thread already holds the contract (297), so a jobs record would be a second one.
+     - **Rejected:** A `jobs` collection with the first plan's `JobRecord` and a board: it duplicates threads. A `rep` field on each award line (205's rejected option): rep is read from the outcome, so it can't disagree. An even split only: the crew splits as it likes. Away characters on a job: off-screen work builds no rep (295). Halving a Burned share: the table doesn't know rep (GQ52). A job that resolves its thread: a thread changes at once, a job waits for Write (GQ71).
+     - **Replaces:** Decision 205 in part: the award log keeps the night's CRANK jobs, and rep reaches the log through them.
+     - **Revisit if:** a GM wants jobs posted and tracked before they run (the board, W172), the dispatch (W146) carries the log, or the book changes the +1, −2 or the split.
+     - **Built:** app 0.73.0, table schema 0.20 → 0.21, no game-data move (Decision 68), PR #…, log 2026-11-19 (S11b).
 
 ## 5. Open Flags
 

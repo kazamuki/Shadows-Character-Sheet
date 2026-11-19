@@ -176,3 +176,27 @@ test("the Activity trail undoes, newest first, back to where tonight started", (
   assert.equal(t.audit.length, 0);
   assert.equal(Engine.tableCheck(t).length, 0);
 });
+
+test("a CRANK job at a close-out has a crew of that session's present names, and the gate keeps it whole (Decision 302)", () => {
+  const fresh = JSON.parse(readFileSync(file, "utf8")); // other tests here edit `sample` in place
+
+  const jobs = fresh.sessions.flatMap(s => (s.close ? s.close.jobs : []).map(j => [s, j]));
+  assert.ok(jobs.length >= 1, "the sample carries a job");
+  for (const [s, j] of jobs) {
+    for (const m of j.crew) assert.ok(s.present.includes(m.name) && s.close.lines.some(l => l.name === m.name && l.present), `${m.name} on ${j.title}`);
+    assert.deepEqual(JSON.parse(JSON.stringify(Engine.migrateTable(JSON.parse(JSON.stringify(fresh))).sessions.find(x => x.id === s.id).close.jobs)), s.close.jobs, "the gate changes nothing");
+  }
+});
+
+test("a character's Çredits ledger carries every share the logs give them, as a line's Çredits do (Decision 302)", () => {
+  const fresh = JSON.parse(readFileSync(file, "utf8"));
+  let checked = 0;
+  for (const s of fresh.sessions) for (const j of s.close ? s.close.jobs : []) for (const m of j.crew) {
+    const copy = fresh.copies.find(c => c.character.identity.name === m.name);
+    if (!copy || copy.character.meta.updated.slice(0, 10) < s.date) continue;
+    checked++;
+    const rows = copy.character.trackers.credits.ledger.filter(r => r.note === `Session ${s.number}`).map(r => r.amount);
+    assert.ok(rows.includes(m.share), `${m.name}'s ledger lacks the ${m.share} from ${j.title}`);
+  }
+  assert.ok(checked >= 3, "the sample's crew have the job's shares");
+});

@@ -443,9 +443,10 @@ const session = (n, f) => {
     created: ts(day, 17), updated: ts(day, 23), ...f,
   });
 };
-const closeOf = (n, lines, hours) => ({
+const closeOf = (n, lines, hours, jobs = []) => ({
   at: ts(DAY[n], 23, 30),
   lines: lines.map(l => ({ present: true, ip: null, milestone: false, credits: null, tier: null, note: "", ...l })),
+  jobs,
 });
 
 session(1, {
@@ -510,7 +511,10 @@ session(5, {
     reflection: "The Hub was the best set piece of the campaign. The Ports was the best scene.",
     seed: "Joss hears Cord is in the Ports. The Listener repeats a name only Mara knows.",
   },
-  close: closeOf(5, [{ name: MARA, ip: 5, credits: 1500 }, { name: DEX, ip: 5, credits: 1500 }, { name: JUNO, ip: 5, milestone: true, credits: 1500, note: "Answered the Listener." }], 4),
+  // The Hub was a CRANK job (Decision 302): its Ç4,500 is the job's, split three ways, so the lines carry none.
+  close: closeOf(5, [{ name: MARA, ip: 5 }, { name: DEX, ip: 5 }, { name: JUNO, ip: 5, milestone: true, note: "Answered the Listener." }], 4, [
+    { title: "CRANK: Infiltrate the NeuroNet Hub", thread: null, outcome: "done", tier: null, pay: 4500, crew: [MARA, DEX, JUNO].map(name => ({ name, share: 1500 })) },
+  ]),
 });
 session(6, {
   hours: 4,
@@ -874,6 +878,8 @@ function character(key, f){
     if (l.ip && !l.present) ch.progression.ip.log.push({ date, kind: "grant", amount: l.ip, note: `Session ${s.number}, an off-screen job` });
     if (l.present) ch.sessions.push({ date: s.date, title: `Session ${s.number}`, ipEarned: l.ip || 0, milestonePoint: !!l.milestone, notes: l.note || "" });
     if (l.credits){ ch.trackers.credits.current += l.credits; ch.trackers.credits.ledger.push({ date, amount: l.credits, note: `Session ${s.number}` }); }
+    // A CRANK job's share is Çredits the player entered too (Decision 302).
+    for (const j of s.close.jobs || []){ const m = j.crew.find(x => x.name === f.name); if (m && m.share){ ch.trackers.credits.current += m.share; ch.trackers.credits.ledger.push({ date, amount: m.share, note: `Session ${s.number}` }); } }
   }
   if (f.playing) f.playing(ch);
   ch.meta.updated = ts(f.exported, 23, 55);
@@ -897,7 +903,7 @@ character("mara", {
   natural: [["educated", 1], ["danger-sense", 1]], advs: [["contacts-minor", 1, "Joss, at the Night Shift"]], disads: [["enemies", 1, "NeuroNet's cleanup, since S4"]],
   skills: ["interface", "programming", "security", "handguns", "investigation", "awareness", "deception", "basic-tech", "dodge", "streetwise", "stealth", "persuasion", "engineering", "pilot"],
   weapons: [gun("handguns")], armor: ["kevlar-vest"], gear: ["smart-deck-i", "commlink"],
-  playing: ch => { spend(ch, "interface", ts(DAY[5], 23, 50)); ch.trackers.crank.rep = 3; ch.trackers.crank.ledger.push({ date: ts(DAY[3], 23, 45), amount: 1, note: "The Pier 9 job" }, { date: ts(DAY[5], 23, 45), amount: 2, note: "The Hub, clean exit" }); ch.trackers.damage = 2; },
+  playing: ch => { spend(ch, "interface", ts(DAY[5], 23, 50)); ch.trackers.crank.rep = 2; ch.trackers.crank.ledger.push({ date: ts(DAY[3], 23, 45), amount: 1, note: "The Pier 9 job" }, { date: ts(DAY[5], 23, 45), amount: 1, note: "The Hub, clean exit" }); ch.trackers.damage = 2; },
 });
 character("dex", {
   name: DEX, archetype: "werewolf", credits: 7, exported: DAY[6],
@@ -960,7 +966,7 @@ const audit = [
 // ── the table ───────────────────────────────────────────────────────
 const table = {
   meta: {
-    kind: "shadows-table", id: tableId(), name: "Dead Air", tableSchemaVersion: "0.20",
+    kind: "shadows-table", id: tableId(), name: "Dead Air", tableSchemaVersion: "0.21",
     created: ts(DAY[1], 17), updated: ts(DAY[7], 21, 10),
   },
   audit,

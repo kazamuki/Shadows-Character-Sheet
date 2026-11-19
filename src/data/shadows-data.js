@@ -287,9 +287,15 @@ window.SHADOWS_DATA = {
     },
     "crank": {
       "name": "CRANK rep",
-      "description": "CRANK is the gray market's job board, on every device in NYTE City. Your rep is your record there: one job at a time, and it doesn't fade. Walking out on a client is the one thing that follows you.",
+      "description": "CRANK is the gray market's job board, on every device in NYTE City. Your rep is your record there: one job at a time, and it doesn't fade. Walking out on a client is the one thing that follows you. Walking away from a client who broke the contract first isn't walking out, and costs nothing.",
       "jobDone": 1,
       "jobWalkedOut": -2,
+      "outcomes": [
+        { "id": "done",   "name": "Seen through",        "rep": 1,  "paid": true },
+        { "id": "failed", "name": "Failed",              "rep": 0,  "paid": false },
+        { "id": "walked", "name": "Walked out",          "rep": -2, "paid": false },
+        { "id": "broken", "name": "The client broke it", "rep": 0,  "paid": false }
+      ],
       "belowText": "Below 0: Novice, and every payout is halved.",
       "paidOffText": "Burned is paid off.",
       "jobs": {
@@ -5274,7 +5280,7 @@ window.SHADOWS_DATA = {
         "when": [
           "after"
         ],
-        "for": "The end of a night. Check who came and how long you played, and the IP for each character is worked out. Then close or keep each open thread, and add the people the crew met.",
+        "for": "The end of a night. Check who came and how long you played, and the IP for each character is worked out. Put down any CRANK job the crew finished, with what it paid and who was on it. Then close or keep each open thread, and add the people the crew met.",
         "words": [
           "closeout",
           "ip",
@@ -5622,7 +5628,7 @@ window.SHADOWS_DATA = {
       },
       "closeout": {
         "term": "Close-out",
-        "text": "The end of a session. Check who came and for how long, and each character's IP is worked out. Then settle the threads and add anyone new."
+        "text": "The end of a session. Check who came and for how long, and each character's IP is worked out. Then put down a CRANK job the crew ran, settle the threads and add anyone new."
       },
       "thread": {
         "term": "Thread",

@@ -3440,7 +3440,7 @@ test("newTable stamps kind, a TBL- id, the name, schema 0.11, no notes, cast or 
   assert.equal(t.meta.kind, "shadows-table");
   assert.ok(Engine.isTableId(t.meta.id), t.meta.id);
   assert.equal(t.meta.name, "Tuesday");
-  assert.equal(t.meta.tableSchemaVersion, "0.20");
+  assert.equal(t.meta.tableSchemaVersion, "0.21");
   assert.equal(t.notes.length, 0);
   assert.equal(JSON.stringify(t.cast), "[]");
   assert.equal(JSON.stringify(t.interactions), "[]");
@@ -3515,7 +3515,7 @@ test("a newer table schema stamp is kept and reported; an older or unreadable on
   assert.equal(Engine.migrateTable(n).meta.tableSchemaVersion, "9.0");
   for (const v of ["0.7", "0.6", "0.5", "0.4", "0.2", "0.1", "0.0", "junk", undefined]) {
     const m = Engine.migrateTable({ meta: { tableSchemaVersion: v } });
-    assert.equal(m.meta.tableSchemaVersion, "0.20", String(v));
+    assert.equal(m.meta.tableSchemaVersion, "0.21", String(v));
     assert.equal(Engine.tableCheck(m).length, 0);
   }
 });
@@ -3567,7 +3567,7 @@ test("a 0.1 table migrates to 0.4 with an empty cast and its notes untouched", (
   Engine.addTableNote(old, { title: "B", text: "two" });
   old.meta.tableSchemaVersion = "0.1"; delete old.cast;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.20");
+  assert.equal(m.meta.tableSchemaVersion, "0.21");
   eq(m.cast, []); eq(m.interactions, []);
   assert.equal(JSON.stringify(m.notes), JSON.stringify(old.notes));
   assert.equal(Engine.tableCheck(m).length, 0);
@@ -3790,7 +3790,7 @@ test("a 0.2 table migrates to 0.3 with no interactions and no affiliations, and 
   delete old.interactions; old.meta.tableSchemaVersion = "0.2";
   for (const n of old.cast) delete n.affiliations;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.20");
+  assert.equal(m.meta.tableSchemaVersion, "0.21");
   eq(m.interactions, []);
   for (const n of m.cast) eq(n.affiliations, []);
   const strip = t => { const c = plain(t); delete c.interactions; delete c.meta.tableSchemaVersion; for (const n of c.cast) { delete n.affiliations; delete n.from; } return JSON.stringify(c); };
@@ -4152,7 +4152,7 @@ test("a 0.3 table migrates to 0.4 with from: null, and the rest is byte-identica
   for (const n of old.cast) delete n.from;
   old.meta.tableSchemaVersion = "0.3";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.20");
+  assert.equal(m.meta.tableSchemaVersion, "0.21");
   for (const n of m.cast) assert.equal(n.from, null);
   const strip = t => { const c = plain(t); delete c.meta.tableSchemaVersion; for (const n of c.cast) delete n.from; return JSON.stringify(c); };
   assert.equal(strip(m), strip(old));
@@ -4361,7 +4361,7 @@ test("188: newTable has encounters, and a 0.4 table migrates to 0.5 with none an
   delete old.encounters;
   old.meta.tableSchemaVersion = "0.4";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.20");
+  assert.equal(m.meta.tableSchemaVersion, "0.21");
   eq(m.encounters, []);
   eq(m.cast, old.cast); eq(m.notes, old.notes); eq(m.interactions, old.interactions);
 });
@@ -4877,7 +4877,7 @@ test("191: the hit's rows keep Massive levels and armor wear, and a 0.5 table op
   old.meta.tableSchemaVersion = "0.5";
   for (const r of old.encounters[0].rows) { delete r.massive; delete r.armorLoss; delete r.scrapped; }
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.20");
+  assert.equal(m.meta.tableSchemaVersion, "0.21");
   eq(m, Engine.migrateTable(t), "a 0.5 table is a 0.6 table with nothing worn or gone");
 });
 
@@ -5351,7 +5351,7 @@ test("193: the kinds are eight, and a 0.6 table opens as 0.7 with no row kept an
   old.meta.tableSchemaVersion = "0.6";
   for (const en of old.encounters) for (const r of en.rows) delete r.kept;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.20");
+  assert.equal(m.meta.tableSchemaVersion, "0.21");
   assert.ok(m.encounters[0].rows.every(r => r.kept === null));
   eq(m, Engine.migrateTable(t));
   // The gate: kept is a link on an entry row, else null.
@@ -5986,7 +5986,7 @@ test("203: a new table has no sessions or threads, and a 0.7 table opens as 0.8 
   delete old.sessions; delete old.threads;
   for (const x of old.interactions) delete x.session;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.20");
+  assert.equal(m.meta.tableSchemaVersion, "0.21");
   eq([m.sessions, m.threads], [[], []]);
   assert.ok(m.interactions.every(x => x.session === null));
   eq(m, Engine.migrateTable(t));
@@ -6282,7 +6282,7 @@ test("205: a new session has close null, and a 0.8 table opens as 0.9 with every
   // A 0.8 file that already carries a close (a hand edit) is not converted either.
   old.sessions[0].close = { at: null, lines: [here("Wren", 5)] };
   assert.equal(Engine.migrateTable(old).sessions[0].close, null);
-  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.20");
+  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.21");
 });
 
 test("Decision 295 (was 206): offScreenPay is the tier's floor, Legendary has none, and an unknown tier is null", () => {
@@ -6661,7 +6661,7 @@ function secretaryTable() {
 const found = (t, q) => Engine.tableSearch(t, q).map(h => [h.kind, h.id, h.field]);
 
 test("208: table schema 0.10; a note's session is null for an old table, kept when real, nulled when not", () => {
-  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.20");
+  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.21");
   const base = v => ({ meta: { tableSchemaVersion: v }, sessions: [{ id: "SE-AAAAAAA1", number: 1 }],
     notes: [{ id: "N-AAAAAAA1", session: "SE-AAAAAAA1" }, { id: "N-AAAAAAA2", session: "S-NOPE0000" }] });
   for (const n of Engine.migrateTable(base("0.9")).notes) assert.equal(n.session, null, "an old table guesses nothing");
@@ -6870,7 +6870,7 @@ const wave = (t, e) => assert.ok(Engine.editEncounter(t, e, { by: "wave" }).ok);
 const roll = (t, e, side, n) => assert.ok(Engine.setSideRoll(t, e, side, n).ok);
 
 test("210: table schema 0.11; a 0.10 table opens one at a time with two sides, PCs on the crew's, nobody an ally", () => {
-  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.20");
+  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.21");
   const t = Engine.newTable("Old");
   const e = Engine.addEncounter(t, { name: "E" }).id;
   const m1 = Engine.addCastMember(t, { name: "Marta" }).id;
@@ -6881,7 +6881,7 @@ test("210: table schema 0.11; a 0.10 table opens one at a time with two sides, P
   for (const r of old.encounters[0].rows) delete r.side;
   old.cast[0].ally = true;   // a 0.10 file has none: nothing is guessed
   const m = Engine.migrateTable(old), en = m.encounters[0];
-  assert.equal(m.meta.tableSchemaVersion, "0.20");
+  assert.equal(m.meta.tableSchemaVersion, "0.21");
   eq([en.by, en.sides.length, en.sides[0]], ["person", 2, { id: "crew", name: "", roll: null }]);
   eq(en.rows.map(r => r.side), ["crew", en.sides[1].id]);
   eq(m.cast.map(n => n.ally), [false]);
@@ -7654,10 +7654,10 @@ test("212: a table saved before 0.12 loads with an empty trail, and a new table 
   eq(Engine.migrateTable(old).audit, []);
   delete old.audit; delete old.meta.tableSchemaVersion;
   eq(Engine.migrateTable(old).audit, []);
-  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.20");
+  assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.21");
   // A file from a newer app keeps its trail gated, not emptied.
   const newer = plain(t);
-  newer.meta.tableSchemaVersion = "0.20";
+  newer.meta.tableSchemaVersion = "0.21";
   newer.audit = [{ seq: 1, date: null, label: "x", patch: [{ path: ["cast", 0, "name"], type: "scalar", before: "x" }] }];
   assert.equal(Engine.migrateTable(newer).audit.length, 1);
   assert.ok(Engine.clearTableActivity(t).ok); eq(t.audit, []);
@@ -9843,7 +9843,7 @@ test("241: the gate keeps a good encounter link, drops a bad one, and converts n
   old.meta.tableSchemaVersion = "0.12";
   old.interactions = [{ ...mk({ kind: "encounter", id: "EN-AAAAAAAA" }), id: "I-AAAAAAAA" }];
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.20");
+  assert.equal(m.meta.tableSchemaVersion, "0.21");
   assert.equal(m.interactions[0].encounter, null);
   assert.equal(m.interactions[0].text, "Fought them in Dock.");
   // constraint 8: new, add, migrate round-trips
@@ -10233,7 +10233,7 @@ test("243: the gate types places and a line's place, keeps an unknown gazetteer 
   old.interactions = [{ ...mk(undefined), id: "I-AAAAAAAA", text: "Unchanged." }];
   old.places = "x";
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.20");
+  assert.equal(m.meta.tableSchemaVersion, "0.21");
   eq(m.places, []);
   assert.equal(m.interactions[0].place, null);
   assert.equal(m.interactions[0].text, "Unchanged.");
@@ -10412,7 +10412,7 @@ test("244: the gate types factions and converts nothing", () => {
   old.meta.tableSchemaVersion = "0.14";
   old.factions = "x"; old.clocks = 5;
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.20");
+  assert.equal(m.meta.tableSchemaVersion, "0.21");
   eq([m.factions, m.clocks], [[], []]);
   eq(m.cast[0].affiliations, ["Eclipse"]);
   // constraint 8: new, add, migrate round-trips
@@ -11279,7 +11279,7 @@ test("251: the gate types a place's site, level and rows, and converts nothing",
   const fresh = Engine.newTable("R"), pid = Engine.addPlace(fresh, { from: "old-pike" }).id;
   Engine.setPlaceSite(fresh, pid, siteTable().packs, { pack: SITE_PK, id: "long-stretch" }); Engine.editPlace(fresh, pid, { exposure: [{ name: "Vex", n: 4 }] });
   eq(Engine.migrateTable(plain(fresh)), plain(fresh));
-  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.20");
+  assert.equal(Engine.newTable().meta.tableSchemaVersion, "0.21");
 });
 
 test("251: picking a profile reads as a change to the place; its copied clock is collateral, and an added clock alone still reads as added", () => {
@@ -11392,7 +11392,7 @@ test("252: a 0.16 table gains an empty plan, no opening and no delays, and conve
   old.meta.tableSchemaVersion = "0.16";
   for (const x of old.encounters) { delete x.design; delete x.opening; for (const r of x.rows) delete r.delay; }
   const m = Engine.migrateTable(old);
-  assert.equal(m.meta.tableSchemaVersion, "0.20");
+  assert.equal(m.meta.tableSchemaVersion, "0.21");
   for (const x of m.encounters) {
     eq(x.design, { hook: "", stakes: "", objectives: "", terrain: "", hazards: "", city: "", beyondNotes: "", escalations: "", failure: "", success: "", escapes: "", failsafe: "", threads: "", milestones: "", pivot: "", stalls: "", adversaries: [], beyond: [] });
     assert.equal(x.opening, null);
@@ -11601,7 +11601,7 @@ test("254: a 0.17 table gains no players and no copies, and converts nothing", (
   const old = plain(t);
   delete old.players; delete old.copies; old.meta.tableSchemaVersion = "0.17";
   const m = Engine.migrateTable(old);
-  eq([m.players, m.copies, m.meta.tableSchemaVersion], [[], [], "0.20"]);
+  eq([m.players, m.copies, m.meta.tableSchemaVersion], [[], [], "0.21"]);
   eq(m.sessions[0].present, ["Dez"]);
   eq(Engine.playerList(m), [], "no seat is guessed from a typed name");
   const { t: s } = seated();
@@ -14098,7 +14098,7 @@ test("Table schema 0.20: a 0.19 file's members get wounds null, and nothing is c
   const t = Engine.newTable("T"); Engine.addCastMember(t, { name: "A" });
   t.meta.tableSchemaVersion = "0.19"; t.cast[0].wounds = { damage: 9, massive: 0 };
   const m = Engine.migrateTable(t);
-  assert.equal(m.meta.tableSchemaVersion, "0.20");
+  assert.equal(m.meta.tableSchemaVersion, "0.21");
   assert.equal(m.cast[0].wounds, null);
   // From 0.20 on, wounds survive the gate.
   const w = Engine.migrateTable(Object.assign(JSON.parse(JSON.stringify(m)), {}));
@@ -14235,4 +14235,88 @@ test("S23: an encounter's Next logs what it did", () => {
   assert.ok(u.ok);
   assert.equal(encOf(t, e).rows.length, 3, "undoing the removal brings Dez back");
   assert.notDeepEqual(plain(t).encounters, before.encounters);
+});
+
+// ── S11b: a CRANK job settled at the close-out (Decision 302) ──────────────
+const jobOf = (extra = {}) => ({ title: "CRANK: Courier for a Street Gang", thread: null, outcome: "done", tier: "skilled", pay: 2400,
+  crew: [{ name: "Mara", share: 800 }, { name: "Dex", share: 800 }, { name: "Juno", share: 800 }], ...extra });
+const jobNight = () => {
+  const t = Engine.newTable("x");
+  const a = crew(t, 4, "2026-10-01", ["Mara", "Dex", "Juno"], 3);
+  return { t, a, lines: [here("Mara", 6), here("Dex", 6), here("Juno", 6)] };
+};
+
+test("Decision 302: a job seen through gives its crew their shares and +1 rep", () => {
+  const { t, a, lines } = jobNight();
+  const r = Engine.writeCloseOut(t, a, { lines, jobs: [jobOf()] });
+  assert.ok(r.ok);
+  const j = closeOf(t, a).jobs;
+  eq(j.map(x => [x.title, x.outcome, x.tier, x.pay, x.crew.map(m => [m.name, m.share])]),
+    [["CRANK: Courier for a Street Gang", "done", "skilled", 2400, [["Mara", 800], ["Dex", 800], ["Juno", 800]]]]);
+  // No screen reads awardTotals' credits today: the test is the reader.
+  eq(Engine.awardTotals(t).map(x => [x.name, x.credits]), [["Mara", 800], ["Dex", 800], ["Juno", 800]]);
+  // A line's own Çredits and a share add.
+  Engine.writeCloseOut(t, a, { lines: [here("Mara", 6, { credits: 50 }), here("Dex", 6), here("Juno", 6)], jobs: [jobOf()] });
+  eq(Engine.awardTotals(t).find(x => x.name === "Mara").credits, 850);
+});
+
+test("Decision 302: writeCloseOut refuses a bad job with its index and changes nothing; the jobs and lines undo together", () => {
+  const { t, a, lines } = jobNight();
+  Engine.writeCloseOut(t, a, { lines, jobs: [] });
+  const before = plain(t);
+  const bad = (job, field) => {
+    const r = Engine.writeCloseOut(t, a, { lines, jobs: [jobOf(), job] });
+    assert.equal(r.ok, false); assert.equal(r.job, 1); assert.equal(r.field, field);
+    eq(t, before, "a refusal changes nothing");
+  };
+  bad(jobOf({ title: "  " }), "title");
+  bad(jobOf({ outcome: "x" }), "outcome");
+  bad(jobOf({ tier: "mythic" }), "tier");
+  bad(jobOf({ pay: -1 }), "pay");
+  bad(jobOf({ crew: [{ name: "Mara", share: 1.5 }] }), "share");
+  bad(jobOf({ crew: [{ name: "Mara", share: -5 }] }), "share");
+  bad(jobOf({ crew: [{ name: "Nobody", share: 5 }] }), "crew");
+  bad(jobOf({ crew: [] }), "crew");
+  bad(jobOf({ crew: [{ name: "Mara", share: 1 }, { name: "mara", share: 1 }] }), "crew");
+  const base = plain(t);
+  assert.ok(Engine.writeCloseOut(t, a, { lines, jobs: [jobOf()] }).ok);
+  assert.equal(closeOf(t, a).jobs.length, 1);
+  assert.ok(Engine.recordTableAction(t, base, "Closed out").ok);
+  assert.ok(Engine.undoTableAction(t).ok);
+  eq(t.sessions, base.sessions, "one undo takes the lines and the jobs");
+  eq(closeOf(t, a).jobs, []);
+});
+
+test("Decision 302: the gate keeps a job only with a title, an outcome and a crew on the log", () => {
+  const { t, a, lines } = jobNight();
+  Engine.writeCloseOut(t, a, { lines: [...lines, away("Rook", "novice")], jobs: [jobOf()] });
+  const gate = jobs => { const o = plain(t); o.sessions[0].close.jobs = jobs; return Engine.migrateTable(o).sessions[0].close.jobs; };
+  for (const junk of [null, "x", 5, {}, [null, "x", 4]]) eq(gate(junk), [], String(junk));
+  eq(gate([jobOf({ outcome: "x" }), jobOf({ title: " " }), jobOf({ crew: [{ name: "Rook", share: 5 }] }), jobOf({ crew: "Mara" })]), [], "bad ones dropped whole");
+  const [one] = gate([jobOf({ thread: "nope", tier: "mythic", pay: "x", crew: [{ name: "mara", share: -5 }, { name: "Rook", share: 1 }, { name: "Dex", share: "800" }, { name: "dex", share: 9 }, { name: "Juno", share: 1.5 }] })]);
+  eq([one.thread, one.tier, one.pay, one.crew], [null, null, null, [{ name: "Mara", share: null }, { name: "Dex", share: 800 }, { name: "Juno", share: null }]],
+    "a bad part is dropped; an away name, a repeat and a name's case are fixed");
+  const [failed] = gate([jobOf({ outcome: "failed" })]);
+  eq([failed.pay, failed.crew.map(m => m.share)], [null, [null, null, null]], "a failed job pays nothing");
+  assert.doesNotThrow(() => gate([{ get title() { throw new Error("x"); } }].slice(1)));
+});
+
+test("Decision 302: migrateTable 0.21 gives every written log jobs: [], and an unwritten close stays null", () => {
+  const { t, a, lines } = jobNight();
+  const b = crew(t, 5, "2026-10-08", ["Mara"], 3);
+  Engine.writeCloseOut(t, a, { lines });
+  const old = plain(t);
+  old.meta.tableSchemaVersion = "0.20";
+  for (const s of old.sessions) if (s.close) delete s.close.jobs;
+  old.sessions.find(s => s.id === a).close.jobs = [jobOf()]; // not guessed, not kept: 0.20 had none
+  const m = Engine.migrateTable(old);
+  assert.equal(m.meta.tableSchemaVersion, "0.21");
+  eq(m.sessions.find(s => s.id === a).close.jobs, []);
+  assert.equal(m.sessions.find(s => s.id === b).close, null);
+});
+
+test("Decision 302: Find reaches a job's title", () => {
+  const { t, a, lines } = jobNight();
+  Engine.writeCloseOut(t, a, { lines, jobs: [jobOf({ title: "Zebra courier" })] });
+  assert.ok(Engine.tableSearch(t, "zebra").some(h => h.kind === "session"));
 });

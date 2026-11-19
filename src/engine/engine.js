@@ -7034,7 +7034,7 @@ const Engine = (() => {
   };
   const _number = v => { const n = _int(v); return n!==null && n>=0 ? n : null; };
   // The award log (Decisions 205–206): null until the GM writes the close-out,
-  // then { at, lines }. A line that makes no sense is dropped, never repaired.
+  // then { at, lines, jobs } (jobs: Decision 302). A line that makes no sense is dropped, never repaired.
   // An away line has no Milestone Point; a present one has no off-screen tier.
   function _closeLine(l){
     if (!_isObj(l)) return null;
@@ -7050,6 +7050,28 @@ const Engine = (() => {
     l.note = _str(l.note);
     return l;
   }
+  // A CRANK job settled tonight (Decision 302): a title, how it ended, an optional tier and thread, a payout
+  // on a paid ending, and a crew of present names with their shares. A part that makes no sense is dropped;
+  // a job with no title, no known ending or no crew on the log is dropped whole. Rep is the ending's, never stored.
+  const crankOutcomes = () => (Array.isArray(crankData().outcomes) ? crankData().outcomes : []).filter(_isObj);
+  function _closeJob(j, present){
+    if (!_isObj(j)) return null;
+    const title = _str(j.title).trim();
+    const o = crankOutcomes().find(e=>e.id===j.outcome);
+    if (!title || !o) return null;
+    const crew = [], seen = new Set();
+    for (const m of (Array.isArray(j.crew) ? j.crew : [])){
+      if (!_isObj(m)) continue;
+      const k = _fold(_str(m.name));
+      if (!present.has(k) || seen.has(k)) continue;
+      seen.add(k);
+      crew.push({ name:present.get(k), share:o.paid===true ? _number(m.share) : null });
+    }
+    if (!crew.length) return null;
+    return { title, thread:typeof j.thread==="string" && THREAD_ID_RE.test(j.thread) ? j.thread : null, outcome:o.id,
+             tier:typeof j.tier==="string" && (crankData().tiers||[]).some(k=>k.id===j.tier) ? j.tier : null,
+             pay:o.paid===true ? _number(j.pay) : null, crew };
+  }
   function _close(c){
     if (!_isObj(c) || !Array.isArray(c.lines)) return null;
     c.at = _isoOrNull(c.at);
@@ -7061,6 +7083,8 @@ const Engine = (() => {
       seen.add(k);
       return true;
     });
+    const present = new Map(c.lines.filter(l=>l.present).map(l=>[_fold(l.name), l.name]));
+    c.jobs = (Array.isArray(c.jobs) ? c.jobs : []).map(j=>_closeJob(j, present)).filter(Boolean);
     return c;
   }
   function _session(x, used){
@@ -7104,7 +7128,7 @@ const Engine = (() => {
     x.updated = _isoOrNull(x.updated);
   }
   // The table file's shape. A bump needs a migrateTable() step in the same change.
-  const TABLE_SCHEMA_VERSION = "0.20";
+  const TABLE_SCHEMA_VERSION = "0.21";
   function newTable(name){
     const now = new Date().toISOString();
     return { meta:{ kind:"shadows-table", id:newTableId(), name:String(name ?? ""),
@@ -7229,6 +7253,9 @@ const Engine = (() => {
     //   Schema 0.20 (Decision 294): a cast member carries wounds. Nothing is converted (203): every member is unhurt.
     if (typeof arrived!=="string" || _versionNewer("0.20", arrived))
       for (const n of (Array.isArray(c.cast) ? c.cast : [])) if (_isObj(n)) n.wounds = null;
+    //   Schema 0.21 (Decision 302): a written award log keeps the night's CRANK jobs. Nothing is guessed from a line's credits (203).
+    if (typeof arrived!=="string" || _versionNewer("0.21", arrived))
+      for (const x of (Array.isArray(c.sessions) ? c.sessions : [])) if (_isObj(x) && _isObj(x.close)) x.close.jobs = [];
     //   Schema 0.19 (Decision 261): a side keeps its Combat Sense roll. A wave fight not ended takes each side's best
     //   as 210 read it, so a fight saved mid-round opens in the order it had; everything else starts with none.
     //   The seed reads the gated rows, so the gate does it (_encounters).
@@ -8389,6 +8416,7 @@ const Engine = (() => {
     for (const l of (_isObj(s.close) && Array.isArray(s.close.lines) ? s.close.lines : [])) if (_isObj(l)){
       f.push(["Close-out", _str(l.name)]); f.push(["Close-out", _str(l.note)]);
     }
+    for (const j of (_isObj(s.close) && Array.isArray(s.close.jobs) ? s.close.jobs : [])) if (_isObj(j)) f.push(["Close-out", _str(j.title)]);
     return f;
   }
   function _interactionFields(t, x){
@@ -8591,7 +8619,31 @@ const Engine = (() => {
       lines.push({ name, present, ip, milestone:present && l.milestone===true, credits,
                    tier:present ? null : l.tier, note:_str(l.note) });
     }
-    x.close = { at:new Date().toISOString(), lines };
+    // The jobs (Decision 302): one job at a time, refused with its index, never repaired.
+    const jobs = [], onLog = new Map(lines.filter(l=>l.present).map(l=>[_fold(l.name), l.name]));
+    for (const [at, j] of (Array.isArray(f.jobs) ? f.jobs : []).entries()){
+      const bad = (why, field) => ({ ok:false, why, job:at, field });
+      if (!_isObj(j)) return bad("Name the job.", "title");
+      const title = _str(j.title).trim(), o = crankOutcomes().find(e=>e.id===j.outcome);
+      if (!title) return bad("Name the job.", "title");
+      if (!o) return bad("Choose how it ended.", "outcome");
+      const tier = _blank(j.tier) ? null : j.tier;
+      if (tier!==null && !(crankData().tiers||[]).some(k=>k.id===tier)) return bad("Choose a tier.", "tier");
+      const pay = o.paid===true && !_blank(j.pay) ? _int(j.pay) : null;
+      if (o.paid===true && !_blank(j.pay) && (pay===null || pay<0)) return bad("Enter a whole number.", "pay");
+      const crew = [], seen = new Set();
+      for (const m of (Array.isArray(j.crew) ? j.crew : []).filter(_isObj)){
+        const k = _fold(_str(m.name)), share = o.paid===true && !_blank(m.share) ? _int(m.share) : null;
+        if (!onLog.has(k)) continue;
+        if (seen.has(k)) return bad("Each name is on a job once.", "crew");
+        if (o.paid===true && !_blank(m.share) && (share===null || share<0)) return bad("Enter a whole number.", "share");
+        seen.add(k);
+        crew.push({ name:onLog.get(k), share });
+      }
+      if (!crew.length) return bad("Put someone on the job.", "crew");
+      jobs.push({ title, thread:typeof j.thread==="string" && THREAD_ID_RE.test(j.thread) ? j.thread : null, outcome:o.id, tier, pay, crew });
+    }
+    x.close = { at:new Date().toISOString(), lines, jobs };
     _tableStamp(t, x);
     return { ok:true };
   }
@@ -8609,6 +8661,11 @@ const Engine = (() => {
       a.credits += l.credits ?? 0;
       if (l.milestone) a.milestones++;
       if (l.present) a.sessions++;
+    }
+    // A crew share is Çredits too (Decision 302). No screen reads `credits` yet; a test does.
+    for (const s of logged) for (const j of (s.close.jobs || [])) for (const m of j.crew){
+      const tag = seats.by.get(_fold(m.name)) || null, a = by.get(tag ? `s:${tag}` : `n:${_fold(m.name)}`);
+      if (a) a.credits += m.share ?? 0;
     }
     return [...by.values()];
   }
