@@ -5786,17 +5786,17 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Built:** as 295.
 
 297. **Every guide line obeys the sheet's switch: a sentence that only explains the sheet lives in sheetGuide.lines and hides when Guide lines is off; a seat's copy draws none, and its Help names the open tab.**
-     *2026-11-18 · Ken + Claude · Touches: sheetGuide.lines, sheetGuide.seat, guide line, rule line, step-note, Guide lines, shadows.ui.sheetGuide, sheetLine, data-guide-line, ranksAdvanceInPlay, introProgression, seat sheet, drawReadOnly, tableHelpContext, gmGuide.contexts.character, unrested, A day without rest, Difficulty, Decision 256, Decision 278, Decision 289, W154, W156*
+     *2026-11-18 · Ken + Claude · Touches: sheetGuide.lines, sheetGuide.seat, guide line, rule line, step-note, Guide lines, shadows.ui.sheetGuide, sheetLine, {tab:…}, data-guide-line, data-gotab, ranksAdvanceInPlay, introProgression, Manual Adjustments, Major Milestones, custom spells, Training, Admin, seat sheet, drawReadOnly, tableHelpContext, gmGuide.contexts.character, unrested, A day without rest, Difficulty, Decision 201, Decision 256, Decision 273, Decision 278, Decision 289, W154, W156*
      - **Decided:** Every sentence the sheet writes is state, rule or guide. A guide sentence (where something is, what to do next) lives in `sheetGuide.lines`, is drawn by one helper (`sheetLine`) and hides when Guide lines is off. A mixed paragraph is split; state and rule always show. A `{tab:id}` in a line is that tab's button. A seat's copy draws no guide line, and a rule line that tells the player to act reads from `sheetGuide.seat`. The table's Help on a seat names the open tab and lists its words.
-     - **Why:** W156: with the switch off, the sheet shows what's true and what the rules say, and nothing that only explains it. K1 left a dozen guide sentences behind. W154: a seat read as the player's own sheet.
+     - **Why:** W156: with the switch off, the sheet shows only what's true and what the rules say. K1 left a dozen guide sentences behind. W154: a seat read as the player's own sheet.
      - **Rejected:**
        - Hiding whole `step-note`s: most hold state or a rule.
        - Guide lines on a seat under the table's switch: a GM can't act on them (KQ20).
        - A Help context for the owed-pick dialog: Help can't sit beside a modal (KQ19).
        - An Expert mode context: Expert mode is the wizard's (KQ7).
-     - **Replaces:** Decision 289 in part (a seat draws no sheet guide line, and the switch reaches every guide line, not only the tab intros). Decision 278 in part (the table's `character` context names the seat's tab and lists its words).
+     - **Replaces:** Decision 289 in part (the switch reaches every guide line, and a seat draws none). Decision 278 in part (the table's `character` context names a seat's tab and lists its words).
      - **Revisit if:** players want a guide line back while the others stay off (one switch per line), or the wizard joins Help (KQ7).
-     - **Built:** app 0.73.0, no game-data or schema move, PR (this one), log 2026-11-18 (K3).
+     - **Built:** app 0.73.0, no game-data or schema move, PR #365, log 2026-11-18 (K3).
 
 ## 5. Open Flags
 
