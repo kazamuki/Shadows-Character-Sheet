@@ -7,7 +7,7 @@ could start if the crew wanted to do a CRANK job in a session rather than off sc
 Bank), *The Job Generator* and its five d10 tables. **Reopens:** Decision 11 (the app never rolls), in part.
 **Status:** **drafted 2026-11-18** by Claude (Opus), the conductor, at Ken's pick ("lets draft S11"). **Approved by
 Ken 2026-11-18**, in the conductor session: "All defaults". GQ54–GQ59 each take their default.
-**Branch:** from `main`; PR to `main`. Nothing ships switched off: GM mode is on for everyone (Decision 239).
+**Built** 2026-11-18, app 0.73.0, Decision 297. **Branch:** from `main`; PR to `main`. Nothing ships switched off: GM mode is on for everyone (Decision 239).
 **Runs beside:** nothing open on `main` at drafting. **Say N everywhere.**
 
 **Pre-flight** at `7b6e925` (`main`, after S25's #362). `private/` at `5541c61`, and `2625`'s mirror line says it was
@@ -165,6 +165,7 @@ Copy is drafted for the voice pass. Every line is checked against the engine bef
 - **The generator** (a modal, `openModal`):
   - **Title:** "A CRANK job".
   - **Lead:** the book's line, from the data: "Roll d10 on each column or choose manually…".
+  - **Sizing:** the book's second paragraph (`tierText`, "The tables don't know the crew's tier…") under the lead, too (Ken, 2026-11-18, on #364).
   - **Five rows,** each with:
     - the column's name;
     - a picker ("—", then "1 · Courier" … "10 · Blacksite Raid");

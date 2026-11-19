@@ -2725,3 +2725,124 @@ test("U3: a session opens to read with the night's controls live, and Edit opens
   assert.equal(app.doc.activeElement, app.$("[data-edit]"));
   assert.deepEqual(app.errors, []);
 });
+
+// ── The CRANK Job Generator (Decision 297) ───────────────────────────────
+// The die is a UI helper, so a test stubs it: each roll takes the next number off the list.
+const stubDie = (app, ...rolls) => app.window.eval(`(() => { const q = ${JSON.stringify(rolls)}; rollD = () => q.length ? q.shift() : 1; })()`);
+const JOB_COLS = ["type", "client", "target", "location", "complication"];
+const jobRows = app => app.$$("#modal [data-jobrow]");
+const jobEntry = (app, col) => app.$(`#modal [data-jobsel="${col}"]`).selectedOptions[0].textContent;
+const jobAll = app => JOB_COLS.map(c => jobEntry(app, c));
+const threadsNow = app => JSON.parse(app.window.eval("JSON.stringify(S.table.threads)"));
+const modalOpen = app => app.$("#modal").open || app.$("#modal").hasAttribute("open");
+
+test("Decision 297: CRANK job opens a generator with all five rows rolled; a row's die changes that row alone", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T", { stay: true });
+  stubDie(app, 1, 2, 10, 5, 1, 7);
+  app.click("[data-crankjob]");
+  assert.ok(modalOpen(app));
+  assert.equal(jobRows(app).length, 5);
+  assert.deepEqual(jobAll(app), ["1 · Courier", "2 · Street Gang", "10 · Unknown Package", "5 · Neon Nightclub", "1 · Double-Cross"]);
+  assert.match(app.$("#modal").textContent, /Move something from one place to another/);
+  assert.match(app.$("#modal").textContent, /Roll d10 on each column or choose manually/);
+  assert.match(app.$("#modal [data-jobtier]").textContent, /The tables don.t know the crew.s tier/, "the sizing paragraph shows where the GM rolls");
+  app.click('#modal [data-jobroll="client"]');
+  assert.deepEqual(jobAll(app), ["1 · Courier", "7 · Government Agency", "10 · Unknown Package", "5 · Neon Nightclub", "1 · Double-Cross"]);
+  assert.equal(app.$('#modal [data-jobroll="client"]').getAttribute("aria-label"), "Roll Client");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 297: Roll all fills every row again", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T", { stay: true });
+  stubDie(app, 1, 1, 1, 1, 1, 6, 7, 8, 9, 10);
+  app.click("[data-crankjob]");
+  app.click("#modal [data-jobrollall]");
+  assert.deepEqual(jobAll(app), ["6 · Security", "7 · Government Agency", "8 · Contraband Shipment", "9 · The LINK", "10 · Paranormal Element"]);
+});
+
+test("Decision 297: a picker sets a row, and its blank clears it and holds Add", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T", { stay: true });
+  stubDie(app, 1, 1, 1, 1, 1);
+  app.click("[data-crankjob]");
+  pick(app, '#modal [data-jobsel="location"]', "9");
+  assert.equal(jobEntry(app, "location"), "9 · The LINK");
+  assert.match(app.$("#modal").textContent, /The job happens in the digital layer/);
+  assert.equal(app.$("#modal [data-jobadd]").disabled, false);
+  pick(app, '#modal [data-jobsel="location"]', "");
+  assert.equal(app.$("#modal [data-jobadd]").disabled, true, "Add waits for all five");
+  assert.equal(jobEntry(app, "type"), "1 · Courier", "the other rows stay");
+});
+
+test("Decision 297: Add as a thread makes one open thread with the title and notes, its More open, and one undo takes it back", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T", { stay: true });
+  stubDie(app, 1, 2, 10, 5, 1);
+  app.click("[data-crankjob]");
+  app.click("#modal [data-jobadd]");
+  assert.ok(!modalOpen(app), "the modal closes");
+  const ths = threadsNow(app);
+  assert.equal(ths.length, 1);
+  assert.equal(ths[0].title, "CRANK: Courier for a Street Gang");
+  assert.equal(ths[0].status, "open");
+  assert.equal(ths[0].opened, null);
+  assert.equal(ths[0].notes.split("\n").length, 5);
+  assert.match(ths[0].notes, /^Job Type: Courier\. Move something/);
+  assert.match(ths[0].notes, /\nComplication: Double-Cross\. /);
+  assert.match(app.$(".thread-notes").textContent, /Target: Unknown Package/, "its More is open");
+  assert.equal(app.window.document.activeElement.dataset.thname, ths[0].id, "focus is on its name");
+  assert.equal(app.window.eval("S.crankJob"), undefined, "the generator's state is dropped");
+  assert.match(app.$("#undotoast").textContent, /Added the thread CRANK: Courier for a Street Gang/);
+  app.click("#undotoast [data-toastundo]");
+  assert.equal(threadsNow(app).length, 0, "one undo takes it all back");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 297: from a session's page the thread is opened in that session", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T", { stay: true });
+  app.click("[data-snew]");
+  const sid = app.window.eval("S.table.sessions[0].id");
+  stubDie(app, 3, 3, 3, 3, 3);
+  app.click("[data-crankjob]");
+  app.click("#modal [data-jobadd]");
+  const ths = threadsNow(app);
+  assert.equal(ths.length, 1);
+  assert.equal(ths[0].opened, sid);
+  assert.match(app.$(".sess-threads").textContent, /CRANK: Espionage for a Crime Syndicate/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 297: closing the generator stores nothing", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T", { stay: true });
+  const snap = () => app.window.eval("JSON.stringify([S.table.meta.updated, S.table.threads, (S.table.audit || []).length])");
+  const before = snap();
+  stubDie(app, 4, 4, 4, 4, 4);
+  app.click("[data-crankjob]");
+  app.click('#modal [data-jobroll="type"]');
+  pick(app, '#modal [data-jobsel="target"]', "2");
+  app.click("#modal .modal-foot [data-modalclose]");
+  assert.ok(!modalOpen(app));
+  assert.equal(snap(), before);
+  assert.equal(app.window.eval("S.crankJob"), undefined);
+  app.click("[data-crankjob]");
+  assert.equal(jobRows(app).length, 5, "it opens fresh, rolled again");
+});
+
+test("Decision 297: the Reference's CRANK panel has the five tables, and Blacksite finds it", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T", { stay: true });
+  app.click('[data-tsec="reference"]');
+  const panel = app.$("#gr-crank").closest(".ref-panel");
+  assert.deepEqual([...panel.querySelectorAll("h3.ref-sub")].map(h => h.textContent), ["The Job Generator", "Job Type", "Client", "Target", "Location", "Complication"]);
+  assert.equal(panel.querySelectorAll("table.ref").length, 6, "the tiers and the five columns");
+  assert.match(panel.textContent, /Roll d10 on each column or choose manually/);
+  type(app, "[data-jumpfilter]", "Blacksite");
+  const hit = app.$("#gr-crank").closest(".ref-panel");
+  assert.match(hit.textContent, /Blacksite Raid/);
+  assert.ok(hit.querySelector("h3.ref-sub"));
+  assert.deepEqual(app.errors, []);
+});

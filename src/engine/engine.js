@@ -9178,13 +9178,36 @@ const Engine = (() => {
       _refPart("Focused healing", { items:[_refItem("", o("focusedHealing").text, [o("focusedHealing").massiveText])] }),
       _refPart("Nanomed Kit", { items:[_refItem("", o("nanomed").text, [o("nanomed").doseText])] })];
   }
+  // The Job Generator (Decision 297): 2625's five d10 columns, in the data's order. A pick is the d10, a whole number
+  // from 1 to the column's row count, typed as a number; anything else is no pick. The engine never rolls: the
+  // generator's die is the UI's, and this reads what it was handed.
+  const _jobColumns = () => { const j = crankData().jobs; return _isObj(j) && Array.isArray(j.columns) ? j.columns.filter(_isObj) : []; };
+  function crankJob(picks){
+    const p = _isObj(picks) ? picks : {};
+    const parts = _jobColumns().map(c=>{
+      const rows = Array.isArray(c.rows) ? c.rows : [], v = p[c.id];
+      const ok = typeof v==="number" && Number.isInteger(v) && v>=1 && v<=rows.length && _isObj(rows[v-1]);
+      return { column:_str(c.id), name:_str(c.name), roll:ok ? v : null, entry:ok ? _str(rows[v-1].name) : "", text:ok ? _str(rows[v-1].text) : "" };
+    });
+    const set = parts.filter(x=>x.roll!==null);
+    return { parts,
+      title:parts.length>1 && parts[0].roll!==null && parts[1].roll!==null ? `CRANK: ${parts[0].entry} for ${/^[AEIOU]/.test(parts[1].entry) ? "an" : "a"} ${parts[1].entry}` : "CRANK job",
+      notes:set.map(x=>`${x.name}: ${x.entry}. ${x.text}`).join("\n"),
+      complete:parts.length>0 && set.length===parts.length };
+  }
   function _refCrank(){
     const c = crankData(), cr = creditSymbol(), n = v => Number(v).toLocaleString("en-US");
-    return [_refPart("", {
+    const j = _isObj(c.jobs) ? c.jobs : {};
+    const tiers = _refPart("", {
       text:_str(c.description),
       columns:["Tier", "Rep", "Pays", "Off-screen job"],
       rows:_list(c.tiers).map(t=>{ const off = offScreenPay(t.id);
-        return [_str(t.name), Number.isFinite(t.rep) ? String(t.rep) : "", crankPayText(t), off!==null ? `${cr}${n(off)}` : "—"]; }) })];
+        return [_str(t.name), Number.isFinite(t.rep) ? String(t.rep) : "", crankPayText(t), off!==null ? `${cr}${n(off)}` : "—"]; }) });
+    const lead = _refPart("The Job Generator", { text:_str(j.text), footText:_str(j.tierText) });
+    const tables = _jobColumns().map(col=>_refPart(_str(col.name), {
+      columns:["d10", _str(col.name), "Notes"],
+      rows:_list(col.rows).map((r, i)=>[String(i+1), _str(r.name), _str(r.text)]) }));
+    return [tiers, lead, ...tables];
   }
   const _REF_READERS = {
     conditions:()=>[
@@ -10559,7 +10582,7 @@ const Engine = (() => {
     ipState, ipCost, spendIP, grantIP, advantageOffer,
     milestoneState, canTakeMinor, majorPrereqs, majorPool, majorOffered, majorListed, majorById, formGrants, takeMilestone, untakeMilestone, minorChoice, takeMinorChoice, addCustomMajor,
     majorChoice, takeMajorChoice, specializationOpening, gainSpecialization, gainedSpecializations,
-    logSession, nextMilestoneAt, trainingCost, startTraining, settleTraining, localDay, ipRoll, ipRollTotal, addCredits, crankState, crankStart, addCrankRep, crankPayText, archPanels, panelMax, panelTracker, adjustPanelTracker, movement,
+    logSession, nextMilestoneAt, trainingCost, startTraining, settleTraining, localDay, ipRoll, ipRollTotal, addCredits, crankState, crankStart, addCrankRep, crankPayText, crankJob, archPanels, panelMax, panelTracker, adjustPanelTracker, movement,
     // A form (Decision 195): what a toggle is on, what it does, and switching it
     toggleOptions, toggleView, formState, formView, setToggle,
     // Audit trail and undo

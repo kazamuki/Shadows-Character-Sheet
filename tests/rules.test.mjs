@@ -3759,3 +3759,27 @@ test("Decision 296: crankStart, crankState and offScreenPay are total", () => {
   assert.equal(forged.trackers.crank.rep, 99);
   assert.equal(Engine.crankState(forged).tier.id, "legendary");
 });
+
+test("Decision 297: the Job Generator's tables are 2625's, word for word", () => {
+  const md = crb("2625_CRANK_and_Bank.md").replace(/\r/g, "");
+  const sect = md.slice(md.indexOf("### The Job Generator"), md.indexOf("### GM Guidance"));
+  assert.ok(sect.length > 500, "couldn't find the Job Generator section");
+  const paras = sect.split("\n").filter(l => l.trim() && !l.startsWith("#") && !l.startsWith("|"));
+  const jobs = D.resources.crank.jobs;
+  assert.equal(jobs.text, paras[0]);
+  assert.equal(jobs.tierText, paras[1]);
+  const steps = [...sect.matchAll(/##### \*\*Step \d: ([^*]+)\*\*\n\n([\s\S]*?)(?=\n#####|$)/g)];
+  assert.equal(steps.length, 5, "the book's five columns");
+  assert.equal(jobs.columns.length, 5);
+  steps.forEach((s, i) => {
+    const rows = [...s[2].matchAll(/^\|\s*(\d+)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*$/gm)];
+    assert.equal(rows.length, 10, `${s[1]} has ten rows`);
+    assert.equal(jobs.columns[i].name, s[1]);
+    assert.equal(jobs.columns[i].rows.length, 10);
+    rows.forEach((r, k) => {
+      assert.equal(Number(r[1]), k + 1, "the book's rows are in d10 order");
+      assert.deepEqual([jobs.columns[i].rows[k].name, jobs.columns[i].rows[k].text], [r[2], r[3]], `${s[1]} ${k + 1}`);
+    });
+  });
+  assert.deepEqual([...jobs.columns.map(c => c.id)], ["type", "client", "target", "location", "complication"]);
+});
