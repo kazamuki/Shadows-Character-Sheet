@@ -881,6 +881,73 @@ function openJot({ viaKey }={}){
     } });
 }
 
+// ── The CRANK Job Generator (Decision 297) ─────────────────────────────
+// Five columns of the book's d10 tables, each rolled or picked, and the contract that results saved as a
+// thread. The picks live on S.crankJob while the modal is open and nowhere else: closing keeps nothing.
+const jobData = () => { const j=D.resources.crank.jobs; return j && Array.isArray(j.columns) ? j : { text:"", columns:[] }; };
+function jobRowHtml(c){
+  const rows=Array.isArray(c.rows) ? c.rows : [];
+  return `<div class="job-row" data-jobrow="${esc(c.id)}">
+    <label class="job-col" for="job-${esc(c.id)}">${esc(c.name)}</label>
+    <div class="job-pick"><select id="job-${esc(c.id)}" data-jobsel="${esc(c.id)}"><option value="">—</option>${rows.map((r, i)=>
+      `<option value="${i+1}">${i+1} · ${esc(r.name)}</option>`).join("")}</select>
+      <button type="button" class="btn sm" data-jobroll="${esc(c.id)}" aria-label="Roll ${esc(c.name)}">Roll</button></div>
+    <p class="job-text" data-jobtext="${esc(c.id)}"></p></div>`;
+}
+function openCrankJob({ opened }={}){
+  const cols=jobData().columns;
+  S.crankJob={};
+  const rollAll=()=>{ for (const c of cols) S.crankJob[c.id]=rollD(c.rows.length); };
+  rollAll();
+  openModal({ title:"A CRANK job", returnTo:"[data-crankjob]",
+    html:`<p class="step-note">${esc(jobData().text)}</p><p class="step-note" data-jobtier>${esc(jobData().tierText)}</p>${cols.map(jobRowHtml).join("")}`,
+    foot:`<button type="button" class="btn" data-jobrollall>Roll all</button> <button type="button" class="btn primary" data-jobadd>Add as a thread</button> <button type="button" class="btn" data-modalclose>Close</button>`,
+    onClose(){ delete S.crankJob; },
+    bind(body, foot){
+      const add=foot.querySelector("[data-jobadd]");
+      const paint=()=>{
+        const job=Engine.crankJob(S.crankJob);
+        for (const p of job.parts){
+          body.querySelector(`[data-jobsel="${p.column}"]`).value=p.roll===null ? "" : String(p.roll);
+          body.querySelector(`[data-jobtext="${p.column}"]`).textContent=p.text;
+        }
+        add.disabled=!job.complete;
+      };
+      body.querySelectorAll("[data-jobsel]").forEach(el=>el.onchange=()=>{
+        const v=parseInt(el.value, 10);
+        if (v>=1) S.crankJob[el.dataset.jobsel]=v; else delete S.crankJob[el.dataset.jobsel];
+        paint();
+      });
+      body.querySelectorAll("[data-jobroll]").forEach(b=>b.onclick=()=>{
+        const c=cols.find(x=>x.id===b.dataset.jobroll);
+        if (c){ S.crankJob[c.id]=rollD(c.rows.length); paint(); }
+      });
+      foot.querySelector("[data-jobrollall]").onclick=()=>{ rollAll(); paint(); };
+      add.onclick=()=>{
+        const job=Engine.crankJob(S.crankJob);
+        if (!job.complete) return;
+        closeModal();
+        // One tableChange, so the thread and its notes are one undo.
+        let r; tableChange(()=>{
+          r=Engine.addThread(S.table, { title:job.title, opened });
+          if (r.ok) Engine.editThread(S.table, r.id, { notes:job.notes });
+        }, false);
+        if (!r.ok){ notice(r.why); return; }
+        if (opened){
+          (S.threadMore || (S.threadMore={}))[r.id]=true;
+          renderTable();
+          const el=$("main").querySelector(attrSel("data-thopen", r.id)); if (el) el.focus();
+        } else showThread(r.id);
+      };
+      paint();
+    } });
+}
+// The button beside a thread add, on the Sessions tab and on a session's page (`opened` is that session).
+function bindCrankJob(main, opened){
+  const b=main.querySelector("[data-crankjob]");
+  if (b) b.onclick=()=>openCrankJob({ opened });
+}
+
 // ── The Reference (Decision 207) ───────────────────────────────────────
 // Everything a GM looks up, on one page that reads the data and the slotted packs on every
 // draw and stores nothing. State is on S: S.refQ, the search as typed. The field is never
@@ -2504,7 +2571,7 @@ function threadsHtml(t){
     ${shut.length ? `<details class="thread-shut" data-thshut${S.threadsShut?" open":""}><summary>Closed (${shut.length})</summary><ul class="int-list">${shut.map(threadRowHtml).join("")}</ul></details>` : ""}
     <div class="cast-add thread-add">
       <label class="field"><span>New thread</span><input type="text" data-thadd value="${esc(S.threadAdd||"")}" placeholder="What's still open?" autocomplete="off"></label>
-      <button type="button" class="btn primary" data-thadd-btn>Add</button></div>`;
+      <div class="thread-btns"><button type="button" class="btn primary" data-thadd-btn>Add</button> <button type="button" class="btn" data-crankjob>CRANK job</button></div></div>`;
 }
 function sessionsTabHtml(t){
   const list=Engine.sessionList(t);
@@ -2550,7 +2617,7 @@ function sessionBodyHtml(s){
   const threadsBlock = `<div class="sess-threads">
       ${opened.length ? `<ul class="int-list">${opened.map(h=>`<li><button type="button" class="cast-open" data-thopen="${esc(h.id)}">${esc(threadTitle(h))}</button></li>`).join("")}</ul>` : ""}
       <div class="cast-add"><label class="field"><span>Open a thread</span><input type="text" data-sthadd placeholder="What did this session leave open?" autocomplete="off"></label>
-        <button type="button" class="btn" data-sthadd-btn>Open a thread</button></div>
+        <div class="thread-btns"><button type="button" class="btn" data-sthadd-btn>Open a thread</button> <button type="button" class="btn" data-crankjob>CRANK job</button></div></div>
       ${closed.length ? `<ul class="int-list">${closed.map(h=>`<li><span class="int-kind">${h.status==="dropped" ? "Dropped" : "Resolved"}</span> ${esc(threadTitle(h))}</li>`).join("")}</ul>` : ""}</div>`;
   return { threadsBlock, rest:`<h2 class="cast-h sec-h" tabindex="-1" data-sint-h>What passed between the crew and the cast</h2>
     ${lines.length ? `<ul class="int-list">${lines.map(x=>sessionInteractionHtml(t, x, false)).join("")}</ul>` : `<p class="step-note">Nothing yet.</p>`}
@@ -2635,6 +2702,7 @@ function bindSessionsTab(main){
   addEl.addEventListener("input", ()=>{ S.threadAdd=addEl.value; });
   addEl.addEventListener("keydown", ev=>{ if (ev.key==="Enter"){ ev.preventDefault(); add(); } });
   main.querySelector("[data-thadd-btn]").onclick=add;
+  bindCrankJob(main, null);
   const found = id => S.table.threads.find(h=>h.id===id);
   const edit = (id, f) => { let r; tableChange(()=>{ r=Engine.editThread(S.table, id, f); }, false); return r; };
   main.querySelectorAll("[data-thtitle]").forEach(el=>{
@@ -2709,6 +2777,7 @@ function bindSessionPage(main, s){
   };
   thEl.addEventListener("keydown", ev=>{ if (ev.key==="Enter"){ ev.preventDefault(); open(); } });
   main.querySelector("[data-sthadd-btn]").onclick=open;
+  bindCrankJob(main, id);
   main.querySelectorAll("[data-sadd]").forEach(b=>b.onclick=()=>{
     const xid=b.dataset.sadd, order=Engine.sessionOffered(S.table, id), at=order.findIndex(x=>x.id===xid);
     let r; tableChange(()=>{ r=Engine.editInteraction(S.table, xid, { session:id }); }, false);

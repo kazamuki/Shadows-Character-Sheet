@@ -41,6 +41,8 @@ own in the footer.
 - An absent character's off-screen job pays the bottom of their tier, and Legendary work stays on-screen.
 - An NPC's TOL is its formula unless you type an override, and a WILL below its formula shows as an error.
 - Cast members carry their wounds from one fight to the next. Heal them from their page.
+- Roll a CRANK job. The book's five tables, rolled or picked, and saved as a thread.
+- The Reference's CRANK panel has the Job Generator's tables.
 
 ## v0.72.0 — 2026-11-16
 

@@ -1364,6 +1364,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
     warn-but-allow in v1.
 11. **All rolls are physical:** the app never rolls dice for creation pools.
     Players enter what they rolled. (The Shadows experience includes the dice.)
+    → **Superseded in part by Decision 297**: the app rolls the GM's CRANK Job Generator, in GM mode only. A player's rolls stay physical.
     *Backfilled 2026-09-24 from this entry and the log (Decision 130) · Touches: dice, creation rolls (Stat Points, Çredits, starting spells), the Improved roll, dice rollers*
     - **Rejected:** an in-app roller for creation pools. The Shadows experience includes the dice: the player rolls, and the app records what they rolled.
     - **Revisit if:** a table plays where the dice can't be seen, remotely or through a GM mode (W29), and wants rolls both sides trust.
@@ -5603,7 +5604,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 272 in part (`?` opens Help, not Keys; Keys lists it as Help). Decision 258 in part (from 1280px a table can have a column on the right: Help's).
      - **Revisit if:** GMs keep Help open all night (it wants another shape), or a player's sheet asks for the same.
      - **Built:** app 0.67.0; PR #323; log 2026-11-12 (S31).
-    → **Superseded in part by Decisions 289 and 297** — Help's panel is shared with the sheet: a second host registers its own guide, context and body (289); the table's `character` context, on a seat's sheet, names the open tab and lists that tab's words for the seat's copy (297).
+    → **Superseded in part by Decisions 289 and 298** — Help's panel is shared with the sheet: a second host registers its own guide, context and body (289); the table's `character` context, on a seat's sheet, names the open tab and lists that tab's words for the seat's copy (298).
 
 279. **Character Points' Disadvantage and Advantage lists show what's taken, and the rest a press away.**
      *2026-11-12 · Ken + Claude · Touches: renderCP, details.group, Disadvantages list, Advantages list, applyPickFilter, data-filterable, data-cp-list, Held only, S.cpAll, data-cp-all, showAllOptions, E1c*
@@ -5717,7 +5718,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 278 in part (Help's panel serves the sheet as well as a table).
      - **Revisit if:** players want Help to stay open across visits, as a table's does, or the wizard asks for the same (KQ7).
      - **Built:** app 0.70.0 (minor), no game-data or schema bump, PR #351, log 2026-11-15 (K1).
-     → **Superseded in part by Decisions 291 and 297** — a context's `words` are references (a gameTerms id or `{ kind: id }`) read through `Engine.word`, and Help gains *Every word* (291); a seat draws no sheet guide line, and the switch reaches every guide line (`sheetGuide.lines`), not only the tab intros (297).
+     → **Superseded in part by Decisions 291 and 298** — a context's `words` are references (a gameTerms id or `{ kind: id }`) read through `Engine.word`, and Help gains *Every word* (291); a seat draws no sheet guide line, and the switch reaches every guide line (`sheetGuide.lines`), not only the tab intros (298).
 
 290. **Natural attacks are one group with one count: two a round from two different natural weapons, plus one a rank of Melee Master. Every character has Fists, and a natural line has a kind.**
      *2026-11-15 · Ken + Deighton + Scott + Claude · Touches: weaponRules.naturalAttacks, naturalAttacks, kind, fist, claw, bite, Fists, Melee Master, Death Touch, attackTag, naturalWeapons, archetypeWeapons, formView, weaponDamage, weaponBonus, Main's Weapons table, pWeaponRows*
@@ -5784,8 +5785,16 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 169 in part: rep has a floor and a start. Closes F37.
      - **Revisit if:** Scott wants a walk-out below 0 to stack with Burned, or Reputation to be bought in play.
      - **Built:** as 295.
+297. **GM mode's CRANK Job Generator rolls the book's five d10 tables for the GM, or takes a pick, and keeps a contract only as a thread.**
+     *2026-11-18 · Ken + Claude · Touches: Job Generator, resources.crank.jobs, crankJob, rollD, the Threads section, addThread, the Reference's CRANK panel, 2625, Decision 11, Decision 203, Decision 207, S11b*
+     - **Decided:** The five tables (Job Type, Client, Target, Location, Complication) are data under `resources.crank.jobs`, each row the book's name and line. The Sessions tab's Threads section, and a session's own thread add, open a generator that rolls any column or all five, or takes a pick from 1 to 10. Nothing is stored until the GM adds the contract as a thread: "CRANK: <Job Type> for a/an <Client>", with the five lines as its notes, written in one change so one undo takes it back. The engine reads picks (`crankJob`) and never rolls; the die is the UI's `rollD`.
+     - **Why:** Ken, 2026-11-18: rolled options for a CRANK thread. `2625`: "Roll d10 on each column or choose manually." The roll is the GM's prep, not a player's check, so it isn't what Decision 11 protects; a thread is how GM mode already follows a question from session to session.
+     - **Rejected:** A `jobs` record now (the archived §4c's `JobRecord`): it's S11b's, and a thread carries a contract until a GM needs a payout or a walk-out on the record. Pick-only, honouring 11 to the letter: the ask is a randomizer, and a GM at a laptop often has no d10 to hand. Storing the last roll: nothing reads it. Three contracts side by side: fifteen rows on a phone. A tier on the contract: the client column scales it.
+     - **Replaces:** Decision 11 in part: the app rolls the GM's generator tables. A player's rolls stay physical.
+     - **Revisit if:** S11b gives jobs their own record, or a GM wants a roll in front of the players.
+     - **Built:** app 0.73.0, no game-data or schema move (Decision 68: the tables are data no character observes), PR (this one), log 2026-11-18 (S11a).
 
-297. **Every guide line obeys the sheet's switch: a sentence that only explains the sheet lives in sheetGuide.lines and hides when Guide lines is off; a seat's copy draws none, and its Help names the open tab.**
+298. **Every guide line obeys the sheet's switch: a sentence that only explains the sheet lives in sheetGuide.lines and hides when Guide lines is off; a seat's copy draws none, and its Help names the open tab.**
      *2026-11-18 · Ken + Claude · Touches: sheetGuide.lines, sheetGuide.seat, guide line, rule line, step-note, Guide lines, shadows.ui.sheetGuide, sheetLine, {tab:…}, data-guide-line, data-gotab, ranksAdvanceInPlay, introProgression, Manual Adjustments, Major Milestones, custom spells, Training, Admin, seat sheet, drawReadOnly, tableHelpContext, gmGuide.contexts.character, unrested, A day without rest, Difficulty, Decision 201, Decision 256, Decision 273, Decision 278, Decision 289, W154, W156*
      - **Decided:** Every sentence the sheet writes is state, rule or guide. A guide sentence (where something is, what to do next) lives in `sheetGuide.lines`, is drawn by one helper (`sheetLine`) and hides when Guide lines is off. A mixed paragraph is split; state and rule always show. A `{tab:id}` in a line is that tab's button. A seat's copy draws no guide line, and a rule line that tells the player to act reads from `sheetGuide.seat`. The table's Help on a seat names the open tab and lists its words.
      - **Why:** W156: with the switch off, the sheet shows only what's true and what the rules say. K1 left a dozen guide sentences behind. W154: a seat read as the player's own sheet.

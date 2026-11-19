@@ -48,7 +48,7 @@ const sheetGuide = () => D.sheetGuide;
 function sheetGuideOn(){
   try{ return localStorage.getItem(SHEET_GUIDE_PREF)!=="off"; }catch(e){ return true; }
 }
-// K3 (Decision 297): every guide sentence the sheet writes besides a tab's intro is a `sheetGuide.lines` key drawn here, and goes when Guide lines is
+// K3 (Decision 298): every guide sentence the sheet writes besides a tab's intro is a `sheetGuide.lines` key drawn here, and goes when Guide lines is
 // off. A seat's copy is drawn on a table screen, where this is "" whatever the table's switch says: a seat draws no sheet guide line (KQ20).
 // {tab:id} is that tab's button, {gmChip} the GM chip, any other {x} a value from `vars`. `inline` draws a span, for a row of them; `cls` is its style (a `sub` beside a control). Total: a missing key,
 // a line that isn't text and a tab it doesn't know are "" or plain text, never a throw.
@@ -1856,7 +1856,7 @@ function renderShProgression(){
   const ch=S.ch, ip=Engine.ipState(ch), ms=Engine.milestoneState(ch), secs=sectionList("pr");
   // Decision 281: what happens between sessions, in one page: log one, spend
   // what it earned, read the history, and Undo, each reached from the jump bar.
-  // A seat's copy can't log a session: its rule line says the player does (KQ20, Decision 297).
+  // A seat's copy can't log a session: its rule line says the player does (KQ20, Decision 298).
   const seatRule = S.screen==="table" && sheetGuide().seat && sheetGuide().seat.introProgression;
   const head = sheetHeader("Progression", termsHtml(seatRule ? seatRule.replace("{perHour}", String(D.ip.perHour)) : copyFill("introProgression", { perHour: D.ip.perHour })));
   let h = logSessionHtml(ch, secs);

@@ -444,7 +444,7 @@ test("E6 7: the seat sheet frames an Arcanist's reference and wraps an attack's 
   assert.deepEqual(app.errors, []);
 });
 
-// K3 (KQ20, Decision 297): a seat's copy reads as a copy.
+// K3 (KQ20, Decision 298): a seat's copy reads as a copy.
 test("K3: a seat's copy draws no guide line, and its Progression says the player logs", () => {
   const app = open();
   openSheet(app);

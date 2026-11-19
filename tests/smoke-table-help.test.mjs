@@ -379,7 +379,7 @@ test("K2: a table's Every word filters and jumps too, and keeps its own words", 
   assert.deepEqual(app.errors, []);
 });
 
-// K3 (KQ6, Decision 297): Help on a seat names the open tab and lists its words, for the seat's copy.
+// K3 (KQ6, Decision 298): Help on a seat names the open tab and lists its words, for the seat's copy.
 test("K3: a seat's Help names the open tab and lists its words", () => {
   const app = helpApp("players");
   app.click(`[data-seat="${app.$("[data-seat]").getAttribute("data-seat")}"]`);

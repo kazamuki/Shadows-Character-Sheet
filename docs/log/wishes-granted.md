@@ -1466,7 +1466,7 @@ against `0450` and Redeemed is an open book question (the CRB folder's HANDOFF f
 
 *Built as S25: Reputation is the book's (4 points, max 3, creation only, 5 / 12 / 20), Burned is new, and the start is written once at the lock as a ledger line, not computed (GQ49). A saved rank-4 Reputation reads as 3 and writes nothing. Burned's buy-off against `0450` and Redeemed is still the open book question; the sheet leaves the IP buy-off as it was.*
 
-**W154 — GM mode's seat sheet reads as read-only in its intros.** → *K3, app 0.73.0, Decision 297 (2026-11-18)* *Ken, from E5's review, 2026-11-13 · 🔧 · Fix*\
+**W154 — GM mode's seat sheet reads as read-only in its intros.** → *K3, app 0.73.0, Decision 298 (2026-11-18)* *Ken, from E5's review, 2026-11-13 · 🔧 · Fix*\
 **Plan:** [help-on-the-sheet K3](plans/help-on-the-sheet.md)
 
 The seat sheet draws the player's tabs, so its Progression intro says "Log a session when it truly ends…" on a sheet nobody can

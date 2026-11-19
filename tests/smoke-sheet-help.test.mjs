@@ -411,7 +411,7 @@ test("K2: no sentence on the sheet changed: the new words carry no forms", () =>
   assert.deepEqual([...Engine.termSpans(text)], [], "a K2 word became a trigger");
 });
 
-// ── K3: Guide lines everywhere (Decision 297) ─────────────────────────────
+// ── K3: Guide lines everywhere (Decision 298) ─────────────────────────────
 const SEC_LABEL = { main: "Main", skills: "Skills", character: "Character", trackers: "Trackers", progression: "Progression", loadout: "Loadout", notes: "Notes" };
 const norm = s => s.replace(/\s+/g, " ").trim();
 // A guide line as it reads on screen: **bold** loses its marks, {tab:id} is that tab's label and {gmChip} is the chip's.
@@ -485,7 +485,7 @@ test("K3: Guide lines off takes exactly the guide lines", () => {
       }
     }
   }
-  // The Train a Skill dialog holds one line (its results, Decision 297); it hides the same way.
+  // The Train a Skill dialog holds one line (its results, Decision 298); it hides the same way.
   for (const off of [false, true]) {
     const app = openSheet(k3Char("professional", true), "progression", off ? { storage: { [SGUIDE]: "off" } } : {});
     app.click("[data-trainopen]");
