@@ -912,17 +912,6 @@ schema bump with a `migrateTable()` step if the note's shape moves (170).
 Look first at how much of this the cast's and threads' links already give
 before inventing a new kind of link.
 
-**W141 — Fix `.form-toggle`'s dark-mode frame, app-wide.** *Ken · 🔎 · Fix · raised 2026-10-31*\
-**Plan:** [gm-mode-next](plans/gm-mode-next.md) S23, folded into its order, drafted 2026-11-18: [`S23-leftovers.md`](plans/gm-mode-next/S23-leftovers.md)
-
-The shared `.form-toggle` (`shadows.css`) frames its buttons with `--frame`. Measured in Chromium on the
-Keys box (S19): in the dark theme the ring against the box is **1.61:1**, and the pressed On button against the
-unpressed Off is **1.71:1**, both under the 3:1 that WCAG 1.4.11 asks of a control's boundary and state (light
-theme: ring 10.20:1). The text is fine (5.09:1 unpressed, 8.65:1 pressed). Ken accepted it for S19 and asked for
-the fix once, for every place the component is used (kind pickers, view toggles, stances, the Keys switch), not
-one box at a time. *To respect:* the contrast guards in `build.test.mjs` parse the rule; phone-check's finger
-sizes; every screen that uses `.form-toggle` in both themes.
-
 **W142 — The cast's crew lines as buttons too.** *Ken · 🔎 · Rule or shape · raised 2026-10-31*\
 **Plan:** [gm-mode-next](plans/gm-mode-next.md) S28 (no order yet); set aside by S21 §7 until it landed
 
@@ -1151,14 +1140,6 @@ scripts would give each session a smaller file to hold.
 `tools/build.mjs` and the build tests list the scripts. Tests load the engine
 with no DOM, so both halves have to load that way.
 
-**W145 — GM tabs with their own icons.** *Ken · 🔎 · Fix · raised 2026-11-06*\
-**Plan:** [gm-mode-next](plans/gm-mode-next.md) S23, folded into its order with Lucide icons for now (GQ60, Ken 2026-11-18): [`S23-leftovers.md`](plans/gm-mode-next/S23-leftovers.md)
-
-U4 (UQ16) kept the borrowed icons until Scott's set arrives. The GM's section tabs borrow the player sheet's icons (`TABLE_SECTIONS[].ui` → `uiIcon()`, `gm.js`): Players has
-Main's, Encounters has Trackers'. Scott is to draw six of the GM's own; when they come they go into `src/data/`
-and the `ui` keys change, with no layout change since the slots are the same size. *To respect:* the icons are data
-(no `gamedataVersion`, Decision 68), one stroke and weight with the sheet's set.
-
 **W148 — Read CI on the head commit instead of re-running the suite in review.** *Claude, from Ken on E1a's build · ⏭ · Docs, process · raised 2026-11-11*\
 **Plan:** none yet
 
@@ -1191,9 +1172,46 @@ tests. Point them at `0432_Advantages.md` and `0431_Disadvantages.md`, check eac
 L5b's order asked for a fixture diff: every archetype, specialization and form, holding every power plus a knife, a pistol and a grenade, with `naturalAttacks`, `archetypeWeapons` and `weaponLine` read on `origin/main` and on the branch, and the fields that moved listed. The builder wrote it as a throwaway script, and the next order that touches a weapon line would write it again (the [loadout-and-gear](plans/loadout-and-gear.md) follow-ons, L8 to L10, each do). The ask: a tool in `tools/`, beside `phone-check`, that does it (`node tools/weapon-diff.mjs`) and prints which fields moved and in how many cases, with a switch to run the running powers too. It reads `origin/main` through a `git worktree` and loads the engine by `vm`, as `tests/harness.mjs` does, so it needs no `node_modules` in the second tree.
 *To respect:* it's a report, not a guard; an order says which moves are expected.
 
+**W165 — An unnamed character seats under its TAG.** *Ken + Claude, from S23's build and review · 💡 · Rule or shape · raised 2026-11-19*\
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S23's verdicts, left over
+
+A character with no name is a seat called by its raw TAG (`TAG-…`) on the card, the page, Find and Activity. The engine's `seatView.name` falls back to the TAG, and crew-by-name matching reads it, so a relabel in the UI alone would disagree with those. *Ask:* should it read "Unnamed" with the TAG beneath, and does matching keep the TAG? *To respect:* Decision 255 (a seat answers to names).
+
+*Ken's answer, 2026-11-19: build it as W171.*
+
+**W166 — "formula" beside an NPC's TOL and WILL is unexplained.** *Ken + Claude, from S23's build and review · 💡 · Fix · raised 2026-11-19*\
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S23's verdicts, left over
+
+Decision 293's note (`formula 12`, `override · formula 12`) has no tip. It wants a tip and its copy, through the voice pass. *To respect:* it is the rule's word, so Deighton reads the copy.
+
+**W167 — A member's read view orders its fields as its form does, and a session's Debrief and Close-out agree.** *Ken + Claude, from S23's build and review · 💡 · Rule or shape · raised 2026-11-19*\
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S23's verdicts, left over
+
+The read view runs want, pushed, line, clocks, got; the form runs want, got, line, pushed. A session reads Close-out before Debrief and edits Debrief first. Making them agree **reopens Decision 271** (the dossier's order), so it needs a ruling on which order wins.
+
+**W168 — Modal titles are in the display face.** *Ken + Claude, from S23's build and review · 💡 · Fix · raised 2026-11-19*\
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S23's verdicts, left over
+
+`.modal-head h2` is Cerulean Nights, and DESIGN.md keeps the display face for names and the brand. The modal is shared with the sheet, so a change moves the sheet's dialogs too; it needs its own order.
+
+**W169 — Threats' "Slot in a pack" is software voice.** *Ken + Claude, from S23's build and review · 💡 · Voice · raised 2026-11-19*\
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S23's verdicts, left over
+
+The empty Threats tab's button says "Slot in a pack". A voice pass (`VOICE-APP.md`).
+
+**W170 — The Tonight strip on a phone: Down on a page's bar, and chips beside a long "Add to encounter".** *Ken + Claude, from S23's build and review · 💡 · Fix · raised 2026-11-19*\
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S23's verdicts, left over
+
+S23 keeps Down on a tab's own bar at 375px (it fits there). On a page's bar the strip holds a fixed 14rem for the lead and Unexported, and a third chip cut both to stubs (measured at 375px). At 1024px four chips and Back still don't all fit beside Add to encounter, though the button now gives way first (13rem). *Ask:* a second row, or a shorter Add, for a page's bar. *To respect:* Fight first (Ken), Decision 270.
+
+**W171 — An unnamed character's seat reads "<player>'s character", with its TAG beneath.** *Ken, from S23's review · 💡 · Rule or shape · raised 2026-11-19*\
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S23's verdicts, left over
+
+Today `seatView.name` falls back to the raw TAG. Change it in the engine so the card, the page, Find, Activity and crew-by-name matching all agree on "<player>'s character", the TAG shown beneath it. It's a shape change to what a seat answers to (Decision 255), so it takes a decision and a sweep of every reader of the name. Answers W165.
+
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W165.** Everything above is open. What was built is in
+- **Next free number: W172.** Everything above is open. What was built is in
   [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)

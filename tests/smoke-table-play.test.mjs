@@ -15,7 +15,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { boot } from "./harness.mjs";
 import { syntheticPack, PACK_ID } from "./packfixture.mjs";
-import { Engine, lockedCharacter, openSheet, clickIn, withDownloads, importFile, card, tipShown, GM_ON, GM_OFF, tableKeys, tableCard, type, runTable, notesTab, tableHome, tableFile, keyIn, castAdd, pick, threatsTab, tableWithPack, entryButton, edit, done, editNote, deadAirApp } from "./smokekit.mjs";
+import { openAddLine, Engine, lockedCharacter, openSheet, clickIn, withDownloads, importFile, card, tipShown, GM_ON, GM_OFF, tableKeys, tableCard, type, runTable, notesTab, tableHome, tableFile, keyIn, castAdd, pick, threatsTab, tableWithPack, entryButton, edit, done, editNote, deadAirApp } from "./smokekit.mjs";
 
 // ── The Encounters tab (Decisions 188–190) ─────────────────────────────
 const encTab = app => app.click('[data-tsec="encounters"]');
@@ -589,7 +589,7 @@ test("Decision 193: Add an interaction offers Fought them last", () => {
   const app = boot({ storage: GM_ON });
   runTable(app, "T");
   app.window.eval(`Engine.addCastMember(S.table, { name: "Dez" })`);
-  app.click('[data-tsec="cast"]'); app.click("[data-copen]");
+  app.click('[data-tsec="cast"]'); app.click("[data-copen]"); openAddLine(app);
   const kinds = app.$$("[data-iakind]");
   assert.equal(kinds[kinds.length - 1].textContent, "Fought them");
   assert.equal(kinds.length, 8);
@@ -1974,7 +1974,7 @@ test("Decision 212: Activity lists newest first, Undo redraws the page behind an
   assert.deepEqual(auditLabels(app), ["Added Marta to the cast", "Added Dez to the cast"]);
   openActivity212(app);
   assert.deepEqual(app.$$("#modal .act-label").map(e => e.textContent), ["Added Dez to the cast", "Added Marta to the cast"]);
-  assert.equal(app.doc.activeElement, app.$("#modal [data-act-undo]"));
+  assert.equal(app.doc.activeElement, app.$("#modal-title"), "S23: Activity opens on its heading, not on Undo");
   app.click("#modal [data-act-undo]");
   assert.match(app.$("#modal [data-act-undo]").textContent, /Undo: Added Marta to the cast/);
   assert.equal(app.doc.activeElement, app.$("#modal [data-act-undo]"));
@@ -1984,6 +1984,19 @@ test("Decision 212: Activity lists newest first, Undo redraws the page behind an
   assert.equal(app.$("#modal [data-act-undo]"), null);
   assert.match(app.$("#modal").textContent, /Nothing to undo yet/);
   assert.equal(app.doc.activeElement, app.$("#modal-title"));
+  assert.deepEqual(app.errors, []);
+});
+
+test("S23: Activity opens on its heading", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T");
+  type(app, "[data-cadd-name]", "Marta"); keyIn(app, "[data-cadd-name]", "Enter");
+  openActivity212(app);
+  assert.ok(app.$("#modal [data-act-undo]"), "there is something to undo");
+  assert.equal(app.doc.activeElement, app.$("#modal-title"));
+  const before = app.window.eval("S.table.audit.length");
+  keyIn(app, "#modal-title", "Enter");
+  assert.equal(app.window.eval("S.table.audit.length"), before, "Enter on the heading undoes nothing");
   assert.deepEqual(app.errors, []);
 });
 
@@ -2715,8 +2728,10 @@ test("U3: a session opens to read with the night's controls live, and Edit opens
   // The summary is the day alone; who and hours are the live row beneath, so changing them leaves it as it was (review).
   const sumEl = app.$("#main .dos-sum"), before = sumEl.textContent;
   assert.ok(before && !before.includes("·"), "the summary is the day alone");
-  const pressed = app.$("[data-crew-box] .crew-btns button[data-crew-name]");
-  if (pressed) pressed.click();
+  // Dead Air's crew are seats, not typed names (S23: the old selector found nothing and the press was skipped).
+  const pressed = app.$("[data-crew-box] .crew-btns button[data-crew-seat]");
+  assert.ok(pressed, "the crew box has a seat to press");
+  pressed.click();
   const hrs = app.$('[data-sf="hours"]'); hrs.value = "7"; hrs.dispatchEvent(new app.window.Event("input", { bubbles: true })); hrs.dispatchEvent(new app.window.Event("change", { bubbles: true }));
   assert.equal(app.$("#main .dos-sum").textContent, before, "who and hours stay out of the summary");
   edit(app);
@@ -2844,5 +2859,47 @@ test("Decision 297: the Reference's CRANK panel has the five tables, and Blacksi
   const hit = app.$("#gr-crank").closest(".ref-panel");
   assert.match(hit.textContent, /Blacksite Raid/);
   assert.ok(hit.querySelector("h3.ref-sub"));
+  assert.deepEqual(app.errors, []);
+});
+
+test("S23: Sessions marks the open session, above Next session, and the list marks it Open", () => {
+  const app = deadAirApp("sessions");
+  const live = app.window.eval("Engine.openSession(S.table)");
+  assert.ok(live, "Dead Air is mid-session");
+  const line = app.$("[data-sess-live]");
+  assert.ok(line, "a line says a session is open");
+  assert.equal(line.querySelector("b").textContent, `${app.window.eval("Engine.sessionTitle(Engine.openSession(S.table))")} is open`);
+  const btn = line.querySelector("button");
+  assert.equal(btn.textContent, "Open");
+  assert.equal(btn.dataset.sopen, live.id);
+  const nextH = [...app.$$("#main h2")].find(h => h.textContent === "Next session");
+  assert.ok(line.compareDocumentPosition(nextH) & 4, "the line is above Next session");
+  const tags = app.$$(".sess-item .tag").filter(t => t.textContent === "Open");
+  assert.equal(tags.length, 1, "the list marks one session Open");
+  assert.equal(tags[0].closest("li").querySelector("[data-sopen]").dataset.sopen, live.id, "and it is the open one");
+  btn.click();
+  assert.equal(app.window.eval("S.sessOpen"), live.id, "Open opens that session");
+  assert.ok(app.$("[data-sback]"));
+  app.click("[data-sback]");
+  // Nothing open: no line, no tag.
+  const bare = boot({ storage: GM_ON });
+  runTable(bare, "Bare");
+  bare.click('[data-tsec="sessions"]');
+  assert.equal(bare.$("[data-sess-live]"), null);
+  assert.equal(bare.$$(".sess-item .tag").length, 0);
+  assert.deepEqual(app.errors, []);
+});
+
+test("S23: the table's name block shows on Sessions only", () => {
+  const app = deadAirApp("sessions");
+  const title = () => app.$("#main h1.tbl-title"), made = () => [...app.$$("#main .step-note")].find(p => /created/.test(p.textContent));
+  assert.ok(title() && !title().classList.contains("sr-only"), "Sessions shows the name");
+  assert.ok(made(), "and when the table was made");
+  for (const id of ["players", "cast", "city", "threats", "encounters", "reference", "notes"]) {
+    app.click(`[data-tsec="${id}"]`);
+    assert.equal(made(), undefined, `${id}: no created line`);
+    assert.ok(title() && title().classList.contains("sr-only"), `${id}: the heading stays for a jump to land on, not shown`);
+    assert.equal(title().textContent, app.window.eval(`TABLE_SECTIONS.find(s => s.id === "${id}").label`), `${id}: and it names the section, not the table`);
+  }
   assert.deepEqual(app.errors, []);
 });

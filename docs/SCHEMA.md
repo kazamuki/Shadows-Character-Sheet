@@ -4418,6 +4418,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Built:** as 177.
     → **Superseded in part by Decision 241** — a line reads as a sentence; Edit opens it in place.
      → **Superseded in part by Decision 254** — *Who knows what* folds a seat's names into one group.
+     → **Superseded in part by Decision 300** — the add row is folded behind Add a line on a member's read view; Edit keeps it open.
 
 180. **A pack is its own file, `.shadows-pack.json`, gated by `migratePack()`, with its own id, a pack schema version, and the author's content version.**
      *2026-10-06 · Ken + Claude · Touches: pack, .shadows-pack.json, migratePack, packCheck, fileKind, meta.kind, PK- id, packSchemaVersion, contentVersion, origins, npcRoles, enemyRoles, tiers, entries, groups, versions table, CLAUDE.md, Decision 170, W63, GQ10*
@@ -5530,6 +5531,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** 176, 204, 208, 243, 244, 258, each in part; cites 179, 245, 270.
      - **Revisit if:** a GM edits mid-scene more than reads, or W140 reshapes Notes.
      - **Built:** app 0.65.0, no schema move, PR #311, log 2026-11-06 (U3).
+     → **Superseded in part by Decision 301** — Cast's quick-add no longer stays at the top: it sits below the list, as Players' does.
 
 272. **On a table, 1–8 open the sections, N runs Next turn on a running encounter's page, Ctrl/⌘+Z takes back the last change, A opens Activity and ? lists every key; the open section's tab is aria-current.**
      *2026-11-07 · Ken + Claude · Touches: keyboard shortcuts, keydown, inField, keysOn, shadows.ui.keys, Keys, openKeys, keyHints, aria-keyshortcuts, 1–8, section tabs, tableTabButtonsHtml, pickTableTab, aria-current, showActiveTab, N, Next turn, data-enext, Ctrl+Z, Cmd+Z, undoTableEntry, showTableDone, nothing to undo, A, Activity, openActivity, ?, phone-check, Decision 259, Decision 271*
@@ -5544,6 +5546,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** a GM wants keys on the player's sheet, a browser takes a digit, or Redo arrives.
      - **Built:** app 0.66.0, no schema move, PR #313, log 2026-11-07 (U5).
     → **Superseded in part by Decision 278** — **?** opens Help, not Keys; Keys lists it as Help and is one link down, and ⋮ → Keys stays.
+    → **Superseded in part by Decision 299** — at a Reset `N` presses Finish the round, which takes Next's place in the bar.
 
 273. **A locked character owed a pick sees one line at the top of each tab, and the picker opens in a dialog when they press Choose.**
      *2026-11-11 · Ken + Claude · Touches: focusedOwedHtml, focusedPickHtml, data-fpick, data-fowedopen, sheetHeader, .focused-owed, openModal, focusedOwedLines, openFocusedPicker, versionCheck, loadIssuesHtml, E1a*
@@ -5806,6 +5809,33 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 289 in part (the switch reaches every guide line, and a seat draws none). Decision 278 in part (the table's `character` context names a seat's tab and lists its words).
      - **Revisit if:** players want a guide line back while the others stay off (one switch per line), or the wizard joins Help (KQ7).
      - **Built:** app 0.73.0, no game-data or schema move, PR #365, log 2026-11-18 (K3).
+
+299. **At an encounter's Reset, Finish the round takes Next's place in the bar, and N presses it.**
+     *2026-11-18 · Ken + Claude · Touches: encounter Reset, Finish the round, Next, the N key, encResetHtml, the encounter bar, data-efinish, aria-keyshortcuts, keyHints, the Keys list, Decision 272*
+     - **Decided:** While an encounter is at its Reset, the bar's primary button is **Finish the round**, where Next sits, and `N` presses it. It is disabled while the Reset's checklist is incomplete, as the checklist's own button is, and `N` does nothing then. The checklist keeps its own Finish the round, unchanged. Keys lists "N · Next turn, or Finish the round at a Reset".
+     - **Why:** At a Reset `N` did nothing and nothing said why, and on a phone Finish the round was below the fold. The same key moves the fight on at every point.
+     - **Rejected:** A notice on `N` at the Reset: it explains a dead key instead of making it work. Moving the checklist up: it's long, and its order is the book's. Removing the checklist's own button: the bar's scrolls away with a long Reset, and the checklist ends on its own button.
+     - **Replaces:** Decision 272 in part: `N` presses Finish the round at a Reset, where it did nothing.
+     - **Revisit if:** a GM presses `N` at a Reset by mistake and skips the checklist.
+     - **Built:** app 0.73.0, no game-data or schema move, PR (this one), log 2026-11-18 (S23).
+
+300. **A cast member's crew-line add sits behind "Add a line", below the lines, on their read view.**
+     *2026-11-18 · Ken + Claude · Touches: castInteractionsHtml, bindInteractions, a member's read view, crew lines, Add a line, intAdd, Decision 179*
+     - **Decided:** A member's read view lists their lines, then an **Add a line** button. Pressing it opens the add row where the button was, focused on its first field (Crew), with a Cancel. Saving or Cancel folds it, and focus returns to the button. A page left and reopened is folded again. Edit's own form keeps the row open above the lines, as it was.
+     - **Why:** The open row put about 14 tab stops between Clocks and the GM note on every member. A GM reads a member far more often than they add a line.
+     - **Rejected:** Keeping it open (179): the cost is paid on every read. Moving it to Edit only: a line is added mid-scene, from the read view. Keeping the row open after a save, for three lines in a scene: three presses of Add a line is cheaper than a row on every read.
+     - **Replaces:** Decision 179 in part: the add row is folded on the read view.
+     - **Revisit if:** GMs add lines from a member's page more than they read it.
+     - **Built:** as 299.
+
+301. **The list tabs lead with their list: Cast's and Players' Add sit below it, Sessions says one line when a session is open, and the table's name block is Sessions' alone.**
+     *2026-11-19 · Ken + Claude · Touches: castTabHtml, playersTabHtml, cast-add, quick-add, sessionsTabHtml, data-sess-live, Open tag, renderTable head, name block, tbl-title, sr-only h1, Next session, Decision 270, Decision 271, UQ7, GQ63, GQ65, GQ66*
+     - **Decided:** **Cast's quick-add and Players' Add form sit below their lists**, as every other Add does. **While a session is open**, Sessions' first line reads "Session N is open" with an **Open** button, above Next session, and the list marks that session **Open**. **The table's name and its created date lead Sessions only**, the table's first tab; every other tab starts at its own list, and keeps an unseen h1 that names the section, so a heading jump and the heading focus on opening still land.
+     - **Why:** On a phone every list tab began with chrome (the name block, then Add), so Cast's first card started near 850px. Ken ruled Add below the content in 271; Cast and Players were the two it missed. The open session was the one thing Sessions didn't say it had.
+     - **Rejected:** A live block at the top of Sessions (270's UQ7): it repeated the tab-hunting, a card of the night's state above the tab. This is one line, a pointer to the page that holds the night, with no state of its own and nothing to keep current; the strip stays the live view. Keeping Cast's quick-add on top (271): the cost is paid on every read. Hiding the name block with no heading: a heading jump would land on nothing.
+     - **Replaces:** Decision 271 in part: "Cast's quick-add stays" no longer holds. Cites 270 (its UQ7).
+     - **Revisit if:** GMs add cast faster than they read the list, or a phone GM can't find which session is open.
+     - **Built:** app 0.73.0, no game-data or schema move, PR #368, log 2026-11-19 (S23).
 
 ## 5. Open Flags
 

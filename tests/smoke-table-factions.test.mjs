@@ -176,7 +176,7 @@ test("244: a key NPC opens the member, and their Back returns to the faction on 
   app.click(`[data-copen="${bob}"]`);
   assert.equal(app.$("[data-ctitle]").textContent, "Bob");
   assert.equal(app.$("[data-cback]").textContent, "Back to Eclipse");
-  assert.match(app.$("main, #main").textContent, /Key to\s*Eclipse/, "the member's page says what they're key to");
+  assert.match(app.$("main, #main").textContent, /Key to[\s\S]*Eclipse/, "the member's page says what they're key to");
   app.click("[data-cback]");
   assert.equal(app.$("[data-ftitle]").textContent, "Eclipse");
   assert.equal(focusedKey(app), `data-copen=${bob} data-cwhere=key|${bob}`, "Back lands on the link");

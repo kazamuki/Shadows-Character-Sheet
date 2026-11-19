@@ -187,7 +187,7 @@ test("253: an Ambush by the crew: Start, then Next passes the other side in roun
   assert.deepEqual(pressed(app, "data-eopen-kind"), ["ambush"]);
   assert.deepEqual(pressed(app, "data-eopen-side"), ["crew"]);
   assert.equal(focusedAttr(app), "data-eopen-kind=ambush");
-  assert.equal(labels(app).at(-1), "Changed Warehouse");
+  assert.equal(labels(app).at(-1), "Changed the opening of Warehouse");
   app.click("[data-enc-start]");
   assert.equal(activeName(app), "A");
   assert.match(rowByName(app, "A").textContent, /\+3 on their first attack roll/);
@@ -237,7 +237,7 @@ test("253: Delay on the active row, then Act now, and a missed delay at Reset", 
   assert.match(rowByName(app, "A").textContent, /Waiting: goes for the alarm/);
   const actNow = app.$(`[data-eacnow="${rid(app, "A")}"]`);
   assert.ok(actNow);
-  assert.equal(labels(app).at(-1), "Changed Warehouse");
+  assert.equal(labels(app).at(-1), "A waits");
   app.click(`[data-eacnow="${rid(app, "A")}"]`);
   assert.equal(activeName(app), "A");
   assert.doesNotMatch(rowByName(app, "A").textContent, /Waiting/);

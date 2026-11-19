@@ -14,7 +14,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { boot } from "./harness.mjs";
 import { syntheticPack, PACK_ID } from "./packfixture.mjs";
-import { Engine, search, clickIn, withDownloads, importFile, named, charKeys, sheetHome, tipShown, wizCss, GM_ON, GM_OFF, tableKeys, tableCard, seedTable, type, runTable, notesTab, tableHome, tableFile, keyIn, castAdd, pick, threatsTab, tableWithPack, entryButton, packStored, edit, done, editNote, deadAirApp, pageControls } from "./smokekit.mjs";
+import { openAddLine, Engine, search, clickIn, withDownloads, importFile, named, charKeys, sheetHome, tipShown, wizCss, GM_ON, GM_OFF, tableKeys, tableCard, seedTable, type, runTable, notesTab, tableHome, tableFile, keyIn, castAdd, pick, threatsTab, tableWithPack, entryButton, packStored, edit, done, editNote, deadAirApp, pageControls } from "./smokekit.mjs";
 
 // ── Tables and the feature switch (Decisions 171, 173) ──────────────────
 const tableEntryOf = (app, id) => JSON.parse(app.window.localStorage.getItem("shadows.table.v1." + id));
@@ -154,6 +154,8 @@ test("Decision 171: Rename changes the header, the window's title and Home's car
   app.$("#tbl-name").value = "New name";
   app.click("#modal [data-nameyes]");
   assert.equal(app.$("#brandctx").textContent, "New name");
+  assert.equal(app.$("h1.step-title").textContent, "Notes", "S23: a tab but Sessions has an unseen h1 naming the section");
+  app.click('[data-tsec="sessions"]');
   assert.equal(app.$("h1.step-title").textContent, "New name");
   assert.equal(app.doc.title, "New name — Shadows");
   tableHome(app);
@@ -964,8 +966,10 @@ test("S8b review 1: a line with no crew name is still on screen once its member 
 test("S8b review 2: What on the add row survives a redraw a press elsewhere causes, and is emptied by Add", () => {
   const app = boot({ storage: GM_ON });
   runTable(app, "Draft");
-  castAdd(app, "Dez"); openFirst(app);
+  castAdd(app, "Dez"); openFirst(app); openAddLine(app);
   app.click('[data-iakind="shared"]'); addLine(app, "first");
+  assert.equal(app.$("[data-iwhat]"), null, "Decision 300: saving folds the row");
+  openAddLine(app);
   type(app, "[data-iwhat]", "half typed");
   const xid = app.$("[data-int]").dataset.int;
   editLine(app);
@@ -979,6 +983,8 @@ test("S8b review 2: What on the add row survives a redraw a press elsewhere caus
   assert.equal(app.$("[data-iwhat]").value, "");
   assert.deepEqual(intTexts(app), ["half typed"]);
   type(app, "[data-iwhat]", "more"); app.click("[data-cback]"); openFirst(app);
+  assert.equal(app.$("[data-iwhat]"), null, "the open row outlived the page");
+  openAddLine(app);
   assert.equal(app.$("[data-iwhat]").value, "", "the draft outlived the page");
   assert.deepEqual(app.errors, []);
 });
@@ -1690,7 +1696,7 @@ test("241: a member's page reads each line as its sentence, with their own name 
 test("241: the add row runs Crew, the kinds, What, When, Where, Add, in document order", () => {
   const app = boot({ storage: GM_ON });
   runTable(app, "Order");
-  castAdd(app, "Dez"); openFirst(app);
+  castAdd(app, "Dez"); openFirst(app); openAddLine(app);
   const order = [...app.$(".int-add").querySelectorAll("[data-iacrew], [data-iakind], [data-iwhat], [data-iadate], [data-iawhere], [data-iadd]")]
     .map(el => el.hasAttribute("data-iacrew") ? "crew" : el.hasAttribute("data-iakind") ? "kind" : el.hasAttribute("data-iwhat") ? "what" : el.hasAttribute("data-iadate") ? "when" : el.hasAttribute("data-iawhere") ? "where" : "add");
   const squeezed = order.filter((x, i) => x !== order[i - 1]);
@@ -1938,5 +1944,32 @@ test("Decision 294: a member hurt only in Massive has Heal all and no Heal field
   assert.equal(app.doc.activeElement, app.$("[data-cheal-all]"));
   app.click("[data-cheal-all]");
   assert.equal(app.window.eval("S.table.cast[0].wounds"), null);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 300: a member's line add opens from Add a line, below the lines, and folds on save or Cancel", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Fold");
+  castAdd(app, "Dez"); openFirst(app);
+  assert.equal(app.$("[data-iwhat]"), null, "folded by default");
+  assert.equal(app.$("[data-iadd]"), null);
+  const btn = app.$("[data-iaopen]");
+  assert.equal(btn.textContent, "Add a line");
+  assert.ok(app.$("[data-intlist]").compareDocumentPosition(btn) & 4, "the button sits below the lines");
+  btn.click();
+  assert.ok(app.$("[data-iwhat]"), "the button opens the row");
+  assert.equal(app.$("[data-iaopen]"), null, "where the button was");
+  assert.equal(app.doc.activeElement, app.$("[data-iacrew]"), "focused on its first field");
+  assert.ok(app.$("[data-intlist]").compareDocumentPosition(app.$("[data-iwhat]")) & 4, "the open row is below the lines too");
+  app.click("[data-iacancel]");
+  assert.equal(app.$("[data-iwhat]"), null, "Cancel folds it");
+  assert.equal(app.doc.activeElement, app.$("[data-iaopen]"), "and lands on the button");
+  app.click("[data-iaopen]");
+  app.click('[data-iakind="shared"]'); type(app, "[data-iacrew]", "Nyx"); type(app, "[data-iwhat]", "the pier is watched"); app.click("[data-iadd]");
+  assert.equal(app.$("[data-iwhat]"), null, "a save folds it");
+  assert.equal(app.$$("[data-int]").length, 1, "and the line was added");
+  edit(app);
+  assert.ok(app.$("[data-iwhat]"), "Edit's own form keeps it open");
+  assert.equal(app.$("[data-iaopen]"), null);
   assert.deepEqual(app.errors, []);
 });

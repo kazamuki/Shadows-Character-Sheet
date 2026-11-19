@@ -232,6 +232,14 @@ function migrateLegacySlots(){
   }
 }
 
+// The modifier this machine's undo and save keys use, as a keycap would say it (S23): ⌘ on a Mac, Ctrl anywhere else.
+// The keys themselves take either (gm.js keyAction), so a list that names one is only right if it names this machine's.
+function modKey(){
+  let p="";
+  try { p=String((navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || ""); } catch(e){}
+  return /^(mac|iphone|ipad|ipod)/i.test(p) ? "⌘" : "Ctrl";
+}
+
 // ── Keeping your place (W47) ──────────────────────────────────────────
 // A press that re-renders replaces the button that was pressed, so focus
 // would fall to <body>: the next Enter does nothing and Tab starts over.

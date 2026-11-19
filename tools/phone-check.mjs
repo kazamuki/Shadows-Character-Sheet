@@ -285,7 +285,7 @@ const tableMeasure = () => {
     header: Math.round(hdr.getBoundingClientRect().height), scrollW: de.scrollWidth - de.clientWidth,
     rail: on("nav.ledger"), vitals: on("aside.vitals"),
     // U5, #39: the open section's tab lies inside the tab row, so a route never leaves it scrolled out of sight (0 = inside, in px past an edge).
-    tabOut: (() => { const t = document.querySelector("#topnav [data-tsec].active"), n = document.querySelector("#topnav"); if (!t || !n) return -1; const a = t.getBoundingClientRect(), b = n.getBoundingClientRect(); return Math.round(Math.max(0, b.left - a.left, a.right - b.right, a.top < b.top ? b.top - a.top : 0)); })() };
+    tabOut: (() => { const t = document.querySelector("#topnav [data-tsec].active"), n = document.querySelector("#topnav"); if (!t || !n) return -1; const a = t.getBoundingClientRect(), b = n.getBoundingClientRect(); return Math.round(Math.max(0, b.left - a.left, a.right - b.right, a.top < b.top ? b.top - a.top : 0, a.bottom > b.bottom ? a.bottom - b.bottom : 0)); })() };
 };
 
 async function tableScreens(browser, file, rows, numbers) {
@@ -605,13 +605,17 @@ async function tableExtras(browser, file, rows, numbers) {
     const page = await c.newPage();
     await page.goto(pathToFileURL(file).href); await page.click("[data-topen]"); await page.click('[data-tsec="cast"]'); await page.click('[data-copen="C-8FGP6RCT"]');
     const at = () => page.evaluate(() => { const pn = document.querySelector(".cast-panel"), bar = document.querySelector(".tbl-bar"), r = pn.getBoundingClientRect(), b = bar.getBoundingClientRect(), t = document.querySelector("[data-ctitle]").getBoundingClientRect();
-      return { x: Math.round(r.x), w: Math.round(r.width), top: Math.round(r.top), barBottom: Math.round(b.bottom), titleTop: Math.round(t.top), statusUnderName: !document.querySelector("[data-edit-done]") || document.querySelector("[data-ctitle]").nextElementSibling.matches(".cast-status") }; });
+      return { x: Math.round(r.x), w: Math.round(r.width), top: Math.round(r.top), barBottom: Math.round(b.bottom), titleTop: Math.round(t.top) }; });
     const before = await at();
     await page.evaluate(() => window.scrollTo(0, Math.min(1000, Math.floor((document.documentElement.scrollHeight - innerHeight) / 3))));
     const after = await at();
+    // S23: the status sits under the name in Edit's form. The read view has no status field, so this is measured with Edit open;
+    // measured on the read view it was true whenever no Edit was open, which proved nothing.
+    await page.click('[data-edit^="member|"]');
+    const statusUnderName = await page.evaluate(() => { const done = document.querySelector("[data-edit-done]"), t = document.querySelector("[data-ctitle]"); return !!done && !!t && !!t.nextElementSibling && t.nextElementSibling.matches(".cast-status"); });
     const docked = z.width >= 1280;
     const bad = [];
-    if (!before.statusUnderName) bad.push("the status isn't under the name");
+    if (!statusUnderName) bad.push("the status isn't under the name, in Edit");
     if (docked) {
       if (before.w < 352 || before.w > 448) bad.push(`the panel is ${before.w}px`);
       if (before.x < z.width / 2) bad.push(`the panel is at x ${before.x}, not on the right`);

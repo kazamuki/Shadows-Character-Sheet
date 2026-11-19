@@ -298,6 +298,7 @@ test("U2: a table opens at the top, its heading focused", () => {
 test("U2: the strip shows one item and Unexported below 768px, every item from there up, and never scrolls sideways", () => {
   const css = readFileSync(new URL("../src/styles/shadows.css", import.meta.url), "utf8");
   assert.ok(css.includes("@media (max-width:767px){ .tn-item:not(.tn-lead):not(.tn-unx){display:none}"), "a hidden item is display:none, so it is neither focusable nor read out");
+  assert.ok(/@media \(max-width:767px\)\{[^}]*\}\s*\/\*[^*]*\*\/\s*\.tn-bar \.tn-item\.tn-down\{display:inline-flex\}/.test(css), "S23: on a tab's own bar a phone keeps Down (it fits there; on a page's bar it doesn't)");
   const rule = [css.match(/\.app\.table-mode \.tn\s*\{[^}]*\}/), css.match(/\.tn-item\s*\{[^}]*\}/)];
   assert.ok(rule.every(Boolean) && rule.every(r => !/overflow-x\s*:\s*(auto|scroll)/.test(r[0])), "the strip and its items shrink and cut, they don't scroll");
   assert.ok(/\.tn-item\s*\{[^}]*overflow\s*:\s*hidden/.test(css), "items cut with an ellipsis");
@@ -359,5 +360,41 @@ test("U5: the tab row is 'Table sections' on a table and 'Character sheet sectio
   app.click("[data-menu-toggle]"); app.click("[data-home]");
   tableCard(app, "Frame").querySelector("[data-topen]").click();
   assert.equal(name(), "Table sections");
+  assert.deepEqual(app.errors, []);
+});
+
+test("S23: a member's clock owner link opens the faction, and Back returns to that member, on the link", () => {
+  const app = deadAirApp("cast");
+  let owner = null, memberId = null;
+  for (const b of app.$$("[data-copen]")) {
+    b.click();
+    owner = app.$('.clock-owner[data-cown^="faction|"]');
+    if (owner) { memberId = app.window.eval("S.castOpen"); break; }
+    app.click("[data-cback]");
+  }
+  assert.ok(owner, "Dead Air has a member whose page lists a faction's clock");
+  const key = owner.dataset.cown;
+  owner.click();
+  assert.equal(app.window.eval("S.tsection"), "city");
+  assert.ok(app.$("[data-fback]"), "the faction's page is open");
+  assert.match(app.$("[data-fback]").textContent, /Back to .+/);
+  assert.notEqual(app.$("[data-fback]").textContent, "Back to Factions", "it names the member, not the list");
+  app.click("[data-fback]");
+  assert.equal(app.window.eval("S.tsection"), "cast");
+  assert.equal(app.window.eval("S.castOpen"), memberId, "Back returns to the member's page");
+  assert.equal(app.doc.activeElement, app.$(`[data-cown="${key}"]`), "on the link it was opened from");
+  assert.deepEqual(app.errors, []);
+});
+
+test("S23: Edit on a member lands on Name, and a note's Edit sits beside its name", () => {
+  const app = deadAirApp("cast");
+  app.click("[data-copen]");
+  app.click('[data-edit^="member|"]');
+  assert.ok(app.doc.activeElement.matches('[data-cf="name"]'), "Name, not Status");
+  app.click('[data-tsec="notes"]');
+  app.click("[data-nopen]");
+  const head = app.$(".tbl-note.open .note-head");
+  assert.ok(head.querySelector('[data-edit^="note|"]'), "Edit is in the note's head, beside the name");
+  assert.equal(app.$(".tbl-note.open .note-acts"), null, "and not at its foot");
   assert.deepEqual(app.errors, []);
 });

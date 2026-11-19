@@ -443,7 +443,7 @@ test("U5: A opens Activity and ⋮ → Keys opens Keys, and each closes back whe
   app.click("[data-tkeys]");
   assert.ok(modalOpen(app), "Keys opened nothing");
   const text = app.$("#modal").textContent;
-  for (const k of ["1–8", "N", "Ctrl/⌘+Z", "A", "?", "F", "J", "Esc"]) assert.ok(text.includes(k), k + " isn't in the list");
+  for (const k of ["1–8", "N", "Ctrl+Z", "A", "?", "F", "J", "Esc"]) assert.ok(text.includes(k), k + " isn't in the list");
   assert.ok(text.includes("? · Help"), "Keys' list doesn't say ? is Help");
   assert.equal(text.includes("These keys"), false, "Keys' list still says ? opens the keys");
   calls.length = 0;
@@ -575,5 +575,89 @@ test("S31: ? is Help now, and Keys says so", () => {
   // Only one listener answers ?: a second binding would toggle it twice and leave it where it was.
   const src = readFileSync(new URL("../src/ui/gm.js", import.meta.url), "utf8");
   assert.equal((src.match(/e.key===s*"?"/g) || []).length, 1, "? is bound in more than one place");
+  assert.deepEqual(app.errors, []);
+});
+
+test("S23: Undo returns focus to the clock that changed", () => {
+  const app = deadAirApp("sessions");
+  const lines = () => app.$$(".near-list [data-cline]");
+  assert.ok(lines().length >= 2, "Dead Air lists two clocks close to full");
+  const second = lines()[1].dataset.cline, other = lines()[0].dataset.cline;
+  assert.notEqual(second, other);
+  const stepper = (id, which) => app.$(`[data-cline="${id}"] [data-clk${which}]`);
+  assert.equal(stepper(second, "minus").getAttribute("data-clkminus"), second, "the stepper carries its clock's id");
+  const btn = stepper(second, "plus").disabled ? stepper(second, "minus") : stepper(second, "plus");
+  btn.focus(); btn.click();
+  const before = auditLen(app);
+  press(app, app.doc.activeElement, "z", { ctrlKey: true });
+  assert.equal(auditLen(app), before - 1, "Ctrl+Z took the step back");
+  const af = app.doc.activeElement, row = af && af.closest("[data-cline]");
+  assert.equal(row && row.dataset.cline, second, "focus is on the clock that changed, not the first one on the page");
+  assert.deepEqual(app.errors, []);
+});
+
+test("S23: the Keys list says Ctrl or ⌘, whichever this machine uses, and never both", () => {
+  const app = tableApp();
+  const list = () => { app.click("[data-menu-toggle]"); app.click("[data-tkeys]"); const t = app.$("#modal .keys-list").textContent; pressEsc(app); return t; };
+  let t = list();
+  assert.match(t, /Ctrl\+Z/); assert.match(t, /Ctrl\+Enter/); assert.doesNotMatch(t, /Ctrl\/|⌘/);
+  Object.defineProperty(app.window.navigator, "platform", { value: "MacIntel", configurable: true });
+  t = list();
+  assert.match(t, /⌘\+Z/); assert.match(t, /⌘\+Enter/); assert.doesNotMatch(t, /Ctrl/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 299: at a Reset, N presses Finish the round, which takes Next's place in the bar", () => {
+  const app = deadAirApp("encounters");
+  openFight(app);
+  for (let i = 0; i < 99 && !app.$(".enc-bar [data-efinish]"); i++) press(app, app.doc.body, "n");
+  const bar = app.$(".enc-bar");
+  assert.ok(bar.querySelector("[data-efinish]"), "the bar's primary button is Finish the round at a Reset");
+  assert.equal(bar.querySelector("[data-efinish]").textContent, "Finish the round");
+  assert.ok(bar.querySelector("[data-efinish]").classList.contains("primary"));
+  assert.equal(bar.querySelector("[data-enext]"), null, "no Next at a Reset");
+  assert.equal(bar.querySelector("[data-efinish]").getAttribute("aria-keyshortcuts"), "N");
+  assert.ok(app.$("#main .enc-reset [data-efinish]"), "the checklist keeps its own");
+  const round = app.window.eval("S.table.encounters.find(e => e.status === 'running').round");
+  const r = press(app, app.doc.body, "n");
+  assert.equal(r.prevented, true, "N acted, so it is held back");
+  assert.equal(app.window.eval("S.table.encounters.find(e => e.status === 'running').round"), round + 1, "N finished the round");
+  assert.ok(app.$("[data-enext]") && !app.$(".enc-bar [data-efinish]"), "Next is back");
+  assert.match(app.window.eval("S.table.audit[S.table.audit.length - 1].label"), /^Reset/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("S23: the tabs and Next show their key in a tooltip while the keys are on, and not once they're off", () => {
+  const app = deadAirApp("sessions");
+  const tabs = () => app.$$("#topnav [data-tsec]");
+  assert.deepEqual(tabs().map(b => b.title), tabs().map((_, i) => `Key: ${i + 1}`), "each tab says its digit");
+  openFight(app);
+  assert.equal(app.$("[data-enext]").title, "Key: N");
+  app.click("[data-menu-toggle]"); app.click("[data-tkeys]");
+  app.click("[data-keyoff]");
+  assert.deepEqual(tabs().map(b => b.getAttribute("title")), tabs().map(() => null), "Off takes the tooltips away with the keys");
+  assert.equal(app.$("[data-enext]").getAttribute("title"), null);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 299: while the Reset's checklist is incomplete both Finish buttons are disabled, N does nothing, and typing the number enables both", () => {
+  const app = tableApp();
+  app.window.eval(`(() => { const t = S.table, e = Engine.addEncounter(t, { name: "Docks" }).id, r = Engine.addParticipant(t, e, { kind: "pc", name: "Wren" });
+    if (!Engine.participantAddCondition(t, e, r.id, { id: "burning", rounds: "3" }).ok) throw new Error("no Burning");
+    if (!Engine.startEncounter(t, e).ok || !Engine.nextTurn(t, e).reset) throw new Error("no Reset"); rebaseTable(); S.encOpen = e; S.tsection = "encounters"; update(); })()`);
+  const fins = () => app.$$("[data-efinish]");
+  assert.equal(fins().length, 2, "the bar's and the checklist's");
+  assert.ok(fins().every(b => b.disabled), "both wait for Burning's number");
+  const round = () => app.window.eval("S.table.encounters[0].round"), n = () => auditLen(app);
+  const before = n();
+  const r = press(app, app.doc.body, "n");
+  assert.equal(r.prevented, false, "N isn't ours while there's nothing to press");
+  assert.equal(round(), 1, "the round didn't move");
+  assert.equal(n(), before);
+  const src = app.$("[data-esrc]");
+  src.value = "3"; src.dispatchEvent(new app.window.Event("input", { bubbles: true }));
+  assert.ok(fins().every(b => !b.disabled), "typing the number enables both");
+  assert.equal(press(app, app.doc.body, "n").prevented, true);
+  assert.equal(round(), 2, "N finishes the round once it can");
   assert.deepEqual(app.errors, []);
 });

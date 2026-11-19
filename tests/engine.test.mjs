@@ -14203,3 +14203,36 @@ test("K3: every guide line is read, and every {tab:} names a tab", () => {
   for (const k of Object.keys(D.appCopy)) if (/^(ranksAdvanceInPlay)$/.test(k)) bad.push(`appCopy.${k} is a guide line now: it lives in sheetGuide.lines`);
   assert.deepEqual(bad, []);
 });
+
+test("S23: an encounter's Next logs what it did", () => {
+  const t = Engine.newTable("S23");
+  const e = Engine.addEncounter(t, { name: "Docks" }).id;
+  const rook = addPc(t, e, "Rook", { order: 14 }), wren = addPc(t, e, "Wren", { order: 8 });
+  const last = () => t.audit[t.audit.length - 1].label;
+  let r = recorded(t, () => assert.ok(Engine.startEncounter(t, e).ok));
+  assert.ok(r.ok); assert.equal(last(), "Started Docks");
+  recorded(t, () => assert.ok(Engine.nextTurn(t, e).ok));
+  assert.equal(last(), "Next: round 1, Wren acts", "a Next names the round and who acts");
+  assert.ok(!/^Changed /.test(last()), "not the encounter's name alone");
+  recorded(t, () => assert.ok(Engine.nextTurn(t, e).ok));
+  assert.equal(last(), "Next: round 1 is over", "the Next that ends the round says so");
+  recorded(t, () => assert.ok(Engine.applyEncounterReset(t, e, { sources: {} }, { keep: [] }).ok));
+  assert.equal(last(), "Reset: round 2");
+  recorded(t, () => assert.ok(Engine.setTurn(t, e, wren).ok));
+  assert.equal(last(), "Wren acts");
+  recorded(t, () => assert.ok(Engine.participantAddCondition(t, e, rook, { id: "agonized" }).ok));
+  assert.equal(last(), "Added a Condition to Rook");
+  recorded(t, () => assert.ok(Engine.participantRemoveCondition(t, e, rook, 0).ok));
+  assert.equal(last(), "Removed a Condition from Rook");
+  const added = recorded(t, () => assert.ok(Engine.addParticipant(t, e, { kind: "pc", name: "Dez" }).ok));
+  assert.ok(added.ok); assert.equal(last(), "Added Dez to Docks");
+  const dez = encOf(t, e).rows.find(x => x.name === "Dez").id;
+  recorded(t, () => assert.ok(Engine.removeParticipant(t, e, dez).ok));
+  assert.equal(last(), "Removed Dez from Docks");
+  // Undo and redo over the steps still round-trip (Decision 124).
+  const before = plain(t);
+  const u = Engine.undoTableAction(t);
+  assert.ok(u.ok);
+  assert.equal(encOf(t, e).rows.length, 3, "undoing the removal brings Dez back");
+  assert.notDeepEqual(plain(t).encounters, before.encounters);
+});

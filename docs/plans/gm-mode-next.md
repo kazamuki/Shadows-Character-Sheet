@@ -32,7 +32,7 @@ suggestion, not a queue.
 | Session | What | Tier | Waits on | Status |
 |---|---|---|---|---|
 | **S22** | **Scott's play report, and a closing critique.** Scott runs a session on the live version and says what got in the way; the conductor re-runs `/impeccable critique` on Dead Air (the last plan's run: 24 → 25 → 27 → 28 → 28 → 27) and reorders this table from both | Docs | **Scott**: a session run on the live version | No order needed |
-| **S23** | **At the table, the leftovers.** The leads the GM-at-the-table reviews logged outside their sessions (§6), and W141 (`.form-toggle`'s dark-mode frame) and W145 (GM tabs with their own icons) | Fix, and Rule or shape for two of Ken's calls | Nothing | **Approved 2026-11-18** (GQ61–GQ66 on their defaults; GQ60: W145 in, with Lucide icons): [`gm-mode-next/S23-leftovers.md`](gm-mode-next/S23-leftovers.md) |
+| **S23** | **At the table, the leftovers.** The leads the GM-at-the-table reviews logged outside their sessions (§6), and W141 (`.form-toggle`'s dark-mode frame) and W145 (GM tabs with their own icons) | Fix, and Rule or shape for two of Ken's calls | Nothing | **Built** in app 0.73.0 (Decisions 299, 300; Ken approved 2026-11-18, GQ61–GQ66 on their defaults, GQ60: W145 in, with Lucide icons): [`gm-mode-next/S23-leftovers.md`](gm-mode-next/S23-leftovers.md). §6's verdicts are below it |
 | **S24** | **NPC rules.** An NPC's TOL and WILL (175 reopened): TOL the formula with an override where an entry means it; **WILL a floor**, so a value below the formula is an error the builder shows (GQ6, Scott 2026-11-03). And a cast member **carries their wounds** into the next fight; the GM says how much heals between fights, and back-to-back fights heal nothing (GQ26, Scott 2026-11-03; supersedes 193) | Rule or shape (table schema) | Nothing | **Built** in app 0.73.0 (Decisions 293, 294; table schema 0.20): [`gm-mode-next/S24-npc-rules.md`](gm-mode-next/S24-npc-rules.md) |
 | **S25** | **CRANK.** An off-screen job pays the bottom of its tier's range, and Legendary can't be taken off-screen (GQ28, Scott 2026-11-03; changes 206 and `offScreenMax`). Rep stops at 0 (F37: closes the flag), and the Reputation Advantage sets starting rep as `0432` says (GQ7) | Rule or shape (player sheet, app bump) | Reading `0432` for GQ7's how (read: Reputation and Burned, W161) | **Built** in app 0.73.0 (Decisions 295, 296; game data 0.59; F37 closed): [`gm-mode-next/S25-crank.md`](gm-mode-next/S25-crank.md), W161 folded in |
 | **S26** | **A session's record.** A session can have a name (W73); a session copied out as Markdown (W86, Deighton's ask); printing a cast member, an encounter and a session's journal (W84, the first plan's S13b) | Rule or shape (table schema for the name) | Nothing | No order yet |
@@ -145,3 +145,26 @@ re-critiques) and U5's review. Line numbers are `main` after #313. S23's pre-fli
   (`gm.js:565`), and on Cast at 375px the first card starts near 850px, under quick-add and three filter rows.
 - Ctrl/⌘+Z reaches across sections, by design (272; the Keys line says "on any page"). Revisit only if GMs report it;
   the cheap middle is a toast that names the section.
+
+**S23's verdicts** (built 2026-11-18, app 0.73.0). Each lead above, by what the builder found:
+
+- **Built:** the clock steppers' ids; an encounter step's audit label (Next, Start, Delay, Act now, rows, Conditions, the opening);
+  phone-check's `tabOut` and `statusUnderName`; U3's session test; Activity's focus (its heading); Ctrl or ⌘ (`modKey`); a key hint
+  on the tabs and Next (`title`, with `aria-keyshortcuts`); a section heading to jump to (an unseen h1 that names the section, on
+  every tab but Sessions); the running fight's card; the dossier's prose at 70ch; a clock one segment from full in magenta; the stat
+  block's figures in Oxanium with green and magenta modifiers; a note's Edit beside its name; Edit on a member landing on Name; a
+  member clock's owner link going Back to the member; Attention as a label and "Key to" explained; a seat's SAN, Luck and Çredits at
+  full strength; Add below the list on Cast and Players (GQ63, reproduced on both); GQ61, GQ64, GQ65, GQ66.
+- **Partly:** the bar's chips beside a long "Add to encounter: …" at 1024px: the button now gives way first (13rem, its full words in
+  a `title`), but four chips and a Back still don't all fit. The remainder is **W170**.
+- **Down on a phone** (not Decision 270's: Ken said a lead, not a reopening of *Fight first*): kept on a tab's own bar, where it fits at
+  375px (`.tn-bar .tn-item.tn-down`). On a page's bar the strip holds a fixed 14rem, and measured at 375px a third chip cut the lead
+  and Unexported to stubs (the lead measured 96px, Down 37px). Left hidden there: **W170**.
+- **Not reproduced:** close-out's focus after a pressed attendance toggle (focus stays on that seat's button); the award log's gold IP
+  readout (a taste call, no defect found).
+- **Left, by Decision 270:** "Close to full" counting 2 of 4 (270: within two segments).
+- **Left, the builder's own call:** the strip's `.74rem`. Not changed: 11.1px passes phone-check's 11px floor, and a larger size
+  widens chips that already cut.
+- **Moved, each to a wish:** a raw TAG as a seat's name (**W165**, reproduced; Ken's answer, "<player>'s character" with the TAG beneath, is **W171**); "formula" under TOL and WILL (**W166**); the read
+  view's field order and Debrief against Close-out (**W167**, which reopens 271); modal titles in the display face (**W168**, shared
+  with the sheet's dialogs); Threats' "Slot in a pack" (**W169**, voice).
