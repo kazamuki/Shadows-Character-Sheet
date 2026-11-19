@@ -1887,6 +1887,13 @@ test("Decision 293: the builder's TOL placeholder is its formula, an override sa
   assert.equal(err.hidden, false);
   assert.equal(err.textContent, "WILL can't be below 3, its formula.");
   assert.equal(app.window.eval("S.table.cast[0].block.authored.WILL"), 2, "the typed number is kept");
+  // The read view shows the formula it uses and what was printed (K3).
+  type(app, '[data-cauth="WILL"]', "2");
+  done(app);
+  const will = [...app.$$(".cast-panel .cast-stat")].find(el => el.querySelector(".cast-stat-id").textContent === "WILL");
+  assert.equal(will.querySelector(".threat-val").textContent, "3");
+  assert.equal(will.querySelector(".cast-fig").textContent, "printed 2");
+  edit(app);
   type(app, '[data-cauth="WILL"]', "3");
   assert.equal(app.$('[data-cauth-err="WILL"]').hidden, true);
   assert.deepEqual(app.errors, []);
