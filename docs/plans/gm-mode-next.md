@@ -155,14 +155,16 @@ re-critiques) and U5's review. Line numbers are `main` after #313. S23's pre-fli
   block's figures in Oxanium with green and magenta modifiers; a note's Edit beside its name; Edit on a member landing on Name; a
   member clock's owner link going Back to the member; Attention as a label and "Key to" explained; a seat's SAN, Luck and Çredits at
   full strength; Add below the list on Cast and Players (GQ63, reproduced on both); GQ61, GQ64, GQ65, GQ66.
-- **Partly:** the bar's chips beside a long "Add to encounter: …" at 1024px: the button now gives way first (13rem, its full words in a
-  `title`), but four chips and a Back still don't all fit; the strip's cut-with-an-ellipsis is Decision 270's.
-- **Not reproduced:** close-out's focus after a pressed attendance toggle. Pressing a seat on Dead Air's close-out leaves focus on that
-  same seat's button.
-- **Left, by a decision:** "Close to full" counting 2 of 4 (270: within two segments); the strip's `.74rem` (11.1px passes the phone
-  floor, and a larger size widens chips that already cut); the strip dropping Down on a phone when the fight leads (270; Ken: a lead).
-- **Moved, each needs a ruling or a voice pass:** a raw TAG as a seat's name (reproduced: a character with no name seats as its TAG,
-  the engine's own fallback, which crew-by-name matching reads; a relabel in the UI alone would disagree with Find and Activity);
-  "formula" under TOL and WILL (a tip and its copy); the read view's field order against the form's, and Debrief against Close-out;
-  modal titles in the display face (shared with the sheet's modals); Threats' "Slot in a pack" (voice); the award log's gold IP
-  readout (taste, no defect found).
+- **Partly:** the bar's chips beside a long "Add to encounter: …" at 1024px: the button now gives way first (13rem, its full words in
+  a `title`), but four chips and a Back still don't all fit. The remainder is **W170**.
+- **Down on a phone** (not Decision 270's: Ken said a lead, not a reopening of *Fight first*): kept on a tab's own bar, where it fits at
+  375px (`.tn-bar .tn-item.tn-down`). On a page's bar the strip holds a fixed 14rem, and measured at 375px a third chip cut the lead
+  and Unexported to stubs (the lead measured 96px, Down 37px). Left hidden there: **W170**.
+- **Not reproduced:** close-out's focus after a pressed attendance toggle (focus stays on that seat's button); the award log's gold IP
+  readout (a taste call, no defect found).
+- **Left, by Decision 270:** "Close to full" counting 2 of 4 (270: within two segments).
+- **Left, the builder's own call:** the strip's `.74rem`. Not changed: 11.1px passes phone-check's 11px floor, and a larger size
+  widens chips that already cut.
+- **Moved, each to a wish:** a raw TAG as a seat's name (**W165**; reproduced); "formula" under TOL and WILL (**W166**); the read
+  view's field order and Debrief against Close-out (**W167**, which reopens 271); modal titles in the display face (**W168**, shared
+  with the sheet's dialogs); Threats' "Slot in a pack" (**W169**, voice).

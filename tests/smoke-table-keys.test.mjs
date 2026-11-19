@@ -639,3 +639,25 @@ test("S23: the tabs and Next show their key in a tooltip while the keys are on, 
   assert.equal(app.$("[data-enext]").getAttribute("title"), null);
   assert.deepEqual(app.errors, []);
 });
+
+test("Decision 299: while the Reset's checklist is incomplete both Finish buttons are disabled, N does nothing, and typing the number enables both", () => {
+  const app = tableApp();
+  app.window.eval(`(() => { const t = S.table, e = Engine.addEncounter(t, { name: "Docks" }).id, r = Engine.addParticipant(t, e, { kind: "pc", name: "Wren" });
+    if (!Engine.participantAddCondition(t, e, r.id, { id: "burning", rounds: "3" }).ok) throw new Error("no Burning");
+    if (!Engine.startEncounter(t, e).ok || !Engine.nextTurn(t, e).reset) throw new Error("no Reset"); rebaseTable(); S.encOpen = e; S.tsection = "encounters"; update(); })()`);
+  const fins = () => app.$$("[data-efinish]");
+  assert.equal(fins().length, 2, "the bar's and the checklist's");
+  assert.ok(fins().every(b => b.disabled), "both wait for Burning's number");
+  const round = () => app.window.eval("S.table.encounters[0].round"), n = () => auditLen(app);
+  const before = n();
+  const r = press(app, app.doc.body, "n");
+  assert.equal(r.prevented, false, "N isn't ours while there's nothing to press");
+  assert.equal(round(), 1, "the round didn't move");
+  assert.equal(n(), before);
+  const src = app.$("[data-esrc]");
+  src.value = "3"; src.dispatchEvent(new app.window.Event("input", { bubbles: true }));
+  assert.ok(fins().every(b => !b.disabled), "typing the number enables both");
+  assert.equal(press(app, app.doc.body, "n").prevented, true);
+  assert.equal(round(), 2, "N finishes the round once it can");
+  assert.deepEqual(app.errors, []);
+});

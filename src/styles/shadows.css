@@ -1324,6 +1324,8 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
 .tn-unx{flex:none; font-family:var(--mono); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--dim); cursor:pointer}
 .tn-unx:hover, .tn-unx:focus-visible{border-color:var(--violet-hi); color:var(--text)}
 @media (max-width:767px){ .tn-item:not(.tn-lead):not(.tn-unx){display:none}
+  /* A tab's own bar is the whole row: Down stays there, where it fits at 375px beside the lead and Unexported (S23). On a page's bar the strip holds a fixed 14rem, and a third chip cut the lead and Unexported to stubs. */
+  .tn-bar .tn-item.tn-down{display:inline-flex}
   /* On a page the strip follows Back and holds a fixed share for its lead item and Unexported; Add to goes after it, past the edge, reached by the bar's own
      sideways scroll with its fade as the cue (Ken: the fight comes first, so the lead reads round and actor). A tab's own bar (.tn-bar) has only the strip and fills it. */
   .app.table-mode .tn{order:1; min-width:0}

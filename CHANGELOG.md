@@ -51,6 +51,7 @@ own in the footer.
 - Sessions shows which one is open, above Next session and in the list.
 - Only Sessions leads with the table's name and date. Every other tab starts at its list.
 - GM mode's tabs have icons of their own.
+- On a phone, a tab's strip keeps **Down** beside the fight.
 - Activity opens on its heading, so **A** then Enter undoes nothing. Keys says Ctrl or ⌘, whichever your machine uses, and the tabs and Next show their key when you hover.
 - The running fight stands out on Encounters. A clock one segment from full turns magenta in the strip. An NPC's stat block reads in the sheet's numbers, with modifiers green or magenta. A seat's SAN, Luck and Çredits read at full strength.
 - A note's Edit sits beside its name. Editing a cast member starts on Name. A faction opened from a member's clock goes Back to that member. A faction's Attention is a label, and Key to says what it means.

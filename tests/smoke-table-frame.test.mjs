@@ -298,6 +298,7 @@ test("U2: a table opens at the top, its heading focused", () => {
 test("U2: the strip shows one item and Unexported below 768px, every item from there up, and never scrolls sideways", () => {
   const css = readFileSync(new URL("../src/styles/shadows.css", import.meta.url), "utf8");
   assert.ok(css.includes("@media (max-width:767px){ .tn-item:not(.tn-lead):not(.tn-unx){display:none}"), "a hidden item is display:none, so it is neither focusable nor read out");
+  assert.ok(/@media \(max-width:767px\)\{[^}]*\}\s*\/\*[^*]*\*\/\s*\.tn-bar \.tn-item\.tn-down\{display:inline-flex\}/.test(css), "S23: on a tab's own bar a phone keeps Down (it fits there; on a page's bar it doesn't)");
   const rule = [css.match(/\.app\.table-mode \.tn\s*\{[^}]*\}/), css.match(/\.tn-item\s*\{[^}]*\}/)];
   assert.ok(rule.every(Boolean) && rule.every(r => !/overflow-x\s*:\s*(auto|scroll)/.test(r[0])), "the strip and its items shrink and cut, they don't scroll");
   assert.ok(/\.tn-item\s*\{[^}]*overflow\s*:\s*hidden/.test(css), "items cut with an ellipsis");
