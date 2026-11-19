@@ -10,7 +10,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { boot } from "./harness.mjs";
-import { Engine, D, lockedCharacter, openSheet } from "./smokekit.mjs";
+import { Engine, D, lockedCharacter, lockedVampire, writtenInCharacter, openSheet } from "./smokekit.mjs";
 
 const SG = () => D.sheetGuide;
 const PIN = "shadows.ui.vitalsPinned", SGUIDE = "shadows.ui.sheetGuide", GMGUIDE = "shadows.ui.gmGuide", GMHELP = "shadows.ui.gmHelp", KEYS = "shadows.ui.keys";
@@ -409,4 +409,93 @@ test("K2: no sentence on the sheet changed: the new words carry no forms", () =>
   assert.deepEqual([...withForms], before, "a gameTerms row gained forms: every sentence that names it grows a trigger (KQ13)");
   const text = "IP HP PROT RES TN TH ACC RoF Capacity Integrity TAG Range Difficulty Health Levels Improvement Points Target Number Threshold";
   assert.deepEqual([...Engine.termSpans(text)], [], "a K2 word became a trigger");
+});
+
+// ── K3: Guide lines everywhere (Decision 297) ─────────────────────────────
+const SEC_LABEL = { main: "Main", skills: "Skills", character: "Character", trackers: "Trackers", progression: "Progression", loadout: "Loadout", notes: "Notes" };
+const norm = s => s.replace(/\s+/g, " ").trim();
+// A guide line as it reads on screen: **bold** loses its marks, {tab:id} is that tab's label and {gmChip} is the chip's.
+const lineSaid = t => norm(t.replace(/\*\*/g, "").replace(/\{tab:(\w+)\}/g, (m, id) => SEC_LABEL[id] || m).replace("{gmChip}", "GM"));
+const guideEls = root => [...root.querySelectorAll("[data-guide], [data-guide-line]")];
+/** A locked character of an archetype, in a full state (a session, IP, Training on) or an empty one. */
+function k3Char(arch, full) {
+  const ch = arch === "vampire" ? lockedVampire("upyr") : arch === "writein" ? writtenInCharacter() : lockedCharacter();
+  if (arch !== "writein") ch.identity.archetype = arch;
+  ch.meta.id = "TAG-K3K3-K3K3-K3K3";
+  if (full) { Engine.logSession(ch, { title: "The job", ipEarned: 4 }); ch.houseRules = { training: true }; }
+  return ch;
+}
+/** Every tab (Admin last), read with the switch on or off: { tab: { text, guides: [{ key, text }] } }. */
+function k3Read(arch, full, off) {
+  const app = openSheet(k3Char(arch, full), "main", off ? { storage: { [SGUIDE]: "off" } } : {});
+  const out = {};
+  const grab = tab => {
+    const clone = app.$("#main").cloneNode(true), els = guideEls(clone);
+    out[tab] = { guides: els.map(e => ({ key: e.getAttribute("data-guide-line") || "intro", text: norm(e.textContent) })) };
+    els.forEach(e => e.remove());
+    out[tab].text = norm(clone.textContent);
+  };
+  for (const tab of SECTIONS) { app.click(`[data-sec="${tab}"]`); grab(tab); }
+  app.click("[data-menu-toggle]"); app.click("[data-admin]"); grab("admin");
+  assert.deepEqual(app.errors, []);
+  return { out, app };
+}
+
+test("K3: Guide lines off takes exactly the guide lines", () => {
+  const lines = SG().lines || {}, drawn = new Set();
+  assert.ok(Object.keys(lines).length > 0, "sheetGuide.lines is empty");
+  for (const arch of ["professional", "arcanist", "vampire", "werewolf", "writein"]) for (const full of [true, false]) {
+    const on = k3Read(arch, full, false).out, off = k3Read(arch, full, true).out;
+    for (const tab of Object.keys(on)) {
+      const where = `${arch} ${full ? "full" : "empty"} ${tab}`;
+      assert.equal(off[tab].guides.length, 0, `${where}: a guide line is drawn with the switch off`);
+      assert.equal(off[tab].text, on[tab].text, `${where}: more than the guide lines changed`);
+      for (const g of on[tab].guides) {
+        if (g.key === "intro") continue;
+        assert.ok(lines[g.key], `${where}: ${g.key} is no sheetGuide line`);
+        assert.equal(g.text, lineSaid(lines[g.key]), `${where}: ${g.key} reads differently from its data`);
+        drawn.add(g.key);
+      }
+    }
+  }
+  // The Train a Skill dialog holds one line (its results, Decision 297); it hides the same way.
+  for (const off of [false, true]) {
+    const app = openSheet(k3Char("professional", true), "progression", off ? { storage: { [SGUIDE]: "off" } } : {});
+    app.click("[data-trainopen]");
+    const t = norm(app.$("#modal").textContent);
+    assert.ok(t.includes("Training sharpens a Skill you already have."), "the rule left with the guide line");
+    assert.equal(t.includes(lineSaid(lines.trainLearnFirst || "?")), !off, `trainLearnFirst ${off ? "shows" : "is missing"}`);
+    if (!off) drawn.add("trainLearnFirst");
+  }
+  assert.deepEqual(Object.keys(lines).filter(k => !drawn.has(k)).sort(), [], "a guide line the matrix never draws");
+});
+
+test("K3: a line's tab button goes to the tab", () => {
+  const app = sheet("character");
+  assert.ok(app.$(`#main [data-guide-line] [data-gotab="loadout"]`), "no Loadout button in What you carry is on Loadout");
+  app.click(`#main [data-guide-line] [data-gotab="loadout"]`);
+  assert.equal(app.window.eval("S.section"), "loadout");
+  app.click('[data-sec="character"]');
+  app.click(`#main [data-guide-line] [data-gotab="trackers"]`);
+  assert.equal(app.window.eval("S.section"), "trackers");
+  app.click("[data-menu-toggle]"); app.click("[data-admin]");
+  assert.ok(app.$('#main [data-guide-line="tolWillWhere"] [data-gotab="trackers"]'), "Admin's TOL and WILL line has no Trackers button");
+  app.click('#main [data-guide-line="tolWillWhere"] [data-gotab="trackers"]');
+  assert.equal(app.window.eval("S.section"), "trackers");
+  assert.deepEqual(app.errors, []);
+});
+
+test("K3: sheetLine is total, and a seat or a switch that's off draws nothing", () => {
+  const app = sheet("main");
+  const ev = x => app.window.eval(x);
+  assert.equal(ev(`sheetLine("noSuchKey")`), "");
+  assert.doesNotThrow(() => ev(`sheetLine(null)`));
+  ev(`D.sheetGuide.lines.__t = "Go to {tab:nowhere} or {tab:loadout}."; D.sheetGuide.lines.__n = 5`);
+  assert.match(ev(`sheetLine("__t")`), /Go to \{tab:nowhere\} or <button[^>]*data-gotab="loadout"/);
+  assert.equal(ev(`sheetLine("__n")`), "");
+  ev(`S.screen="table"`);
+  assert.equal(ev(`sheetLine("__t")`), "", "a seat drew a line");
+  ev(`S.screen="sheet"`);
+  app.window.localStorage.setItem(SGUIDE, "off");
+  assert.equal(ev(`sheetLine("__t")`), "", "the switch was ignored");
 });

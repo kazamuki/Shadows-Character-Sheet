@@ -1183,7 +1183,7 @@ window.SHADOWS_DATA = {
     { "id": "ip", "title": "Improvement Points (IP)", "bookSource": "0450 Advancement, Improvement Points",
       "description": "Improvement Points, or IP, are the currency of practice. Every hour of play earns 5 IP, so a three-hour session puts 15 IP on the sheet. IP is spent between sessions, never during one." },
     { "id": "difficulty", "title": "Difficulty", "bookSource": "0300 Core Mechanics, Action Risk: Skill Checks",
-      "description": "The number to beat is based on the difficulty of the action, which the GM sets." },
+      "description": "The number to beat is based on the difficulty of the action, which the GM sets. Typically: 10 for easy, 15 for average, and 20 for challenging difficulty." },
     { "id": "tn", "title": "Target Number (TN)", "bookSource": "0300 Core Mechanics, Essence Checks",
       "description": "The minimum value a die must roll to count as a Hit. This is how difficult the task is. Higher numbers mean less room for error. Typically, the TN is 8, unless the GM modifies the value." },
     { "id": "th", "title": "Threshold (TH)", "bookSource": "0300 Core Mechanics, Essence Checks",
@@ -3094,7 +3094,7 @@ window.SHADOWS_DATA = {
               { "id": "stored", "name": "Stored", "text": "blood bags, the recently dead", "perHL": 2, "upToShare": 0.5 }
             ],
             "unfed": { "label": "A day unfed", "share": 0.5 },
-            "unrested": { "label": "A day without rest", "share": 0.5, "plus": 2, "text": "Instead of A day unfed: the day's Thirst and 2 more." },
+            "unrested": { "label": "A day without rest", "share": 0.5, "plus": 2, "text": "A day without rest: instead of A day unfed, the day's Thirst and 2 more." },
             "low": { "at": "rou", "name": "Hunger", "text": "Your SFR is at your RoU or lower. Make a WILL Essence check (TN 7, TH 1) or fall into a Blood Frenzy." }
           },
           {
@@ -4145,7 +4145,6 @@ window.SHADOWS_DATA = {
     "powerImproveNote": "Rewording a power costs IP; your GM names it. Rewrite what changed. Its rank rises on Progression. Your notes stay yours.",
     "specializationUnwritten": "The {label} options aren't written yet. Your character file remembers that.",
     "applyFromText": "Apply these from their text.",
-    "ranksAdvanceInPlay": "Ranks rise with IP, on Progression.",
     "lockIssued": "NYTE City knows your name now. {tag}. Your copy is {file}.",
     "lockIssuedTagless": "NYTE City doesn't know your name. Keep it that way. Your copy is {file}.",
     "statMaxBy": "Max {max} ({by}).",
@@ -5070,6 +5069,25 @@ window.SHADOWS_DATA = {
           "Use Progression's spends for what you earned. Admin is for what's wrong."
         ]
       }
+    },
+    // K3 (Decision 297): every guide sentence the sheet writes outside a tab's intro, drawn by sheet.js's sheetLine and gone when Guide lines is off.
+    // {tab:id} is that tab's button, {gmChip} the GM chip, **bold** as anywhere. A paragraph that holds a rule keeps it in the code and splits the guide sentence out.
+    "lines": {
+      "ranksOnProgression": "Ranks rise with IP, on {tab:progression}.",
+      "carryOnLoadout": "What you carry is on {tab:loadout}.",
+      "poolsOnTrackers": "The pools you spend are on {tab:trackers}.",
+      "manualAdjustmentsFor": "For what the sheet doesn't add up by itself: an item, a ruling, a scar the city left.",
+      "ipFromSessions": "Log sessions to earn IP.",
+      "majorGmChip": "Where the book leaves it to judgement, your table decides: taking one marked {gmChip} asks you to confirm.",
+      "sessionsPatient": "NYTE City is patient.",
+      "powersOnCharacter": "Powers are edited, added and removed on {tab:character}.",
+      "customSpells": "Spells you improvised, or settled with your GM.",
+      "tolWillWhere": "Change the Stats they come from, or add a Manual Adjustment on {tab:trackers}.",
+      "trainLearnFirst": "Learn one with IP first, then train it here."
+    },
+    // A seat's copy (KQ20): the rule line that tells the player to act, said to the GM. Keyed by the line's appCopy key.
+    "seat": {
+      "introProgression": "The player logs sessions on their own sheet. Each pays {perHour} IP an hour of play, 1 Milestone Point, and refreshes their LUCK."
     }
   },
   /* GM mode's Help (Decision 278): the words the ? panel, the guide lines and
@@ -5082,6 +5100,7 @@ window.SHADOWS_DATA = {
     "ui": {
       "title": "Help",
       "close": "Close",
+      "seatTab": "{title}: {tab}",
       "back": "Back to this page",
       "on": "On",
       "off": "Off",

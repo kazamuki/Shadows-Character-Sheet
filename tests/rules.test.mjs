@@ -3759,3 +3759,8 @@ test("Decision 296: crankStart, crankState and offScreenPay are total", () => {
   assert.equal(forged.trackers.crank.rep, 99);
   assert.equal(Engine.crankState(forged).tier.id, "legendary");
 });
+
+test("K3: Difficulty quotes 0300 whole", () => {
+  const d = D.gameTerms.find(r => r.id === "difficulty").description;
+  assert.match(d, /Typically: 10 for easy, 15 for average, and 20 for challenging difficulty\./);
+});

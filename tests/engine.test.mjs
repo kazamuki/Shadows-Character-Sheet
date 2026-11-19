@@ -324,7 +324,7 @@ const MAPS = [/\.byPowerLevel$/, /^statRules\.(modifiers|raiseCost)$/, /^spells\
   /\.starterPower$/, /\.starterPower\.\*\[\]$/,
   /\.sp(\.\*)?$/, // W32: keyed by the text an amount sits beside, read by spAmounts
   /^gmGuide\.(contexts|words|empty|ui\.when)$/, // keyed by a page, a word, a section's empty state and a part of a night, read by gm.js's Help (Decision 278)
-  /^sheetGuide\.(contexts|ui\.when|ui\.kinds)$/, // keyed by a sheet tab and a part of a night, read by sheet.js's Help (K1)
+  /^sheetGuide\.(contexts|lines|seat|ui\.when|ui\.kinds)$/, // keyed by a sheet tab, a guide line and a rule line a seat words differently, read by sheet.js (K1, K3)
   /^appCopy\.statusLabel$/, // keyed by an archetype's `status`, read by statusLabel()
   /^skillRowText$/, // keyed by what a Skill's row says (a Take X, a die face, a light level), read by skillLine and attackNotes (Decision 233)
   /\.grants\[\]\.(shift|mod)$/, // a `visibility` row's maps, keyed by a light level's id, read by visShifts and visModText (Decision 237)
@@ -14113,4 +14113,25 @@ test("Decision 294: a cast row healed mid-fight carries what's left, not what it
   assert.equal(rowOf(t, e, dezRow).damage, 4);
   assert.ok(Engine.endEncounter(t, e, { rows: {} }).ok);
   eq(castOf(t, dez.id).wounds, { damage: 4, massive: 0 });
+});
+
+// K3 (Decision 297): every guide line is drawn by one helper, and the move out of sheet.js is complete.
+test("K3: every guide line is read, and every {tab:} names a tab", () => {
+  const lines = D.sheetGuide.lines || {}, src = readFileSync(join(ROOT, "src/ui/sheet.js"), "utf8");
+  const ids = [...readFileSync(join(ROOT, "src/ui/shared.js"), "utf8").matchAll(/\{id:"(\w+)",\s+label:/g)].map(m => m[1]);
+  assert.ok(Object.keys(lines).length > 0, "sheetGuide.lines is empty");
+  const called = [...src.matchAll(/sheetLine\("(\w+)"/g)].map(m => m[1]);
+  const bad = [];
+  for (const k of Object.keys(lines)) if (!called.includes(k)) bad.push(`sheetGuide.lines.${k} is read by no sheetLine("${k}")`);
+  for (const k of called) if (!(k in lines)) bad.push(`sheetLine("${k}") names no sheetGuide.lines key`);
+  for (const [k, t] of Object.entries(lines)) {
+    if (typeof t !== "string") bad.push(`lines.${k} isn't text`);
+    for (const m of String(t).matchAll(/\{tab:(\w+)\}/g)) if (!ids.includes(m[1])) bad.push(`lines.${k}: {tab:${m[1]}} is no sheet tab`);
+    // The move is complete: the sentence isn't also written in sheet.js.
+    const bare = String(t).replace(/\*\*/g, "").replace(/\{[^}]*\}/g, "").trim();
+    for (const part of bare.split(/(?<=[.!?])\s+|,\s+on\s+|\bon\s*\./).map(s => s.trim()).filter(s => s.length > 20))
+      if (src.includes(part)) bad.push(`"${part}" is still written in sheet.js`);
+  }
+  for (const k of Object.keys(D.appCopy)) if (/^(ranksAdvanceInPlay)$/.test(k)) bad.push(`appCopy.${k} is a guide line now: it lives in sheetGuide.lines`);
+  assert.deepEqual(bad, []);
 });
