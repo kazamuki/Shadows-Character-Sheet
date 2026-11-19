@@ -790,7 +790,7 @@ them, so ask Deighton and Scott how they meet before choosing levels. Crew are
 typed names, read as the seat that answers to them (Decision 254).
 
 **W73 — A session can have a name.** *Ken · ⏭ · Rule or shape · raised 2026-10-08 in S5a's review*\
-**Plan:** [gm-mode-next](plans/gm-mode-next.md) S26 (no order yet) · **Goes with:** W84, W86
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S26, [order](plans/gm-mode-next/S26-session-record.md) approved 2026-11-19, not built · **Goes with:** W84, W86
 
 A table refers to its past by session: *"when did we learn that? Session 2,
 The Ledger."* S5a (Decisions 203–204) gives a session a number the GM sets and
@@ -872,7 +872,7 @@ no slotted pack lists); the browser's own datalist styling varies, so check it
 on a tablet.
 
 **W84 — Print a cast member, an encounter, a session's journal.** *Ken · 🔎 · Fix (UI) · raised 2026-10-09 in S13a's order (SQ4)*\
-**Plan:** [gm-mode-next](plans/gm-mode-next.md) S26 (no order yet; was the first plan's S13b) · **Goes with:** W73, W86
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S26, [order](plans/gm-mode-next/S26-session-record.md) approved 2026-11-19, not built (was the first plan's S13b) · **Goes with:** W73, W86
 
 The plan's S13 lists printing beside the GM screen: a cast member's page
 (the stat block, If Pushed, their line), an encounter (its rows, Conditions
@@ -884,7 +884,7 @@ markup in `index.html` (constraint 3); and the award log prints in the
 player's words, as the page reads it (205).
 
 **W86 — A session copied out as Markdown.** *Ken, from Deighton · 🔎 · Fix (UI) · raised 2026-10-09 in S14's order*\
-**Plan:** [gm-mode-next](plans/gm-mode-next.md) S26 (no order yet) · **Goes with:** W73, W84, W140
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S26, [order](plans/gm-mode-next/S26-session-record.md) approved 2026-11-19, not built · **Goes with:** W73, W84, W140
 
 Deighton keeps his notes in Obsidian, as an outline of bulleted lists. A
 session's journal, its interaction lines and its jotted notes (Decision 208)
