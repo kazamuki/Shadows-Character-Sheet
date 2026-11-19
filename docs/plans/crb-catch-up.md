@@ -224,6 +224,11 @@ This chapter carries most of the creation economy, and almost none of it is writ
 
 ---
 
+## 2625_CRANK_and_Bank (Scott's CRANK rulings, built as S25)
+
+- ☐ ⚖ **Running a CRANK job off-screen** (Scott, 2026-11-03: "Off-screen jobs always pay the lowest of the range. Legendary shouldn't be done off-screen."). `2625` says "Çredits in the lower half of their tier's payout range". The sheet follows Scott (Decision 295): the floor of the tier's range, and no off-screen Legendary work. The book should say the same.
+- ☐ ⚖ **Rep stops at 0** (Scott, 2026-11-03, F37). The book never says what a walk-out does at rep 0 or 1. The sheet stops it at 0 (Decision 296); only **Burned** (`0431`) starts a character below 0. The book could say so in the Reputation paragraph.
+
 ## Cyborg removal: every place the book mentions it
 
 *Added after the 2026-10-01 decision. Cyborg is no longer an archetype. Cybernetics become a list, plus a mini-game that's still in flux, open to Professionals only. Arcanists, Vampires and Werewolves can't take cybernetics.*

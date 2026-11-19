@@ -8,8 +8,17 @@ window.SHADOWS_CHANGELOG = [
     "items": [],
     "groups": [
       {
+        "title": "Character sheet",
+        "items": [
+          "**Reputation** sets your CRANK rep when you lock: 5, 12 or 20, a rank at a time, and it tops out at rank 3.",
+          "New Disadvantage: **Burned**. Each rank starts you 2 rep under, and you pay it back on the job. Below 0 you're a Novice and every payout is halved.",
+          "Walking out on a client can't take your rep below 0."
+        ]
+      },
+      {
         "title": "GM mode",
         "items": [
+          "An absent character's off-screen job pays the bottom of their tier, and Legendary work stays on-screen.",
           "An NPC's TOL is its formula unless you type an override, and a WILL below its formula shows as an error.",
           "Cast members carry their wounds from one fight to the next. Heal them from their page."
         ]

@@ -987,7 +987,8 @@ test("206: the absent are the earlier names; a tier is picked, its range shows, 
   assert.equal(coField(app, "Dez", "tier").value, "");
   assert.match(coField(app, "Dez", "tier").options[0].textContent, /Choose a tier/);
   typeChange(app, `[data-co-row="${coRow(app, "Dez").dataset.coRow}"] [data-co="tier"]`, "competent");
-  assert.match(coRow(app, "Dez").textContent, /Pays 300–550/);
+  assert.match(coRow(app, "Dez").textContent, /Pays Ç300/, "the floor, one figure (Decision 295)");
+  assert.equal(coField(app, "Dez", "credits").value, "300", "the credits are filled with the floor");
   assert.equal(app.doc.activeElement, coField(app, "Dez", "tier"));
   coType(app, "Dez", "credits", "400");
   writeLog(app);
@@ -997,13 +998,28 @@ test("206: the absent are the earlier names; a tier is picked, its range shows, 
   openSess(app, ids.b);
   app.click("[data-co-open]");
   assert.equal(coField(app, "Dez", "tier").value, "competent", "the last pick is suggested");
-  assert.equal(coField(app, "Dez", "credits").value, "", "the amount isn't");
+  assert.equal(coField(app, "Dez", "credits").value, "300", "the amount is the floor again, not last time's 400");
   // Unticked: the row folds and writes no line.
   app.click(`[data-co-row="${coRow(app, "Dez").dataset.coRow}"] [data-co="took"]`);
   assert.equal(coRow(app, "Dez").querySelector('[data-co="tier"]'), null);
   assert.equal(app.doc.activeElement, coField(app, "Dez", "took"));
   app.click("[data-co-write]");
   assert.deepEqual(JSON.parse(JSON.stringify(app.window.eval("S.table.sessions.find(s => s.number === 5).close.lines.map(l => l.name)"))), ["Wren"]);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 295: a tier change moves untouched credits; a typed amount stays; Legendary says there's no off-screen work and leaves credits blank", () => {
+  const { app, ids } = closeApp(t => { mkSession(t, 3, "2026-09-01", ["Dez", "Ash"], 2); return mkSession(t, 4, "2026-09-08", ["Wren"], 3); });
+  closeSheet(app, ids);
+  const pick = (n, v) => typeChange(app, `[data-co-row="${coRow(app, n).dataset.coRow}"] [data-co="tier"]`, v);
+  pick("Dez", "skilled"); assert.equal(coField(app, "Dez", "credits").value, "1000");
+  pick("Dez", "expert"); assert.equal(coField(app, "Dez", "credits").value, "4000", "untouched credits follow the tier");
+  pick("Dez", "legendary");
+  assert.match(coRow(app, "Dez").textContent, /No off-screen work at Legendary./);
+  assert.equal(coField(app, "Dez", "credits").value, "", "no figure to offer");
+  assert.doesNotMatch(coRow(app, "Dez").textContent, /Pays/);
+  pick("Ash", "competent"); coType(app, "Ash", "credits", "350"); pick("Ash", "expert");
+  assert.equal(coField(app, "Ash", "credits").value, "350", "what the GM typed stays");
   assert.deepEqual(app.errors, []);
 });
 

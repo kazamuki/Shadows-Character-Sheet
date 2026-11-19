@@ -271,7 +271,7 @@ test('CRB: Long-Lived — "You may only purchase this Advantage during character
     "the creation-only restriction is not in the data");
   // Nothing else in the catalog claims it, so a stray true is a typo, not a rule.
   const claimed = [...D.advantages.filter(a => a.creationOnly).map(a => a.id)];
-  assert.deepEqual(claimed, ["long-lived"]);
+  assert.deepEqual(claimed, ["long-lived", "reputation"]);  // Reputation: Decision 296, 0432
 });
 
 test('CRB: the entries that say "with your GM" ask for text and never block the lock', () => {
@@ -2092,7 +2092,7 @@ const ruleRows = d => (Array.isArray(d.grants) ? d.grants : []).filter(g => g &&
 const tagsOf = (kind, id, held = null) => JSON.parse(JSON.stringify(Engine.effectTagsFor(kind, id, held)));
 
 test("P18 1: every Advantage and Disadvantage has an effect", () => {
-  assert.equal(P18_DEFS.length, 87);
+  assert.equal(P18_DEFS.length, 88);
   const none = P18_DEFS.filter(([, d]) => !Array.isArray(d.grants) || !d.grants.length).map(([, d]) => d.id);
   assert.deepEqual(none, [], "an entry with no effect in its grants");
   const bad = P18_DEFS.flatMap(([, d]) => ruleRows(d).filter(g => typeof g.ruleText !== "string" || !g.ruleText.trim()).map(() => d.id));
@@ -3627,4 +3627,119 @@ test("Decision 293: Marta's printed WILL 2 is below its formula 3, and her TOL 2
   assert.equal(b.WILL.value, 2, "the stored number is kept");
   assert.equal(b.TOL.formula, 2);
   assert.equal(b.TOL.override, false);
+});
+
+// ── S25: CRANK (Decisions 295 and 296) ────────────────────────────────────
+// 2625: an off-screen job; 0432 Reputation; 0431 Burned. Inline numbers, so they run without private/ too.
+const rep25 = (rep, ledger = []) => { const ch = subject(); ch.trackers.crank.rep = rep; ch.trackers.crank.ledger = ledger; return ch; };
+const lockWith25 = (kind, id, rank) => { const ch = hold19(subject(), kind, id, rank); ch.creation.locked = true; return ch; };
+
+test("Decision 295: an off-screen job pays its tier's floor, and Legendary has none", () => {
+  // 2625: "hand them Çredits in the ... tier's payout range", and Scott's GQ28: always the lowest, never Legendary.
+  assert.deepEqual([300, 1000, 4000].map((_, i) => Engine.offScreenPay(["competent", "skilled", "expert"][i])), [300, 1000, 4000]);
+  assert.equal(Engine.offScreenPay("novice"), 50);
+  assert.equal(Engine.offScreenPay("legendary"), null);
+  assert.equal(D.resources.crank.tiers.find(t => t.id === "legendary").offScreen, false);
+  assert.equal("offScreenMax" in D.resources.crank.tiers.find(t => t.id === "legendary"), false);
+});
+
+test("Decision 296: a walk-out stops at 0, and below 0 only Burned goes", () => {
+  const out = D.resources.crank.jobWalkedOut;
+  const a = rep25(1); assert.equal(Engine.addCrankRep(a, out, "walked").ok, true);
+  assert.equal(a.trackers.crank.rep, 0, "rep 1 walked out is 0, not -1");
+  const l = a.trackers.crank.ledger.at(-1);
+  assert.equal(l.amount, -1, "the ledger records what was applied");
+  assert.match(l.note, /stopped at 0/);
+  const b = rep25(-4); Engine.addCrankRep(b, out, "walked");
+  assert.equal(b.trackers.crank.rep, -4, "a Burned character stays where they are");
+  Engine.addCrankRep(b, D.resources.crank.jobDone, "job");
+  assert.equal(b.trackers.crank.rep, -3, "a job done always counts");
+  const c = rep25(5); Engine.addCrankRep(c, out, "walked");
+  assert.equal(c.trackers.crank.rep, 3, "a loss that fits is whole");
+  assert.equal(c.trackers.crank.ledger.at(-1).amount, -2);
+  const z = rep25(0); Engine.addCrankRep(z, out, "walked");
+  assert.equal(z.trackers.crank.rep, 0);
+  // Admin's correction is the GM setting rep where the table says: it isn't floored.
+  const f = rep25(0); Engine.addCrankRep(f, -3, "Admin correction", { free: true });
+  assert.equal(f.trackers.crank.rep, -3);
+  assert.equal(f.trackers.crank.ledger.at(-1).amount, -3);
+});
+
+test("Decision 296: Reputation 2 starts rep at 12, written once at lock (0432)", () => {
+  assert.deepEqual(JSON.parse(JSON.stringify(Engine.crankStart(lockWith25("advantages", "reputation", 2)))), [{ id: "reputation", name: "Reputation", rank: 2, amount: 12 }]);
+  for (const [rank, rep, tier] of [[1, 5, "competent"], [2, 12, "skilled"], [3, 20, "expert"]]) {
+    const at = Engine.buildExport(lockWith25("advantages", "reputation", rank), { lock: true });
+    assert.equal(at.trackers.crank.rep, rep);
+    assert.equal(Engine.crankState(at).tier.id, tier);
+  }
+  const at = Engine.buildExport(lockWith25("advantages", "reputation", 2), { lock: true });
+  same(at.trackers.crank.ledger.map(e => [e.amount, e.note]), [[12, "Start: Reputation rank 2"]]);
+  const again = Engine.buildExport(Engine.migrate(JSON.parse(JSON.stringify(at))), { lock: true });
+  assert.equal(again.trackers.crank.rep, 12, "a second lock adds nothing");
+  assert.equal(again.trackers.crank.ledger.length, 1);
+  assert.equal(Engine.buildExport(lockWith25("advantages", "reputation", 2)).trackers.crank.rep, 0, "an export that isn't the lock writes nothing");
+});
+
+test("Decision 296: Burned 2 starts rep at -4, Novice and halved (0431)", () => {
+  const at = Engine.buildExport(lockWith25("disadvantages", "burned", 2), { lock: true });
+  assert.equal(at.trackers.crank.rep, -4);
+  const s = Engine.crankState(at);
+  assert.equal(s.tier.id, "novice");
+  assert.equal(s.below, true);
+  assert.equal(s.paidOff, false);
+  assert.equal(D.disadvantages.find(d => d.id === "burned").pointsGranted, 1);
+  assert.equal(D.disadvantages.find(d => d.id === "burned").maxRank, 3);
+});
+
+test("Decision 296: Burned paid off can go without moving rep", () => {
+  const at = Engine.buildExport(lockWith25("disadvantages", "burned", 2), { lock: true });
+  for (let i = 0; i < 3; i++) Engine.addCrankRep(at, 1, "job");
+  assert.equal(Engine.crankState(at).paidOff, false, "-1 is still below");
+  Engine.addCrankRep(at, 1, "job");
+  const s = Engine.crankState(at);
+  assert.deepEqual([s.rep, s.below, s.paidOff], [0, false, true]);
+  at.disadvantages = at.disadvantages.filter(d => d.id !== "burned");
+  assert.equal(Engine.crankState(at).rep, 0, "removing Burned moves nothing");
+  assert.equal(Engine.crankState(at).paidOff, false);
+  assert.equal(Engine.buildExport(at).trackers.crank.rep, 0);
+});
+
+test("Decision 296: Reputation and Burned lock each other", () => {
+  const rep = hold19(subject(), "advantages", "reputation"), burned = hold19(subject(), "disadvantages", "burned");
+  assert.deepEqual(JSON.parse(JSON.stringify(Engine.optionLock(rep, "disadvantage", "burned"))), { locked: true, by: "Reputation" });
+  assert.deepEqual(JSON.parse(JSON.stringify(Engine.optionLock(burned, "advantage", "reputation"))), { locked: true, by: "Burned" });
+  assert.equal(Engine.optionLock(subject(), "advantage", "reputation").locked, false);
+});
+
+test("Decision 296: Reputation is creation only: the IP buy refuses it, new and held", () => {
+  const ch = Engine.migrate(JSON.parse(JSON.stringify(subject()))); ch.creation.locked = true; fund(ch, 500);
+  const r = Engine.spendIP(ch, "advantage", "reputation");
+  assert.equal(r.ok, false);
+  assert.match(r.why, /can only be taken when a character is made/);
+  assert.equal(D.advantages.find(d => d.id === "reputation").creationOnly, true);
+  assert.equal(D.advantages.find(d => d.id === "reputation").maxRank, 3);
+  assert.equal(D.advantages.find(d => d.id === "reputation").cost, 4);
+});
+
+test("Decision 296: an old rank-4 Reputation reads as rank 3 and writes nothing on open", () => {
+  const old = Engine.migrate(JSON.parse(JSON.stringify(hold19(subject(), "advantages", "reputation", 4))));
+  assert.equal(Engine.crankStart(old)[0].rank, 3);
+  assert.equal(Engine.crankStart(old)[0].amount, 20);
+  assert.equal(old.trackers.crank.rep, 0);
+  assert.equal(old.trackers.crank.ledger.length, 0);
+  assert.equal(Engine.buildExport(old).trackers.crank.rep, 0, "opening or exporting writes no start");
+});
+
+test("Decision 296: crankStart, crankState and offScreenPay are total", () => {
+  for (const bad of [null, undefined, {}, 3, "x", { trackers: null }, { trackers: { crank: "lots" } }, { advantages: "x", disadvantages: 4 }]) {
+    assert.doesNotThrow(() => Engine.crankStart(bad));
+    assert.ok(Array.isArray(Engine.crankStart(bad)));
+    assert.doesNotThrow(() => Engine.crankState(bad));
+    assert.equal(typeof Engine.crankState(bad).below, "boolean");
+  }
+  for (const bad of [null, undefined, {}, 3, "x", "mythic"]) assert.equal(Engine.offScreenPay(bad), null);
+  // A start line forged into the ledger is only a ledger line.
+  const forged = Engine.migrate({ trackers: { crank: { rep: 99, ledger: [{ date: "x", amount: 99, note: "Start: Reputation rank 9", start: "reputation" }] } } });
+  assert.equal(forged.trackers.crank.rep, 99);
+  assert.equal(Engine.crankState(forged).tier.id, "legendary");
 });

@@ -540,6 +540,13 @@ const Engine = (() => {
       }
       else if (g.type==="statMax" && D().stats.some(s=>s.id===g.stat) && Number.isInteger(g.max) && g.max>=1) vars = { stat: g.stat, max: g.max };
       else if (g.type==="startingCredits" && goodNum(g.amount) && g.amount!==0) vars = { amount: String(Math.abs(g.amount)).replace(/\B(?=(\d{3})+(?!\d))/g, ",") };
+      // Decision 296: a start for CRANK rep. A held card says its own figure (capped at maxRank); the general line says them all.
+      else if (g.type==="crankStart" && ((Array.isArray(g.byRank) && g.byRank.length && g.byRank.every(goodNum)) || (goodNum(g.perRank) && g.perRank!==0))){
+        const byRank = Array.isArray(g.byRank);
+        if (h && rank>=1){ const top = Number.isInteger(def.maxRank) && def.maxRank>=1 ? def.maxRank : rank, r = Math.min(rank, top), v = byRank ? g.byRank[r-1] : g.perRank * r;
+          if (goodNum(v)) text = fillTag(TH.crankStart, { v: v<0 ? "−" + Math.abs(v) : String(v) }); }
+        if (!text) text = byRank ? fillTag(T.crankStart, { ranks: joinList(g.byRank.map(String), "or") }) : fillTag(T.crankStartPerRank, { amount: signedMinus(g.perRank) });
+      }
       if (!text) text = vars && fillTag(T[g.type], vars);
       if (text) out.push({ computed:true, text });
     }
@@ -2756,9 +2763,9 @@ const Engine = (() => {
       if (typeof r.description!=="string" || !r.description) return null;
       const w = wordRow(kind, id, { title:r.name || id, text:r.description });
       if (Array.isArray(r.tiers)) w.more = r.tiers.filter(isPlainObj).map(t => ({ text:`${t.name} · ${t.rep} rep · ${crankPayText(t)}` }));
-      if (r.flagged===true && typeof r.playerNote==="string"){
+      if (id==="crank" && typeof r.belowText==="string" && r.belowText){
         let st = null; try { st = ch && typeof ch==="object" ? crankState(ch) : null; } catch (e){ st = null; }
-        if (st && st.unsettled){ w.note = r.playerNote; w.flagged = true; }
+        if (st && st.below) w.more = [{ text:r.belowText }, ...(w.more||[])];
       }
       if (id==="sfr" && ch && typeof ch==="object"){ let s = null; try { s = sfr(ch); } catch (e){ s = null; } if (!s || s.value==null) w.absent = true; }
       return w;
@@ -4091,13 +4098,37 @@ const Engine = (() => {
     tiers.forEach((t, k) => { if (t.rep <= rep) i = k; });
     if (i < 0 && tiers.length) i = 0;          // below every tier reads the first (F37's stub)
     const tier = i >= 0 ? tiers[i] : null, next = tier && tiers[i+1] || null;
-    return { rep, tier, next, toNext: next ? next.rep - rep : null, unsettled: rep < 0 };
+    // Decision 296: below 0 only Burned goes. `below` is Novice at half pay; `paidOff` is a held Burned whose rep is back to 0.
+    let burned = false; try { burned = cranksDown(ch).length > 0; } catch (e){ burned = false; }
+    return { rep, tier, next, toNext: next ? next.rep - rep : null, below: rep < 0, paidOff: burned && rep >= 0 };
   }
-  function addCrankRep(ch, amount, note){
+  // Decision 296: what a held trait starts CRANK rep at, read from its `crankStart` grant, one entry a trait with its rank
+  // capped at maxRank (an old Reputation rank 4 reads as 3). Read only; the lock is what writes it (buildExport).
+  function crankStart(ch){
+    const out = [];
+    for (const { g, name, id, rank } of traitGrants(ch, "crankStart")){
+      const def = advById(id) || disById(id), top = def && Number.isInteger(def.maxRank) && def.maxRank>=1 ? def.maxRank : rank, r = Math.min(rank, top);
+      const amount = Array.isArray(g.byRank) ? g.byRank[r-1] : goodNum(g.perRank) ? g.perRank * r : null;
+      if (goodNum(amount) && amount!==0 && !out.some(e=>e.id===id)) out.push({ id, name, rank:r, amount });
+    }
+    return out;
+  }
+  // The held traits that start rep below 0 (Burned): the ones a paid-off line is about.
+  const cranksDown = ch => crankStart(ch).filter(e=>e.amount<0);
+  // A loss never takes rep below 0, or below where it already is (Decision 296): a Burned character at -4 who walks out
+  // stays at -4, a character at 1 who walks out goes to 0. The ledger records what was applied. A gain is whole.
+  // `opts.free` is Admin's correction: a GM sets rep wherever the table says, so the floor doesn't apply.
+  function addCrankRep(ch, amount, note, opts){
     amount = Math.trunc(Number(amount)||0);
     if (!amount) return {ok:false, why:"Enter an amount."};
-    ch.trackers.crank.rep = (ch.trackers.crank.rep||0) + amount;
-    ch.trackers.crank.ledger.push({date:new Date().toISOString(), amount, note:note||""});
+    const rep = Number(ch.trackers.crank.rep)||0;
+    let applied = amount, said = note||"";
+    if (amount<0 && !(opts && opts.free===true)){
+      applied = Math.max(rep + amount, Math.min(rep, 0)) - rep;
+      if (applied!==amount) said = `${said ? said + " " : ""}(${signedMinus(amount)}, stopped at ${rep<0 ? "−" + Math.abs(rep) : 0})`;
+    }
+    ch.trackers.crank.rep = rep + applied;
+    ch.trackers.crank.ledger.push({date:new Date().toISOString(), amount:applied, note:said});
     return {ok:true};
   }
   function crankPayText(tier){
@@ -6622,6 +6653,17 @@ const Engine = (() => {
     const seeding = !(ch.creation && ch.creation.locked===true) || !!(opts && opts.lock===true), total = startingCredits(ch).total;
     if (pl && seeding && total!=null && (c.trackers.credits.ledger||[]).length===0)
       c.trackers.credits.current = total;
+    // Decision 296: Reputation's and Burned's starts are written once, at the lock, as ledger lines, so rep stays an input.
+    // The `start` marker on a line is what makes a second lock write nothing for that trait.
+    if (opts && opts.lock===true && isPlainObj(c.trackers) && isPlainObj(c.trackers.crank)){
+      const cr = c.trackers.crank;
+      if (!Array.isArray(cr.ledger)) cr.ledger = [];
+      for (const e of crankStart(ch)){
+        if (cr.ledger.some(l=>isPlainObj(l) && l.start===e.id)) continue;
+        cr.ledger.push({ date:new Date().toISOString(), amount:e.amount, note:`Start: ${e.name} rank ${e.rank}`, start:e.id });
+        cr.rep = (Number(cr.rep)||0) + e.amount;
+      }
+    }
     return c;
   }
 
@@ -8433,13 +8475,13 @@ const Engine = (() => {
   }
 
   // ── The close-out (Decisions 205–206) ──────────────────────────────────
-  // What an off-screen CRANK job pays: the tier's minimum to the midpoint of
-  // its range, or to offScreenMax where the book prints no top. Data only.
+  // What an off-screen CRANK job pays: the floor of the tier's range, one figure, and null for a tier marked
+  // `offScreen: false` (Legendary) or one the data lacks (Decision 295). Data only.
+  const _offScreenTier = tierId => (crankData().tiers||[]).find(e=>_isObj(e) && e.id===tierId) || null;
   function offScreenPay(tierId){
-    const k = (crankData().tiers||[]).find(e=>_isObj(e) && e.id===tierId);
-    if (!k || !_isObj(k.pay) || !Number.isFinite(k.pay.min)) return null;
-    const max = Number.isFinite(k.offScreenMax) ? k.offScreenMax : Number.isFinite(k.pay.max) ? Math.floor((k.pay.min + k.pay.max)/2) : null;
-    return max===null ? null : { min:k.pay.min, max };
+    const k = _offScreenTier(tierId);
+    if (!k || k.offScreen===false || !_isObj(k.pay) || !Number.isFinite(k.pay.min)) return null;
+    return k.pay.min;
   }
   // Does a session number bring a Milestone? By the number, never a count of sessions.
   function arcDue(number){
@@ -8483,7 +8525,7 @@ const Engine = (() => {
       const k = _fold(l.name);
       if (l.tier && !tiers.has(k)) tiers.set(k, l.tier);
     }
-    const away = absent.map(a=>{ const tier = tiers.get(a.key) || null; return { name:a.name, tier, range:tier ? offScreenPay(tier) : null }; });
+    const away = absent.map(a=>{ const tier = tiers.get(a.key) || null; const k = tier ? _offScreenTier(tier) : null; return { name:a.name, tier, pay:tier ? offScreenPay(tier) : null, noJob:!!k && k.offScreen===false }; });
     const named = new Set();
     for (const x of sessionInteractions(t, id)) for (const l of (Array.isArray(x.cast) ? x.cast : [])) if (_isObj(l)) named.add(l.id);
     const newcomers = (Array.isArray(t && t.cast) ? t.cast : []).filter(n=>_isObj(n)
@@ -9140,7 +9182,7 @@ const Engine = (() => {
       text:_str(c.description),
       columns:["Tier", "Rep", "Pays", "Off-screen job"],
       rows:_list(c.tiers).map(t=>{ const off = offScreenPay(t.id);
-        return [_str(t.name), Number.isFinite(t.rep) ? String(t.rep) : "", crankPayText(t), off ? `${cr}${n(off.min)}–${n(off.max)}` : ""]; }) })];
+        return [_str(t.name), Number.isFinite(t.rep) ? String(t.rep) : "", crankPayText(t), off!==null ? `${cr}${n(off)}` : "—"]; }) })];
   }
   const _REF_READERS = {
     conditions:()=>[
@@ -10515,7 +10557,7 @@ const Engine = (() => {
     ipState, ipCost, spendIP, grantIP, advantageOffer,
     milestoneState, canTakeMinor, majorPrereqs, majorPool, majorOffered, majorListed, majorById, formGrants, takeMilestone, untakeMilestone, minorChoice, takeMinorChoice, addCustomMajor,
     majorChoice, takeMajorChoice, specializationOpening, gainSpecialization, gainedSpecializations,
-    logSession, nextMilestoneAt, trainingCost, startTraining, settleTraining, localDay, ipRoll, ipRollTotal, addCredits, crankState, addCrankRep, crankPayText, archPanels, panelMax, panelTracker, adjustPanelTracker, movement,
+    logSession, nextMilestoneAt, trainingCost, startTraining, settleTraining, localDay, ipRoll, ipRollTotal, addCredits, crankState, crankStart, addCrankRep, crankPayText, archPanels, panelMax, panelTracker, adjustPanelTracker, movement,
     // A form (Decision 195): what a toggle is on, what it does, and switching it
     toggleOptions, toggleView, formState, formView, setToggle,
     // Audit trail and undo

@@ -3396,8 +3396,9 @@ test("CRANK: crankState reads the tier at every boundary", () => {
     const s = at(rep);
     assert.deepEqual([s.rep, s.tier.id, s.next && s.next.id, s.toNext], [rep, tier, next, toNext], `rep ${rep}`);
   }
-  assert.equal(at(-2).unsettled, true);
-  assert.equal(at(0).unsettled, false);
+  assert.equal(at(-2).below, true);
+  assert.equal(at(0).below, false);
+  assert.equal("unsettled" in at(-2), false, "F37 is closed (Decision 296): nothing is unsettled any more");
   assert.equal(Engine.crankState(null).tier.id, "novice");
 });
 
@@ -3405,8 +3406,8 @@ test("CRANK: addCrankRep writes a ledger line for +1 and -2, and refuses nothing
   const ch = Engine.newCharacter();
   const r = D.resources.crank;
   assert.deepEqual([Engine.addCrankRep(ch, r.jobDone, "job").ok, Engine.addCrankRep(ch, r.jobWalkedOut, "").ok], [true, true]);
-  assert.equal(ch.trackers.crank.rep, -1);
-  assert.deepEqual([...ch.trackers.crank.ledger.map(e => e.amount)], [1, -2]);
+  assert.equal(ch.trackers.crank.rep, 0, "rep 1 walked out stops at 0 (Decision 296)");
+  assert.deepEqual([...ch.trackers.crank.ledger.map(e => e.amount)], [1, -1], "the ledger records what was applied");
   for (const bad of [0, "x", NaN]){
     assert.equal(Engine.addCrankRep(ch, bad, "").ok, false);
   }
@@ -6284,12 +6285,12 @@ test("205: a new session has close null, and a 0.8 table opens as 0.9 with every
   assert.equal(Engine.migrateTable(old).meta.tableSchemaVersion, "0.20");
 });
 
-test("206: offScreenPay is the tier's minimum to its midpoint, Legendary's to offScreenMax, and an unknown tier is null", () => {
-  eq(Engine.offScreenPay("novice"), { min: 50, max: 125 });
-  eq(Engine.offScreenPay("competent"), { min: 300, max: 550 });
-  eq(Engine.offScreenPay("skilled"), { min: 1000, max: 2000 });
-  eq(Engine.offScreenPay("expert"), { min: 4000, max: 6000 });
-  eq(Engine.offScreenPay("legendary"), { min: 10000, max: 15000 });
+test("Decision 295 (was 206): offScreenPay is the tier's floor, Legendary has none, and an unknown tier is null", () => {
+  eq(Engine.offScreenPay("novice"), 50);
+  eq(Engine.offScreenPay("competent"), 300);
+  eq(Engine.offScreenPay("skilled"), 1000);
+  eq(Engine.offScreenPay("expert"), 4000);
+  eq(Engine.offScreenPay("legendary"), null);
   for (const v of ["mythic", "", null, undefined, 3, {}]) assert.equal(Engine.offScreenPay(v), null);
 });
 
@@ -6338,7 +6339,7 @@ test("206: the remembered tier is the newest written line before this session, n
   const later = crew(t, 5, "2026-09-29", ["Dez"]);
   assert.ok(Engine.writeCloseOut(t, later, { lines: [away("Dez", "expert")] }).ok);
   const d = Engine.closeOutDraft(t, s4);
-  eq(d.absent.map(a => [a.name, a.tier, a.range]), [["Dez", "skilled", { min: 1000, max: 2000 }]]);
+  eq(d.absent.map(a => [a.name, a.tier, a.pay, a.noJob]), [["Dez", "skilled", 1000, false]]);
   eq(Engine.closeOutDraft(t, s2).absent.map(a => a.tier), [null]);
   assert.ok(s1);
 });
@@ -6568,13 +6569,27 @@ test("207: Pain Levels: the text's three numbers follow painPenaltiesPerLevel", 
   refEq(rows, D.resources.healthLevels.painLevels.map(l => [l.label, l.description]));
 });
 
-test("207: CRANK: a row per tier, Legendary's off-screen range is offScreenPay's", () => {
+test("Decision 295: the close-out offers the floor, and no job at Legendary", () => {
+  const t = Engine.newTable("x");
+  crew(t, 1, "2026-09-01", ["Dez", "Ash"]);
+  const s2 = crew(t, 2, "2026-09-08", ["Wren"]);
+  assert.ok(Engine.writeCloseOut(t, s2, { lines: [here("Wren", 5), away("Dez", "competent"), away("Ash", "legendary")] }).ok);
+  const s3 = crew(t, 3, "2026-09-15", ["Wren"]);
+  const d = Engine.closeOutDraft(t, s3);
+  eq(d.absent.map(a => [a.name, a.tier, a.pay, a.noJob]), [["Dez", "competent", 300, false], ["Ash", "legendary", null, true]]);
+  eq(Engine.closeOutDraft(t, s2).absent.map(a => [a.tier, a.pay, a.noJob]), [[null, null, false], [null, null, false]], "a name with no tier yet has neither");
+  assert.ok(Engine.writeCloseOut(t, s3, { lines: [here("Wren", 5), away("Dez", "competent"), away("Ash", "legendary")] }).ok, "a Legendary away line still writes, with no credits");
+});
+
+test("207: CRANK: a row per tier, the off-screen column is offScreenPay's, and Legendary's is a dash", () => {
   const part = refPanel(Engine.gmReference([], {}), "crank").parts[0];
   assert.equal(part.text, D.resources.crank.description);
   refEq(part.rows.map(r => r[0]), D.resources.crank.tiers.map(t => t.name));
-  const leg = part.rows.at(-1), off = Engine.offScreenPay("legendary");
+  const leg = part.rows.at(-1);
   assert.equal(leg[2], Engine.crankPayText(D.resources.crank.tiers.at(-1)));
-  assert.equal(leg[3], `${Engine.creditSymbol()}${off.min.toLocaleString("en-US")}–${off.max.toLocaleString("en-US")}`);
+  assert.equal(leg[3], "—");
+  assert.equal(part.rows[1][3], `${Engine.creditSymbol()}300`);
+  assert.equal(part.rows[0][3], `${Engine.creditSymbol()}50`);
 });
 
 test("207: Rate of fire agrees with the data: the Mode and Rounds columns are weaponRules.rofModes", () => {

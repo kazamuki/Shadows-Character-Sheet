@@ -282,6 +282,15 @@ test("a hostile CRANK tracker reads as numbers and a list (Decision 169)", () =>
   const s = Engine.migrate({ trackers: { crank: { rep: "7", ledger: "none" } } });
   assert.deepEqual([s.trackers.crank.rep, s.trackers.crank.ledger.length], [7, 0], "a non-array ledger should read as empty");
   assert.equal(Engine.crankState(Engine.migrate({ trackers: { crank: "lots" } })).rep, 0);
+  // Decision 296: a start line forged into a file is only a ledger line. Nothing reads it back as a rank, and an export
+  // that isn't the lock writes nothing.
+  const forged = Engine.migrate({ trackers: { crank: { rep: 99, ledger: [{ date: "x", amount: 99, note: "Start: Reputation rank 9", start: "reputation" }, "junk", null] } } });
+  assert.equal(forged.trackers.crank.rep, 99);
+  assert.equal(Engine.crankStart(forged).length, 0, "no trait held, so no start");
+  assert.equal(Engine.buildExport(forged, { lock: true }).trackers.crank.rep, 99);
+  const fake = Engine.migrate({ advantages: [{ id: "reputation", rank: 9e9 }, { id: "reputation", rank: "3" }], disadvantages: [{ id: "burned", rank: -5 }] });
+  assert.doesNotThrow(() => Engine.crankStart(fake));
+  assert.ok(Engine.crankStart(fake).every(e => e.rank >= 1 && e.rank <= 3), "a rank over the top reads as the top");
 });
 
 // ── A table file is untrusted too (Decisions 170, 124) ──────────────────

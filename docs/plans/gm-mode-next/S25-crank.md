@@ -6,6 +6,7 @@ Reputation Advantage in `0432`". The book: `0432` (Reputation, ~444), `0431` (Bu
 **Reopens:** Decision 169 (CRANK rep) and Decision 206 (the close-out's off-screen pay).
 **Status:** **drafted 2026-11-18** by Claude (Opus), the conductor, at Ken's pick ("lets draft S25!"). **Approved by
 Ken 2026-11-18**, in the conductor session: "All defaults". GQ48–GQ53 each take their default.
+**Built** 2026-11-18 (Decisions 295, 296; app 0.73.0, game data 0.59). Burned's IP buy-off was left as it was: W161 says to ask the book first.
 **Branch:** from `main`; PR to `main`. Nothing ships switched off. CRANK has been on for everyone since Decision 239.
 **Runs beside:** nothing open on `main` at drafting. **S11** (the Job Generator, `2625`'s five d10 tables) is the
 natural next order. It shares `2625` and nothing else, so draft it after this merges. **Say N everywhere.**

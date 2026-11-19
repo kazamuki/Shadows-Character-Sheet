@@ -275,16 +275,6 @@ words in `reference/rulings-2026-10-16.md`.
 *To respect:* rules changes, so a design talk first, then the book (`crb-catch-up.md`), then the data and P18's tags in one pass each. Age's MOB bears
 on P20's stat caps: ask before P20 is written.
 
-**W161 — Reputation and Burned, as CRANK rep.** *Ken + Claude, from moving the mirror to 2026-11-15 · 💡 · Content · raised 2026-11-16*\
-**Plan:** [gm-mode-next S25](plans/gm-mode-next.md), folded into its order, drafted 2026-11-18: [`S25-crank.md`](plans/gm-mode-next/S25-crank.md)
-
-The book rewrote Reputation on 2026-11-01: it runs on CRANK rep, max rank 3, and its ranks start CRANK rep at 5 / 12 / 20 (`0432`). It added **Burned**
-(`0431`: 1 point, max 3, −2 CRANK rep a rank, removed only by earning CRANK rep back to 0). Each says it "can't be taken with" the other. The sheet's
-Reputation is still the fame version (cost 4, max rank 4, a neighborhood to whole territories) and it has no Burned. The CRANK rep resource exists already.
-*To respect:* a cost and a max rank move, so `gamedataVersion` (Decision 68), and a saved rank-4 Reputation needs somewhere to land. The pair is the second
-`excludes` (after Dwarf and Giant, Decision 235). Starting CRANK rep from a rank is a value the sheet computes, never stores (constraint 7). Burned's buy-off
-against `0450` and Redeemed is an open book question (the CRB folder's HANDOFF flag 1): ask before building that half.
-
 ### Loadout & catalog
 
 **W69 — Gear that changes what you can do while you wear it.** *Ken, from Deighton · ⏭ · Rule or shape · raised 2026-10-08 · answered by Deighton 2026-10-10*\

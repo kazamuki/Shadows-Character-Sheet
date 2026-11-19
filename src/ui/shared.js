@@ -588,12 +588,13 @@ const TIPS = {
     const r = tipChar() && Engine.statReading(tipChar(), id); if (!r) return null;
     return { title:`${r.name} ${r.value}`, text:r.description, more:statLines(r) };
   },
-  // Decision 169: what CRANK is and what each tier pays. The playerNote shows
-  // only while rep is below zero (F37).
+  // Decision 169: what CRANK is and what each tier pays. Below 0 (only Burned goes there, Decision 296) it says so, and says
+  // every payout is halved; it's a fact, not a flag, so it's a line of the tip's list rather than a note.
   crank: () => { const R=D.resources.crank, st=tipChar() && Engine.crankState(tipChar()); if (!R) return null;
+    const tiers=R.tiers.map(t=>`${t.name} · ${t.rep} rep · ${Engine.crankPayText(t)}`);
     return { title:R.name, text:R.description,
-      more:R.tiers.map(t=>`${t.name} · ${t.rep} rep · ${Engine.crankPayText(t)}`),
-      note: st && st.unsettled ? `${copy("unsettledLabel")}: ${R.playerNote}` : "" }; },
+      more: st && st.below ? [R.belowText, ...tiers] : tiers,
+      note:"" }; },
   // Decision 287 (W133): a game word inside a sentence. The key is the term's id, then "|" and its number when it has one. The
   // engine says what it means and returns the numbers a line needs signed; the minus is written here.
   term: key => {

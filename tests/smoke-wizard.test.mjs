@@ -1170,7 +1170,7 @@ const cpExpert = (mut, store = EXPERT) => onStep("professional", "street", "char
 const pickOf13 = (app, name) => app.$$("#main .pick").find(p => p.querySelector("h2") && p.querySelector("h2").textContent === name);
 const hiddenIn = el => !!el.closest("[hidden]");
 const shownNames = app => app.$$("#main [data-filterable] .pick").filter(p => !p.hidden).map(p => p.querySelector("h2").textContent);
-// Decision 279: the lists open folded; a test that counts all 87 asks for them open first.
+// Decision 279: the lists open folded; a test that counts all 88 asks for them open first.
 const openLists = app => { for (const k of ["disadvantages", "advantages"]) app.click(`[data-cp-all="${k}"]`); return app; };
 const typeFilter = (app, v) => { const f = app.$("#main [data-jumpfilter]"); f.value = v; f.dispatchEvent(new app.window.Event("input")); };
 const holdThree = ch => {
@@ -1186,7 +1186,7 @@ test("P13 1: Expert mode folds the CP step's book text and keeps every control",
   });
   assert.deepEqual(app.errors, []);
   const filterable = app.$$("#main [data-filterable] .pick");
-  assert.equal(filterable.length, 87);
+  assert.equal(filterable.length, 88);
   for (const p of filterable) {
     const name = p.querySelector("h2").textContent;
     assert.ok(p.querySelector(".desc").hidden, `${name}: the book text is shown`);
@@ -1292,13 +1292,13 @@ test("P13 5: the CP filter finds an entry by its name, in both modes", () => {
     const app = openLists(cpExpert(() => {}, store));
     typeFilter(app, "Ambidextrous");
     assert.deepEqual(shownNames(app), ["Ambidextrous"], "the name didn't find its entry");
-    assert.equal(app.$("#main [data-jumpcount]").textContent, "1 of 87");
+    assert.equal(app.$("#main [data-jumpcount]").textContent, "1 of 88");
     typeFilter(app, "Animal Ken");
     assert.deepEqual(shownNames(app), ["Animal Ken"]);
     typeFilter(app, "called shot");                          // only in a description
     assert.ok(shownNames(app).includes("Bullseye"), "folded text can't be found");
     typeFilter(app, "");
-    assert.equal(shownNames(app).length, 87);
+    assert.equal(shownNames(app).length, 88);
   }
   // Held entries stay, as before.
   const app = openLists(cpExpert(holdThree));
@@ -1376,7 +1376,7 @@ test("P13 8: Held only shows the build, and works with the filter", () => {
   app.click("#main [data-heldonly]");                      // off: the filter is still on
   assert.deepEqual(shownNames(app).sort(), ["Ambidextrous", ...held].sort());
   typeFilter(app, "");
-  assert.equal(shownNames(app).length, 87);
+  assert.equal(shownNames(app).length, 88);
   // It stops being shown once it's no longer held.
   app.click("#main [data-heldonly]");
   app.click('[data-step="adv|bullseye|-1"]');
@@ -1610,6 +1610,34 @@ test("P20a 6: Dwarf and Giant lock each other on the CP step", () => {
     assert.match(card.querySelector(".head").textContent, new RegExp(`locked by ${byName}`));
     assert.deepEqual(app.errors, []);
   }
+});
+
+test("Decision 296: Reputation and Burned lock each other on the CP step, and their cards say the start", () => {
+  const pickOf = (app, name) => app.$$("#main .pick").find(p => p.querySelector("h2") && p.querySelector("h2").textContent === name);
+  const rep = onStep("professional", "street", "character-points", ch => { ch.advantages = [trait20("reputation", 2)]; });
+  const burnedCard = pickOf(rep, "Burned");
+  assert.ok(burnedCard.querySelector("[data-step^='disadv|'][data-step$='|1']").disabled, "Burned's + is open beside Reputation");
+  assert.match(burnedCard.querySelector(".head").textContent, /locked by Reputation/);
+  assert.match(pickOf(rep, "Reputation").querySelector(".effects").textContent, /Starts CRANK rep at 12/);
+  assert.match(pickOf(rep, "Reputation").querySelector(".effects").textContent, /Creation only/);
+  const bur = onStep("professional", "street", "character-points", ch => { ch.disadvantages = [trait20("burned", 2)]; });
+  const repCard = pickOf(bur, "Reputation");
+  assert.ok(repCard.querySelector("[data-step^='adv|'][data-step$='|1']").disabled, "Reputation's + is open beside Burned");
+  assert.match(repCard.querySelector(".head").textContent, /locked by Burned/);
+  assert.match(pickOf(bur, "Burned").querySelector(".effects").textContent, /Starts CRANK rep at −4/);
+  assert.deepEqual([rep.errors, bur.errors], [[], []]);
+});
+
+test("Decision 296: the lock writes Reputation's start once, as a ledger line", () => {
+  const half = named("Known"); half.creation.locked = false; half.creation.rolls.credits = 6;
+  half.creation.powerLevel = "street"; half.advantages = [trait20("reputation", 2)];
+  const app = boot({ storage: { "shadows.draft.v1": { ch: half, step: 7, maxReached: 7 } } });
+  withDownloads(app);
+  card(app, "Known").querySelector("[data-open]").click();
+  app.click("[data-lock]");
+  assert.equal(app.window.eval("S.ch.trackers.crank.rep"), 12);
+  assert.equal(app.window.eval("S.ch.trackers.crank.ledger.map(e => e.note).join('|')"), "Start: Reputation rank 2");
+  assert.deepEqual(app.errors, []);
 });
 
 test("P20a 7: the review line shows Wealthy's Ç10,000 and the lock seeds it, once", () => {
