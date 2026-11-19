@@ -4,8 +4,8 @@
 rep, raised 2026-11-16). **Rulings:** GQ28 and F37 (Scott, 2026-11-03), and GQ7, which Scott answered "per the
 Reputation Advantage in `0432`". The book: `0432` (Reputation, ~444), `0431` (Burned), `2625` (CRANK and Bank).
 **Reopens:** Decision 169 (CRANK rep) and Decision 206 (the close-out's off-screen pay).
-**Status:** **drafted 2026-11-18** by Claude (Opus), the conductor, at Ken's pick ("lets draft S25!"). Not approved.
-GQ48–GQ53 below, each with a default; an unanswered one is answered "Default".
+**Status:** **drafted 2026-11-18** by Claude (Opus), the conductor, at Ken's pick ("lets draft S25!"). **Approved by
+Ken 2026-11-18**, in the conductor session: "All defaults". GQ48–GQ53 each take their default.
 **Branch:** from `main`; PR to `main`. Nothing ships switched off. CRANK has been on for everyone since Decision 239.
 **Runs beside:** nothing open on `main` at drafting. **S11** (the Job Generator, `2625`'s five d10 tables) is the
 natural next order. It shares `2625` and nothing else, so draft it after this merges. **Say N everywhere.**
