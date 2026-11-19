@@ -1915,3 +1915,21 @@ test("Decision 294: a hurt member's page says so; Heal takes HP and keeps focus,
   assert.equal(app.doc.activeElement, app.$("[data-ctitle]"));
   assert.deepEqual(app.errors, []);
 });
+
+test("Decision 294: a member hurt only in Massive has Heal all and no Heal field; healing the last HP leaves focus on Heal all", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Heal");
+  castAdd(app, "Dez");
+  app.click("[data-copen]");
+  type(app, '[data-cstat="BOD"]', "5");
+  app.window.eval("S.table.cast[0].wounds = { damage: 4, massive: 1 }");
+  done(app);
+  type(app, "[data-cheal]", "4"); app.click("[data-cheal-go]");
+  assert.deepEqual(JSON.parse(app.window.eval("JSON.stringify(S.table.cast[0].wounds)")), { damage: 0, massive: 1 });
+  assert.equal(app.$("[data-cheal]"), null, "no HP to heal, no Heal field");
+  assert.equal(app.$("[data-cheal-go]"), null);
+  assert.equal(app.doc.activeElement, app.$("[data-cheal-all]"));
+  app.click("[data-cheal-all]");
+  assert.equal(app.window.eval("S.table.cast[0].wounds"), null);
+  assert.deepEqual(app.errors, []);
+});

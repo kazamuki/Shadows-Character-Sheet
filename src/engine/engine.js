@@ -10114,6 +10114,7 @@ const Engine = (() => {
     else {
       const hp = _isObj(f) && typeof f.hp==="number" && Number.isFinite(f.hp) ? Math.floor(f.hp) : 0;
       if (hp < 1) return { ok:false, why:"Heal at least 1." };
+      if (w.damage < 1) return { ok:false, why:"Only Heal all clears Massive." };
       m.wounds = _wounds({ damage:Math.max(0, w.damage - hp), massive:w.massive });
     }
     _tableStamp(t, m);

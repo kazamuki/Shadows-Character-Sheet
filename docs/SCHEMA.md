@@ -5756,7 +5756,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Rejected:** Refusing a WILL below the floor at the field: a pack copy arrives with one (Marta), and the gate can't ask (GQ44). Rewriting stored TOLs that differ from the formula: changes Scott's numbers without asking (GQ43). The rule keyed by id in code (Decision 135).
      - **Replaces:** Decision 175 in part: TOL and WILL are no longer stored only as authored; a blank reads the formula, and WILL has a floor.
      - **Revisit if:** Scott says the roster's low TOLs are mistakes, not overrides, or a third derived stat needs a rule.
-     - **Built:** table schema 0.20, app 0.72.0, PR (this one), log 2026-11-16 (S24).
+     - **Built:** table schema 0.20, app 0.73.0, PR (this one), log 2026-11-16 (S24).
 
 294. **A cast member carries their wounds out of a fight and into the next one; the GM heals them between fights.**
      *2026-11-16 · Ken + Claude, from Scott (GQ26, 2026-11-03) · Touches: cast member, wounds, endEncounter, encounterWrapUp, the wrap-up, addParticipant, startEncounter, a cast row's start, Kept, healCast, castHealth, the cast page, table schema 0.20, GQ26, GQ45, GQ46, GQ47, Decision 191, Decision 193, Decision 257*

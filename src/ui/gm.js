@@ -1129,8 +1129,8 @@ function castWoundsHtml(n){
   const massive = w.massive ? `, ${w.massive} level${w.massive===1 ? "" : "s"} gone to Massive` : "";
   return `<div class="cast-wounds" data-cwounds><h2 class="cast-h sec-h">Wounds</h2>
     <p class="cast-health" data-cwounds-text>${esc(hurt + massive)}</p>
-    <div class="cast-heal"><label class="field"><span>Heal</span><input type="number" step="1" min="1" inputmode="numeric" data-cheal autocomplete="off"></label>
-      <button type="button" class="btn sm" data-cheal-go>Heal</button><button type="button" class="btn sm" data-cheal-all>Heal all</button></div>
+    <div class="cast-heal">${w.damage>0 ? `<label class="field"><span>Heal</span><input type="number" step="1" min="1" inputmode="numeric" data-cheal autocomplete="off"></label>
+      <button type="button" class="btn sm" data-cheal-go>Heal</button>` : ""}<button type="button" class="btn sm" data-cheal-all>Heal all</button></div>
     <p class="enc-err" data-cheal-err hidden></p>
     ${inFight ? `<p class="step-note">In a fight now: this heals ${esc(name)} after it, unless the wrap-up says otherwise.</p>` : ""}</div>`;
 }
@@ -1440,16 +1440,17 @@ function bindCastPage(main, n){
   bindInteractions(main, n);
   // Heal: some HP, or all of it. One recorded change either way, so Undo takes it back.
   const healGo=main.querySelector("[data-cheal-go]"), healAll=main.querySelector("[data-cheal-all]"), healIn=main.querySelector("[data-cheal]");
+  const who=()=>own().name.trim() || "Unnamed";
+  if (healAll) healAll.onclick=()=>{ tableChange(()=>{ Engine.healCast(S.table, id, { all:true }); }, true, `Healed ${who()} fully`); const f=$("main").querySelector("[data-ctitle]"); if (f) f.focus(); };
   if (healGo){
     const err=msg=>{ const el=main.querySelector("[data-cheal-err]"); el.textContent=msg; el.hidden=!msg; if (msg) el.setAttribute("role", "alert"); else el.removeAttribute("role"); };
-    const who=()=>own().name.trim() || "Unnamed";
     healGo.onclick=()=>{
       const hp=Number(healIn.value);
       if (!(hp>=1)){ err("Heal at least 1."); healIn.focus(); return; }
       tableChange(()=>{ Engine.healCast(S.table, id, { hp }); }, true, `Healed ${who()} ${Math.floor(hp)}`);
-      const f=$("main").querySelector(own().wounds ? "[data-cheal]" : "[data-ctitle]"); if (f){ if ("value" in f) f.value=""; f.focus(); } };
+      // Hurt on: back to the emptied field; only Massive left: the field is gone, so Heal all; nothing left: the heading.
+      const f=$("main").querySelector(own().wounds ? "[data-cheal], [data-cheal-all]" : "[data-ctitle]"); if (f){ if ("value" in f) f.value=""; f.focus(); } };
     healIn.addEventListener("keydown", ev=>{ if (ev.key==="Enter"){ ev.preventDefault(); healGo.click(); } });
-    healAll.onclick=()=>{ tableChange(()=>{ Engine.healCast(S.table, id, { all:true }); }, true, `Healed ${who()} fully`); const f=$("main").querySelector("[data-ctitle]"); if (f) f.focus(); };
   }
   const fromBtn=main.querySelector("[data-tfrom]");
   if (fromBtn) fromBtn.onclick=()=>openThreat(fromBtn.dataset.tfrom, null, n.id);

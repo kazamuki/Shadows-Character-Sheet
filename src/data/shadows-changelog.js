@@ -2,6 +2,21 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.73.0",
+    "date": null,
+    "intro": [],
+    "items": [],
+    "groups": [
+      {
+        "title": "GM mode",
+        "items": [
+          "An NPC's TOL is its formula unless you type an override, and a WILL below its formula shows as an error.",
+          "Cast members carry their wounds from one fight to the next. Heal them from their page."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.72.0",
     "date": "2026-11-16",
     "intro": [],
@@ -21,8 +36,6 @@ window.SHADOWS_CHANGELOG = [
       {
         "title": "GM mode",
         "items": [
-          "An NPC's TOL is its formula unless you type an override, and a WILL below its formula shows as an error.",
-          "Cast members carry their wounds from one fight to the next. Heal them from their page.",
           "The city guide adds **ForgeKor**, the weapons outfit that sells everything but the final trigger pull."
         ]
       }

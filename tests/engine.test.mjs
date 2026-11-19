@@ -14016,9 +14016,13 @@ test("Decision 294: a row nothing has happened to takes its member's wounds at S
   Engine.healCast(t, dez.id, { all: true });
   assert.equal(rowOf(t, e2, row).damage, 6);
   // Adding to a running fight takes them too.
+  Engine.endEncounter(t, e2);
+  const mem = castOf(t, dez.id); mem.wounds = { damage: 5, massive: 1 };
   const f = Engine.addEncounter(t, { name: "Third" }).id;
   Engine.addParticipant(t, f, { kind: "pc", name: "Wren" });
-  Engine.startEncounter(t, f).ok;
+  assert.ok(Engine.startEncounter(t, f).ok);
+  const late = Engine.addParticipant(t, f, { kind: "cast", id: dez.id }).id;
+  eq([rowOf(t, f, late).damage, rowOf(t, f, late).massive], [5, 1]);
 });
 
 test("Decision 294: Heal takes HP, Heal all clears Massive too, and the refusals", () => {
@@ -14034,6 +14038,9 @@ test("Decision 294: Heal takes HP, Heal all clears Massive too, and the refusals
   eq(m.wounds, { damage: 7, massive: 1 });
   assert.ok(Engine.healCast(t, dez.id, { hp: 99 }).ok);
   eq(m.wounds, { damage: 0, massive: 1 }, "Heal N takes HP only");
+  const before = JSON.stringify(m);
+  eq(Engine.healCast(t, dez.id, { hp: 1 }), { ok: false, why: "Only Heal all clears Massive." });
+  assert.equal(JSON.stringify(m), before, "a refused Heal changes nothing");
   assert.ok(Engine.healCast(t, dez.id, { all: true }).ok);
   assert.equal(m.wounds, null);
   m.wounds = { damage: 2, massive: 0 };
