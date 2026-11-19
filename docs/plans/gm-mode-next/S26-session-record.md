@@ -3,7 +3,8 @@
 **Plan:** [`../gm-mode-next.md`](../gm-mode-next.md), session S26. **The wishes:** W73 (a session can have a name),
 W86 (a session copied out as Markdown, Deighton's ask: he keeps his notes in Obsidian), W84 (print a cast member, an
 encounter, a session's journal; the first plan's S13b). **The ask:** Ken, 2026-11-19, after S11b merged: "Draft S26".
-**Status:** **drafted 2026-11-19** by Claude (Opus), the conductor. **Not approved.** GQ75–GQ80 are open.
+**Status:** **drafted 2026-11-19** by Claude (Opus), the conductor. **Approved by Ken 2026-11-19**, in the conductor
+session: "All defaults". GQ75–GQ80 each take their default.
 **Branch:** from `main`; PR to `main`. Nothing ships switched off: GM mode is on for everyone (Decision 239).
 **Runs beside:** nothing. One build at a time (Ken). **Say N everywhere** (N, N+1, N+2).
 
