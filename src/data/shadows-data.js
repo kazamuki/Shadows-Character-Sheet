@@ -1943,6 +1943,7 @@ window.SHADOWS_DATA = {
       "name": "Burned",
       "pointsGranted": 1,
       "maxRank": 3,
+      "noBuyOff": "Burned comes off only by earning rep back to 0. At 0, the GM removes it on Admin.",
       "description": "Bailing on a client is the one thing that follows you.\n\nYou walked out on a contract, maybe more than one, and CRANK hasn't forgotten.\n\n- Each rank starts you at –2 rep on CRANK.\n\n- While rep is below 0 you are a Novice, and every payout is halved.\n\n- The only way to remove this Disadvantage is to earn rep back up to 0.",
       "grants": [
         { "type": "crankStart", "perRank": -2 }

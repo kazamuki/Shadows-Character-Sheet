@@ -3485,6 +3485,8 @@ const Engine = (() => {
       if (!def) return {ok:false, why:"That isn't a Disadvantage."};
       const rank = heldRank(ch, "disadvantage", def.id);
       if (rank<=0) return {ok:false, why:`You don't have ${def.name}.`};
+      // Decision 296 (0431, Ken 2026-11-18): an entry with a `noBuyOff` line isn't sold off for IP, at any rep.
+      if (typeof def.noBuyOff==="string" && def.noBuyOff.trim()) return {ok:false, why:def.noBuyOff};
       const times = Number(((D().ip||{}).disadvantageBuyOff||{}).timesPoints), points = Number(def.pointsGranted);
       if (!(times>0) || !(points>=0)) return {ok:false, why:`${def.name} has no price.`};
       return {ok:true, cost:points*times, from:rank, to:rank-1, name:def.name};

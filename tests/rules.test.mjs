@@ -3730,6 +3730,22 @@ test("Decision 296: an old rank-4 Reputation reads as rank 3 and writes nothing 
   assert.equal(Engine.buildExport(old).trackers.crank.rep, 0, "opening or exporting writes no start");
 });
 
+test("Decision 296: Burned can't be bought off with IP, at -4 or at 0", () => {
+  const at = Engine.buildExport(lockWith25("disadvantages", "burned", 1), { lock: true }); fund(at, 500);
+  assert.equal(at.trackers.crank.rep, -2);
+  for (const rep of [-2, 0]) {
+    at.trackers.crank.rep = rep;
+    const r = Engine.ipCost(at, "disadvantage", "burned");
+    assert.equal(r.ok, false);
+    assert.match(r.why, /only by earning rep back to 0/);
+    assert.equal(Engine.spendIP(at, "disadvantage", "burned").ok, false);
+    assert.equal(at.disadvantages.find(d => d.id === "burned").rank, 1, "nothing was bought");
+  }
+  // Another Disadvantage is still sold.
+  hold19(at, "disadvantages", "berserker");
+  assert.equal(Engine.ipCost(at, "disadvantage", "berserker").ok, true);
+});
+
 test("Decision 296: crankStart, crankState and offScreenPay are total", () => {
   for (const bad of [null, undefined, {}, 3, "x", { trackers: null }, { trackers: { crank: "lots" } }, { advantages: "x", disadvantages: 4 }]) {
     assert.doesNotThrow(() => Engine.crankStart(bad));
