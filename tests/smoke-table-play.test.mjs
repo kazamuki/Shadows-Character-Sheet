@@ -2945,10 +2945,10 @@ test("Decision 302: a job is added, split, re-split, written and undone whole", 
   assert.match(jobCard(app).textContent, /Pays Ç1,000–3,000/);
   app.click("[data-co-write]");
   const log = app.$$(".co-log li").map(l => l.textContent);
-  assert.match(log[0], /^Mara: .*From CRANK: Courier for a Street Gang, seen through: \+Ç1,000 and \+1 CRANK rep\.$/);
-  assert.match(log[1], /^Dex: .*seen through: \+Ç1,000 and \+1 CRANK rep\.$/);
+  assert.match(log[0], /^Mara: .*From CRANK: Courier for a Street Gang, seen through: \+1,000 Çredits and \+1 CRANK rep\.$/);
+  assert.match(log[1], /^Dex: .*seen through: \+1,000 Çredits and \+1 CRANK rep\.$/);
   assert.doesNotMatch(log[2], /CRANK/, "Juno wasn't on it");
-  assert.equal(log[3], "Jobs: CRANK: Courier for a Street Gang, seen through, Ç2,000 (a Skilled job).");
+  assert.equal(log[3], "Jobs: CRANK: Courier for a Street Gang, seen through, 2,000 Çredits (a Skilled job).");
   assert.equal(app.window.eval("S.table.sessions[0].close.jobs.length"), 1);
   app.window.eval("Engine.undoTableAction(S.table)");
   assert.equal(app.window.eval("S.table.sessions[0].close"), null, "one undo takes the log and its job");

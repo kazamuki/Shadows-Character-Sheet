@@ -2907,7 +2907,7 @@ function coJobClauses(c, name){
   const out=[];
   for (const j of ((c && c.jobs) || [])){
     const m=j.crew.find(e=>coKey(e.name)===coKey(name)), o=crankOutcome(j.outcome); if (!m || !o) continue;
-    const bits=[ m.share ? `+Ç${coMoney(m.share)}` : "", o.rep>0 ? `+${o.rep} CRANK rep` : o.rep<0 ? `−${-o.rep} CRANK rep` : "" ].filter(Boolean);
+    const bits=[ m.share ? `+${coMoney(m.share)} Çredits` : "", o.rep>0 ? `+${o.rep} CRANK rep` : o.rep<0 ? `−${-o.rep} CRANK rep` : "" ].filter(Boolean);
     out.push(`From <em>${esc(j.title)}</em>, ${esc(o.name.toLowerCase())}: ${bits.length ? bits.join(" and ") : "no rep lost"}.`);
   }
   return out;
@@ -2917,7 +2917,7 @@ function coJobsLine(c){
   const jobs=(c && c.jobs) || []; if (!jobs.length) return "";
   const one=j=>{
     const o=crankOutcome(j.outcome), t=crankTierName(j.tier);
-    return `<em>${esc(j.title)}</em>, ${esc(o ? o.name.toLowerCase() : j.outcome)}${j.pay ? `, Ç${coMoney(j.pay)}` : ""}${t ? ` (${coAn(t)} ${esc(t)} job)` : ""}`;
+    return `<em>${esc(j.title)}</em>, ${esc(o ? o.name.toLowerCase() : j.outcome)}${j.pay ? `, ${coMoney(j.pay)} Çredits` : ""}${t ? ` (${coAn(t)} ${esc(t)} job)` : ""}`;
   };
   return `<li class="int-line co-jobs-log">Jobs: ${jobs.map(one).join("; ")}.</li>`;
 }
