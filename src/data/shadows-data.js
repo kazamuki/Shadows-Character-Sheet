@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.58",
+    "gamedataVersion": "0.59",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-11-11"
   },
@@ -290,15 +290,14 @@ window.SHADOWS_DATA = {
       "description": "CRANK is the gray market's job board, on every device in NYTE City. Your rep is your record there: one job at a time, and it doesn't fade. Walking out on a client is the one thing that follows you.",
       "jobDone": 1,
       "jobWalkedOut": -2,
-      "flagged": true,
-      "flagNote": "F37: can rep go below zero? Stubbed: it can, and reads Novice.",
-      "playerNote": "Rep below zero: you read Novice until it's ruled, and your GM has the last word.",
+      "belowText": "Below 0: Novice, and every payout is halved.",
+      "paidOffText": "Burned is paid off. Remove it on Admin.",
       "tiers": [
         { "id": "novice",    "name": "Novice",    "rep": 0,  "pay": { "min": 50,    "max": 200 } },
         { "id": "competent", "name": "Competent", "rep": 5,  "pay": { "min": 300,   "max": 800 } },
         { "id": "skilled",   "name": "Skilled",   "rep": 12, "pay": { "min": 1000,  "max": 3000 } },
         { "id": "expert",    "name": "Expert",    "rep": 20, "pay": { "min": 4000,  "max": 8000 } },
-        { "id": "legendary", "name": "Legendary", "rep": 30, "pay": { "min": 10000, "max": null }, "offScreenMax": 15000 /* the book prints no top; Ken's default for an off-screen job, GQ28 asks Deighton */ }
+        { "id": "legendary", "name": "Legendary", "rep": 30, "pay": { "min": 10000, "max": null }, "offScreen": false /* Scott, GQ28: Legendary work isn't done off-screen (Decision 295) */ }
       ]
     },
     "sfr": {
@@ -1114,6 +1113,8 @@ window.SHADOWS_DATA = {
     "derivedModPerRank": "Max {stat} {amount} per rank",
     "statMax": "{stat} max {max}",
     "startingCredits": "+Ç{amount} to start",
+    "crankStart": "Starts CRANK rep at {ranks}, by rank",
+    "crankStartPerRank": "Starts CRANK rep {amount} a rank",
     "pickedSkill": "the Skill you choose"
   },
   /* Decision 233: the light levels 0530 (Visibility) sets, read by a `visibility` grants row (Night Vision), which names
@@ -1210,7 +1211,8 @@ window.SHADOWS_DATA = {
     "derivedMod": "Max {stat} {total}",
     "painIgnoreOne": "Ignore {total} Pain Level",
     "painIgnoreMany": "Ignore {total} Pain Levels",
-    "healTimes": "Rest heals ×{v}"
+    "healTimes": "Rest heals ×{v}",
+    "crankStart": "Starts CRANK rep at {v}"
   },
   /* ADVANTAGES -- purchasable traits. `cost` is CP PER RANK (Decision 16: an
      Archery Master at rank 2 = 12 CP), `maxRank` caps ranks, `universal: true`
@@ -1734,11 +1736,13 @@ window.SHADOWS_DATA = {
       "id": "reputation",
       "name": "Reputation",
       "cost": 4,
-      "maxRank": 4,
-      "description": "Reputation travels faster than bullets.\n\nYou are feared, beloved, or both. Each rank expands how far that name reaches. Those who know your name offer deference: discounts, trust, access, vouches from strangers. The further your reputation extends, the more doors open before you touch them.\n\n- Rank 1: A neighborhood or small group knows your name. Quiet respect wherever you're known.\n\n- Rank 2: Your name has reached the LINK. Outside your area, people occasionally recognize you.\n\n- Rank 3: An entire sector knows who you are. On the streets, people approach you.\n\n- Rank 4: Whole territories have heard your name. Strangers have already decided what you are before you speak.",
+      "maxRank": 3,
+      "creationOnly": true,
+      "excludes": ["burned"],
+      "description": "Reputation travels faster than bullets.\n\nYou've worked CRANK before, and the platform remembers. Each rank is a track record built before the story starts: contracts closed, clients satisfied, and a feedback history that puts better work in front of you. Legendary can't be bought. It's earned on the job.\n\nStart with additional rep on CRANK.\n\n- Rank 1: Start at 5 rep — Competent\n\n- Rank 2: Start at 12 rep — Skilled\n\n- Rank 3: Start at 20 rep — Expert",
       "universal": true,
       "grants": [
-        { "type": "rule", "ruleText": "Your name opens doors: a neighborhood (rank 1), the LINK (2), a sector (3), whole territories (4).", "heldText": "{v}", "byRank": ["A neighborhood or small group knows your name.", "Your name has reached the LINK.", "An entire sector knows who you are.", "Whole territories have heard your name."] }
+        { "type": "crankStart", "byRank": [5, 12, 20] }
       ]
     },
     {
@@ -1932,6 +1936,17 @@ window.SHADOWS_DATA = {
         { "type": "derivedMod", "stat": "SAN", "amount": -5 },
         { "type": "rule", "ruleText": "First blood in an encounter: a Sanity Check. Pass, and it's off until the next one." },
         { "type": "failOn", "faces": [2, 3], "skills": ["combat-sense"], "whenText": "after you fail first blood's Sanity Check, for the encounter" }
+      ]
+    },
+    {
+      "id": "burned",
+      "name": "Burned",
+      "pointsGranted": 1,
+      "maxRank": 3,
+      "noBuyOff": "Burned comes off only by earning rep back to 0. At 0, the GM removes it on Admin.",
+      "description": "Bailing on a client is the one thing that follows you.\n\nYou walked out on a contract, maybe more than one, and CRANK hasn't forgotten.\n\n- Each rank starts you at –2 rep on CRANK.\n\n- While rep is below 0 you are a Novice, and every payout is halved.\n\n- The only way to remove this Disadvantage is to earn rep back up to 0.",
+      "grants": [
+        { "type": "crankStart", "perRank": -2 }
       ]
     },
     {

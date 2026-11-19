@@ -124,8 +124,8 @@ window.SHADOWS_DATA = {
       // wound penalties per level: extract from WIP in Phase 1
     },
     credits: { symbol: "Ç", description: "..." },   // the sign every price shows (Decision 135); the starting roll is on the power level
-    crank: { name, description, jobDone: 1, jobWalkedOut: -2, flagged, flagNote, playerNote,   // CRANK rep (Decision 169, F37)
-             tiers: [ { id, name, rep, pay: { min, max /* null = no cap */ }, offScreenMax? /* Legendary only: the top of an off-screen job's range (Decision 206, GQ28) */ } ] },   // ascending by rep; ids permanent
+    crank: { name, description, jobDone: 1, jobWalkedOut: -2, belowText, paidOffText,   // CRANK rep (Decisions 169, 296)
+             tiers: [ { id, name, rep, pay: { min, max /* null = no cap */ }, offScreen? /* false on Legendary: no off-screen work (Decision 295); an off-screen job pays `pay.min` */ } ] },   // ascending by rep; ids permanent
     sfr: { /* SFR / Blood Pool — archetype-dependent, Phase 1 */ }
   },
 
@@ -4267,7 +4267,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 165 in part: the card alone on its row is CRANK (with SFR), not Çredits.
      - **Revisit if:** the team links the Reputation Advantage to starting rep (GQ7), F37 is answered (rep below zero), the GM Workshop changes the tier table or the +1/−2, or the GM mode's dispatch needs a rep change the two buttons can't express.
      - **Built:** app 0.37.0, game data 0.29, schema 0.17; PR #111; log 2026-10-05 (CRANK rep).
-     → **Superseded in part by Decision 214**: CRANK shows only with the switch on, and the card alone on Main's last row is whichever is left over.
+     → **Superseded in part by Decisions 214 and 296**: 214, CRANK shows only with the switch on, and the card alone on Main's last row is whichever is left over; 296, rep has a floor (a loss never takes it below 0, or below where it is) and a start (Reputation and Burned, written once at lock), and F37 is closed.
 
 170. **A GM's table is its own file, `.shadows-table.json`, gated by `migrateTable()`, with its own id and its own schema version.**
      *2026-10-05 · Ken + Claude · Touches: table file, .shadows-table.json, newTable, migrateTable, tableCheck, fileKind, meta.kind, TBL-, tableSchemaVersion, table notes, versions table, import, W29, GQ9*
@@ -4773,7 +4773,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing.
      - **Revisit if:** S3b's seats give attendance and tiers, GQ28 is answered, or the CRB changes 5 an hour.
      - **Built:** as 205.
-     → **Superseded in part by Decision 228** — the player default it called its own fix is that decision: the Session Log counts hours and `ip.perSession` is gone.
+     → **Superseded in part by Decisions 228 and 295** — 228, the player default it called its own fix is that decision: the Session Log counts hours and `ip.perSession` is gone; 295, an off-screen job pays its tier's floor, one figure, and Legendary has none, and `offScreenMax` is gone.
 
 207. **A table's Reference tab gathers what a GM looks up on one searchable page: Conditions and the Codex first, then the book's combat and check references, each panel a row in the data.**
      *2026-10-09 · Ken + Claude · Touches: Reference tab, TABLE_SECTIONS, gmReference, panels, from, parts, bookSource, Engine.gmReference, Conditions, packs, traits glossary, Quick Reference, check table, TN, TH, Defense, Pain Levels, CRANK, jump bar, search, Decision 139, Decision 185, Decision 204, GQ29, W84*
@@ -5767,6 +5767,24 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** NPC downtime arrives (S5's), Scott wants Conditions to carry, or armor wear on the cast is wanted (193's other half).
      - **Built:** as 293.
 
+295. **An off-screen CRANK job pays the floor of its tier's range, and Legendary work isn't done off-screen.**
+     *2026-11-18 · Ken + Claude, from Scott (GQ28, 2026-11-03) · Touches: offScreenPay, offScreen, closeOutDraft, absent, writeCloseOut, the close-out's absent line, the Reference's CRANK panel, Legendary, 2625, GQ28, Decision 206*
+     - **Decided:** `offScreenPay(tier)` is the tier's `pay.min`, one figure, and null for a tier marked `offScreen: false` (Legendary). `offScreenMax` leaves the data. The close-out fills an absent line's credits with that figure for the GM to edit, and moves them with the tier until the GM types an amount; a Legendary line says there's no off-screen work and leaves credits blank. The Reference shows the floor, and "—" for Legendary.
+     - **Why:** Scott: "Off-screen jobs always pay the lowest of the range. Legendary shouldn't be done off-screen." One figure is what a GM pays, and a range invites a roll nobody asked for.
+     - **Rejected:** Keeping the range's lower half, as `2625` prints it: Scott's ruling is later and narrower (`crb-catch-up.md` asks Ken to align the book). Refusing a Legendary absent line: the character exists and was absent; the line just has no job.
+     - **Replaces:** Decision 206 in part: off-screen pay is the floor, not the minimum to the midpoint, and Legendary has none.
+     - **Revisit if:** the book keeps "lower half", or a GM wants off-screen Legendary work back.
+     - **Built:** app 0.73.0, game data 0.59, no schema move, PR (this one), log 2026-11-18 (S25).
+
+296. **CRANK rep stops at 0, except for Burned; Reputation and Burned set a character's starting rep, written once at lock.**
+     *2026-11-18 · Ken + Claude, from Scott (F37, GQ7) and `0431`/`0432` · Touches: crankState, crankStart, addCrankRep, noBuyOff, ipCost, trackers.crank, buildExport lock, Reputation, Burned, excludes, creationOnly, F37, GQ7, GQ48–GQ53, W161, Decision 169, Decision 235*
+     - **Decided:** A loss never takes rep below 0, or below where it already is; the ledger records what was applied ("−2, stopped at 0"); Admin's correction isn't floored. Reputation (4 points, max 3, creation only) and Burned (1 point, max 3) are an `excludes` pair, each with a `crankStart` grant: Reputation's ranks start rep at 5, 12 and 20, Burned's at −2 a rank. At the lock, `buildExport` writes each held one as a ledger line, "Start: <name> rank N", marked `start`, and moves rep; a marked line is never written twice. Below 0 a character reads Novice and the sheet says payouts are halved; a held Burned at 0 or more is paid off and can go on Admin, moving nothing. Burned has a `noBuyOff` line and the IP buy-off refuses it at any rep (Ken); Admin removes it. An old Reputation rank 4 reads as 3; a locked character gets no start.
+     - **Why:** Scott: rep stops at 0. The book: Burned is the one way below it, and earning back to 0 the only way out. Writing the start once keeps rep an input and lets Burned leave without a jump.
+     - **Rejected:** A start computed from what's held: removing Burned would raise rep by 2 a rank. A clamp at 0 for everything: no Burned. Removing Burned by itself at 0: the engine never edits what a player holds. Reputation bought in play: it's a past record. Halving payouts on the table: it can't see a player's rep.
+     - **Replaces:** Decision 169 in part: rep has a floor and a start. Closes F37.
+     - **Revisit if:** Scott wants a walk-out below 0 to stack with Burned, or Reputation to be bought in play.
+     - **Built:** as 295.
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data
@@ -5778,7 +5796,7 @@ line in `INDEX.md` §2.
 **Closed:** F1, F2, F14 and F17 (Decision 97) · F3 and F4 (Phase 1) · F10 (the
 CRB v4 content pass; its data flag was cleared in Batch 1) · F11 (Decision 113) ·
 F15 and F16 (slips fixed in the CRB) · F20–F22 (Decision 98) · F27 (Decision
-129) · F8 and F35 (Decision 150) · F13 (Decision 152) · F28, F29 and F33 (Ken, 2026-10-08: `0460` defines Suppression and Blast, and `0412` says Master of None raises no starting cap; the 2026-10-08 log) · F7 (Decisions 196 and 200: `0414` and `0413` write both archetypes' SFR) · F9 (Decision 217: the General Majors are the Professional's) · F18, F23 and F25 (Decision 219: Resistance halves first, AP on a spell pierces Natural Armor, grenades are Massive) · F24 and F36 (Decision 220: healing counts from 0 HP, and Dying at a Reset is the check plus a mark per ticking source) · F34 (Decision 222: a magazine taken out before it's empty is kept with its count) · F26, F30 and F31 (Decision 221: a shotgun takes neither the Scope nor the Angel Mod and its refusal says why, Anti-Materiel and Reach read as rules, the Razorwhip reaches 2m) · F38, F39 and F41 (Decision 215: Innate powers granted, Base Powers on the Bloodline's or Origin's, an Upyr holds both Built to Last powers). F40 was never opened: Ken answered VQ22 (Decision 202). How each one closed is in the session log, and the notes that used to sit
+129) · F8 and F35 (Decision 150) · F13 (Decision 152) · F28, F29 and F33 (Ken, 2026-10-08: `0460` defines Suppression and Blast, and `0412` says Master of None raises no starting cap; the 2026-10-08 log) · F7 (Decisions 196 and 200: `0414` and `0413` write both archetypes' SFR) · F9 (Decision 217: the General Majors are the Professional's) · F18, F23 and F25 (Decision 219: Resistance halves first, AP on a spell pierces Natural Armor, grenades are Massive) · F24 and F36 (Decision 220: healing counts from 0 HP, and Dying at a Reset is the check plus a mark per ticking source) · F34 (Decision 222: a magazine taken out before it's empty is kept with its count) · F26, F30 and F31 (Decision 221: a shotgun takes neither the Scope nor the Angel Mod and its refusal says why, Anti-Materiel and Reach read as rules, the Razorwhip reaches 2m) · F38, F39 and F41 (Decision 215: Innate powers granted, Base Powers on the Bloodline's or Origin's, an Upyr holds both Built to Last powers) · F37 (Decision 296: rep stops at 0, and only Burned starts below it). F40 was never opened: Ken answered VQ22 (Decision 202). How each one closed is in the session log, and the notes that used to sit
 here are in `log/archive.md`.
 
 | # | Item | Owner | Blocking? |
@@ -5788,7 +5806,6 @@ here are in `log/archive.md`.
 | F12 | Minor Milestones pool sourced from REF (v3.5); WIP refers to an unwritten Advancement Section | Ken → docs | No |
 | F19 | **Cyborg install cost mechanism** — proposed as either temporary Sanity erosion (roughly 1–5% permanent max-SAN reduction per install, d6 for major replacements) or a temporary Health Level cost that recovers over weeks (borrowing the Massive Damage mechanic). Scott is on record as unsure which; whichever is chosen, recovery must not be cheap enough to make the cost meaningless. Blocks the Cyborg rewrite's IP-sink design (part of F6) | Ken/D/Scott | No |
 | F32 | **Arcanist Major Milestones.** 0411's Arcanist Powers and Growth & Milestones sections are empty; REF_CRB has Arcanist Majors (Aetheric Potency, for one). Bring them in, or wait for 0411? `growth` stays hidden until then (AQ4) | Ken | No |
-| F37 | **Can CRANK rep go below zero?** `200` Part VI: "Abandoning a contract mid-job costs -2 rep", and the tier table starts at Novice, 0. A Novice at 0 or 1 who walks out goes where? Stubbed (Decision 169): rep goes negative and reads Novice, and the tip says the rule isn't settled. Scott wrote CRANK; ask him with Deighton. **Answered by Scott 2026-11-03: rep stops at 0.** Closes when the clamp is built (`plans/gm-mode-next.md`, *CRANK rep*) | Scott/Deighton | No |
 | F42 | **Which damage Resistance answers.** 0460 names Thermal, Electric and Freezing. The app maps Thermal → Burning and Electric → Electric. No damage type is cold, so Freezing answers nothing yet. Elemental spells (fire, frost, lightning) are magic, so no Resistance answers them; Warding does. Stubbed as written (Decision 219) | Deighton | No |
 | F43 | **The TN and TH of the WILL Essence check that keeps a held spell** (W87, Q19). Taking damage, a Shock or going down calls for it; the numbers aren't set, nor whether it is one check or one per spell, nor whether an Arcanist holding as many spells as their Evocation rank (no dice left) can still cast or keeps a 1-die floor. Stubbed (Decision 224): at no dice left no spell is marked Beyond your pool and the pool line says so; the prompt says "A WILL Essence check keeps it. Your GM sets the TN and TH.", and nothing is decided or released by the sheet | Deighton | No |
 | F44 | **What a rank of Educated bought after creation gives.** Its grant is 10 Skill Points a rank, and after lock there is nothing to spend them on. Talented offers it (Q25); the IP buy refuses it, and its row says so (`flagged`, Decision 227). Deighton: what should a rank in play give? | Deighton | No |
@@ -5803,5 +5820,5 @@ here are in `log/archive.md`.
 | F53 | **What Spirit damage is.** 0480 names Spirit in its Warding rows and its Backlash table and never says what it is. Stubbed (K2, Decision 291): the damage type has no description, is `flagged`, and shows its `playerNote` on Every word | Deighton | Doesn't block K2 |
 | F54 | **What Aether damage is.** 0480 names Aether in its Warding rows and its Backlash table and never says what it is. Stubbed (K2, Decision 291): the damage type has no description, is `flagged`, and shows its `playerNote` on Every word | Deighton | Doesn't block K2 |
 | F55 | **Does Bone Spines' "+5 while grappling" replace the +3 or add to it, and does a rank add to the +5?** `0413`: "+3 melee damage, +5 while grappling", "+1 damage (max 5)" a rank. Stubbed (L5b, Decision 292): the mark computes the +3 with its rank and prints "+5 while grappling" as the book writes it; the power is `flagged` with a `playerNote` that the GM rules it | Deighton | Doesn't block L5b |
-F42 and F43 go to Deighton, and F37 with Scott, who wrote CRANK.
+F42 and F43 go to Deighton.
 

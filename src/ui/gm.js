@@ -2727,7 +2727,9 @@ const coKey = name => String(name||"").trim().toLowerCase().replace(/[‘’ʼ]/
 const coTyped = (c, l, f) => !!c.typed[`${coKey(l.name)}|${f}`];
 const coNum = v => typeof v==="number" && Number.isFinite(v) ? String(v) : "";
 const coMoney = n => n.toLocaleString("en-US");
-const coRange = r => r ? `${coMoney(r.min)}–${coMoney(r.max)}` : "";
+// Decision 295: an away line's credits start at its tier's floor, for the GM to change; a tier with no off-screen work leaves them blank.
+const coFloor = tier => { const p=tier ? Engine.offScreenPay(tier) : null; return p===null ? "" : String(p); };
+const coNoJob = tier => !!tier && (((D.resources||{}).crank||{}).tiers||[]).some(k=>k.id===tier && k.offScreen===false);
 const crankTiers = () => (((D.resources||{}).crank||{}).tiers)||[];
 const crankTierName = id => (crankTiers().find(k=>k.id===id)||{}).name || "";
 function closeSheetNow(s){ return !!(S.closeOut && S.closeOut.view && S.closeOut.id===s.id); }
@@ -2744,7 +2746,7 @@ function closeDraftNew(id, written){
   for (const a of d.absent){
     const w=done.get(coKey(a.name));
     c.lines.push(w && !w.present ? { name:w.name, present:false, took:true, tier:w.tier||"", credits:coNum(w.credits), note:w.note }
-      : { name:a.name, present:false, took:!written, tier:a.tier||"", credits:"", note:"" });
+      : { name:a.name, present:false, took:!written, tier:a.tier||"", credits:written ? "" : coFloor(a.tier), note:"" });
   }
   // What was written but can't be found again (a session since deleted) is kept as it was.
   if (written) for (const w of written.lines) if (!c.lines.some(l=>coKey(l.name)===coKey(w.name)))
@@ -2776,8 +2778,9 @@ function closeSync(){
   }
   for (const a of d.absent){
     const o=old.get(`${coKey(a.name)}|a`);
-    lines.push({ name:a.name, present:false, took:o ? o.took : true, tier:o && coTyped(c, o, "tier") ? o.tier : (a.tier||""),
-      credits:o ? o.credits : "", note:o ? o.note : "" });
+    const tier=o && coTyped(c, o, "tier") ? o.tier : (a.tier||"");
+    lines.push({ name:a.name, present:false, took:o ? o.took : true, tier,
+      credits:o && coTyped(c, o, "credits") ? o.credits : coFloor(tier), note:o ? o.note : "" });
   }
   for (const o of old.values()) if (!o.present && !lines.some(l=>side(l)===side(o)) && !d.present.some(p=>coKey(p.name)===coKey(o.name))) lines.push(o);
   c.gone=Object.fromEntries([...old].filter(([k])=>!lines.some(l=>side(l)===k)));
@@ -2835,7 +2838,7 @@ function coAwayRows(c){
       return `<li class="co-row" data-co-row="${i}">${head}
         <label class="field"><span>Tier</span><select data-co="tier">${l.tier ? "" : `<option value="" selected>Choose a tier</option>`}${crankTiers().map(k=>
           `<option value="${esc(k.id)}"${k.id===l.tier ? " selected" : ""}>${esc(k.name)}</option>`).join("")}</select></label>
-        <span class="co-range">${l.tier && Engine.offScreenPay(l.tier) ? `Pays ${esc(coRange(Engine.offScreenPay(l.tier)))}` : ""}</span>
+        <span class="co-range">${coNoJob(l.tier) ? `No off-screen work at ${esc(crankTierName(l.tier))}.` : coFloor(l.tier) ? `Pays Ç${esc(coMoney(Number(coFloor(l.tier))))}` : ""}</span>
         <label class="field"><span>Çredits</span><input type="number" min="0" step="1" inputmode="numeric" data-co="credits" value="${esc(l.credits)}"></label>
         <label class="field co-note"><span>Note</span><input type="text" data-co="note" value="${esc(l.note)}" autocomplete="off"></label></li>`;
     }).join("")}</ul>`;
@@ -2944,7 +2947,7 @@ function bindCloseOut(main, s){
       } else if (f==="milestone"){
         el.onchange=()=>{ lineOf(el).milestone=el.checked; };
       } else if (f==="tier"){
-        el.onchange=()=>{ const l=lineOf(el); l.tier=el.value; c.typed[`${coKey(l.name)}|tier`]=true; drawLists(); focus(`[data-co-row="${c.lines.indexOf(l)}"] [data-co="tier"]`); };
+        el.onchange=()=>{ const l=lineOf(el); l.tier=el.value; c.typed[`${coKey(l.name)}|tier`]=true; if (!coTyped(c, l, "credits")) l.credits=coFloor(l.tier); drawLists(); focus(`[data-co-row="${c.lines.indexOf(l)}"] [data-co="tier"]`); };
       } else {
         el.oninput=()=>{ const l=lineOf(el); l[f]=el.value; c.typed[`${coKey(l.name)}|${f}`]=true; };
       }

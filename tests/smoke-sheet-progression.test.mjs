@@ -36,21 +36,33 @@ test("CRANK: Main's card reads 0 and Novice; the popover's Job done makes it 1, 
   assert.deepEqual(app.errors, []);
 });
 
-test("CRANK: Walked out at 0 shows -2 and Novice, and the tip carries the unsettled note", () => {
+test("Decision 296: walked out at 0 stays at 0; a Burned character below 0 reads Novice at half pay, in the card, the tip and Trackers", () => {
   const app = openSheet(lockedCharacter(), "trackers", { storage: CRANK_ON });
   app.click('#main [data-crk="-2"]');
-  assert.equal(activeChar(app).trackers.crank.rep, -2);
-  assert.match(app.$("#main").textContent, /-2/);
-  assert.match(app.$("#main").textContent, /Novice/);
-  clickIn(app, app.$('#main [data-tip="crank"]'));
-  const shown = tipShown(app);
+  assert.equal(activeChar(app).trackers.crank.rep, 0, "a walk-out can't take rep below 0");
+  assert.doesNotMatch(app.$("#main").textContent, new RegExp(D.resources.crank.belowText));
+  assert.match(activeChar(app).trackers.crank.ledger.at(-1).note, /stopped at 0/);
+  const ch = lockedCharacter();
+  ch.disadvantages.push({ id: "burned", rank: 2, notes: "" });
+  ch.trackers.crank.rep = -4; ch.trackers.crank.ledger.push({ date: "2026-10-01T00:00:00.000Z", amount: -4, note: "Start: Burned rank 2", start: "burned" });
+  const b = openSheet(ch, "trackers", { storage: CRANK_ON });
+  assert.match(b.$("#main").textContent, new RegExp(D.resources.crank.belowText.replace(/[.*+?^${}()|[]\]/g, "\$&")));
+  assert.match(b.$("#main").textContent, /Novice/);
+  b.click('#main [data-crk="-2"]');
+  assert.equal(activeChar(b).trackers.crank.rep, -4, "Burned's rep stays where it is");
+  clickIn(b, b.$('#main [data-tip="crank"]'));
+  const shown = tipShown(b);
   assert.match(shown, /gray market/);
   for (const t of D.resources.crank.tiers) assert.ok(shown.includes(t.name) && shown.includes(Engine.crankPayText(t)), `the tip lacks ${t.name}`);
-  assert.ok(shown.includes(D.resources.crank.playerNote), "the unsettled note is missing below zero");
-  app.click('#main [data-crk="1"]'); app.click('#main [data-crk="1"]'); app.click('#main [data-crk="1"]');
-  clickIn(app, app.$('#main [data-tip="crank"]'));
-  assert.ok(!tipShown(app).includes(D.resources.crank.playerNote), "the note shows while rep is not below zero");
-  assert.deepEqual(app.errors, []);
+  assert.ok(shown.includes(D.resources.crank.belowText), "the tip says nothing of half pay below 0");
+  assert.doesNotMatch(shown, new RegExp(D.appCopy.unsettledLabel), "F37 is closed: nothing is unsettled");
+  for (let i = 0; i < 4; i++) b.click('#main [data-crk="1"]');
+  assert.equal(activeChar(b).trackers.crank.rep, 0);
+  assert.ok(b.$("#main").textContent.includes(D.resources.crank.paidOffText), "paid off: the sheet says Burned can go");
+  assert.ok(!b.$("#main").textContent.includes(D.resources.crank.belowText));
+  clickIn(b, b.$('#main [data-tip="crank"]'));
+  assert.ok(!tipShown(b).includes(D.resources.crank.belowText), "the tip says halved at rep 0");
+  assert.deepEqual(b.errors, []);
 });
 
 test("CRANK: the print view has the field, blank and filled", () => {

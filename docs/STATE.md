@@ -1,7 +1,7 @@
 # State of the build
 
-**Updated:** 2026-11-15
-**Versions:** app `0.73.0` · game data `0.58` · character schema `0.34` · table schema `0.20` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
+**Updated:** 2026-11-18
+**Versions:** app `0.73.0` · game data `0.59` · character schema `0.34` · table schema `0.20` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -41,12 +41,12 @@ decision; that's how this section reached 1,500 words (`log/archive.md` §4).
   table file with its cast, players and their characters as copies, packs and the Codex, encounters, sessions and the
   close-out, the Reference, Find and Jot, undo, and keys; U1–U5 (269–272) made it work in play. The switch stays, on; tests reach its
   switched-off path through the harness's `GM_OFF`. What's left is `plans/gm-mode-next.md`.
-- **CRANK** reputation is on for everyone (239).
+- **CRANK** reputation is on for everyone (239). Rep stops at 0 but for **Burned**; Reputation and Burned set a starting rep (295, 296).
 - The engine reproduces the CRB's worked examples (`tests/rules.test.mjs`),
   and a hostile file renders safely everywhere (`tests/hostile.test.mjs`).
 
 **The print front page is full.** Anything more there breaks to a second
-page (Decision 96). Four pages in all, the archetype's last (153). **One known defect:** the frame/texture decoration shows
+page (96). Four pages in all, the archetype's last (153). **One known defect:** the frame/texture decoration shows
 on screen but not in Chrome's print/PDF output (Decision 94). Cosmetic only.
 
 ---
@@ -68,10 +68,9 @@ pushed `v*` tag, or a dry run on a branch. The live version is the latest
   procedures; `npm run bump` moves the app version; `test:fast` is the quick loop.
 - **Before proposing anything, search SCHEMA §4's Touches lines** for what it
   touches, and read the Rejected and Revisit if of what you find (Decision 130).
-- **One entry declares `excludes`, none `requires`:** Dwarf excludes Giant
-  (Deighton, Decision 235), the lock symmetric. `requires` is tested against a
-  synthetic fixture. Adding a real pair is a rules question for Deighton, not a
-  data edit (Decision 77).
+- **Two entries declare `excludes`, none `requires`:** Dwarf excludes Giant
+  (Deighton, 235) and Reputation excludes Burned (the book, 296). `requires` is tested against a
+  synthetic fixture. A new real pair is a rules question for Deighton (77).
 - **`grants()` reads advantages, disadvantages and taken Majors** (199);
   a Major is looked up with `majorById`, never `majorGeneral` alone. Natural
   Armor still scans for itself, specializations included (104).
@@ -109,7 +108,7 @@ is the authority on a flag's full text.
 | **Vampire** — `0413` | ✅ built (Decisions 200–202, 215, 223, 240, 264, 266): Bloodlines, the Thirst, 22 Majors; Base Powers and CP as the 2026-10-22 book prints; sustained powers run (Start/Stop, Turn Reset charges them) | Nobody. Whether it leaves `draft` is Ken's (the chapter dropped "Under Construction") |
 | **Werewolf** — `0414` | ✅ built (Decisions 195–197, 199, 215, 240, 264, 266): Origins, Form, Call of the Wild, its own Majors; Base Powers and CP as the book prints; its powers run only in Werewolf Form | Nobody. As the Vampire: `draft` is Ken's call |
 | **Arcanist / Magic** | 🔶 spells, Cascade, Aberrations, magic on the sheet, holding a spell (Decision 224), Disciplines as Boosts with their prerequisites (Decision 265) all built · Origins still `draft` | Deighton: **F43** (the held spell's check). Deighton + Scott + Bill + Ken: Origins and spheres/implements, after the four-way comparison; not blocking |
-| **GM mode** — `plans/gm-mode-next.md` | 🔶 **launched in 0.57.0** (260); its first plan (S1–S21) and GM-at-the-table (U1–U5: the encounter row, the Tonight strip, records that open to read, keys; 269–272, in 0.63.0–0.66.0) are built and archived, and **S31** (Help on every table page, 278) is built in 0.67.0. A GM session ships visible, with changelog lines and an app bump | Scott: a session on the live version first (S22), then his to-dos (the plan's §4: Codex v2 for S12a and S17, the Site Profiles, the print files). Then Ken's pick from S23–S30. **Deighton's read of Help's words** (GQ39) arrives as edits to `gmGuide` in the data |
+| **GM mode** — `plans/gm-mode-next.md` | 🔶 **launched in 0.57.0** (260); its first plan (S1–S21) and GM-at-the-table (U1–U5: the encounter row, the Tonight strip, records that open to read, keys; 269–272, in 0.63.0–0.66.0) are built and archived, and **S31** (Help on every table page, 278) is built in 0.67.0, S24 and S25 (293–296) in 0.73.0. A GM session ships visible, with changelog lines | Scott: a session on the live version first (S22), then his to-dos (the plan's §4: Codex v2 for S12a and S17, the Site Profiles, the print files). Then Ken's pick from S23–S30. **Deighton's read of Help's words** (GQ39) arrives as edits to `gmGuide` in the data |
 | **The book** — `plans/crb-catch-up.md` | 📋 what the CRB still needs from the sheet, by chapter, re-checked against the mirror at `c99bb58` (2026-11-15). The four inscribed Cantrips follow it to TN 7 (Scott to confirm it's his change). FG-1 "Thunderclap" takes the book's Injured / Maimed (Ken, 2026-11-16; Deighton to see it, past his "2x+ Injured stands"). The 2026-11-12 rulings on Luck, spending SFR and "EM pulse" are in it; the sheet says the first two already, the GM Reference's SFR line ahead of the book (Decision 288) | Ken. The sheet-from-book syncs are closed (`plans/archive/`); the next mirror refresh gets a new one. Ken: the EMP *names* (the tag `EMP`, `EMP Shielding`, the EMP Tip, Forge Fang's weakness) wait on the book and on a `name` beside a glossary id. Deighton: whether a power that prints its own action (Vitality Surge's Fast Action, Odin's Aegis as a reaction, changing shape) keeps it under the free-SFR ruling |
 | **Print sheet — visual system** — `plans/print-sheet-scotts-look.md` | 📋 Scott's export landed 2026-09-23 (landscape) · front-page restyle proposed and mocked up · one known cosmetic defect | Ken: approve the plan. Scott said yes to PQ1 (embed Cerulean Nights) and PQ2 (all his artwork) and answered PQ4, 2026-11-03; he still has to send the files. Deighton: PQ3 (do the stat groups mean anything). The frame/texture print defect blocks on no one |
 
@@ -156,7 +155,7 @@ TQ1–TQ3), and the print plan (`plans/print-sheet-scotts-look.md`). GM mode's
 GM mode is launched (260): a GM session is an ordinary batch now, with its changelog lines and an app bump.
 
 **Waiting on others:**
-- **Deighton** answered every open rules question on 2026-10-10 (`reference/rulings-2026-10-10.md`). Still his: what a rank of Educated bought in play gives (F44: the IP buy refuses it until then), the TN and TH of the WILL check that keeps a held spell (F43), and whether a Supernatural's Skills and Powers share its stats' headroom past 10 (Ken asked). **One ruling on kickers may clear F46 and F47 together:** do dice stack, and which one is "your Kicker Die"; F45 is Concierge's appraising Skill. **F48** is which damage type the book's ten untyped weapons deal (bows, damaging grenades, the HRL-1 and HXC-1). **CRANK** is kept and back on for everyone (239, 2026-10-23); Scott answered GQ7, F37 and GQ28 on 2026-11-03, and each is now a build (`plans/gm-mode-next.md`, S25).
+- **Deighton** answered every open rules question on 2026-10-10 (`reference/rulings-2026-10-10.md`). Still his: what a rank of Educated bought in play gives (F44: the IP buy refuses it until then), the TN and TH of the WILL check that keeps a held spell (F43), and whether a Supernatural's Skills and Powers share its stats' headroom past 10 (Ken asked). **One ruling on kickers may clear F46 and F47 together:** do dice stack, and which one is "your Kicker Die"; F45 is Concierge's appraising Skill. **F48** is which damage type the book's ten untyped weapons deal (bows, damaging grenades, the HRL-1 and HXC-1). **CRANK** is kept and back on for everyone (239, 2026-10-23); Scott's GQ7, F37 and GQ28 are built (S25, 295–296). Burned's buy-off against `0450` and Redeemed waits on the book.
 - **Deighton, on vehicles (W91, off the plan):** 17 of the 28 follow-up questions
   (`reference/rulings-2026-10-23.md`), SH3 (a typed vehicle), VK1b (the Mods number),
   and his in-person talk on vehicles without PROT and RES. The loadout plan's §6

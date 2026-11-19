@@ -1453,3 +1453,15 @@ On a phone, the Main tab's Health card starts 35–37% of the way down the scree
 Below 640px a Reference panel's table is `width:max-content` inside its `.ref-frame` (`shadows.css`, the rules E6 left for GM mode), so each sentence is one line. At 375 the *Checks* panel is 1387px wide: a GM reads a rule by scrolling sideways about four screens. E6 gave the player's Magic reference `width:100%` inside its frame (`.ref-body .ref-frame table.ref`), so prose wraps and only a genuinely wide column table scrolls. The same split would serve Reference: sentence tables fill the frame, column tables keep `max-content`. *To respect:* Decision 207 (Reference's panels are rows in the data), so the split is read from the table's shape or a data field, not a panel id in code (Decision 135); `phone-check` should gain the open-panel overflow floor E6 added for the sheet.
 
 *Built as E7 (2026-11-14): `.ref-frame table.ref` is `width:100%` for the sheet's and GM's Reference alike, and E6's two overrides are gone. *Checks* is 391px in a 343px frame at 375 and scrolls inside it; every other panel fits.*
+
+**W161 — Reputation and Burned, as CRANK rep.** → *S25, app 0.73.0, Decisions 295 and 296 (2026-11-18)* *Ken + Claude, from moving the mirror to 2026-11-15 · 💡 · Content · raised 2026-11-16*\
+**Plan:** [gm-mode-next S25](plans/gm-mode-next.md), folded into its order, drafted 2026-11-18: [`S25-crank.md`](plans/gm-mode-next/S25-crank.md)
+
+The book rewrote Reputation on 2026-11-01: it runs on CRANK rep, max rank 3, and its ranks start CRANK rep at 5 / 12 / 20 (`0432`). It added **Burned**
+(`0431`: 1 point, max 3, −2 CRANK rep a rank, removed only by earning CRANK rep back to 0). Each says it "can't be taken with" the other. The sheet's
+Reputation is still the fame version (cost 4, max rank 4, a neighborhood to whole territories) and it has no Burned. The CRANK rep resource exists already.
+*To respect:* a cost and a max rank move, so `gamedataVersion` (Decision 68), and a saved rank-4 Reputation needs somewhere to land. The pair is the second
+`excludes` (after Dwarf and Giant, Decision 235). Starting CRANK rep from a rank is a value the sheet computes, never stores (constraint 7). Burned's buy-off
+against `0450` and Redeemed is an open book question (the CRB folder's HANDOFF flag 1): ask before building that half.
+
+*Built as S25: Reputation is the book's (4 points, max 3, creation only, 5 / 12 / 20), Burned is new, and the start is written once at the lock as a ledger line, not computed (GQ49). A saved rank-4 Reputation reads as 3 and writes nothing. Burned's buy-off against `0450` and Redeemed is still the open book question; the sheet leaves the IP buy-off as it was.*
