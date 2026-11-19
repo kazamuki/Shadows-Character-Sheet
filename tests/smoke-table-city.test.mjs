@@ -8,7 +8,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { boot } from "./harness.mjs";
-import { Engine, D, GM_ON, type, runTable, keyIn, castAdd, pick, edit, done, editNote, deadAirApp } from "./smokekit.mjs";
+import { openAddLine, Engine, D, GM_ON, type, runTable, keyIn, castAdd, pick, edit, done, editNote, deadAirApp } from "./smokekit.mjs";
 
 const cityTab = app => app.click('[data-tsec="city"]');
 const castTab = app => app.click('[data-tsec="cast"]');
@@ -139,14 +139,17 @@ test("243: a place's page saves as typed; a Territory change clears a zone it do
 
 test("243: Where on the add row is kept between lines, and the line reads at the place", () => {
   const app = setup();
+  openAddLine(app);
   assert.deepEqual([...app.$$("[data-iawhere] option")].map(o => o.textContent), ["Nowhere in particular", "Central Park", "the Pier"], "by title");
   app.click('[data-iakind="shared"]'); type(app, "[data-iacrew]", "Scott");
   const pier = placeIdOf(app, "the Pier");
   both(app, "[data-iawhere]", pier);
   addLine(app, "the lake is on fire");
+  openAddLine(app);
   assert.match(app.$("[data-int]").querySelector(".int-sentence").textContent, /^Scott told Dez “the lake is on fire” at the Pier on \S+/);
   assert.equal(app.$("[data-iawhere]").value, pier, "Where is kept");
   addLine(app, "and the bridge");
+  openAddLine(app);
   const texts = app.$$("[data-int] .int-sentence").map(s => s.textContent);
   assert.match(texts[0], /“and the bridge” at the Pier on/);
   assert.match(texts[1], /“the lake is on fire” at the Pier on/);

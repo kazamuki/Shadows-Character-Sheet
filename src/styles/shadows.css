@@ -16,6 +16,8 @@
   --dim:#8C97B5;
   --ink:#111111;           /* Gutter Black */
   --on-accent:#FFFFFF;     /* text on a violet/frame fill -- both themes (W7) */
+  --toggle-ring:#4F72B8;   /* a toggle's frame on the dark grounds, 3:1 (W141): --frame is 1.5:1 there */
+  --toggle-on:#A050C0;     /* a toggle's pressed fill, 3:1 against its resting one (W141); white words stay 4.5:1 */
   --display:'Cerulean Nights','Chakra Petch',sans-serif;
   --body:'Inter',system-ui,sans-serif;
   --mono:'Roboto Mono',ui-monospace,monospace;
@@ -46,6 +48,8 @@
   --magenta:var(--violet);
   --violet-text:var(--violet);
   --magenta-text:var(--violet);
+  --toggle-ring:var(--frame);
+  --toggle-on:var(--violet);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scrollbar-color:var(--frame) var(--ground)}
@@ -582,9 +586,9 @@ table.edit .x:hover,.journal .x:hover,.spell.own .x:hover{color:var(--magenta-te
 .statcell .sm2{font-family:var(--mono); font-size:.7rem; color:var(--dim)}
 .statcell .sm2.pos{color:var(--green)} .statcell .sm2.neg{color:var(--magenta-text)}
 .statcell.shifted{border-color:var(--violet-hi)} .statcell .sform{font-family:var(--mono); font-size:.7rem; color:var(--violet-text)}
-.form-toggle{display:flex; gap:0; border:1px solid var(--frame); border-radius:4px; overflow:hidden}
+.form-toggle{display:flex; gap:0; border:1px solid var(--toggle-ring); border-radius:4px; overflow:hidden}
 .form-toggle button{background:var(--panel-2); border:0; color:var(--dim); padding:6px 16px; font-size:.8rem}
-.form-toggle button.on{background:var(--violet); color:var(--on-accent)}
+.form-toggle button.on{background:var(--toggle-on); color:var(--on-accent)}
 
 /* ── Phase 3.1: tabbed sheet ─────────────────────────────────────────── */
 /* Once a character is locked the creation ledger is dead weight — collapse it
@@ -1295,6 +1299,8 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
   background:var(--ground); padding:4px 0; margin:0 0 12px; border-bottom:1px solid var(--frame); overflow-x:auto; scrollbar-width:none}
 .app.table-mode .tbl-bar::-webkit-scrollbar{display:none}
 .app.table-mode .tbl-bar .btn{flex:none; white-space:nowrap}
+/* A long fight's name in Add to encounter cut the strip's chips to "Round 2 · R…" at 1024px (S23): the button gives way first, and its title says the rest. */
+.app.table-mode .tbl-bar .btn[data-encadd]{flex:0 1 auto; min-width:9rem; max-width:13rem; overflow:hidden; text-overflow:ellipsis}
 @media (max-width:1060px){
   .app.table-mode:has(#main :is(input:not([type=checkbox],[type=radio]),textarea,select):focus) .tbl-bar{position:static}
 }
@@ -1314,6 +1320,7 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
 .tn-n{font-family:var(--numeric); font-weight:600}
 .tn-actor{color:var(--cyan)}
 .tn-down{color:var(--magenta-text)}
+.tn-hot .tn-n{color:var(--magenta-text)}
 .tn-unx{flex:none; font-family:var(--mono); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--dim); cursor:pointer}
 .tn-unx:hover, .tn-unx:focus-visible{border-color:var(--violet-hi); color:var(--text)}
 @media (max-width:767px){ .tn-item:not(.tn-lead):not(.tn-unx){display:none}
@@ -1439,6 +1446,9 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .cast-card{cursor:pointer; min-width:0}
 /* Status on a card (Decision 176): missing is a thread still, so dashed; dead and out of the picture are quieter, with no accent on hover. Text stays at full contrast. */
 .cast-card[data-status="missing"]{border-style:dashed}
+/* The fight that's running (S23): the one card on Encounters that isn't waiting for anyone. */
+.cast-card.enc-live{border-color:var(--violet-hi); border-left-width:5px}
+.cast-card.enc-live .cast-meta{color:var(--text); font-weight:600}
 .cast-card[data-status="dead"]:hover, .cast-card[data-status="gone"]:hover{border-color:var(--frame)}
 .cast-open{background:none; border:0; padding:0; color:var(--text); font:inherit; font-weight:600; font-size:1rem; text-align:left; cursor:pointer; max-width:100%; overflow-wrap:anywhere}
 .cast-open:hover{color:var(--cyan)}
@@ -1472,11 +1482,11 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
    Mono Caps labels, and their line as a quote set off by a 2px violet rule (no italic: DESIGN.md allows none). */
 .rec-head{display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; margin-bottom:6px}
 .rec-head .step-title{margin-bottom:0; min-width:0}
-.dos-sum{margin:0 0 14px; color:var(--text); overflow-wrap:anywhere}
+.dos-sum{margin:0 0 14px; color:var(--text); overflow-wrap:anywhere; max-width:70ch}
 .dos-sum[hidden]{display:none}
 .dos-l{margin:16px 0 4px}
-.dos-p{margin:0 0 10px; white-space:pre-line; overflow-wrap:anywhere}
-.dos-quote{margin:0 0 12px; padding:2px 0 2px 12px; border-left:2px solid var(--violet); white-space:pre-line; overflow-wrap:anywhere}
+.dos-p{margin:0 0 10px; white-space:pre-line; overflow-wrap:anywhere; max-width:70ch}   /* a dossier's prose read 98-100 characters a line at 1024px (S23) */
+.dos-quote{margin:0 0 12px; padding:2px 0 2px 12px; border-left:2px solid var(--violet); white-space:pre-line; overflow-wrap:anywhere; max-width:70ch}
 .dos-meta{margin:0 0 8px; color:var(--dim); overflow-wrap:anywhere}
 .dos-tags{margin:0 0 8px}
 .app.table-mode .cast-layout.solo .cast-col{max-width:var(--table-area)}
@@ -1495,6 +1505,9 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .threat-members{list-style:none; padding-left:0}
 .threat-members li{margin-bottom:6px}
 .threat-val{font-family:var(--mono); font-size:1.05rem}
+.cast-stat .threat-val{font-family:var(--numeric); font-size:1.2rem; font-weight:600}
+.cast-fig.pos{color:var(--green)}
+.cast-fig.neg{color:var(--magenta-text)}
 .cast-from{margin:0 0 12px; color:var(--dim); overflow-wrap:anywhere}
 .cast-from .cast-open{font-weight:600}
 .cast-meta .tag{overflow-wrap:anywhere; max-width:100%; text-align:left}
@@ -1662,6 +1675,7 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .thread-more textarea{min-height:60px; width:100%}
 .sess-list{padding:0}
 .sess-item{padding:6px 0; border-bottom:1px solid var(--frame)}
+.sess-live{display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin:0 0 12px}
 .sess-head{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:0 14px; align-items:end}
 .sess-head input{min-width:0; width:100%}
 /* The crew as buttons (Decision 262): a row that wraps to the width. A seat already in is dimmed but its In mark reads at full strength; pressed has a check, not only a colour. */
@@ -1855,6 +1869,7 @@ h2.city-name{font-size:1.15rem}
 .seat-hp{font-family:var(--numeric); font-size:1.1rem; font-weight:600; line-height:1.2; letter-spacing:.01em; font-variant-numeric:tabular-nums; color:var(--green)}
 .seat-hp.down{color:var(--magenta-text)}
 .seat-status{margin-left:6px}
+.seat-stats{color:var(--text)}   /* SAN, Luck and Çredits are what a GM reads a seat for: not the card's dim footnote (S23) */
 .seat-shut{margin:6px 0}
 .seat-shut summary{cursor:pointer; color:var(--dim)}
 .seat-shut > summary, .player > .thread-more > summary{min-height:44px; padding:10px 0; box-sizing:border-box}

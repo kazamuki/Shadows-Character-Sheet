@@ -7345,6 +7345,40 @@ const Engine = (() => {
     const was = find(before), now = find(after);
     return !!was && !!now && !_eq(was, now);
   }
+  // What a step in a running fight did, from the encounter before and after it (S23). An encounter's own writers
+  // (Next, Start, Act now, a row added or removed, a Condition) all land as "Changed <the encounter's name>" otherwise,
+  // which says which fight and nothing about the step. Null when nothing here is worth naming: the caller falls back.
+  function _encChangeLabel(was, now){
+    const rowName = r => _str(r && r.name).trim() || "Someone";
+    const rows = e => (_isObj(e) && Array.isArray(e.rows) ? e.rows : []).filter(_isObj);
+    const title = encounterTitle(now), wr = rows(was), nr = rows(now);
+    if (was.status==="planned" && now.status==="running") return `Started ${title}`;
+    const ids = new Set(wr.map(r=>r.id)), nids = new Set(nr.map(r=>r.id));
+    const came = nr.filter(r=>!ids.has(r.id)), went = wr.filter(r=>!nids.has(r.id));
+    if (came.length || went.length){
+      const one = came.length ? came[0] : went[0], n = came.length ? came.length : went.length;
+      const who = n===1 ? rowName(one) : `${n} rows`;
+      return came.length ? `Added ${who} to ${title}` : `Removed ${who} from ${title}`;
+    }
+    if (now.status==="running"){
+      const actor = nr.find(r=>r.id===now.turn);
+      const wa = Array.isArray(was.acted) ? was.acted.length : 0, na = Array.isArray(now.acted) ? now.acted.length : 0;
+      if ((_int(now.round) || 0) > (_int(was.round) || 0)) return `Reset: round ${now.round}`;
+      const waiting = nr.find(r=>_isObj(r.delay) && !_isObj((wr.find(x=>x.id===r.id) || {}).delay));
+      if (waiting) return `${rowName(waiting)} waits`;
+      if (na > wa) return actor ? `Next: round ${now.round}, ${rowName(actor)} acts` : `Next: round ${now.round} is over`;
+      if (was.turn!==now.turn && actor) return `${rowName(actor)} acts`;
+    }
+    if (!_eq(was.opening, now.opening)) return `Changed the opening of ${title}`;
+    const conds = r => Array.isArray(r && r.conditions) ? r.conditions : [];
+    for (const r of nr){
+      const w = wr.find(x=>x.id===r.id); if (!w) continue;
+      if (conds(r).length > conds(w).length) return `Added a Condition to ${rowName(r)}`;
+      if (conds(r).length < conds(w).length) return `Removed a Condition from ${rowName(r)}`;
+      if (!_eq(conds(w), conds(r))) return `Changed a Condition on ${rowName(r)}`;
+    }
+    return null;
+  }
   function tableActionLabel(before, after, patch){
     const fallback = "Changed the table";
     try {
@@ -7367,7 +7401,7 @@ const Engine = (() => {
           // A clock added with its owner changed in the same patch is collateral of that change (251): a profile's clock copied onto a place.
           if (!was.has(r.id) && coll==="clocks" && _clockOwnerChanged(before, after, r)) continue;
           if (!was.has(r.id)) came.push(_recLabel("Added", coll, r));
-          else if (!_eq(was.get(r.id), r)) changed.push(_recLabel("Changed", coll, was.get(r.id)));
+          else if (!_eq(was.get(r.id), r)) changed.push((coll==="encounters" && _encChangeLabel(was.get(r.id), r)) || _recLabel("Changed", coll, was.get(r.id)));
         }
         // An owner's removal names the owner; the clocks that went with it are collateral, whoever owned them (245, 251).
         for (const [id, r] of was) if (!now.has(id)){

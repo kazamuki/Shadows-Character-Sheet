@@ -289,6 +289,60 @@ test("every token used for words reads on every ground, in both themes (W43)", (
   assert.deepEqual([...bad], []);
 });
 
+// W141: a toggle's frame and its pressed fill are shapes, not words: 3:1 (WCAG 1.4.11), on every ground it sits on, in both
+// themes. --frame is the brand's Deep Circuit and reads 1.5:1 on the dark grounds, so the toggle has tokens of its own, and
+// the component must use them (the first assertions), or the pins below prove nothing about it.
+test("W141: .form-toggle's ring and pressed state are 3:1 in the dark theme", () => {
+  const css = readFileSync(join(ROOT, "src/styles/shadows.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(m => ({ sel: m[1].trim().replace(/\s+/g, " "), body: m[2] }));
+  const decl = (sel, prop) => { const r = rules.find(x => x.sel === sel); const m = r && [...r.body.matchAll(/(?:^|;)\s*([\w-]+)\s*:\s*([^;]+)/g)].find(d => d[1] === prop); return m && m[2].trim(); };
+  assert.match(decl(".form-toggle", "border") || "", /var\(--toggle-ring\)/, ".form-toggle's frame doesn't use --toggle-ring");
+  assert.equal(decl(".form-toggle button.on", "background"), "var(--toggle-on)", "a pressed toggle doesn't use --toggle-on");
+  assert.equal(decl(".form-toggle button", "background"), "var(--panel-2)", "the resting fill moved: the pressed pin below measures against it");
+  const tokens = sel => Object.fromEntries(rules.filter(r => r.sel === sel)
+    .flatMap(r => [...r.body.matchAll(/--([\w-]+)\s*:\s*([^;]+)/g)].map(m => [m[1], m[2].trim()])));
+  const dark = tokens(":root"), light = Object.assign({}, dark, tokens(':root[data-theme="light"]'));
+  const resolve = (v, t, d = 0) => { const m = /^var\(--([\w-]+)\)$/.exec(v || ""); return m && d < 5 ? resolve(t[m[1]], t, d + 1) : v; };
+  const lum = hex => [0, 2, 4].map(i => parseInt(hex.slice(1 + i, 3 + i), 16) / 255)
+    .map(x => x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4)
+    .reduce((s, x, i) => s + x * [0.2126, 0.7152, 0.0722][i], 0);
+  const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+  const bad = [];
+  for (const [name, t] of [["dark", dark], ["light", light]]) {
+    const ring = resolve("var(--toggle-ring)", t), on = resolve("var(--toggle-on)", t), rest = resolve("var(--panel-2)", t), white = resolve("var(--on-accent)", t);
+    assert.ok(/^#[0-9a-f]{6}$/i.test(ring) && /^#[0-9a-f]{6}$/i.test(on), `${name}: the toggle's tokens didn't resolve to colours`);
+    for (const g of ["ground", "panel", "panel-2"]) {
+      const c = ratio(ring, resolve(`var(--${g})`, t));
+      if (c < 3) bad.push(`${name}: the ring on --${g} is ${c.toFixed(2)}:1`);
+    }
+    const c = ratio(on, rest);
+    if (c < 3) bad.push(`${name}: pressed against resting is ${c.toFixed(2)}:1`);
+    const w = ratio(on, white);
+    if (w < 4.5) bad.push(`${name}: the words on a pressed toggle are ${w.toFixed(2)}:1`);
+  }
+  assert.deepEqual(bad, []);
+});
+
+// W145 (S23, GQ60): GM mode's eight tabs each have a Lucide icon of their own. They borrowed the sheet's (Sessions' and Notes'
+// among them), so a GM saw the same glyph for two different places. Every one is a `gmtab_*` key, none is shared, each exists
+// in the icon set, and the sheet's own tabs are the ones they were.
+test("W145: each GM tab has an icon of its own, and none is a sheet tab's", () => {
+  const gm = readFileSync(join(ROOT, "src/ui/gm.js"), "utf8");
+  const sections = /const TABLE_SECTIONS = (\[[^\n]*\]);/.exec(gm);
+  assert.ok(sections, "couldn't read TABLE_SECTIONS");
+  const keys = [...sections[1].matchAll(/ui:"([\w-]+)"/g)].map(m => m[1]);
+  assert.equal(keys.length, 8, "eight GM tabs");
+  assert.equal(new Set(keys).size, 8, "no two GM tabs share an icon");
+  assert.deepEqual(keys.filter(k => !/^gmtab_/.test(k)), [], "a GM tab borrows an icon that isn't a gmtab_ one");
+  const icons = readFileSync(join(ROOT, "src/data/shadows-icons.js"), "utf8");
+  const ui = icons.slice(icons.indexOf("  ui: {"));
+  for (const k of keys) assert.match(ui, new RegExp(`\\n    ${k}: \`<svg [^\`]*viewBox="0 0 24 24"[^\`]*stroke="currentColor"[^\`]*</svg>\``), `${k} isn't a Lucide-framed icon in the ui set`);
+  const sheet = readFileSync(join(ROOT, "src/ui/sheet.js"), "utf8") + readFileSync(join(ROOT, "src/ui/shared.js"), "utf8");
+  for (const k of ["tab_main", "tab_skills", "tab_traits", "tab_archetype", "tab_trackers", "tab_progression", "tab_sessions", "tab_loadout", "tab_notes"])
+    assert.match(ui, new RegExp(`\\n    ${k}: `), `the sheet's ${k} is gone`);
+  assert.equal(keys.filter(k => sheet.includes(`"${k}"`)).length, 0, "the sheet reads a gmtab_ key");
+});
+
 // W43: the Admin banner's dot pulsed forever, and the vitals drawer slid,
 // with the player's "reduce motion" setting on. Every animation, and every
 // transition that moves or resizes something, is switched off for them.
