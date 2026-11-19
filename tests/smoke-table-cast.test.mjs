@@ -154,6 +154,8 @@ test("Decision 171: Rename changes the header, the window's title and Home's car
   app.$("#tbl-name").value = "New name";
   app.click("#modal [data-nameyes]");
   assert.equal(app.$("#brandctx").textContent, "New name");
+  assert.equal(app.$("h1.step-title").textContent, "Notes", "S23: a tab but Sessions has an unseen h1 naming the section");
+  app.click('[data-tsec="sessions"]');
   assert.equal(app.$("h1.step-title").textContent, "New name");
   assert.equal(app.doc.title, "New name — Shadows");
   tableHome(app);
@@ -966,7 +968,7 @@ test("S8b review 2: What on the add row survives a redraw a press elsewhere caus
   runTable(app, "Draft");
   castAdd(app, "Dez"); openFirst(app); openAddLine(app);
   app.click('[data-iakind="shared"]'); addLine(app, "first");
-  assert.equal(app.$("[data-iwhat]"), null, "Decision N+1: saving folds the row");
+  assert.equal(app.$("[data-iwhat]"), null, "Decision 300: saving folds the row");
   openAddLine(app);
   type(app, "[data-iwhat]", "half typed");
   const xid = app.$("[data-int]").dataset.int;
@@ -1945,7 +1947,7 @@ test("Decision 294: a member hurt only in Massive has Heal all and no Heal field
   assert.deepEqual(app.errors, []);
 });
 
-test("Decision N+1: a member's line add opens from Add a line, below the lines, and folds on save or Cancel", () => {
+test("Decision 300: a member's line add opens from Add a line, below the lines, and folds on save or Cancel", () => {
   const app = boot({ storage: GM_ON });
   runTable(app, "Fold");
   castAdd(app, "Dez"); openFirst(app);

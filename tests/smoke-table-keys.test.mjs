@@ -607,7 +607,7 @@ test("S23: the Keys list says Ctrl or ⌘, whichever this machine uses, and neve
   assert.deepEqual(app.errors, []);
 });
 
-test("Decision N: at a Reset, N presses Finish the round, which takes Next's place in the bar", () => {
+test("Decision 299: at a Reset, N presses Finish the round, which takes Next's place in the bar", () => {
   const app = deadAirApp("encounters");
   openFight(app);
   for (let i = 0; i < 99 && !app.$(".enc-bar [data-efinish]"); i++) press(app, app.doc.body, "n");

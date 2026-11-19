@@ -1474,3 +1474,22 @@ log on. A seat's intro could read as what the table sees, not what the player do
 tabs on purpose (Decision 256), so this is a different line for a read-only view, not a second sheet.
 
 *Built as K3: a seat's copy draws no sheet guide line, whichever switch is on; Progression's rule line there is `sheetGuide.seat.introProgression` (the player logs sessions on their own sheet); the table's Help on a seat names the open tab and lists its words.*
+
+**W141 — Fix `.form-toggle`'s dark-mode frame, app-wide.** → *S23, app 0.73.0 (2026-11-18): `--toggle-ring` and `--toggle-on`, 3:1 in the dark theme, pinned in `build.test.mjs`* *Ken · 🔎 · Fix · raised 2026-10-31*\
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S23, folded into its order, drafted 2026-11-18: [`S23-leftovers.md`](plans/gm-mode-next/S23-leftovers.md)
+
+The shared `.form-toggle` (`shadows.css`) frames its buttons with `--frame`. Measured in Chromium on the
+Keys box (S19): in the dark theme the ring against the box is **1.61:1**, and the pressed On button against the
+unpressed Off is **1.71:1**, both under the 3:1 that WCAG 1.4.11 asks of a control's boundary and state (light
+theme: ring 10.20:1). The text is fine (5.09:1 unpressed, 8.65:1 pressed). Ken accepted it for S19 and asked for
+the fix once, for every place the component is used (kind pickers, view toggles, stances, the Keys switch), not
+one box at a time. *To respect:* the contrast guards in `build.test.mjs` parse the rule; phone-check's finger
+sizes; every screen that uses `.form-toggle` in both themes.
+
+**W145 — GM tabs with their own icons.** → *S23, app 0.73.0 (2026-11-18): `gmtab_*` Lucide icons, one per GM tab* *Ken · 🔎 · Fix · raised 2026-11-06*\
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S23, folded into its order with Lucide icons for now (GQ60, Ken 2026-11-18): [`S23-leftovers.md`](plans/gm-mode-next/S23-leftovers.md)
+
+U4 (UQ16) kept the borrowed icons until Scott's set arrives. The GM's section tabs borrow the player sheet's icons (`TABLE_SECTIONS[].ui` → `uiIcon()`, `gm.js`): Players has
+Main's, Encounters has Trackers'. Scott is to draw six of the GM's own; when they come they go into `src/data/`
+and the `ui` keys change, with no layout change since the slots are the same size. *To respect:* the icons are data
+(no `gamedataVersion`, Decision 68), one stroke and weight with the sheet's set.

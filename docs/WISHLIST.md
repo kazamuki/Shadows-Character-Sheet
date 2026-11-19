@@ -912,17 +912,6 @@ schema bump with a `migrateTable()` step if the note's shape moves (170).
 Look first at how much of this the cast's and threads' links already give
 before inventing a new kind of link.
 
-**W141 — Fix `.form-toggle`'s dark-mode frame, app-wide.** *Ken · 🔎 · Fix · raised 2026-10-31*\
-**Plan:** [gm-mode-next](plans/gm-mode-next.md) S23, folded into its order, drafted 2026-11-18: [`S23-leftovers.md`](plans/gm-mode-next/S23-leftovers.md)
-
-The shared `.form-toggle` (`shadows.css`) frames its buttons with `--frame`. Measured in Chromium on the
-Keys box (S19): in the dark theme the ring against the box is **1.61:1**, and the pressed On button against the
-unpressed Off is **1.71:1**, both under the 3:1 that WCAG 1.4.11 asks of a control's boundary and state (light
-theme: ring 10.20:1). The text is fine (5.09:1 unpressed, 8.65:1 pressed). Ken accepted it for S19 and asked for
-the fix once, for every place the component is used (kind pickers, view toggles, stances, the Keys switch), not
-one box at a time. *To respect:* the contrast guards in `build.test.mjs` parse the rule; phone-check's finger
-sizes; every screen that uses `.form-toggle` in both themes.
-
 **W142 — The cast's crew lines as buttons too.** *Ken · 🔎 · Rule or shape · raised 2026-10-31*\
 **Plan:** [gm-mode-next](plans/gm-mode-next.md) S28 (no order yet); set aside by S21 §7 until it landed
 
@@ -1150,14 +1139,6 @@ scripts would give each session a smaller file to hold.
 *To respect:* constraints 2, 4 and 5 (classic scripts, fixed order, no DOM).
 `tools/build.mjs` and the build tests list the scripts. Tests load the engine
 with no DOM, so both halves have to load that way.
-
-**W145 — GM tabs with their own icons.** *Ken · 🔎 · Fix · raised 2026-11-06*\
-**Plan:** [gm-mode-next](plans/gm-mode-next.md) S23, folded into its order with Lucide icons for now (GQ60, Ken 2026-11-18): [`S23-leftovers.md`](plans/gm-mode-next/S23-leftovers.md)
-
-U4 (UQ16) kept the borrowed icons until Scott's set arrives. The GM's section tabs borrow the player sheet's icons (`TABLE_SECTIONS[].ui` → `uiIcon()`, `gm.js`): Players has
-Main's, Encounters has Trackers'. Scott is to draw six of the GM's own; when they come they go into `src/data/`
-and the `ui` keys change, with no layout change since the slots are the same size. *To respect:* the icons are data
-(no `gamedataVersion`, Decision 68), one stroke and weight with the sheet's set.
 
 **W148 — Read CI on the head commit instead of re-running the suite in review.** *Claude, from Ken on E1a's build · ⏭ · Docs, process · raised 2026-11-11*\
 **Plan:** none yet

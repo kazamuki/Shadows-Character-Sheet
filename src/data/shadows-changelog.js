@@ -15,7 +15,8 @@ window.SHADOWS_CHANGELOG = [
           "Help's **Difficulty** reads the rulebook's whole sentence, with its usual numbers.",
           "**Reputation** sets your CRANK rep when you lock: 5, 12 or 20, a rank at a time, and it tops out at rank 3.",
           "New Disadvantage: **Burned**. Each rank starts you 2 rep under. You pay it back on the job, and IP can't buy it off. Below 0 you're a Novice and every payout is halved.",
-          "Walking out on a client can't take your rep below 0."
+          "Walking out on a client can't take your rep below 0.",
+          "Toggles are easier to see in the dark theme."
         ]
       },
       {
@@ -26,7 +27,18 @@ window.SHADOWS_CHANGELOG = [
           "An NPC's TOL is its formula unless you type an override, and a WILL below its formula shows as an error.",
           "Cast members carry their wounds from one fight to the next. Heal them from their page.",
           "Roll a CRANK job. The book's five tables, rolled or picked, and saved as a thread.",
-          "The Reference's CRANK panel has the Job Generator's tables."
+          "The Reference's CRANK panel has the Job Generator's tables.",
+          "Undo puts you back on the clock you changed.",
+          "At a round's Reset, **N** finishes the round. Finish the round sits where Next does.",
+          "A fight's Next, a Reset, a Delay and a Condition say what they did in Activity: \"Next: round 2, Rook acts\".",
+          "A cast member's page folds its **Add a line** below their lines.",
+          "Sessions shows which one is open, above Next session and in the list.",
+          "Only Sessions leads with the table's name and date. Every other tab starts at its list.",
+          "GM mode's tabs have icons of their own.",
+          "Activity opens on its heading, so **A** then Enter undoes nothing. Keys says Ctrl or ⌘, whichever your machine uses, and the tabs and Next show their key when you hover.",
+          "The running fight stands out on Encounters. A clock one segment from full turns magenta in the strip. An NPC's stat block reads in the sheet's numbers, with modifiers green or magenta. A seat's SAN, Luck and Çredits read at full strength.",
+          "A note's Edit sits beside its name. Editing a cast member starts on Name. A faction opened from a member's clock goes Back to that member. A faction's Attention is a label, and Key to says what it means.",
+          "Prose on a dossier stops at a readable line length, and a long fight's name in Add to encounter gives way to the strip's chips."
         ]
       }
     ]

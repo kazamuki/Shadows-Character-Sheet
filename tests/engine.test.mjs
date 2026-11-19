@@ -14202,6 +14202,7 @@ test("K3: every guide line is read, and every {tab:} names a tab", () => {
   }
   for (const k of Object.keys(D.appCopy)) if (/^(ranksAdvanceInPlay)$/.test(k)) bad.push(`appCopy.${k} is a guide line now: it lives in sheetGuide.lines`);
   assert.deepEqual(bad, []);
+});
 
 test("S23: an encounter's Next logs what it did", () => {
   const t = Engine.newTable("S23");

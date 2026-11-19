@@ -202,7 +202,7 @@ export const runTable = (app, name, { stay = false } = {}) => {
   if (!stay) app.click('[data-tsec="cast"]');
 };
 
-/** A member's read view folds the crew-line add row behind Add a line (Decision N+1): open it, if it is folded. */
+/** A member's read view folds the crew-line add row behind Add a line (Decision 300): open it, if it is folded. */
 export const openAddLine = app => { const b = app.$("[data-iaopen]"); if (b) b.click(); };
 export const notesTab = app => app.click('[data-tsec="notes"]');
 

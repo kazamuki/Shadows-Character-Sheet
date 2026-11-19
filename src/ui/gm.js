@@ -1093,16 +1093,16 @@ function castTabHtml(t){
   const view=[["cast","The cast"],["crew","Who knows what"]];
   return `<div class="form-toggle cast-view" role="group" aria-label="View">${view.map(([k,name])=>
       `<button type="button" data-cview="${k}" class="${(k==="crew")===crew?"on":""}" aria-pressed="${(k==="crew")===crew}">${esc(name)}</button>`).join("")}</div>
-    ${crew ? "" : `<div class="cast-add">
-      <label class="field"><span>Name</span><input type="text" data-cadd-name placeholder="Who did they meet?" autocomplete="off"></label>
-      <label class="field"><span>Who they are</span><input type="text" data-cadd-line placeholder="One line: who they are" autocomplete="off"></label>
-      <button class="btn primary" data-cadd>Add</button></div>`}
     <div class="cast-filters">
       <label class="field"><span>Search</span><input type="search" data-csearch placeholder="${crew?"Search who knows what":"Search the cast"}" autocomplete="off" value="${esc(f.q)}"></label>
       ${crew ? "" : `<label class="field"><span>Show</span><select data-cstatus>${CAST_FILTER_STATUSES.map(s=>`<option value="${s}"${s===f.status?" selected":""}>${esc(castStatusLabel(s))}</option>`).join("")}</select></label>
       <label class="field"><span>Affiliation</span><select data-caff><option value="">Any</option>${affs.map(a=>`<option value="${esc(a)}"${a===f.affiliation?" selected":""}>${esc(a)}</option>`).join("")}</select></label>`}
     </div>
-    <div data-castlist>${castListHtml(t)}</div>`;
+    <div data-castlist>${castListHtml(t)}</div>
+    ${crew ? "" : `<div class="cast-add">
+      <label class="field"><span>Name</span><input type="text" data-cadd-name placeholder="Who did they meet?" autocomplete="off"></label>
+      <label class="field"><span>Who they are</span><input type="text" data-cadd-line placeholder="One line: who they are" autocomplete="off"></label>
+      <button class="btn primary" data-cadd>Add</button></div>`}`;
 }
 
 // ── A member's page ──
@@ -1162,7 +1162,7 @@ function interactionRowHtml(x, n){
     <p class="int-actions"><button type="button" class="btn sm danger" data-idel="${id}">Delete</button>
       <button type="button" class="btn sm primary" data-idone="${id}">Done</button></p></li>`;
 }
-// The add row. In a member's read view it is folded behind Add a line, below their lines (Decision N+1); Edit keeps it open above them.
+// The add row. In a member's read view it is folded behind Add a line, below their lines (Decision 300); Edit keeps it open above them.
 function castInteractionsHtml(n, folded){
   const a=intAdd(), rows=Engine.interactionsFor(S.table, n.id);
   const names=crewNameChoices(S.table);
@@ -1449,7 +1449,7 @@ function bindInteractions(main, n){
   const id=n.id, a=intAdd(), whatEl=main.querySelector("[data-iwhat]");
   const focus = sel => { const el=$("main").querySelector(sel); if (el) el.focus(); };
   const found = xid => S.table.interactions.find(x=>x.id===xid);
-  // Folded (a member's read view): Add a line opens the row on its first field; Cancel and a save fold it again (Decision N+1).
+  // Folded (a member's read view): Add a line opens the row on its first field; Cancel and a save fold it again (Decision 300).
   const folded=!!main.querySelector("[data-iaopen], [data-iacancel]");
   const opener=main.querySelector("[data-iaopen]"), cancel=main.querySelector("[data-iacancel]");
   if (opener) opener.onclick=()=>{ a.open=true; renderTable(); focus("[data-iacrew]"); };
@@ -4050,7 +4050,7 @@ function encOpeningHtml(v){
     ${v.opening ? `<div class="tag-choice"><span>By</span><div class="form-toggle" role="group" aria-label="By">${v.sides.map(s=>
       `<button type="button" data-eopen-side="${esc(s.id)}" class="${s.id===v.opening.side ? "on" : ""}" aria-pressed="${s.id===v.opening.side}">${esc(s.title)}</button>`).join("")}</div></div>` : ""}</div>`;
 }
-// Whether the Reset's inputs are complete (a number for each source that ticks): the bar's Finish the round follows the checklist's own (Decision N).
+// Whether the Reset's inputs are complete (a number for each source that ticks): the bar's Finish the round follows the checklist's own (Decision 299).
 const encResetOk = e => Engine.resolveEncounterReset(S.table, e.id, encResetInput()).ok;
 function encPageHtml(e){
   const v=Engine.encounterView(S.table, e.id, packsMemo), title=v.title, ended=e.status==="ended", running=e.status==="running", wrapping=!!encWrapNow(e);
@@ -4459,10 +4459,10 @@ function playerHtml(g){
 }
 function playersTabHtml(t){
   const list=Engine.playerList(t);
-  return `<div class="cast-add">
+  return `${list.length ? list.map(playerHtml).join("") : emptyHtml("players", true)}
+    <div class="cast-add">
       <label class="field"><span>Name</span><input type="text" data-pyadd-name placeholder="Player's name" autocomplete="off"></label>
-      <button type="button" class="btn primary" data-pyadd>Add a player</button></div>
-    ${list.length ? list.map(playerHtml).join("") : emptyHtml("players", true)}`;
+      <button type="button" class="btn primary" data-pyadd>Add a player</button></div>`;
 }
 // The names a seat answers to: its character's own, then the typed rows.
 function seatNameRowsHtml(v){
