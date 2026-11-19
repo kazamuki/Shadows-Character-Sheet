@@ -5,8 +5,8 @@ jobs board (a `JobRecord`, closing a job, the walk-out a client caused), and it 
 ask:** Ken, 2026-11-18: "a randomizer that rolls the various CRANK options to give a GM some options for threads they
 could start if the crew wanted to do a CRANK job in a session rather than off screen". **The book:** `2625` (CRANK and
 Bank), *The Job Generator* and its five d10 tables. **Reopens:** Decision 11 (the app never rolls), in part.
-**Status:** **drafted 2026-11-18** by Claude (Opus), the conductor, at Ken's pick ("lets draft S11"). Not approved.
-GQ54–GQ59 wait on Ken.
+**Status:** **drafted 2026-11-18** by Claude (Opus), the conductor, at Ken's pick ("lets draft S11"). **Approved by
+Ken 2026-11-18**, in the conductor session: "All defaults". GQ54–GQ59 each take their default.
 **Branch:** from `main`; PR to `main`. Nothing ships switched off: GM mode is on for everyone (Decision 239).
 **Runs beside:** nothing open on `main` at drafting. **Say N everywhere.**
 
