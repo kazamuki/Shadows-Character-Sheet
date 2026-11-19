@@ -14114,3 +14114,63 @@ test("Decision 294: a cast row healed mid-fight carries what's left, not what it
   assert.ok(Engine.endEncounter(t, e, { rows: {} }).ok);
   eq(castOf(t, dez.id).wounds, { damage: 4, massive: 0 });
 });
+
+// ── The CRANK Job Generator (Decision 297) ──────────────────────────────
+test("Decision 297: crankJob reads a pick as the d10", () => {
+  const j = Engine.crankJob({ type: 1, client: 2, target: 10, location: 5, complication: 1 });
+  assert.equal(j.title, "CRANK: Courier for a Street Gang");
+  assert.equal(j.complete, true);
+  const lines = j.notes.split("\n");
+  assert.equal(lines.length, 5);
+  assert.ok(lines[0].startsWith("Job Type: Courier. Move something"), lines[0]);
+  assert.ok(lines[2].startsWith("Target: Unknown Package. No description. No manifest"), lines[2]);
+  assert.ok(lines[4].startsWith("Complication: Double-Cross."), lines[4]);
+  assert.equal(JSON.stringify(j.parts.map(p => [p.name, p.roll, p.entry])), JSON.stringify([["Job Type", 1, "Courier"], ["Client", 2, "Street Gang"], ["Target", 10, "Unknown Package"], ["Location", 5, "Neon Nightclub"], ["Complication", 1, "Double-Cross"]]));
+});
+
+test("Decision 297: crankJob is total, and a bad pick is no pick", () => {
+  for (const bad of [null, undefined, {}, "x", 7, [], { type: 0 }, { type: 11 }, { type: "3" }, { type: 2.5 }, { type: NaN }, { type: -1 }, { type: {} }]) {
+    let j;
+    assert.doesNotThrow(() => { j = Engine.crankJob(bad); });
+    assert.equal(j.parts.length, 5);
+    assert.equal(j.complete, false);
+    assert.equal(j.title, "CRANK job");
+    assert.ok(j.parts.every(p => p.roll === null && p.entry === "" && p.text === ""), "a bad pick leaves its row empty");
+  }
+  const half = Engine.crankJob({ type: 3, client: 99 });
+  assert.equal(half.title, "CRANK job", "while either of the two is missing");
+  assert.equal(half.parts[0].entry, "Espionage");
+  assert.equal(half.complete, false);
+  assert.equal(half.notes.split("\n").length, 1, "only the rows that are set make notes");
+  assert.equal(Engine.crankJob({ type: 10 }).parts[0].entry, "Blacksite Raid", "10 is a pick, the edge of the die");
+  assert.equal(Engine.crankJob({ type: 1 }).parts[0].entry, "Courier");
+});
+
+test("Decision 297: crankJob is total over hostile data", () => {
+  const keep = D.resources.crank.jobs;
+  try {
+    for (const bad of [undefined, null, "x", {}, { columns: "x" }, { columns: [null, 4, { id: "type", rows: "x" }, { id: "type", rows: [null, { name: 4 }] }] }]) {
+      D.resources.crank.jobs = bad;
+      let j; assert.doesNotThrow(() => { j = Engine.crankJob({ type: 1, client: 1 }); });
+      assert.equal(j.complete, false);
+    }
+  } finally { D.resources.crank.jobs = keep; }
+});
+
+test("Decision 297: the engine never rolls: crankJob gives the same contract every time, and the engine's only randomness is the id maker's", () => {
+  const a = Engine.crankJob({ type: 4, client: 6, target: 3, location: 9, complication: 7 });
+  assert.deepEqual(a, Engine.crankJob({ type: 4, client: 6, target: 3, location: 9, complication: 7 }));
+  const src = readFileSync(join(ROOT, "src/engine/engine.js"), "utf8");
+  assert.equal((src.match(/Math\.random/g) || []).length, 1, "Math.random is only the id maker's fallback");
+  assert.equal((src.match(/getRandomValues/g) || []).length, 2, "and crypto is only the id maker's");
+});
+
+test("Decision 297: a pick's bound is the column's own row count, not a fixed 10", () => {
+  const keep = D.resources.crank.jobs;
+  try {
+    D.resources.crank.jobs = { text: "", columns: [{ id: "a", name: "A", rows: Array.from({ length: 12 }, (_, i) => ({ name: `r${i + 1}`, text: "t" })) }] };
+    assert.equal(Engine.crankJob({ a: 12 }).parts[0].entry, "r12");
+    assert.equal(Engine.crankJob({ a: 13 }).parts[0].roll, null);
+    assert.equal(Engine.crankJob({ a: 0 }).parts[0].roll, null);
+  } finally { D.resources.crank.jobs = keep; }
+});

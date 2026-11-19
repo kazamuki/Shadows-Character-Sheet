@@ -12,6 +12,17 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s==null?"":s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 // The currency sign, from the data (Decision 135), escaped once for markup.
 const CR = esc(Engine.creditSymbol());
+// The die (Decision 297): the one place the app rolls, for the GM's Job Generator. A plain function, so a test
+// stubs it; the engine never rolls. Whole numbers 1 to `sides`, with no modulo bias.
+function rollD(sides){
+  const n=Math.max(2, Math.floor(Number(sides))||10), c=window.crypto;
+  if (c && typeof c.getRandomValues==="function"){
+    const a=new Uint32Array(1), lim=Math.floor(4294967296/n)*n;
+    do c.getRandomValues(a); while (a[0]>=lim);
+    return a[0]%n+1;
+  }
+  return Math.floor(Math.random()*n)+1;
+}
 // Today as the player lives it, YYYY-MM-DD (not UTC: after 7 pm in New York that says tomorrow).
 const localDay = Engine.localDay;
 // A sign is the true minus, never a hyphen (S13a's SQ7): `signed` leaves zero bare,

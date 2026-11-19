@@ -867,6 +867,8 @@ The open sessions of the *Still to build* table, as drafted. S12 and S13 are hal
 
 #### S11 — CRANK work
 
+*Split 2026-11-18: S11a, the generator, is built (Decision 297); S11b, the jobs board, has no order (`plans/gm-mode-next.md`).*
+
 - The generator's five columns as data; roll or pick; a job record; the
   jobs board; closing a job proposes one payout to split and each
   character's rep (§4i, as `2625` was revised 2026-10-22). **Not by dispatch** since GQ20

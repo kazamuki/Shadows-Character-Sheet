@@ -292,6 +292,72 @@ window.SHADOWS_DATA = {
       "jobWalkedOut": -2,
       "belowText": "Below 0: Novice, and every payout is halved.",
       "paidOffText": "Burned is paid off. Remove it on Admin.",
+      "jobs": {
+        "text": "Roll d10 on each column or choose manually. Five rolls give you a complete contract — a job type, a client, a target, a location, and a complication that will make it interesting. Not every element needs to drive the scene equally. Sometimes the complication is the whole job. Sometimes the location tells you everything.",
+        "tierText": "The tables don't know the crew's tier, but you do, and the client column does most of the scaling for you. A small business owner's extraction pulls a cousin out of a bad apartment; a megacorp executive's pulls a defector out of a tower. Read every entry at the size the client can afford, and reroll anything that doesn't fit.",
+        "columns": [
+          { "id": "type", "name": "Job Type", "rows": [
+            { "name": "Courier", "text": "Move something from one place to another. Legal, illegal, or dangerous — the package doesn't come with a label." },
+            { "name": "Extraction", "text": "Get someone out. Whether they want to come is a separate question." },
+            { "name": "Espionage", "text": "Steal data, sabotage a facility, or gather intelligence without being noticed." },
+            { "name": "Cyberwarfare", "text": "Hack a system, plant something in it, or wipe something out of it." },
+            { "name": "Smuggling", "text": "Move illegal goods across a border or through territory that doesn't want them moved." },
+            { "name": "Security", "text": "Keep something or someone safe. The threat isn't always obvious at the start." },
+            { "name": "Heist", "text": "Take something from somewhere it's being kept." },
+            { "name": "Assassination", "text": "Remove a target. The contract specifies low-profile or high-profile. The target rarely cooperates with either." },
+            { "name": "Investigation", "text": "Find a missing person, locate an item, or uncover something someone wants buried." },
+            { "name": "Blacksite Raid", "text": "Get into a high-risk facility and come back out. Whatever's inside is worth the attempt — probably." }
+          ] },
+          { "id": "client", "name": "Client", "rows": [
+            { "name": "Small Business Owner", "text": "Wants protection, a debt collected, or a competitor handled. Budget is limited; desperation is not." },
+            { "name": "Street Gang", "text": "Needs muscle, product moved, or a message delivered. Will pay in Skrip if they pay at all." },
+            { "name": "Crime Syndicate", "text": "Wants it handled quietly and completely. No loose ends." },
+            { "name": "Corrupt Official", "text": "Needs evidence buried, a rival framed, or something retrieved before anyone asks questions." },
+            { "name": "Megacorp Executive", "text": "High pay, high risk. Expect at least one layer of deception built into the contract." },
+            { "name": "Underground Resistance", "text": "Aims to disrupt corporate or government control. Pays what they can. Believes in what they're doing." },
+            { "name": "Government Agency", "text": "Black ops framing, minimal details, complete deniability. The paperwork doesn't exist." },
+            { "name": "Wealthy Socialite", "text": "Needs something done discreetly. The stakes are personal, which makes them unpredictable." },
+            { "name": "Rogue VI or Program", "text": "Unusual requests, unconventional payment methods, and ethical complications the client may not recognize as such." },
+            { "name": "Unknown Entity", "text": "Every posting is anonymous, but most give their client away through what they want and how they ask. This one doesn't. The job is real. The client is a question mark." }
+          ] },
+          { "id": "target", "name": "Target", "rows": [
+            { "name": "Corporate Executive", "text": "Well-guarded, well-connected, and carrying information worth more than the posted rate." },
+            { "name": "Rival Fixer", "text": "Experienced and paranoid. Has their own crew." },
+            { "name": "Underground Hacker", "text": "Hard to find, harder to trust, and probably already knows you're coming." },
+            { "name": "High-Tech Prototype", "text": "Cyberware, weapon system, or AI component. Multiple parties want it." },
+            { "name": "Encrypted Data", "text": "The contents are unknown until they're not. Could be worth more than the contract." },
+            { "name": "Political Figure", "text": "Enormous fallout if the job goes loud. The client is counting on it not going loud." },
+            { "name": "Gang Leader", "text": "Armed, dangerous, and backed by people who will take the loss personally." },
+            { "name": "Contraband Shipment", "text": "High demand from multiple directions. Someone else is already moving on it." },
+            { "name": "Automated Security System", "text": "The obstacle is digital. Getting through it is a technical problem until it isn't." },
+            { "name": "Unknown Package", "text": "No description. No manifest. Just a location and a pickup." }
+          ] },
+          { "id": "location", "name": "Location", "rows": [
+            { "name": "Corporate Office Tower", "text": "High-tech security, layered access, and staff trained to notice things that don't belong." },
+            { "name": "Underground Research Lab", "text": "Off the books. Biological or chemical risk is possible. Nobody official knows it exists." },
+            { "name": "Slum Territory", "text": "Gang-controlled, unpredictable, and full of people who've learned to stay out of other people's business." },
+            { "name": "Detention Facility", "text": "Getting in requires a plan. Getting out requires a better one." },
+            { "name": "Neon Nightclub", "text": "Loud, chaotic, and full of eyes. The noise is cover. So is everyone else." },
+            { "name": "Private Penthouse", "text": "Elite security, controlled access, and an owner who expects to be untouchable." },
+            { "name": "Black Market Bazaar", "text": "Traders, fixers, and competing interests in a space where everyone is watching everyone else." },
+            { "name": "Cargo Ship or Warehouse", "text": "Plenty of cover. Time pressure is almost always a factor." },
+            { "name": "The LINK", "text": "The job happens in the digital layer. Physical security is someone else's problem — until it isn't." },
+            { "name": "Abandoned Facility", "text": "Empty on paper. Rarely empty in practice." }
+          ] },
+          { "id": "complication", "name": "Complication", "rows": [
+            { "name": "Double-Cross", "text": "The client is setting the crew up. The question is whether they figure it out before or after." },
+            { "name": "Unexpected Security", "text": "The location is locked down in ways the intel didn't mention." },
+            { "name": "Rival Crew", "text": "Another team is working the same job. Their contract may or may not align with the crew's." },
+            { "name": "Corrupt Law Enforcement", "text": "Someone with a badge shows up at exactly the wrong moment." },
+            { "name": "Bad Intel", "text": "The job isn't what the posting described. The gap between what was promised and what's true is the real problem." },
+            { "name": "Hidden Agenda", "text": "The client wants something beyond what the contract states. Whether that's a problem depends on what it is." },
+            { "name": "Hard Deadline", "text": "The window is hours, not days. Everything else adjusts accordingly." },
+            { "name": "Heavier Resistance", "text": "More opposition than the tier suggested. Someone upgraded the threat level and didn't update the posting." },
+            { "name": "Collateral Stakes", "text": "Completing the job cleanly means making a choice about who else gets caught in it." },
+            { "name": "Paranormal Element", "text": "Something not human is involved. It may be incidental. It may be the whole job." }
+          ] }
+        ]
+      },
       "tiers": [
         { "id": "novice",    "name": "Novice",    "rep": 0,  "pay": { "min": 50,    "max": 200 } },
         { "id": "competent", "name": "Competent", "rep": 5,  "pay": { "min": 300,   "max": 800 } },
@@ -5141,7 +5207,7 @@ window.SHADOWS_DATA = {
           "after"
         ],
         "intro": "Your nights of play: what's coming, the threads in motion, and every session so far.",
-        "for": "Where the campaign's nights live. Before you play, **Next session** is your prep in one screen. When you sit down, start a session. Afterwards, close it out.",
+        "for": "Where the campaign's nights live. Before you play, **Next session** is your prep in one screen. When you sit down, start a session. Afterwards, close it out. Want a job for the crew? **CRANK job**, under Threads, rolls the book's five tables.",
         "words": [
           "table",
           "closeToFull",

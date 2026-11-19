@@ -1364,6 +1364,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
     warn-but-allow in v1.
 11. **All rolls are physical:** the app never rolls dice for creation pools.
     Players enter what they rolled. (The Shadows experience includes the dice.)
+    → **Superseded in part by Decision 297**: the app rolls the GM's CRANK Job Generator, in GM mode only. A player's rolls stay physical.
     *Backfilled 2026-09-24 from this entry and the log (Decision 130) · Touches: dice, creation rolls (Stat Points, Çredits, starting spells), the Improved roll, dice rollers*
     - **Rejected:** an in-app roller for creation pools. The Shadows experience includes the dice: the player rolls, and the app records what they rolled.
     - **Revisit if:** a table plays where the dice can't be seen, remotely or through a GM mode (W29), and wants rolls both sides trust.
@@ -5784,6 +5785,14 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 169 in part: rep has a floor and a start. Closes F37.
      - **Revisit if:** Scott wants a walk-out below 0 to stack with Burned, or Reputation to be bought in play.
      - **Built:** as 295.
+297. **GM mode's CRANK Job Generator rolls the book's five d10 tables for the GM, or takes a pick, and keeps a contract only as a thread.**
+     *2026-11-18 · Ken + Claude · Touches: Job Generator, resources.crank.jobs, crankJob, rollD, the Threads section, addThread, the Reference's CRANK panel, 2625, Decision 11, Decision 203, Decision 207, S11b*
+     - **Decided:** The five tables (Job Type, Client, Target, Location, Complication) are data under `resources.crank.jobs`, each row the book's name and line. The Sessions tab's Threads section, and a session's own thread add, open a generator that rolls any column or all five, or takes a pick from 1 to 10. Nothing is stored until the GM adds the contract as a thread: "CRANK: <Job Type> for a <Client>", with the five lines as its notes, written in one change so one undo takes it back. The engine reads picks (`crankJob`) and never rolls; the die is the UI's `rollD`.
+     - **Why:** Ken, 2026-11-18: rolled options for a CRANK thread. `2625`: "Roll d10 on each column or choose manually." The roll is the GM's prep, not a player's check, so it isn't what Decision 11 protects; a thread is how GM mode already follows a question from session to session.
+     - **Rejected:** A `jobs` record now (the archived §4c's `JobRecord`): it's S11b's, and a thread carries a contract until a GM needs a payout or a walk-out on the record. Pick-only, honouring 11 to the letter: the ask is a randomizer, and a GM at a laptop often has no d10 to hand. Storing the last roll: nothing reads it. Three contracts side by side: fifteen rows on a phone. A tier on the contract: the client column scales it.
+     - **Replaces:** Decision 11 in part: the app rolls the GM's generator tables. A player's rolls stay physical.
+     - **Revisit if:** S11b gives jobs their own record, or a GM wants a roll in front of the players.
+     - **Built:** app 0.73.0, no game-data or schema move (Decision 68: the tables are data no character observes), PR (this one), log 2026-11-18 (S11a).
 
 ## 5. Open Flags
 

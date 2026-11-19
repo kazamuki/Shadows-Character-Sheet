@@ -178,7 +178,7 @@ you there.
 
 | # | Why it shapes everything |
 |---|---|
-| 11 | Every roll is physical — the app never rolls a player's dice |
+| 11 | Every roll is physical — the app never rolls a player's dice → **superseded in part by 297** (the GM's CRANK generator rolls) |
 | 15 | Archetypes share one generic structure; a new one is data, not code |
 | 26 | What the engine doesn't model goes through a manual adjustments ledger, not a special case |
 | 48 | Audit trail and admin are one subsystem: one ordered, reversible record |
@@ -211,7 +211,7 @@ What a number *is*. Change one of these and characters change.
 - **8** — Skill checks: 1d10 + Rank + Primary Stat (full score) + Synergy Bonus (modifier).
 - **9** — Derived attributes: TOL = 1 + INT/COOL/EMP mods (floor 1); WILL = 1 + BOD/INT/EMP mods (floor 1); SAN = EMP×10 (flo... → **superseded in part by 103 and 109**
 - **10** — Hard caps: the wizard enforces all table limits strictly.
-- **11** — All rolls are physical: the app never rolls dice for creation pools.
+- **11** — All rolls are physical: the app never rolls dice for creation pools. → **superseded in part by 297**: the GM's CRANK Job Generator rolls
 - **12** ~~— Supernatural restriction: archetypes with canPurchaseAdvantages: false (Werewolf; Vampire assumed) cannot buy Advan...~~ → **superseded by 152**
 - **13** — Milestone cadence: 1 Milestone Point per session; Minor at 5/15/25…, Major at 10/20/30…; 10 IP per session (WIP Pro... → **superseded in part by 228**
 - **150** *(The stat buy and the Power Level table — W34, W35, F8)* — Stat Points are the level's flat pool or a roll, the GM's pick (`creation.statMethod`, schema 0.15); a stat point costs 1 up to 6 and 2 from 7 to 10, from a free 1; Skill Points are base + INT + REF, Boosts included; CP 5/10/15/20, Max Skill Rank 4/5/6/7; a roll is 5 below the flat pool + 1d10. F8 and F35 closed. → **superseded in part by 198**
@@ -417,6 +417,7 @@ The seven-tab running sheet, damage, IP, milestones, sessions.
 - **294** *(Wounds carry — S24, GQ26, GQ45–GQ47)* — a cast member stores `wounds` (`{ damage, massive }` or null); the wrap-up writes each cast row's and each Kept copy's, a row takes them at Start (and on adding to a running fight) while nothing has happened to it, Conditions don't carry; the cast page's Heal takes HP and Heal all clears Massive too. → supersedes 193 in part.
 - **295** *(An off-screen job pays the floor — S25, GQ28, GQ51)* — `offScreenPay(tier)` is the tier's `pay.min`, one figure, and null for a tier marked `offScreen: false` (Legendary); `offScreenMax` is gone. The close-out fills an absent line's credits with it (they follow the tier until the GM types), and a Legendary line says there's no off-screen work; the Reference shows the floor and "—". Replaces 206 in part
 - **296** *(CRANK rep stops at 0; Reputation and Burned start it — S25, F37, GQ7, GQ48–GQ53, W161)* — a loss never takes rep below 0 or below where it is (Admin's correction isn't floored); Reputation (4 points, max 3, creation only) and Burned (1 point, max 3) exclude each other and carry a `crankStart` grant (5, 12, 20 · −2 a rank), written once at the lock as a "Start: … rank N" ledger line; below 0 reads Novice at half pay, a held Burned at 0 is paid off and can go on Admin. F37 closed. Replaces 169 in part
+- **297** *(The CRANK Job Generator — S11a, GQ54–GQ59)* — `resources.crank.jobs` holds `2625`'s five d10 tables; the Sessions tab's Threads section and a session's thread add open a generator that rolls or picks each column, and **Add as a thread** saves "CRANK: <type> for a <client>" with the five lines as notes, in one undo. `Engine.crankJob(picks)` reads picks and never rolls; the die is the UI's `rollD`. The Reference's CRANK panel shows the tables. Replaces 11 in part
 - **140** *(The header — B19, AQ10)* — two thin rows: the name with ⋮ and theme, then the tabs in one line that scrolls sideways (active tab kept in view, fades, mouse wheel); a long name ends in "…", the `Shadows //` prefix goes below 480 px, and the header un-sticks below 540 px tall. → **superseded in part by 208**
 
 ### GM mode

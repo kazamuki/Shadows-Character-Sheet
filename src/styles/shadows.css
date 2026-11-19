@@ -1427,6 +1427,14 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
    so every one of them wraps; the stat grid wraps to the screen. */
 .cast-add, .cast-filters{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:0 14px; align-items:end}
 .cast-add .btn{justify-self:start; margin-bottom:14px}
+.thread-btns{display:flex; flex-wrap:wrap; gap:8px; align-items:end}
+/* The CRANK Job Generator (Decision 297): a column's name, its picker and die, then the book's line. */
+.job-row{padding:8px 0; border-top:1px solid var(--frame); min-width:0}
+.job-row:first-of-type{border-top:0}
+.job-col{display:block; font-family:var(--mono); font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; color:var(--dim); margin-bottom:4px}
+.job-pick{display:flex; gap:8px; align-items:center; min-width:0}
+.job-pick select{flex:1 1 auto; min-width:0; max-width:100%}
+.job-text{margin:6px 0 0; font-size:.9rem; overflow-wrap:anywhere}
 .cast-filters{margin-bottom:6px}
 .cast-card{cursor:pointer; min-width:0}
 /* Status on a card (Decision 176): missing is a thread still, so dashed; dead and out of the picture are quieter, with no accent on hover. Text stays at full contrast. */
