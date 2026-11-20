@@ -529,3 +529,45 @@ test("K3: sheetLine is total, and a seat or a switch that's off draws nothing", 
   app.window.localStorage.setItem(SGUIDE, "off");
   assert.equal(ev(`sheetLine("__t")`), "", "the switch was ignored");
 });
+
+// ── K4 (Decisions 306, 307) ──
+test("K4: the sheet's Help has This tab and Vocab, and no Back", () => {
+  const app = sheet("trackers");
+  app.click("[data-shelp]");
+  const tabs = () => [...app.$$("#ghelp .help-tabs button")];
+  assert.deepEqual(tabs().map(b => b.textContent), [SG().ui.pageTab, SG().ui.wordsLink]);
+  assert.deepEqual([SG().ui.pageTab, SG().ui.wordsLink], ["This tab", "Vocab"]);
+  assert.equal(panel(app).querySelector("[data-help-back]"), null);
+  assert.equal(panel(app).querySelector(".help-foot"), null);
+  app.click("#ghelp [data-hwords]");
+  assert.equal(app.$("#ghelp [data-hwords]").getAttribute("aria-current"), "page");
+  assert.equal(app.doc.activeElement, app.$("#ghelp [data-hwords]"), "focus left the pressed tab");
+  assert.ok(app.$("#ghelp [data-help-q]"), "Vocab's filter isn't shown");
+  app.click("#ghelp [data-hpage]");
+  assert.equal(heading(app), SG().contexts.trackers.title);
+  assert.equal(app.$("#ghelp [data-hpage]").getAttribute("aria-current"), "page");
+  assert.equal(app.doc.activeElement, app.$("#ghelp [data-hpage]"));
+  assert.deepEqual(app.errors, []);
+});
+
+test("K4: the sheet's Guide lines and The ? key are in ⋮, show their state and flip in place", () => {
+  const app = sheet("skills");
+  app.click("[data-menu-toggle]");
+  const item = n => app.$(`#hdrmenu [data-menu-switch="${n}"]`);
+  for (const [name, key, pref] of [["guide", "guideSwitch", SGUIDE], ["keys", "keySwitch", KEYS]]) {
+    assert.ok(item(name).textContent.includes(SG().ui[key]), name + "'s label");
+    assert.equal(item(name).getAttribute("aria-pressed"), "true");
+    app.click(`[data-menu-switch="${name}"]`);
+    assert.equal(ls(app, pref), "off", name + " didn't write its setting");
+    assert.equal(item(name).getAttribute("aria-pressed"), "false");
+    assert.ok(item(name).textContent.includes(SG().ui.off));
+    assert.equal(app.doc.activeElement, item(name), name + ": focus left the item");
+    assert.equal(app.$("#hdrmenu").hidden, false, name + ": ⋮ closed");
+  }
+  assert.equal(app.$$("#main [data-guide]").length, 0, "the guide line is still on the page");
+  assert.equal(app.$("[data-shelp]").hasAttribute("aria-keyshortcuts"), false);
+  app.click('[data-menu-switch="guide"]'); app.click('[data-menu-switch="keys"]');
+  assert.equal(ls(app, SGUIDE), null); assert.equal(ls(app, KEYS), null);
+  assert.equal(app.$$("#main [data-guide]").length, 1);
+  assert.deepEqual(app.errors, []);
+});
