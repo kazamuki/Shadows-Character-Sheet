@@ -155,8 +155,8 @@ test("K1: Guide lines Off hides every guide line and keeps the rule lines, for t
   const rule = { skills: "introSkills", progression: "introProgression", admin: "introAdmin" };
   const ruleText = k => D.appCopy[k].replace("{perHour}", String(D.ip.perHour));
   app.click('[data-sec="skills"]');
-  app.click("[data-shelp]");
-  app.click("#ghelp [data-help-guide-off]");
+  app.click("[data-menu-toggle]");
+  app.click('[data-menu-switch="guide"]');
   assert.equal(ls(app, SGUIDE), "off");
   assert.equal(ls(app, GMGUIDE), null, "the sheet's switch wrote the table's");
   for (const sec of tabs) { app.click(`[data-sec="${sec}"]`); assert.equal(guides().length, 0, `${sec} still shows its guide line`); }
@@ -168,7 +168,8 @@ test("K1: Guide lines Off hides every guide line and keeps the rule lines, for t
   const again = openSheet(lockedCharacter(), "skills", { storage: { [SGUIDE]: "off" } });
   assert.equal(again.$$("#main [data-guide]").length, 0, "a reload forgot the switch");
   app.click('[data-sec="notes"]');
-  app.click("#ghelp [data-help-guide-on]");
+  app.click("[data-menu-toggle]");
+  app.click('[data-menu-switch="guide"]');
   assert.equal(ls(app, SGUIDE), null);
   assert.equal(guides().length, 1, "On didn't bring it back");
   assert.deepEqual(app.errors, []);
@@ -191,8 +192,8 @@ test("K1: one flyout at a time", () => {
 
 test("K1: the ? key switch in Help turns keys off for the table too", () => {
   const app = sheet("main");
-  app.click("[data-shelp]");
-  app.click("#ghelp [data-help-keys-off]");
+  app.click("[data-menu-toggle]");
+  app.click('[data-menu-switch="keys"]');
   assert.equal(ls(app, KEYS), "off");
   pressEsc(app);
   assert.equal(questionMark(app).prevented, false);
@@ -200,7 +201,8 @@ test("K1: the ? key switch in Help turns keys off for the table too", () => {
   app.click("[data-shelp]");
   assert.equal(shown(app), true, "the button stopped working");
   assert.equal(app.$("[data-shelp]").hasAttribute("aria-keyshortcuts"), false);
-  app.click("#ghelp [data-help-keys-on]");
+  app.click("[data-menu-toggle]");
+  app.click('[data-menu-switch="keys"]');
   assert.equal(ls(app, KEYS), null);
   assert.deepEqual(app.errors, []);
 });
@@ -276,7 +278,7 @@ test("K2: Every word opens from the sheet's Help, filters and jumps", () => {
   assert.equal(heading(app), SG().ui.wordsLink);
   const q = app.$("#ghelp [data-help-q]");
   assert.ok(q && q.type === "search", "no filter box");
-  assert.equal(app.doc.activeElement, q, "focus didn't go to the filter box");
+  assert.equal(app.doc.activeElement, app.$("#ghelp [data-hwords]"), "K4: focus stays on the Vocab tab, not the filter box");
   assert.equal(app.$("#ghelp label[for='ghelp-q']").textContent, SG().ui.filterLabel);
   const all = Engine.words(Engine.migrate(JSON.parse(JSON.stringify(lockedCharacter()))));
   assert.equal(app.$$("#ghelp .help-word").length, all.length, "not every word is listed");
@@ -309,10 +311,10 @@ test("K2: Every word opens from the sheet's Help, filters and jumps", () => {
   letterBtn(app, "B").click();
   const first = app.$$("#ghelp .help-word").find(r => r.dataset.hwLetter === "B");
   assert.equal(app.doc.activeElement, first.querySelector("dt"), "focus didn't land on the first B word");
-  // Back, and the link is where focus returns.
-  app.click("#ghelp [data-help-back]");
+  // K4: the tab back, and focus is on it.
+  app.click("#ghelp [data-hpage]");
   assert.equal(heading(app), SG().contexts.main.title);
-  assert.equal(app.doc.activeElement, app.$("#ghelp [data-hwords]"), "focus didn't return to the Every word link");
+  assert.equal(app.doc.activeElement, app.$("#ghelp [data-hpage]"), "focus didn't stay on the pressed tab");
   // Closing clears the filter.
   app.click("#ghelp [data-hwords]"); typeQ(app, "tol");
   app.click("#ghelp [data-help-close]"); app.click("[data-shelp]"); app.click("#ghelp [data-hwords]");
@@ -371,7 +373,7 @@ test("K2: a tab press keeps Every word open in the column, and closes the flyout
   // Admin is a mode that outlives its tab: the words are no more Admin's than Skills'.
   wide.click("[data-menu-toggle]"); wide.click("[data-admin]");
   assert.equal(heading(wide), SG().ui.wordsLink);
-  wide.click("#ghelp [data-help-back]");
+  wide.click("#ghelp [data-hpage]");
   assert.equal(heading(wide), SG().contexts.admin.title);
   wide.click('[data-sec="notes"]');
   assert.equal(heading(wide), SG().contexts.notes.title, "Back left the words on a tab");

@@ -156,7 +156,7 @@ But a new player opening Trackers or Progression still has nowhere to ask what t
 - **The words come from what the tips already read** (`gameTerms`, Decision 139's tips, the Stat and Condition entries), defined once. A glossary must not become a second copy that drifts (Decision 135).
 - **The switch is view state, not character state.** It goes in browser storage like `gmGuide`, never in the `.shadows.json` (constraint 7).
 - **GM mode's seat sheet draws the player's tabs** (Decision 256). Decide whether a seat shows the player's Help or the table's.
-- **The phone** (E6): S31's review found Help's foot about 530px below the fold on a phone. Learn from that and from W150 before laying it out.
+- **The phone** (E6): S31's review found Help's foot about 530px below the fold on a phone. Since K4 (Decision 306) Help's tabs are at its top and stay there.
 - **Rules questions go to Deighton.** If a definition has to say something the CRB doesn't, it's a flag, not copy.
 
 **W159 — Main's vitals row fills its width at 768 and 1280.** *Claude, from E7's pre-flight, 2026-11-14 · 💡 · Rule or shape*\

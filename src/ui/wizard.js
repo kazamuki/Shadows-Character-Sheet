@@ -978,7 +978,7 @@ function bindMain(){
   main.querySelectorAll("[data-nav]").forEach(b=>b.onclick=()=>{
     S.step = Math.max(0, Math.min(STEPS.length-1, S.step+Number(b.dataset.nav)));
     S.maxReached = Math.max(S.maxReached, S.step);
-    window.scrollTo(0,0); update();
+    scrollPageTop(); update();
   });
   main.querySelectorAll("[data-importdismiss]").forEach(b=>b.onclick=()=>{ S.importIssues=[]; update(); });
   // selections
@@ -1140,7 +1140,7 @@ function bindMain(){
     ch.creation.locked=true;
     S.ch=Engine.migrate(Engine.buildExport(ch, { lock:true }));
     S.screen="sheet"; S.section="main"; S.issued=true;
-    window.scrollTo(0,0); update();
+    scrollPageTop(); update();
     // W46 (Decision 163): the export stays in this click, so the download
     // keeps its permission; the TAG prints alongside it, never in front.
     const file=exportChar(), C=D.appCopy||{};

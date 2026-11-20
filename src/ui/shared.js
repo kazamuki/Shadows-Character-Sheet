@@ -524,6 +524,7 @@ function popEl(){
       closePopover(false);
     });
     window.addEventListener("resize", ()=>{ if (popState) placePopover(); });
+    document.addEventListener("scroll", ()=>{ if (popState) placePopover(); }, true);   // K4: the page's box scrolls, not the window, from 1280px
   }
   return el;
 }
@@ -545,8 +546,9 @@ function placePopover(){
     el.style.left=`${Math.round(Math.max(8, r.left - w - 10))}px`;
     return;
   }
-  el.style.top=`${Math.round(r.bottom + (window.scrollY||0) + 6)}px`;
-  el.style.left=`${Math.round(Math.max(8, Math.min(r.left + (window.scrollX||0), (window.scrollX||0) + vw - w - 8)))}px`;
+  const sc=windowScroll();
+  el.style.top=`${Math.round(r.bottom + sc.y + 6)}px`;
+  el.style.left=`${Math.round(Math.max(8, Math.min(r.left + sc.x, sc.x + vw - w - 8)))}px`;
 }
 function drawPopover(){
   const el=popEl(), st=popState, p=st.render();
@@ -704,7 +706,7 @@ function placeTip(){
   if (!el || !st) return;
   if (!st.el.isConnected){ hideTip(); return; }
   const host=el.parentNode, inModal=host!==document.body;
-  const r=st.el.getBoundingClientRect(), h=inModal ? host.getBoundingClientRect() : { left:-(window.scrollX||0), top:-(window.scrollY||0) };
+  const r=st.el.getBoundingClientRect(), h=inModal ? host.getBoundingClientRect() : { left:-windowScroll().x, top:-windowScroll().y };
   const vw=document.documentElement.clientWidth||window.innerWidth||0, w=el.offsetWidth||300;
   const left=Math.max(8, Math.min(r.left, vw - w - 8));
   el.style.left=`${Math.round(left - h.left)}px`;
@@ -825,7 +827,7 @@ function anchorKept(draw){
   draw();
   if (i<0) return;
   const el=document.querySelectorAll("#main "+sel)[i];
-  if (el && el.getClientRects().length){ const d=el.getBoundingClientRect().top-was; if (d) window.scrollBy(0, d); }
+  if (el && el.getClientRects().length){ const d=el.getBoundingClientRect().top-was; if (d) pageScrollBy(d); }
 }
 
 // ── Jump bar (W5, W22) ────────────────────────────────────────────────
@@ -887,7 +889,7 @@ function jumpTo(id){
   const barTop=bar ? parseFloat(getComputedStyle(bar).top) : NaN;
   const off=(bar && !isNaN(barTop) ? barTop+bar.offsetHeight : (hdr?hdr.offsetHeight:0)+(bar?bar.offsetHeight:0))+8;
   const calm=window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  try{ window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - off, behavior: calm?"auto":"smooth" }); }catch(e){}
+  try{ pageScrollTo(el.getBoundingClientRect().top + pageScrollTop() - off, calm); }catch(e){}
   el.focus({ preventScroll:true });
 }
 // W22: hide the picks whose name and text don't match. One you hold
@@ -1154,6 +1156,33 @@ const showsStatus = a => !!a && a.status!=="final" && a.status!=="draft";
 // flyout does (Decision 166), with its own setter: that one is the vitals'.
 const HELP_HOSTS = {}, HELP_MEDIA = "(min-width:1280px)";
 const helpPinRoom = () => !!(window.matchMedia && window.matchMedia(HELP_MEDIA).matches);
+/*PAGE-SCROLL:BEGIN*/
+// K4 (Decision N+1): from 1280px #app is the page's scroll box and the window doesn't scroll; narrower the window does. These three are the only
+// code that reads or moves the page's scroll (a guard in build.test.mjs fails on any other `window.scroll…`). All total: no #app, no matchMedia, no throw.
+function pageScroller(){
+  const app=document.getElementById("app");
+  return app && helpPinRoom() ? app : (document.scrollingElement || document.documentElement);
+}
+function scrollPageTop(){
+  const box=pageScroller();
+  if (box===document.getElementById("app")){ box.scrollTop=0; return; }
+  window.scrollTo(0,0);
+}
+// How far the page is scrolled, as the popover and the tip need it: absolute-placed in the body, they sit in the window's coordinates, which
+// the box's scroll doesn't move (it is 0 there), so they are placed again when the box scrolls instead (the scroll listeners below).
+const windowScroll = () => ({ x:window.scrollX||0, y:window.scrollY||0 });
+function pageScrollBy(dy){
+  const box=pageScroller();
+  if (box===document.getElementById("app")) box.scrollTop += dy; else window.scrollBy(0, dy);
+}
+function pageScrollTo(top, calm){
+  const box=pageScroller();
+  if (box===document.getElementById("app")){ try{ box.scrollTo({ top, behavior: calm?"auto":"smooth" }); }catch(e){ box.scrollTop=top; } return; }
+  window.scrollTo({ top, behavior: calm?"auto":"smooth" });
+}
+// Where the page's top edge is in the viewport's coordinates, and how far it is scrolled (the jump's reach).
+const pageScrollTop = () => { const box=pageScroller(); return box===document.getElementById("app") ? box.scrollTop : (window.scrollY||0); };
+/*PAGE-SCROLL:END*/
 // The host of the screen that's up, or null: a table's, a locked sheet's. A seat's read-only sheet is a table screen.
 const helpHost = () => S.screen==="table" ? HELP_HOSTS.table : S.screen==="sheet" && S.ch ? HELP_HOSTS.sheet : null;
 let helpKey=null, helpHostId=null, helpPainted=null;
@@ -1217,6 +1246,48 @@ function toggleHelp(opts){ if (helpShown()) closeHelp(); else openHelp(opts); }
 // Esc closes one layer. A flyout covers the page, so it answers Esc anywhere; a column answers it only from inside itself,
 // since Esc in the page beside it is the page's.
 function helpEscCloses(){ const el=$("ghelp"); return helpShown() && !!el && (!helpPinRoom() || el.contains(document.activeElement)); }
+// K4 (Decision N): a switch in ⋮. The item names the switch and says whether it's on (a chip from the guide's own On and Off), with
+// aria-pressed; a press flips it, redraws that one item in place and leaves ⋮ open with focus on the item. The press stops here: the page's
+// click-away that shuts ⋮ would otherwise see a target the redraw replaced.
+const menuSwitchHtml = (name, label, on, u) => `<button type="button" data-menu-switch="${name}" aria-pressed="${on}">${esc(label)} <span class="menu-state">${esc(on ? u.on : u.off)}</span></button>`;
+function bindMenuSwitch(root, name, get, set, u){
+  const find = () => document.querySelector(`#hdrmenu [data-menu-switch="${name}"]`);
+  const b=root.querySelector(`[data-menu-switch="${name}"]`); if (!b) return;
+  b.onclick=e=>{
+    e.stopPropagation();
+    set(!get());
+    const menu=$("hdrmenu"), kb=document.querySelector("#hdractions [data-menu-toggle]"), now=find(), on=get();
+    if (menu){ menu.hidden=false; if (kb) kb.setAttribute("aria-expanded","true"); }
+    if (now){ now.setAttribute("aria-pressed", String(on)); const chip=now.querySelector(".menu-state"); if (chip) chip.textContent=on ? u.on : u.off; now.focus({ preventScroll:true }); }
+  };
+}
+// K4 (Decision N): one head for both hosts. The title and Close, then the tabs: each is { view (S.helpView it opens: null, "night", "words"),
+// label, attr (its data attribute, which the tests and Shortcuts' returnTo find it by) }. `extra` is more buttons after the tabs (the
+// table's Shortcuts, which opens a box and is no view). The open tab is the one whose view is S.helpView. It sticks to the top of the panel.
+function helpHeadHtml(title, tabs, u, extra){
+  return `<div class="help-head"><div class="dhead"><h2 id="ghelp-h" tabindex="-1">${esc(title)}</h2>
+      <button type="button" class="btn sm" data-help-close aria-label="${esc(u.close)} ${esc(u.title.toLowerCase())}">${esc(u.close)}</button></div>
+    <div class="help-tabs" role="group" aria-label="${esc(u.title)}">${tabs.map(t=>{ const on=(S.helpView||null)===t.view;
+      return `<button type="button" class="btn sm help-tab${on ? " on" : ""}" ${t.attr}${on ? ' aria-current="page"' : ""}>${esc(t.label)}</button>`; }).join("")}${extra||""}</div></div>`;
+}
+// A tab press: the view changes under the pressed tab, which keeps focus; the filter is cleared by leaving, never stored.
+const HELP_TAB_VIEWS = { "data-hpage":null, "data-hnight":"night", "data-hwords":"words" };
+function bindHelpTabs(el){
+  for (const attr of Object.keys(HELP_TAB_VIEWS)){
+    const b=el.querySelector("["+attr+"]"); if (!b) continue;
+    b.onclick=()=>{
+      S.helpView=HELP_TAB_VIEWS[attr]; S.helpQ=""; paintHelp();
+      const again=$("ghelp") && $("ghelp").querySelector("["+attr+"]"); if (again) again.focus({ preventScroll:true });
+    };
+  }
+}
+// The head's height is what the find bar sticks under: read from the head, so a tab row that wraps moves it.
+function sizeHelpHead(el){
+  const head=el.querySelector(".help-head"); if (!head) return;
+  const set=()=>el.style.setProperty("--help-head-h", head.offsetHeight + "px");
+  set();
+  if (window.ResizeObserver) new ResizeObserver(set).observe(head);
+}
 // Drawn again only when the page it is for, or its view, has changed: a press inside it must keep its focus.
 function paintHelp(force){
   const el=$("ghelp"), h=helpHost(); if (!el || !h || !helpShown()) return;
@@ -1232,6 +1303,8 @@ function paintHelp(force){
   el.innerHTML=h.bodyHtml(id); helpKey=key; helpPainted=S.helpView;
   el.querySelectorAll("[data-help-close]").forEach(b=>b.onclick=closeHelp);
   h.bind(el);
+  bindHelpTabs(el);
+  sizeHelpHead(el);
   bindHelpList(el);
   if (inQ){ const q=el.querySelector("[data-help-q]"); if (q){ q.focus({ preventScroll:true }); try{ q.setSelectionRange(sel[0], sel[1]); }catch(e){} } }
   if (top) el.scrollTop=top;
@@ -1268,8 +1341,9 @@ function bindHelpList(el){
   q.onkeydown=e=>{ if (e.key==="Escape" && q.value){ e.preventDefault(); q.value=""; apply(); } };
   letters.forEach(b=>b.onclick=()=>{
     const r=rows.find(x=>!x.hidden && x.dataset.hwLetter===b.dataset.helpLetter); if (!r) return;
-    // The panel scrolls, not the page behind it; the sticky find bar (a phone) covers the top of the list, so it is left out of the reach.
-    const bar=q.closest(".help-find"), covered=bar && getComputedStyle(bar).position==="sticky" ? bar.offsetHeight : 0;
+    // The panel scrolls, not the page behind it; the sticky head and find bar cover the top of the list, so they are left out of the reach.
+    const bar=q.closest(".help-find"), head=el.querySelector(".help-head");
+    const covered=(bar && getComputedStyle(bar).position==="sticky" ? bar.offsetHeight : 0) + (head && getComputedStyle(head).position==="sticky" ? head.offsetHeight : 0);
     el.scrollTop=Math.max(0, r.offsetTop - covered);
     const dt=r.querySelector("dt"); if (dt) dt.focus({ preventScroll:true });
   });

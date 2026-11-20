@@ -4152,6 +4152,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 35 in part (a pinned panel brings back a right-hand column on the locked sheet); Decision 37 in part (the flyout can be pinned); Decision 119 in part (the panel's vitals open popovers too, to the left).
      - **Revisit if:** a narrower screen wants the pin, or the panel's stats and derived rows prove to be what's used least and want trimming.
      - **Built:** app 0.35.0; `smoke.test.mjs`, mutation-tested; `npm run phone-check` passes. Log 2026-10-01.
+    → **Superseded in part by Decision 307** — a pinned column narrows the page's scroll box (from 1280px `#app`) instead of padding the window's page, so the page's scrollbar sits beside the page.
 
 161. **Below 1060px the wizard's rail is one sticky line of the points left, the full rail is a tap away in the flyout, and each step has one title.**
      *2026-10-01 · Ken + Claude · Touches: vitals rail, aside.vitals, vstrip, Vitals pill, vdrawer, wizardRailHtml, step strip, ledger, step title, stepHeader, creationFlow.steps.short, jump bar, jumpTo, wiznav, Back, Continue, footer, Home glyph, W44*
@@ -5549,6 +5550,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** a GM wants keys on the player's sheet, a browser takes a digit, or Redo arrives.
      - **Built:** app 0.66.0, no schema move, PR #313, log 2026-11-07 (U5).
     → **Superseded in part by Decision 278** — **?** opens Help, not Keys; Keys lists it as Help and is one link down, and ⋮ → Keys stays.
+    → **Superseded in part by Decision 306** — GM mode's **Keys** is **Shortcuts**, in ⋮, the box's title and Help's head.
     → **Superseded in part by Decision 299** — at a Reset `N` presses Finish the round, which takes Next's place in the bar.
 
 273. **A locked character owed a pick sees one line at the top of each tab, and the picker opens in a dialog when they press Choose.**
@@ -5611,6 +5613,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** GMs keep Help open all night (it wants another shape), or a player's sheet asks for the same.
      - **Built:** app 0.67.0; PR #323; log 2026-11-12 (S31).
     → **Superseded in part by Decisions 289 and 298** — Help's panel is shared with the sheet: a second host registers its own guide, context and body (289); the table's `character` context, on a seat's sheet, names the open tab and lists that tab's words for the seat's copy (298).
+    → **Superseded in part by Decision 306** — the foot's links are tabs at the top of Help (This page, Running a session, Vocab, Shortcuts); the night's name, parts and copy are Deighton's; Guide lines is in ⋮; Help has no foot and no Back.
 
 279. **Character Points' Disadvantage and Advantage lists show what's taken, and the rest a press away.**
      *2026-11-12 · Ken + Claude · Touches: renderCP, details.group, Disadvantages list, Advantages list, applyPickFilter, data-filterable, data-cp-list, Held only, S.cpAll, data-cp-all, showAllOptions, E1c*
@@ -5725,6 +5728,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** players want Help to stay open across visits, as a table's does, or the wizard asks for the same (KQ7).
      - **Built:** app 0.70.0 (minor), no game-data or schema bump, PR #351, log 2026-11-15 (K1).
      → **Superseded in part by Decisions 291 and 298** — a context's `words` are references (a gameTerms id or `{ kind: id }`) read through `Engine.word`, and Help gains *Every word* (291); a seat draws no sheet guide line, and the switch reaches every guide line (`sheetGuide.lines`), not only the tab intros (298).
+     → **Superseded in part by Decision 306** — the sheet's *Every word* is the **Vocab** tab beside **This tab**, Back is gone, and the Guide lines and **The ? key** switches are in ⋮.
 
 290. **Natural attacks are one group with one count: two a round from two different natural weapons, plus one a rank of Melee Master. Every character has Fists, and a natural line has a kind.**
      *2026-11-15 · Ken + Deighton + Scott + Claude · Touches: weaponRules.naturalAttacks, naturalAttacks, kind, fist, claw, bite, Fists, Melee Master, Death Touch, attackTag, naturalWeapons, archetypeWeapons, formView, weaponDamage, weaponBonus, Main's Weapons table, pWeaponRows*
@@ -5875,6 +5879,31 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing.
      - **Revisit if:** a GM wants a cast member or the whole campaign as Markdown, or Notes (S30) wants the same.
      - **Built:** as 303.
+
+306. **Help opens on a row of tabs that stays at its top with Close: This page, Running a session, Vocab (Shortcuts after them on a table); its switches move to ⋮; the vitals' head stays too.**
+     *2026-11-20 · Ken + Deighton + Claude · Touches: Help, #ghelp, help-head, data-hpage, data-hnight, data-hwords, data-hkeys, data-tkeys, helpView, gmGuide.ui, gmGuide.night, sheetGuide.ui, Shortcuts, Vocab, hdr-menu, help-find, vdrawer, Decision 272, Decision 278, Decision 289*
+     - **Decided:** Help's heading, Close and a row of tabs stay at the top of the panel as it scrolls. A table's tabs are This page, Running a session and Vocab, then Shortcuts (GM mode's Keys, renamed everywhere), which opens its box; a sheet's are This tab and Vocab. Running a session says what a session is, then walks Session prep, Current session and Debrief. Guide lines, and the sheet's ? key switch, are in ⋮; Help has no foot and no Back. The vitals' Pin and Close stay at its top too.
+     - **Why:** Ken, after a night with Deighton: the night read as its own thing, its link sat under the page's whole help, and Close scrolled away. A switch for the whole screen belongs with the screen's settings. The night's words are Deighton's.
+     - **Rejected:**
+       - Links at the top with Back kept: three ways out of a view where one row does.
+       - The night as a dialog: it's read beside the page.
+       - Close fixed, tabs in the scroll: the tabs are how you move.
+       - The switches at Help's foot: out of reach, and about the screen.
+     - **Replaces:** Decision 278 in part (the foot's links are tabs at the top; the night's name, parts and copy; Guide lines in ⋮). Decision 289 in part (the sheet's Every word is a tab, Back is gone, its switches are in ⋮). Decision 272 in part (Keys is Shortcuts).
+     - **Revisit if:** Help gets a fourth view, or a phone can't spare the head's height.
+     - **Built:** app 0.75.0; PR #…; log 2026-11-20 (K4).
+
+307. **From 1280px the page scrolls in its own box, so with a column pinned its scrollbar is at the column's left edge.**
+     *2026-11-20 · Ken + Claude · Touches: #app, scroll box, pageScroller, scrollPageTop, pageScrollTo, pageScrollBy, windowScroll, jumpTo, anchorKept, placePopover, tip placement, help-pinned, vitals-pinned, header.top, --hdr-off, --sbw, phone-check, Decision 140, Decision 160*
+     - **Decided:** From 1280px `#app` is the page's scroll box, the height of the window; the window doesn't scroll. A pinned column narrows it instead of padding it, so the page's scrollbar sits between the page and the column. Every "back to the top", jump and placement goes through one helper that knows which box scrolls. Narrower, the window scrolls, as before. The popover and the tip stay in the body, placed in the window's coordinates, and are placed again when anything scrolls.
+     - **Why:** Ken: the window's scrollbar was on the far side of Help's column, beside the column's own, and hard to grab. It holds for the sheet's pinned vitals too.
+     - **Rejected:**
+       - The column's scrollbar on its left: it would sit where the page's should and scroll Help.
+       - The box only while a column is pinned: opening Help would move the page between two scrollers mid-read, and the desktop would run two scroll models.
+       - The column on the left of the page: it moves every layout Decision 258 and 160 settled.
+     - **Replaces:** Decision 160 in part (a pinned column narrows the page's box, not its padding).
+     - **Revisit if:** a browser's keyboard or wheel scrolling misses the box, or print or the phone needs the window back.
+     - **Built:** app 0.75.0; PR #…; log 2026-11-20 (K4).
 
 ## 5. Open Flags
 

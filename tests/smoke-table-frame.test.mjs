@@ -398,3 +398,19 @@ test("S23: Edit on a member lands on Name, and a note's Edit sits beside its nam
   assert.equal(app.$(".tbl-note.open .note-acts"), null, "and not at its foot");
   assert.deepEqual(app.errors, []);
 });
+
+test("K4: from 1280px a jump to the top scrolls the page's box, not the window", () => {
+  const t = Engine.migrateTable(JSON.parse(readFileSync(new URL("../samples/dead-air.shadows-table.json", import.meta.url), "utf8")));
+  const open = width => boot({ width, storage: { ...GM_ON, ["shadows.table.v1." + t.meta.id]: { table: t, section: "players", changed: "2026-10-05T10:00:00.000Z", exported: null } } });
+  for (const [width, box] of [[1280, true], [1024, false]]) {
+    const app = open(width);
+    app.click("[data-topen]");
+    const calls = []; app.window.scrollTo = (...a) => calls.push(a);
+    const sets = []; let top = 500;
+    Object.defineProperty(app.$("#app"), "scrollTop", { configurable: true, get: () => top, set: v => { top = v; sets.push(v); } });
+    app.click('[data-tsec="cast"]');
+    if (box) { assert.ok(sets.includes(0) && top === 0, "the box wasn't scrolled to the top"); assert.equal(calls.length, 0, "the window was scrolled"); }
+    else { assert.ok(calls.some(a => a[0] === 0 && a[1] === 0), "the window wasn't scrolled to the top"); assert.deepEqual(sets, [], "the box was scrolled below 1280px"); }
+    assert.deepEqual(app.errors, []);
+  }
+});

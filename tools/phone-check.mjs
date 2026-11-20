@@ -134,7 +134,7 @@ const builtFile = args.find(a => !a.startsWith("--"));
 
 const frameBoxes = () => {
   const r = el => { if (!el) return null; const b = el.getBoundingClientRect(); return [b.x, b.y, b.width, b.height].map(n => Math.round(n * 10) / 10); };
-  window.scrollTo(0, 0);
+  __pg().scrollTop = 0;
   const out = { header: r(document.querySelector("header.top")), rail: r(document.querySelector("nav.ledger")),
     main: r(document.querySelector("main")), vitals: r(document.querySelector("aside.vitals")), children: [] };
   // Every box under `main`, folded to a hash: a card, a field or a line of prose that moves changes it, which the
@@ -449,7 +449,7 @@ async function sheetHelp(browser, file, rows) {
   };
   const box = (page, sel) => page.evaluate(s => { const e = document.querySelector(s); if (!e) return null; const r = e.getBoundingClientRect(), cs = getComputedStyle(e);
     return { left: Math.round(r.left), right: Math.round(r.right), top: Math.round(r.top), bottom: Math.round(r.bottom), w: Math.round(r.width), h: Math.round(r.height), shown: cs.visibility !== "hidden" && cs.display !== "none" && r.width > 0 && r.height > 0 }; }, sel);
-  // A phone: the button is a real target, the name isn't cut, and the foot's switches are in the first screen.
+  // A phone: the button is a real target, the name isn't cut, and K4: Help's head (Close and the tabs) is in the first screen, and two lines of tabs at most.
   for (const w of WIDTHS.filter(w => w.width < 640)) {
     const { c, page, errors } = await open(w.width, w.height, false, "trackers", !!w.touch);
     const bad = [];
@@ -466,14 +466,17 @@ async function sheetHelp(browser, file, rows) {
     if (await guideShown("main")) bad.push("Main's guide line shows on a phone");
     if (!(await guideShown("trackers"))) bad.push("Trackers' guide line is hidden on a phone");
     if (w.width < 480) { await page.click("[data-menu-toggle]"); await page.click("[data-shelp-menu]"); } else await page.click("[data-shelp]");
-    const foot = await box(page, "#ghelp .help-foot"), close = await box(page, "#ghelp [data-help-close]");
-    if (!foot) bad.push("no foot");
-    else if (foot.bottom > w.height) bad.push(`the foot's switches end at ${foot.bottom}px of ${w.height}`);
-    if (foot && close && foot.top < close.bottom) bad.push("the foot isn't under the heading");
+    // K4 (Decision 306): the foot is gone; the head holds Close and the tabs, and the tabs wrap to two lines at most.
+    const head = await box(page, "#ghelp .help-head"), close = await box(page, "#ghelp [data-help-close]");
+    const tabRows = await page.evaluate(() => new Set([...document.querySelectorAll("#ghelp .help-tab")].map(b => Math.round(b.getBoundingClientRect().top))).size);
+    if (!head) bad.push("no head");
+    else if (head.bottom > w.height * 0.3) bad.push(`the head ends at ${head.bottom}px of ${w.height}`);
+    if (!close || close.bottom > w.height) bad.push("Close is not in the first screen");
+    if (tabRows > 2) bad.push(`the tabs take ${tabRows} lines`);
     const sw = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     if (sw > 0) bad.push(`the page scrolls sideways by ${sw}px`);
     if (errors.length) bad.push(errors.join("; "));
-    rows.push({ width: w.name, screen: "K1: sheet Help's foot above the fold, the name beside the ?", layout: bad.length ? bad.join("; ") : `ok (${w.width < 480 ? "Help in ⋮" : `? ${hdr.bw}x${hdr.bh}`}, name ${hdr.nw}, foot ends ${foot && foot.bottom} of ${w.height})`, ok: !bad.length });
+    rows.push({ width: w.name, screen: "K1/K4: sheet Help's head above the fold, the name beside the ?", layout: bad.length ? bad.join("; ") : `ok (${w.width < 480 ? "Help in ⋮" : `? ${hdr.bw}x${hdr.bh}`}, name ${hdr.nw}, head ends ${head && head.bottom} of ${w.height}, ${tabRows} tab line(s))`, ok: !bad.length });
     await c.close();
   }
   // K2: Every word on a phone. #ghelp is a block with overflow (unlike K1's inline span), so its scrollWidth means something; the filter box and
@@ -491,8 +494,9 @@ async function sheetHelp(browser, file, rows) {
     const wide = await page.evaluate(() => { const p = document.querySelector("#ghelp"); return p.scrollWidth - p.clientWidth; });
     if (wide > 0) bad.push(`#ghelp is ${wide}px wider than it shows`);
     await page.evaluate(() => { document.querySelector("#ghelp").scrollTop = 900; });
-    const stuck = await box(page, "#ghelp .help-find"), jumpAfter = await box(page, "#ghelp .help-jump");
-    if (!stuck || !find || stuck.top > 40 || stuck.top < -1) bad.push(`the find bar left the first screen when the list scrolled (top ${stuck.top}px)`);
+    const stuck = await box(page, "#ghelp .help-find"), jumpAfter = await box(page, "#ghelp .help-jump"), headAfter = await box(page, "#ghelp .help-head");
+    // K4: it sticks just under the head, which sticks at the top.
+    if (!stuck || !find || !headAfter || headAfter.top > 0 || Math.abs(stuck.top - headAfter.bottom) > 1) bad.push(`the find bar left the first screen when the list scrolled (top ${stuck.top}px)`);
     if (jumpAfter && jumpAfter.bottom > w.height) bad.push(`the letter row left the first screen when the list scrolled (bottom ${jumpAfter.bottom}px)`);
     const sw = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     if (sw > 0) bad.push(`the page scrolls sideways by ${sw}px`);
@@ -512,8 +516,8 @@ async function sheetHelp(browser, file, rows) {
     if (main && help && main.right > help.left + 1) bad.push(`main runs ${main.right - help.left}px under the column`);
     // The find bar sticks at every width: after the list scrolls it is still at the top of the column.
     await page.evaluate(() => { document.querySelector("#ghelp").scrollTop = 900; });
-    const stuck = await box(page, "#ghelp .help-find");
-    if (!stuck || !stuck.shown || stuck.top > 40 || stuck.top < -1) bad.push(`the find bar left the top of the column when the list scrolled (top ${stuck && stuck.top}px)`);
+    const stuck = await box(page, "#ghelp .help-find"), headAfter = await box(page, "#ghelp .help-head");
+    if (!stuck || !stuck.shown || !headAfter || headAfter.top > 0 || Math.abs(stuck.top - headAfter.bottom) > 1) bad.push(`the find bar left the top of the column when the list scrolled (top ${stuck && stuck.top}px)`);
     if (errors.length) bad.push(errors.join("; "));
     rows.push({ width: `sheet ${width}`, screen: "K2: Every word, vitals pinned, the find bar sticks", layout: bad.length ? bad.join("; ") : `ok (main ends ${main && main.right}, column starts ${help && help.left})`, ok: !bad.length });
     await c.close();
@@ -607,7 +611,7 @@ async function tableExtras(browser, file, rows, numbers) {
     const at = () => page.evaluate(() => { const pn = document.querySelector(".cast-panel"), bar = document.querySelector(".tbl-bar"), r = pn.getBoundingClientRect(), b = bar.getBoundingClientRect(), t = document.querySelector("[data-ctitle]").getBoundingClientRect();
       return { x: Math.round(r.x), w: Math.round(r.width), top: Math.round(r.top), barBottom: Math.round(b.bottom), titleTop: Math.round(t.top) }; });
     const before = await at();
-    await page.evaluate(() => window.scrollTo(0, Math.min(1000, Math.floor((document.documentElement.scrollHeight - innerHeight) / 3))));
+    await page.evaluate(() => __pg().scrollTop = Math.min(1000, Math.floor((__pg().scrollHeight - __pg().clientHeight) / 3)));
     const after = await at();
     // S23: the status sits under the name in Edit's form. The read view has no status field, so this is measured with Edit open;
     // measured on the read view it was true whenever no Edit was open, which proved nothing.
@@ -643,7 +647,7 @@ async function tableKeys(browser, file, rows) {
     await p.goto(pathToFileURL(file).href); await p.click("[data-topen]"); await p.click(`[data-tsec="${tab}"]`);
     return [c, p, errors];
   };
-  const blur = p => p.evaluate(() => { if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur(); window.scrollTo(0, 0); });
+  const blur = p => p.evaluate(() => { if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur(); __pg().scrollTop = 0; });
   const modal = p => p.evaluate(() => !!document.querySelector("dialog.modal[open]"));
   const row = (screen, bad, said) => rows.push({ width: "table keys", screen, layout: bad.length ? bad.join("; ") : said, ok: !bad.length });
   // B1
@@ -670,11 +674,11 @@ async function tableKeys(browser, file, rows) {
     const [c, p] = await open({ width: 844, height: 390 }), bad = [];
     await p.click("[data-copen]");
     await p.evaluate(() => { const pad = document.createElement("div"); pad.id = "keys-pad"; pad.style.height = "3000px"; document.querySelector("main").appendChild(pad); });
-    await p.evaluate(() => window.scrollTo(0, 1500));
-    await blur(p); await p.evaluate(() => window.scrollTo(0, 1500));
-    const before = await p.evaluate(() => Math.round(window.scrollY));
+    await p.evaluate(() => { __pg().scrollTop = 1500; });
+    await blur(p); await p.evaluate(() => { __pg().scrollTop = 1500; });
+    const before = await p.evaluate(() => Math.round(__pg().scrollTop));
     await p.keyboard.press("f"); await p.keyboard.press("Escape");
-    const after = await p.evaluate(() => ({ y: Math.round(window.scrollY), on: document.activeElement === document.querySelector("[data-tfind]") }));
+    const after = await p.evaluate(() => ({ y: Math.round(__pg().scrollTop), on: document.activeElement === document.querySelector("[data-tfind]") }));
     if (Math.abs(after.y - before) > 1 || !after.on) bad.push(`844x390: scrollY ${before} -> ${after.y}, focus on Find ${after.on}`);
     row("B2: Esc after F, at 844x390", bad, `scrollY ${before} -> ${after.y}, focus on Find`);
     keyNumbers.push({ check: "B2 844x390", before, after: after.y, focus: after.on ? "[data-tfind]" : "elsewhere" });
@@ -684,10 +688,10 @@ async function tableKeys(browser, file, rows) {
   {
     const [c, p] = await open({ width: 1300, height: 900 }), bad = [];
     await p.evaluate(() => { const pad = document.createElement("div"); pad.style.height = "3000px"; document.querySelector("main").appendChild(pad); });
-    await p.evaluate(() => { const b = document.querySelector("[data-copen]"); b.focus({ preventScroll: true }); window.scrollTo(0, 120); });
-    const before = await p.evaluate(() => Math.round(window.scrollY));
+    await p.evaluate(() => { const b = document.querySelector("[data-copen]"); b.focus({ preventScroll: true }); __pg().scrollTop = 120; });
+    const before = await p.evaluate(() => Math.round(__pg().scrollTop));
     await p.keyboard.press("f"); await p.keyboard.press("Escape");
-    const after = await p.evaluate(() => ({ y: Math.round(window.scrollY), on: document.activeElement === document.querySelector("[data-copen]") }));
+    const after = await p.evaluate(() => ({ y: Math.round(__pg().scrollTop), on: document.activeElement === document.querySelector("[data-copen]") }));
     if (Math.abs(after.y - before) > 1 || !after.on) bad.push(`1300x900: scrollY ${before} -> ${after.y}, focus back on the card ${after.on}`);
     row("B2: Esc after F from a card, at 1300x900", bad, `scrollY ${before} -> ${after.y}, focus on the card`);
     keyNumbers.push({ check: "B2 1300x900", before, after: after.y, focus: after.on ? "[data-copen]" : "elsewhere" });
@@ -882,6 +886,10 @@ const majorSeed = JSON.stringify({ ch: lockedCharacter("professional", 10), sect
 const MAJOR = "progression: a Major";
 
 const browser = await launch();
+// K4 (Decision 307): from 1280px the page scrolls in #app, not the window. `__pg()` is whichever box scrolls, as the app's pageScroller() says,
+// in every page this run opens; each scroll and each read of the scroll position below goes through it.
+{ const nc = browser.newContext.bind(browser);
+  browser.newContext = async (...a) => { const c = await nc(...a); await c.addInitScript(() => { window.__pg = () => (matchMedia("(min-width:1280px)").matches && document.getElementById("app")) || document.scrollingElement; }); return c; }; }
 const rows = [], tableNumbers = [];
 try {
   for (const w of WIDTHS) {
@@ -936,13 +944,13 @@ try {
         shut.forEach(d => { d.open = false; });
         // W45: the vitals bar and a sheet's jump bar are one row each, and
         // Main's Health card starts near the top. Measured from the top.
-        window.scrollTo(0, 0);
+        __pg().scrollTop = 0;
         const lines = sel => new Set([...document.querySelectorAll(sel)].filter(shown).map(e => Math.round(e.getBoundingClientRect().top))).size;
         const hp = document.querySelector("#main .cond-grid");
         const sticky = document.querySelector("#main .jumpbar.sticky");
         const bars = { vbar: lines("#main .vbar .vpill"), jump: lines("#main .jumpbar:not(.sticky) .jump"),
           hp: hp ? Math.round(hp.getBoundingClientRect().top) : null, sticky: sticky ? Math.round(sticky.getBoundingClientRect().height) : null };
-        window.scrollTo(0, document.documentElement.scrollHeight);
+        __pg().scrollTop = __pg().scrollHeight;
         const h = document.querySelector("header.top").getBoundingClientRect();
         const de = document.documentElement;
         const brand = document.querySelector("header.top .brand");

@@ -860,7 +860,8 @@ tr.lo-modrow td{border-top:0; padding-top:0}
   border-left:1px solid var(--frame); background:var(--panel); box-shadow:-18px 0 44px rgba(0,0,0,.45);
   transform:translateX(100%); transition:transform .26s ease; overflow-y:auto; padding:18px 18px 48px}
 .vdrawer.open{transform:translateX(0)}
-.vdrawer .dhead{display:flex; align-items:center; margin-bottom:12px}
+/* K4: Pin and Close stay at the top of the panel as it scrolls. The head reaches up over the panel's 18px of padding, so nothing shows above it. */
+.vdrawer .dhead{display:flex; align-items:center; position:sticky; top:-18px; z-index:2; margin:-18px -18px 12px; padding:18px 18px 8px; background:var(--panel)}
 .vdrawer .dhead h2{font-family:var(--mono); font-size:.7rem; font-weight:500; letter-spacing:.18em;
   text-transform:uppercase; color:var(--dim)}
 .vdrawer .dclose{margin-left:auto; background:none; border:1px solid var(--frame); border-radius:4px;
@@ -883,15 +884,24 @@ tr.lo-modrow td{border-top:0; padding-top:0}
    the header and page make room for it, and the bar's pills go, since the
    panel shows them. Narrower, the pin is ignored and the bar comes back. */
 :root{--pin-w:300px}
+/* K4 (Decision N+1): from 1280px the page scrolls in #app, not the window, so a pinned column narrows the box and the page's scrollbar sits at the
+   column's left edge, beside the page (not past the column, beside the column's own). Narrower, the window scrolls as it always did.
+   pageScroller() in shared.js is the one place that knows which. `--sbw` is the box's scrollbar, so the fixed footer clears it. */
+@media screen and (min-width:1280px){
+  html, body{height:100%; overflow:hidden}
+  .app{height:100vh; min-height:0; overflow-y:auto; overflow-x:hidden}
+  .footer{right:var(--sbw, 0px)}
+}
 @media (min-width:1280px){
   .vdrawer .dpin{display:inline-block}
-  body.vitals-pinned .app{padding-right:var(--pin-w)}
+  body.vitals-pinned .app{margin-right:var(--pin-w)}
   body.vitals-pinned .vdrawer{transform:none; transition:none; z-index:30; width:var(--pin-w); max-width:none;
     box-shadow:none; background:var(--ground); background-image:linear-gradient(180deg, rgba(113,43,140,.10), rgba(13,23,49,0) 240px)}
+  body.vitals-pinned .vdrawer .dhead{background:var(--ground)}
   body.vitals-pinned .vdrawer .dclose{display:none}
   body.vitals-pinned .vdrawer-scrim{display:none}
   body.vitals-pinned .vbar{display:none}
-  body.vitals-pinned .footer{right:var(--pin-w)}
+  body.vitals-pinned .footer{right:calc(var(--pin-w) + var(--sbw, 0px))}
   body.vitals-pinned .toast{left:calc((100vw - var(--pin-w)) / 2)}
 }
 
@@ -905,6 +915,13 @@ tr.lo-modrow td{border-top:0; padding-top:0}
 .ghelp.open{transform:translateX(0)}
 .ghelp-scrim{position:fixed; inset:0; background:rgba(5,10,22,.5); z-index:70; opacity:0; visibility:hidden; transition:opacity .26s}
 .ghelp-scrim.open{opacity:1; visibility:visible}
+/* K4: the heading, Close and the tabs stay at the top of the panel as it scrolls. The head reaches up over the panel's 18px of padding, so
+   nothing shows above it, and it takes the panel's own ground. A sticky offset is measured from the scroller's padding edge in the content box, so it is -18px (the padding), and the find bar's is the head's height less the same 18. The panel (#ghelp) stays the one scroller: the head sticks inside it. */
+.ghelp .help-head{position:sticky; top:-18px; z-index:2; margin:-18px -18px 10px; padding:18px 18px 8px; background:var(--panel); border-bottom:1px solid var(--frame)}
+.ghelp .help-head .dhead{margin-bottom:8px}
+.ghelp .help-tabs{display:flex; flex-wrap:wrap; gap:6px}
+.ghelp .help-tab.on{background:var(--violet); border-color:var(--violet); color:var(--on-accent)}
+.ghelp .help-keys{margin-left:auto}
 .ghelp .dhead{display:flex; align-items:center; gap:10px; margin-bottom:10px}
 .ghelp .dhead h2{flex:1; min-width:0; overflow-wrap:anywhere; font-family:var(--mono); font-size:.78rem; font-weight:500; letter-spacing:.16em; text-transform:uppercase; color:var(--text)}
 .ghelp .dhead .btn{flex:none}
@@ -919,8 +936,8 @@ tr.lo-modrow td{border-top:0; padding-top:0}
 /* Every word (K2): the find bar (a box and the letters), then the list. On a phone the bar sticks to the top of the panel's scroll, so a
    letter is always one press away. A word's title is a block, so a long one wraps rather than widening the panel. */
 /* The bar sticks at every width (Ken, K2 review). The panel has 18px of padding above its content; the bar reaches up over it so nothing scrolls through that strip. */
-.ghelp .help-find{position:sticky; top:-18px; z-index:1; margin:0 0 6px; padding:18px 0 8px; background:var(--panel)}
-@media (min-width:1280px){ .ghelp.open .help-find{background:var(--ground)} }
+.ghelp .help-find{position:sticky; top:calc(var(--help-head-h, 18px) - 18px); z-index:1; margin:0 0 6px; padding:10px 0 8px; background:var(--panel)}
+@media (min-width:1280px){ .ghelp.open .help-find, .ghelp.open .help-head{background:var(--ground)} }
 .ghelp .help-q-label{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}   /* read by a screen reader; the box says it too (its placeholder) */
 .ghelp .help-q{width:100%; box-sizing:border-box; min-height:36px}
 .ghelp .help-jump{display:flex; flex-wrap:wrap; gap:2px; margin:8px 0 0}
@@ -933,20 +950,17 @@ tr.lo-modrow td{border-top:0; padding-top:0}
 .ghelp .help-kind{font-family:var(--mono); font-size:.7rem; font-weight:500; letter-spacing:.1em; text-transform:uppercase; color:var(--dim); margin-left:4px}
 .ghelp .help-none{margin:10px 0 0}
 .ghelp .help-note{margin:6px 0 0}
-.ghelp .help-foot .field{margin:0 0 12px}
 .ghelp .help-secs{display:flex; flex-wrap:wrap; gap:6px; margin:0 0 6px}
-.ghelp .help-foot{margin-top:22px; padding-top:14px; border-top:1px solid var(--frame)}
-.ghelp .help-links{display:flex; flex-wrap:wrap; gap:6px; margin:0 0 12px}
 @media (min-width:1280px){
-  .app.help-pinned{padding-right:var(--help-w)}
+  .app.help-pinned{margin-right:var(--help-w)}
   .ghelp.open{transition:none; z-index:30; box-shadow:none; background:var(--ground); background-image:linear-gradient(180deg, rgba(113,43,140,.10), rgba(13,23,49,0) 240px)}
   .ghelp-scrim{display:none}
-  .app.help-pinned ~ .footer{right:var(--help-w)}
+  .app.help-pinned ~ .footer{right:calc(var(--help-w) + var(--sbw, 0px))}
   body:has(.app.help-pinned) .toast{left:calc((100vw - var(--help-w)) / 2)}
   /* The sheet's Help takes the pinned vitals' column while it's open (K1): the drawer steps out of the way, the bar's pills come back
      (its toggle has nothing to open), and the page makes room for one column, not both. Closing Help removes the class and the pin is
      back; nothing here, or in the code, writes the pin. */
-  body.vitals-pinned .app.help-pinned{padding-right:var(--help-w)}
+  body.vitals-pinned .app.help-pinned{margin-right:var(--help-w)}
   body.vitals-pinned:has(.app.help-pinned) .vdrawer{visibility:hidden}
   body.vitals-pinned:has(.app.help-pinned) .vbar{display:flex}
   body.vitals-pinned:has(.app.help-pinned) .vbar > .vpill.toggle{display:none}
@@ -959,13 +973,6 @@ tr.lo-modrow td{border-top:0; padding-top:0}
 @media (max-width:479px){ .hdr-actions [data-shelp]{display:none} .hdr-menu [data-shelp-menu]{display:block} }
 /* Main's guide line gives its room to the Health card on a phone: Main is read at a glance, and Help says the same (K1). */
 @media (max-width:639px){ #main [data-guide="main"]{display:none} }
-/* On a phone the sheet's Help draws its switches first, under the heading, so they're in reach without scrolling (W150). */
-@media (max-width:599px){
-  .ghelp[data-host="sheet"]{display:flex; flex-direction:column}
-  .ghelp[data-host="sheet"] > *{order:2; flex:none}
-  .ghelp[data-host="sheet"] > .dhead{order:0}
-  .ghelp[data-host="sheet"] > .help-foot{order:1; margin:0 0 18px; padding:0 0 12px; border-top:0; border-bottom:1px solid var(--frame)}
-}
 @media (min-width:1400px){ .app.table-mode.help-pinned .roster-list:not(.sess-list){grid-template-columns:repeat(3, minmax(0, 1fr))} }
 
 /* Page footer — registry/version chrome, collapsible. */
@@ -1055,6 +1062,8 @@ tr.lo-modrow td{border-top:0; padding-top:0}
 .hdr-menu button{text-align:left; background:none; border:0; color:var(--text); cursor:pointer;
   padding:9px 11px; border-radius:5px; font-size:.86rem; white-space:nowrap}
 .hdr-menu button:hover{background:var(--panel-2)}
+.hdr-menu .menu-state{float:right; margin-left:12px; font-family:var(--mono); font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; color:var(--dim)}
+.hdr-menu [aria-pressed="true"] .menu-state{color:var(--cyan)}
 
 /* Collapsible trait cards (advantages / disadvantages) */
 details.pick.trait{padding:0}

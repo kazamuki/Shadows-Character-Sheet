@@ -594,3 +594,12 @@ test("U4: gm.js has no inline style but a computed transform", () => {
     assert.equal(val(inBlock("@media (min-width:640px)"), ".ref-frame table.ref", "width"), null, "E6's 640px override is still there");
   });
 }
+
+test("K4: nothing but the page's scroll helpers scrolls or reads the window's scroll", () => {
+  // Decision 307: from 1280px the page scrolls in #app. A `window.scrollTo(0,0)` left in the UI would scroll nothing there.
+  for (const f of BROWSER_JS.filter(f => f.startsWith("src/ui/"))) {
+    const src = readFileSync(join(ROOT, f), "utf8").replace(/\/\*PAGE-SCROLL:BEGIN\*\/[\s\S]*?\/\*PAGE-SCROLL:END\*\//, "");
+    const bad = src.split("\n").map((l, i) => [i + 1, l]).filter(([, l]) => /window\.(scrollTo|scrollBy|scroll)\(|window\.scroll[XY]\b|\bpage[XY]Offset\b|\bscrollingElement\b/.test(l.replace(/\/\/.*$/, "")));
+    assert.deepEqual(bad, [], `${f}: the window's scroll is read or moved outside the page helpers (use scrollPageTop / pageScrollTo / pageScrollBy)`);
+  }
+});

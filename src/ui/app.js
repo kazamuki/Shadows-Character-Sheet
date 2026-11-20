@@ -12,7 +12,7 @@
 //   minor — a capability a player can use that wasn't there before
 //   major — existing character files or the workflow break
 // The other three versions have their own triggers; see CLAUDE.md.
-const APP_VERSION = "0.74.0";
+const APP_VERSION = "0.75.0";
 
 // ── Main render + events ─────────────────────────────────────────────
 // Header chrome: brand context + the section tabs (which now live in the
@@ -29,7 +29,7 @@ function renderTopChrome(){
     ctx.textContent = charName(S.ch, "Unnamed");
     nav.innerHTML = tabButtonsHtml();
     nav.querySelectorAll("[data-sec]").forEach(b=>b.onclick=()=>{
-      S.section=normSection(b.dataset.sec); window.scrollTo(0,0); update();
+      S.section=normSection(b.dataset.sec); scrollPageTop(); update();
     });
     showActiveTab(nav);
     if (act){
@@ -37,6 +37,8 @@ function renderTopChrome(){
         <button class="kebab" data-menu-toggle aria-haspopup="true" aria-expanded="false" aria-label="Sheet actions">⋮</button>
         <div class="hdr-menu" id="hdrmenu" hidden>
           <button data-shelp-menu="1">Help</button>
+          ${menuSwitchHtml("guide", sheetGuide().ui.guideSwitch, sheetGuideOn(), sheetGuide().ui)}
+          ${menuSwitchHtml("keys", sheetGuide().ui.keySwitch, keysOn(), sheetGuide().ui)}
           <button data-admin="1">${S.admin?"Exit admin mode":"Admin mode (free edit)"}</button>
           <button data-export="1">Export .shadows.json</button>
           <button data-print="1">Print sheet</button>
@@ -51,11 +53,14 @@ function renderTopChrome(){
       act.querySelectorAll("[data-admin]").forEach(b=>b.onclick=()=>{
         menu.hidden=true; S.admin=!S.admin;
         if (S.admin) S.section="admin"; else if (S.section==="admin") S.section="main";
-        window.scrollTo(0,0); update();
+        scrollPageTop(); update();
       });
       act.querySelectorAll("[data-export]").forEach(b=>b.onclick=()=>{ menu.hidden=true; exportChar(); });
       act.querySelectorAll("[data-print]").forEach(b=>b.onclick=()=>{ menu.hidden=true; printSheet(S.ch); });
       act.querySelectorAll("[data-home]").forEach(b=>b.onclick=goHome);
+      // A guide line is drawn with the page, so the page draws again; setKeys moves the ? button's aria-keyshortcuts and nothing else.
+      bindMenuSwitch(act, "guide", sheetGuideOn, on=>{ setSheetGuide(on); renderMain(); }, sheetGuide().ui);
+      bindMenuSwitch(act, "keys", keysOn, setKeys, sheetGuide().ui);
     }
   } else if (S.screen==="wizard"){
     ctx.textContent = charName(S.ch, "Character Intake");
@@ -392,6 +397,9 @@ function boot(){
     nav.addEventListener("scroll", ()=>tabRowFades(nav), { passive:true });
     wheelSideways(nav);
   }
+  // K4: from 1280px the page's box has a scrollbar of its own; the fixed footer clears it (--sbw in the CSS). 0 where the window scrolls.
+  const sbw=()=>{ const app=$("app"); document.documentElement.style.setProperty("--sbw", (app && app.offsetWidth ? Math.max(0, app.offsetWidth-app.clientWidth) : 0) + "px"); };
+  sbw(); window.addEventListener("resize", sbw); if (window.ResizeObserver && $("app")) new ResizeObserver(sbw).observe($("app"));
   const closeMenu=()=>{ const m=$("hdrmenu"); if (m && !m.hidden){ m.hidden=true; const a=$("hdractions"), kb=a&&a.querySelector("[data-menu-toggle]"); if(kb) kb.setAttribute("aria-expanded","false"); } };
   document.addEventListener("keydown", e=>{
     // W58: Esc closes one layer. A modal or a popover handles its own Esc
