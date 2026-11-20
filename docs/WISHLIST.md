@@ -783,10 +783,10 @@ as a hint on the member's page and in *Who knows what*, and never stored
 give it away and ten might not. It's a fact the GM records, as an interaction
 kind (*learned their name*) or a mark on the interaction that gave it away.
 *To respect:* Decision 177 (interactions are the history; no second place for
-the same sentence), 179 (*Who knows what*). The Reputation advantage (`0430`,
-Rank 2: "people occasionally recognize you") and CRANK rep (169) are player
-rules about being recognised; a level the GM sets must not quietly contradict
-them, so ask Deighton and Scott how they meet before choosing levels. Crew are
+the same sentence), 179 (*Who knows what*). No player rule is about being
+recognised: CRANK rep (169) is standing on the platform, and the Reputation
+advantage (`0430`/`0432`) now only sets starting CRANK rep; its old "people
+occasionally recognize you" line is gone (checked 2026-11-19, S28's GQ31). Crew are
 typed names, read as the seat that answers to them (Decision 254).
 
 **W77 — A cast member's page, laid out for the table.** *Ken · 🔎 · Fix (UI) · raised 2026-10-08*\

@@ -120,7 +120,7 @@ lines. 254, 294 and 300 are read, not changed.
 
 | Id | Question | Default |
 |---|---|---|
-| **GQ31** | **Should a cast member record how well they know each of the crew** (a face, a regular, a name: W68)? | **No, not in S28.** W68 says to ask Deighton and Scott how a level the GM sets meets the Reputation advantage (`0430`, "people occasionally recognize you") and CRANK rep before choosing levels, and *Who knows what* already lists who has crossed paths, and how often. W68 stays on the wishlist, waiting on them |
+| **GQ31** | **Should a cast member record how well they know each of the crew** (a face, a regular, a name: W68)? | **No, not in S28.** No rule stands in its way: CRANK rep is a contractor's standing on the platform (169), not whether a face on the street knows yours, and the book's Reputation advantage is now only starting CRANK rep (`0430`/`0432`; its old "people occasionally recognize you" line is gone). It stays out because it's a new stored field with levels to design, and its first two levels can be read off *Who knows what* today. W68 stays on the wishlist as its own small order |
 | **GQ81** | **What a card shows.** (a) The stats, TOL, WILL and Health, values only, on one line. (b) The whole block as the page reads it, in a fold per card. (c) A third view, *Stat blocks*, beside *The cast* and *Who knows what* | **(a).** It's what a GM compares across the cast, and one line keeps the list scrolling. (b) costs a press per member, which is W78's complaint. (c) is a mode for one line |
 | **GQ82** | **Health on a hurt member's card.** (a) "Health 18 of 32". (b) "Health 32", the wounds on the page | **(a).** Who's still standing is half of who to throw next; the figure is already computed (294) |
 | **GQ83** | **Origin and Enemy role.** (a) The packs' names as buttons under the field, one pick, like NPC roles. (b) A ▾ on the field, the list unchanged (W81's own idea). (c) A select with "Other…" | **(a).** The same form already picks roles with buttons, the Codex's lists are short, and a typed name still works. (b) leaves the list to each browser's datalist, which is what W81 says doesn't look like a list |
@@ -160,8 +160,7 @@ binding, `castInteractionsHtml`, `interactionRowHtml`, `bindInteractions`, `intA
 
 ## 7. Out of scope
 
-- **W68** (how well a member knows the crew), unless Ken answers GQ31 yes. Then it's an order of its own, after Deighton
-  and Scott.
+- **W68** (how well a member knows the crew), unless Ken answers GQ31 yes. Then it's an order of its own.
 - **Tier as buttons.** It's a number with its guidance; W81 names only Origin and Enemy role.
 - **The modifiers, skills or traits on a card** (GQ81).
 - **A site profile's Exposure "Add someone"** (`exposure-names`, ~1812), which also types crew. Add it to the wishlist
