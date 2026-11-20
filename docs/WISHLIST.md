@@ -768,7 +768,7 @@ own; how long player data is kept; and whether this is the character sheet's
 job or the GM toolkit's.
 
 **W68 — How well a cast member knows each of the crew: a face, a regular, a name.** *Ken · 💡 · Rule or shape · raised 2026-10-07 in W29 S10c's order*\
-**Plan:** [gm-mode-next](plans/gm-mode-next.md) S28, as its question GQ31 (a new stored field), [order](plans/gm-mode-next/S28-cast-at-a-glance.md) drafted 2026-11-19, not approved; default: not built
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S28, as its question GQ31 (a new stored field), [order](plans/gm-mode-next/S28-cast-at-a-glance.md) approved 2026-11-19, not built; default: not built
 
 A GM's hint for the scene: does Dez half-recognise Rook ("you look familiar"),
 know them by sight ("I know you"), or know their name ("hey there, Rook")?
@@ -790,7 +790,7 @@ occasionally recognize you" line is gone (checked 2026-11-19, S28's GQ31). Crew 
 typed names, read as the seat that answers to them (Decision 254).
 
 **W77 — A cast member's page, laid out for the table.** *Ken · 🔎 · Fix (UI) · raised 2026-10-08*\
-**Plan:** [gm-mode-next](plans/gm-mode-next.md) S28 closes it as built ([order](plans/gm-mode-next/S28-cast-at-a-glance.md) drafted 2026-11-19, not approved): the first plan's S18 built the bar, the status under the name and the docked stat block (Decision 258) · **Goes with:** W78, W80, W81
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S28 closes it as built ([order](plans/gm-mode-next/S28-cast-at-a-glance.md) approved 2026-11-19, not built): the first plan's S18 built the bar, the status under the name and the docked stat block (Decision 258) · **Goes with:** W78, W80, W81
 
 Three things about the page a GM opens mid-scene:
 - **Back and Add to <encounter> always in reach.** They sit at the top today
@@ -810,7 +810,7 @@ a preference of this browser as 160's is, not of the table.
 <encounter> live there, and stay put while the page scrolls.
 
 **W78 — The cast list shows each member's stat block, to read.** *Ken · 🔎 · Fix (UI) · raised 2026-10-08*\
-**Plan:** [gm-mode-next](plans/gm-mode-next.md) S28, [order](plans/gm-mode-next/S28-cast-at-a-glance.md) drafted 2026-11-19, not approved · **Goes with:** W77
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S28, [order](plans/gm-mode-next/S28-cast-at-a-glance.md) approved 2026-11-19, not built · **Goes with:** W77
 
 A GM scanning the cast for who to throw at the crew opens each member to
 see their numbers. The wish: each card on the Cast tab shows the block as it
@@ -848,7 +848,7 @@ is the place; no new markup in `index.html` beyond what's there); Decision 164
 pinned stat block (W77) and the rail leaves the page the middle.
 
 **W81 — Origin and Enemy role look like what they do.** *Ken · ⏭ · Fix (UI) · raised 2026-10-08*\
-**Plan:** [gm-mode-next](plans/gm-mode-next.md) S28, [order](plans/gm-mode-next/S28-cast-at-a-glance.md) drafted 2026-11-19, not approved · **Goes with:** W77
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S28, [order](plans/gm-mode-next/S28-cast-at-a-glance.md) approved 2026-11-19, not built · **Goes with:** W77
 
 On a cast member's page, **Origin** and **Enemy role** are text fields with a
 list of suggestions from the slotted packs (a `datalist`). They behave like a
@@ -877,7 +877,7 @@ Look first at how much of this the cast's and threads' links already give
 before inventing a new kind of link.
 
 **W142 — The cast's crew lines as buttons too.** *Ken · 🔎 · Rule or shape · raised 2026-10-31*\
-**Plan:** [gm-mode-next](plans/gm-mode-next.md) S28, [order](plans/gm-mode-next/S28-cast-at-a-glance.md) drafted 2026-11-19, not approved; set aside by S21 §7 until it landed
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S28, [order](plans/gm-mode-next/S28-cast-at-a-glance.md) approved 2026-11-19, not built; set aside by S21 §7 until it landed
 
 S21 turns an encounter's Add a PC and a session's Who was there into a row of buttons, one per active
 seat, with Add a player for anyone else. A line between the crew and the cast (**Between them and the

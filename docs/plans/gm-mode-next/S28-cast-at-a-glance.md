@@ -4,7 +4,8 @@
 stat block), W81 (Origin and Enemy role look like what they do), W142 (the cast's crew lines as buttons too), what's left
 of W77, and GQ31 (W68: how well a cast member knows each of the crew). **The ask:** Ken, 2026-11-19, after S26 merged:
 "Draft S28".
-**Status:** **drafted 2026-11-19** by Claude (Opus), the conductor. **Not approved.** GQ31 and GQ81–GQ85 are open.
+**Status:** **drafted 2026-11-19** by Claude (Opus), the conductor. **Approved by Ken 2026-11-19**, in the conductor
+session: "All defaults". GQ31 and GQ81–GQ85 each take their default.
 **Branch:** from `main`; PR to `main`. Nothing ships switched off: GM mode is on for everyone (Decision 239).
 **Runs beside:** nothing. One build at a time (Ken). **Say N everywhere** (N, N+1, N+2).
 
