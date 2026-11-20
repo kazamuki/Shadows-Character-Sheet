@@ -10,7 +10,7 @@
 
 **Built on:** K1 (the shared panel, Decision 289), K2 (*Every word*'s list, 291), K3 (298), S31 (278), the pinned vitals (160, 166). Decisions 140, 160, 166, 258, 278, 289, 291, 298.
 
-**Status: drafted 2026-11-20** by Claude (Opus), the S31 conductor, at Ken's request ("yeah, lets draft that. it is not affected by the text deighton is reviewing"). **Not yet approved.** Ken answered KQ23–KQ27 on 2026-11-20 (§4, in his words): *Vocab*, *Shortcuts*, the switches in ⋮, KQ26 Default, and KQ27 "seems reasonable" with a fuller explanation asked for. He also asked to take Deighton's notes on the night now (Deighton answered the S31 page's round 1 by 2026-11-20), so the night's three parts are rewritten from them (§9) and KQ28–KQ29 are new.
+**Status: drafted 2026-11-20** by Claude (Opus), the S31 conductor, at Ken's request ("yeah, lets draft that. it is not affected by the text deighton is reviewing"). **Approved by Ken 2026-11-20, in the S31 conductor's session: "Approve, Defaults"** (KQ28 and KQ29 on their defaults). Ken answered KQ23–KQ27 on 2026-11-20 (§4, in his words): *Vocab*, *Shortcuts*, the switches in ⋮, KQ26 Default, and KQ27 "seems reasonable" with a fuller explanation asked for. He also asked to take Deighton's notes on the night now (Deighton answered the S31 page's round 1 by 2026-11-20), so the night's three parts are rewritten from them (§9), and KQ28–KQ29 were added and answered Default.
 
 **Branch:** cut from `origin/main` at the pre-flight commit. PR to `main`. Nothing ships switched off.
 
@@ -115,17 +115,17 @@ N+1. **From 1280px the page scrolls in its own box, so with a column pinned its 
 
 ## 4. Questions for Ken
 
-A question left blank is answered **Default**. **Answered by Ken, 2026-11-20** (his words quoted), except KQ28–KQ29, which are new.
+A question left blank is answered **Default**. **Answered by Ken, 2026-11-20** (his words quoted); KQ28–KQ29 **answered Default** ("Approve, Defaults").
 
 - **KQ23 — The tabs' names.** **Answered:** "instead of 'every word', 'vocab'". So **This page** (the sheet: **This tab**), the night's tab (KQ28), **Vocab**. `wordsLink` is "Vocab" in both guides, and the view's heading says so too.
 - **KQ24 — Keys.** **Answered:** "Shortcuts instead of 'keys'". In the tab row after the tabs, drawn as a button, not a tab (it opens a box, not a view). **Shortcuts** replaces **Keys** everywhere GM mode shows it: ⋮, the box's title and its switch's label, and Help's head. The `data-tkeys`/`data-hkeys` attributes and `shadows.ui.keys` keep their names (they're ids, constraint 6's spirit; tests use them).
 - **KQ25 — The switches.** **Answered:** "the guide line switch … could be in the ... menu, since it affects the sheet as a whole". There are three today: GM mode's **Guide lines** (Help's foot), the sheet's **Guide lines** and **The ? key** (Help's foot), and GM mode's keys switch, which is already in the Keys box. So: both **Guide lines** go to ⋮ on their screen, and so does the sheet's **The ? key**. GM mode's keys switch stays in Shortcuts, where the keys are listed. Help has no foot.
 - **KQ26 — Which tab ? opens on.** **Answered: Default.** This page, every time.
 - **KQ27 — The scroll box at every width from 1280px, or only while a column is pinned.** **Answered:** "This seems reasonable, can [you] explain this in more detail?" Explained to Ken 2026-11-20; **Default unless he says otherwise**: every width from 1280px. With no column it looks and scrolls exactly as now; opening a column only narrows the box, so the page never jumps, and there's one way of scrolling to test on a desktop instead of two that hand the position back and forth.
-- **KQ28 — The night tab's name.** Scott (round 1): "Is the section called 'a night at the table' also? I would change that if possible." Deighton's notes call its parts Session prep, Current session and Debrief, and define a session as an hour or more of play.
+- **KQ28 — The night tab's name.** **Answered: Default** (Running a session). Scott (round 1): "Is the section called 'a night at the table' also? I would change that if possible." Deighton's notes call its parts Session prep, Current session and Debrief, and define a session as an hour or more of play.
   - **Default:** **Running a session**. It names what the tab walks through, and fits beside This page and Vocab.
   - *Alternative:* **Session flow**, or keep **A night at the table**.
-- **KQ29 — The parts' names, Deighton's** (Session prep, Current session, Debrief; today Before a session, At the table, After). They're `gmGuide.ui.when`, so they also rename the **When** chips on every page's Help.
+- **KQ29 — The parts' names, Deighton's** **Answered: Default** (take all three now). (Session prep, Current session, Debrief; today Before a session, At the table, After). They're `gmGuide.ui.when`, so they also rename the **When** chips on every page's Help.
   - **Default:** take all three now. Nobody else named the parts; Ken and Scott marked the old copy as fine.
   - *Alternative:* wait for Round 3, because **Debrief** is also Deighton's pick for the close-out page itself (R-closeout), where Ken and Scott picked "End the session". If Round 3 lands on Debrief for the page too, the part and the page share a name, which is the point; if not, the part is still a fair name for what comes after play.
 
