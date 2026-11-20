@@ -5891,7 +5891,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - The switches at Help's foot: out of reach, and about the screen.
      - **Replaces:** Decision 278 in part (the foot's links are tabs at the top; the night's name, parts and copy; Guide lines in ⋮). Decision 289 in part (the sheet's Every word is a tab, Back is gone, its switches are in ⋮). Decision 272 in part (Keys is Shortcuts).
      - **Revisit if:** Help gets a fourth view, or a phone can't spare the head's height.
-     - **Built:** app 0.75.0; PR #…; log 2026-11-20 (K4).
+     - **Built:** app 0.75.0; PR #375; log 2026-11-20 (K4).
 
 307. **From 1280px the page scrolls in its own box, so with a column pinned its scrollbar is at the column's left edge.**
      *2026-11-20 · Ken + Claude · Touches: #app, scroll box, pageScroller, scrollPageTop, pageScrollTo, pageScrollBy, windowScroll, jumpTo, anchorKept, placePopover, tip placement, help-pinned, vitals-pinned, header.top, --hdr-off, --sbw, phone-check, Decision 140, Decision 160*
@@ -5903,7 +5903,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - The column on the left of the page: it moves every layout Decision 258 and 160 settled.
      - **Replaces:** Decision 160 in part (a pinned column narrows the page's box, not its padding).
      - **Revisit if:** a browser's keyboard or wheel scrolling misses the box, or print or the phone needs the window back.
-     - **Built:** app 0.75.0; PR #…; log 2026-11-20 (K4).
+     - **Built:** app 0.75.0; PR #375; log 2026-11-20 (K4).
 
 ## 5. Open Flags
 
