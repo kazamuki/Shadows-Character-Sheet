@@ -7088,6 +7088,7 @@ const Engine = (() => {
     return c;
   }
   function _session(x, used){
+    x.title = _str(x.title);
     x.close = _close(x.close);
     x.number = _number(x.number);
     x.date = _day(x.date);
@@ -7128,7 +7129,7 @@ const Engine = (() => {
     x.updated = _isoOrNull(x.updated);
   }
   // The table file's shape. A bump needs a migrateTable() step in the same change.
-  const TABLE_SCHEMA_VERSION = "0.21";
+  const TABLE_SCHEMA_VERSION = "0.22";
   function newTable(name){
     const now = new Date().toISOString();
     return { meta:{ kind:"shadows-table", id:newTableId(), name:String(name ?? ""),
@@ -7256,6 +7257,9 @@ const Engine = (() => {
     //   Schema 0.21 (Decision 302): a written award log keeps the night's CRANK jobs. Nothing is guessed from a line's credits (203).
     if (typeof arrived!=="string" || _versionNewer("0.21", arrived))
       for (const x of (Array.isArray(c.sessions) ? c.sessions : [])) if (_isObj(x) && _isObj(x.close)) x.close.jobs = [];
+    //   Schema 0.22 (Decision 303): a session keeps a name. Nothing is guessed (203): every session starts unnamed.
+    if (typeof arrived!=="string" || _versionNewer("0.22", arrived))
+      for (const x of (Array.isArray(c.sessions) ? c.sessions : [])) if (_isObj(x)) x.title = "";
     //   Schema 0.19 (Decision 261): a side keeps its Combat Sense roll. A wave fight not ended takes each side's best
     //   as 210 read it, so a fight saved mid-round opens in the order it had; everything else starts with none.
     //   The seed reads the gated rows, so the gate does it (_encounters).
@@ -8240,7 +8244,7 @@ const Engine = (() => {
     const number = _number(f.number) ?? list.reduce((m, s)=>Math.max(m, s.number ?? -1), 0) + 1;
     const now = new Date().toISOString();
     const used = new Set(list.map(s=>s.id));
-    const x = { id:newSessionId(used), number, date:"date" in f ? _day(f.date) : _today(), present:[], hours:null,
+    const x = { id:newSessionId(used), number, title:_str(f.title).trim(), date:"date" in f ? _day(f.date) : _today(), present:[], hours:null,
                 journal:Object.fromEntries(JOURNAL_PARTS.map(k=>[k, ""])), close:null, created:now, updated:now };
     t.sessions.unshift(x);
     _tableStamp(t);
@@ -8261,6 +8265,7 @@ const Engine = (() => {
     }
     if ("number" in f) x.number = number;
     if ("hours" in f) x.hours = hours;
+    if ("title" in f) x.title = _str(f.title).trim();
     if ("date" in f) x.date = _day(f.date);
     if ("present" in f) x.present = _roleList(f.present);
     if (_isObj(f.journal)){
@@ -8290,7 +8295,10 @@ const Engine = (() => {
     });
   }
   function sessionTitle(s){
-    return _isObj(s) && Number.isFinite(s.number) ? `Session ${s.number}` : "Session";
+    if (!_isObj(s)) return "Session";
+    const n = Number.isFinite(s.number) ? `Session ${s.number}` : "";
+    const name = _str(s.title).trim();
+    return n && name ? `${n}: ${name}` : n || name || "Session";
   }
   // The notes jotted in a session, newest first (Decision 208).
   const sessionNotes = (t, id) => _notes(t).filter(n=>n.session===id && typeof id==="string")

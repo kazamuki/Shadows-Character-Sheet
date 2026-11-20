@@ -3,7 +3,7 @@
     "kind": "shadows-table",
     "id": "TBL-8E8Z-R2TG-6C8Z",
     "name": "Dead Air",
-    "tableSchemaVersion": "0.21",
+    "tableSchemaVersion": "0.22",
     "created": "2026-07-18T17:00:00.000Z",
     "updated": "2026-10-31T21:10:00.000Z"
   },
@@ -1957,6 +1957,7 @@
     {
       "id": "SE-DEAZD9A1",
       "number": 1,
+      "title": "The Shard",
       "date": "2026-07-18",
       "present": [
         "Mara Okonkwo",
@@ -2011,6 +2012,7 @@
     {
       "id": "SE-9DYZVSQP",
       "number": 2,
+      "title": "The Velvet Lung",
       "date": "2026-08-01",
       "present": [
         "Mara Okonkwo",
@@ -2065,6 +2067,7 @@
     {
       "id": "SE-0DSNNZ7V",
       "number": 3,
+      "title": "Pier 9",
       "date": "2026-08-22",
       "present": [
         "Mara Okonkwo",
@@ -2119,6 +2122,7 @@
     {
       "id": "SE-FC4H16S3",
       "number": 4,
+      "title": "The Coroner's Report",
       "date": "2026-09-12",
       "present": [
         "Mara Okonkwo",
@@ -2172,6 +2176,7 @@
     {
       "id": "SE-H671NF6W",
       "number": 5,
+      "title": "The Hub",
       "date": "2026-09-26",
       "present": [
         "Mara Okonkwo",
@@ -2248,6 +2253,7 @@
     {
       "id": "SE-PJB1ZXSS",
       "number": 6,
+      "title": "The Phantom Ports",
       "date": "2026-10-17",
       "present": [
         "Mara Okonkwo",
@@ -2302,6 +2308,7 @@
     {
       "id": "SE-HR5CH1JX",
       "number": 7,
+      "title": "",
       "date": "2026-10-31",
       "present": [
         "Mara Okonkwo",

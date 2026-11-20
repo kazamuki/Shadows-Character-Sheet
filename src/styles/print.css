@@ -225,3 +225,48 @@
 #printSheet table.p-table tr.p-tight .p-line{ line-height:1.1; padding-bottom:0 }
 #printSheet table.p-table tr.p-cat .p-small{ vertical-align:baseline }
 #printSheet table.p-table tr.p-tight td{ line-height:1.1; padding-top:1px; padding-bottom:1px }
+
+/* ── A table page, printed as it reads (Decision 304) ──────────────────
+ * Print on a session's, a cast member's or an encounter's page puts the class on <body> (printTablePage, gm.js). The page
+ * itself prints: #app shows, #printSheet hides, the chrome and every button that only acts go, and the page is portrait on
+ * white. Every rule here sits under body.table-print, so a character's print (the header's Print sheet, a seat's Print,
+ * the blank sheet) reads exactly the rules above and is not touched. */
+@page table{ size: letter portrait; margin: 14mm; }
+body.table-print{
+  --ground:#FFFFFF; --panel:#FFFFFF; --panel-2:#FFFFFF; --text:#111111; --dim:#444444; --ink:#FFFFFF;
+  --cyan:#111111; --green:#111111; --gold:#111111; --magenta:#712B8C; --violet-text:#712B8C; --magenta-text:#712B8C;
+  background:#fff; color:#111;
+}
+body.table-print #printSheet{ display:none }
+body.table-print #app{ display:block; page:table; min-height:0; background:#fff }
+body.table-print #app > :not(main){ display:none }
+body.table-print #main{ display:block; padding:0; margin:0; max-width:none; width:auto }
+body.table-print .tbl-bar, body.table-print .enc-bar, body.table-print .guide-line, body.table-print .btn:not(.crew-btn),
+body.table-print [data-tprint], body.table-print [data-smd], body.table-print .cast-delete, body.table-print .toast,
+body.table-print summary::marker, body.table-print .thread-btns, body.table-print .cast-add,
+body.table-print [data-crew-add], body.table-print .crew-btn:not(.on), body.table-print .crew-mark,
+body.table-print .tag[data-tip][aria-label^="What "], body.table-print .enc-tips, body.table-print .enc-more, body.table-print .enc-acts,
+body.table-print .enc-add, body.table-print .tprint-skip, body.table-print .enc-name-field, body.table-print .field-hint,
+body.table-print .form-toggle button:not(.on), body.table-print .form-toggle:not(:has(button.on)), body.table-print .field[data-print-empty],
+body.table-print h2.sec-h:has(+ [data-fclocks]:empty){ display:none !important }
+body.table-print .print-only{ display:block }
+body.table-print .form-toggle{ display:flex; flex-wrap:wrap; justify-content:flex-start; gap:0 14px; border:0; overflow:visible; width:auto }
+body.table-print .form-toggle button, body.table-print .form-toggle button.on{ background:none !important; border:0 !important; box-shadow:none; padding:0; color:#111; font:inherit; min-height:0 }
+body.table-print h1, body.table-print h2, body.table-print h3, body.table-print .step-title{ color:#712B8C; break-after:avoid }
+body.table-print .rec-head, body.table-print .enc-title-row{ display:block }
+/* A button that is a name or a title prints as text. */
+body.table-print .cast-open, body.table-print .int-who{ background:none; border:0; padding:0; color:#111; font:inherit; text-align:left }
+/* A field prints its value and no box; an empty one doesn't print. */
+body.table-print input, body.table-print textarea, body.table-print select{
+  border:0; background:none; padding:0; color:#111; box-shadow:none; appearance:none; -webkit-appearance:none; resize:none }
+/* The cast page's stat block is docked beside the text on screen; on paper it flows with the page. */
+body.table-print .cast-layout{ display:block }
+body.table-print .cast-layout *{ position:static !important }
+body.table-print .cast-col{ max-width:none }
+body.table-print details > summary{ list-style:none }
+body.table-print li, body.table-print .int-line{ break-inside:avoid }
+/* Who was there: the names that were, as text. */
+body.table-print .crew-btns{ display:flex; flex-wrap:wrap; gap:0 12px }
+body.table-print .crew-btn{ background:none; border:0; padding:0; color:#111; font:inherit; min-height:0 }
+body.table-print .cast-heal{ display:none }
+body.table-print textarea{ overflow:visible; height:auto; min-height:0 }

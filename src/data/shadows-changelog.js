@@ -2,6 +2,22 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.74.0",
+    "date": null,
+    "intro": [],
+    "items": [],
+    "groups": [
+      {
+        "title": "GM mode",
+        "items": [
+          "Give a session a name. It reads after its number everywhere: Session 5: The Hub.",
+          "Copy a session as Markdown, its journal first, to paste into your own notes.",
+          "Print a session, a cast member or an encounter, as the page reads."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.73.0",
     "date": "2026-11-19",
     "intro": [],

@@ -789,18 +789,6 @@ rules about being recognised; a level the GM sets must not quietly contradict
 them, so ask Deighton and Scott how they meet before choosing levels. Crew are
 typed names, read as the seat that answers to them (Decision 254).
 
-**W73 — A session can have a name.** *Ken · ⏭ · Rule or shape · raised 2026-10-08 in S5a's review*\
-**Plan:** [gm-mode-next](plans/gm-mode-next.md) S26, [order](plans/gm-mode-next/S26-session-record.md) approved 2026-11-19, not built · **Goes with:** W84, W86
-
-A table refers to its past by session: *"when did we learn that? Session 2,
-The Ledger."* S5a (Decisions 203–204) gives a session a number the GM sets and
-a day, and nothing else names it. The wish is an optional `title`, shown after
-the number wherever a session is named: the list, *Closed in*, an
-interaction's *Session 2*, and Next session's *Last session set up*.
-*To respect:* table schema bump and a `migrateTable()` step (`""` for every
-session already there); the number stays the identity and the sort (Ken,
-S5a's review: "last session" is by number), and the title is text only.
-
 **W77 — A cast member's page, laid out for the table.** *Ken · 🔎 · Fix (UI) · raised 2026-10-08*\
 **Plan:** [gm-mode-next](plans/gm-mode-next.md) S28 takes what's left; the first plan's S18 built the bar, the status under the name and the docked stat block (Decision 258) · **Goes with:** W78, W80, W81
 
@@ -871,32 +859,8 @@ GM type a name the packs don't have.
 no slotted pack lists); the browser's own datalist styling varies, so check it
 on a tablet.
 
-**W84 — Print a cast member, an encounter, a session's journal.** *Ken · 🔎 · Fix (UI) · raised 2026-10-09 in S13a's order (SQ4)*\
-**Plan:** [gm-mode-next](plans/gm-mode-next.md) S26, [order](plans/gm-mode-next/S26-session-record.md) approved 2026-11-19, not built (was the first plan's S13b) · **Goes with:** W73, W86
-
-The plan's S13 lists printing beside the GM screen: a cast member's page
-(the stat block, If Pushed, their line), an encounter (its rows, Conditions
-and the round, for a GM who runs the fight on paper), and a session's
-journal with its award log. S13a builds the Reference tab alone; this is **S13b**.
-*To respect:* `print.css` is the sheet's, with its own front page (Decision
-96), so a table page's print styles must not move the character's; no new
-markup in `index.html` (constraint 3); and the award log prints in the
-player's words, as the page reads it (205).
-
-**W86 — A session copied out as Markdown.** *Ken, from Deighton · 🔎 · Fix (UI) · raised 2026-10-09 in S14's order*\
-**Plan:** [gm-mode-next](plans/gm-mode-next.md) S26, [order](plans/gm-mode-next/S26-session-record.md) approved 2026-11-19, not built · **Goes with:** W73, W84, W140
-
-Deighton keeps his notes in Obsidian, as an outline of bulleted lists. A
-session's journal, its interaction lines and its jotted notes (Decision 208)
-could leave the app as one Markdown file to paste or save, in the Campaign
-Journal's order, so what he writes at the table lands in his own notes
-without retyping.
-*To respect:* it reads the table and writes nothing back (constraint 7); the
-file is the player's words as the page reads them; it is the session's page's
-action, not a new tab. Out of S14's scope (§6).
-
 **W140 — Notes that organise themselves: tags, categories, and the session they came from.** *Ken · 🔎 · Rule or shape · raised 2026-10-30*\
-**Plan:** [gm-mode-next](plans/gm-mode-next.md) S30 (no order yet); U3 (Decision 271) made Notes a list of titles, the screen this will fill · **Goes with:** W86
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S30 (no order yet); U3 (Decision 271) made Notes a list of titles, the screen this will fill
 
 A GM takes notes for many reasons: a name to remember, a rule to look up, a
 hook for later, what a player promised. Today a table note is a dated line
@@ -974,6 +938,11 @@ CRB 0530 (Visibility) gives each light level a Stealth bonus beside its attack p
 **Plan:** none yet
 
 E4 struck RES on the sheet for a body piece at Integrity 0, because the engine already stops applying it (CRB 0460 §Integrity). Two places still print it as a number: GM mode's seat line ("RES +6 · INT 0/10 · Scrap", `gm.js` `seatArmorText`; the compromised case already says "RES is gone", and `smoke-table-seat-fight.test.mjs` pins "· Scrap"), and the printed sheet's RES column (`sheet.js` print view, beside "0 / 10 scrap"). *To respect:* Decisions 191 and 257 (the seat reads the sheet's pipeline), and the print sheet's text-only armour row.
+
+**W173 — The browser's own Print on a table page.** *Ken, from S26 · ⏭ · Fix (UI) · raised 2026-11-19*\
+**Plan:** none yet
+
+S26's Print button prints a session, a cast member or an encounter as it reads. The browser's own Print (Ctrl+P, the menu) on a table page still prints `#printSheet`, which is empty or holds the last character printed. It would have to tell a character's print from a table page's. *To respect:* the character's print must not move (Decision 304).
 
 ### For the designers
 
@@ -1216,7 +1185,7 @@ A GM who wants to post jobs, see which the crew has taken and keep the ones nobo
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W173.** Everything above is open. What was built is in
+- **Next free number: W174.** Everything above is open. What was built is in
   [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)

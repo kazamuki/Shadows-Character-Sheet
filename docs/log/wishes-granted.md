@@ -1493,3 +1493,39 @@ U4 (UQ16) kept the borrowed icons until Scott's set arrives. The GM's section ta
 Main's, Encounters has Trackers'. Scott is to draw six of the GM's own; when they come they go into `src/data/`
 and the `ui` keys change, with no layout change since the slots are the same size. *To respect:* the icons are data
 (no `gamedataVersion`, Decision 68), one stroke and weight with the sheet's set.
+
+**W73 — A session can have a name.** → *S26, app 0.74.0, Decisions 303–305 (2026-11-19)* *Ken · ⏭ · Rule or shape · raised 2026-10-08 in S5a's review*\
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S26, [order](plans/gm-mode-next/S26-session-record.md) built · **Goes with:** W84, W86
+
+A table refers to its past by session: *"when did we learn that? Session 2,
+The Ledger."* S5a (Decisions 203–204) gives a session a number the GM sets and
+a day, and nothing else names it. The wish is an optional `title`, shown after
+the number wherever a session is named: the list, *Closed in*, an
+interaction's *Session 2*, and Next session's *Last session set up*.
+*To respect:* table schema bump and a `migrateTable()` step (`""` for every
+session already there); the number stays the identity and the sort (Ken,
+S5a's review: "last session" is by number), and the title is text only.
+
+**W84 — Print a cast member, an encounter, a session's journal.** → *S26, app 0.74.0, Decisions 303–305 (2026-11-19)* *Ken · 🔎 · Fix (UI) · raised 2026-10-09 in S13a's order (SQ4)*\
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S26, [order](plans/gm-mode-next/S26-session-record.md) built (was the first plan's S13b) · **Goes with:** W73, W86
+
+The plan's S13 lists printing beside the GM screen: a cast member's page
+(the stat block, If Pushed, their line), an encounter (its rows, Conditions
+and the round, for a GM who runs the fight on paper), and a session's
+journal with its award log. S13a builds the Reference tab alone; this is **S13b**.
+*To respect:* `print.css` is the sheet's, with its own front page (Decision
+96), so a table page's print styles must not move the character's; no new
+markup in `index.html` (constraint 3); and the award log prints in the
+player's words, as the page reads it (205).
+
+**W86 — A session copied out as Markdown.** → *S26, app 0.74.0, Decisions 303–305 (2026-11-19)* *Ken, from Deighton · 🔎 · Fix (UI) · raised 2026-10-09 in S14's order*\
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S26, [order](plans/gm-mode-next/S26-session-record.md) built · **Goes with:** W73, W84, W140
+
+Deighton keeps his notes in Obsidian, as an outline of bulleted lists. A
+session's journal, its interaction lines and its jotted notes (Decision 208)
+could leave the app as one Markdown file to paste or save, in the Campaign
+Journal's order, so what he writes at the table lands in his own notes
+without retyping.
+*To respect:* it reads the table and writes nothing back (constraint 7); the
+file is the player's words as the page reads them; it is the session's page's
+action, not a new tab. Out of S14's scope (§6).

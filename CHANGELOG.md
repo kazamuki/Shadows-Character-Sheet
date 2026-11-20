@@ -24,6 +24,14 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.74.0
+
+### GM mode
+
+- Give a session a name. It reads after its number everywhere: Session 5: The Hub.
+- Copy a session as Markdown, its journal first, to paste into your own notes.
+- Print a session, a cast member or an encounter, as the page reads.
+
 ## v0.73.0 — 2026-11-19
 
 ### Character sheet

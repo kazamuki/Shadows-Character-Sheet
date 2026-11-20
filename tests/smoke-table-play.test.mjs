@@ -900,7 +900,7 @@ test("Decisions 203–204: export and import keep sessions and threads, and a 0.
   const before = JSON.parse(JSON.stringify(app.window.eval("({ s: S.table.sessions, t: S.table.threads })")));
   app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
   const file = await tableFile(downloads[0]);
-  assert.equal(file.meta.tableSchemaVersion, "0.21");
+  assert.equal(file.meta.tableSchemaVersion, "0.22");
   assert.deepEqual(file.sessions, before.s); assert.deepEqual(file.threads, before.t);
   const fresh = boot({ storage: GM_ON });
   withDownloads(fresh);
@@ -913,7 +913,7 @@ test("Decisions 203–204: export and import keep sessions and threads, and a 0.
   const older = boot({ storage: GM_ON });
   withDownloads(older);
   await importFile(older, old);
-  assert.equal(older.window.eval("S.table.meta.tableSchemaVersion"), "0.21");
+  assert.equal(older.window.eval("S.table.meta.tableSchemaVersion"), "0.22");
   assert.equal(older.window.eval("S.table.sessions.length + S.table.threads.length"), 0);
   assert.equal(older.window.eval("S.table.interactions[0].session"), null);
   assert.deepEqual([...app.errors, ...fresh.errors, ...older.errors], []);
@@ -3017,4 +3017,244 @@ test("Decision 302: on a Redo a share that was still the even split moves with t
   jobIn(app, '[data-co-job="0"] [data-cj="pay"]', "3000");
   assert.deepEqual(shares(app), ["1000", "1000", "1000"], "Dex and Juno were the even split, so they follow; Mara typed hers");
   assert.deepEqual(app.errors, []);
+});
+
+// ── A session's name (Decision 303) ─────────────────────────────────────
+test("Decision 303: a name typed in Name reads after the number on every screen that names the session", () => {
+  const { app, ids } = closeApp(t => {
+    const id = mkSession(t, 1, "2026-09-01", ["Wren"], 2);
+    const h = Engine.addThread(t, { title: "Find Wren", opened: id }).id;
+    Engine.editThread(t, h, { status: "resolved", closed: id });
+    Engine.addInteraction(t, { kind: "met", text: "Wren says hello.", session: id, date: "2026-09-01" });
+    return id;
+  });
+  openSess(app, ids);
+  assert.equal(app.$("h1.step-title").textContent, "Session 1");
+  edit(app);
+  assert.equal(app.$$(".sess-head .field span")[1].textContent, "Name");
+  type(app, '[data-sf="title"]', "  The Hub  ");
+  assert.equal(app.$("h1.step-title").textContent, "Session 1: The Hub", "the head reads it as it's typed");
+  assert.equal(app.window.eval("S.table.sessions[0].title"), "The Hub", "saved trimmed");
+  done(app);
+  assert.equal(app.$("h1.step-title").textContent, "Session 1: The Hub");
+  assert.equal(app.$("[data-co-open]").textContent, "Close out Session 1: The Hub");
+  app.click("[data-co-open]");
+  assert.equal(app.$("h1.step-title").textContent, "Close out Session 1: The Hub");
+  assert.equal(app.$("[data-co-back]").textContent, "Back to Session 1: The Hub");
+  app.click("[data-co-back]");
+  app.click("[data-sback]");
+  assert.deepEqual(sessionRows(app), [`Session 1: The Hub · ${app.window.eval(`dayText("2026-09-01")`)} · Wren · 2 hours`]);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 303: a session with a name and no number says Close out The Hub; with neither it says this session", () => {
+  const { app, ids } = closeApp(t => { const id = mkSession(t, 1, "2026-09-01", ["Wren"], 2); Engine.editSession(t, id, { number: null, title: "The Hub" }); return id; });
+  openSess(app, ids);
+  assert.equal(app.$("h1.step-title").textContent, "The Hub");
+  assert.equal(app.$("[data-co-open]").textContent, "Close out The Hub");
+  app.click("[data-co-open]");
+  assert.equal(app.$("h1.step-title").textContent, "Close out The Hub");
+  assert.equal(app.$("[data-co-back]").textContent, "Back to The Hub");
+  app.click("[data-co-back]");
+  edit(app);
+  type(app, '[data-sf="title"]', "");
+  done(app);
+  assert.equal(app.$("[data-co-open]").textContent, "Close out this session");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 303: a hostile session name renders as text on the page, the list and the close-out", () => {
+  const evil = `<img src=x onerror="window.__hit=1"><b>x</b>`;
+  const { app, ids } = closeApp(t => { const id = mkSession(t, 2, "2026-09-01", ["Wren"], 2); Engine.editSession(t, id, { title: evil }); return id; });
+  assert.equal(app.$(".sess-open").textContent.includes(evil), true);
+  openSess(app, ids);
+  assert.equal(app.$("h1.step-title").textContent, `Session 2: ${evil}`);
+  app.click("[data-co-open]");
+  assert.equal(app.$("h1.step-title").textContent, `Close out Session 2: ${evil}`);
+  assert.equal(app.$("#main img"), null);
+  assert.equal(app.window.__hit, undefined);
+  assert.deepEqual(app.errors, []);
+});
+
+// ── A session as Markdown and Print on a table page (Decisions 304, 305) ──
+const dead5 = () => {
+  const app = deadAirApp("sessions");
+  app.window.eval(`S.sessOpen = S.table.sessions.find(s => s.number === 5).id; renderTable();`);
+  return app;
+};
+const asMd = s => s.replace(/\*\*?/g, "").replace(/\s+/g, " ").trim();
+
+test("Decision 305: the Markdown is the page's words: the award log, the lines and the journal, each as the page reads", () => {
+  const app = dead5();
+  const md = app.window.eval(`sessionMarkdown(sessOpenNow())`);
+  const lines = md.split("\n");
+  assert.equal(lines[0], "# Session 5: The Hub");
+  assert.match(lines[2], /^\d.* · Mara Okonkwo, Dex Villanueva, Juno Park · 4 hours$/, "the day line: the day, who came, the hours");
+  const sec = h => { const i = lines.indexOf("## " + h); return i < 0 ? [] : lines.slice(i + 1).slice(0, lines.slice(i + 1).findIndex(l => l.startsWith("## ")) < 0 ? undefined : lines.slice(i + 1).findIndex(l => l.startsWith("## "))).filter(l => l.startsWith("- ")); };
+  const journal = app.window.eval(`S.table.sessions.find(s => s.number === 5).journal`);
+  assert.ok(lines.indexOf("## What happened") > 0 && lines.indexOf("## What happened") < lines.indexOf("## Close-out"), "the journal leads");
+  assert.equal(sec("What happened")[0], "- " + journal.happened.split("\n")[0]);
+  const page = [...app.$$(".co-log li")].map(li => asMd(li.textContent));
+  const close = sec("Close-out").map(l => asMd(l.slice(2)));
+  assert.ok(page.length >= 4, "the sample's log has lines and a jobs line");
+  assert.deepEqual(close, page, "each line of the award log is the page's item");
+  assert.match(sec("Close-out").at(-1), /^- Jobs: \*.+\*, seen through, 4,500 Çredits\.$/);
+  const said = [...app.$$("[data-sline]")].map(li => asMd(li.textContent));
+  assert.deepEqual(sec("What passed between the crew and the cast").map(l => asMd(l.slice(2))), said.map(x => x.replace(/ ?Add to this session$/, "")));
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 305: a typed outline keeps its bullets, an accidental block is escaped, and a hostile name is text", () => {
+  const app = dead5();
+  const md = app.window.eval(`(() => { const s = sessOpenNow(); s.title = "<b>x</b>"; s.journal.happened = "# Not a heading\\n  - nested\\n* star\\n1. numbered\\n\\n> quote\\nplain"; return sessionMarkdown(s); })()`);
+  const l = md.split("\n");
+  assert.equal(l[0], "# Session 5: <b>x</b>");
+  const i = l.indexOf("## What happened");
+  assert.deepEqual(l.slice(i + 1, i + 7), ["- \\# Not a heading", "  - nested", "- star", "- 1\\. numbered", "- \\> quote", "- plain"]);
+});
+
+test("Decision 305: Copy as Markdown copies it and says so; if the clipboard refuses it saves a .md and says so", async () => {
+  const app = dead5();
+  const want = app.window.eval(`sessionMarkdown(sessOpenNow())`);
+  const got = [];
+  Object.defineProperty(app.window.navigator, "clipboard", { configurable: true, value: { writeText: t => { got.push(t); return Promise.resolve(); } } });
+  app.click("[data-smd]");
+  await new Promise(r => setTimeout(r, 20));
+  assert.deepEqual(got, [want]);
+  assert.match(app.$("#undotoast").textContent, /Copied as Markdown\./);
+  assert.equal(app.doc.activeElement, app.$("[data-smd]"), "focus stays on the button");
+  const saved = [];
+  Object.defineProperty(app.window.navigator, "clipboard", { configurable: true, value: { writeText: () => Promise.reject(new Error("no")) } });
+  app.window.URL.createObjectURL = () => "blob:x"; app.window.URL.revokeObjectURL = () => {};
+  app.window.HTMLAnchorElement.prototype.click = function () { saved.push(this.download); };
+  app.click("[data-smd]");
+  await new Promise(r => setTimeout(r, 20));
+  assert.deepEqual(saved, ["Session 5 The Hub.md"]);
+  assert.match(app.$("#undotoast").textContent, /Saved as Markdown\./);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 304: Print on a table page prints the page, the Debrief open, and the sheet's own print is unchanged", () => {
+  const app = deadAirApp("sessions");
+  app.window.eval(`S.sessOpen = Engine.sessionList(S.table).find(s => !s.close).id; renderTable();`);
+  assert.ok(app.$$("details.sess-debrief").length === 1);
+  const seen = [];
+  app.window.print = () => seen.push({ cls: app.doc.body.className, open: app.$("details.sess-debrief").open });
+  const was = app.$("details.sess-debrief").open;
+  app.click("[data-tprint]");
+  assert.deepEqual(seen, [{ cls: "table-print", open: true }], "the class is on and the Debrief open while it prints");
+  assert.equal(app.doc.body.classList.contains("table-print"), true, "print() returning isn't the end: a phone captures the page after it");
+  app.window.dispatchEvent(new app.window.Event("afterprint"));
+  assert.equal(app.doc.body.classList.contains("table-print"), false, "the class is back after the print");
+  assert.equal(app.$("details.sess-debrief").open, was, "the fold is as it was");
+  assert.equal(app.$("#printSheet").innerHTML, "", "#printSheet is untouched");
+  // A character's Print sheet leaves the class off and fills #printSheet.
+  const ch = Engine.migrate(lockedCharacter());
+  const sheet = boot({ storage: { "shadows.active.v1": { ch, section: "main" } } });
+  sheet.$$("#main button").find(b => /Open sheet/.test(b.textContent)).click();
+  const cls = [];
+  sheet.window.print = () => cls.push(sheet.doc.body.className);
+  sheet.click("[data-menu-toggle]"); sheet.click("[data-print]");
+  assert.deepEqual(cls, [""]);
+  assert.ok(sheet.$("#printSheet").innerHTML.length > 100);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 304: Print is on a session, a cast member and an encounter, and on no form", () => {
+  const app = deadAirApp("sessions");
+  app.window.eval(`S.sessOpen = S.table.sessions[0].id; renderTable();`);
+  assert.equal(app.$$("[data-tprint]").length, 1);
+  edit(app);
+  assert.equal(app.$$("[data-tprint]").length, 0, "no Print on the form");
+  app.window.eval(`S.editing = null; S.tsection = "cast"; S.sessOpen = null; S.castOpen = S.table.cast[0].id; renderTable();`);
+  assert.equal(app.$$("[data-tprint]").length, 1);
+  app.window.eval(`S.tsection = "encounters"; S.encOpen = S.table.encounters.find(e => e.status === "running").id; renderTable();`);
+  assert.equal(app.$$("[data-tprint]").length, 1);
+  app.window.eval(`S.encOpen = S.table.encounters.find(e => e.status === "planned").id; renderTable();`);
+  assert.equal(app.$$("[data-tprint]").length, 1, "a planned encounter: beside its Name field");
+  app.window.eval(`S.encOpen = S.table.encounters.find(e => e.status === "ended").id; renderTable();`);
+  assert.equal(app.$$("[data-tprint]").length, 1, "an ended encounter: beside its title");
+  assert.deepEqual(app.errors, []);
+});
+
+const screenCss = readFileSync(new URL("../src/styles/shadows.css", import.meta.url), "utf8");
+test("Decision 304: the print-only title is hidden on screen by shadows.css (print.css only loads for print)", () => {
+  assert.match(screenCss.replace(/\/\*[\s\S]*?\*\//g, ""), /(^|\n)\.print-only\s*\{\s*display:\s*none/);
+  const app = deadAirApp("encounters");
+  app.window.eval(`S.encOpen = S.table.encounters.find(e => e.status === "planned").id; renderTable();`);
+  assert.ok(app.$("h1[data-print-title].print-only"), "the page carries it");
+  assert.doesNotMatch(readFileSync(new URL("../src/styles/print.css", import.meta.url), "utf8"), /(^|\n)\.print-only\s*\{\s*display:\s*none/, "not left in a file that never loads on screen");
+  assert.match(readFileSync(new URL("../src/styles/print.css", import.meta.url), "utf8"), /body.table-print textarea{[^}]*min-height:0/, "a textarea drops the screen's 150px floor on paper");
+});
+
+const printCss = readFileSync(new URL("../src/styles/print.css", import.meta.url), "utf8");
+const tpRules = printCss.slice(printCss.indexOf("A table page, printed as it reads"));
+
+test("Decision 304: a chip that holds words prints; only the '?' tip buttons are dropped", () => {
+  const app = deadAirApp("encounters");
+  app.window.eval(`S.encOpen = S.table.encounters.find(e => e.status === "running").id; renderTable();`);
+  const tips = [...app.$$(".tag[data-tip]")];
+  assert.ok(tips.length > 0);
+  const dropped = tips.filter(b => (b.getAttribute("aria-label") || "").startsWith("What "));
+  const kept = tips.filter(b => !dropped.includes(b));
+  assert.ok(dropped.length > 0 && kept.length > 0, "the page has both kinds");
+  for (const b of dropped) assert.match(b.textContent, /\?/, "a dropped chip is a '?' button");
+  for (const b of kept) assert.doesNotMatch(b.textContent.trim(), /^\??$/, "a chip with words has no 'What …' label and prints");
+  // The rule names the "?" buttons by that label and no longer drops every tip.
+  assert.match(tpRules, /\.tag\[data-tip\]\[aria-label\^="What "\]/);
+  assert.doesNotMatch(tpRules.replace(/\.tag\[data-tip\]\[aria-label\^="What "\]/g, ""), /\.tag\[data-tip\]/);
+});
+
+test("Decision 304: an encounter prints its words: no More, no add rows, no unselected choices, no empty headings", () => {
+  const app = deadAirApp("encounters");
+  app.window.eval(`S.encOpen = S.table.encounters.find(e => e.status === "running").id; renderTable();`);
+  const mores = [...app.$$("details.enc-more")];
+  assert.ok(mores.length > 0);
+  const before = mores.map(d => d.open);
+  let at;
+  app.window.print = () => { at = mores.map(d => d.open); };
+  app.click("[data-tprint]");
+  assert.deepEqual(at, before, "More is not opened for the paper");
+  app.window.dispatchEvent(new app.window.Event("afterprint"));
+  for (const sel of [".enc-more", ".enc-acts", ".enc-add", ".enc-tips", ".form-toggle button:not(.on)", ".tprint-skip", "h2.sec-h:has(+ [data-fclocks]:empty)"])
+    assert.match(tpRules, new RegExp(sel.replace(/[.*+?^${}()|[\]\\:]/g, "\\$&")), sel + " is dropped on paper");
+  assert.ok(app.$$(".form-toggle button.on").length > 0, "the chosen one stays");
+  // The Debrief's own fold opens; a fold that holds words is one printTablePage opens.
+  const live = app.window.eval(`S.tsection = "sessions"; S.sessOpen = Engine.sessionList(S.table).find(s => !s.close).id; renderTable(); 1`);
+  assert.ok(live && app.$("details.sess-debrief"));
+  assert.ok(app.$(".tprint-skip[data-sco-h]"), "a live session's empty Close-out heading is skipped on paper");
+});
+
+test("Decision 304: a field prints what is in it now: empty ones are marked by value, text typed since render prints, a textarea is sized to its text", () => {
+  const app = deadAirApp("encounters");
+  app.window.eval(`S.encOpen = S.table.encounters.find(e => e.status === "planned").id; renderTable();`);
+  const tas = [...app.$$("main textarea, #main textarea")];
+  assert.ok(tas.length >= 2);
+  const empty = tas.find(t => !t.value.trim()), full = tas.find(t => t.value.trim());
+  assert.ok(empty, "the planned encounter has an empty plan field");
+  empty.value = "typed after the page was drawn";   // no re-render on input
+  Object.defineProperty(empty, "scrollHeight", { configurable: true, value: 706 });
+  const seen = {};
+  const marks = () => [...app.$$(".field")].filter(f => f.hasAttribute("data-print-empty"));
+  app.window.print = () => { seen.marked = marks().map(f => f.contains(empty)); seen.height = empty.style.height; seen.title = app.$("[data-print-title]").textContent; seen.n = marks().length; };
+  app.$("[data-enc-title]").value = "";
+  app.click("[data-tprint]");
+  assert.equal(seen.marked.some(Boolean), false, "text typed into an empty field is not marked empty");
+  assert.ok(seen.n > 0, "an empty field is marked");
+  assert.equal(seen.height, "706px", "a textarea is as tall as its text for the paper");
+  assert.ok(seen.title.length > 0, "an unnamed encounter prints its title (the placeholder)");
+  app.window.dispatchEvent(new app.window.Event("afterprint"));
+  assert.equal(marks().length, 0, "the marks are taken back");
+  assert.equal(empty.style.height, "", "the size is put back");
+});
+
+test("Decision 304: where print() returns first and afterprint never comes, the next touch of the page puts it back", async () => {
+  const app = deadAirApp("sessions");
+  app.window.eval(`S.sessOpen = S.table.sessions[0].id; renderTable();`);
+  app.window.print = () => {};
+  app.click("[data-tprint]");
+  await new Promise(r => setTimeout(r, 5));
+  assert.equal(app.doc.body.classList.contains("table-print"), true);
+  app.doc.body.dispatchEvent(new app.window.Event("pointerdown", { bubbles: true }));
+  assert.equal(app.doc.body.classList.contains("table-print"), false);
 });

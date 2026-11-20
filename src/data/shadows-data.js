@@ -5271,7 +5271,7 @@ window.SHADOWS_DATA = {
         ],
         "tips": [
           "Log a line the moment someone tells, learns or owes something: **Who knows what** is built from them.",
-          "Write **Seed for next session** while it's fresh. Next time it's on Sessions as **Last session set up**."
+          "Write **Seed for next session** while it's fresh. **Copy as Markdown** puts the journal and the record on your clipboard for your own notes."
         ]
       },
       "closeout": {
@@ -5377,7 +5377,8 @@ window.SHADOWS_DATA = {
           "keyTo"
         ],
         "tips": [
-          "**What they want** and **If pushed** are what you'll reach for when the crew surprises you."
+          "**What they want** and **If pushed** are what you'll reach for when the crew surprises you.",
+          "**Print** puts the page on paper, stat block and all."
         ]
       },
       "city": {
@@ -5530,7 +5531,8 @@ window.SHADOWS_DATA = {
           "clock"
         ],
         "tips": [
-          "**Core Stakes** and **Planned Escape Options** do the most work when a fight goes sideways."
+          "**Core Stakes** and **Planned Escape Options** do the most work when a fight goes sideways.",
+          "**Print** puts the plan on paper, so a fight can be run from a page."
         ]
       },
       "encounterRunning": {
@@ -5547,7 +5549,8 @@ window.SHADOWS_DATA = {
           "strip"
         ],
         "tips": [
-          "The strip under the header shows the round and who acts on every tab, so you can check Reference mid-fight and come straight back."
+          "The strip under the header shows the round and who acts on every tab, so you can check Reference mid-fight and come straight back.",
+          "**Print** puts the fight's page on paper, rows and plan."
         ]
       },
       "encounterPast": {
