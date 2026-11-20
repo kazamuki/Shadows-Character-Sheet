@@ -3177,6 +3177,16 @@ test("Decision 304: Print is on a session, a cast member and an encounter, and o
   assert.deepEqual(app.errors, []);
 });
 
+const screenCss = readFileSync(new URL("../src/styles/shadows.css", import.meta.url), "utf8");
+test("Decision 304: the print-only title is hidden on screen by shadows.css (print.css only loads for print)", () => {
+  assert.match(screenCss.replace(/\/\*[\s\S]*?\*\//g, ""), /(^|\n)\.print-only\s*\{\s*display:\s*none/);
+  const app = deadAirApp("encounters");
+  app.window.eval(`S.encOpen = S.table.encounters.find(e => e.status === "planned").id; renderTable();`);
+  assert.ok(app.$("h1[data-print-title].print-only"), "the page carries it");
+  assert.doesNotMatch(readFileSync(new URL("../src/styles/print.css", import.meta.url), "utf8"), /(^|\n)\.print-only\s*\{\s*display:\s*none/, "not left in a file that never loads on screen");
+  assert.match(readFileSync(new URL("../src/styles/print.css", import.meta.url), "utf8"), /body.table-print textarea{[^}]*min-height:0/, "a textarea drops the screen's 150px floor on paper");
+});
+
 const printCss = readFileSync(new URL("../src/styles/print.css", import.meta.url), "utf8");
 const tpRules = printCss.slice(printCss.indexOf("A table page, printed as it reads"));
 

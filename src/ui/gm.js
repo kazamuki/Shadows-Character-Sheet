@@ -2686,12 +2686,13 @@ function printTablePage(btn){
     const c=f.querySelector("input:not([type=checkbox]):not([type=radio]), textarea");
     if (c && !String(c.value).trim()){ f.setAttribute("data-print-empty", ""); marked.push(f); }
   });
-  main.querySelectorAll("textarea").forEach(t=>{ grown.push([t, t.style.height]); t.style.height="auto"; t.style.height=t.scrollHeight+"px"; });
   const live=main.querySelector("[data-print-title]"), input=main.querySelector("[data-enc-title]");
   const was=live ? live.textContent : "";
   if (live && input) live.textContent=input.value.trim() || input.placeholder || was;
   shut.forEach(d=>{ d.open=true; });
   document.body.classList.add("table-print");
+  // Sized on the screen's layout (the print rules only apply once the paper is drawn), so the screen's 150px floor is lifted for the measure.
+  main.querySelectorAll("textarea").forEach(t=>{ grown.push([t, t.style.height, t.style.minHeight]); t.style.minHeight="0"; t.style.height="0px"; t.style.height=t.scrollHeight+"px"; });
   const mql=typeof window.matchMedia==="function" ? window.matchMedia("print") : null;
   let done=false;
   const restore = () => {
@@ -2699,7 +2700,7 @@ function printTablePage(btn){
     document.body.classList.remove("table-print");
     shut.forEach(d=>{ d.open=false; });
     marked.forEach(f=>f.removeAttribute("data-print-empty"));
-    grown.forEach(([t, h])=>{ t.style.height=h; });
+    grown.forEach(([t, h, m])=>{ t.style.height=h; t.style.minHeight=m; });
     if (live) live.textContent=was;
     window.removeEventListener("afterprint", restore);
     document.removeEventListener("pointerdown", restore, true); document.removeEventListener("keydown", restore, true);

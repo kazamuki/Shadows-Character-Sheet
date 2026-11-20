@@ -1912,3 +1912,5 @@ h2.city-name{font-size:1.15rem}
 .cast-heal{display:flex; flex-wrap:wrap; gap:8px; align-items:flex-end; margin:0 0 10px}
 .cast-heal .field{max-width:7rem}
 .enc-hurt{font-family:var(--mono); font-size:.8rem; color:var(--magenta-text)}
+/* Printed only on a table page (print.css shows it under body.table-print): an encounter's title as a heading, where its name is a field on screen. */
+.print-only{ display:none }

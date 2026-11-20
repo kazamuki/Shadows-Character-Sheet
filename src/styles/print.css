@@ -247,10 +247,10 @@ body.table-print summary::marker, body.table-print .thread-btns, body.table-prin
 body.table-print [data-crew-add], body.table-print .crew-btn:not(.on), body.table-print .crew-mark,
 body.table-print .tag[data-tip][aria-label^="What "], body.table-print .enc-tips, body.table-print .enc-more, body.table-print .enc-acts,
 body.table-print .enc-add, body.table-print .tprint-skip, body.table-print .enc-name-field, body.table-print .field-hint,
-body.table-print .form-toggle button:not(.on), body.table-print .field[data-print-empty],
+body.table-print .form-toggle button:not(.on), body.table-print .form-toggle:not(:has(button.on)), body.table-print .field[data-print-empty],
 body.table-print h2.sec-h:has(+ [data-fclocks]:empty){ display:none !important }
 body.table-print .print-only{ display:block }
-body.table-print .form-toggle{ display:inline }
+body.table-print .form-toggle{ display:flex; flex-wrap:wrap; justify-content:flex-start; gap:0 14px; border:0; overflow:visible; width:auto }
 body.table-print .form-toggle button, body.table-print .form-toggle button.on{ background:none !important; border:0 !important; box-shadow:none; padding:0; color:#111; font:inherit; min-height:0 }
 body.table-print h1, body.table-print h2, body.table-print h3, body.table-print .step-title{ color:#712B8C; break-after:avoid }
 body.table-print .rec-head, body.table-print .enc-title-row{ display:block }
@@ -269,6 +269,4 @@ body.table-print li, body.table-print .int-line{ break-inside:avoid }
 body.table-print .crew-btns{ display:flex; flex-wrap:wrap; gap:0 12px }
 body.table-print .crew-btn{ background:none; border:0; padding:0; color:#111; font:inherit; min-height:0 }
 body.table-print .cast-heal{ display:none }
-body.table-print textarea{ overflow:visible; height:auto }
-/* Printed only on a table page: an encounter's title as a heading when its name is a field on screen. */
-.print-only{ display:none }
+body.table-print textarea{ overflow:visible; height:auto; min-height:0 }
