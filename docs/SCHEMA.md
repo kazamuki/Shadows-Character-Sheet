@@ -1164,6 +1164,7 @@ commit** — a GM's table must never change under them.
   sessions: [ {                      // 0.8: what happened, session by session (Decision 203)
     id: "SE-XXXXXXXX",               // the TAG alphabet; unique in the table
     number: 1,                       // a whole number from 0, or null; the GM's, one past the highest by default
+    title: "",                       // 0.22: the GM's name for it, text, trimmed, or ""; read after the number (Decision 303)
     date: "YYYY-MM-DD",              // the GM's local day, a real one, or null
     present: [ "" ],                 // typed names, trimmed, no empties, read as the seat that answers to them (Decision 254)
     hours: null,                     // half hours from 0 to 24, or null; the close-out works IP out from it (Decision 206)
@@ -4732,6 +4733,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** GQ27 asks for the prompts as fields, S3b's seats claim attendance, or a GM often runs two sessions in a day.
      - **Built:** table schema 0.8, switched off (173); log 2026-10-08 (sessions and threads).
      → **Superseded in part by Decision 254** — attendance stays typed names, read as seats.
+     → **Superseded in part by Decision 303** — a session also keeps a name.
 
 204. **Threads are records, one of them current; a table opens on Sessions, which leads with Next session, computed from the threads, last session's seed and who was met without a stat block.**
      *2026-10-08 · Ken + Claude · Touches: threads, table.threads, TH- id, thread status, open, resolved, dropped, current, opened, closed, Next session, Met last session, Sessions tab, TABLE_SECTIONS, landing page, Decision 171, Decision 176, W29, GQ1*
@@ -5846,6 +5848,33 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 205 in part: the award log keeps the night's CRANK jobs, and rep reaches the log through them.
      - **Revisit if:** a GM wants jobs posted and tracked before they run (the board, W172), the dispatch (W146) carries the log, or the book changes the +1, −2 or the split.
      - **Built:** app 0.73.0, table schema 0.20 → 0.21, no game-data move (Decision 68), PR #…, log 2026-11-19 (S11b).
+
+303. **A session can have a name, read after its number: "Session 5: The Hub". The number stays its identity and its order.**
+     *2026-11-19 · Ken + Claude · Touches: sessions, session title, sessionTitle, sessionLine, addSession, editSession, _session, the session form, Name, Closed in, Last session set up, Find, table schema 0.22, migrateTable, W73, GQ75, Decision 203*
+     - **Decided:** A session keeps `title`, text, "" by default. `Engine.sessionTitle` reads "Session 5: The Hub" with both, "Session 5" with a number alone, "The Hub" with a name alone, and "Session" with neither, and every screen that names a session reads it. The list still sorts by number, then day (203).
+     - **Why:** A table refers to its past by session ("Session 2, The Ledger"), and the number alone doesn't say which night that was. One function already names a session everywhere, so the name reaches every screen at once.
+     - **Rejected:** The name instead of the number: a GM's number is the order and Ken's "last session" (S5a's review). A name separated by "·": the session list already uses "·" between the day, who came and the hours. Sorting by name: a name is text, not an order.
+     - **Replaces:** Decision 203 in part: a session also keeps a name.
+     - **Revisit if:** a GM wants sessions grouped into arcs by name, or the player's own Session Log wants the GM's name.
+     - **Built:** app 0.74.0, table schema 0.21 → 0.22, no game-data move (Decision 68), PR #…, log 2026-11-19 (S26).
+
+304. **A table page prints as it reads: a session, a cast member or an encounter, in portrait, without the app around it.**
+     *2026-11-19 · Ken + Claude · Touches: Print, print.css, @page, #printSheet, #app, printSheet, table-print, the session page, the cast member's page, the encounter page, the Debrief, recHeadHtml, W84, GQ76, GQ77, GQ80, Decision 96, Decision 270*
+     - **Decided:** **Print** on a session's, a cast member's or an encounter's page prints the page itself: `print.css` shows `#app`'s page instead of `#printSheet` while a table page is being printed, drops the chrome and every button that only acts, opens any folded part, and uses a portrait page of its own. The character's print is unchanged.
+     - **Why:** The page is already what a GM wants on paper: its stat block, its rows, its award log, in its own words. A second renderer per page would say the same things twice and drift from the screen.
+     - **Rejected:** A print renderer per page in `#printSheet` (three twins of three pages). Scott's paper look for table pages (96 is the character sheet's; a GM's page is a working page). Landscape (the sheet's: a session's journal and a cast page read down). The browser's own Print reaching table pages too (it would have to tell a character's print from a page's; W173).
+     - **Replaces:** nothing.
+     - **Revisit if:** a GM wants a blank encounter for paper play (the worksheet, 252), a page prints badly enough to need its own layout, or places and factions want Print.
+     - **Built:** as 303.
+
+305. **A session copies out as Markdown: its journal, then its threads, lines, jots and award log, in the page's own words.**
+     *2026-11-19 · Ken + Claude · Touches: Copy as Markdown, sessionMarkdown, the session page, JOURNAL, sentenceHtml, coLogLine, coJobsLine, jottedHtml, the clipboard, .md, W86, GQ78, GQ79, Decision 205, Decision 208*
+     - **Decided:** **Copy as Markdown** on a session's page copies one Markdown document: the session's title as a heading, its day, who came and the hours, then each written part of the Campaign Journal under its label, one bullet a line, then the threads it opened and closed, its lines, its jots and its award log. If the clipboard refuses, the same file is saved as `.md`. It reads the table and writes nothing.
+     - **Why:** Deighton keeps his notes in Obsidian, as bulleted outlines, and wants what he wrote at the table there without retyping (W86). The journal is the night's story, so it leads; the record follows it.
+     - **Rejected:** The whole table as one file (Obsidian keeps a note per session). Building it in the engine (the words are the page's, built in `gm.js`). Escaping the GM's own prose (Markdown the GM types should stay Markdown). Rich text (Obsidian pastes Markdown).
+     - **Replaces:** nothing.
+     - **Revisit if:** a GM wants a cast member or the whole campaign as Markdown, or Notes (S30) wants the same.
+     - **Built:** as 303.
 
 ## 5. Open Flags
 

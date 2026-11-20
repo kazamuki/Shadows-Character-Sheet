@@ -438,7 +438,7 @@ const sessions = [];
 const session = (n, f) => {
   const day = DAY[n];
   sessions.push({
-    id: SE("s" + n), number: n, date: day, present: [...CREW], hours: null,
+    id: SE("s" + n), number: n, title: "", date: day, present: [...CREW], hours: null,
     journal: { happened: "", fallout: "", threads: "", impact: "", reflection: "", seed: "" }, close: null,
     created: ts(day, 17), updated: ts(day, 23), ...f,
   });
@@ -450,6 +450,7 @@ const closeOf = (n, lines, hours, jobs = []) => ({
 });
 
 session(1, {
+  title: "The Shard",
   hours: 4,
   journal: {
     happened: "Pearl hired the crew for a courier job: a memory shard from a NeuroNet engineer to a buyer in Techtopia. Mara read the shard's header and found a dead channel: eleven minutes of silence. The handoff at Suds & Duds went sideways when three Eclipse soldiers showed up early.",
@@ -462,6 +463,7 @@ session(1, {
   close: closeOf(1, [{ name: MARA, ip: 4, credits: 1200, note: "Read the shard's header; kept it." }, { name: DEX, ip: 4, credits: 1200 }, { name: JUNO, ip: 4, credits: 1200 }], 4),
 });
 session(2, {
+  title: "The Velvet Lung",
   hours: 4.5,
   journal: {
     happened: "Ibarra's invitation was dinner at the Velvet Lung; the crew declined the first course and left. Rook's contractors tried the Park at dusk. Fenn and the Rangers helped the crew out of the Ramble. Fenn recognized the shard's signal and would say nothing about it.",
@@ -474,6 +476,7 @@ session(2, {
   close: closeOf(2, [{ name: MARA, ip: 4, credits: 800 }, { name: DEX, ip: 4, credits: 800 }, { name: JUNO, ip: 5, milestone: true, credits: 800, note: "Cast in the Park after dusk." }], 4.5),
 });
 session(3, {
+  title: "Pier 9",
   hours: 3.5,
   journal: {
     happened: "The delivery note led to Pier 9 and the Dockside Devils. Teo was gracious; Dolly, who the crew mistook for a clerk, gave nothing away. Eclipse (Nine's team) and the Volkov contractors both arrived. A three-way fight broke out. Nine died at Dex's feet. Cord ran for the tide and the crew let him go.",
@@ -486,6 +489,7 @@ session(3, {
   close: closeOf(3, [{ name: MARA, ip: 3, credits: 600 }, { name: DEX, ip: 3, milestone: true, credits: 600, note: "Held back and a friend of Ibarra's died anyway." }, { name: JUNO, ip: 3, credits: 600 }], 3.5),
 });
 session(4, {
+  title: "The Coroner's Report",
   present: [MARA, DEX], hours: 5,
   journal: {
     happened: "Juno was away (family trouble in Seoul). Mara and Dex met Oyelaran, who had the coroner's report on a body no one had told them was dead: Wren. Mara broke into the Hub's guest network from the laundromat and found a routing log with the same eleven minutes of silence. Dex spent a night in Achterberg's clinic, nearly turning.",
@@ -502,6 +506,7 @@ session(4, {
   ], 5),
 });
 session(5, {
+  title: "The Hub",
   hours: 4,
   journal: {
     happened: "The crew infiltrated the NeuroNet Hub at night for Wren's desk and the full log. Drones and guards, a fight on the fourth floor, and a clean exit through the freight elevator. They found Wren's body in the Phantom Ports at Wharf 17, sitting upright, headphones on.",
@@ -517,6 +522,7 @@ session(5, {
   ]),
 });
 session(6, {
+  title: "The Phantom Ports",
   hours: 4,
   journal: {
     happened: "The crew went into the Phantom Ports with the shard. Mara opened it. The Listener answered through Juno, then through Dex, then through Mara. Cord was there, sitting beside Wren, speaking in the Listener's voice. The crew retreated down the length of Wharf 17 and out; the Listener followed to the ghost-line, and stopped.",
@@ -966,7 +972,7 @@ const audit = [
 // ── the table ───────────────────────────────────────────────────────
 const table = {
   meta: {
-    kind: "shadows-table", id: tableId(), name: "Dead Air", tableSchemaVersion: "0.21",
+    kind: "shadows-table", id: tableId(), name: "Dead Air", tableSchemaVersion: "0.22",
     created: ts(DAY[1], 17), updated: ts(DAY[7], 21, 10),
   },
   audit,

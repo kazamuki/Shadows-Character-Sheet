@@ -548,14 +548,14 @@ test("Decision 174: a saved 0.1 table opens as the current schema with its notes
   t.meta.tableSchemaVersion = "0.1"; delete t.cast;
   const app = boot({ storage: { ["shadows.table.v1." + t.meta.id]: { table: t, section: "notes", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app, "Old one").querySelector("[data-topen]").click();
-  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.21");
+  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.22");
   assert.equal(app.window.eval("S.table.cast.length"), 0);
   editNote(app);
   assert.equal(app.$("[data-ntitle]").value, "Kept");
   app.click('[data-tsec="cast"]');
   castAdd(app, "Dez");
   const saved = tableEntryOf(app, t.meta.id).table;
-  assert.equal(saved.meta.tableSchemaVersion, "0.21");
+  assert.equal(saved.meta.tableSchemaVersion, "0.22");
   assert.equal(saved.cast.length, 1); assert.equal(saved.notes[0].title, "Kept");
   tableHome(app);
   tableCard(app, "Old one").querySelector("[data-tremove]").click();
@@ -909,7 +909,7 @@ test("Decisions 177–179: export and import keep every interaction and affiliat
   const file = await tableFile(downloads[0]);
   assert.equal(JSON.stringify(file.interactions), JSON.stringify(before.interactions));
   assert.equal(JSON.stringify(file.cast.map(n => n.affiliations)), JSON.stringify(before.cast.map(n => n.affiliations)));
-  assert.equal(file.meta.tableSchemaVersion, "0.21");
+  assert.equal(file.meta.tableSchemaVersion, "0.22");
   const fresh = boot({ storage: GM_ON });
   withDownloads(fresh);
   await importFile(fresh, file);
@@ -921,7 +921,7 @@ test("Decisions 177–179: export and import keep every interaction and affiliat
   delete old.interactions; old.meta.tableSchemaVersion = "0.2"; for (const n of old.cast) delete n.affiliations;
   const app2 = boot({ storage: { ["shadows.table.v1." + old.meta.id]: { table: old, section: "notes", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app2, "Saved 0.2").querySelector("[data-topen]").click();
-  assert.equal(app2.window.eval("S.table.meta.tableSchemaVersion"), "0.21");
+  assert.equal(app2.window.eval("S.table.meta.tableSchemaVersion"), "0.22");
   assert.equal(app2.window.eval("S.table.interactions.length"), 0);
   editNote(app2);
   assert.equal(app2.$("[data-ntitle]").value, "Kept");
@@ -1294,7 +1294,7 @@ test("Decision 182: Use copies the entry into the cast and opens it, name select
   assert.equal(app.$("[data-chealth]").textContent.length > 0, true);
   app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
   const file = await tableFile(downloads[0]);
-  assert.equal(file.meta.tableSchemaVersion, "0.21");
+  assert.equal(file.meta.tableSchemaVersion, "0.22");
   assert.deepEqual(file.cast[0].from, { kind: "entry", pack: PACK_ID, id: "gull", name: "Gull" });
   const json = JSON.stringify(file);
   for (const w of ["Entry 01", "Lives high", "Test Pack", "Pier Watch", "Wren", "rooftop runner", "Moss", "Quiet money"]) assert.ok(!json.includes(w), `the exported table carries pack content: ${w}`);
@@ -1391,7 +1391,7 @@ test("Decision 182: a saved 0.3 table opens as 0.4, its cast kept and every memb
   delete t.cast[0].from; t.meta.tableSchemaVersion = "0.3";
   const app = boot({ storage: { ["shadows.table.v1." + t.meta.id]: { table: t, section: "cast", changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
   tableCard(app, "Three").querySelector("[data-topen]").click();
-  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.21");
+  assert.equal(app.window.eval("S.table.meta.tableSchemaVersion"), "0.22");
   assert.equal(app.window.eval("S.table.cast[0].from"), null);
   assert.deepEqual(castNames(app), ["Dez"]);
   assert.deepEqual(app.errors, []);
@@ -1811,8 +1811,8 @@ test("U3: a member opens to read, and Edit opens today's form", () => {
   assert.ok(sum && wants, "the summary line and What they want are drawn");
   const after = (a, b) => !!(a.compareDocumentPosition(b) & app.window.Node.DOCUMENT_POSITION_FOLLOWING);
   assert.ok(after(h1, sum) && after(sum, wants), "name, summary, then What they want");
-  const first = pageControls(app).filter(el => !el.matches("[data-edit]"))[0];
-  assert.ok(after(wants, first), "What they want comes before any control but the bar's and Edit");
+  const first = pageControls(app).filter(el => !el.matches("[data-edit], [data-tprint]"))[0];
+  assert.ok(after(wants, first), "What they want comes before any control but the bar's, Edit and Print");
   assert.equal(app.$$("#main .dos-l").map(l => l.textContent).slice(0, 3).join("|"), "What they want|If pushed|Their line");
   assert.ok(app.$("#main blockquote.dos-quote"), "their line is a quote");
   // The stat block is sixth: after Clocks, before What they've got and the GM note, at every width (review).

@@ -505,7 +505,9 @@ const editingNow = (kind, id) => !!S.editing && S.editing.kind===kind && S.editi
 const editBtnHtml = (kind, id, name) => `<button type="button" class="btn sm" data-edit="${kind}|${esc(id)}" aria-label="Edit ${esc(name)}">Edit</button>`;
 const doneBtnHtml = (kind, id, name) => `<button type="button" class="btn sm primary" data-edit-done="${kind}|${esc(id)}" aria-label="Done editing ${esc(name)}">Done</button>`;
 // A page's name with Edit beside it (and no Edit while it is being edited: the bar's Done is the way out).
-const recHeadHtml = (h1, kind, id, name) => `<div class="rec-head">${h1}${editingNow(kind, id) ? "" : editBtnHtml(kind, id, name)}</div>`;
+// `extra` is the page's other head buttons (Print, Copy as Markdown), shown with Edit and gone while it is edited.
+const recHeadHtml = (h1, kind, id, name, extra="") => `<div class="rec-head">${h1}${editingNow(kind, id) ? "" : editBtnHtml(kind, id, name) + extra}</div>`;
+const printBtnHtml = name => `<button type="button" class="btn sm" data-tprint aria-label="Print ${esc(name)}">Print</button>`;
 // Prose under a Mono Caps label; nothing at all when there is nothing to say.
 const proseHtml = (label, text) => String(text||"").trim() ? `<h2 class="ref-sub dos-l">${esc(label)}</h2><p class="dos-p">${esc(text)}</p>` : "";
 // Edit puts the keyboard in the form's first field; Done puts it back on Edit.
@@ -689,6 +691,8 @@ function bindTable(){
   else if (S.tsection==="threats") bindThreats(main);
   else if (S.tsection==="encounters") bindEncounters(main);
   else if (S.tsection==="reference") bindReference(main);
+  main.querySelectorAll("[data-tprint]").forEach(b=>b.onclick=()=>printTablePage(b));
+  main.querySelectorAll("[data-smd]").forEach(b=>b.onclick=()=>copySessionMarkdown(sessOpenNow(), b));
 }
 function bindNotes(main){
   const titleOf = id => main.querySelector(`[data-ntitle="${id}"]`);
@@ -1230,7 +1234,7 @@ function castReadHtml(n){
   const aff=n.affiliations.length ? `<h2 class="ref-sub dos-l">Affiliations</h2><p class="dos-p">${n.affiliations.map(esc).join(" / ")}</p>` : "";
   return `${castBarHtml(n, false)}
     <div class="cast-layout${panel ? " read" : " solo"}"><div class="cast-col">
-    ${recHeadHtml(`<h1 class="step-title tbl-title cast-title" data-ctitle tabindex="-1">${esc(name)}</h1>`, "member", n.id, name)}
+    ${recHeadHtml(`<h1 class="step-title tbl-title cast-title" data-ctitle tabindex="-1">${esc(name)}</h1>`, "member", n.id, name, printBtnHtml(name))}
     ${n.status!=="alive" ? `<p class="dos-tags"><span class="tag plain">${esc(castStatusLabel(n.status))}</span></p>` : ""}
     ${castFromHtml(n)}
     ${String(n.flavor||"").trim() ? `<p class="dos-sum">${esc(n.flavor)}</p>` : ""}
@@ -2461,6 +2465,8 @@ const THREAD_STATUS_LABELS = { open:"Open", resolved:"Resolved", dropped:"Droppe
 function sessOpenNow(){ return S.sessOpen ? (S.table.sessions||[]).find(s=>s.id===S.sessOpen) || null : null; }
 const threadTitle = h => String(h.title||"").trim() || "Untitled";
 const sessionById = id => id ? (S.table.sessions||[]).find(s=>s.id===id) || null : null;
+// A session with a number or a name says which; with neither it's just "Session", and a screen says "this session" instead.
+const sessionNamed = s => Engine.sessionTitle(s)!=="Session";
 const hoursText = n => `${n} hour${n===1 ? "" : "s"}`;
 // One line for a session: its number, day, who came and how long.
 function sessionLine(s){
@@ -2614,6 +2620,72 @@ function jottedHtml(s){
     const text=n.text.trim(), title=n.title.trim();
     return `<li class="int-line"><button type="button" class="cast-open" data-jotopen="${esc(n.id)}">${esc(text || title || "Untitled note")}${text && title ? ` <span class="int-kind">${esc(title)}</span>` : ""}</button></li>`; }).join("")}</ul>` : "";
 }
+// ── A session as Markdown (Decision 305) ───────────────────────────────
+// Built from the page's own functions, so a line in the file is the line on the page: the HTML they return is read back as
+// text, with <strong> and <em> as ** and *. Nothing here writes a sentence of its own but the section labels.
+function mdOfHtml(html){
+  const box=document.createElement("div"); box.innerHTML=html;
+  const kids = n => Array.from(n.childNodes).map(walk).join("");
+  const walk = n => n.nodeType===3 ? n.nodeValue : n.nodeType!==1 ? "" : n.tagName==="STRONG" ? `**${kids(n)}**` : n.tagName==="EM" ? `*${kids(n)}*` : kids(n);
+  return kids(box).replace(/\s+/g, " ").trim();
+}
+// A line that would start a Markdown block by accident is escaped at its start.
+const mdSafe = t => t.replace(/^([#>])/, "\\$1").replace(/^(\d+)([.)])/, "$1\\$2");
+// A typed part, one bullet a line. A line already bulleted keeps one bullet and its leading spaces, so an outline stays nested.
+function mdBullets(text){
+  return String(text||"").split(/\r?\n/).map(l=>{
+    const m=/^(\s*)[-*\u2022]\s+(.*)$/.exec(l), lead=m ? m[1] : "", body=(m ? m[2] : l).trim();
+    return body ? `${lead}- ${mdSafe(body)}` : "";
+  }).filter(Boolean);
+}
+function sessionMarkdown(s){
+  const t=S.table, one = x => String(x||"").replace(/\s+/g, " ").trim(), out=[`# ${one(Engine.sessionTitle(s))}`];
+  const block = (label, lines) => { if (lines.length) out.push("", `## ${label}`, ...lines); };
+  const day=[ s.date ? dayText(s.date) : "", (s.present||[]).join(", "), typeof s.hours==="number" ? hoursText(s.hours) : "" ].filter(Boolean).join(" · ");
+  if (day) out.push("", day);
+  for (const [k, label] of JOURNAL) block(label, mdBullets((s.journal||{})[k]));
+  const th=[];
+  for (const h of t.threads||[]) if (h.opened===s.id) th.push(`- Opened: ${one(threadTitle(h))}`);
+  for (const h of t.threads||[]) if (h.closed===s.id && h.status!=="open") th.push(`- ${THREAD_STATUS_LABELS[h.status]}: ${one(threadTitle(h))}`);
+  block("Threads", th);
+  block("What passed between the crew and the cast", Engine.sessionInteractions(t, s.id).map(x=>`- ${mdOfHtml(sentenceHtml(t, x))}`));
+  const jots=document.createElement("div"); jots.innerHTML=jottedHtml(s);
+  block("Jotted", Array.from(jots.querySelectorAll("li button")).map(b=>{
+    const kind=b.querySelector(".int-kind"), title=kind ? one(kind.textContent) : "";
+    if (kind) kind.remove();
+    return `- ${one(b.textContent)}${title ? ` (${title})` : ""}`; }));
+  const c=s.close;
+  if (c && c.lines.length) block("Close-out", [...c.lines.map(l=>`- ${mdOfHtml(coLogLine(l, c))}`), ...(coJobsLine(c) ? [`- ${mdOfHtml(coJobsLine(c))}`] : [])]);
+  return out.join("\n") + "\n";
+}
+// Copy it; where the browser won't give the clipboard, save it as a .md file instead. Focus stays on the button.
+function copySessionMarkdown(s, btn){
+  if (!s) return;
+  const md=sessionMarkdown(s);
+  const back = () => { if (btn && btn.isConnected) btn.focus(); };
+  const save = () => {
+    const name=Engine.sessionTitle(s).replace(/[\\/:*?"<>|\u0000-\u001f]+/g, "").replace(/\s+/g, " ").trim() || "Session";
+    const url=URL.createObjectURL(new Blob([md], { type:"text/markdown" }));
+    const a=document.createElement("a"); a.href=url; a.download=name+".md"; a.click();
+    setTimeout(()=>URL.revokeObjectURL(url), 2000);
+    notice("Saved as Markdown."); back();
+  };
+  const cb=navigator.clipboard;
+  if (!cb || typeof cb.writeText!=="function"){ save(); return; }
+  let p; try { p=cb.writeText(md); } catch (e) { save(); return; }
+  Promise.resolve(p).then(()=>{ notice("Copied as Markdown."); back(); }, save);
+}
+// Print the page as it reads (Decision 304): the class shows #app and hides #printSheet, every fold opens for the paper
+// and goes back as it was, and the character's print is not touched.
+function printTablePage(btn){
+  const main=$("main"), shut=Array.from(main.querySelectorAll("details:not([open])"));
+  const restore = () => { document.body.classList.remove("table-print"); shut.forEach(d=>{ d.open=false; }); window.removeEventListener("afterprint", restore); };
+  shut.forEach(d=>{ d.open=true; });
+  document.body.classList.add("table-print");
+  window.addEventListener("afterprint", restore);
+  try { window.print(); } finally { restore(); }
+  if (btn && btn.isConnected) btn.focus();
+}
 // The Campaign Journal's six parts, folded while the session is being played and open once it is closed out (Decision 270).
 // Opening it keeps it open for that session until the table closes: S.debriefOpen[id].
 const debriefOpen = s => { const live = Engine.openSession(S.table); return !(live && live.id === s.id) || !!(S.debriefOpen && S.debriefOpen[s.id]); };
@@ -2655,7 +2727,7 @@ const sessionSummary = s => s.date ? dayText(s.date) : "";   // the day alone: w
 function sessionReadHtml(s){
   const title=Engine.sessionTitle(s), body=sessionBodyHtml(s), summary=sessionSummary(s);
   return `${sessionBarHtml(s, false)}
-    ${recHeadHtml(`<h1 class="step-title tbl-title">${esc(title)}</h1>`, "session", s.id, title)}
+    ${recHeadHtml(`<h1 class="step-title tbl-title">${esc(title)}</h1>`, "session", s.id, title, `<button type="button" class="btn sm" data-smd aria-label="Copy ${esc(title)} as Markdown">Copy as Markdown</button>${printBtnHtml(title)}`)}
     <p class="dos-sum"${summary ? "" : " hidden"}>${esc(summary)}</p>
     <div class="sess-head">${whoHtml(s, `s|${s.id}`)}${hoursFieldHtml(s)}</div>
     ${body.threadsBlock}
@@ -2668,6 +2740,7 @@ function sessionFormHtml(s){
     <h1 class="step-title tbl-title">${esc(Engine.sessionTitle(s))}</h1>
     <div class="sess-head">
       <label class="field"><span>Number</span><input type="number" step="1" min="0" inputmode="numeric" data-sf="number" value="${numAttr(s.number)}"></label>
+      <label class="field"><span>Name</span><input type="text" data-sf="title" value="${esc(s.title||"")}" placeholder="The night in a few words" autocomplete="off"></label>
       <label class="field"><span>Day</span><input type="date" data-sf="date" value="${esc(s.date||"")}"></label>
       ${whoHtml(s, `s|${s.id}`)}
       ${hoursFieldHtml(s)}
@@ -2765,11 +2838,11 @@ function bindSessionPage(main, s){
   // Saved as typed. A refused number or hours changes nothing; on blur the field shows what's stored.
   main.querySelectorAll("[data-sf]").forEach(el=>{
     const key=el.dataset.sf, val = () => el.value;
-    el.addEventListener("input", ()=>{ const r=edit({ [key]:val() }); if (r.ok && key==="number") title(); });
+    el.addEventListener("input", ()=>{ const r=edit({ [key]:val() }); if (r.ok && (key==="number" || key==="title")) title(); });
     el.addEventListener("change", ()=>{
       const r=edit({ [key]:val() }); if (!r.ok) notice(r.why);
       const cur=own(); if (!cur) return;
-      el.value = key==="number" || key==="hours" ? numAttr(cur[key]) : (cur[key]||"");
+      el.value = key==="number" || key==="hours" ? numAttr(cur[key]) : (cur[key]||"");   // a name shows trimmed
       title();
     });
   });
@@ -2936,7 +3009,7 @@ function writtenDay(at){
   return d.toLocaleDateString(undefined, { day:"numeric", month:"short" });
 }
 function closeOutSectionHtml(s){
-  const c=s.close, name=Number.isFinite(s.number) ? Engine.sessionTitle(s) : "this session";
+  const c=s.close, name=sessionNamed(s) ? Engine.sessionTitle(s) : "this session";
   if (!c) return `<h2 class="cast-h sec-h" tabindex="-1" data-sco-h>Close-out</h2>
     <p><button type="button" class="btn primary" data-co-open>Close out ${esc(name)}</button></p>`;
   const day=writtenDay(c.at);
@@ -3048,7 +3121,7 @@ function coListsHtml(s){
   return `${coIpRows(c)}${coAwayRows(c)}${coJobs(c)}${coArcHtml(s)}${coThreads()}${coNewcomers(c)}`;
 }
 function closeSheetHtml(s){
-  const hasNumber=Number.isFinite(s.number), title=Engine.sessionTitle(s);
+  const hasNumber=sessionNamed(s), title=Engine.sessionTitle(s);
   return `<div class="tbl-bar scroll-row" data-row="tblbar"><button type="button" class="btn sm" data-co-back>Back to ${hasNumber ? esc(title) : "the session"}</button></div>
     <h1 class="step-title tbl-title">Close out ${hasNumber ? esc(title) : "this session"}</h1>
     <div class="sess-head">
@@ -4204,8 +4277,8 @@ function encPageHtml(e){
   const plan = ended ? encPlanReadHtml(v) : encPlanEditHtml(e, v);
   return `${bar}
     ${ended ? `<h1 class="step-title tbl-title cast-title" data-enc-h tabindex="-1">${esc(title)}</h1>`
-      : running ? `<div class="enc-title-row"><h1 class="step-title tbl-title cast-title" data-enc-h tabindex="-1">${esc(title)}</h1><button type="button" class="btn sm" data-enc-rename>Rename</button></div>`
-      : `<label class="field"><span>Name</span><input type="text" data-enc-title value="${esc(e.name)}" placeholder="${esc(title)}" autocomplete="off"></label>`}
+      : running ? `<div class="enc-title-row"><h1 class="step-title tbl-title cast-title" data-enc-h tabindex="-1">${esc(title)}</h1><button type="button" class="btn sm" data-enc-rename>Rename</button>${printBtnHtml(title)}</div>`
+      : `<div class="enc-title-row"><label class="field"><span>Name</span><input type="text" data-enc-title value="${esc(e.name)}" placeholder="${esc(title)}" autocomplete="off"></label>${printBtnHtml(title)}</div>`}
     ${turns}
     ${canOpen ? encOpeningHtml(v) : ""}
     ${wrapping ? encWrapHtml(e, title) : v.atReset ? encResetHtml(e, v) : rows}

@@ -200,3 +200,9 @@ test("a character's Çredits ledger carries every share the logs give them, as a
   }
   assert.ok(checked >= 3, "the sample's crew have the job's shares");
 });
+
+test("Decision 303: every session has a title key, and exactly one is unnamed", () => {
+  assert.ok(sample.sessions.every(s => typeof s.title === "string"), "a title on every session");
+  assert.equal(sample.sessions.filter(s => s.title === "").length, 1, "all but one are named");
+  assert.equal(Engine.sessionTitle(sample.sessions.find(s => s.number === 5)), "Session 5: The Hub");
+});
