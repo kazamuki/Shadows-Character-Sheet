@@ -244,7 +244,14 @@ body.table-print #main{ display:block; padding:0; margin:0; max-width:none; widt
 body.table-print .tbl-bar, body.table-print .enc-bar, body.table-print .guide-line, body.table-print .btn:not(.crew-btn),
 body.table-print [data-tprint], body.table-print [data-smd], body.table-print .cast-delete, body.table-print .toast,
 body.table-print summary::marker, body.table-print .thread-btns, body.table-print .cast-add,
-body.table-print [data-crew-add], body.table-print .crew-btn:not(.on), body.table-print .crew-mark, body.table-print .tag[data-tip]{ display:none !important }
+body.table-print [data-crew-add], body.table-print .crew-btn:not(.on), body.table-print .crew-mark,
+body.table-print .tag[data-tip][aria-label^="What "], body.table-print .enc-tips, body.table-print .enc-more, body.table-print .enc-acts,
+body.table-print .enc-add, body.table-print .tprint-skip, body.table-print .enc-name-field, body.table-print .field-hint,
+body.table-print .form-toggle button:not(.on), body.table-print .field[data-print-empty],
+body.table-print h2.sec-h:has(+ [data-fclocks]:empty){ display:none !important }
+body.table-print .print-only{ display:block }
+body.table-print .form-toggle{ display:inline }
+body.table-print .form-toggle button, body.table-print .form-toggle button.on{ background:none !important; border:0 !important; box-shadow:none; padding:0; color:#111; font:inherit; min-height:0 }
 body.table-print h1, body.table-print h2, body.table-print h3, body.table-print .step-title{ color:#712B8C; break-after:avoid }
 body.table-print .rec-head, body.table-print .enc-title-row{ display:block }
 /* A button that is a name or a title prints as text. */
@@ -252,8 +259,6 @@ body.table-print .cast-open, body.table-print .int-who{ background:none; border:
 /* A field prints its value and no box; an empty one doesn't print. */
 body.table-print input, body.table-print textarea, body.table-print select{
   border:0; background:none; padding:0; color:#111; box-shadow:none; appearance:none; -webkit-appearance:none; resize:none }
-body.table-print .field:has(> input[value=""]), body.table-print .field:has(> input:placeholder-shown),
-body.table-print .field:has(> textarea:placeholder-shown){ display:none }
 /* The cast page's stat block is docked beside the text on screen; on paper it flows with the page. */
 body.table-print .cast-layout{ display:block }
 body.table-print .cast-layout *{ position:static !important }
@@ -264,4 +269,6 @@ body.table-print li, body.table-print .int-line{ break-inside:avoid }
 body.table-print .crew-btns{ display:flex; flex-wrap:wrap; gap:0 12px }
 body.table-print .crew-btn{ background:none; border:0; padding:0; color:#111; font:inherit; min-height:0 }
 body.table-print .cast-heal{ display:none }
-body.table-print .field:has(textarea:empty), body.table-print .field:has(input:not([value]):not([type=checkbox])){ display:none }
+body.table-print textarea{ overflow:visible; height:auto }
+/* Printed only on a table page: an encounter's title as a heading when its name is a field on screen. */
+.print-only{ display:none }

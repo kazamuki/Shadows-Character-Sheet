@@ -2675,15 +2675,42 @@ function copySessionMarkdown(s, btn){
   let p; try { p=cb.writeText(md); } catch (e) { save(); return; }
   Promise.resolve(p).then(()=>{ notice("Copied as Markdown."); back(); }, save);
 }
-// Print the page as it reads (Decision 304): the class shows #app and hides #printSheet, every fold opens for the paper
-// and goes back as it was, and the character's print is not touched.
+// Print the page as it reads (Decision 304): the class shows #app and hides #printSheet; the folds that hold the page's words
+// open for the paper (not an encounter row's More, which holds buttons); an empty field is marked by its value now, not by the
+// markup it was drawn with; a textarea is sized to its text; and all of it goes back after the print, not when print() returns,
+// since a phone's print() returns before the page is captured. The character's print is not touched.
 function printTablePage(btn){
-  const main=$("main"), shut=Array.from(main.querySelectorAll("details:not([open])"));
-  const restore = () => { document.body.classList.remove("table-print"); shut.forEach(d=>{ d.open=false; }); window.removeEventListener("afterprint", restore); };
+  const main=$("main"), shut=Array.from(main.querySelectorAll("details:not(.enc-more):not([open])"));
+  const marked=[], grown=[];
+  main.querySelectorAll(".field").forEach(f=>{
+    const c=f.querySelector("input:not([type=checkbox]):not([type=radio]), textarea");
+    if (c && !String(c.value).trim()){ f.setAttribute("data-print-empty", ""); marked.push(f); }
+  });
+  main.querySelectorAll("textarea").forEach(t=>{ grown.push([t, t.style.height]); t.style.height="auto"; t.style.height=t.scrollHeight+"px"; });
+  const live=main.querySelector("[data-print-title]"), input=main.querySelector("[data-enc-title]");
+  const was=live ? live.textContent : "";
+  if (live && input) live.textContent=input.value.trim() || input.placeholder || was;
   shut.forEach(d=>{ d.open=true; });
   document.body.classList.add("table-print");
+  const mql=typeof window.matchMedia==="function" ? window.matchMedia("print") : null;
+  let done=false;
+  const restore = () => {
+    if (done) return; done=true;
+    document.body.classList.remove("table-print");
+    shut.forEach(d=>{ d.open=false; });
+    marked.forEach(f=>f.removeAttribute("data-print-empty"));
+    grown.forEach(([t, h])=>{ t.style.height=h; });
+    if (live) live.textContent=was;
+    window.removeEventListener("afterprint", restore);
+    document.removeEventListener("pointerdown", restore, true); document.removeEventListener("keydown", restore, true);
+    if (mql && mql.removeEventListener) mql.removeEventListener("change", onMql);
+  };
+  const onMql = ev => { if (!ev.matches) restore(); };
   window.addEventListener("afterprint", restore);
-  try { window.print(); } finally { restore(); }
+  if (mql && mql.addEventListener) mql.addEventListener("change", onMql);
+  // Where print() returns before the page is captured and afterprint never comes, the next touch of the page puts it back.
+  try { window.print(); } catch (e) { restore(); throw e; }
+  setTimeout(()=>{ if (!done){ document.addEventListener("pointerdown", restore, true); document.addEventListener("keydown", restore, true); } }, 0);
   if (btn && btn.isConnected) btn.focus();
 }
 // The Campaign Journal's six parts, folded while the session is being played and open once it is closed out (Decision 270).
@@ -3010,8 +3037,8 @@ function writtenDay(at){
 }
 function closeOutSectionHtml(s){
   const c=s.close, name=sessionNamed(s) ? Engine.sessionTitle(s) : "this session";
-  if (!c) return `<h2 class="cast-h sec-h" tabindex="-1" data-sco-h>Close-out</h2>
-    <p><button type="button" class="btn primary" data-co-open>Close out ${esc(name)}</button></p>`;
+  if (!c) return `<h2 class="cast-h sec-h tprint-skip" tabindex="-1" data-sco-h>Close-out</h2>
+    <p class="tprint-skip"><button type="button" class="btn primary" data-co-open>Close out ${esc(name)}</button></p>`;
   const day=writtenDay(c.at);
   return `<h2 class="cast-h sec-h" tabindex="-1" data-sco-h>Close-out</h2>
     <p class="step-note">${day ? `Written ${esc(day)}.` : "Written."}</p>
@@ -4276,9 +4303,9 @@ function encPageHtml(e){
     : wrapping ? "" : `<h2 class="cast-h sec-h">Clocks</h2>${clocksHtml(clockOwner)}`;
   const plan = ended ? encPlanReadHtml(v) : encPlanEditHtml(e, v);
   return `${bar}
-    ${ended ? `<h1 class="step-title tbl-title cast-title" data-enc-h tabindex="-1">${esc(title)}</h1>`
+    ${ended ? `<div class="enc-title-row"><h1 class="step-title tbl-title cast-title" data-enc-h tabindex="-1">${esc(title)}</h1>${printBtnHtml(title)}</div>`
       : running ? `<div class="enc-title-row"><h1 class="step-title tbl-title cast-title" data-enc-h tabindex="-1">${esc(title)}</h1><button type="button" class="btn sm" data-enc-rename>Rename</button>${printBtnHtml(title)}</div>`
-      : `<div class="enc-title-row"><label class="field"><span>Name</span><input type="text" data-enc-title value="${esc(e.name)}" placeholder="${esc(title)}" autocomplete="off"></label>${printBtnHtml(title)}</div>`}
+      : `<div class="enc-title-row"><h1 class="step-title tbl-title print-only" data-print-title>${esc(title)}</h1><label class="field enc-name-field"><span>Name</span><input type="text" data-enc-title value="${esc(e.name)}" placeholder="${esc(title)}" autocomplete="off"></label>${printBtnHtml(title)}</div>`}
     ${turns}
     ${canOpen ? encOpeningHtml(v) : ""}
     ${wrapping ? encWrapHtml(e, title) : v.atReset ? encResetHtml(e, v) : rows}

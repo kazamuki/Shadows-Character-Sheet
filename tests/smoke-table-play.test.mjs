@@ -3143,7 +3143,9 @@ test("Decision 304: Print on a table page prints the page, the Debrief open, and
   const was = app.$("details.sess-debrief").open;
   app.click("[data-tprint]");
   assert.deepEqual(seen, [{ cls: "table-print", open: true }], "the class is on and the Debrief open while it prints");
-  assert.equal(app.doc.body.classList.contains("table-print"), false, "the class is back");
+  assert.equal(app.doc.body.classList.contains("table-print"), true, "print() returning isn't the end: a phone captures the page after it");
+  app.window.dispatchEvent(new app.window.Event("afterprint"));
+  assert.equal(app.doc.body.classList.contains("table-print"), false, "the class is back after the print");
   assert.equal(app.$("details.sess-debrief").open, was, "the fold is as it was");
   assert.equal(app.$("#printSheet").innerHTML, "", "#printSheet is untouched");
   // A character's Print sheet leaves the class off and fills #printSheet.
@@ -3170,5 +3172,79 @@ test("Decision 304: Print is on a session, a cast member and an encounter, and o
   assert.equal(app.$$("[data-tprint]").length, 1);
   app.window.eval(`S.encOpen = S.table.encounters.find(e => e.status === "planned").id; renderTable();`);
   assert.equal(app.$$("[data-tprint]").length, 1, "a planned encounter: beside its Name field");
+  app.window.eval(`S.encOpen = S.table.encounters.find(e => e.status === "ended").id; renderTable();`);
+  assert.equal(app.$$("[data-tprint]").length, 1, "an ended encounter: beside its title");
   assert.deepEqual(app.errors, []);
+});
+
+const printCss = readFileSync(new URL("../src/styles/print.css", import.meta.url), "utf8");
+const tpRules = printCss.slice(printCss.indexOf("A table page, printed as it reads"));
+
+test("Decision 304: a chip that holds words prints; only the '?' tip buttons are dropped", () => {
+  const app = deadAirApp("encounters");
+  app.window.eval(`S.encOpen = S.table.encounters.find(e => e.status === "running").id; renderTable();`);
+  const tips = [...app.$$(".tag[data-tip]")];
+  assert.ok(tips.length > 0);
+  const dropped = tips.filter(b => (b.getAttribute("aria-label") || "").startsWith("What "));
+  const kept = tips.filter(b => !dropped.includes(b));
+  assert.ok(dropped.length > 0 && kept.length > 0, "the page has both kinds");
+  for (const b of dropped) assert.match(b.textContent, /\?/, "a dropped chip is a '?' button");
+  for (const b of kept) assert.doesNotMatch(b.textContent.trim(), /^\??$/, "a chip with words has no 'What …' label and prints");
+  // The rule names the "?" buttons by that label and no longer drops every tip.
+  assert.match(tpRules, /\.tag\[data-tip\]\[aria-label\^="What "\]/);
+  assert.doesNotMatch(tpRules.replace(/\.tag\[data-tip\]\[aria-label\^="What "\]/g, ""), /\.tag\[data-tip\]/);
+});
+
+test("Decision 304: an encounter prints its words: no More, no add rows, no unselected choices, no empty headings", () => {
+  const app = deadAirApp("encounters");
+  app.window.eval(`S.encOpen = S.table.encounters.find(e => e.status === "running").id; renderTable();`);
+  const mores = [...app.$$("details.enc-more")];
+  assert.ok(mores.length > 0);
+  const before = mores.map(d => d.open);
+  let at;
+  app.window.print = () => { at = mores.map(d => d.open); };
+  app.click("[data-tprint]");
+  assert.deepEqual(at, before, "More is not opened for the paper");
+  app.window.dispatchEvent(new app.window.Event("afterprint"));
+  for (const sel of [".enc-more", ".enc-acts", ".enc-add", ".enc-tips", ".form-toggle button:not(.on)", ".tprint-skip", "h2.sec-h:has(+ [data-fclocks]:empty)"])
+    assert.match(tpRules, new RegExp(sel.replace(/[.*+?^${}()|[\]\\:]/g, "\\$&")), sel + " is dropped on paper");
+  assert.ok(app.$$(".form-toggle button.on").length > 0, "the chosen one stays");
+  // The Debrief's own fold opens; a fold that holds words is one printTablePage opens.
+  const live = app.window.eval(`S.tsection = "sessions"; S.sessOpen = Engine.sessionList(S.table).find(s => !s.close).id; renderTable(); 1`);
+  assert.ok(live && app.$("details.sess-debrief"));
+  assert.ok(app.$(".tprint-skip[data-sco-h]"), "a live session's empty Close-out heading is skipped on paper");
+});
+
+test("Decision 304: a field prints what is in it now: empty ones are marked by value, text typed since render prints, a textarea is sized to its text", () => {
+  const app = deadAirApp("encounters");
+  app.window.eval(`S.encOpen = S.table.encounters.find(e => e.status === "planned").id; renderTable();`);
+  const tas = [...app.$$("main textarea, #main textarea")];
+  assert.ok(tas.length >= 2);
+  const empty = tas.find(t => !t.value.trim()), full = tas.find(t => t.value.trim());
+  assert.ok(empty, "the planned encounter has an empty plan field");
+  empty.value = "typed after the page was drawn";   // no re-render on input
+  Object.defineProperty(empty, "scrollHeight", { configurable: true, value: 706 });
+  const seen = {};
+  const marks = () => [...app.$$(".field")].filter(f => f.hasAttribute("data-print-empty"));
+  app.window.print = () => { seen.marked = marks().map(f => f.contains(empty)); seen.height = empty.style.height; seen.title = app.$("[data-print-title]").textContent; seen.n = marks().length; };
+  app.$("[data-enc-title]").value = "";
+  app.click("[data-tprint]");
+  assert.equal(seen.marked.some(Boolean), false, "text typed into an empty field is not marked empty");
+  assert.ok(seen.n > 0, "an empty field is marked");
+  assert.equal(seen.height, "706px", "a textarea is as tall as its text for the paper");
+  assert.ok(seen.title.length > 0, "an unnamed encounter prints its title (the placeholder)");
+  app.window.dispatchEvent(new app.window.Event("afterprint"));
+  assert.equal(marks().length, 0, "the marks are taken back");
+  assert.equal(empty.style.height, "", "the size is put back");
+});
+
+test("Decision 304: where print() returns first and afterprint never comes, the next touch of the page puts it back", async () => {
+  const app = deadAirApp("sessions");
+  app.window.eval(`S.sessOpen = S.table.sessions[0].id; renderTable();`);
+  app.window.print = () => {};
+  app.click("[data-tprint]");
+  await new Promise(r => setTimeout(r, 5));
+  assert.equal(app.doc.body.classList.contains("table-print"), true);
+  app.doc.body.dispatchEvent(new app.window.Event("pointerdown", { bubbles: true }));
+  assert.equal(app.doc.body.classList.contains("table-print"), false);
 });
