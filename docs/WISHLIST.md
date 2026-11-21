@@ -944,6 +944,11 @@ E4 struck RES on the sheet for a body piece at Integrity 0, because the engine a
 
 S26's Print button prints a session, a cast member or an encounter as it reads. The browser's own Print (Ctrl+P, the menu) on a table page still prints `#printSheet`, which is empty or holds the last character printed. It would have to tell a character's print from a table page's. *To respect:* the character's print must not move (Decision 304).
 
+**W174 — Esc in ⋮ should hand focus back to the ⋮ button.** *Claude, from K4's review (PR #375), 2026-11-20 · ⏭ · Fix (UI) · raised 2026-11-20*\
+**Plan:** none yet
+
+Esc inside the ⋮ menu closes it, but focus drops to the page's body instead of going back to the ⋮ button, so the next Tab starts from the top of the page. It's old behaviour, and more noticeable since K4 put Guide lines and the sheet's ? key switch in ⋮ (Decision 306), where a keyboard user flips them with the menu open. *To respect:* a press on a ⋮ switch leaves ⋮ open with focus on the item (K4), Esc with ⋮ open closes the menu before Help (Decision 278's one layer at a time), and `closeMenu` in `app.js` is the one place that shuts it.
+
 ### For the designers
 
 **W56 — A tuning bench: change the game's numbers, see what moves, hand back a change request.** *Ken · ⏭ · shaped with Claude 2026-10-01*\
@@ -1185,7 +1190,7 @@ A GM who wants to post jobs, see which the crew has taken and keep the ones nobo
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W174.** Everything above is open. What was built is in
+- **Next free number: W175.** Everything above is open. What was built is in
   [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)

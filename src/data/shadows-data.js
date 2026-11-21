@@ -5226,7 +5226,7 @@ window.SHADOWS_DATA = {
         "sections": [
           "sessions"
         ],
-        "text": "Once the session's over, press **Close out**. Say how long you played, award the IP, and fill in what else happened. Then **Export** from ⋮ to download a copy of the table and everything that changed."
+        "text": "Once the session's over, press **Close out**. Say how long you played, award the IP, and fill in what else happened. Then press **Export the table** to download a copy of the table and everything that changed."
       }
     ],
     "contexts": {
