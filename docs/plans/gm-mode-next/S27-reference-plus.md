@@ -4,8 +4,8 @@
 Skills, Powers and Equipment most and said adding them "wouldn't take away anything"; Scott (2026-11-03) said add them.
 Ken (2026-11-20, after S28 merged): "S27 next", and **make sure the codex pack and the Reference panels are up to date
 with the latest `private/` mirror.**
-**Status:** **drafted 2026-11-20** by Claude (Opus, the S28 reviewer), from `main` at `208afeb` (S28 merged, #376). Not
-approved. Questions in §4.
+**Status:** **drafted 2026-11-20** by Claude (Opus, the S28 reviewer), from `main` at `208afeb` (S28 merged, #376).
+**Approved by Ken 2026-11-20**, in the conductor session: "All defaults". GQ87–GQ94 each take their default; GQ86 was answered no.
 **Branch:** from `main`; PR to `main`. Nothing ships switched off: GM mode is on for everyone (Decision 239).
 **Runs beside:** nothing. One build at a time (Ken). **Say N everywhere** (N is the one decision).
 
