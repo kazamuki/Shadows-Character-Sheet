@@ -1466,6 +1466,7 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .cast-line, .cast-meta{overflow-wrap:anywhere; min-width:0}
 .cast-line{margin-top:3px; font-style:italic; color:var(--dim)}
 .cast-figs{margin:4px 0 0; overflow-wrap:anywhere; min-width:0; color:var(--dim)}
+.cast-fig{white-space:nowrap}
 .cast-figs .threat-val{font-family:var(--numeric); font-size:1rem; font-weight:600; color:var(--text)}
 .mono{font-family:var(--mono)}
 .gm-door{margin-top:8px}

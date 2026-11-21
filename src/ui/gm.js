@@ -1007,7 +1007,7 @@ const INTERACTION_KINDS = [["shared","Told them"], ["learned","Learned from them
   ["killed","Killed them"], ["owes","Owes them"], ["owed","They owe"], ["fought","Fought them"]];
 const splitList = (v, re) => String(v).split(re).map(s=>s.trim()).filter(Boolean);
 // The add row's draft: kept while the page is open, so three lines in a scene are three Enters.
-const intAdd = () => S.intAdd || (S.intAdd={ kind:null, crew:[], date:localDay(), what:"", where:"" });
+const intAdd = () => S.intAdd || (S.crewAdd==="ia" && (S.crewAdd=null), S.intAdd={ kind:null, crew:[], date:localDay(), what:"", where:"" });
 // A line's crew is the crew picker (Decision 310): the add row's holds a list until Add, a line's Edit saves at once.
 const crewLinePicker = (key, names, save) => ({ key, label:"Crew", list:"crew-names", choices:()=>crewNameChoices(S.table), names, save });
 const addCrewPicker = () => crewLinePicker("ia", ()=>intAdd().crew, list=>{ intAdd().crew=list; return true; });
@@ -1032,12 +1032,12 @@ const hasNumber = b => Engine.blockHasNumber(b);
 // read panel's are (readBlockHtml) and never summed again here. A hurt member reads what is left of the total.
 function cardFiguresHtml(n){
   if (!hasNumber(n.block)) return "";
-  const r=Engine.npc(n.block), bits=[], fig=(id, v)=>`<span class="cast-stat-id">${esc(id)}</span> <b class="threat-val">${esc(v)}</b>`;
+  const r=Engine.npc(n.block), bits=[], fig=(id, v)=>`<span class="cast-fig"><span class="cast-stat-id">${esc(id)}</span> <b class="threat-val">${esc(v)}</b></span>`;
   for (const s of D.stats){ const v=r.stats[s.id]; if (v && v.value!==null) bits.push(fig(s.id, v.value)); }
   for (const d of D.derived.filter(x=>x.type==="sumOfModifiers")){ const a=r.authored[d.id]; if (a && a.used!==null) bits.push(fig(d.id, a.used)); }
   const h=n.wounds ? Engine.castHealth(S.table, n.id) : null;
-  if (h && h.total!==null) bits.push(`<span class="cast-stat-id">Health</span> <b class="threat-val">${esc(h.left)}</b> of <b class="threat-val">${esc(h.total)}</b>`);
-  else if (r.health) bits.push(`<span class="cast-stat-id">Health</span> <b class="threat-val">${esc(r.health.total)}</b>`);
+  if (h && h.total!==null) bits.push(`<span class="cast-fig"><span class="cast-stat-id">Health</span> <b class="threat-val">${esc(h.left)}</b> of <b class="threat-val">${esc(h.total)}</b></span>`);
+  else if (r.health) bits.push(`<span class="cast-fig"><span class="cast-stat-id">Health</span> <b class="threat-val">${esc(r.health.total)}</b></span>`);
   return bits.length ? `<p class="cast-figs">${bits.join(" · ")}</p>` : "";
 }
 function castCardHtml(n){
@@ -1457,7 +1457,7 @@ function bindInteractions(main, n){
   const folded=!!main.querySelector("[data-iaopen], [data-iacancel]");
   const opener=main.querySelector("[data-iaopen]"), cancel=main.querySelector("[data-iacancel]");
   if (opener) opener.onclick=()=>{ a.open=true; renderTable(); focus(`${crewBoxSel("ia")} button`); };
-  if (cancel) cancel.onclick=()=>{ a.open=false; renderTable(); focus("[data-iaopen]"); };
+  if (cancel) cancel.onclick=()=>{ a.open=false; if (S.crewAdd==="ia") S.crewAdd=null; renderTable(); focus("[data-iaopen]"); };
   if (whatEl){
     main.querySelectorAll("[data-iakind]").forEach(b=>b.onclick=()=>{
       a.kind = a.kind===b.dataset.iakind ? null : b.dataset.iakind;
@@ -1490,7 +1490,7 @@ function bindInteractions(main, n){
     if (sent && cur) sent.innerHTML=sentenceHtml(S.table, cur, { plain:true }) + (sentTag(cur) ? " " + sentTag(cur) : "");
   };
   main.querySelectorAll("[data-iedit]").forEach(b=>b.onclick=()=>{
-    S.intEdit=b.dataset.iedit; S.intEditOf=id; renderTable(); focus(`${crewBoxSel(`il|${b.dataset.iedit}`)} button`); });
+    S.intEdit=b.dataset.iedit; S.intEditOf=id; if (String(S.crewAdd).startsWith("il|")) S.crewAdd=null; renderTable(); focus(`${crewBoxSel(`il|${b.dataset.iedit}`)} button`); });
   main.querySelectorAll("[data-idone]").forEach(b=>b.onclick=()=>{
     S.intEdit=null; renderTable(); focus(attrSel("data-iedit", b.dataset.idone)); });
   bindCastCards(main);

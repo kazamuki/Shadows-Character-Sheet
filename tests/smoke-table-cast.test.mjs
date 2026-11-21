@@ -2131,3 +2131,26 @@ test("Decision 310: a name with markup renders as text in the picker", () => {
   assert.deepEqual(crewPressed(app, "edit"), ["<img src=x>"]);
   assert.deepEqual(app.errors, []);
 });
+
+test("Decision 310: an Add a player field left open on one add row or line's Edit is shut on the next", () => {
+  const [t] = withSeats();
+  const a = Engine.addCastMember(t, { name: "Dez" }).id;
+  Engine.addCastMember(t, { name: "Wren" });
+  Engine.addInteraction(t, { kind: "shared", cast: [a], crew: ["Nyx"], text: "x", date: "2026-10-01" });
+  const app = tableOpen(t);
+  const open = name => app.$$("[data-copen]").find(x => x.textContent === name).click();
+  open("Dez"); editLine(app);
+  crewBox(app, "edit").querySelector("[data-crew-add]").click();
+  assert.ok(crewBox(app, "edit").querySelector("[data-crew-input]"));
+  app.click("[data-idone]"); editLine(app);
+  assert.equal(crewBox(app, "edit").querySelector("[data-crew-input]"), null, "Edit reopened with Add a player still open");
+  app.click("[data-idone]"); app.click("[data-iaopen]");
+  crewBox(app, "add").querySelector("[data-crew-add]").click();
+  assert.ok(crewBox(app, "add").querySelector("[data-crew-input]"));
+  app.click("[data-iacancel]"); app.click("[data-iaopen]");
+  assert.equal(crewBox(app, "add").querySelector("[data-crew-input]"), null, "the add row reopened with Add a player still open");
+  crewBox(app, "add").querySelector("[data-crew-add]").click();
+  app.click("[data-cback]"); open("Wren"); app.click("[data-iaopen]");
+  assert.equal(crewBox(app, "add").querySelector("[data-crew-input]"), null, "another member's add row opened with Add a player open");
+  assert.deepEqual(app.errors, []);
+});
