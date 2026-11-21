@@ -567,7 +567,7 @@ function paintTonight(){
   const own=main.querySelector(":scope > .tn-bar"), items=!main.querySelector(":scope > .enc-bar") && tonightShows() ? tonightItems() : [];
   if (!items.length){ if (tonightEl && tonightEl.parentNode) tonightEl.remove(); if (own) own.remove(); return; }
   if (!tonightEl){
-    tonightEl=document.createElement("div"); tonightEl.className="tn"; tonightEl.setAttribute("role","region"); tonightEl.setAttribute("aria-label","Tonight");
+    tonightEl=document.createElement("div"); tonightEl.className="tn"; tonightEl.setAttribute("role","region"); tonightEl.setAttribute("aria-label","Status");
     tonightEl.addEventListener("click", ev=>{ const b=ev.target.closest("[data-tn]"); if (b && tonightGo[b.dataset.tn]) tonightGo[b.dataset.tn](); });
   }
   let bar=main.querySelector(":scope > .tbl-bar");

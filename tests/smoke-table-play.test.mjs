@@ -48,7 +48,7 @@ test("Decision 188: switched off there is no Encounters tab; switched on it sits
   runTable(app, "T");
   assert.deepEqual(app.$$("[data-tsec]").map(b => b.dataset.tsec), ["sessions", "players", "cast", "city", "threats", "encounters", "reference", "notes"]);
   encTab(app);
-  assert.match(app.$("#main").textContent, /Nothing on the books\./);
+  assert.match(app.$("#main").textContent, /No encounters yet\./);
   assert.deepEqual(app.errors, []);
 });
 

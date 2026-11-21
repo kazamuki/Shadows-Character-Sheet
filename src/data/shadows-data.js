@@ -5238,8 +5238,8 @@ window.SHADOWS_DATA = {
           "during",
           "after"
         ],
-        "intro": "Your nights of play: what's coming, the threads in motion, and every session so far.",
-        "for": "Where the campaign's nights live. Before you play, **Next session** is your prep in one screen. When you sit down, start a session. Afterwards, close it out. Want a job for the crew? **CRANK job**, under Threads, rolls the book's five tables.",
+        "intro": "Your sessions: what's coming, the threads in motion, and every session so far.",
+        "for": "Where the campaign's sessions live. Before you play, **Next session** is your prep in one screen. When you sit down, start a session. Afterwards, close it out. Want a job for the crew? **CRANK job**, under Threads, rolls the book's five tables.",
         "words": [
           "table",
           "closeToFull",
@@ -5251,7 +5251,7 @@ window.SHADOWS_DATA = {
           "closeout"
         ],
         "tips": [
-          "Keep one thread current, the one tonight is about: it rides in the strip on every tab.",
+          "Keep one thread current, the one this session is about: it rides in the **Status** bar on every tab.",
           "Read **Next session** before you play, not during."
         ]
       },
@@ -5262,7 +5262,7 @@ window.SHADOWS_DATA = {
           "during",
           "after"
         ],
-        "for": "One night: who was there, how long, what passed between the crew and the cast, what you jotted, and your write-up of it.",
+        "for": "One session: who was there, how long you played, what passed between the crew and the NPCs, what you jotted, and your debrief.",
         "words": [
           "openSession",
           "line",
@@ -5281,7 +5281,7 @@ window.SHADOWS_DATA = {
         "when": [
           "after"
         ],
-        "for": "The end of a night. Check who came and how long you played, and the IP for each character is worked out. Put down any CRANK job the crew finished, with what it paid and who was on it. Then close or keep each open thread, and add the people the crew met.",
+        "for": "The end of a session. Check who came and how long you played, and the IP for each character is worked out. Put down any CRANK job the crew finished, with what it paid and who was on it. Then close or keep each open thread, and add the people the crew met.",
         "words": [
           "closeout",
           "ip",
@@ -5334,7 +5334,7 @@ window.SHADOWS_DATA = {
           "after"
         ],
         "intro": "Everyone in NYTE City the crew deals with, and what they know.",
-        "for": "Everyone in the story who isn't a player's character. Write who they are and what they want, give the ones who might fight a stat block, and log what passes between them and the crew.",
+        "for": "Everyone in the story who isn't a player's character. Write who they are and what they want, give a stat block to the ones the crew might fight or roll against, and log what passes between them and the crew.",
         "words": [
           "cast",
           "status",
@@ -5343,7 +5343,7 @@ window.SHADOWS_DATA = {
           "whoKnows"
         ],
         "tips": [
-          "Not everyone needs a stat block, only people who might end up in a fight.",
+          "Not everyone needs a stat block, only the NPCs the crew might fight or roll against.",
           "Each card shows that member's numbers, and the Health they have left, so you can see who to throw at the crew."
         ]
       },
@@ -5551,7 +5551,7 @@ window.SHADOWS_DATA = {
           "strip"
         ],
         "tips": [
-          "The strip under the header shows the round and who acts on every tab, so you can check Reference mid-fight and come straight back.",
+          "The **Status** bar under the header shows the round and who acts on every tab, so you can check Reference mid-fight and come straight back.",
           "**Print** puts the fight's page on paper, rows and plan."
         ]
       },
@@ -5590,7 +5590,7 @@ window.SHADOWS_DATA = {
           "during",
           "after"
         ],
-        "intro": "Thoughts just for you, kept with the table.",
+        "intro": "Your notes, kept with the table.",
         "for": "Anything you want to keep for yourself: a campaign pitch, safety notes, spoilers, rulings you've made, a rumor table.",
         "words": [
           "note",
@@ -5621,15 +5621,15 @@ window.SHADOWS_DATA = {
     "words": {
       "table": {
         "term": "Table",
-        "text": "Everything about one campaign: its sessions, players, cast, city, encounters and notes. It lives in this browser, and the exported `.shadows-table.json` is the copy that lasts."
+        "text": "Your campaign: its sessions, players, cast, city, encounters and notes. It lives in this browser, and the exported `.shadows-table.json` is the copy that lasts."
       },
       "session": {
         "term": "Session",
-        "text": "One night of play: the day, who was there, how long, what passed between the crew and the cast, and your write-up."
+        "text": "Playing Shadows for an hour or more is a game session. GM mode keeps its day, who was there, how long you played, what passed between the crew and the NPCs, and your debrief."
       },
       "openSession": {
         "term": "Open session",
-        "text": "The latest session that isn't closed out. Jot files to it, and the strip shows while it's open."
+        "text": "The latest session that isn't closed out. Jot files to it, and the **Status** bar shows while it's open."
       },
       "closeout": {
         "term": "Close-out",
@@ -5637,15 +5637,15 @@ window.SHADOWS_DATA = {
       },
       "thread": {
         "term": "Thread",
-        "text": "A question the story hasn't answered yet. Examples include a missing witness, a debt, or a contract on someone. Close it as **Resolved** or **Dropped** when it ends."
+        "text": "A plot thread: a question the story hasn't answered yet, followed from session to session. Examples include a missing witness, a debt, or a contract on someone. Close it as **Resolved** or **Dropped** when it ends."
       },
       "currentThread": {
         "term": "Current thread",
-        "text": "The thread tonight is about. Only one at a time, and it rides in the strip on every tab."
+        "text": "The thread this session is about. Only one at a time, and it rides in the **Status** bar on every tab."
       },
       "clock": {
         "term": "Clock",
-        "text": "A countdown to trouble: 2 to 12 segments that fill as something gets closer. Give it to a faction, a person, a place or a fight, say what moves it and what happens when it's full, and press **+** when the story pushes it."
+        "text": "A countdown to something happening: 2 to 12 segments that fill as it gets closer, and when it's full, it happens. A gang's raid, an NPC running out of patience, a building coming down, reinforcements arriving. Say what fills it and what happens at the end, and press **+** when the story pushes it."
       },
       "closeToFull": {
         "term": "Close to full",
@@ -5657,7 +5657,7 @@ window.SHADOWS_DATA = {
       },
       "metNoStat": {
         "term": "Met last session, no stat block yet",
-        "text": "People the crew met last time who'd need numbers if a fight started."
+        "text": "People the crew met last time who'd need numbers if it came to a roll."
       },
       "journal": {
         "term": "Debrief",
@@ -5669,11 +5669,11 @@ window.SHADOWS_DATA = {
       },
       "ip": {
         "term": "Improvement Points",
-        "text": "What characters spend to grow. The close-out gives each character who was there 5 an hour, rounded up."
+        "text": "What characters spend to grow. The close-out suggests 5 for every hour played, for each character who was there, rounding any part of a point up (2½ hours is 13). Add more for roleplay or anything else worth rewarding."
       },
       "away": {
         "term": "Away tonight",
-        "text": "Characters who missed the session. Tick **Took a job** for one who worked off-screen, and pick the job's tier for their Çredits."
+        "text": "Players who missed the session. Their characters can still have been busy: tick **Took a job** for one who ran a CRANK side job off-screen, and pick the job's tier for their Çredits."
       },
       "player": {
         "term": "Player",
@@ -5681,11 +5681,11 @@ window.SHADOWS_DATA = {
       },
       "characterCopy": {
         "term": "Character copy",
-        "text": "A copy of a player's `.shadows.json`, imported so you can see their sheet. It changes only when you import a fresh file."
+        "text": "Your copy of a player's character: the `.shadows.json` they export and send you, imported on **Players** so you can see their sheet. It only changes when you import a newer file, and nothing you do here changes theirs."
       },
       "benched": {
         "term": "Benched, retired and dead",
-        "text": "Characters a player isn't playing now. They keep their history."
+        "text": "Characters no longer playing in this campaign: dead, retired or on hiatus. They keep their history."
       },
       "cast": {
         "term": "Cast",
@@ -5693,15 +5693,15 @@ window.SHADOWS_DATA = {
       },
       "status": {
         "term": "Status",
-        "text": "Where someone stands: alive, dead, missing, or out of the picture. **In play** shows the ones who are alive or missing."
+        "text": "An NPC's overall condition: alive, dead, missing, or out of the picture. **In play** shows the ones who are alive or missing."
       },
       "affiliation": {
         "term": "Affiliation",
-        "text": "Who someone answers to: a faction, a crew, a company. Filter the cast by it."
+        "text": "Who someone answers to: a faction, a crew, a company. Filter the cast by affiliation to see everyone tied to one group."
       },
       "statBlock": {
         "term": "Stat block",
-        "text": "A cast member's numbers for a fight. Only people who might fight need one."
+        "text": "Shows an NPC's stats, abilities, attacks and relevant skills. Give one to anyone the crew might fight or roll against, in a social check as much as a fight."
       },
       "whoKnows": {
         "term": "Who knows what",
@@ -5717,7 +5717,7 @@ window.SHADOWS_DATA = {
       },
       "siteProfile": {
         "term": "Site profile",
-        "text": "A ready-made profile from the Threat Codex for a kind of place, with a level and how exposed each character is there. A pack brings them."
+        "text": "An environmental threat from the Threat Codex: a kind of place that's dangerous in itself, with a level and how exposed each character is there. A pack brings them."
       },
       "faction": {
         "term": "Faction",
@@ -5749,7 +5749,7 @@ window.SHADOWS_DATA = {
       },
       "encounter": {
         "term": "Encounter",
-        "text": "A scene you plan ahead, usually a fight: who's in it, the stakes, the ground and the way out. Start it to run it round by round."
+        "text": "A scene of play, planned ahead or set up when it happens. Most come to a fight: who's in it, the stakes, the ground and the way out. Start it to run it round by round."
       },
       "plan": {
         "term": "The plan",
@@ -5757,7 +5757,7 @@ window.SHADOWS_DATA = {
       },
       "round": {
         "term": "Round",
-        "text": "One pass through everyone in the fight, in turn order."
+        "text": "A measure of in-game time: everyone in the fight, players and NPCs, acts in turn order, then the round resets and a new one starts."
       },
       "nextTurn": {
         "term": "Next turn",
@@ -5765,44 +5765,44 @@ window.SHADOWS_DATA = {
       },
       "combatSense": {
         "term": "Combat Sense",
-        "text": "What sets turn order in a combat encounter. In a fight run by waves, each side rolls it again at a round's end if the fight has changed."
+        "text": "What sets turn order in a combat encounter, the book's Order of Engagement (often called initiative). Combat Sense is the Skill everyone rolls for it; ties roll again. In a fight run by waves, each side rolls it again at a round's end if the fight has changed."
       },
       "strip": {
-        "term": "The strip",
+        "term": "Status bar",
         "text": "The line under the header while a session is open or a fight runs: the round and who acts, who's down, the current thread, the clock nearest full, and **Unexported**. Tap any of it to go there."
       },
       "unexported": {
         "term": "Unexported",
-        "text": "The table has changed since you last exported it. Tap it to export: the file is your backup."
+        "text": "Your latest changes are only in this browser. Tap it to export the table: the file is your backup, and the copy that lasts."
       },
       "find": {
         "term": "Find",
-        "text": "Searches the whole table: cast, sessions, lines, threads, notes, encounters, places, factions, clocks and players. **F** opens it."
+        "text": "Searches the whole table: cast, sessions, lines, threads, notes, encounters, places, factions, clocks and players. Press **F** to open it."
       },
       "jot": {
         "term": "Jot",
-        "text": "A quick note without leaving the page. It goes with the open session, or to Notes if none is open. **J** opens it."
+        "text": "A quick note without leaving the page. It goes with the open session, or to Notes if none is open. Press **J** to open it."
       },
       "activity": {
         "term": "Activity",
-        "text": "Every change to this table, newest first, and Undo for the newest. **A** opens it."
+        "text": "Every change to this campaign, newest first, with Undo for the newest. Press **A** to open it."
       },
       "note": {
         "term": "Note",
-        "text": "Anything for you alone. Tie it to a session to find it by that session later."
+        "text": "Anything you want to keep. Tie it to a session to find it by that session later."
       }
     },
     "empty": {
-      "sessions": "Nothing yet. Start a session when you sit down to play, or add a thread you want to follow. Press **?** for what each tab is for.",
+      "sessions": "Nothing yet. Start a session when you sit down to play, or add a thread you want to follow. Press **?** to learn what each tab is for.",
       "threads": "No threads yet. A thread is a question the story hasn't answered: add one to follow it from session to session.",
       "sessionsList": "No sessions yet. Start one when you sit down to play.",
       "players": "Nobody seated yet. Add a player, then import their characters.",
-      "cast": "Nobody yet. The city fills up fast: add the people the crew meets, or bring them in from Threats.",
+      "cast": "Nobody yet. Add the NPCs the crew meets, or bring them in from Threats.",
       "places": "No places yet. Add one, or find it in The city.",
       "factions": "No factions yet. Add one, or find it in The city.",
       "threats": "No threats yet. Slot in the pack that came with your GM material to see its threats here.",
-      "encounters": "Nothing on the books. Plan a fight ahead, or start one when it breaks out.",
-      "notes": "Nothing on file yet. Write down what you don't want to forget: it's for you, not your players, and **Find** searches it."
+      "encounters": "No encounters yet. Plan one ahead, or start one when it happens.",
+      "notes": "Add a note. Anything you want to keep, and Find searches it."
     }
   },
   /* GM mode's Reference (Decision 207): its panels, in order. A panel with
