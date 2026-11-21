@@ -436,6 +436,8 @@ test("K4: Guide lines is in ⋮, shows its state and flips in place; Shortcuts o
   const item = () => app.$('#hdrmenu [data-menu-switch="guide"]');
   assert.equal(item().getAttribute("aria-pressed"), "true");
   assert.ok(item().textContent.includes("On"), item().textContent);
+  // aria-pressed says the state; the On/Off chip is hidden from the name, or a reader hears "Guide lines On, pressed".
+  assert.equal(item().querySelector(".menu-state").getAttribute("aria-hidden"), "true");
   app.click('[data-menu-switch="guide"]');
   assert.equal(app.$("#main [data-guide]"), null, "the page's guide lines are still there");
   assert.equal(item().getAttribute("aria-pressed"), "false");

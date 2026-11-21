@@ -1249,7 +1249,7 @@ function helpEscCloses(){ const el=$("ghelp"); return helpShown() && !!el && (!h
 // K4 (Decision N): a switch in ⋮. The item names the switch and says whether it's on (a chip from the guide's own On and Off), with
 // aria-pressed; a press flips it, redraws that one item in place and leaves ⋮ open with focus on the item. The press stops here: the page's
 // click-away that shuts ⋮ would otherwise see a target the redraw replaced.
-const menuSwitchHtml = (name, label, on, u) => `<button type="button" data-menu-switch="${name}" aria-pressed="${on}">${esc(label)} <span class="menu-state">${esc(on ? u.on : u.off)}</span></button>`;
+const menuSwitchHtml = (name, label, on, u) => `<button type="button" data-menu-switch="${name}" aria-pressed="${on}">${esc(label)} <span class="menu-state" aria-hidden="true">${esc(on ? u.on : u.off)}</span></button>`;   // aria-pressed says the state; the chip is for the eye, so the name stays put
 function bindMenuSwitch(root, name, get, set, u){
   const find = () => document.querySelector(`#hdrmenu [data-menu-switch="${name}"]`);
   const b=root.querySelector(`[data-menu-switch="${name}"]`); if (!b) return;
@@ -1282,11 +1282,15 @@ function bindHelpTabs(el){
   }
 }
 // The head's height is what the find bar sticks under: read from the head, so a tab row that wraps moves it.
+// One observer, moved to each new head: a paint replaces the head, so the last one is let go rather than watched forever.
+let helpHeadRO=null;
 function sizeHelpHead(el){
   const head=el.querySelector(".help-head"); if (!head) return;
   const set=()=>el.style.setProperty("--help-head-h", head.offsetHeight + "px");
   set();
-  if (window.ResizeObserver) new ResizeObserver(set).observe(head);
+  if (!window.ResizeObserver) return;
+  if (helpHeadRO) helpHeadRO.disconnect();
+  helpHeadRO=new ResizeObserver(set); helpHeadRO.observe(head);
 }
 // Drawn again only when the page it is for, or its view, has changed: a press inside it must keep its focus.
 function paintHelp(force){

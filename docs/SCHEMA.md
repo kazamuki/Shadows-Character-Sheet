@@ -5399,6 +5399,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** a GM asks for another key, a browser takes F or J, or players get a sheet-wide search.
      - **Built:** app 0.56.1; switched off (173); no schema move; PR #278; log 2026-10-31 (S19).
     → **Superseded in part by Decision 272** — more keys under the same rules (1–8, N, Ctrl/⌘+Z, A, ?), and the one Keys switch covers them all.
+    → **Superseded in part by Decision 306** — ⋮ → Keys is ⋮ → **Shortcuts**, and so is the box it opens.
 
 260. **GM mode is launched: `FEATURES.gm` is true, so every player sees Run a table, and the switch stays, on.**
      *2026-10-31 · Ken + Claude · Touches: GM mode, FEATURES, featureOn, applyFeatureQuery, ?gm=on, ?gm=off, shadows.feature.gm, Home, Run a table, Import a file, launch line, changelog-pending, CHANGELOG, boot features option, GM_OFF, Decision 173, Decision 239*
@@ -5751,6 +5752,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 289 in part (a context's words are references, not only gameTerms ids). Decision 287 in part (gameTerms gains a `rule` kind).
      - **Revisit if:** players want the new words found inside sentences (forms), or a GM wants the game's words on the table's Every word (KQ15).
      - **Built:** app 0.71.0 (minor), game data 0.56, no schema bump, PR (this one), log 2026-11-15 (K2).
+     → **Superseded in part by Decision 306** — *Every word* is called **Vocab**, a tab at the top of Help.
 292. **A power that changes natural weapons or melee says so on the lines it reaches, by kind (claw, bite, fist) or by the melee class, at its rank, as a conditional mark; one that runs is applied while it runs.**
      *2026-11-16 · Ken + Claude · Touches: attackMod, weaponRules.attackMods, naturalAttacks, archetypeWeapons, weaponLine, conditional, bonuses, damageType, runningPowers, Rend and Tear, Bone Spines, Monstrous Maw, Rending Claws, Blood of Valhalla, Let It Loose, Steel Fangs, Serrated Claws, Main's Weapons table, Loadout's weapon rows, pNaturalRows, LQ5, W136*
      - **Decided:** A power's `attackMod` grant reaches the lines whose `kind` it names, or with `class: "melee"` every melee line (Decision 248's class), except grenades (`excludeCategories`, Ken: spines don't make a thrown grenade hit harder). Its damage and rounds are `plus` + `perRank` × (rank − 1). On a power that isn't running it's a conditional mark, never summed (Decision 104). On a running power (Decision 266) its damage is added and listed in `bonuses`, and its `damageType` replaces the line's. Main, Loadout and print show the same marks. Nothing is stored.
@@ -5889,7 +5891,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - The night as a dialog: it's read beside the page.
        - Close fixed, tabs in the scroll: the tabs are how you move.
        - The switches at Help's foot: out of reach, and about the screen.
-     - **Replaces:** Decision 278 in part (the foot's links are tabs at the top; the night's name, parts and copy; Guide lines in ⋮). Decision 289 in part (the sheet's Every word is a tab, Back is gone, its switches are in ⋮). Decision 272 in part (Keys is Shortcuts).
+     - **Replaces:** Decision 278 in part (the foot's links are tabs at the top; the night's name, parts and copy; Guide lines in ⋮). Decision 289 in part (the sheet's Every word is a tab, Back is gone, its switches are in ⋮). Decisions 259 and 272 in part (Keys is Shortcuts). Decision 291 in part (Every word is Vocab).
      - **Revisit if:** Help gets a fourth view, or a phone can't spare the head's height.
      - **Built:** app 0.75.0; PR #375; log 2026-11-20 (K4).
 
