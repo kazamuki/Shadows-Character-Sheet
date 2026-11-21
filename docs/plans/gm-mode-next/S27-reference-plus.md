@@ -12,32 +12,29 @@ approved. Questions in §4.
 **Pre-flight** at `208afeb`. `private/` at `c99bb58` (the 2026-11-15 mirror); the private repo's `origin/main` has nothing
 newer (the conductor checked).
 
-### The mirror check Ken asked for
+### The audit Ken asked for: the Reference's data and the Codex pack against the mirror
 
-**The Threat Codex pack is current.** `npm run codex-pack` on `main` rebuilt `private/gm/threat-codex.shadows-pack.json`
-and left `git -C private status` clean: byte for byte what is committed. `tests/codexpack.test.mjs` pins that
-("the committed Codex pack is what the mirror builds, byte for byte") and passes in the full suite (2024 tests). Its
-counts: 42 threats, 11 people, 29 groups, 114 traits, 7 origins, 9 NPC roles, 8 enemy roles, 4 tiers, 15 sites. The
-builder's only noise is two warnings (Entries 24 and 28: a gear line has a comma after a dash and is kept as one line).
-They're kept-as-one-line notes, not drift. **No Codex drift. Nothing to build.**
+Ken (2026-11-20): no newer mirror than `c99bb58` (GQ86 answered), and nobody has audited the data against it. **The audit
+is done, in the pre-flight, and is written up in
+[`docs/audits/2026-11-20_reference-and-codex-pack-vs-mirror.md`](../../audits/2026-11-20_reference-and-codex-pack-vs-mirror.md)**:
+every Reference panel's data and every pack record against `private/`, by script where a string match is the right test
+and by hand where the panel is a paraphrase. In short:
 
-**The Reference's book panels are current, and already guarded.** Six panels carry `bookSource` (Defense, Checks,
-Modifiers and range, Actions, Rate of fire, Armor and damage). `tests/rules.test.mjs` "CRB: the Reference's book panels
-are quoted verbatim from the mirror" (Decision 288) reads each from `private/crb` and passes. I also ran a one-off
-script that normalises and looks up every string the panels, `conditions`, `conditionRules`, `damageRules`,
-`recoveryRules`, `weaponTagGlossary` and `resources.healthLevels` show, in the whole mirror. What it found, and which
-kind each is:
+- **The pack: no drift.** Byte-identical to the mirror's build; all 42 threats' stats, TOL, WILL, tiers, skills and trait
+  names, all 29 groups' compositions, all 7 origins' modifiers and all 114 glossary traits agree with the mirror, checked by
+  scripts that share nothing with the builder.
+- **The Reference: no drift, no Content fix, no rule needing a ruling.** The six book panels are verbatim (and guarded);
+  Conditions, Pain, hits, Recovery and 27 of 29 weapon tags agree in meaning.
+- **Two things to sort:** (1) **Anti-Materiel** and **Reach** in the weapon tags are Deighton's 2026-10-10 rulings, ahead
+  of the mirror, tracked in `crb-catch-up.md` but **not marked** `rulingSource`, so Decision 288's guard doesn't see them
+  (GQ94). (2) Recovery lacks the book's *With Skill* actions: a gap, not drift (GQ92).
+- **Actions' two Power items** are Decision 288's own exception (the 2026-11-12 ruling), marked and tracked. Leave.
 
-| Drift | Where | Kind |
-|---|---|---|
-| **Actions** has two items the mirror doesn't: **Activate a Power** under Free Action, **Attack with a Power** under Standard (the mirror's 0530 still says one "Activate a Power" under Standard) | `gmReference` `actions`, both `rulingSource` | **Not drift.** Deighton's 2026-11-12 ruling, Decision 288's one exception, with an open line in `plans/crb-catch-up.md` (~182) the test checks. The mirror is behind the ruling; the fix is Ken's book change, not ours. Leave |
-| **Checks** shows `10 (Easy) · 15 (Average) · …` and `Higher total wins · (tie favors defender)` | `gmReference` `checks` | **Not drift.** 2130's table breaks those cells with `<br />`; the data joins the lines with ` · `, and the verbatim test splits on it |
-| The data-backed panels (Conditions, How Conditions work, Pain Levels, hits, Recovery, Weapon tags) | `D.conditions`, `damageRules`, `recoveryRules`, … | **Not drift.** They are our paraphrase, so a verbatim match is the wrong test. I read them against 0540, 0550 and 0460 by hand: all twenty Conditions' effects and recoveries, the Pain table and its three penalties, Shock, At Zero, Dying and Death Marks, natural healing (BOD HP a day), Speed Heal (2× for 24 hours) and the Nanomed dose rule agree in meaning. Weapon tags and CRANK have their own tests (`rules.test.mjs` 1223 and ~3764) |
-| **Recovery** lacks the book's **With Skill** actions (Stop the Bleeding, Treat the Agonized, Stabilize the Dying: Medical, Standard, Difficulty 15/15/20) and the Battle Chem line | `recoveryRules` has no data for them | **A gap, not drift.** Nothing in the panel is wrong. It's a Content addition, and out of S27's scope; see §7 and GQ88 |
-
-**So: no Content fix is owed on the pack or on the thirteen panels, and no ruling is needed.** If Ken meant a *newer*
-mirror than `c99bb58` (the book has moved since 2026-11-15, for example Deighton's ruling landing in 0530), that is
-GQ86 and the work is a re-pull by whoever holds the book, not this order.
+**Sizing, and the split question: do not split.** The audit took a pass and found nothing to fix, so it is not a build:
+it's a record, already written. What S27 *builds* from it is small: the audit's scripts become guards (GQ93), and GQ94's
+marker if Ken wants it. Neither is bigger than S27's panels, and the panels are the order. If Ken wants the audit repeated
+whenever the mirror moves, the guards in step 1 are how; a standing "audit the paraphrased panels" order would only be
+needed if a pass found drift, and this one didn't.
 
 **Carried over** (S28's review; the order's own, not the build's):
 - **Count from the sample, not from an old order.** S28's order said *Dead Air* had fourteen members with five blocks; its
@@ -67,11 +64,16 @@ finds it on the Reference, searched with the rest, without opening a player's sh
    "Bestial" the power.
 6. The thirteen panels read exactly as they do today (a diff of `Engine.gmReference` before and after, §10).
 7. No page scrolls sideways at 375px on the Reference, with and without a search (`npm run phone-check`).
+8. The audit's findings are kept (GQ93, GQ94): the pack's entries, groups and origins are re-read from the mirror by a test
+   that shares nothing with the builder; and, if Ken says (a) to GQ94, Anti-Materiel and Reach read as rulings ahead of
+   the book where the Reference shows them.
 
 ## 2. Tier, versions, numbers
 
 **Rule or shape.** The new panels need new `from` kinds in the engine (`_REF_FROM`, `_REF_READERS`) — a shape the data
 names, not only a data edit (GQ29's own note). No stored shape moves.
+- **Fix-tier additions (GQ93, GQ94):** two guards from the audit's scripts, and `rulingSource` on two weapon tags if Ken
+  answers GQ94 (a). Neither moves a shape (`rulingSource` is already a key the Reference reads on a panel's items).
 - **App:** a minor. Join `main`'s `[Unreleased]` heading (0.75.0) if it is still unreleased, else take the next.
 - **Game data:** none. The panels are three rows in `gmReference.panels` and one line of Help; no character can observe
   them (Decision 68). Re-check at build: if a panel's *content* needs a data field that doesn't exist, that's a stop.
@@ -98,13 +100,15 @@ N. **The Reference gains Skills, Powers and Equipment, read from the game data o
 
 | Id | Question | Default |
 |---|---|---|
-| **GQ86** | **Did you mean a newer mirror than `c99bb58`?** The pack and the Reference match 2026-11-15 exactly, and the private repo has nothing newer | **No.** If the book has moved since (0530 after Deighton's ruling, say), re-pull it into `private/` first and this order is re-pre-flighted |
+| **GQ86** | **Did you mean a newer mirror than `c99bb58`?** | **Answered, no** (Ken, 2026-11-20). If the book moves, re-pull it into `private/` first and this order is re-pre-flighted |
 | **GQ87** | **What does "Powers" cover?** (a) The Vampire's and the Werewolf's powers (45, each with an SFR cost and an effect). (b) Those, and Spells as a fourth panel (125, TN/range/effect, no SFR). (c) Those, and the Arcanist | **(a).** GQ29 says "a power's SFR cost and effect", which only (a) has. Spells are Magic with a different shape, and are their own wish if asked |
 | **GQ88** | **Equipment: how much, and in how many panels?** (a) One panel, three parts: Gear, Weapons, Armor (228 rows, searched together). (b) Gear only. (c) Three panels | **(a).** "A piece of gear" means any of the three to a GM; one panel keeps the jump bar at sixteen chips, and the search narrows the rows |
 | **GQ89** | **"Whether a character has a piece of gear"** (Deighton's wording in GQ29) is per character | **Not the Reference.** It is the Players tab's, and its own small wish (the builder adds a W). The Reference lists what the gear *is* |
 | **GQ90** | **A power or weapon flagged in the data** (1 Vampire power, 10 weapons, 3 armor pieces carry `flagged`) | **Show it with its `playerNote`, as the sheet does; never the `flagNote`** (constraint 9). A Vampire and Werewolf that are `draft` today show their powers; 275 keeps the build-state badge off |
 | **GQ91** | **Panel order.** The thirteen stay; where do the three go? | **After CRANK**, Skills, Powers, Equipment. The order is a data edit; the jump bar's chips wrap |
 | **GQ92** | **The Recovery panel's missing "With Skill" actions** (Medical: Stop the Bleeding, Treat the Agonized, Stabilize the Dying; Battle Chems) | **Not in S27.** A gap, not drift. The builder adds it as a new W; it is a small Content order (new `recoveryRules` data and a panel part) |
+| **GQ93** | **Keep the audit's scripts as guards?** (a) Two tests, in `codexpack.test.mjs` and `rules.test.mjs`: the pack's entries, groups and origins re-read from the mirror independently of the builder, and the data-backed panels' book-sourced strings checked where they are verbatim. (b) The write-up only | **(a).** They are the part of the audit that can run again; the builder's own tests share its parser, so a builder bug would pass them. The hand-read panels (Conditions, Pain, hits, Recovery, tags) stay a written record, since a paraphrase has no string to match |
+| **GQ94** | **Mark Anti-Materiel and Reach as rulings ahead of the book?** (a) Yes: a `rulingSource` on a data-backed tag, shown in the Reference as Decision 288 shows it, and a test that each is named in `crb-catch-up.md`. (b) Leave them | **(a).** It is 288's own rule applied to a panel it didn't reach, and two rulings are exactly what the Reference shouldn't show as if they were the book's. It is small: two data fields, one reader line and one test line |
 
 ## 5. The assumption sweep
 
@@ -123,6 +127,8 @@ N. **The Reference gains Skills, Powers and Equipment, read from the game data o
 | Help `gmGuide.contexts.reference.for` (data ~5578) | "Conditions, the Codex, Defense, checks, damage, Pain Levels, recovery and more" | adds skills, powers and equipment. **Grep the copy and `gmGuide.words`** for "thirteen" and the panel list; none found at pre-flight |
 | `tests/engine.test.mjs` 6461–6540 (`refIds`, "every panel the data lists", `froms`) | asserts every data panel resolves and every `from` is known | the three kinds join `froms`; the test that `gmReference([], {})` returns every panel keeps passing |
 | `tests/rules.test.mjs` "the Reference's book panels are quoted verbatim" | filters panels with `bookSource` | unchanged; the new panels have none, so it neither covers nor trips on them. **A new guard instead:** their figures are the data's (§10) |
+| `_REF_READERS.weaponTags` (~9320) and `weaponTagGlossary` (data ~4287) | maps each tag to `_refItem(id, description, [playerNote])`; no `rulingSource` anywhere on a data-backed panel (only `parts` items carry one; the verbatim test reads `bookSource` panels only) | **GQ94 (a):** `weaponTagGlossary` entries may carry `rulingSource`; the reader shows it as the `parts` items do (find how `refItemHtml`/`_refBook` pass it on: `_refItem` has no such field today, so this is a small shape change in `_refItem` and the item markup: **stop and look** before adding it). Anti-Materiel and Reach get it, citing 288; a test that each marked tag is named in an open `crb-catch-up.md` line |
+| `tests/codexpack.test.mjs`, `tests/rules.test.mjs` | the pack's tests share the builder's parser; the verbatim test covers `bookSource` panels | **GQ93 (a):** the audit's two checks join them (§10 tests 8–9) |
 | `tools/phone-check.mjs` (~349) | walks `reference` | unchanged; it must still pass with sixteen panels |
 | Print | `print.css` has no Reference rule | unchanged. **Name it in the PR:** the Reference doesn't print |
 | `docs/STATE.md`, INDEX §3, `CHANGELOG.md`, `shipped.md`, the plan's S27 row | | the close-out below |
@@ -142,8 +148,8 @@ tables. `gm.js`: `refPartHtml`, `refPanelsHtml`, `referenceTabHtml` (945–995).
 - **The Recovery panel's "With Skill" part** (GQ92): add it to `WISHLIST.md` as a new W.
 - **The ruling items on Actions.** They stay until Ken's book change lands (Decision 288; `crb-catch-up.md` ~182).
 - **Reordering the thirteen**, and **editing the pack or the mirror.**
-- **A guard tying the data-backed panels' *paraphrase* to the mirror.** Not possible by string match; the hand check
-  above is the record.
+- **A guard tying the data-backed panels' *paraphrase* to the mirror.** Not possible by string match; the audit's hand
+  read is the record. (The verbatim and structural checks that *are* possible are GQ93's, in scope.)
 
 ## 8. The shapes
 
@@ -193,6 +199,17 @@ Each fails on `main`, or the builder says why it already passes. Engine tests in
 7. Smoke, `"N: the Reference tab draws the three panels and their jump chips"`: sixteen chips, `#gr-skills`,
    `#gr-powers`, `#gr-equipment`; a hostile name (`<img src=x>`) in a skill, power and weapon renders as text.
 
+8. `codexpack.test.mjs`, `"the pack's threats, groups and origins agree with the mirror, read independently of the builder"`: re-reads
+   2612's `**ENTRY n**` blocks (stat row, tier, skills and totals, trait names), the 29 `**Composition:**` lines and 2610's origin
+   modifiers with its own small parsers, and compares them with the pack. Passes on `main` (the audit found no drift): the
+   builder **mutation-tests it** by changing a stat, a skill total, a group count and an origin modifier in a copy of the
+   mirror's text and seeing each fail. (Source: the scratch scripts `packaudit.mjs`, `packaudit2.mjs` in the shared notes
+   folder.)
+9. `rules.test.mjs`, `"the Reference's data-backed book strings that are verbatim stay verbatim"`: (only if the builder can
+   name a list this isn't already; the six `bookSource` panels have it) otherwise **skip it and say so**. The audit's
+   `refdrift.mjs` shows why a general string match is wrong for paraphrase: 106 of its hits are our wording.
+10. If GQ94 (a): `"a weapon tag that says a ruling the book doesn't is marked, and named in crb-catch-up"` (Anti-Materiel, Reach).
+
 ## 11. Tests beyond the examples
 
 - **Mutation-test:** a reader that prints `flagNote` (test 3 or 4 fails); `_REF_FROM` missing one kind (test 1); a
@@ -207,10 +224,12 @@ Each fails on `main`, or the builder says why it already passes. Engine tests in
 
 1. Baseline: `git submodule update --init private`, then `npm run test:fast`. Run the pack check Ken asked for as a
    one-line record in the PR: `npm run codex-pack` leaves `git -C private status` clean.
-2. Save the thirteen panels' `Engine.gmReference` output as a fixture. Write the worked examples; show them failing.
-3. The readers and `_REF_FROM`. Run `npm run verify`.
-4. The three data rows, Help's line. Run the preview, then `npm run phone-check`.
-5. Close-out. Run the full `npm run verify`.
+2. If GQ93 (a): write the audit's two guards (§10 tests 8–9) first, show they pass on `main`, mutation-test them, and run
+   `npm run verify`. They are a Fix, and could ship alone if the panels stall.
+3. Save the thirteen panels' `Engine.gmReference` output as a fixture. Write the worked examples; show them failing.
+4. The readers and `_REF_FROM`. Run `npm run verify`.
+5. The three data rows, Help's line (and GQ94's marker). Run the preview, then `npm run phone-check`.
+6. Close-out. Run the full `npm run verify`.
 
 ## 13. Stop and ask
 
@@ -227,7 +246,7 @@ The `close-the-session` skill for *Rule or shape*:
 - Decision N, its INDEX line, and the mark on 207.
 - The app minor. No data or schema bump.
 - STATE rewritten (the GM mode row).
-- The log, a `shipped.md` row; the plan's S27 row built; GQ86–GQ92 answered. The wishlist: the Players-tab "has this
+- The log, a `shipped.md` row; the plan's S27 row built; GQ86–GQ94 answered. The wishlist: the Players-tab "has this
   gear" wish (GQ89) and the Recovery "With Skill" part (GQ92) added as new W ids; any wish this order takes up gets its
   **Plan** line rewritten.
 
@@ -237,7 +256,7 @@ The `close-the-session` skill for *Rule or shape*:
 **PR title:** `feat(gm): the Reference gains Skills, Powers and Equipment (S27, Decision N)`.
 
 **PR body:** the template's sections, plus **New strings as rendered**, **Screenshots** (the Reference at desktop and
-375px), **The pack check** (the command and its clean status) and **Where the order didn't fit**.
+375px), **The pack check** (the command and its clean status; the audit is `docs/audits/2026-11-20_reference-and-codex-pack-vs-mirror.md`) and **Where the order didn't fit**.
 
 **Review checklist:**
 - §1's seven checks, run in the preview.
