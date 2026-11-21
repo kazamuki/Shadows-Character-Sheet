@@ -571,3 +571,16 @@ test("K4: the sheet's Guide lines and The ? key are in ⋮, show their state and
   assert.equal(app.$$("#main [data-guide]").length, 1);
   assert.deepEqual(app.errors, []);
 });
+
+test("K4: the sheet's tab press opens Help at its top; a redraw of the same view keeps its place", () => {
+  const app = sheet("trackers", { width: 1280 });
+  app.click("[data-shelp]");
+  let top = 0; Object.defineProperty(panel(app), "scrollTop", { configurable: true, get: () => top, set: v => { top = v; } });
+  top = 500; app.click("#ghelp [data-hwords]");
+  assert.equal(top, 0, "Vocab opened where This tab was scrolled to");
+  top = 500; app.click("#ghelp [data-hpage]");
+  assert.equal(top, 0, "This tab opened where Vocab was scrolled to");
+  top = 500; app.window.eval("paintHelp(true)");
+  assert.equal(top, 500, "a redraw of the same view lost its place");
+  assert.deepEqual(app.errors, []);
+});

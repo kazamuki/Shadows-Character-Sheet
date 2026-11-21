@@ -463,3 +463,20 @@ test("K4: Help's head and tabs don't scroll away, and Vocab's filter sticks unde
   assert.match(rule(".ghelp .help-find"), /top:\s*calc\(var\(--help-head-h/, "the find bar sticks at a literal, not under the head");
   assert.match(rule(".ghelp"), /overflow-y:\s*auto/, "#ghelp is no longer the scroller");
 });
+
+test("K4: a tab press, or a new page, opens Help at its top; a redraw of the same view keeps its place", () => {
+  const app = helpApp("sessions", { width: 1280 });
+  app.click("[data-thelp]");
+  let top = 0; Object.defineProperty(panel(app), "scrollTop", { configurable: true, get: () => top, set: v => { top = v; } });
+  top = 500; app.click("#ghelp [data-hnight]");
+  assert.equal(top, 0, "the night tab opened where the last view was scrolled to");
+  top = 500; app.click("#ghelp [data-hwords]");
+  assert.equal(top, 0, "Vocab opened where the last view was scrolled to");
+  top = 500; app.click("#ghelp [data-hpage]");
+  assert.equal(top, 0, "This page opened where the last view was scrolled to");
+  top = 500; app.click('[data-tsec="cast"]');
+  assert.equal(top, 0, "a new page's help opened where the last page's was scrolled to");
+  top = 500; app.window.eval("paintHelp(true)");
+  assert.equal(top, 500, "a redraw of the same page and view lost its place");
+  assert.deepEqual(app.errors, []);
+});

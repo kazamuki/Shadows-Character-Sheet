@@ -1185,7 +1185,7 @@ const pageScrollTop = () => { const box=pageScroller(); return box===document.ge
 /*PAGE-SCROLL:END*/
 // The host of the screen that's up, or null: a table's, a locked sheet's. A seat's read-only sheet is a table screen.
 const helpHost = () => S.screen==="table" ? HELP_HOSTS.table : S.screen==="sheet" && S.ch ? HELP_HOSTS.sheet : null;
-let helpKey=null, helpHostId=null, helpPainted=null;
+let helpKey=null, helpHostId=null, helpPainted=null, helpPaintedCtx=null;
 // The data's marks: **bold** is a button or label as the screen has it, `code` is a file name.
 const helpMd = s => esc(String(s||"")).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/`(.+?)`/g, "<code>$1</code>");
 // ── Keys (Decisions 259, 272): the choice to turn them off is this browser's (`shadows.ui.keys` is "off", or anything else, or nothing, is on)
@@ -1232,6 +1232,7 @@ function openHelp({ viaKey, returnTo }={}){
   S.helpReturn = returnTo || (viaKey && document.activeElement!==document.body ? document.activeElement : null);
   h.setOpen(true); S.helpView=null; S.helpQ=""; S.helpFrom=helpContext(); S.helpCtx=S.helpFrom;
   if (h.opened) h.opened();
+  helpPaintedCtx=null;   // a fresh opening starts at the top
   syncHelp(); paintHelp(true);
   const x=$("ghelp").querySelector("[data-help-close]"); if (x) x.focus({ preventScroll:true });
 }
@@ -1303,15 +1304,17 @@ function paintHelp(force){
   const hadFocus=el.contains(document.activeElement), ae=document.activeElement;
   // The filter box keeps its focus, caret and scroll through a draw it didn't ask for: a sheet redraw beside the column is one.
   const inQ=!!ae && !!ae.matches && ae.matches("[data-help-q]") && el.contains(ae), sel=inQ ? [ae.selectionStart, ae.selectionEnd] : null;
-  const top=S.helpView && S.helpView===helpPainted ? el.scrollTop : 0;
-  el.innerHTML=h.bodyHtml(id); helpKey=key; helpPainted=S.helpView;
+  // The panel's scroll is kept only for a redraw of the same page in the same view (a sheet's redraw beside the column); a tab press or a
+  // new page starts at the top, and nothing carries over from the last time Help was open (K4 review).
+  const top=helpPaintedCtx===id && helpPainted===(S.helpView||null) ? el.scrollTop : 0;
+  el.innerHTML=h.bodyHtml(id); helpKey=key; helpPainted=S.helpView||null; helpPaintedCtx=id;
   el.querySelectorAll("[data-help-close]").forEach(b=>b.onclick=closeHelp);
   h.bind(el);
   bindHelpTabs(el);
   sizeHelpHead(el);
   bindHelpList(el);
   if (inQ){ const q=el.querySelector("[data-help-q]"); if (q){ q.focus({ preventScroll:true }); try{ q.setSelectionRange(sel[0], sel[1]); }catch(e){} } }
-  if (top) el.scrollTop=top;
+  el.scrollTop=top;
   if (hadFocus && !el.contains(document.activeElement)){ const h2=$("ghelp-h"); if (h2) h2.focus({ preventScroll:true }); }
 }
 
