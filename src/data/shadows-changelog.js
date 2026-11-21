@@ -16,9 +16,9 @@ window.SHADOWS_CHANGELOG = [
           "**Help has tabs.** *This page*, *Running a session* and *Vocab* sit at the top with Close, and stay there as you scroll. *Running a session* says what a session is, then walks Session prep, Current session and Debrief.",
           "**Guide lines is in ⋮.** GM mode's Keys are now **Shortcuts**.",
           "**Close stays in reach.** Help's buttons no longer scroll away.",
-          "Each card on the Cast tab shows that member's numbers, and how much Health they have left.",
-          "Origin and Enemy role offer the pack's names as buttons, the way NPC roles do. You can still type your own.",
-          "Pick a line's crew with buttons, as you pick who was there.",
+          "**The cast at a glance.** Each card on the Cast tab shows that member's numbers, and how much Health they have left.",
+          "**Origin and Enemy role are buttons.** Origin and Enemy role offer the pack's names as buttons, the way NPC roles do. You can still type your own.",
+          "**A line's crew is buttons.** Pick a line's crew with buttons, as you pick who was there.",
           "**The scrollbar is beside the page.** On a wide screen with Help pinned, the page's scrollbar sits next to the page, not past the column."
         ]
       },

@@ -5921,7 +5921,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - The modifiers beside each value: they double the line, and the page has them.
      - **Replaces:** nothing.
      - **Revisit if:** GMs open members for a skill or a trait more than for a stat, or a card grows past two lines at 375px.
-     - **Built:** app 0.75.0; PR #…; log 2026-11-20 (S28).
+     - **Built:** app 0.75.0; PR #376; log 2026-11-20 (S28). The Revisit-if is met (a full block's figures run to 3 lines at 375px, a card about 220px tall) and it ships anyway (Ken).
 
 309. **Origin and Enemy role offer the packs' names as buttons, one pick each, as NPC roles do; the field still takes any name.**
      *2026-11-20 · Ken + Claude · Touches: castFormHtml, castPickHtml, Origin, Enemy role, cast-origins, cast-enemies, datalist, castRolesHtml, role toggles, the member's Edit form, packChoices, W81, GQ83, Decision 184*
