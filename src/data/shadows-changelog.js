@@ -2,6 +2,20 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.75.1",
+    "date": null,
+    "intro": [],
+    "items": [],
+    "groups": [
+      {
+        "title": "GM mode",
+        "items": [
+          "**Help talks like a GM.** A session is an hour or more of play, not a night. Encounters can be planned or happen on the spot, stat blocks are for any roll, social ones too, and a clock says what happens when it fills. IP says how a part hour rounds and that you can add more for roleplay. The line under the header is the **Status** bar, and empty pages say less."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.75.0",
     "date": "2026-11-20",
     "intro": [],

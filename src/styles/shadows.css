@@ -921,7 +921,7 @@ tr.lo-modrow td{border-top:0; padding-top:0}
 .ghelp .help-head .dhead{margin-bottom:8px}
 .ghelp .help-tabs{display:flex; flex-wrap:wrap; gap:6px}
 .ghelp .help-tab.on{background:var(--violet); border-color:var(--violet); color:var(--on-accent)}
-.ghelp .help-keys{margin-left:auto}
+.ghelp .help-keys{flex:none}
 .ghelp .dhead{display:flex; align-items:center; gap:10px; margin-bottom:10px}
 .ghelp .dhead h2{flex:1; min-width:0; overflow-wrap:anywhere; font-family:var(--mono); font-size:.78rem; font-weight:500; letter-spacing:.16em; text-transform:uppercase; color:var(--text)}
 .ghelp .dhead .btn{flex:none}

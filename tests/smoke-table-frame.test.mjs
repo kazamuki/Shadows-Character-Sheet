@@ -195,7 +195,7 @@ test("U2: the strip reads the night, in order, on every tab and page, and each i
   const app = open();
   for (const id of TABS) {
     tab(app, id);
-    const region = app.$('#main [role="region"][aria-label="Tonight"]');
+    const region = app.$('#main [role="region"][aria-label="Status"]');
     assert.ok(region && region.closest(".tbl-bar"), `${id}: the strip is a region inside the bar`);
     assert.deepEqual(tnKeys(app), ["fight", "thread", "clock", "unx"], `${id}: Fight, Thread, Clock, Unexported (nobody is Down in Dead Air)`);
   }

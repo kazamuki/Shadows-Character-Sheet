@@ -1262,14 +1262,15 @@ function bindMenuSwitch(root, name, get, set, u){
     if (now){ now.setAttribute("aria-pressed", String(on)); const chip=now.querySelector(".menu-state"); if (chip) chip.textContent=on ? u.on : u.off; now.focus({ preventScroll:true }); }
   };
 }
-// K4 (Decision N): one head for both hosts. The title and Close, then the tabs: each is { view (S.helpView it opens: null, "night", "words"),
-// label, attr (its data attribute, which the tests and Shortcuts' returnTo find it by) }. `extra` is more buttons after the tabs (the
-// table's Shortcuts, which opens a box and is no view). The open tab is the one whose view is S.helpView. It sticks to the top of the panel.
+// K4 (Decision 306): one head for both hosts. The title, then `extra` and Close: the buttons that act rather than show a view
+// (the table's Shortcuts, which opens a box) sit beside Close in the title row (Ken, 2026-11-21: on its own line under the tabs it
+// looked stranded). Then the tabs, only views: each is { view (S.helpView it opens: null, "night", "words"), label, attr (its data
+// attribute, which the tests and Shortcuts' returnTo find it by) }. The open tab is the one whose view is S.helpView. It sticks to the top of the panel.
 function helpHeadHtml(title, tabs, u, extra){
-  return `<div class="help-head"><div class="dhead"><h2 id="ghelp-h" tabindex="-1">${esc(title)}</h2>
+  return `<div class="help-head"><div class="dhead"><h2 id="ghelp-h" tabindex="-1">${esc(title)}</h2>${extra||""}
       <button type="button" class="btn sm" data-help-close aria-label="${esc(u.close)} ${esc(u.title.toLowerCase())}">${esc(u.close)}</button></div>
     <div class="help-tabs" role="group" aria-label="${esc(u.title)}">${tabs.map(t=>{ const on=(S.helpView||null)===t.view;
-      return `<button type="button" class="btn sm help-tab${on ? " on" : ""}" ${t.attr}${on ? ' aria-current="page"' : ""}>${esc(t.label)}</button>`; }).join("")}${extra||""}</div></div>`;
+      return `<button type="button" class="btn sm help-tab${on ? " on" : ""}" ${t.attr}${on ? ' aria-current="page"' : ""}>${esc(t.label)}</button>`; }).join("")}</div></div>`;
 }
 // A tab press: the view changes under the pressed tab, which keeps focus; the filter is cleared by leaving, never stored.
 const HELP_TAB_VIEWS = { "data-hpage":null, "data-hnight":"night", "data-hwords":"words" };

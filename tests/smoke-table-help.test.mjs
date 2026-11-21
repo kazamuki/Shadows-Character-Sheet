@@ -241,7 +241,7 @@ test("S31: an empty section says what it's for", () => {
   assert.ok(main().includes(said(E.sessions)), "Sessions' empty state isn't the data's");
   assert.ok(main().includes(said(E.threads)));
   assert.ok(main().includes(said(E.sessionsList)));
-  assert.match(said(E.sessions), /Press \? for what each tab is for\.$/);
+  assert.match(said(E.sessions), /Press \? to learn what each tab is for\.$/);
   const want = { players: E.players, cast: E.cast, threats: E.threats, encounters: E.encounters, notes: E.notes };
   for (const [id, line] of Object.entries(want)) {
     app.click(`[data-tsec="${id}"]`);
@@ -405,7 +405,9 @@ test("K4: a table's Help opens on This page with its tabs and Close in one head"
   const head = panel(app).querySelector(".help-head");
   assert.ok(head, "no head");
   assert.ok(head.querySelector("h2") && head.querySelector("[data-help-close]"), "the heading and Close are in the head");
-  assert.deepEqual([...head.querySelectorAll(".help-tabs button")].map(b => b.textContent), [G.ui.pageTab, G.ui.nightLink, G.ui.wordsLink, G.ui.keysLink]);
+  assert.deepEqual([...head.querySelectorAll(".help-tabs button")].map(b => b.textContent), [G.ui.pageTab, G.ui.nightLink, G.ui.wordsLink], "the tab row holds only views");
+  // Shortcuts opens a box, so it sits with Close in the title row, before it (Ken, 2026-11-21).
+  assert.deepEqual([...head.querySelectorAll(".dhead button")].map(b => b.textContent), [G.ui.keysLink, G.ui.close], "Shortcuts isn't beside Close");
   assert.deepEqual([G.ui.pageTab, G.ui.nightLink, G.ui.wordsLink, G.ui.keysLink], ["This page", "Running a session", "Vocab", "Shortcuts"]);
   assert.equal(head.querySelector("[aria-current=page]").getAttribute("data-hpage"), "", "This page isn't the open tab");
   assert.equal(head.querySelectorAll("[aria-current=page]").length, 1);
