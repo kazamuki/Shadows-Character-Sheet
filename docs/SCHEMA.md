@@ -5897,6 +5897,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 278 in part (the foot's links are tabs at the top; the night's name, parts and copy; Guide lines in ⋮). Decision 289 in part (the sheet's Every word is a tab, Back is gone, its switches are in ⋮). Decisions 259 and 272 in part (Keys is Shortcuts). Decision 291 in part (Every word is Vocab).
      - **Revisit if:** Help gets a fourth view, or a phone can't spare the head's height.
      - **Built:** app 0.75.0; PR #375; log 2026-11-20 (K4).
+    → **Superseded in part by Decision 311** — Shortcuts sits beside Close in the title row, not after the tabs.
 
 307. **From 1280px the page scrolls in its own box, so with a column pinned its scrollbar is at the column's left edge.**
      *2026-11-20 · Ken + Claude · Touches: #app, scroll box, pageScroller, scrollPageTop, pageScrollTo, pageScrollBy, windowScroll, jumpTo, anchorKept, placePopover, tip placement, help-pinned, vitals-pinned, header.top, --hdr-off, --sbw, phone-check, Decision 140, Decision 160*
@@ -5946,6 +5947,17 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 262 in part (the buttons are also a line's crew), 179 in part (a line's crew is picked, not typed).
      - **Revisit if:** tables routinely seat more than eight, or a GM logs lines for crew who aren't seated.
      - **Built:** as 308.
+
+311. **Help's tab row holds only views; Shortcuts, which opens a box, sits beside Close in the title row.**
+     *2026-11-21 · Ken + Claude · Touches: Help, help-head, helpHeadHtml, data-hkeys, help-keys, help-tabs, Shortcuts, Decision 306*
+     - **Decided:** On a table, Help's title row is the heading, then Shortcuts, then Close; the tab row under it is This page, Running a session and Vocab only.
+     - **Why:** Ken, on 0.75.0: Shortcuts sat alone on a third line under the tabs at every width and looked stranded. It's an action like Close, not a view, and the title row had room.
+     - **Rejected:**
+       - A wider column: it comes out of the page beside it, which Help sits next to all session.
+       - Shortcuts only in ⋮: it's there already, but Help is where a new GM looks for how to do things.
+     - **Replaces:** Decision 306 in part (Shortcuts was after the tabs).
+     - **Revisit if:** the title row gets a third action, or long titles crowd it at 1280px.
+     - **Built:** app 0.75.1; the second gmGuide copy fix's PR.
 
 ## 5. Open Flags
 
