@@ -9,7 +9,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { boot } from "./harness.mjs";
-import { Engine, D, GM_ON, type, runTable, keyIn, castAdd, edit, done, editNote, deadAirApp } from "./smokekit.mjs";
+import { Engine, D, GM_ON, type, runTable, keyIn, castAdd, edit, done, editNote, deadAirApp, crewSet } from "./smokekit.mjs";
 
 const cityTab = app => app.click('[data-tsec="city"]');
 const castTab = app => app.click('[data-tsec="cast"]');
@@ -341,7 +341,7 @@ test("244: a place's Back still works after backPlace became backCity", () => {
   const pier = app.window.eval("S.table.places[0].id");
   castTab(app);
   app.click("[data-copen]");
-  app.click('[data-iakind="shared"]'); type(app, "[data-iacrew]", "Scott");
+  app.click('[data-iakind="shared"]'); crewSet(app, "add", ["Scott"]);
   both(app, "[data-iawhere]", pier);
   type(app, "[data-iwhat]", "the lake is on fire"); keyIn(app, "[data-iwhat]", "Enter");
   app.click("[data-cback]");

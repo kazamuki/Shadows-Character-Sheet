@@ -8,7 +8,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { boot } from "./harness.mjs";
-import { openAddLine, Engine, D, GM_ON, type, runTable, keyIn, castAdd, pick, edit, done, editNote, deadAirApp } from "./smokekit.mjs";
+import { openAddLine, Engine, D, GM_ON, type, runTable, keyIn, castAdd, pick, edit, done, editNote, deadAirApp, crewSet } from "./smokekit.mjs";
 
 const cityTab = app => app.click('[data-tsec="city"]');
 const castTab = app => app.click('[data-tsec="cast"]');
@@ -141,7 +141,7 @@ test("243: Where on the add row is kept between lines, and the line reads at the
   const app = setup();
   openAddLine(app);
   assert.deepEqual([...app.$$("[data-iawhere] option")].map(o => o.textContent), ["Nowhere in particular", "Central Park", "the Pier"], "by title");
-  app.click('[data-iakind="shared"]'); type(app, "[data-iacrew]", "Scott");
+  app.click('[data-iakind="shared"]'); crewSet(app, "add", ["Scott"]);
   const pier = placeIdOf(app, "the Pier");
   both(app, "[data-iawhere]", pier);
   addLine(app, "the lake is on fire");
@@ -161,12 +161,12 @@ test("243: Where on the add row is kept between lines, and the line reads at the
 
 test("243: Where in an open line updates its sentence in place", () => {
   const app = setup();
-  app.click('[data-iakind="shared"]'); type(app, "[data-iacrew]", "Scott");
+  app.click('[data-iakind="shared"]'); crewSet(app, "add", ["Scott"]);
   addLine(app, "hello");
   const xid = app.$("[data-int]").dataset.int;
   app.click(`[data-iedit="${xid}"]`);
   const labels = [...app.$(`[data-int="${xid}"]`).querySelectorAll("label span")].map(x => x.textContent);
-  assert.deepEqual(labels, ["Crew", "What", "When", "Where"]);
+  assert.deepEqual(labels, ["What", "When", "Where"]);
   assert.equal(app.$(`[data-iwhere="${xid}"]`).value, "", "Nowhere in particular");
   const n = auditLen(app);
   const park = placeIdOf(app, "Central Park");
@@ -183,7 +183,7 @@ test("243: Where in an open line updates its sentence in place", () => {
 // Two lines, one with a two-crew line so Who knows what shows it twice; a session dated today holds them.
 function withLines() {
   const app = setup();
-  app.click('[data-iakind="shared"]'); type(app, "[data-iacrew]", "Scott, Nyx");
+  app.click('[data-iakind="shared"]'); crewSet(app, "add", ["Scott","Nyx"]);
   both(app, "[data-iawhere]", placeIdOf(app, "the Pier"));
   addLine(app, "the lake is on fire");
   both(app, "[data-iawhere]", "");
@@ -232,7 +232,7 @@ test("243: a session's page lists a line with a place, and Back returns to it, o
   addPlace(app, "the Pier");
   castTab(app);
   app.click("[data-copen]");
-  app.click('[data-iakind="shared"]'); type(app, "[data-iacrew]", "Scott");
+  app.click('[data-iakind="shared"]'); crewSet(app, "add", ["Scott"]);
   both(app, "[data-iawhere]", placeIdOf(app, "the Pier"));
   addLine(app, "hello");
   const xid = app.window.eval("S.table.interactions[0].id");
