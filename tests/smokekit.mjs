@@ -278,3 +278,22 @@ export const deadAirApp = (section = "sessions") => {
 };
 // The focusable things a page has outside its bar, in document order: what a reader tabs through.
 export const pageControls = app => app.$$("#main button, #main input, #main select, #main textarea, #main a[href]").filter(el => !el.closest(".tbl-bar") && !el.disabled);
+
+// ── A line's crew is buttons (Decision 310) ────────────────────────────
+// `which`: "add" is the add row, "edit" the one line open in Edit, or a line's id.
+export const crewBoxSel = which => which === "add" || !which ? '[data-crew-key="ia"]' : which === "edit" ? '[data-crew-key^="il|"]' : `[data-crew-key="il|${which}"]`;
+export const crewBox = (app, which) => app.$(crewBoxSel(which));
+const crewMarked = b => b.textContent.replace("✓", "").trim();
+/** The names a crew picker shows pressed, in its order. */
+export const crewPressed = (app, which) => [...crewBox(app, which).querySelectorAll(".crew-btn.on")].map(crewMarked);
+/** Puts exactly these names on a line's crew: every pressed button is unpressed first, then each name is a seat's button or Add a player. */
+export const crewSet = (app, which, names) => {
+  for (let guard = 0; guard < 20; guard++) { const on = crewBox(app, which).querySelector(".crew-btn.on"); if (!on) break; on.click(); }
+  for (const name of names) {
+    const seat = [...crewBox(app, which).querySelectorAll("[data-crew-seat]")].find(b => crewMarked(b).toLowerCase() === name.toLowerCase());
+    if (seat) { seat.click(); continue; }
+    if (!crewBox(app, which).querySelector("[data-crew-input]")) crewBox(app, which).querySelector("[data-crew-add]").click();
+    type(app, `${crewBoxSel(which)} [data-crew-input]`, name);
+    crewBox(app, which).querySelector("[data-crew-go]").click();
+  }
+};

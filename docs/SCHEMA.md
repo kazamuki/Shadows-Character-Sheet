@@ -4421,6 +4421,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
     → **Superseded in part by Decision 241** — a line reads as a sentence; Edit opens it in place.
      → **Superseded in part by Decision 254** — *Who knows what* folds a seat's names into one group.
      → **Superseded in part by Decision 300** — the add row is folded behind Add a line on a member's read view; Edit keeps it open.
+     → **Superseded in part by Decision 310** — a line's Crew is picked with buttons, as Who was there is, not typed.
 
 180. **A pack is its own file, `.shadows-pack.json`, gated by `migratePack()`, with its own id, a pack schema version, and the author's content version.**
      *2026-10-06 · Ken + Claude · Touches: pack, .shadows-pack.json, migratePack, packCheck, fileKind, meta.kind, PK- id, packSchemaVersion, contentVersion, origins, npcRoles, enemyRoles, tiers, entries, groups, versions table, CLAUDE.md, Decision 170, W63, GQ10*
@@ -4485,6 +4486,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. It builds what 174 deferred and 182 moved here.
      - **Revisit if:** the tier table becomes a rule the entries keep (GQ21), GQ17 adds Orders, or a GM asks for the modifiers applied.
      - **Built:** as 183.
+     → **Superseded in part by Decision 309** — origin and enemy role are offered as buttons under the field, not a list in it.
 
 185. **A trait from a pack is copied into the block as its name and text, and the page counts the block's traits by kind, matching each name to the glossaries as it reads.**
      *2026-10-06 · Ken + Claude · Touches: traits, block.traits, Add from a pack, trait picker, Engine.packTraits, trait kind, trait count, traitGuide, Decision 175, Decision 182, S13*
@@ -5440,6 +5442,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing.
      - **Revisit if:** tables routinely seat more than eight, a GM needs a benched seat in a fight often, or the cast's crew lines (W142) get the same buttons.
      - **Built:** app 0.59.0; PR #285; log 2026-10-31 (S21).
+     → **Superseded in part by Decision 310** — the same buttons are a line's Crew, in the add row and in Edit.
 263. **A General Major that changes one weapon or armor goes on that row: the row keeps the Major's id, so removing another row never moves it, and removing the row loses it.**
      *2026-11-01 · Ken + Claude · Touches: majors on weapons and armor rows, setMajorRow, majorRows, untakeMilestone, row on a Major, follows, weaponLine, armorState, protDice, modSlots, kickers, bonuses, Tuned Edge, Custom Fit, Signature Weapon, Iconic Weapon, Legendary Weapon, Weapon Expert, W136, L5b, LQ29–LQ34, character schema 0.32, Decision 120, Decision 223, Decision 233, Decision 248*
      - **Decided:** A Major whose data has `row` goes on one weapon or armor row of its `kind`, stored as its id in that row's `majors`; one row at a time, moved or cleared on Loadout, cleared when the Major is removed. Tuned Edge adds 1 damage (listed in `bonuses`); Custom Fit steps a body piece's PROT die up `armorRules.protDice`, never past d12; Signature adds 2 mod slots to a catalog weapon and Iconic and Legendary 1 each to Signature's (`follows`); Weapon Expert puts a 1d4 kicker on the line, a 1d6 when an unconditional 1d4 reaches its Skill. Readers count a Major only while it's held.
@@ -5906,6 +5909,43 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 160 in part (a pinned column narrows the page's box, not its padding).
      - **Revisit if:** a browser's keyboard or wheel scrolling misses the box, or print or the phone needs the window back.
      - **Built:** app 0.75.0; PR #375; log 2026-11-20 (K4).
+
+308. **A cast card shows its member's figures: each stat with a value, TOL and WILL, then Health, as left of total when hurt.**
+     *2026-11-20 · Ken + Claude · Touches: castCardHtml, cardFiguresHtml, the cast list, Cast tab, cast card, .cast-meta, .cast-figs, Stat block, Engine.npc, blockHasNumber, castHealth, Health, W78, GQ81, GQ82, Decision 294*
+     - **Decided:** A card whose block has a number shows one line of figures under its meta: the stats with a value in the data's order, then TOL and WILL when set, then Health, "Health 32", or "Health 18 of 32" while hurt. Values only; the modifiers, skills, armor, gear and traits stay on the member's page. The meta no longer says "Stat block". Every figure comes from `Engine.npc` and `castHealth`.
+     - **Why:** A GM choosing who to throw at the crew compares numbers across the cast; the stats and Health are what they compare, and one line keeps a long cast scrolling on a tablet.
+     - **Rejected:**
+       - The whole block on every card: a trait is a paragraph, and fourteen cards become a page each.
+       - A fold per card: a press per member is the cost W78 is about.
+       - A third view beside *The cast* and *Who knows what*: a mode to remember for one line.
+       - The modifiers beside each value: they double the line, and the page has them.
+     - **Replaces:** nothing.
+     - **Revisit if:** GMs open members for a skill or a trait more than for a stat, or a card grows past two lines at 375px.
+     - **Built:** app 0.75.0; PR #…; log 2026-11-20 (S28).
+
+309. **Origin and Enemy role offer the packs' names as buttons, one pick each, as NPC roles do; the field still takes any name.**
+     *2026-11-20 · Ken + Claude · Touches: castFormHtml, castPickHtml, Origin, Enemy role, cast-origins, cast-enemies, datalist, castRolesHtml, role toggles, the member's Edit form, packChoices, W81, GQ83, Decision 184*
+     - **Decided:** With a pack slotted, Origin and Enemy role each show the packs' names as a row of buttons under the field. The button whose name the field holds (case-folded) is pressed; a press sets the field to that name, and pressing the pressed one clears it. The field keeps any typed name. With no pack, the field alone. The datalists go.
+     - **Why:** A list hidden in a text box doesn't say it's there (W81), the form beside it already shows NPC roles as buttons, and the Codex's 7 origins and 8 enemy roles fit a row.
+     - **Rejected:**
+       - A ▾ drawn on the field (W81's first idea): the browser's datalist still differs by device, and one page would pick roles two ways.
+       - A select with "Other…": a typed name becomes a second step.
+       - Several picks: a member has one origin and one enemy role (174).
+     - **Replaces:** Decision 184 in part: origin and enemy role are offered as buttons, not a list.
+     - **Revisit if:** a slotted pack has more names than fit two rows at 375px.
+     - **Built:** as 308.
+
+310. **A line's crew is the row of buttons Who was there uses: the seats, the line's other names, and Add a player.**
+     *2026-11-20 · Ken + Claude · Touches: castInteractionsHtml, interactionRowHtml, bindInteractions, crew lines, Crew, crewPickHtml, bindCrewPick, crew-names, intAdd, whoHtml, bindWho, seatPicks, seatFor, Add a player, W142, GQ84, GQ85, Decision 179, Decision 254, Decision 262, Decision 300*
+     - **Decided:** A line's Crew, in the add row and in a line's Edit, is a button per active seat (pressed while a name on the line answers to it), then each other name on the line as a pressed button, then **Add a player**, a field where commas make several. A press toggles. In Edit it saves at once; in the add row it's held until Add and kept after it. Who was there and the line share one picker. What's stored is unchanged: typed names, read as seats (254).
+     - **Why:** S21 made the crew buttons everywhere else, and 262 named this as the one place left. Most lines are with one or two of a crew of five, so a press beats typing a name.
+     - **Rejected:**
+       - The typed field beside the buttons: 262 rejected two ways to do one thing.
+       - A seat's character's name written in place of the typed name the line had: a line keeps what the GM wrote (254).
+       - Clearing the add row's crew after Add: the next line in a scene is usually with the same people.
+     - **Replaces:** Decision 262 in part (the buttons are also a line's crew), 179 in part (a line's crew is picked, not typed).
+     - **Revisit if:** tables routinely seat more than eight, or a GM logs lines for crew who aren't seated.
+     - **Built:** as 308.
 
 ## 5. Open Flags
 

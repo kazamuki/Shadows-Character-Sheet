@@ -5343,7 +5343,8 @@ window.SHADOWS_DATA = {
           "whoKnows"
         ],
         "tips": [
-          "Not everyone needs a stat block, only people who might end up in a fight."
+          "Not everyone needs a stat block, only people who might end up in a fight.",
+          "Each card shows that member's numbers, and the Health they have left, so you can see who to throw at the crew."
         ]
       },
       "whoKnows": {

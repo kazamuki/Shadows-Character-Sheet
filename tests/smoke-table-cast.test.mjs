@@ -14,7 +14,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { boot } from "./harness.mjs";
 import { syntheticPack, PACK_ID } from "./packfixture.mjs";
-import { openAddLine, Engine, search, clickIn, withDownloads, importFile, named, charKeys, sheetHome, tipShown, wizCss, GM_ON, GM_OFF, tableKeys, tableCard, seedTable, type, runTable, notesTab, tableHome, tableFile, keyIn, castAdd, pick, threatsTab, tableWithPack, entryButton, packStored, edit, done, editNote, deadAirApp, pageControls } from "./smokekit.mjs";
+import { crewSet, openAddLine, Engine, search, clickIn, withDownloads, importFile, named, charKeys, sheetHome, tipShown, wizCss, GM_ON, GM_OFF, tableKeys, tableCard, seedTable, type, runTable, notesTab, tableHome, tableFile, keyIn, castAdd, pick, threatsTab, tableWithPack, entryButton, packStored, edit, done, editNote, deadAirApp, pageControls } from "./smokekit.mjs";
 
 // ── Tables and the feature switch (Decisions 171, 173) ──────────────────
 const tableEntryOf = (app, id) => JSON.parse(app.window.localStorage.getItem("shadows.table.v1." + id));
@@ -490,7 +490,7 @@ test("Decision 176: the tab button and Back return to the list, with the filters
   assert.deepEqual(app.errors, []);
 });
 
-test("Decision 174: a card shows what's known, the status when it isn't alive, and Stat block when a number is in it", () => {
+test("Decision 174: a card shows what's known, the status when it isn't alive, and its figures when a number is in it (Decision 308)", () => {
   const app = boot({ storage: GM_ON });
   runTable(app, "Cards");
   castAdd(app, "Dez", "a courier");
@@ -501,7 +501,8 @@ test("Decision 174: a card shows what's known, the status when it isn't alive, a
   app.click("[data-cback]");
   const text = app.$("[data-ccard]").textContent.replace(/\s+/g, " ");
   assert.match(text, /Dez/); assert.match(text, /a courier/);
-  assert.match(text, /Born here · Fixer \/ Courier · Enemy: Boss · Tier 2 · Stat block/);
+  assert.match(text, /Born here · Fixer \/ Courier · Enemy: Boss · Tier 2/);
+  assert.match(text, /BOD 5/);
   assert.doesNotMatch(text, /Alive/);
   app.click("[data-copen]");
   pick(app, '[data-cf="status"]', "gone");
@@ -642,13 +643,13 @@ test("Decision 177: kind once, crew once, then What and Enter three times: three
   runTable(app, "Scene");
   memberWith(app);
   app.click('[data-iakind="learned"]');
-  type(app, "[data-iacrew]", "Nyx");
+  crewSet(app, "add", ["Nyx"]);
   for (const t of ["one", "two", "three"]) {
     addLine(app, t);
     assert.equal(app.doc.activeElement.hasAttribute("data-iwhat"), true, "focus left What");
     assert.equal(app.doc.activeElement.value, "", "What wasn't emptied");
     assert.equal(app.$('[data-iakind="learned"]').getAttribute("aria-pressed"), "true", "the kind didn't stay");
-    assert.equal(app.$("[data-iacrew]").value, "Nyx", "the crew didn't stay");
+    assert.deepEqual(crewPressed(app, "add"), ["Nyx"], "the crew didn't stay");
   }
   assert.deepEqual(intTexts(app), ["three", "two", "one"]);
   assert.deepEqual(app.$$("[data-int] .int-sentence").map(s => /^Nyx learned from Dez “([a-z]+)”/.exec(s.textContent)?.[1]), ["three", "two", "one"], "crew, kind or order drawn wrong");
@@ -679,12 +680,12 @@ test("Decision 177: Killed them on the add row sets the member Dead, no kind sta
   runTable(app, "Killing");
   castAdd(app, "Orla"); castAdd(app, "Dez");   // Dez, Orla
   openFirst(app);
-  app.click('[data-iakind="killed"]'); type(app, "[data-iacrew]", "Rook");
+  app.click('[data-iakind="killed"]'); crewSet(app, "add", ["Rook"]);
   addLine(app, "shot in the warehouse");
   assert.equal(app.$$("[data-iakind]").filter(b => b.getAttribute("aria-pressed") === "true").length, 0, "the add row kept Killed them");
   assert.equal(app.$$("[data-iakind=\"killed\"]").length, 1);
   assert.equal(app.doc.activeElement.hasAttribute("data-iwhat"), true);
-  assert.equal(app.$("[data-iacrew]").value, "Rook", "the crew didn't stay");
+  assert.deepEqual(crewPressed(app, "add"), ["Rook"], "the crew didn't stay");
   edit(app);
   assert.equal(app.$('[data-cf="status"]').value, "dead", "the status select doesn't read Dead");
   app.click("[data-cback]");
@@ -723,8 +724,8 @@ test("Decision 177: a date and a crew field show what was stored after change", 
   app.click('[data-iakind="shared"]'); addLine(app, "x");
   const xid = app.$("[data-int]").dataset.int;
   editLine(app);
-  pick(app, "[data-icrew]", " Nyx , , ");
-  assert.equal(app.$("[data-icrew]").value, "Nyx");
+  crewSet(app, "edit", ["Nyx"]);
+  assert.deepEqual(crewPressed(app, "edit"), ["Nyx"]);
   assert.deepEqual(tableOf(app).interactions[0].crew, ["Nyx"]);
   pick(app, "[data-idate]", "2026-02-30");
   assert.equal(app.$("[data-idate]").value, "", "a refused date still shows");
@@ -732,8 +733,8 @@ test("Decision 177: a date and a crew field show what was stored after change", 
   pick(app, "[data-idate]", "2026-10-04");
   assert.equal(app.$("[data-idate]").value, "2026-10-04");
   assert.equal(tableOf(app).interactions[0].date, "2026-10-04");
-  pick(app, "[data-iacrew]", " Rook ,, Nyx ");
-  assert.equal(app.$("[data-iacrew]").value, "Rook, Nyx");
+  crewSet(app, "add", ["Rook", "Nyx"]);   // two names through Add a player, one comma list
+  assert.deepEqual(crewPressed(app, "add"), ["Rook", "Nyx"]);
   assert.equal(xid, tableOf(app).interactions[0].id);
   assert.deepEqual(app.errors, []);
 });
@@ -745,13 +746,13 @@ test("Decision 177: a line typed and then Home at once is kept", () => {
   app.click('[data-iakind="shared"]'); addLine(app, "first");
   editLine(app);
   type(app, "[data-itext]", "the warehouse is a front");
-  type(app, "[data-icrew]", "Nyx");
+  crewSet(app, "edit", ["Nyx"]);
   tableHome(app);
   tableCard(app, "Home now").querySelector("[data-topen]").click();
   openFirst(app);
   editLine(app);
   assert.equal(app.$("[data-itext]").value, "the warehouse is a front");
-  assert.equal(app.$("[data-icrew]").value, "Nyx");
+  assert.deepEqual(crewPressed(app, "edit"), ["Nyx"]);
   assert.deepEqual(app.errors, []);
 });
 
@@ -821,8 +822,8 @@ test("Decision 179: Who knows what groups by crew name, the toggle keeps focus, 
   runTable(app, "Knows");
   castAdd(app, "Moth"); castAdd(app, "Dez");   // Dez, Moth
   openFirst(app);
-  app.click('[data-iakind="shared"]'); type(app, "[data-iacrew]", "Nyx"); addLine(app, "the warehouse is a front");
-  type(app, "[data-iacrew]", "nyx, Rook"); app.click('[data-iakind="helped"]'); addLine(app, "carried the bags");
+  app.click('[data-iakind="shared"]'); crewSet(app, "add", ["Nyx"]); addLine(app, "the warehouse is a front");
+  crewSet(app, "add", ["nyx","Rook"]); app.click('[data-iakind="helped"]'); addLine(app, "carried the bags");
   app.click("[data-cback]");
   assert.ok(app.$("[data-cadd-name]"));
   app.click('[data-cview="crew"]');
@@ -854,7 +855,7 @@ test("Decision 178: delete a member and Who knows what keeps their name struck t
   runTable(app, "Gone");
   castAdd(app, "Moth"); castAdd(app, "Dez");
   openFirst(app);
-  app.click('[data-iakind="shared"]'); type(app, "[data-iacrew]", "Nyx"); addLine(app, "told");
+  app.click('[data-iakind="shared"]'); crewSet(app, "add", ["Nyx"]); addLine(app, "told");
   app.click("[data-cdel]"); app.click("#modal [data-askyes]");
   assert.deepEqual(castNames(app), ["Moth"]);
   assert.equal(tableOf(app).interactions[0].cast[0].name, "Dez");
@@ -874,7 +875,7 @@ test("Decision 179: Delete from Who knows what lands on the toggle, never <body>
   const app = boot({ storage: GM_ON });
   runTable(app, "Toggle");
   castAdd(app, "Dez"); openFirst(app);
-  app.click('[data-iakind="shared"]'); type(app, "[data-iacrew]", "Nyx"); addLine(app, "x");
+  app.click('[data-iakind="shared"]'); crewSet(app, "add", ["Nyx"]); addLine(app, "x");
   app.click("[data-cback]"); app.click('[data-cview="crew"]');
   app.click(".int-line [data-copen]");
   app.click("[data-cdel]"); app.click("#modal [data-askyes]");
@@ -898,7 +899,7 @@ test("Decisions 177–179: export and import keep every interaction and affiliat
   runTable(app, "Round");
   castAdd(app, "Dez"); openFirst(app);
   type(app, '[data-cf="affiliations"]', "Eclipse / Goblins");
-  app.click('[data-iakind="wronged"]'); type(app, "[data-iacrew]", "Nyx, Rook"); type(app, "[data-iadate]", "2026-10-03"); addLine(app, "took the cash");
+  app.click('[data-iakind="wronged"]'); crewSet(app, "add", ["Nyx","Rook"]); type(app, "[data-iadate]", "2026-10-03"); addLine(app, "took the cash");
   app.click("[data-cdel]"); app.click("#modal [data-askyes]");
   castAdd(app, "Moth"); openFirst(app); type(app, '[data-cf="affiliations"]', "Anchor");
   app.click('[data-iakind="owes"]'); addLine(app, "a favour");
@@ -993,12 +994,12 @@ test("S8b review 3: Back from Who knows what lands on the same name even after a
   const app = boot({ storage: GM_ON });
   runTable(app, "Keyed");
   castAdd(app, "Bob"); openFirst(app);
-  app.click('[data-iakind="shared"]'); type(app, "[data-iacrew]", "Nyx"); addLine(app, "one");
+  app.click('[data-iakind="shared"]'); crewSet(app, "add", ["Nyx"]); addLine(app, "one");
   app.click("[data-cback]"); app.click('[data-cview="crew"]');
   const who = app.$(".crew-group .int-line [data-copen]");
   const where = who.dataset.cwhere;
-  who.click();
-  type(app, "[data-iacrew]", "Ash"); addLine(app, "two");
+  who.click(); openAddLine(app);
+  crewSet(app, "add", ["Ash"]); addLine(app, "two");
   app.click("[data-cback]");
   assert.deepEqual(app.$$(".crew-name").map(h => h.textContent), ["Ash", "Nyx"], "Nyx's group didn't move");
   assert.equal(app.doc.activeElement.dataset.cwhere, where, "focus isn't on the name that was pressed");
@@ -1429,13 +1430,13 @@ test("Decision 184: with no pack slotted in, a member's page has no lists, toggl
   assert.deepEqual(app.errors, []);
 });
 
-test("Decision 184: a pack offers its origins and enemy roles as lists that still take anything, and roles as toggles", () => {
+test("Decision 184: a pack offers its origins and enemy roles as buttons (Decision 309) that still take anything, and roles as toggles", () => {
   const app = memberFromGull();
-  const opts = id => app.$$(`#${id} option`).map(o => o.value);
+  const names = label => [...app.$(`[role="group"][aria-label="${label}"]`).querySelectorAll("button")].map(b => b.textContent);
   edit(app);
-  assert.deepEqual(opts("cast-origins"), ["Dock", "Spire"]);
-  assert.deepEqual(opts("cast-enemies"), ["Bruiser"]);
-  assert.equal(app.$('[data-cf="origin"]').getAttribute("list"), "cast-origins");
+  assert.deepEqual(names("Origins in the pack"), ["Dock", "Spire"]);
+  assert.deepEqual(names("Enemy roles in the pack"), ["Bruiser"]);
+  assert.equal(app.$('[data-cf="origin"]').getAttribute("list"), null);
   assert.equal(app.$('[data-cf="npcRoles"]').getAttribute("list"), null, "NPC roles can't use a list: it doesn't suggest after a slash");
   assert.deepEqual(app.$$("[data-crole]").map(b => b.textContent), ["Gatherer", "Lookout"]);
   type(app, '[data-cf="origin"]', "Somewhere else");
@@ -1683,13 +1684,13 @@ test("241: a member's page reads each line as its sentence, with their own name 
   const app = boot({ storage: GM_ON });
   runTable(app, "Sentences");
   castAdd(app, "Dez"); openFirst(app);
-  app.click('[data-iakind="shared"]'); type(app, "[data-iacrew]", "Nyx"); type(app, "[data-iadate]", "2026-10-08");
+  app.click('[data-iakind="shared"]'); crewSet(app, "add", ["Nyx"]); type(app, "[data-iadate]", "2026-10-08");
   addLine(app, "the warehouse is a front");
   const line = app.$("[data-int]");
   assert.match(line.textContent, /^Nyx told Dez “the warehouse is a front” on \S+/);
   assert.equal(line.querySelector("[data-copen]"), null, "Dez is a button on Dez's own page");
   assert.ok(line.querySelector("[data-iedit]"), "no Edit");
-  assert.equal(line.querySelector("[data-icrew], [data-itext]"), null, "the fields are open without Edit");
+  assert.equal(line.querySelector("[data-crew-key], [data-itext]"), null, "the fields are open without Edit");
   assert.deepEqual(app.errors, []);
 });
 
@@ -1697,8 +1698,8 @@ test("241: the add row runs Crew, the kinds, What, When, Where, Add, in document
   const app = boot({ storage: GM_ON });
   runTable(app, "Order");
   castAdd(app, "Dez"); openFirst(app); openAddLine(app);
-  const order = [...app.$(".int-add").querySelectorAll("[data-iacrew], [data-iakind], [data-iwhat], [data-iadate], [data-iawhere], [data-iadd]")]
-    .map(el => el.hasAttribute("data-iacrew") ? "crew" : el.hasAttribute("data-iakind") ? "kind" : el.hasAttribute("data-iwhat") ? "what" : el.hasAttribute("data-iadate") ? "when" : el.hasAttribute("data-iawhere") ? "where" : "add");
+  const order = [...app.$(".int-add").querySelectorAll("[data-crew-key], [data-iakind], [data-iwhat], [data-iadate], [data-iawhere], [data-iadd]")]
+    .map(el => el.closest("[data-crew-key]") ? "crew" : el.hasAttribute("data-iakind") ? "kind" : el.hasAttribute("data-iwhat") ? "what" : el.hasAttribute("data-iadate") ? "when" : el.hasAttribute("data-iawhere") ? "where" : "add");
   const squeezed = order.filter((x, i) => x !== order[i - 1]);
   assert.deepEqual(squeezed, ["crew", "kind", "what", "when", "where", "add"]);
 });
@@ -1711,21 +1712,20 @@ test("241: Edit opens one line at a time with Crew focused; typing, then change,
   addLine(app, "one"); addLine(app, "two");
   const [b, a] = app.$$("[data-int]").map(el => el.dataset.int);   // two, one
   editLine(app, b);
-  assert.equal(focusedKey(app), `data-icrew=${b}`, "Edit didn't focus Crew");
+  assert.ok(app.doc.activeElement.closest(`[data-crew-key="il|${b}"]`), "Edit didn't focus Crew");
   const labels = [...app.$(`[data-int="${b}"]`).querySelectorAll("label span")].map(x => x.textContent);
-  assert.deepEqual(labels, ["Crew", "What", "When", "Where"]);
+  assert.deepEqual(labels, ["What", "When", "Where"]);
+  assert.equal(app.$(`[data-int="${b}"] .crew-label`).textContent, "Crew");
   const before = auditLen(app);
-  type(app, `[data-icrew="${b}"]`, "Nyx");
+  crewSet(app, b, ["Nyx"]);
   assert.match(app.$(`[data-isent="${b}"]`).textContent, /^Nyx told Dez “two”/, "the sentence didn't follow the field");
   assert.equal(auditLen(app), before + 1);
-  pick(app, `[data-icrew="${b}"]`, "Nyx");              // blur re-sends the value: no phantom entry
-  assert.equal(auditLen(app), before + 1, "change made a second entry");
-  assert.equal(app.doc.activeElement, app.$(`[data-icrew="${b}"]`));
+  assert.ok(app.doc.activeElement.closest(`[data-crew-key="il|${b}"]`), "a press lost focus");
   editLine(app, a);
-  assert.equal(app.$(`[data-icrew="${b}"]`), null, "a second Edit left the first open");
-  assert.ok(app.$(`[data-icrew="${a}"]`));
+  assert.equal(app.$(`[data-crew-key="il|${b}"]`), null, "a second Edit left the first open");
+  assert.ok(app.$(`[data-crew-key="il|${a}"]`));
   app.click(`[data-idone="${a}"]`);
-  assert.equal(app.$(`[data-icrew="${a}"]`), null, "Done left the line open");
+  assert.equal(app.$(`[data-crew-key="il|${a}"]`), null, "Done left the line open");
   assert.equal(focusedKey(app), `data-iedit=${a}`);
   assert.deepEqual(tableOf(app).interactions.map(x => x.crew.join()), ["Nyx", ""]);
   assert.deepEqual(app.errors, []);
@@ -1735,15 +1735,15 @@ test("241: the open line's fields are Crew, the kinds, What, When, Where, then D
   const app = boot({ storage: GM_ON });
   runTable(app, "Open order");
   castAdd(app, "Dez"); openFirst(app);
-  app.click('[data-iakind="owed"]'); type(app, "[data-iacrew]", "Nyx"); addLine(app, "for the van");
+  app.click('[data-iakind="owed"]'); crewSet(app, "add", ["Nyx"]); addLine(app, "for the van");
   const xid = app.$("[data-int]").dataset.int;
   editLine(app);
-  const all = [...app.$(`[data-int="${xid}"]`).querySelectorAll("[data-icrew], [data-ikind], [data-itext], [data-idate], [data-iwhere], [data-idel], [data-idone]")]
-    .map(el => ["icrew", "ikind", "itext", "idate", "iwhere", "idel", "idone"].find(k => el.hasAttribute("data-" + k)));
-  assert.deepEqual(all.filter((x, i) => x !== all[i - 1]), ["icrew", "ikind", "itext", "idate", "iwhere", "idel", "idone"]);
+  const all = [...app.$(`[data-int="${xid}"]`).querySelectorAll("[data-crew-key], [data-ikind], [data-itext], [data-idate], [data-iwhere], [data-idel], [data-idone]")]
+    .map(el => ["crew-key", "ikind", "itext", "idate", "iwhere", "idel", "idone"].find(k => k === "crew-key" ? el.closest("[data-crew-key]") : el.hasAttribute("data-" + k)));
+  assert.deepEqual(all.filter((x, i) => x !== all[i - 1]), ["crew-key", "ikind", "itext", "idate", "iwhere", "idel", "idone"]);
   assert.match(app.$(`[data-isent="${xid}"]`).textContent, /^Dez owes Nyx on \S+: for the van/);
   app.click(`[data-ikind="${xid}|helped"]`);
-  assert.ok(app.$(`[data-icrew="${xid}"]`), "a kind change closed the line");
+  assert.ok(app.$(`[data-crew-key="il|${xid}"]`), "a kind change closed the line");
   assert.match(app.$(`[data-isent="${xid}"]`).textContent, /^Nyx helped Dez on \S+: for the van/);
 });
 
@@ -1959,17 +1959,175 @@ test("Decision 300: a member's line add opens from Add a line, below the lines, 
   btn.click();
   assert.ok(app.$("[data-iwhat]"), "the button opens the row");
   assert.equal(app.$("[data-iaopen]"), null, "where the button was");
-  assert.equal(app.doc.activeElement, app.$("[data-iacrew]"), "focused on its first field");
+  assert.equal(app.doc.activeElement, crewBox(app, "add").querySelector("button"), "focused on its first field");
   assert.ok(app.$("[data-intlist]").compareDocumentPosition(app.$("[data-iwhat]")) & 4, "the open row is below the lines too");
   app.click("[data-iacancel]");
   assert.equal(app.$("[data-iwhat]"), null, "Cancel folds it");
   assert.equal(app.doc.activeElement, app.$("[data-iaopen]"), "and lands on the button");
   app.click("[data-iaopen]");
-  app.click('[data-iakind="shared"]'); type(app, "[data-iacrew]", "Nyx"); type(app, "[data-iwhat]", "the pier is watched"); app.click("[data-iadd]");
+  app.click('[data-iakind="shared"]'); crewSet(app, "add", ["Nyx"]); type(app, "[data-iwhat]", "the pier is watched"); app.click("[data-iadd]");
   assert.equal(app.$("[data-iwhat]"), null, "a save folds it");
   assert.equal(app.$$("[data-int]").length, 1, "and the line was added");
   edit(app);
   assert.ok(app.$("[data-iwhat]"), "Edit's own form keeps it open");
   assert.equal(app.$("[data-iaopen]"), null);
+  assert.deepEqual(app.errors, []);
+});
+
+// ── S28: the cast at a glance (Decisions 308–310) ───────────────────────
+import { crewBox, crewPressed, lockedCharacter } from "./smokekit.mjs";
+
+const tableOpen = (t, section = "cast") => {
+  const app = boot({ storage: { ["shadows.table.v1." + t.meta.id]: { table: t, section, changed: "2026-10-05T10:00:00.000Z", exported: null }, ...GM_ON } });
+  tableCard(app, t.meta.name).querySelector("[data-topen]").click();
+  return app;
+};
+const withSeats = (name = "Seats") => {
+  const t = Engine.newTable(name), pid = Engine.addPlayer(t, { name: "Brogan" }).id, tags = {};
+  for (const [n, tag] of [["Nyx", "TAG-AAAA-AAAA-AAAA"], ["Rook", "TAG-BBBB-BBBB-BBBB"]]) {
+    const ch = lockedCharacter(); ch.identity.name = n; ch.meta.id = tag; ch.meta.updated = "2026-10-02T10:00:00.000Z";
+    assert.ok(Engine.importSeat(t, pid, ch).ok); tags[n] = tag;
+  }
+  return [t, tags];
+};
+const figsOf = (app, name) => { const c = app.$$("[data-ccard]").find(x => x.querySelector(".cast-open").textContent === name); return c && c.querySelector(".cast-figs") ? c.querySelector(".cast-figs").textContent.replace(/\s+/g, " ").trim() : null; };
+const block = stats => ({ stats, authored: {}, skills: [], armor: [], gear: [], traits: [] });
+
+test("Decision 308: a cast card shows its member's figures, and no card says Stat block", () => {
+  const t = Engine.newTable("Figures");
+  const a = Engine.addCastMember(t, { name: "Dez" }).id, b = Engine.addCastMember(t, { name: "Wren" }).id;
+  Engine.addCastMember(t, { name: "Ivo" });
+  Engine.setCastBlock(t, a, { ...block({ BOD: 7, REF: 5 }), authored: { TOL: 6 } });
+  Engine.setCastBlock(t, b, block({ BOD: 7 }));
+  const app = tableOpen(t);
+  const r = Engine.npc(t.cast.find(n => n.id === a).block);
+  assert.ok(r.health, "the fixture has no Health");
+  assert.equal(figsOf(app, "Dez"), `BOD 7 · REF 5 · TOL 6 · Health ${r.health.total}`);
+  assert.match(figsOf(app, "Wren"), /^BOD 7( · .*)?$/);
+  assert.equal(figsOf(app, "Ivo"), null, "a card with no number has a figures line");
+  assert.doesNotMatch(app.$("#main").textContent, /Stat block/, "a card still says Stat block");
+  // The figures are the read panel's: Health beside it on the member's page.
+  app.$$("[data-copen]").find(b => b.textContent === "Dez").click();
+  assert.equal(app.$(".cast-panel .cast-health b").textContent, String(Engine.npc(t.cast.find(n => n.name === app.$(".cast-title").textContent).block).health.total));
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 308: a hurt member's card reads Health left of total, as the page's Wounds does", () => {
+  const t = Engine.newTable("Hurt");
+  const a = Engine.addCastMember(t, { name: "Dez" }).id;
+  Engine.setCastBlock(t, a, block({ BOD: 7 }));
+  t.cast[0].wounds = { damage: 9, massive: 0 };
+  const h = Engine.castHealth(t, a);
+  assert.ok(h && h.total !== null && h.left < h.total);
+  const app = tableOpen(t);
+  assert.match(figsOf(app, "Dez"), new RegExp(`Health ${h.left} of ${h.total}$`));
+  app.click("[data-copen]");
+  assert.match(app.$("[data-cwounds-text]").textContent, new RegExp(`${h.left} of ${h.total} HP left`));
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 308: markup in a member's origin renders as text on the card", () => {
+  const t = Engine.newTable("Hostile");
+  const a = Engine.addCastMember(t, { name: "<img src=x>" }).id;
+  Engine.editCastMember(t, a, { origin: "<b>Dock</b>" });
+  Engine.setCastBlock(t, a, block({ BOD: 7 }));
+  const app = tableOpen(t);
+  assert.equal(app.$$("[data-ccard] img, [data-ccard] .cast-meta b").length, 0);
+  assert.match(app.$("[data-ccard] .cast-meta").textContent, /<b>Dock<\/b>/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 309: Origin and Enemy role are buttons from the packs, one pick each, and the field still takes any name", () => {
+  const app = memberFromGull();
+  edit(app);
+  const row = label => app.$(`[role="group"][aria-label="${label}"]`);
+  assert.equal(app.$("#cast-origins"), null); assert.equal(app.$("#cast-enemies"), null);
+  assert.equal(app.$('[data-cf="origin"]').getAttribute("list"), null);
+  assert.deepEqual([...row("Origins in the pack").querySelectorAll("button")].map(b => b.textContent), ["Dock", "Spire"]);
+  assert.deepEqual([...row("Enemy roles in the pack").querySelectorAll("button")].map(b => b.textContent), ["Bruiser"]);
+  const pressed = () => [...row("Origins in the pack").querySelectorAll('[aria-pressed="true"]')].map(b => b.textContent);
+  const spire = () => row("Origins in the pack").querySelectorAll("button")[1];
+  spire().click();
+  assert.equal(castSel(app).origin, "Spire"); assert.equal(app.$('[data-cf="origin"]').value, "Spire"); assert.deepEqual(pressed(), ["Spire"]);
+  spire().click();
+  assert.equal(castSel(app).origin, ""); assert.deepEqual(pressed(), []);
+  type(app, '[data-cf="origin"]', "spire"); assert.deepEqual(pressed(), ["Spire"], "a typed name didn't press its button case-folded");
+  type(app, '[data-cf="origin"]', "Harbour"); assert.deepEqual(pressed(), []); assert.equal(castSel(app).origin, "Harbour");
+  const bruiser = () => row("Enemy roles in the pack").querySelector("button");
+  assert.equal(bruiser().getAttribute("aria-pressed"), "true", "the entry's own enemy role isn't pressed");
+  bruiser().click(); assert.equal(castSel(app).enemyRole, "");
+  bruiser().click(); assert.equal(castSel(app).enemyRole, "Bruiser");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 309: with no pack slotted in, Origin and Enemy role are the field alone", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "Bare"); castAdd(app, "Dez");
+  app.click("[data-copen]"); edit(app);
+  assert.equal(app.$('#main [aria-label="Origins in the pack"], #main [aria-label="Enemy roles in the pack"]'), null);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 310: a line's crew is picked like Who was there: the add row holds it until Add and keeps it after", () => {
+  const [t] = withSeats();
+  Engine.addCastMember(t, { name: "Dez" });
+  const app = tableOpen(t);
+  openFirst(app); openAddLine(app);
+  const box = crewBox(app, "add");
+  assert.deepEqual([...box.querySelectorAll("button")].map(b => b.textContent.replace("✓", "").trim()), ["Nyx", "Rook", "Add a player"]);
+  assert.equal(app.$("[data-iacrew]"), null, "the typed crew field is still drawn");
+  app.click('[data-iakind="shared"]');
+  box.querySelector("[data-crew-seat]").click();
+  assert.deepEqual(crewPressed(app, "add"), ["Nyx"]);
+  assert.equal(tableOf(app).interactions.length, 0, "a press saved a line");
+  addLine(app, "the pier is watched");
+  assert.deepEqual(tableOf(app).interactions[0].crew, ["Nyx"]);
+  openAddLine(app);
+  assert.deepEqual(crewPressed(app, "add"), ["Nyx"], "the crew didn't stay after Add");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 310: in a line's Edit a press saves at once, a second press takes the name off, and Add a player takes several", () => {
+  const [t] = withSeats();
+  const id = Engine.addCastMember(t, { name: "Dez" }).id;
+  Engine.addInteraction(t, { kind: "shared", cast: [id], crew: ["Nyx"], text: "x", date: "2026-10-01" });
+  const app = tableOpen(t);
+  openFirst(app); editLine(app);
+  assert.deepEqual(crewPressed(app, "edit"), ["Nyx"]);
+  [...crewBox(app, "edit").querySelectorAll("[data-crew-seat]")][1].click();
+  assert.deepEqual(tableOf(app).interactions[0].crew, ["Nyx", "Rook"]);
+  [...crewBox(app, "edit").querySelectorAll("[data-crew-seat]")][0].click();
+  assert.deepEqual(tableOf(app).interactions[0].crew, ["Rook"]);
+  crewBox(app, "edit").querySelector("[data-crew-add]").click();
+  type(app, '[data-crew-key^="il|"] [data-crew-input]', "Ash, Vee");
+  crewBox(app, "edit").querySelector("[data-crew-go]").click();
+  assert.deepEqual(tableOf(app).interactions[0].crew, ["Rook", "Ash", "Vee"]);
+  assert.match(app.$("[data-isent]").textContent, /Rook, Ash and Vee/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 310: a typed alias shows its seat pressed, and a press takes the alias off, never the character's name", () => {
+  const [t, tags] = withSeats();
+  Engine.setSeat(t, tags.Nyx, { names: ["the courier"] });
+  const id = Engine.addCastMember(t, { name: "Dez" }).id;
+  Engine.addInteraction(t, { kind: "shared", cast: [id], crew: ["The Courier", "Ash"], text: "x", date: "2026-10-01" });
+  const app = tableOpen(t);
+  openFirst(app); editLine(app);
+  assert.deepEqual(crewPressed(app, "edit"), ["Nyx", "Ash"]);
+  crewBox(app, "edit").querySelector("[data-crew-seat]").click();
+  assert.deepEqual(tableOf(app).interactions[0].crew, ["Ash"]);
+  crewBox(app, "edit").querySelector("[data-crew-seat]").click();
+  assert.deepEqual(tableOf(app).interactions[0].crew, ["Ash", "Nyx"], "a press wrote something other than the seat's name");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Decision 310: a name with markup renders as text in the picker", () => {
+  const [t] = withSeats();
+  const id = Engine.addCastMember(t, { name: "Dez" }).id;
+  Engine.addInteraction(t, { kind: "shared", cast: [id], crew: ["<img src=x>"], text: "x", date: "2026-10-01" });
+  const app = tableOpen(t);
+  openFirst(app); editLine(app);
+  assert.equal(crewBox(app, "edit").querySelectorAll("img").length, 0);
+  assert.deepEqual(crewPressed(app, "edit"), ["<img src=x>"]);
   assert.deepEqual(app.errors, []);
 });

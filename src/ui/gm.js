@@ -1007,7 +1007,11 @@ const INTERACTION_KINDS = [["shared","Told them"], ["learned","Learned from them
   ["killed","Killed them"], ["owes","Owes them"], ["owed","They owe"], ["fought","Fought them"]];
 const splitList = (v, re) => String(v).split(re).map(s=>s.trim()).filter(Boolean);
 // The add row's draft: kept while the page is open, so three lines in a scene are three Enters.
-const intAdd = () => S.intAdd || (S.intAdd={ kind:null, crew:"", date:localDay(), what:"", where:"" });
+const intAdd = () => S.intAdd || (S.intAdd={ kind:null, crew:[], date:localDay(), what:"", where:"" });
+// A line's crew is the crew picker (Decision 310): the add row's holds a list until Add, a line's Edit saves at once.
+const crewLinePicker = (key, names, save) => ({ key, label:"Crew", list:"crew-names", choices:()=>crewNameChoices(S.table), names, save });
+const addCrewPicker = () => crewLinePicker("ia", ()=>intAdd().crew, list=>{ intAdd().crew=list; return true; });
+const editCrewPicker = (xid, save) => crewLinePicker(`il|${xid}`, ()=>{ const x=S.table.interactions.find(i=>i && i.id===xid); return x ? x.crew : []; }, save || (()=>false));
 // Where (Decision 243): the table's places by title, and none. A line whose place was removed shows its kept name, struck, until it is changed.
 function whereSelectHtml(attr, x){
   const places=Engine.placeList(S.table, {}), cur=x && x.place && typeof x.place==="object" ? x.place : null;
@@ -1024,15 +1028,27 @@ const numAttr = v => typeof v==="number" && Number.isFinite(v) ? v : "";
 const castSigned = n => n===0 ? "0" : signed(n);   // sheet.js's, with a zero
 const hasNumber = b => Engine.blockHasNumber(b);
 
+// A card's figures (Decision 308): the stats with a value, TOL and WILL, then Health, read off Engine.npc and castHealth as the
+// read panel's are (readBlockHtml) and never summed again here. A hurt member reads what is left of the total.
+function cardFiguresHtml(n){
+  if (!hasNumber(n.block)) return "";
+  const r=Engine.npc(n.block), bits=[], fig=(id, v)=>`<span class="cast-stat-id">${esc(id)}</span> <b class="threat-val">${esc(v)}</b>`;
+  for (const s of D.stats){ const v=r.stats[s.id]; if (v && v.value!==null) bits.push(fig(s.id, v.value)); }
+  for (const d of D.derived.filter(x=>x.type==="sumOfModifiers")){ const a=r.authored[d.id]; if (a && a.used!==null) bits.push(fig(d.id, a.used)); }
+  const h=n.wounds ? Engine.castHealth(S.table, n.id) : null;
+  if (h && h.total!==null) bits.push(`<span class="cast-stat-id">Health</span> <b class="threat-val">${esc(h.left)}</b> of <b class="threat-val">${esc(h.total)}</b>`);
+  else if (r.health) bits.push(`<span class="cast-stat-id">Health</span> <b class="threat-val">${esc(r.health.total)}</b>`);
+  return bits.length ? `<p class="cast-figs">${bits.join(" · ")}</p>` : "";
+}
 function castCardHtml(n){
   const id=esc(n.id);
   const bits=[ n.affiliations.length ? n.affiliations.join(" / ") : "", n.origin, n.npcRoles.length ? n.npcRoles.join(" / ") : "", n.enemyRole ? `Enemy: ${n.enemyRole}` : "",
-    n.tier!==null ? `Tier ${n.tier}` : "", n.status!=="alive" ? castStatusLabel(n.status) : "", hasNumber(n.block) ? "Stat block" : ""
+    n.tier!==null ? `Tier ${n.tier}` : "", n.status!=="alive" ? castStatusLabel(n.status) : ""
   ].filter(Boolean).map(esc).join(" · ");
   return `<li class="roster-card cast-card" data-ccard="${id}" data-status="${esc(n.status)}">
     <button class="cast-open" data-copen="${id}">${esc(n.name.trim() || "Unnamed")}</button>
     ${n.flavor ? `<div class="cast-line">${esc(n.flavor)}</div>` : ""}
-    ${bits ? `<div class="roster-meta cast-meta">${bits}</div>` : ""}</li>`;
+    ${bits ? `<div class="roster-meta cast-meta">${bits}</div>` : ""}${cardFiguresHtml(n)}</li>`;
 }
 function castListHtml(t){
   if (S.castView==="crew") return crewViewHtml(t);
@@ -1095,9 +1111,9 @@ function castTabHtml(t){
 }
 
 // ── A member's page ──
-const castText = (n, key, label, ph, area, list) => `<label class="field"><span>${esc(label)}</span>${area
+const castText = (n, key, label, ph, area) => `<label class="field"><span>${esc(label)}</span>${area
   ? `<textarea data-cf="${key}" placeholder="${esc(ph||"")}">${esc(n[key])}</textarea>`
-  : `<input type="text" data-cf="${key}" value="${esc(n[key])}" placeholder="${esc(ph||"")}" autocomplete="off"${list ? ` list="${list}"` : ""}>`}</label>`;
+  : `<input type="text" data-cf="${key}" value="${esc(n[key])}" placeholder="${esc(ph||"")}" autocomplete="off">`}</label>`;
 const PACK_KINDS = [["universal","Universal"], ["origin","Origin"], ["signature","Signature"]];
 const packKindLabel = k => (PACK_KINDS.find(x=>x[0]===k) || [])[1] || "";
 const foldName = v => String(v||"").trim().toLowerCase();
@@ -1140,9 +1156,7 @@ function interactionRowHtml(x, n){
       <button type="button" class="btn sm int-edit" data-iedit="${id}" aria-label="Edit this line">Edit</button></li>`;
   return `<li class="int-row" data-int="${id}">
     <p class="int-sentence" data-isent="${id}">${sentenceHtml(S.table, x, { plain:true })} ${tag}</p>
-    <div class="int-fields">
-      <label class="field"><span>Crew</span><input type="text" data-icrew="${id}" list="crew-names" value="${esc(x.crew.join(", "))}" placeholder="Crew" autocomplete="off"></label>
-    </div>
+    <div class="int-fields">${crewPickHtml(editCrewPicker(x.id))}</div>
     ${kindToggleHtml("data-ikind", x.kind, "What kind", x.id+"|")}
     <div class="int-fields">
       <label class="field"><span>What</span><textarea rows="2" data-itext="${id}" placeholder="What passed between them">${esc(x.text)}</textarea></label>
@@ -1154,11 +1168,8 @@ function interactionRowHtml(x, n){
 // The add row. In a member's read view it is folded behind Add a line, below their lines (Decision 300); Edit keeps it open above them.
 function castInteractionsHtml(n, folded){
   const a=intAdd(), rows=Engine.interactionsFor(S.table, n.id);
-  const names=crewNameChoices(S.table);
-  const row=`<datalist id="crew-names">${names.map(x=>`<option value="${esc(x)}">`).join("")}</datalist>
-    <div class="int-add">
-      <div class="int-fields">
-        <label class="field"><span>Crew</span><input type="text" data-iacrew list="crew-names" value="${esc(a.crew)}" placeholder="Who from the crew" autocomplete="off"></label></div>
+  const row=`<div class="int-add">
+      <div class="int-fields">${crewPickHtml(addCrewPicker())}</div>
       ${kindToggleHtml("data-iakind", a.kind, "What kind")}
       <div class="int-fields">
         <label class="field"><span>What</span><input type="text" data-iwhat value="${esc(a.what||"")}" placeholder="What passed between them" autocomplete="off"></label>
@@ -1176,6 +1187,9 @@ function castRolesHtml(n){
     `<button type="button" data-crole="${esc(r)}" aria-pressed="false">${esc(r)}</button>`).join("")}</div>` : "";
 }
 const datalistHtml = (id, names) => names.length ? `<datalist id="${id}">${names.map(x=>`<option value="${esc(x)}"></option>`).join("")}</datalist>` : "";
+// Origin and Enemy role (Decision 309): the packs' names as buttons under the field, one pick each. The field keeps any name; the pressed one is the one it holds.
+const castPickHtml = (key, names, label) => names.length ? `<div class="form-toggle cast-roles" role="group" aria-label="${esc(label)}">${names.map(r=>
+  `<button type="button" data-cpick="${key}" data-cname="${esc(r)}" aria-pressed="false">${esc(r)}</button>`).join("")}</div>` : "";
 // A member opens to read (Decision 271); Edit is today's form.
 function castPageHtml(n){
   return editingNow("member", n.id) ? castFormHtml(n) : castReadHtml(n);
@@ -1248,9 +1262,9 @@ function castFormHtml(n){
     ${castText(n,"flavor","Who they are","One line: who they are")}
     ${castText(n,"description","Description","What you'd see.",true)}
     <div class="cast-codex">
-      ${castText(n,"origin","Origin","",false,c.origins.length ? "cast-origins" : "")}${datalistHtml("cast-origins", c.origins)}
+      <div>${castText(n,"origin","Origin")}${castPickHtml("origin", c.origins, "Origins in the pack")}</div>
       <div><label class="field"><span>NPC roles</span><input type="text" data-cf="npcRoles" value="${esc(n.npcRoles.join(" / "))}" placeholder="Separate with / or ," autocomplete="off"></label>${castRolesHtml(n)}</div>
-      ${castText(n,"enemyRole","Enemy role","",false,c.enemyRoles.length ? "cast-enemies" : "")}${datalistHtml("cast-enemies", c.enemyRoles)}
+      <div>${castText(n,"enemyRole","Enemy role")}${castPickHtml("enemyRole", c.enemyRoles, "Enemy roles in the pack")}</div>
       <div><label class="field"><span>Tier</span><input type="number" step="1" min="1" inputmode="numeric" data-cf="tier" value="${numAttr(n.tier)}"></label>${packs ? `<p class="cast-guide" data-ctier hidden></p>` : ""}</div>
       <div class="field cast-ally"><span>In a fight</span><div class="form-toggle" role="group" aria-label="In a fight"><button type="button" data-cally class="${n.ally?"on":""}" aria-pressed="${n.ally}">Fights with the crew</button></div></div>
     </div>
@@ -1369,6 +1383,7 @@ function castGuide(main, n){
   main.querySelectorAll("[data-cmod]").forEach(el=>{ const v=mods[el.dataset.cmod]; el.textContent = v ? `${who} ${castSigned(v)}` : ""; });
   const have=new Set((Array.isArray(n.npcRoles) ? n.npcRoles : []).map(foldName));
   main.querySelectorAll("[data-crole]").forEach(b=>{ const on=have.has(foldName(b.dataset.crole)); b.setAttribute("aria-pressed", String(on)); b.classList.toggle("on", on); });
+  main.querySelectorAll("[data-cpick]").forEach(b=>{ const on=foldName(n[b.dataset.cpick])===foldName(b.dataset.cname); b.setAttribute("aria-pressed", String(on)); b.classList.toggle("on", on); });
   const t=m.tier, tn=t ? t.rec.id : null, guide=(key)=>t && String(t.rec[key]||"").trim() ? `Tier ${tn}: ${esc(t.rec[key])}` : "";
   const e=m.enemyRole, usual=e && e.rec.tier!==null && e.rec.tier!==n.tier ? e.rec.name.trim() || "Enemy role" : "";
   set("[data-ctier]", [ t && packChipHtml(t.pack, "tiers", t.rec, t.rec.name.trim() || `Tier ${tn}`),
@@ -1441,16 +1456,15 @@ function bindInteractions(main, n){
   // Folded (a member's read view): Add a line opens the row on its first field; Cancel and a save fold it again (Decision 300).
   const folded=!!main.querySelector("[data-iaopen], [data-iacancel]");
   const opener=main.querySelector("[data-iaopen]"), cancel=main.querySelector("[data-iacancel]");
-  if (opener) opener.onclick=()=>{ a.open=true; renderTable(); focus("[data-iacrew]"); };
+  if (opener) opener.onclick=()=>{ a.open=true; renderTable(); focus(`${crewBoxSel("ia")} button`); };
   if (cancel) cancel.onclick=()=>{ a.open=false; renderTable(); focus("[data-iaopen]"); };
   if (whatEl){
     main.querySelectorAll("[data-iakind]").forEach(b=>b.onclick=()=>{
       a.kind = a.kind===b.dataset.iakind ? null : b.dataset.iakind;
       main.querySelectorAll("[data-iakind]").forEach(x=>{ const on=x.dataset.iakind===a.kind; x.classList.toggle("on", on); x.setAttribute("aria-pressed", String(on)); });
     });
-    const crewEl=main.querySelector("[data-iacrew]"), dateEl=main.querySelector("[data-iadate]");
-    crewEl.oninput=()=>{ a.crew=crewEl.value; };
-    crewEl.onchange=()=>{ a.crew=splitList(crewEl.value, /,/).join(", "); crewEl.value=a.crew; };
+    bindCrewPick(main, addCrewPicker());
+    const dateEl=main.querySelector("[data-iadate]");
     dateEl.oninput=dateEl.onchange=()=>{ a.date=dateEl.value||null; };
     const whereEl=main.querySelector("[data-iawhere]");
     if (whereEl) whereEl.oninput=whereEl.onchange=()=>{ a.where=whereEl.value; };
@@ -1458,7 +1472,7 @@ function bindInteractions(main, n){
     const add=()=>{
       const text=whatEl.value;
       if (!a.kind && !text.trim()) return;
-      let r; tableChange(()=>{ r=Engine.addInteraction(S.table, { kind:a.kind, cast:[id], crew:splitList(a.crew, /,/), text, date:a.date, place:a.where||null }); }, false);
+      let r; tableChange(()=>{ r=Engine.addInteraction(S.table, { kind:a.kind, cast:[id], crew:a.crew.slice(), text, date:a.date, place:a.where||null }); }, false);
       if (!r.ok) return;
       if (a.kind==="killed") a.kind=null;
       a.what="";
@@ -1476,7 +1490,7 @@ function bindInteractions(main, n){
     if (sent && cur) sent.innerHTML=sentenceHtml(S.table, cur, { plain:true }) + (sentTag(cur) ? " " + sentTag(cur) : "");
   };
   main.querySelectorAll("[data-iedit]").forEach(b=>b.onclick=()=>{
-    S.intEdit=b.dataset.iedit; S.intEditOf=id; renderTable(); focus(attrSel("data-icrew", b.dataset.iedit)); });
+    S.intEdit=b.dataset.iedit; S.intEditOf=id; renderTable(); focus(`${crewBoxSel(`il|${b.dataset.iedit}`)} button`); });
   main.querySelectorAll("[data-idone]").forEach(b=>b.onclick=()=>{
     S.intEdit=null; renderTable(); focus(attrSel("data-iedit", b.dataset.idone)); });
   bindCastCards(main);
@@ -1487,10 +1501,7 @@ function bindInteractions(main, n){
   });
   main.querySelectorAll("[data-itext]").forEach(el=>el.oninput=()=>edit(el.dataset.itext, { text:el.value }));
   main.querySelectorAll("[data-iwhere]").forEach(el=>el.oninput=el.onchange=()=>{ if (el.value!=="~gone") edit(el.dataset.iwhere, { place:el.value || null }); });
-  main.querySelectorAll("[data-icrew]").forEach(el=>{
-    el.oninput=()=>edit(el.dataset.icrew, { crew:splitList(el.value, /,/) });
-    el.onchange=()=>{ edit(el.dataset.icrew, { crew:splitList(el.value, /,/) }); const x=found(el.dataset.icrew); el.value = x ? x.crew.join(", ") : ""; };
-  });
+  main.querySelectorAll('[data-crew-key^="il|"]').forEach(box=>{ const xid=box.dataset.crewKey.slice(3); bindCrewPick(main, editCrewPicker(xid, list=>{ edit(xid, { crew:list }); return true; })); });
   main.querySelectorAll("[data-idate]").forEach(el=>{
     const save=()=>edit(el.dataset.idate, { date:el.value });
     el.oninput=save;
@@ -1590,6 +1601,13 @@ function bindCastPage(main, n){
     const w=foldName(btn.dataset.crole), cur=own().npcRoles, has=cur.some(r=>foldName(r)===w);
     edit("npcRoles", has ? cur.filter(r=>foldName(r)!==w) : [...cur, btn.dataset.crole]);
     main.querySelector('[data-cf="npcRoles"]').value=own().npcRoles.join(" / ");
+    castGuide(main, own());
+  });
+  // Origin and Enemy role: the pressed button's name goes in the field, pressed again it clears it. The field stays the one source.
+  main.querySelectorAll("[data-cpick]").forEach(btn=>btn.onclick=()=>{
+    const key=btn.dataset.cpick, same=foldName(own()[key])===foldName(btn.dataset.cname), v=same ? "" : btn.dataset.cname;
+    edit(key, v);
+    main.querySelector(`[data-cf="${key}"]`).value=own()[key];
     castGuide(main, own());
   });
   const pick=main.querySelector("[data-ctpick]");
@@ -2462,31 +2480,34 @@ function sessionLine(s){
 function crewAddHtml(open, tog){
   return `<button type="button" class="btn crew-add" ${tog} aria-expanded="${open}">Add a player</button>`;
 }
-function crewFieldHtml(field, go){
-  return `<div class="cast-add crew-field"><label class="field"><span>Name</span><input type="text" ${field} list="sess-crew" autocomplete="off"></label>
-    <button type="button" class="btn" ${go}>Add</button></div>${datalistHtml("sess-crew", sessionCrewNames(S.table))}`;
+function crewFieldHtml(field, go, listId="sess-crew", names=sessionCrewNames(S.table)){
+  return `<div class="cast-add crew-field"><label class="field"><span>Name</span><input type="text" ${field} list="${listId}" autocomplete="off"></label>
+    <button type="button" class="btn" ${go}>Add</button></div>${datalistHtml(listId, names)}`;
 }
-// Who was there (a session's page and its close-out): a seat's button is pressed while a name in `present` answers to it;
-// any other name in `present` follows as a pressed button of its own. S.crewAdd says which page's Add a player field is open.
-function whoHtml(s, key){
-  const t=S.table, present=Array.isArray(s.present) ? s.present : [], picks=Engine.seatPicks(t, present), tags=new Set(picks.map(p=>p.tag));
+// One picker for the crew (Decisions 262, 310): Who was there, and a line's Crew in the add row and in Edit. `o` says what it is a picker of:
+// { key (which one's Add a player field is open, on S.crewAdd), label, names() (the list now), save(list) (true when it kept it),
+//   after() (runs once saved), list (the Add a player field's datalist id), choices() (its names) }.
+// A seat's button is pressed while a name in the list answers to it; any other name follows as a pressed button of its own.
+// A press adds the seat's name, or takes off every name that answers to it, and never rewrites a name the GM typed.
+const crewBoxSel = key => `[data-crew-box]${attrSel("data-crew-key", key)}`;
+function crewPickHtml(o){
+  const t=S.table, present=o.names(), picks=Engine.seatPicks(t, present), tags=new Set(picks.map(p=>p.tag));
   const seen=new Set(), others=present.filter(n=>{ const k=foldName(n); if (!k || seen.has(k)) return false; seen.add(k); return !tags.has(Engine.seatFor(t, n)); });
-  const open=S.crewAdd===key, mark=`<span class="crew-mark" aria-hidden="true">✓</span> `;
-  return `<div class="field crew-who" data-crew-box><span class="crew-label">Who was there</span>
-    <div class="crew-btns" role="group" aria-label="Who was there">${picks.map(p=>`<button type="button" class="btn crew-btn${p.in ? " on" : ""}" data-crew-seat="${esc(p.tag)}" aria-pressed="${p.in}">${p.in ? mark : ""}${esc(p.name)}</button>`).join("")}${others.map(n=>`<button type="button" class="btn crew-btn on" data-crew-name="${esc(n)}" aria-pressed="true">${mark}${esc(n)}</button>`).join("")}${crewAddHtml(open, "data-crew-add")}</div>
-    ${open ? crewFieldHtml("data-crew-input", "data-crew-go") : ""}</div>`;
+  const open=S.crewAdd===o.key, mark=`<span class="crew-mark" aria-hidden="true">✓</span> `;
+  return `<div class="field crew-who" data-crew-box data-crew-key="${esc(o.key)}"><span class="crew-label">${esc(o.label)}</span>
+    <div class="crew-btns" role="group" aria-label="${esc(o.label)}">${picks.map(p=>`<button type="button" class="btn crew-btn${p.in ? " on" : ""}" data-crew-seat="${esc(p.tag)}" aria-pressed="${p.in}">${p.in ? mark : ""}${esc(p.name)}</button>`).join("")}${others.map(n=>`<button type="button" class="btn crew-btn on" data-crew-name="${esc(n)}" aria-pressed="true">${mark}${esc(n)}</button>`).join("")}${crewAddHtml(open, "data-crew-add")}</div>
+    ${open ? crewFieldHtml("data-crew-input", "data-crew-go", o.list, o.choices()) : ""}</div>`;
 }
-// Binds a Who was there box. `key` says which page it is on; `after` runs once `present` is saved (the close-out redraws its lists).
-function bindWho(main, id, key, after){
-  const box=main.querySelector("[data-crew-box]"); if (!box) return;
-  const cur=()=>sessionById(id), foc=sel=>{ const el=$("main").querySelector(sel); if (el) el.focus(); return !!el; };
-  const save=list=>{ let r; tableChange(()=>{ r=Engine.editSession(S.table, id, { present:list }); }, false); if (!r.ok){ notice(r.why); return false; } return true; };
-  const draw=()=>{ box.outerHTML=whoHtml(cur(), key); bindWho($("main"), id, key, after); };
+// Binds the picker `o` describes, wherever it is drawn on the page.
+function bindCrewPick(main, o){
+  const box=main.querySelector(`[data-crew-box]${attrSel("data-crew-key", o.key)}`); if (!box) return;
+  const foc=sel=>{ const el=$("main").querySelector(sel); if (el) el.focus(); return !!el; }, mine=`[data-crew-box]${attrSel("data-crew-key", o.key)}`;
+  const draw=()=>{ box.outerHTML=crewPickHtml(o); bindCrewPick($("main"), o); };
   const has=(list, n)=>list.some(x=>foldName(x)===foldName(n));
-  const finish=sel=>{ if (after) after(); draw(); foc(sel); };
+  const finish=sel=>{ if (o.after) o.after(); draw(); foc(sel); };
   const addName=()=>{
     const input=box.querySelector("[data-crew-input]"), names=input ? splitList(input.value, /,/) : []; if (!names.length){ if (input) input.focus(); return; }
-    const present=cur().present||[], list=present.slice();
+    const present=o.names(), list=present.slice();
     // A comma separates names, as the old field did. A name already there, or answering to a seat already pressed, is skipped.
     for (const name of names){
       const seat=Engine.seatFor(S.table, name);
@@ -2494,26 +2515,35 @@ function bindWho(main, id, key, after){
       list.push(name);
     }
     if (list.length===present.length){ notice("Already in."); input.focus(); return; }
-    if (save(list)) finish("[data-crew-input]"); else input.focus();
+    if (o.save(list)) finish(`${mine} [data-crew-input]`); else input.focus();
   };
   box.onclick=ev=>{
     const b=ev.target.closest("button"); if (!b || !box.contains(b)) return;
-    const s=cur(); if (!s) return; const t=S.table, present=Array.isArray(s.present) ? s.present : [];
+    const t=S.table, present=o.names();
     if ("crewSeat" in b.dataset){
       const tag=b.dataset.crewSeat, p=Engine.seatPicks(t, present).find(x=>x.tag===tag); if (!p) return;
       const list=p.in ? present.filter(n=>Engine.seatFor(t, n)!==tag) : has(present, p.name) ? present : present.concat([p.name]);
-      if (save(list)) finish(`[data-crew-seat="${tag}"]`);
+      if (o.save(list)) finish(`${mine} [data-crew-seat="${tag}"]`);
     } else if ("crewName" in b.dataset){
       const at=[...box.querySelectorAll(".crew-btns button")].indexOf(b);
-      if (save(present.filter(n=>foldName(n)!==foldName(b.dataset.crewName)))){
-        if (after) after(); draw();
-        const all=$("main").querySelectorAll("[data-crew-box] .crew-btns button"); (all[at] || all[all.length-1]).focus(); }
+      if (o.save(present.filter(n=>foldName(n)!==foldName(b.dataset.crewName)))){
+        if (o.after) o.after(); draw();
+        const all=$("main").querySelectorAll(`${mine} .crew-btns button`); (all[at] || all[all.length-1]).focus(); }
     } else if ("crewAdd" in b.dataset){
-      S.crewAdd=S.crewAdd===key ? null : key; draw(); foc(S.crewAdd ? "[data-crew-input]" : "[data-crew-add]");
+      S.crewAdd=S.crewAdd===o.key ? null : o.key; draw(); foc(S.crewAdd ? `${mine} [data-crew-input]` : `${mine} [data-crew-add]`);
     } else if ("crewGo" in b.dataset) addName();
   };
   box.onkeydown=ev=>{ if (ev.key==="Enter" && ev.target.matches("[data-crew-input]")){ ev.preventDefault(); addName(); } };
 }
+// Who was there (a session's page and its close-out): the picker over a session's `present`. `after` runs once it's saved (the close-out redraws its lists).
+function whoPicker(id, key, after){
+  const cur=()=>sessionById(id);
+  return { key, label:"Who was there", list:"sess-crew", choices:()=>sessionCrewNames(S.table), after,
+    names:()=>{ const s=cur(); return s && Array.isArray(s.present) ? s.present : []; },
+    save:list=>{ let r; tableChange(()=>{ r=Engine.editSession(S.table, id, { present:list }); }, false); if (!r.ok){ notice(r.why); return false; } return true; } };
+}
+const whoHtml = (s, key) => crewPickHtml(whoPicker(s.id, key));
+const bindWho = (main, id, key, after) => bindCrewPick(main, whoPicker(id, key, after));
 // Every crew name the table knows, spelled as first written, for the Add a player fields.
 function sessionCrewNames(t){
   const seen=new Map(), add = n => { const k=String(n||"").trim(); if (k && !seen.has(k.toLowerCase())) seen.set(k.toLowerCase(), k); };
