@@ -155,8 +155,8 @@ test("K1: Guide lines Off hides every guide line and keeps the rule lines, for t
   const rule = { skills: "introSkills", progression: "introProgression", admin: "introAdmin" };
   const ruleText = k => D.appCopy[k].replace("{perHour}", String(D.ip.perHour));
   app.click('[data-sec="skills"]');
-  app.click("[data-shelp]");
-  app.click("#ghelp [data-help-guide-off]");
+  app.click("[data-menu-toggle]");
+  app.click('[data-menu-switch="guide"]');
   assert.equal(ls(app, SGUIDE), "off");
   assert.equal(ls(app, GMGUIDE), null, "the sheet's switch wrote the table's");
   for (const sec of tabs) { app.click(`[data-sec="${sec}"]`); assert.equal(guides().length, 0, `${sec} still shows its guide line`); }
@@ -168,7 +168,8 @@ test("K1: Guide lines Off hides every guide line and keeps the rule lines, for t
   const again = openSheet(lockedCharacter(), "skills", { storage: { [SGUIDE]: "off" } });
   assert.equal(again.$$("#main [data-guide]").length, 0, "a reload forgot the switch");
   app.click('[data-sec="notes"]');
-  app.click("#ghelp [data-help-guide-on]");
+  app.click("[data-menu-toggle]");
+  app.click('[data-menu-switch="guide"]');
   assert.equal(ls(app, SGUIDE), null);
   assert.equal(guides().length, 1, "On didn't bring it back");
   assert.deepEqual(app.errors, []);
@@ -191,8 +192,8 @@ test("K1: one flyout at a time", () => {
 
 test("K1: the ? key switch in Help turns keys off for the table too", () => {
   const app = sheet("main");
-  app.click("[data-shelp]");
-  app.click("#ghelp [data-help-keys-off]");
+  app.click("[data-menu-toggle]");
+  app.click('[data-menu-switch="keys"]');
   assert.equal(ls(app, KEYS), "off");
   pressEsc(app);
   assert.equal(questionMark(app).prevented, false);
@@ -200,7 +201,8 @@ test("K1: the ? key switch in Help turns keys off for the table too", () => {
   app.click("[data-shelp]");
   assert.equal(shown(app), true, "the button stopped working");
   assert.equal(app.$("[data-shelp]").hasAttribute("aria-keyshortcuts"), false);
-  app.click("#ghelp [data-help-keys-on]");
+  app.click("[data-menu-toggle]");
+  app.click('[data-menu-switch="keys"]');
   assert.equal(ls(app, KEYS), null);
   assert.deepEqual(app.errors, []);
 });
@@ -276,7 +278,7 @@ test("K2: Every word opens from the sheet's Help, filters and jumps", () => {
   assert.equal(heading(app), SG().ui.wordsLink);
   const q = app.$("#ghelp [data-help-q]");
   assert.ok(q && q.type === "search", "no filter box");
-  assert.equal(app.doc.activeElement, q, "focus didn't go to the filter box");
+  assert.equal(app.doc.activeElement, app.$("#ghelp [data-hwords]"), "K4: focus stays on the Vocab tab, not the filter box");
   assert.equal(app.$("#ghelp label[for='ghelp-q']").textContent, SG().ui.filterLabel);
   const all = Engine.words(Engine.migrate(JSON.parse(JSON.stringify(lockedCharacter()))));
   assert.equal(app.$$("#ghelp .help-word").length, all.length, "not every word is listed");
@@ -309,10 +311,10 @@ test("K2: Every word opens from the sheet's Help, filters and jumps", () => {
   letterBtn(app, "B").click();
   const first = app.$$("#ghelp .help-word").find(r => r.dataset.hwLetter === "B");
   assert.equal(app.doc.activeElement, first.querySelector("dt"), "focus didn't land on the first B word");
-  // Back, and the link is where focus returns.
-  app.click("#ghelp [data-help-back]");
+  // K4: the tab back, and focus is on it.
+  app.click("#ghelp [data-hpage]");
   assert.equal(heading(app), SG().contexts.main.title);
-  assert.equal(app.doc.activeElement, app.$("#ghelp [data-hwords]"), "focus didn't return to the Every word link");
+  assert.equal(app.doc.activeElement, app.$("#ghelp [data-hpage]"), "focus didn't stay on the pressed tab");
   // Closing clears the filter.
   app.click("#ghelp [data-hwords]"); typeQ(app, "tol");
   app.click("#ghelp [data-help-close]"); app.click("[data-shelp]"); app.click("#ghelp [data-hwords]");
@@ -371,7 +373,7 @@ test("K2: a tab press keeps Every word open in the column, and closes the flyout
   // Admin is a mode that outlives its tab: the words are no more Admin's than Skills'.
   wide.click("[data-menu-toggle]"); wide.click("[data-admin]");
   assert.equal(heading(wide), SG().ui.wordsLink);
-  wide.click("#ghelp [data-help-back]");
+  wide.click("#ghelp [data-hpage]");
   assert.equal(heading(wide), SG().contexts.admin.title);
   wide.click('[data-sec="notes"]');
   assert.equal(heading(wide), SG().contexts.notes.title, "Back left the words on a tab");
@@ -526,4 +528,64 @@ test("K3: sheetLine is total, and a seat or a switch that's off draws nothing", 
   ev(`S.screen="sheet"`);
   app.window.localStorage.setItem(SGUIDE, "off");
   assert.equal(ev(`sheetLine("__t")`), "", "the switch was ignored");
+});
+
+// ── K4 (Decisions 306, 307) ──
+test("K4: the sheet's Help has This tab and Vocab, and no Back", () => {
+  const app = sheet("trackers");
+  app.click("[data-shelp]");
+  const tabs = () => [...app.$$("#ghelp .help-tabs button")];
+  assert.deepEqual(tabs().map(b => b.textContent), [SG().ui.pageTab, SG().ui.wordsLink]);
+  assert.deepEqual([SG().ui.pageTab, SG().ui.wordsLink], ["This tab", "Vocab"]);
+  assert.equal(panel(app).querySelector("[data-help-back]"), null);
+  assert.equal(panel(app).querySelector(".help-foot"), null);
+  app.click("#ghelp [data-hwords]");
+  assert.equal(app.$("#ghelp [data-hwords]").getAttribute("aria-current"), "page");
+  assert.equal(app.doc.activeElement, app.$("#ghelp [data-hwords]"), "focus left the pressed tab");
+  assert.ok(app.$("#ghelp [data-help-q]"), "Vocab's filter isn't shown");
+  app.click("#ghelp [data-hpage]");
+  assert.equal(heading(app), SG().contexts.trackers.title);
+  assert.equal(app.$("#ghelp [data-hpage]").getAttribute("aria-current"), "page");
+  assert.equal(app.doc.activeElement, app.$("#ghelp [data-hpage]"));
+  assert.deepEqual(app.errors, []);
+});
+
+test("K4: the sheet's Guide lines and The ? key are in ⋮, show their state and flip in place", () => {
+  const app = sheet("skills");
+  app.click("[data-menu-toggle]");
+  const item = n => app.$(`#hdrmenu [data-menu-switch="${n}"]`);
+  for (const [name, key, pref] of [["guide", "guideSwitch", SGUIDE], ["keys", "keySwitch", KEYS]]) {
+    assert.ok(item(name).textContent.includes(SG().ui[key]), name + "'s label");
+    assert.equal(item(name).getAttribute("aria-pressed"), "true");
+    app.click(`[data-menu-switch="${name}"]`);
+    assert.equal(ls(app, pref), "off", name + " didn't write its setting");
+    assert.equal(item(name).getAttribute("aria-pressed"), "false");
+    assert.ok(item(name).textContent.includes(SG().ui.off));
+    assert.equal(app.doc.activeElement, item(name), name + ": focus left the item");
+    assert.equal(app.$("#hdrmenu").hidden, false, name + ": ⋮ closed");
+  }
+  assert.equal(app.$$("#main [data-guide]").length, 0, "the guide line is still on the page");
+  assert.equal(app.$("[data-shelp]").hasAttribute("aria-keyshortcuts"), false);
+  app.click('[data-menu-switch="guide"]'); app.click('[data-menu-switch="keys"]');
+  assert.equal(ls(app, SGUIDE), null); assert.equal(ls(app, KEYS), null);
+  assert.equal(app.$$("#main [data-guide]").length, 1);
+  assert.deepEqual(app.errors, []);
+});
+
+test("K4: the sheet's tab press opens Help at its top; a redraw of the same view keeps its place", () => {
+  const app = sheet("trackers", { width: 1280 });
+  app.click("[data-shelp]");
+  let top = 0; Object.defineProperty(panel(app), "scrollTop", { configurable: true, get: () => top, set: v => { top = v; } });
+  top = 500; app.click("#ghelp [data-hwords]");
+  assert.equal(top, 0, "Vocab opened where This tab was scrolled to");
+  top = 500; app.click("#ghelp [data-hpage]");
+  assert.equal(top, 0, "This tab opened where Vocab was scrolled to");
+  top = 500; app.window.eval("paintHelp(true)");
+  assert.equal(top, 500, "a redraw of the same view lost its place");
+  // Vocab outlives a change of tab (keepView): a redraw after one, say a new word from an edit, keeps the reader's place.
+  app.click("#ghelp [data-hwords]"); top = 500;
+  app.click('[data-sec="skills"]');
+  top = 500; app.window.eval("paintHelp(true)");
+  assert.equal(top, 500, "Vocab jumped to its top on a redraw after a change of tab");
+  assert.deepEqual(app.errors, []);
 });

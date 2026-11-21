@@ -128,7 +128,7 @@ function openTable(t, section){
   S={ screen:"table", ch:null, step:0, maxReached:0, section:"main", admin:false, table:t, tsection:TABLE_SECTIONS.some(s=>s.id===section) ? section : TABLE_SECTIONS[0].id };
   rebaseTable();
   // A table opens at the top of its tab with its heading focused, whatever Home was scrolled to (Decision 270).
-  window.scrollTo(0,0);
+  scrollPageTop();
   update();
   const h=$("main") && $("main").querySelector("h1"); if (h) takeFocus(h, true);
 }
@@ -284,7 +284,7 @@ function pickTableTab(id){
 }
 // A tab press, and the digit keys, which are the same press (Decision 272).
 function pressTableTab(id){
-  pickTableTab(id); window.scrollTo(0,0); update();
+  pickTableTab(id); scrollPageTop(); update();
   const now=$("topnav") && $("topnav").querySelector(attrSel("data-tsec", id)); if (now) now.focus({ preventScroll:true });
 }
 function renderTableChrome(){
@@ -305,7 +305,8 @@ function renderTableChrome(){
       <button data-trename="1">Rename</button>
       <button data-texport-open="1">Export .shadows-table.json</button>
       <button data-tactivity="1">Activity</button>
-      <button data-tkeys="1">Keys</button>
+      <button data-tkeys="1">Shortcuts</button>
+      ${menuSwitchHtml("guide", gmGuide().ui.guideSwitch, guideOn(), gmGuide().ui)}
       <button data-whatsnew="1">What's new</button>
       <button data-thome="1">Home</button>
     </div>`;
@@ -322,6 +323,7 @@ function renderTableChrome(){
   // Focus ⋮ first: the item that was clicked is about to be hidden, and a box returns focus to what opened it.
   act.querySelector("[data-tkeys]").onclick=()=>{ menu.hidden=true; kb.setAttribute("aria-expanded","false"); kb.focus(); openKeys(); };
   act.querySelector("[data-thome]").onclick=()=>{ lastTableSaved=null; goHome(); };
+  bindMenuSwitch(act, "guide", guideOn, on=>{ setGuide(on); renderTable(); }, gmGuide().ui);
 }
 // ── Keys (Decisions 259, 272) ──────────────────────────────────────────
 // F opens Find and J opens Jot on a table's screen; the preference that turns them off (`shadows.ui.keys`) is shared.js's.
@@ -335,10 +337,10 @@ function keyHints(){
   TABLE_SECTIONS.forEach((sec, i)=>hint(document.querySelector(attrSel("data-tsec", sec.id)), String(i+1), true));
 }
 function openKeys({ viaKey, returnTo }={}){
-  const draw=()=>{ const on=keysOn(); return `<div class="form-toggle" role="group" aria-label="Keys">
+  const draw=()=>{ const on=keysOn(); return `<div class="form-toggle" role="group" aria-label="${esc(gmGuide().ui.keysLink)}">
       <button type="button" data-keyon class="${on?"on":""}" aria-pressed="${on}"${on?" autofocus":""}>On</button>
       <button type="button" data-keyoff class="${on?"":"on"}" aria-pressed="${!on}"${on?"":" autofocus"}>Off</button></div>`; };
-  openModal({ title:"Keys", returnTo:returnTo || "[data-menu-toggle]", viaKey,
+  openModal({ title:gmGuide().ui.keysLink, returnTo:returnTo || "[data-menu-toggle]", viaKey,
     html:`<ul class="step-note keys-list">
         <li><b>1–8</b> · The sections, in order: Sessions to Notes</li>
         <li><b>N</b> · Next turn, or Finish the round at a Reset, on a running fight's page</li>
@@ -350,7 +352,7 @@ function openKeys({ viaKey, returnTo }={}){
         <li><b>Esc</b> · Close a box</li>
         <li><b>${modKey()}+Enter</b> · Save a jot</li></ul>
       <p class="step-note">None of these work while you're typing in a field.</p>
-      <div class="field tag-choice"><span>Keys</span><div data-keyswitch>${draw()}</div></div>`,
+      <div class="field tag-choice"><span>${esc(gmGuide().ui.keysLink)}</span><div data-keyswitch>${draw()}</div></div>`,
     foot:`<button type="button" class="btn" data-modalclose>Close</button>`,
     bind(body){
       const sw=body.querySelector("[data-keyswitch]");
@@ -394,12 +396,6 @@ function tableHelpContext(){
   return G[id] ? id : sec;
 }
 const helpWordsHtml = ids => `<dl class="help-words">${ids.map(w=>{ const x=gmGuide().words[w]; return x ? `<dt>${esc(x.term)}</dt><dd>${helpMd(x.text)}</dd>` : ""; }).join("")}</dl>`;
-function helpSwitchHtml(){
-  const u=gmGuide().ui, on=guideOn();
-  return `<div class="form-toggle" role="group" aria-label="${esc(u.guideSwitch)}">
-    <button type="button" data-help-guide-on class="${on?"on":""}" aria-pressed="${on}">${esc(u.on)}</button>
-    <button type="button" data-help-guide-off class="${on?"":"on"}" aria-pressed="${!on}">${esc(u.off)}</button></div>`;
-}
 // K3 (KQ6): Help on a seat's sheet names the tab that's open and lists that tab's words, read for the seat's copy. null for any other page.
 function seatHelpTab(id){
   try{
@@ -409,29 +405,24 @@ function seatHelpTab(id){
   }catch(e){ return null; }
 }
 function helpBodyHtml(id){
-  const g=gmGuide(), u=g.ui, c=g.contexts[id], seat=seatHelpTab(id), head = (title, back) => `<div class="dhead"><h2 id="ghelp-h" tabindex="-1">${esc(title)}</h2>
-      <button type="button" class="btn sm" data-help-close aria-label="${esc(u.close)} ${esc(u.title.toLowerCase())}">${esc(u.close)}</button></div>${back ? `<p><button type="button" class="btn sm" data-help-back>${esc(u.back)}</button></p>` : ""}`;
+  const g=gmGuide(), u=g.ui, c=g.contexts[id], seat=seatHelpTab(id);
+  // K4: the tabs are one row under the heading, in reach as the panel scrolls; Shortcuts opens its box, so it is a button after them.
+  const head = title => helpHeadHtml(title, [{ view:null, attr:"data-hpage", label:u.pageTab }, { view:"night", attr:"data-hnight", label:u.nightLink }, { view:"words", attr:"data-hwords", label:u.wordsLink }], u,
+    `<button type="button" class="btn sm help-keys" data-hkeys>${esc(u.keysLink)}</button>`);
   if (S.helpView==="night")
-    return head(u.nightLink, true) + g.night.map(p=>`<h3 class="ref-sub dos-l">${esc(u.when[p.when])}</h3><p class="dos-p">${helpMd(p.text)}</p>
+    return head(u.nightLink) + `<p class="dos-p">${helpMd(u.nightIntro)}</p>` + g.night.map(p=>`<h3 class="ref-sub dos-l">${esc(u.when[p.when])}</h3><p class="dos-p">${helpMd(p.text)}</p>
       <p class="help-secs">${p.sections.map(sid=>{ const sec=TABLE_SECTIONS.find(s=>s.id===sid); return sec ? `<button type="button" class="btn sm" data-hsec="${esc(sid)}">${esc(sec.label)}</button>` : ""; }).join(" ")}</p>`).join("");
   if (S.helpView==="words")
-    return head(u.wordsLink, true) + helpListHtml(Object.keys(g.words).sort((a, b)=>g.words[a].term.toLowerCase().localeCompare(g.words[b].term.toLowerCase()))
+    return head(u.wordsLink) + helpListHtml(Object.keys(g.words).sort((a, b)=>g.words[a].term.toLowerCase().localeCompare(g.words[b].term.toLowerCase()))
       .map(w=>({ title:g.words[w].term, kind:"", html:helpMd(g.words[w].text), find:g.words[w].term, text:g.words[w].text })), u);
   const seatWords = seat ? sheetHelpWordsHtml(seat.words, seat.ch) : "";
   return head(seat ? u.seatTab.replace("{title}", c.title).replace("{tab}", seat.label) : c.title) + `<h3 class="ref-sub dos-l">${esc(u.forLabel)}</h3><p class="dos-p">${helpMd(c.for)}</p>
     <h3 class="ref-sub dos-l">${esc(u.whenLabel)}</h3><ul class="help-when">${c.when.map(w=>`<li class="tag plain">${esc(u.when[w])}</li>`).join("")}</ul>
     ${seat ? (seatWords ? `<h3 class="ref-sub dos-l">${esc(u.wordsLabel)}</h3>${seatWords}` : "") : c.words.length ? `<h3 class="ref-sub dos-l">${esc(u.wordsLabel)}</h3>${helpWordsHtml(c.words)}` : ""}
-    ${c.tips.length ? `<h3 class="ref-sub dos-l">${esc(u.tipsLabel)}</h3><ul class="help-tips">${c.tips.map(t=>`<li>${helpMd(t)}</li>`).join("")}</ul>` : ""}
-    <div class="help-foot"><p class="help-links"><button type="button" class="btn sm" data-hnight>${esc(u.nightLink)}</button>
-      <button type="button" class="btn sm" data-hwords>${esc(u.wordsLink)}</button>
-      <button type="button" class="btn sm" data-hkeys>${esc(u.keysLink)}</button></p>
-      <div class="field tag-choice"><span>${esc(u.guideSwitch)}</span><div data-help-switch>${helpSwitchHtml()}</div></div></div>`;
+    ${c.tips.length ? `<h3 class="ref-sub dos-l">${esc(u.tipsLabel)}</h3><ul class="help-tips">${c.tips.map(t=>`<li>${helpMd(t)}</li>`).join("")}</ul>` : ""}`;
 }
-// What a press in the table's panel does, once the shared panel has drawn it.
+// What a press in the table's panel does, once the shared panel has drawn it (the tabs are the shared panel's).
 function bindTableHelp(el){
-  const go = (sel, view) => { const b=el.querySelector(sel); if (b) b.onclick=()=>{ S.helpView=view; S.helpWas=sel; S.helpQ=""; paintHelp(); const h=$("ghelp").querySelector("[data-help-q]") || $("ghelp-h"); if (h) h.focus({ preventScroll:true }); }; };
-  go("[data-hnight]", "night"); go("[data-hwords]", "words");
-  const back=el.querySelector("[data-help-back]"); if (back) back.onclick=()=>{ S.helpView=null; S.helpQ=""; paintHelp(); const w=S.helpWas && el.querySelector(S.helpWas); if (w) w.focus({ preventScroll:true }); };
   const keys=el.querySelector("[data-hkeys]"); if (keys) keys.onclick=()=>openKeys({ returnTo:"[data-hkeys]" });
   el.querySelectorAll("[data-hsec]").forEach(b=>b.onclick=()=>{
     // The page is where the GM is going: a flyout is done, and a column shows that page's help, not this view.
@@ -439,12 +430,6 @@ function bindTableHelp(el){
     if (!helpPinRoom()){ S.helpOpen=false; syncHelp(); }
     pressTableTab(b.dataset.hsec);
   });
-  const sw=el.querySelector("[data-help-switch]");
-  if (sw){
-    const wire = () => { const a=sw.querySelector("[data-help-guide-on]"), b=sw.querySelector("[data-help-guide-off]"); if (a) a.onclick=()=>set(true); if (b) b.onclick=()=>set(false); };
-    const set = on => { setGuide(on); sw.innerHTML=helpSwitchHtml(); wire(); renderTable(); const b=sw.querySelector(on ? "[data-help-guide-on]" : "[data-help-guide-off]"); if (b) b.focus({ preventScroll:true }); };
-    wire();
-  }
 }
 // The table's host of the shared panel (shared.js): its button, its state, its context and its body.
 HELP_HOSTS.table = {
@@ -604,15 +589,15 @@ function goFight(eid, rowId){
   const here=S.tsection==="encounters" && S.encOpen===eid;
   pickTableTab("encounters"); S.encOpen=eid;
   if (!here){ S.backFromLine=null; S.encWrap=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; S.encDelay=null; S.encPick=false; S.encQ=""; S.encCodex=false; S.encCodexQ=""; }
-  window.scrollTo(0,0); update();
+  scrollPageTop(); update();
   const main=$("main"), row=rowId && main.querySelector(attrSel("data-erow", rowId));
   if (row){ takeFocus(row, true); if (row.scrollIntoView) row.scrollIntoView({ block:"nearest" }); return; }
   const next=main.querySelector("[data-esrc], [data-efinish]:not([disabled]), [data-enext]"); if (next) next.focus({ preventScroll:true });
   const act=main.querySelector(".enc-row.active"); if (act && act.scrollIntoView) act.scrollIntoView({ block:"nearest" });
 }
-function goThread(id){ pickTableTab("sessions"); window.scrollTo(0,0); renderTableChrome(); showThread(id); }
+function goThread(id){ pickTableTab("sessions"); scrollPageTop(); renderTableChrome(); showThread(id); }
 function goClock(cid){
-  pickTableTab("sessions"); window.scrollTo(0,0); update();
+  pickTableTab("sessions"); scrollPageTop(); update();
   const row=$("main").querySelector(attrSel("data-cline", cid)), plus=row && row.querySelector("[data-clkplus]:not([disabled])");
   if (plus){ plus.focus({ preventScroll:true }); if (row.scrollIntoView) row.scrollIntoView({ block:"center" }); }
 }
@@ -807,7 +792,7 @@ function openFound(kind, id, field){
   S.editing=null;
   const toMember=cid=>{ S.tsection="cast"; S.castOpen=cid; S.castView="cast"; S.backEnc=null; S.backSess=false; S.backClose=false; S.backCity=null; S.castFrom=null; S.intAdd=null; };
   const toSession=sid=>{ S.tsection="sessions"; S.sessOpen=sid; S.coEnd=null; if (S.closeOut) S.closeOut.view=false; };
-  window.scrollTo(0,0);
+  scrollPageTop();
   if (kind==="cast"){
     // A hit in the GM note lands on its field, which is under Edit (Decision 271); anything else lands on the dossier's name.
     toMember(id); if (field==="GM note") S.editing={ kind:"member", id };
@@ -851,7 +836,7 @@ function openFound(kind, id, field){
 }
 // The Notes tab with that note open to read and its row focused (Decision 271).
 function openNote(id){
-  S.tsection="notes"; S.noteOpen=id; S.editing=null; window.scrollTo(0,0); update();
+  S.tsection="notes"; S.noteOpen=id; S.editing=null; scrollPageTop(); update();
   const el=$("main").querySelector(attrSel("data-nopen", id)); if (el){ el.focus(); if (el.scrollIntoView) el.scrollIntoView({ block:"center" }); }
 }
 // Where a jot would go, said before it is saved: the session being played, whatever day it is dated (Decision 270).
@@ -1302,7 +1287,7 @@ function bindFightLinks(main){
     S.backFromLine={ line, enc, key, tsection:S.tsection, castOpen:S.castOpen, castView:S.castView, castFrom:S.castFrom, backEnc:S.backEnc, backSess:S.backSess,
       backClose:S.backClose, backCity:S.backCity, placeOpen:S.placeOpen, placeRoute:S.placeRoute, sessOpen:S.sessOpen, castQ:S.castQ, closeView:S.closeOut ? S.closeOut.view : false };
     S.intEdit=null; S.tsection="encounters"; S.encOpen=enc; S.encWrap=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; S.encPick=false; S.encQ=""; S.encCodex=false; S.encCodexQ="";
-    window.scrollTo(0,0); update();
+    scrollPageTop(); update();
     const h=$("main").querySelector("[data-enc-h]"); if (h) takeFocus(h, true);
   });
 }
@@ -1323,7 +1308,7 @@ function routeTitle(r){
 function bindCastCards(main){
   bindFightLinks(main);
   // A member opened from Who knows what remembers which name it was, so Back lands on it.
-  const open = (id, from) => { S.castOpen=id; S.backEnc=null; S.backSess=false; S.backClose=false; S.backCity=null; S.castFrom=from||null; S.intAdd=null; window.scrollTo(0,0); update(); const el=$("main").querySelector("[data-cback]"); if (el) el.focus(); };
+  const open = (id, from) => { S.castOpen=id; S.backEnc=null; S.backSess=false; S.backClose=false; S.backCity=null; S.castFrom=from||null; S.intAdd=null; scrollPageTop(); update(); const el=$("main").querySelector("[data-cback]"); if (el) el.focus(); };
   main.querySelectorAll("[data-copen]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation();
     open(b.dataset.copen, b.dataset.cwhere ? attrSel("data-cwhere", b.dataset.cwhere) : null); });
   main.querySelectorAll("[data-ccard]").forEach(li=>li.onclick=ev=>{ if (!ev.target.closest("button")) open(li.dataset.ccard); });
@@ -1624,16 +1609,16 @@ function bindCastPage(main, n){
   const backBtn=main.querySelector("[data-cback]");
   if (backBtn) backBtn.onclick=()=>{
     if (S.backEnc && encList().some(e=>e.id===S.backEnc)){
-      S.encOpen=S.backEnc; S.backEnc=null; S.castOpen=null; S.tsection="encounters"; window.scrollTo(0,0); update();
+      S.encOpen=S.backEnc; S.backEnc=null; S.castOpen=null; S.tsection="encounters"; scrollPageTop(); update();
       focus(attrSel("data-eopencast", id)) || focus("[data-enext]"); return;
     }
     if (S.backClose && S.closeOut){
-      S.backClose=false; S.castOpen=null; S.intAdd=null; S.tsection="sessions"; S.closeOut.view=true; window.scrollTo(0,0); update();
+      S.backClose=false; S.castOpen=null; S.intAdd=null; S.tsection="sessions"; S.closeOut.view=true; scrollPageTop(); update();
       const el=$("main").querySelector(attrSel("data-co-open-cast", id)) || $("main").querySelector('[data-crew-seat], [data-crew-name], [data-crew-add]'); if (el) el.focus();
       return;
     }
     if (S.backSess){
-      const back=S.castFrom; S.backSess=false; S.castFrom=null; S.castOpen=null; S.intAdd=null; S.tsection="sessions"; window.scrollTo(0,0); update();
+      const back=S.castFrom; S.backSess=false; S.castFrom=null; S.castOpen=null; S.intAdd=null; S.tsection="sessions"; scrollPageTop(); update();
       const el=(back && $("main").querySelector(back)) || $("main").querySelector(S.sessOpen ? "[data-sback]" : "[data-snew]"); if (el) el.focus();
       return;
     }
@@ -1641,13 +1626,13 @@ function bindCastPage(main, n){
     if (cb){
       const back=S.castFrom;
       if (cb.kind==="faction"){ S.factionOpen=cb.id; S.placeOpen=null; S.cityView="factions"; } else { S.placeOpen=cb.id; S.factionOpen=null; }
-      S.backCity=null; S.castFrom=null; S.castOpen=null; S.intAdd=null; S.tsection="city"; window.scrollTo(0,0); update();
+      S.backCity=null; S.castFrom=null; S.castOpen=null; S.intAdd=null; S.tsection="city"; scrollPageTop(); update();
       const el=(back && $("main").querySelector(back)) || $("main").querySelector(cb.kind==="faction" ? "[data-ftitle]" : "[data-ptitle]"); if (el) takeFocus(el, true);
       return;
     }
     S.backCity=null; S.backEnc=null;
     const from=S.castFrom;
-    S.castOpen=null; S.castFrom=null; S.intAdd=null; window.scrollTo(0,0); update();
+    S.castOpen=null; S.castFrom=null; S.intAdd=null; scrollPageTop(); update();
     // Back to Who knows what lands on the name that was pressed; to the list, on the card, or quick-add if the filter hides them.
     if (from) focus(from); else focus(`[data-copen="${id}"]`);
     if (document.activeElement===document.body) focus("[data-cadd-name]");
@@ -1959,7 +1944,7 @@ function bindPlaceLinks(main){
     S.placeRoute={ kind:"line", key, tsection:S.tsection, castOpen:S.castOpen, castView:S.castView, castFrom:S.castFrom, backEnc:S.backEnc, backSess:S.backSess,
       backClose:S.backClose, backCity:S.backCity, placeOpen:S.placeOpen, placeRoute:S.placeRoute, sessOpen:S.sessOpen, castQ:S.castQ, closeView:S.closeOut ? S.closeOut.view : false };
     S.intEdit=null; S.tsection="city"; S.placeOpen=pid; S.factionOpen=null; S.cityView="places";
-    window.scrollTo(0,0); update();
+    scrollPageTop(); update();
     const h=$("main").querySelector("[data-ptitle]"); if (h) takeFocus(h, true);
   });
 }
@@ -1970,12 +1955,12 @@ function placeBack(){
     Object.assign(S, { tsection:r.tsection, castOpen:r.castOpen, castView:r.castView, castFrom:r.castFrom, backEnc:r.backEnc, backSess:r.backSess, backClose:r.backClose,
       backCity:r.backCity||null, placeOpen:r.placeOpen||null, placeRoute:r.placeRoute||null, sessOpen:r.sessOpen, castQ:r.castQ });
     if (S.closeOut) S.closeOut.view=r.closeView;
-    window.scrollTo(0,0); update();
+    scrollPageTop(); update();
     const link=$("main").querySelector(attrSel("data-popenline", r.key));
     if (link) link.focus(); else { const h=$("main").querySelector("h1"); if (h) takeFocus(h, true); }
     return;
   }
-  S.tsection="city"; window.scrollTo(0,0);
+  S.tsection="city"; scrollPageTop();
   if (r && r.kind==="city"){ S.cityView="city"; update(); focus(r.sel) || focus('[data-cityview="city"]'); return; }
   S.cityView="places"; update();
   focus(attrSel("data-popen", id)) || focus("[data-padd-name]") || focus('[data-cityview="places"]');
@@ -1990,7 +1975,7 @@ function bindCity(main){
   if (S.cityView==="city") bindCityView(main); else if (S.cityView==="factions") bindFactionList(main); else bindPlaceList(main);
 }
 function openPlacePage(id, route){
-  S.placeOpen=id; S.factionOpen=null; S.placeRoute=route||null; S.clockEdit=null; window.scrollTo(0,0); update();
+  S.placeOpen=id; S.factionOpen=null; S.placeRoute=route||null; S.clockEdit=null; scrollPageTop(); update();
   const h=$("main").querySelector("[data-ptitle]"); if (h) takeFocus(h, true);
 }
 function bindPlaceList(main){
@@ -2073,7 +2058,7 @@ function bindPlacePage(main, p){
   main.querySelectorAll("[data-copen]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation();
     S.tsection="cast"; S.castOpen=b.dataset.copen; S.backEnc=null; S.backSess=false; S.backClose=false; S.backCity={ kind:"place", id };
     S.castFrom=b.dataset.cwhere ? attrSel("data-cwhere", b.dataset.cwhere) : null; S.intAdd=null;
-    window.scrollTo(0,0); update(); focus("[data-cback]"); });
+    scrollPageTop(); update(); focus("[data-cback]"); });
   bindClockLines(main);
   bindEdit(main, "place", id);
   const pback=main.querySelector("[data-pback]"); if (pback) pback.onclick=placeBack;
@@ -2342,7 +2327,7 @@ function castKeyToHtml(n){
 }
 function openFactionPage(id, route){
   S.factionOpen=id; S.factionRoute=route||null; S.placeOpen=null; S.clockEdit=null; S.cityView="factions"; S.tsection="city";
-  window.scrollTo(0,0); update();
+  scrollPageTop(); update();
   const h=$("main").querySelector("[data-ftitle]"); if (h) takeFocus(h, true);
 }
 function factionBack(){
@@ -2353,12 +2338,12 @@ function factionBack(){
       backCity:r.backCity||null, placeOpen:r.placeOpen||null, placeRoute:r.placeRoute||null, sessOpen:r.sessOpen, castQ:r.castQ });
     S.factionOpen=r.factionOpen||null; S.factionRoute=r.factionRoute||null; if (r.cityView) S.cityView=r.cityView;
     if (S.closeOut) S.closeOut.view=r.closeView;
-    window.scrollTo(0,0); update();
+    scrollPageTop(); update();
     const link=$("main").querySelector(r.sel || attrSel("data-fopen", r.key));
     if (link) link.focus(); else { const h=$("main").querySelector("h1"); if (h) takeFocus(h, true); }
     return;
   }
-  S.tsection="city"; window.scrollTo(0,0);
+  S.tsection="city"; scrollPageTop();
   if (r && r.kind==="city"){ S.cityView="city"; update(); focus(r.sel) || focus('[data-cityview="city"]'); return; }
   S.cityView="factions"; update();
   focus(attrSel("data-fcardopen", id)) || focus("[data-fadd-name]") || focus('[data-cityview="factions"]');
@@ -2413,7 +2398,7 @@ function bindFactionPage(main, f){
   const openMember = (ev, b) => { ev.stopPropagation();
     S.tsection="cast"; S.castOpen=b.dataset.copen; S.backEnc=null; S.backSess=false; S.backClose=false; S.backCity={ kind:"faction", id };
     S.castFrom=b.dataset.cwhere ? attrSel("data-cwhere", b.dataset.cwhere) : null; S.intAdd=null;
-    window.scrollTo(0,0); update(); focus("[data-cback]"); };
+    scrollPageTop(); update(); focus("[data-cback]"); };
   bindKeys();
   main.querySelectorAll(".int-list [data-copen]").forEach(b=>{ if (!b.closest("[data-fkeys]")) b.onclick=ev=>openMember(ev, b); });
   // Tipping points: typed lines, added and removed one at a time.
@@ -2790,18 +2775,18 @@ function bindSessions(main){
 function bindSessionOpeners(main){
   bindFightLinks(main);
   main.querySelectorAll("[data-sopen]").forEach(b=>b.onclick=()=>{
-    S.sessOpen=b.dataset.sopen; S.coEnd=null; if (S.closeOut) S.closeOut.view=false; window.scrollTo(0,0); update();
+    S.sessOpen=b.dataset.sopen; S.coEnd=null; if (S.closeOut) S.closeOut.view=false; scrollPageTop(); update();
     const el=$("main").querySelector("[data-sback]"); if (el) el.focus(); });
   main.querySelectorAll("[data-copen]").forEach(b=>b.onclick=ev=>{ ev.stopPropagation();
     S.tsection="cast"; S.castOpen=b.dataset.copen; S.backEnc=null; S.backSess=true; S.backClose=false; S.backCity=null; S.castFrom=b.dataset.cwhere ? attrSel("data-cwhere", b.dataset.cwhere) : null; S.intAdd=null;
-    window.scrollTo(0,0); update(); const el=$("main").querySelector("[data-cback]"); if (el) el.focus(); });
+    scrollPageTop(); update(); const el=$("main").querySelector("[data-cback]"); if (el) el.focus(); });
 }
 // Open a thread's row in Threads, its More open, and land on its title.
 function showThread(id){
   const h=(S.table.threads||[]).find(x=>x.id===id); if (!h) return;
   (S.threadMore || (S.threadMore={}))[id]=true;
   if (h.status!=="open") S.threadsShut=true;
-  S.sessOpen=null; S.editing=null; window.scrollTo(0,0); renderTable();
+  S.sessOpen=null; S.editing=null; scrollPageTop(); renderTable();
   const el=$("main").querySelector(attrSel("data-thname", id)); if (el){ el.focus(); if (el.scrollIntoView) el.scrollIntoView({ block:"center" }); }
 }
 function bindSessionsTab(main){
@@ -2812,7 +2797,7 @@ function bindSessionsTab(main){
   main.querySelector("[data-snew]").onclick=()=>{
     let r; tableChange(()=>{ r=Engine.addSession(S.table, {}); }, false);
     if (!r.ok){ notice(r.why); return; }
-    S.sessOpen=r.id; window.scrollTo(0,0); update(); const h=$("main").querySelector("h1"); if (h) takeFocus(h, true);
+    S.sessOpen=r.id; scrollPageTop(); update(); const h=$("main").querySelector("h1"); if (h) takeFocus(h, true);
   };
   const addEl=main.querySelector("[data-thadd]");
   const add=()=>{
@@ -2885,7 +2870,7 @@ function bindSessionPage(main, s){
   deb.addEventListener("toggle", ()=>{ (S.debriefOpen || (S.debriefOpen={}))[id]=deb.open; if (deb.open) deb.querySelectorAll("[data-sj]").forEach(grow); });
   const sback=main.querySelector("[data-sback]");
   if (sback) sback.onclick=()=>{
-    S.sessOpen=null; window.scrollTo(0,0); update(); focus(".sess-open" + attrSel("data-sopen", id));
+    S.sessOpen=null; scrollPageTop(); update(); focus(".sess-open" + attrSel("data-sopen", id));
   };
   bindEdit(main, "session", id);
   main.querySelectorAll("[data-thopen]").forEach(b=>b.onclick=()=>showThread(b.dataset.thopen));
@@ -3171,7 +3156,7 @@ function closeEndHtml(s){
 }
 function bindCloseEnd(main, s){
   const focus = sel => { const el=$("main").querySelector(sel); if (el) el.focus(); return !!el; };
-  const leave = () => { S.coEnd=null; window.scrollTo(0,0); update(); focus("[data-sco-h]"); };
+  const leave = () => { S.coEnd=null; scrollPageTop(); update(); focus("[data-sco-h]"); };
   main.querySelector("[data-coend-back]").onclick=leave;
   main.querySelector("[data-coend-done]").onclick=leave;
   main.querySelector("[data-coend-export]").onclick=()=>{ const name=exportTable(S.table); notice(`Exported ${name}.`); focus("[data-coend-done]"); };
@@ -3198,7 +3183,7 @@ function bindCloseOut(main, s){
   });
   bindWho(main, id, `c|${id}`, ()=>{ closeSync(); drawLists(); });
   main.querySelector("[data-co-back]").onclick=()=>{
-    c.view=false; window.scrollTo(0,0); update(); focus("[data-co-open]");
+    c.view=false; scrollPageTop(); update(); focus("[data-co-open]");
   };
   main.querySelector("[data-co-write]").onclick=()=>{
     const lines=c.lines.filter(l=>l.present || l.took).map(l=>l.present
@@ -3223,7 +3208,7 @@ function bindCloseOut(main, s){
       if (el) el.focus(); else focus('[data-crew-seat], [data-crew-name], [data-crew-add]');
       return;
     }
-    S.closeOut=null; S.coEnd=id; S.keepUnx=true; window.scrollTo(0,0); update(); focus("[data-coend-h]");
+    S.closeOut=null; S.coEnd=id; S.keepUnx=true; scrollPageTop(); update(); focus("[data-coend-h]");
   };
   function bindLists(){
     box.querySelectorAll("[data-co]").forEach(el=>{
@@ -3303,7 +3288,7 @@ function bindCloseOut(main, s){
     });
     box.querySelectorAll("[data-co-open-cast]").forEach(b=>b.onclick=()=>{
       S.tsection="cast"; S.castOpen=b.dataset.coOpenCast; S.backEnc=null; S.backSess=false; S.backClose=true; S.castFrom=null; S.intAdd=null;
-      window.scrollTo(0,0); update(); focus("[data-cback]");
+      scrollPageTop(); update(); focus("[data-cback]");
     });
   }
   bindLists();
@@ -3311,7 +3296,7 @@ function bindCloseOut(main, s){
 function bindCloseOutSection(main, s){
   const id=s.id, focus = sel => { const el=$("main").querySelector(sel); if (el) el.focus(); return !!el; };
   const open=main.querySelector("[data-co-open]"), redo=main.querySelector("[data-co-redo]");
-  const show = c => { S.closeOut=c; window.scrollTo(0,0); update(); focus('[data-crew-seat], [data-crew-name], [data-crew-add]'); };
+  const show = c => { S.closeOut=c; scrollPageTop(); update(); focus('[data-crew-seat], [data-crew-name], [data-crew-add]'); };
   if (open) open.onclick=()=>{
     if (S.closeOut && S.closeOut.id===id){
       // Resuming: the same lines, and a fresh look at who is new.
@@ -3592,7 +3577,7 @@ function openThreat(key, group, member, enc){
   const [pack, id]=String(key).split("|"), found=Engine.packEntry(packsMemo, pack, id); if (!found) return;
   S.tsection="threats"; S.threatOpen={ pack, id }; S.threatGroup=group||null; S.threatMember=member||null; S.threatEnc=enc||null; S.backEnc=null;
   if (!group) S.threatView = found.entry.kind==="npc" ? "npc" : "threat";
-  window.scrollTo(0,0); update();
+  scrollPageTop(); update();
   const el=$("main").querySelector("[data-ttitle]"); if (el) el.focus();
 }
 // Under a member's title: where the copy came from, a button while the pack is here.
@@ -3629,7 +3614,7 @@ function bindThreatCards(main){
 function openGroup(key){
   const [pack, id]=String(key).split("|");
   if (!Engine.packGroups(packsMemo, {}).some(x=>x.pack.meta.id===pack && x.group.id===id)) return;
-  S.threatGroup={ pack, id }; S.threatOpen=null; window.scrollTo(0,0); update();
+  S.threatGroup={ pack, id }; S.threatOpen=null; scrollPageTop(); update();
   const el=$("main").querySelector("[data-ttitle]"); if (el) el.focus();
 }
 function bindThreats(main){
@@ -3649,19 +3634,19 @@ function bindThreatPage(main, back, focusFirst){
   const entry=S.threatOpen, group=S.threatGroup;
   back.onclick=()=>{
     if (S.threatEnc && encList().some(e=>e.id===S.threatEnc)){
-      S.encOpen=S.threatEnc; S.threatEnc=null; S.threatOpen=null; S.threatGroup=null; S.tsection="encounters"; window.scrollTo(0,0); update();
+      S.encOpen=S.threatEnc; S.threatEnc=null; S.threatOpen=null; S.threatGroup=null; S.tsection="encounters"; scrollPageTop(); update();
       focusFirst(attrSel("data-eopenentry", entryKey(entry.pack, entry.id)), "[data-enext]"); return;
     }
     S.threatEnc=null;
     const member=entry && S.threatMember && S.table.cast.find(n=>n.id===S.threatMember);
     if (member){
       S.tsection="cast"; S.castOpen=member.id; S.castFrom=null; S.intAdd=null; S.threatOpen=null; S.threatMember=null;
-      window.scrollTo(0,0); update(); focusFirst("[data-tfrom]", "[data-cback]"); return;
+      scrollPageTop(); update(); focusFirst("[data-tfrom]", "[data-cback]"); return;
     }
     S.threatMember=null;
-    if (entry && group){ S.threatOpen=null; window.scrollTo(0,0); update(); focusFirst(attrSel("data-tmember", entryKey(entry.pack, entry.id)), "[data-tback]"); return; }
+    if (entry && group){ S.threatOpen=null; scrollPageTop(); update(); focusFirst(attrSel("data-tmember", entryKey(entry.pack, entry.id)), "[data-tback]"); return; }
     const key = entry ? entryKey(entry.pack, entry.id) : group ? entryKey(group.pack, group.id) : "";
-    S.threatOpen=null; S.threatGroup=null; window.scrollTo(0,0); update();
+    S.threatOpen=null; S.threatGroup=null; scrollPageTop(); update();
     focusFirst(attrSel(entry ? "data-tentry" : "data-tgroup", key), "[data-tsearch]", "[data-tview]");
   };
   main.querySelectorAll("[data-tmember]").forEach(b=>b.onclick=()=>openThreat(b.dataset.tmember, group));
@@ -3680,7 +3665,7 @@ function bindThreatPage(main, back, focusFirst){
     // The copy opens, in the cast, in Edit with its name selected: a Street Tough is Vinnie from here (Decision 271). A filter that would hide it is cleared.
     S.tsection="cast"; S.castOpen=r.id; S.castFrom=null; S.intAdd=null; S.castView="cast"; S.threatMember=null; S.editing={ kind:"member", id:r.id };
     if (!Engine.castFilter(S.table, castFilterNow()).some(n=>n.id===r.id)){ S.castQ=""; S.castStatus="inplay"; S.castAff=""; }
-    window.scrollTo(0,0); update();
+    scrollPageTop(); update();
     const el=$("main").querySelector('[data-cf="name"]'); if (el){ el.focus(); el.select(); }
   };
 }
@@ -4331,7 +4316,7 @@ function bindEncounters(main){
   };
   const open = id => {
     S.backFromLine=null; S.encOpen=id; S.encWrap=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; S.encDelay=null; S.clockEdit=null; S.encPick=false; S.encQ=""; S.encCodex=false; S.encCodexQ="";
-    window.scrollTo(0,0); redraw();
+    scrollPageTop(); redraw();
     const e=encOpenNow(); if (!e) return;
     if (e.status==="planned") focus("[data-enc-title]");
     else if (e.status==="running"){ focus("[data-esrc], [data-efinish]:not([disabled]), [data-enext]") || focus("[data-efinish]"); toActive(); }   // the acting row is on screen when the page opens
@@ -4392,11 +4377,11 @@ function bindEncounters(main){
         S.backFromLine=null; S.encOpen=null; S.encWrap=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; S.intEdit=null;
         Object.assign(S, { tsection:r.tsection, castOpen:r.castOpen, castView:r.castView, castFrom:r.castFrom, backEnc:r.backEnc, backSess:r.backSess, backClose:r.backClose, backCity:r.backCity||null, placeOpen:r.placeOpen||null, placeRoute:r.placeRoute||null, sessOpen:r.sessOpen, castQ:r.castQ });
         if (S.closeOut) S.closeOut.view=r.closeView;
-        window.scrollTo(0,0); update();
+        scrollPageTop(); update();
         const link=$("main").querySelector(attrSel("data-eopenline", r.key)); if (link) link.focus(); else { const h=$("main").querySelector("h1"); if (h) takeFocus(h, true); }
         return;
       }
-      const id=S.encOpen; S.encOpen=null; S.encWrap=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; window.scrollTo(0,0); redraw(); focus(attrSel("data-enc-open", id)) || focus("[data-enc-new]"); },
+      const id=S.encOpen; S.encOpen=null; S.encWrap=null; S.encReset=null; S.encDmg=null; S.encHit=null; S.encCond=null; scrollPageTop(); redraw(); focus(attrSel("data-enc-open", id)) || focus("[data-enc-new]"); },
     "data-enc-start": () => { const r=Engine.startEncounter(S.table, eid()); if (!r.ok){ notice(r.why); return; } S.encReset=null; tableChange(()=>{}); focus("[data-enext]"); toActive(); },
     "data-enc-end": () => { const e=encOpenNow(), t=Engine.encounterTitle(e);
       if (e.status==="running"){ S.encWrap={ enc:e.id, rows:{}, diff:"", err:"" }; S.encDmg=null; S.encHit=null; S.encCond=null; redraw(); focus("[data-ew-h]"); return; }
@@ -4459,7 +4444,7 @@ function bindEncounters(main){
       const to=order.slice(order.indexOf(tag)+1).find(x=>{ const el=$("main").querySelector(attrSel("data-enc-seat", x)); return el && !el.disabled; });
       focus(to ? attrSel("data-enc-seat", to) : "[data-enc-player]"); },
     "data-eopencast": b => { const id=b.dataset.eopencast; if (!S.table.cast.some(n=>n.id===id)) return;
-      S.tsection="cast"; S.castOpen=id; S.castFrom=null; S.intAdd=null; S.backSess=false; S.backClose=false; S.backEnc=eid(); S.castView="cast"; window.scrollTo(0,0); update(); focus("[data-cback]"); },
+      S.tsection="cast"; S.castOpen=id; S.castFrom=null; S.intAdd=null; S.backSess=false; S.backClose=false; S.backEnc=eid(); S.castView="cast"; scrollPageTop(); update(); focus("[data-cback]"); },
     "data-eopenseat": b => { const tag=b.dataset.eopenseat; if (!Engine.seatView(S.table, tag)) return;
       S.backEnc=eid(); S.tsection="players"; openSeat(tag); },
     "data-eopenentry": b => openThreat(b.dataset.eopenentry, null, null, eid()),
@@ -4776,7 +4761,7 @@ function bindReadOnlySheet(main, v){
   const tag=v.tag, focus = sel => { const el=$("main").querySelector(sel); if (el) takeFocus(el, true); };
   const goTab = id => {
     if (!RO_SECTIONS.some(s=>s.id===id)) id="main";
-    S.seatSheet=id; window.scrollTo(0,0); update(); focus(`[data-rotab="${id}"]`);
+    S.seatSheet=id; scrollPageTop(); update(); focus(`[data-rotab="${id}"]`);
   };
   // The page's own h1 is the copy's name (Decision 256's focus target); the sheet draws it again, so the copy drops its own.
   const own=main.querySelector("[data-rosheet] > h1.step-title"); if (own) own.remove();
@@ -4785,7 +4770,7 @@ function bindReadOnlySheet(main, v){
   bindScrollRows(main.querySelector("[data-rotabs]"));   // the nav is a scroll-row itself, so its wrapper is what we hand over
   main.querySelectorAll("[data-rotab]").forEach(b=>b.onclick=()=>goTab(b.dataset.rotab));
   main.querySelector("[data-seatback]").onclick=()=>seatBack(tag);
-  main.querySelector("[data-roseat]").onclick=()=>{ S.seatSheet=null; window.scrollTo(0,0); update(); focus("[data-seath]"); };
+  main.querySelector("[data-roseat]").onclick=()=>{ S.seatSheet=null; scrollPageTop(); update(); focus("[data-seath]"); };
   main.querySelector("[data-roprint]").onclick=()=>{
     const ch=Engine.seatCharacter(S.table, tag);
     if (ch) printSheet(ch);
@@ -4843,7 +4828,7 @@ async function seatImport(pid, files, land){
 // ── Binding ──
 function openSeat(tag){
   const v=Engine.seatView(S.table, tag);
-  S.seatOpen=tag; S.seatSheet = v && v.copy ? "main" : null; window.scrollTo(0,0); update();
+  S.seatOpen=tag; S.seatSheet = v && v.copy ? "main" : null; scrollPageTop(); update();
   const h=$("main").querySelector("[data-seath]"); if (h) takeFocus(h, true);
 }
 function bindPlayers(main){
@@ -4893,13 +4878,13 @@ function seatBack(tag){
   // From a claimed row (Decision 257) it goes back to the encounter, onto that row's name.
   const enc = S.backEnc && encList().find(x=>x.id===S.backEnc);
   if (enc){
-    S.backEnc=null; S.seatOpen=null; S.seatSheet=null; S.encOpen=enc.id; S.tsection="encounters"; window.scrollTo(0,0); update();
+    S.backEnc=null; S.seatOpen=null; S.seatSheet=null; S.encOpen=enc.id; S.tsection="encounters"; scrollPageTop(); update();
     const view=Engine.encounterView(S.table, enc.id, packsMemo), hit=view && view.rows.find(x=>x.seat && x.seat.tag===tag);
     const name=hit && $("main").querySelector(`${attrSel("data-erow", hit.row.id)} [data-eopenseat]`);
     if (name) takeFocus(name); else { const list=$("main").querySelector("[data-erow]"); if (list) takeFocus(list); }
     return;
   }
-  S.seatOpen=null; S.seatSheet=null; window.scrollTo(0,0); update();
+  S.seatOpen=null; S.seatSheet=null; scrollPageTop(); update();
   // A folded card can't take focus: its list's summary does.
   const el=$("main").querySelector(attrSel("data-seat", tag)), shut=el && el.closest("details:not([open])");
   if (shut) takeFocus(shut.querySelector("summary")); else if (el) takeFocus(el);
@@ -4914,7 +4899,7 @@ function bindSeatPage(main, v0){
     main.querySelector("[data-seatclash]").innerHTML=seatClashHtml(v); };
   main.querySelector("[data-seatback]").onclick=()=>seatBack(tag);
   const read=main.querySelector("[data-seatread]");
-  if (read) read.onclick=()=>{ S.seatSheet="main"; window.scrollTo(0,0); update(); const h=$("main").querySelector("[data-seath]"); if (h) takeFocus(h, true); };
+  if (read) read.onclick=()=>{ S.seatSheet="main"; scrollPageTop(); update(); const h=$("main").querySelector("[data-seath]"); if (h) takeFocus(h, true); };
   main.querySelectorAll("[data-seatst]").forEach(b=>b.onclick=()=>{
     edit({ status:b.dataset.seatst });
     main.querySelectorAll("[data-seatst]").forEach(x=>{ const on=x.dataset.seatst===own().status; x.classList.toggle("on", on); x.setAttribute("aria-pressed", String(on)); });

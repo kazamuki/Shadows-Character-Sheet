@@ -91,51 +91,24 @@ function sheetWordRows(){
   return Engine.words(S.ch).map(w=>({ title:w.title, kind:w.homonym ? u.kinds[w.kind] : "", html:sheetWordBodyHtml(w),
     find:`${w.title} ${w.id}`, text:[w.text, ...(w.reading ? statLines(w.reading) : []), ...(w.more||[]).map(m=>m.text), w.note].filter(Boolean).join(" ") }));
 }
+// K4: Help's head is the shared one: the tabs This tab and Vocab, in reach as the panel scrolls.
+const sheetHelpHead = title => { const u=sheetGuide().ui; return helpHeadHtml(title, [{ view:null, attr:"data-hpage", label:u.pageTab }, { view:"words", attr:"data-hwords", label:u.wordsLink }], u); };
 function sheetWordsHtml(){
   const u=sheetGuide().ui;
-  return `<div class="dhead"><h2 id="ghelp-h" tabindex="-1">${esc(u.wordsLink)}</h2>
-      <button type="button" class="btn sm" data-help-close aria-label="${esc(u.close)} ${esc(u.title.toLowerCase())}">${esc(u.close)}</button></div>
-    <p><button type="button" class="btn sm" data-help-back>${esc(u.back)}</button></p>${helpListHtml(sheetWordRows(), u)}`;
+  return sheetHelpHead(u.wordsLink) + helpListHtml(sheetWordRows(), u);
 }
 // What the panel is made of: the tab's help, or Every word. The words' key (below) is their content, never the filter.
 function sheetPanelHtml(id){ return S.helpView==="words" ? sheetWordsHtml() : sheetHelpHtml(id); }
 function sheetPanelKey(id){ return S.helpView==="words" ? "words|" + JSON.stringify(Engine.words(S.ch).map(w=>[w.kind, w.id, w.title, w.text, w.more, w.note, w.reading])) : sheetHelpHtml(id); }
-function sheetHelpToggleHtml(label, attr, on){
-  const u=sheetGuide().ui;
-  return `<div class="form-toggle" role="group" aria-label="${esc(label)}">
-    <button type="button" data-help-${attr}-on class="${on?"on":""}" aria-pressed="${on}">${esc(u.on)}</button>
-    <button type="button" data-help-${attr}-off class="${on?"":"on"}" aria-pressed="${!on}">${esc(u.off)}</button></div>`;
-}
 function sheetHelpHtml(id){
   const g=sheetGuide(), u=g.ui, c=g.contexts[id], words=sheetHelpWordsHtml(c.words);
-  return `<div class="dhead"><h2 id="ghelp-h" tabindex="-1">${esc(c.title)}</h2>
-      <button type="button" class="btn sm" data-help-close aria-label="${esc(u.close)} ${esc(u.title.toLowerCase())}">${esc(u.close)}</button></div>
-    <h3 class="ref-sub dos-l">${esc(u.forLabel)}</h3><p class="dos-p">${helpMd(c.for)}</p>
+  return sheetHelpHead(c.title) + `<h3 class="ref-sub dos-l">${esc(u.forLabel)}</h3><p class="dos-p">${helpMd(c.for)}</p>
     <h3 class="ref-sub dos-l">${esc(u.whenLabel)}</h3><ul class="help-when">${c.when.map(w=>`<li class="tag plain">${esc(u.when[w])}</li>`).join("")}</ul>
     ${words ? `<h3 class="ref-sub dos-l">${esc(u.wordsLabel)}</h3>${words}` : ""}
-    ${c.tips.length ? `<h3 class="ref-sub dos-l">${esc(u.tipsLabel)}</h3><ul class="help-tips">${c.tips.map(t=>`<li>${helpMd(t)}</li>`).join("")}</ul>` : ""}
-    <div class="help-foot">
-      <p class="help-links"><button type="button" class="btn sm" data-hwords>${esc(u.wordsLink)}</button></p>
-      <div class="field tag-choice"><span>${esc(u.guideSwitch)}</span><div data-help-guideswitch>${sheetHelpToggleHtml(u.guideSwitch, "guide", sheetGuideOn())}</div></div>
-      <div class="field tag-choice"><span>${esc(u.keySwitch)}</span><div data-help-keyswitch>${sheetHelpToggleHtml(u.keySwitch, "keys", keysOn())}</div></div></div>`;
+    ${c.tips.length ? `<h3 class="ref-sub dos-l">${esc(u.tipsLabel)}</h3><ul class="help-tips">${c.tips.map(t=>`<li>${helpMd(t)}</li>`).join("")}</ul>` : ""}`;
 }
-function bindSheetHelp(el){
-  const wire = (sel, attr, set, repaint) => {
-    const sw=el.querySelector(sel); if (!sw) return;
-    for (const on of [true, false]){
-      const b=sw.querySelector(`[data-help-${attr}-${on?"on":"off"}]`);
-      if (b) b.onclick=()=>{ set(on); repaint(); const again=$("ghelp") && $("ghelp").querySelector(`[data-help-${attr}-${on?"on":"off"}]`); if (again) again.focus({ preventScroll:true }); };
-    }
-  };
-  // Every word swaps the panel's view and Back swaps it home; the filter is cleared by leaving, never stored.
-  const words=el.querySelector("[data-hwords]");
-  if (words) words.onclick=()=>{ S.helpView="words"; S.helpQ=""; paintHelp(); const q=$("ghelp") && $("ghelp").querySelector("[data-help-q]"); if (q) q.focus({ preventScroll:true }); };
-  const back=el.querySelector("[data-help-back]");
-  if (back) back.onclick=()=>{ S.helpView=null; S.helpQ=""; paintHelp(); const w=$("ghelp") && $("ghelp").querySelector("[data-hwords]"); if (w) w.focus({ preventScroll:true }); };
-  // A guide line is drawn with the page, so the page draws again; the panel repaints itself because its switch changed.
-  wire("[data-help-guideswitch]", "guide", setSheetGuide, ()=>{ renderMain(); });
-  wire("[data-help-keyswitch]", "keys", setKeys, ()=>{ paintHelp(true); });
-}
+// Every tab press is the shared panel's (shared.js bindHelpTabs); this host has nothing to bind.
+function bindSheetHelp(el){}
 // The pinned vitals' column is Help's while Help is a column: the drawer is out of reach, as well as out of sight (CSS).
 let vitalsSwapped=false;
 HELP_HOSTS.sheet = {
@@ -4028,10 +4001,10 @@ function openVitalPopover(key, scope="#main"){
     // Decision 225: a new round starts from Main, the same Turn Reset panel and the same one writer.
     body.querySelectorAll("[data-popreset]").forEach(b=>b.onclick=()=>{
       closePopover(false); S.hit=null; S.act=Object.assign(newActForm("reset"), { owner: S.ch });
-      S.section=normSection("trackers"); window.scrollTo(0,0); update();
+      S.section=normSection("trackers"); scrollPageTop(); update();
     });
     body.querySelectorAll("[data-popgo]").forEach(b=>b.onclick=()=>{
-      closePopover(false); S.section=normSection(b.dataset.popgo); window.scrollTo(0,0); update();
+      closePopover(false); S.section=normSection(b.dataset.popgo); scrollPageTop(); update();
     });
   } });
 }
@@ -4087,7 +4060,7 @@ function bindSheet(){
   main.querySelectorAll("[data-vitals-toggle]").forEach(b=>b.onclick=()=>{ if (S.vitalsOpen) closeVitals(); else openVitals(); });
   main.querySelectorAll("[data-vitals-pin-main]").forEach(b=>b.onclick=()=>{
     setVitalsPinned(true); takeFocus($("vdrawer").querySelector("[data-vitals-pin]")); });
-  bindSheetReaders(main, id=>{ S.section=normSection(id); window.scrollTo(0,0); update(); });
+  bindSheetReaders(main, id=>{ S.section=normSection(id); scrollPageTop(); update(); });
   main.querySelectorAll("[data-vpop]").forEach(b=>b.onclick=()=>openVitalPopover(b.dataset.vpop));
   // Character: Expand all / Collapse all opens or closes every Advantage and
   // Disadvantage card in place, and remembers the choice in this browser.
@@ -4110,8 +4083,8 @@ function bindSheet(){
       yes:"Clear the log", then:()=>{ ch.audit=[]; update(); } });
   });
   // Admin banner controls
-  main.querySelectorAll("[data-admin-open]").forEach(b=>b.onclick=()=>{ S.section="admin"; window.scrollTo(0,0); update(); });
-  main.querySelectorAll("[data-admin-exit]").forEach(b=>b.onclick=()=>{ S.admin=false; if(S.section==="admin") S.section="main"; window.scrollTo(0,0); update(); });
+  main.querySelectorAll("[data-admin-open]").forEach(b=>b.onclick=()=>{ S.section="admin"; scrollPageTop(); update(); });
+  main.querySelectorAll("[data-admin-exit]").forEach(b=>b.onclick=()=>{ S.admin=false; if(S.section==="admin") S.section="main"; scrollPageTop(); update(); });
 
   bindVitalControls(main);
 
@@ -4337,7 +4310,7 @@ function bindSheet(){
     // The Milestone Point may be the one a training waits for: logging lands it in the same commit (Decision 230).
     const dry = Engine.logSession(clone(ch), entry), landed = dry.trained, off = stoppedNames(ch, dry.stopped);
     commit("session", `Log session${title?`: ${title}`:""}${landedLabel(landed)}${off?`. ${off} stopped.`:""}`, ()=>{ Engine.logSession(ch, entry); });
-    window.scrollTo(0,0);
+    scrollPageTop();
   });
   main.querySelectorAll("[data-sesdel]").forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.sesdel), s=ch.sessions[i]||{};

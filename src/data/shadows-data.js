@@ -5046,8 +5046,8 @@ window.SHADOWS_DATA = {
       "tipsLabel": "Try this",
       "guideSwitch": "Guide lines",
       "keySwitch": "The ? key",
-      "wordsLink": "Every word",
-      "back": "Back to this tab",
+      "pageTab": "This tab",
+      "wordsLink": "Vocab",
       "filterLabel": "Find a word",
       "filterEmpty": "No word matches.",
       "jumpLabel": "Jump to a letter",
@@ -5179,24 +5179,25 @@ window.SHADOWS_DATA = {
       "title": "Help",
       "close": "Close",
       "seatTab": "{title}: {tab}",
-      "back": "Back to this page",
       "on": "On",
       "off": "Off",
       "forLabel": "What it's for",
       "whenLabel": "When",
       "wordsLabel": "On this page",
       "tipsLabel": "Try this",
-      "nightLink": "A night at the table",
-      "wordsLink": "Every word",
+      "pageTab": "This page",
+      "nightLink": "Running a session",
+      "nightIntro": "A session is one sitting of play, an hour or more, whenever you play. GM mode follows it in three parts: **Session prep** before you start, the **Current session** while you play, and the **Debrief** once you're done.",
+      "wordsLink": "Vocab",
       "filterLabel": "Find a word",
       "filterEmpty": "No word matches.",
       "jumpLabel": "Jump to a letter",
-      "keysLink": "Keys",
+      "keysLink": "Shortcuts",
       "guideSwitch": "Guide lines",
       "when": {
-        "before": "Before a session",
-        "during": "At the table",
-        "after": "After"
+        "before": "Session prep",
+        "during": "Current session",
+        "after": "Debrief"
       }
     },
     "night": [
@@ -5208,7 +5209,7 @@ window.SHADOWS_DATA = {
           "encounters",
           "threats"
         ],
-        "text": "Open **Sessions** and read **Next session** top to bottom: the clocks close to full, the threads still open, what last session set up, and anyone the crew met who'll need numbers. Give those people a stat block on **Cast**. Plan the fight you expect on **Encounters**, and pull what you need from your pack on **Threats**."
+        "text": "Open **Sessions** and read **Next session** for everything the coming session needs. Check the loose ends from last time, if there are any. Note the objectives, places and people you want the crew to run into, and work over any fight built from the **Threats** you're using. Note what the players don't know yet but could find out with the right choices."
       },
       {
         "when": "during",
@@ -5218,14 +5219,14 @@ window.SHADOWS_DATA = {
           "reference",
           "players"
         ],
-        "text": "Press **New session** when you sit down. **Jot** (J) catches a name or a debt without leaving the page, and files it with the session. Run a fight from **Encounters**. While a session is open or a fight runs, the strip under the header keeps the round, the current thread and the nearest clock a tap away on every tab. **Reference** has the rules you'll look up; **Players** has everyone's HP and Conditions at a glance."
+        "text": "Press **New session** when you're ready to play. **Jot** (J) catches a detail as it happens, without leaving the page you're on. Run fights from **Encounters**, which tracks the turns and the threats in them. **Reference** has the rules for anything that isn't clear in the moment."
       },
       {
         "when": "after",
         "sections": [
           "sessions"
         ],
-        "text": "Open the session and **close it out**: who came, how long you played, and the IP each character earns. Close the threads that ended, add the people the crew met, and write the seed for next session. Then **Export**: the file is the copy that lasts."
+        "text": "Once the session's over, press **Close out**. Say how long you played, award the IP, and fill in what else happened. Then press **Export the table** to download a copy of the table and everything that changed."
       }
     ],
     "contexts": {

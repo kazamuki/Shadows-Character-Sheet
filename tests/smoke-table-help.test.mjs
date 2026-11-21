@@ -217,20 +217,20 @@ test("S31: the guide line shows on each section's list until turned off, for thi
   app.click(`[data-copen="${t.cast[0].id}"]`);
   assert.equal(lineOf(), null, "a member's page carries a guide line");
   app.click('[data-tsec="cast"]');
-  app.click("[data-thelp]");
-  app.click("[data-help-guide-off]");
+  app.click("[data-menu-toggle]");
+  app.click('[data-menu-switch="guide"]');
   assert.equal(ls(app, GMGUIDE), "off");
   assert.equal(lineOf(), null, "Off left the line on the page");
-  assert.equal(app.doc.activeElement, app.$("[data-help-guide-off]"), "focus left the pressed half");
+  assert.equal(app.doc.activeElement, app.$('[data-menu-switch="guide"]'), "focus left the pressed item");
   for (const id of ["sessions", "players", "notes"]) { app.click(`[data-tsec="${id}"]`); assert.equal(lineOf(), null, id + " still shows one"); }
   // This browser's: it holds across a reload, and On brings it back.
   const again = helpApp("sessions", { extra: { [GMGUIDE]: "off" } });
   assert.equal(again.$("#main [data-guide]"), null, "the preference didn't hold on a fresh boot");
-  again.click("[data-thelp]");
-  again.click("[data-help-guide-on]");
+  again.click("[data-menu-toggle]");
+  again.click('[data-menu-switch="guide"]');
   assert.equal(ls(again, GMGUIDE), null);
   assert.ok(again.$("#main [data-guide]"), "On didn't bring the line back");
-  assert.equal(again.doc.activeElement, again.$("[data-help-guide-on]"));
+  assert.equal(again.doc.activeElement, again.$('[data-menu-switch="guide"]'));
   assert.deepEqual(app.errors.concat(again.errors), []);
 });
 
@@ -326,9 +326,9 @@ test("S31: Esc closes one layer at a time, a box sits above the panel, a night's
   const terms = narrow.$$("#ghelp dt").map(d => d.textContent);
   assert.equal(terms.length, Object.keys(G.words).length);
   assert.deepEqual(terms, [...terms].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase())));
-  narrow.click("#ghelp [data-help-back]");
+  narrow.click("#ghelp [data-hpage]");
   assert.equal(narrow.$("#ghelp h2").textContent, "Reference");
-  assert.equal(narrow.doc.activeElement, narrow.$("#ghelp [data-hwords]"));
+  assert.equal(narrow.doc.activeElement, narrow.$("#ghelp [data-hpage]"));
   // A note with no title still has help, and a pinned panel follows the page into it.
   const wide = helpApp("notes", { width: 1280 });
   wide.click("[data-thelp]");
@@ -362,7 +362,7 @@ test("K2: a table's Every word filters and jumps too, and keeps its own words", 
   app.click("#ghelp [data-hwords]");
   const q = app.$("#ghelp [data-help-q]");
   assert.ok(q, "no filter box on the table's Every word");
-  assert.equal(app.doc.activeElement, q);
+  assert.equal(app.doc.activeElement, app.$("#ghelp [data-hwords]"), "K4: focus stays on the Vocab tab");
   assert.equal(app.$("#ghelp label[for='ghelp-q']").textContent, G.ui.filterLabel);
   assert.equal(app.$$("#ghelp .help-word").length, Object.keys(G.words).length, "the table's own words, and no others");
   const live = () => app.$$("#ghelp .help-word").filter(r => !r.hidden).map(r => r.querySelector("dt").textContent);
@@ -374,8 +374,8 @@ test("K2: a table's Every word filters and jumps too, and keeps its own words", 
   const firstS = app.$$("#ghelp .help-word").find(r => r.dataset.hwLetter === "S");
   app.click('#ghelp [data-help-letter="S"]');
   assert.equal(app.doc.activeElement, firstS.querySelector("dt"), "the S letter didn't land on the first S word");
-  app.click("#ghelp [data-help-back]");
-  assert.equal(app.doc.activeElement, app.$("#ghelp [data-hwords]"));
+  app.click("#ghelp [data-hpage]");
+  assert.equal(app.doc.activeElement, app.$("#ghelp [data-hpage]"));
   assert.deepEqual(app.errors, []);
 });
 
@@ -395,5 +395,88 @@ test("K3: a seat's Help names the open tab and lists its words", () => {
     for (const w of words) assert.ok(text.includes(w), `${tab}: ${w} isn't listed`);
     assert.equal(shown(app), true, "a tab press closed Help");
   }
+  assert.deepEqual(app.errors, []);
+});
+
+// ── K4 (Decisions 306, 307): Help's tabs, the night, the switches in ⋮ ──
+test("K4: a table's Help opens on This page with its tabs and Close in one head", () => {
+  const app = helpApp("sessions");
+  app.click("[data-thelp]");
+  const head = panel(app).querySelector(".help-head");
+  assert.ok(head, "no head");
+  assert.ok(head.querySelector("h2") && head.querySelector("[data-help-close]"), "the heading and Close are in the head");
+  assert.deepEqual([...head.querySelectorAll(".help-tabs button")].map(b => b.textContent), [G.ui.pageTab, G.ui.nightLink, G.ui.wordsLink, G.ui.keysLink]);
+  assert.deepEqual([G.ui.pageTab, G.ui.nightLink, G.ui.wordsLink, G.ui.keysLink], ["This page", "Running a session", "Vocab", "Shortcuts"]);
+  assert.equal(head.querySelector("[aria-current=page]").getAttribute("data-hpage"), "", "This page isn't the open tab");
+  assert.equal(head.querySelectorAll("[aria-current=page]").length, 1);
+  assert.equal(panel(app).querySelector("[data-help-back]"), null, "a Back button is left");
+  assert.equal(panel(app).querySelector(".help-foot"), null, "a foot is left");
+  assert.equal(panel(app).querySelector("[data-help-guide-on], [data-help-guide-off], [data-help-switch]"), null, "a switch is left inside Help");
+  assert.deepEqual(app.errors, []);
+});
+
+test("K4: Running a session says what a session is, then Session prep, Current session and Debrief", () => {
+  const app = helpApp("sessions");
+  app.click("[data-thelp]");
+  app.click("#ghelp [data-hnight]");
+  const p = panel(app);
+  assert.equal(p.querySelector("[data-hnight]").getAttribute("aria-current"), "page");
+  assert.equal(app.doc.activeElement, p.querySelector("[data-hnight]"), "focus left the pressed tab");
+  assert.equal(p.querySelector("p.dos-p").textContent, said(G.ui.nightIntro));
+  assert.deepEqual([...p.querySelectorAll("h3")].map(h => h.textContent), ["Session prep", "Current session", "Debrief"]);
+  // A page's When chips read the new names.
+  app.click("#ghelp [data-hpage]");
+  assert.ok([...panel(app).querySelectorAll(".help-when li")].some(li => li.textContent === "Session prep"), "Sessions' When chips don't read Session prep");
+  assert.deepEqual(app.errors, []);
+});
+
+test("K4: Guide lines is in ⋮, shows its state and flips in place; Shortcuts opens its box from ⋮ and from the head", () => {
+  const app = helpApp("sessions");
+  app.click("[data-menu-toggle]");
+  const item = () => app.$('#hdrmenu [data-menu-switch="guide"]');
+  assert.equal(item().getAttribute("aria-pressed"), "true");
+  assert.ok(item().textContent.includes("On"), item().textContent);
+  // aria-pressed says the state; the On/Off chip is hidden from the name, or a reader hears "Guide lines On, pressed".
+  assert.equal(item().querySelector(".menu-state").getAttribute("aria-hidden"), "true");
+  app.click('[data-menu-switch="guide"]');
+  assert.equal(app.$("#main [data-guide]"), null, "the page's guide lines are still there");
+  assert.equal(item().getAttribute("aria-pressed"), "false");
+  assert.ok(item().textContent.includes("Off"));
+  assert.equal(app.doc.activeElement, item(), "focus left the item");
+  assert.equal(app.$("#hdrmenu").hidden, false, "⋮ closed");
+  assert.equal(ls(app, GMGUIDE), "off");
+  app.click('[data-menu-switch="guide"]');
+  assert.equal(ls(app, GMGUIDE), null);
+  assert.ok(app.$("#main [data-guide]"));
+  // Shortcuts: ⋮ opens a box with that title, and closing it gives focus back to ⋮.
+  app.click("[data-tkeys]");
+  assert.equal(app.$("dialog.modal[open] h2, dialog.modal[open] .modal-title").textContent.trim(), "Shortcuts");
+  assert.equal(app.$("dialog.modal[open] [role=group]").getAttribute("aria-label"), "Shortcuts");
+  assert.deepEqual(app.errors, []);
+});
+
+test("K4: Help's head and tabs don't scroll away, and Vocab's filter sticks under them", () => {
+  const css = readFileSync(new URL("../src/styles/shadows.css", import.meta.url), "utf8");
+  const rule = sel => { const m = css.match(new RegExp(sel.replace(/[.\[\]]/g, "\$&") + "\s*\{([^}]*)\}")); return m ? m[1] : ""; };
+  assert.match(rule(".ghelp .help-head"), /position:\s*sticky/, "Help's head doesn't stick");
+  assert.match(rule(".vdrawer .dhead"), /position:\s*sticky/, "the vitals' head doesn't stick");
+  assert.match(rule(".ghelp .help-find"), /top:\s*calc\(var\(--help-head-h/, "the find bar sticks at a literal, not under the head");
+  assert.match(rule(".ghelp"), /overflow-y:\s*auto/, "#ghelp is no longer the scroller");
+});
+
+test("K4: a tab press, or a new page, opens Help at its top; a redraw of the same view keeps its place", () => {
+  const app = helpApp("sessions", { width: 1280 });
+  app.click("[data-thelp]");
+  let top = 0; Object.defineProperty(panel(app), "scrollTop", { configurable: true, get: () => top, set: v => { top = v; } });
+  top = 500; app.click("#ghelp [data-hnight]");
+  assert.equal(top, 0, "the night tab opened where the last view was scrolled to");
+  top = 500; app.click("#ghelp [data-hwords]");
+  assert.equal(top, 0, "Vocab opened where the last view was scrolled to");
+  top = 500; app.click("#ghelp [data-hpage]");
+  assert.equal(top, 0, "This page opened where the last view was scrolled to");
+  top = 500; app.click('[data-tsec="cast"]');
+  assert.equal(top, 0, "a new page's help opened where the last page's was scrolled to");
+  top = 500; app.window.eval("paintHelp(true)");
+  assert.equal(top, 500, "a redraw of the same page and view lost its place");
   assert.deepEqual(app.errors, []);
 });

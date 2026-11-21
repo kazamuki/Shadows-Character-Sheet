@@ -24,13 +24,24 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.74.0
+## [Unreleased] — app 0.75.0
 
 ### GM mode
 
 - Give a session a name. It reads after its number everywhere: Session 5: The Hub.
 - Copy a session as Markdown, its journal first, to paste into your own notes.
 - Print a session, a cast member or an encounter, as the page reads.
+- **Help has tabs.** *This page*, *Running a session* and *Vocab* sit at the top with Close, and stay there as you scroll. *Running a session* says what a session is, then walks Session prep, Current session and Debrief.
+- **Guide lines is in ⋮.** GM mode's Keys are now **Shortcuts**.
+- **Close stays in reach.** Help's buttons no longer scroll away.
+- **The scrollbar is beside the page.** On a wide screen with Help pinned, the page's scrollbar sits next to the page, not past the column.
+
+### Character sheet
+
+- **Help has tabs.** *This tab* and *Vocab* sit at the top with Close, and stay there as you scroll.
+- **Guide lines** and **The ? key** are in ⋮.
+- **Close stays in reach.** The vitals' Pin and Close no longer scroll away.
+- **The scrollbar is beside the page.** On a wide screen with the vitals pinned, the page's scrollbar sits next to the page, not past the column.
 
 ## v0.73.0 — 2026-11-19
 
