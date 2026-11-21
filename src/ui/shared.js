@@ -1306,7 +1306,8 @@ function paintHelp(force){
   const inQ=!!ae && !!ae.matches && ae.matches("[data-help-q]") && el.contains(ae), sel=inQ ? [ae.selectionStart, ae.selectionEnd] : null;
   // The panel's scroll is kept only for a redraw of the same page in the same view (a sheet's redraw beside the column); a tab press or a
   // new page starts at the top, and nothing carries over from the last time Help was open (K4 review).
-  const top=helpPaintedCtx===id && helpPainted===(S.helpView||null) ? el.scrollTop : 0;
+  // A view the host keeps across pages (the sheet's Vocab) is the same view on the new page too, so it keeps its place.
+  const top=helpPainted===(S.helpView||null) && (helpPaintedCtx===id || !!(helpPaintedCtx && h.keepView && h.keepView(S.helpView))) ? el.scrollTop : 0;
   el.innerHTML=h.bodyHtml(id); helpKey=key; helpPainted=S.helpView||null; helpPaintedCtx=id;
   el.querySelectorAll("[data-help-close]").forEach(b=>b.onclick=closeHelp);
   h.bind(el);

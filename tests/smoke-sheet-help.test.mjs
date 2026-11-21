@@ -582,5 +582,10 @@ test("K4: the sheet's tab press opens Help at its top; a redraw of the same view
   assert.equal(top, 0, "This tab opened where Vocab was scrolled to");
   top = 500; app.window.eval("paintHelp(true)");
   assert.equal(top, 500, "a redraw of the same view lost its place");
+  // Vocab outlives a change of tab (keepView): a redraw after one, say a new word from an edit, keeps the reader's place.
+  app.click("#ghelp [data-hwords]"); top = 500;
+  app.click('[data-sec="skills"]');
+  top = 500; app.window.eval("paintHelp(true)");
+  assert.equal(top, 500, "Vocab jumped to its top on a redraw after a change of tab");
   assert.deepEqual(app.errors, []);
 });
