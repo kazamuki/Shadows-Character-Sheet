@@ -1529,3 +1529,11 @@ without retyping.
 *To respect:* it reads the table and writes nothing back (constraint 7); the
 file is the player's words as the page reads them; it is the session's page's
 action, not a new tab. Out of S14's scope (§6).
+
+**W153 — The no-data screen stops saying "game data".** *Ken, from E5's review, 2026-11-13 → pools-and-numbers J1, app 0.76.0: the screen says which file is missing and what to do*\
+`app.js` line 349: when the data file doesn't load, the page's heading says "No game data". E5 took the phrase out of everything
+a player reads on a sheet, and this is the one place left. It's a screen only seen when something is broken, so it's tool voice:
+plain, short, and saying what to do. *To respect:* it can't use `appCopy`, since that lives in the data that didn't load.
+
+**W174 — Esc in ⋮ should hand focus back to the ⋮ button.** *Claude, from K4's review (PR #375), 2026-11-20 → pools-and-numbers J1, app 0.76.0: Esc with ⋮ open puts focus back on ⋮; an outside click still moves none*\
+Esc inside the ⋮ menu closes it, but focus drops to the page's body instead of going back to the ⋮ button, so the next Tab starts from the top of the page. It's old behaviour, and more noticeable since K4 put Guide lines and the sheet's ? key switch in ⋮ (Decision 306), where a keyboard user flips them with the menu open. *To respect:* a press on a ⋮ switch leaves ⋮ open with focus on the item (K4), Esc with ⋮ open closes the menu before Help (Decision 278's one layer at a time), and `closeMenu` in `app.js` is the one place that shuts it.

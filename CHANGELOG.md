@@ -24,7 +24,13 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.75.1
+## [Unreleased] — app 0.76.0
+
+### Character sheet
+
+- **Your GM can move your SFR.** Manual Adjustments on Trackers take SFR max and Rate of Use, up or down, with a note, and Undo takes it back. Admin has a button that goes straight there.
+- **Esc in the ⋮ menu** puts you back on ⋮, so the next Tab carries on from there.
+- **A sheet missing its rules file** says which file and what to do.
 
 ### GM mode
 
