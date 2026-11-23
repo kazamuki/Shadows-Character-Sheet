@@ -5969,7 +5969,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - The target list moved into the data: 26's targets are code, and a target is something the engine reads (Decision 135).
      - **Replaces:** nothing. Extends 26 (its targets) and 225 (the Custom pool's max).
      - **Revisit if:** a rule in the book or a Major starts adjusting SFR or RoU the same way across many entries; then it's a `grants` type, as `sfrMax` and `rou` already are.
-     - **Built:** app 0.76.0; pools-and-numbers J1 (PR #…); log entry 2026-11-22.
+     - **Built:** app 0.76.0; pools-and-numbers J1 (PR #381); log entry 2026-11-22.
 
 ## 5. Open Flags
 
