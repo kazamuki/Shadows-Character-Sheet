@@ -1678,6 +1678,17 @@ function vitalPopover(ch, key){
   return null;
 }
 
+// What the GM has moved on the SFR pool by hand, as one line for its Trackers panel (Decision 312): "+2 max and −1 RoU by hand, in Manual Adjustments."
+function sfrByHandText(s){
+  const h = s && s.byHand; if (!h) return "";
+  const parts = [];
+  if (h.sfrMax) parts.push(`${signed(h.sfrMax)} max`);
+  if (h.rou && typeof s.rou==="number") parts.push(`${signed(h.rou)} RoU`);
+  return parts.length ? `${parts.join(" and ")} by hand, in Manual Adjustments.` : "";
+}
+// The labels for the targets the sheet offers beyond the Stats (a journal row reads them; anything else prints as the file wrote it).
+const ADJ_LABELS = { SFR:"SFR max", ROU:"SFR Rate of Use" };
+const adjLabel = t => Object.prototype.hasOwnProperty.call(ADJ_LABELS, t) ? ADJ_LABELS[t] : t;
 function renderShTrackers(){
   const ch=S.ch, hp=Engine.health(ch), pain=Engine.painState(ch);
   const luck=Engine.luckState(ch), san=Engine.sanState(ch);
@@ -1746,7 +1757,8 @@ ${esc(painIgnoredText(pain))}: ${signed(-pain.ignored)} Pain Level${pain.ignored
     // (`resource`, `counts`, Decision 135), not its id.
     const t = Engine.panelTracker(ch, p), max = t.max, val = t.count, down = t.down;
     // A pool the player sizes keeps its box once set, so it can be changed; the engine reads the number (W54).
-    const effMax = max, manualMax = max==null ? "" : t.manual ? max : null;
+    const effMax = max, manualMax = max==null ? "" : t.manual ? (t.typed==null ? max : t.typed) : null;
+    const byHand = p.resource==="sfr" ? sfrByHandText(Engine.sfr(ch)) : "";
     const roundLine = sfrRoundText(t.turn);
     const cur = down ? (effMax!=null?Math.max(0,effMax-val):null) : val;
     h += `<div class="trk"><h2>${esc(p.title)}</h2>
@@ -1755,6 +1767,7 @@ ${esc(painIgnoredText(pain))}: ${signed(-pain.ignored)} Pain Level${pain.ignored
       <button class="btn sm" data-trk="${p.id}|1">+1</button>
       ${manualMax!==null?`<label class="field" style="margin:0"><input type="number" min="0" data-trkmax="${p.id}" value="${manualMax}" placeholder="max" aria-label="${esc(p.title)} max" style="width:84px"></label>`:""}
       <span class="sub">${p.atMax&&effMax!=null&&cur>=effMax?esc(p.atMax):p.note?esc(p.note):p.max==="TOL"?"Capped by Tolerance (computed).":"Set the max when the rules land — the tracker won't block on un-modeled rules."}</span>
+      ${byHand?`<span class="sub sfr-byhand" data-sfrbyhand>${esc(byHand)}</span>`:""}
       ${roundLine?`<span class="sub sfr-round${t.turn.at||t.turn.past?" bad":""}" data-sfrround>${esc(roundLine)}</span>`:""}
       ${t.need!=null?`<span class="sub trk-step">${t.need?`<b>Need:</b> ${esc(t.need)}. `:""}${t.step?`<b>Step ${val}:</b> ${esc(t.step)}`:"No withdrawal."}</span>`:""}</div>`;
     // A tracker that declares `overMax: "cascade"` (the Arcanist's TOL Spent) opens the
@@ -1797,15 +1810,20 @@ ${esc(painIgnoredText(pain))}: ${signed(-pain.ignored)} Pain Level${pain.ignored
 
   h += `</div></div>`;
 
-  // Manual adjustments
-  h += `<div class="sect">Manual Adjustments</div>
+  // Manual adjustments. SFR max and Rate of Use are offered only where the pool has that number (Decision 312).
+  const sfrNow = Engine.sfr(ch);
+  const adjSfrOptions = [];
+  if (sfrNow && sfrNow.value!=null) adjSfrOptions.push({ id:"SFR", label:ADJ_LABELS.SFR });
+  if (sfrNow && typeof sfrNow.rou==="number") adjSfrOptions.push({ id:"ROU", label:ADJ_LABELS.ROU });
+  h += `<div class="sect" data-adjhead>Manual Adjustments</div>
     ${sheetLine("manualAdjustmentsFor")}
-    <p class="step-note">A Stat moves everything worked out from it. TOL, WILL and the maximums take the amount as it is, and the Stats they come from don't move.</p>
+    <p class="step-note">A Stat moves everything worked out from it. TOL, WILL, the maximums and Rate of Use take the amount as it is, and the Stats they come from don't move.</p>
     <div class="trk"><h2>Add</h2>
     <select data-adjtarget aria-label="adjustment target">
       ${D.stats.map(s=>`<option value="${s.id}">${s.id} (cascades)</option>`).join("")}
       <option value="TOL">TOL</option><option value="WILL">WILL</option>
       <option value="SAN">SAN max</option><option value="LUCK">LUCK max</option><option value="HP">HP max</option>
+      ${adjSfrOptions.map(o=>`<option value="${o.id}">${esc(o.label)}</option>`).join("")}
     </select>
     <input type="number" data-adjamt placeholder="±" aria-label="adjustment amount" style="width:70px">
     <input type="text" data-adjnote placeholder="why (e.g. a ruling)" aria-label="adjustment note">
@@ -1815,7 +1833,7 @@ ${esc(painIgnoredText(pain))}: ${signed(-pain.ignored)} Pain Level${pain.ignored
     h += `<div class="journal">` + adjs.map((a2,i)=>`<div class="jrow">
       <span class="d">${esc(String(a2.date||"").slice(0,10))}</span>
       <span class="amt ${a2.amount<0?"spend":"grant"}">${signed(a2.amount)}</span>
-      <span class="what">${esc(a2.target)}</span><span class="note">${esc(a2.note)}</span>
+      <span class="what">${esc(adjLabel(a2.target))}</span><span class="note">${esc(a2.note)}</span>
       <button class="x" data-adjdel="${i}" title="remove">✕</button></div>`).join("") + `</div>`;
   }
   return h;
@@ -2814,6 +2832,7 @@ function renderShAdmin(){
     : `<div class="trk"><h2>Budgets</h2>
     <span class="sub" style="flex-basis:auto">Stat Points ${fmt(sLeft)} · Skill Points ${fmt(kLeft)} · CP ${bal?fmt(bal.left):"—"}</span>
     <span class="sub">Reference only — admin edits never block on these.</span></div>`;
+  h += `<div class="trk"><h2>Maximums</h2><button class="btn sm" data-admin-adjmax>${esc(copy("adminAdjustMaximum"))}</button></div>`;
 
   // Identity
   const idf=(k,label,type)=>`<label class="field"><span>${esc(label)}</span><input type="${type||"text"}" data-admin-id="${k}" value="${esc(ch.identity[k]==null?"":ch.identity[k])}"></label>`;
@@ -4083,6 +4102,12 @@ function bindSheet(){
       yes:"Clear the log", then:()=>{ ch.audit=[]; update(); } });
   });
   // Admin banner controls
+  // Decision 312: Admin's way to Manual Adjustments. Admin stays on; focus lands on the target list.
+  main.querySelectorAll("[data-admin-adjmax]").forEach(b=>b.onclick=()=>{
+    S.section=normSection("trackers"); scrollPageTop(); update();
+    const sel=main.querySelector("[data-adjtarget]");
+    if (sel){ sel.focus({ preventScroll:true }); if (sel.scrollIntoView) sel.scrollIntoView({ block:"center" }); }
+  });
   main.querySelectorAll("[data-admin-open]").forEach(b=>b.onclick=()=>{ S.section="admin"; scrollPageTop(); update(); });
   main.querySelectorAll("[data-admin-exit]").forEach(b=>b.onclick=()=>{ S.admin=false; if(S.section==="admin") S.section="main"; scrollPageTop(); update(); });
 
@@ -4200,13 +4225,13 @@ function bindSheet(){
     const amt=num(main.querySelector("[data-adjamt]"));
     const note=(main.querySelector("[data-adjnote]")||{}).value||"";
     if (!target || amt==null || !amt) return;
-    commit("adjustment", `Adjust ${target} ${signed(Math.trunc(amt))}${note?` (${note})`:""}`, ()=>{
+    commit("adjustment", `Adjust ${adjLabel(target)} ${signed(Math.trunc(amt))}${note?` (${note})`:""}`, ()=>{
       ch.trackers.adjustments.push({target, amount:Math.trunc(amt), note, date:new Date().toISOString()});
     });
   });
   main.querySelectorAll("[data-adjdel]").forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.adjdel), a2=ch.trackers.adjustments[i]||{};
-    commit("adjustment", `Remove adjustment ${esc(a2.target||"")}`, ()=>{ ch.trackers.adjustments.splice(i,1); });
+    commit("adjustment", `Remove adjustment ${esc(adjLabel(a2.target||""))}`, ()=>{ ch.trackers.adjustments.splice(i,1); });
   });
 
   // IP

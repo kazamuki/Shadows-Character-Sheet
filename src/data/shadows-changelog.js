@@ -2,11 +2,19 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
-    "version": "0.75.1",
+    "version": "0.76.0",
     "date": null,
     "intro": [],
     "items": [],
     "groups": [
+      {
+        "title": "Character sheet",
+        "items": [
+          "**Your GM can move your SFR.** Manual Adjustments on Trackers take SFR max and Rate of Use, up or down, with a note, and Undo takes it back. Admin has a button that goes straight there.",
+          "**Esc in the ⋮ menu** puts you back on ⋮, so the next Tab carries on from there.",
+          "**A sheet missing its rules file** says which file and what to do."
+        ]
+      },
       {
         "title": "GM mode",
         "items": [

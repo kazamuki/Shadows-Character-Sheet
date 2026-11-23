@@ -228,7 +228,10 @@ in the order's header:
   Pinning a few numbers on a few characters misses the one that moved. The
   builder scripts the engine's outputs over every archetype, specialization
   and trait on `main`, keeps them as a fixture **before** the engine
-  changes, and diffs the branch against it.
+  changes, and diffs the branch against it. **It takes that snapshot in a
+  scratch worktree on `main`,** with the output in its own temp dir: never
+  by checking `main`'s `src/` out into its own worktree, which leaves it
+  idle until the snapshot ends, and never into another checkout (J1's build).
 - **A list the order writes by hand is a convenience; the source is
   checked by script** (P21's review). P21's order named two Skills where two
   kickers meet, and the data made five reachable. The test reads the book's

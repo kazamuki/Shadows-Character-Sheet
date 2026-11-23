@@ -895,19 +895,21 @@ const Engine = (() => {
   // and the tracker then asks for its max instead of inventing one.
   function sfr(ch){
     const row = scalingRow(ch);
+    // What the GM has moved by hand (Decision 312): added after the formula and the Majors, floored once after the sum.
+    const h = { sfrMax:adjFor(ch,"SFR"), rou:adjFor(ch,"ROU") };
     // A pool the player sizes (a Custom archetype that ticks Uses SFR) has no scaling row
     // to read: its size is what they typed on Trackers, and it has no Rate of Use (Decision 225).
     if (!row || !row.startingSFR){
       const own = playerPool(ch);
-      return own==null ? null : { value:own, rou:null, formula:"", setBy:"player" };
+      return own==null ? null : { value:Math.max(0, own + h.sfrMax), rou:null, formula:"", setBy:"player", byHand:h };
     }
     const f = row.startingSFR;
-    const g = grants(ch), rou = typeof row.rou==="number" ? row.rou + g.rou : row.rou;
+    const g = grants(ch), rou = typeof row.rou==="number" ? Math.max(0, row.rou + g.rou + h.rou) : row.rou;
     if (!isFormula(f)) return { value:null, rou, formula:"" };
     const d = derived(ch);
     const input = typeof d[f.stat]==="number" ? d[f.stat] : D().stats.some(s=>s.id===f.stat) ? statValue(ch, f.stat) : null;
     const v = formulaValue(f, input);
-    return { value: v==null ? v : v + g.sfrMax, rou, formula: formulaText(f), fromMilestones: { rou:g.rou, sfrMax:g.sfrMax } };
+    return { value: v==null ? v : Math.max(0, v + g.sfrMax + h.sfrMax), rou, formula: formulaText(f), fromMilestones: { rou:g.rou, sfrMax:g.sfrMax }, byHand:h };
   }
 
   // ── Pools ────────────────────────────────────────────────────────────
@@ -4520,7 +4522,10 @@ const Engine = (() => {
   function panelMax(ch, p){
     if (p.max==="TOL") return derived(ch).TOL;
     if (p.max==="startingSFR"){ const s=sfr(ch); return s && s.value!=null ? s.value : null; }
-    return typeof p.max==="number" ? p.max : storedMax(ch, p);
+    if (typeof p.max==="number") return p.max;
+    // A pool the player sizes reads its typed number here and in sfr(): both add the hand adjustment (Decision 312).
+    const typed = storedMax(ch, p);
+    return typed!=null && p.resource==="sfr" ? Math.max(0, typed + adjFor(ch,"SFR")) : typed;
   }
   // A panel's `turnCap` names what caps one round's spend: "rou" is the pool's Rate of Use.
   // A number (or null) only; the round's count is `trackers.<resource>.turn` (Decision 225).
@@ -4560,7 +4565,7 @@ const Engine = (() => {
     const max = panelMax(ch, p), s = panelStore(ch, p, false), count = Number(s.obj[s.key])||0;
     const down = p.counts==="down", st = panelSteps(ch, p);
     const out = { count, max, down, shown: down ? (max!=null ? Math.max(0, max-count) : null) : count,
-                  manual: p.max==null && max!=null, turn: null };
+                  manual: p.max==null && max!=null, typed: p.max==null ? storedMax(ch, p) : null, turn: null };
     const cap = panelTurnCap(ch, p);
     if (cap!=null){ const n = turnCount(ch, p); out.turn = { spent:n, cap, at: n>0 && n===cap, past: Math.max(0, n-cap) }; }
     if (st) Object.assign(out, { need:st.need, step: count>0 ? (st.steps[Math.min(count, st.steps.length)-1] || "") : "" });

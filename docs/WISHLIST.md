@@ -927,13 +927,6 @@ does the same (line 55). E5 made the sheet's numbers read with a true minus (`nu
 mistake, left because E5 is the sheet. *To respect:* `voice.test.mjs`'s minus check reads the sheet only, so it needs a wizard
 pass over an overspent draft to hold the fix.
 
-**W153 — The no-data screen stops saying "game data".** *Ken, from E5's review, 2026-11-13 · 🔧 · Fix*\
-**Plan:** [pools-and-numbers J1](plans/pools-and-numbers.md), approved 2026-11-22
-
-`app.js` line 349: when the data file doesn't load, the page's heading says "No game data". E5 took the phrase out of everything
-a player reads on a sheet, and this is the one place left. It's a screen only seen when something is broken, so it's tool voice:
-plain, short, and saying what to do. *To respect:* it can't use `appCopy`, since that lives in the data that didn't load.
-
 **W155 — Stealth reads the light: +1 in Dim, +3 in Dark, +5 in Blind.** *Ken, from E8's review, 2026-11-14 · 🔧 · Content*\
 **Plan:** none yet
 
@@ -948,11 +941,6 @@ E4 struck RES on the sheet for a body piece at Integrity 0, because the engine a
 **Plan:** none yet
 
 S26's Print button prints a session, a cast member or an encounter as it reads. The browser's own Print (Ctrl+P, the menu) on a table page still prints `#printSheet`, which is empty or holds the last character printed. It would have to tell a character's print from a table page's. *To respect:* the character's print must not move (Decision 304).
-
-**W174 — Esc in ⋮ should hand focus back to the ⋮ button.** *Claude, from K4's review (PR #375), 2026-11-20 · ⏭ · Fix (UI) · raised 2026-11-20*\
-**Plan:** [pools-and-numbers J1](plans/pools-and-numbers.md), approved 2026-11-22
-
-Esc inside the ⋮ menu closes it, but focus drops to the page's body instead of going back to the ⋮ button, so the next Tab starts from the top of the page. It's old behaviour, and more noticeable since K4 put Guide lines and the sheet's ? key switch in ⋮ (Decision 306), where a keyboard user flips them with the menu open. *To respect:* a press on a ⋮ switch leaves ⋮ open with focus on the item (K4), Esc with ⋮ open closes the menu before Help (Decision 278's one layer at a time), and `closeMenu` in `app.js` is the one place that shuts it.
 
 ### For the designers
 

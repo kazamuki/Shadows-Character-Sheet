@@ -4227,7 +4227,8 @@ window.SHADOWS_DATA = {
     "orphanNote": "This {kind} isn't in the current rules.",
     "introSkills": "A trained Skill rolls 1d10 + its Rank, its Primary Stat and its Synergy. An untrained one rolls 1d10 + its Primary Stat, and nothing else.",
     "introProgression": "Log a session when it truly ends. It pays {perHour} IP an hour of play (your table can change the rate below), 1 Milestone Point, and refreshes your LUCK.",
-    "introAdmin": "Change any number directly, past creation's caps and pools. It's for fixing mistakes: every change is logged in the Activity Log on Progression and can be undone."
+    "introAdmin": "Change any number directly, past creation's caps and pools. It's for fixing mistakes: every change is logged in the Activity Log on Progression and can be undone.",
+    "adminAdjustMaximum": "Adjust a maximum"
   },
   "ip": {
     /* 5 IP an hour of play, rounded up (CRB 0450): Progression's Log a session and GM mode's close-out (Decisions 206, 228). */

@@ -72,7 +72,8 @@ function hostileCharacter({ locked = true, archetype = "arcanist" } = {}) {
     running: [{ id: P("run.id") }, { id: "iron-hide", used: P("run.used") }],   // Decision 266
     credits: { current: P("credits"), ledger: [{ date: P("cr.date"), amount: P("cr.amount"), note: P("cr.note") }] },
     crank: { rep: "lots", ledger: [{ date: P("crk.date"), amount: "5", note: P("crk.note") }] },
-    adjustments: [{ target: P("adj.target"), amount: P("adj.amount"), note: P("adj.note"), date: P("adj.date") }],
+    adjustments: [{ target: P("adj.target"), amount: P("adj.amount"), note: P("adj.note"), date: P("adj.date") },
+      { target: "SFR", amount: P("adj.sfr"), note: P("adj.note"), date: P("adj.date") }, { target: "ROU", amount: P("adj.rou"), note: "", date: "" }],   // J1
     conditions: [{ id: P("cond.id") }, { id: "agonized", note: P("cond.note") },
       { id: "injured", location: P("cond.loc") }, { id: "dying", marks: P("marks") }],
     aberrations: [{ id: P("ab.id"), permanence: P("ab.perm") }, { id: "drained", permanence: "permanent", note: P("ab.note") }],
@@ -201,7 +202,7 @@ test("migrate() reads every stored number as a number, and drops an undo entry t
     "trackers.damage": c.trackers.damage, "luck.bonus": c.trackers.luck.bonus, "san.loss": c.trackers.san.loss,
     "credits.current": c.trackers.credits.current, "ledger.amount": c.trackers.credits.ledger[0].amount,
     "crank.rep": c.trackers.crank.rep, "crank.ledger.amount": c.trackers.crank.ledger[0].amount,
-    "adjustments.amount": c.trackers.adjustments[0].amount, "panel.value": c.trackers.panel["tol-spent"].value,
+    "adjustments.amount": c.trackers.adjustments[0].amount, "adjustments.sfr": c.trackers.adjustments[1].amount, "adjustments.rou": c.trackers.adjustments[2].amount, "panel.value": c.trackers.panel["tol-spent"].value,
     "ip.earned": c.progression.ip.earned, "ip.log.amount": c.progression.ip.log[0].amount,
     "milestonePoints": c.progression.milestonePoints, "sessions.ipEarned": c.sessions[0].ipEarned,
     "focusAllocation.INT": c.archetypeChoices.focusAllocation.INT, "boosts.times": c.creation.boosts[0].times,
@@ -1676,4 +1677,38 @@ test("a cast member's wounds are coerced", () => {
     cast: wounds.map((w, i) => ({ id: `C-AAAAAAA${i < 10 ? i : "A"}`, name: `N${i}`, wounds: w })),
   });
   assert.deepEqual(JSON.parse(JSON.stringify(t.cast.map(n => n.wounds))), [null, null, null, null, null, null, null, { damage: 1, massive: 2 }, { damage: 999, massive: 999 }, null, null]);
+});
+
+// J1: a hostile amount on an SFR or Rate of Use adjustment comes out a number, and every reader of the pool stays a finite number >= 0.
+for (const archetype of ["werewolf", "vampire"])
+test(`J1: a hostile ${archetype} file's SFR and Rate of Use adjustments leave every reader a finite number, not below 0`, () => {
+  const c = Engine.migrate(hostileCharacter({ archetype }));
+  const s = Engine.sfr(c);
+  assert.ok(s && Number.isFinite(s.value) && s.value >= 0, `sfr().value = ${s && s.value}`);
+  assert.ok(Number.isFinite(s.rou) && s.rou >= 0, `sfr().rou = ${s.rou}`);
+  const p = Engine.archPanels(c).find(x => x.type === "tracker" && x.resource === "sfr");
+  const t = Engine.panelTracker(c, p);
+  assert.ok(Number.isFinite(t.max) && t.max >= 0 && Number.isFinite(t.shown) && t.shown >= 0, JSON.stringify(t));
+  for (const huge of [1e300, -1e300, 9007199254740993]) {
+    c.trackers.adjustments = [{ target: "SFR", amount: huge, note: "", date: "" }, { target: "ROU", amount: huge, note: "", date: "" }];
+    const h = Engine.sfr(c);
+    assert.ok(Number.isFinite(h.value) && h.value >= 0 && Number.isFinite(h.rou) && h.rou >= 0, `${huge}: ${JSON.stringify(h)}`);
+  }
+});
+
+// J1: the Custom pool reads its typed max in two places (sfr() and panelMax); a hostile typed max and a hostile adjustment leave both finite, equal and not below 0.
+test("J1: a hostile Custom SFR pool: sfr() and the panel agree, finite and not below 0, and typed is a number or null", () => {
+  const typedCases = [P("typed"), -5, 1e300, 12.7, "12", null, NaN, 20];
+  for (const typed of typedCases) for (const amount of [P("amt"), -1e300, 1e300, -3, 4]) {
+    const ch = hostileCharacter({ archetype: WRITE_IN });
+    ch.trackers.panel = { sfr: { value: 0, max: typed } };
+    ch.trackers.adjustments = [{ target: "SFR", amount, note: "", date: "" }];
+    const c = Engine.migrate(ch);
+    const s = Engine.sfr(c), p = Engine.archPanels(c).find(x => x.type === "tracker" && x.resource === "sfr");
+    assert.ok(p, "the Custom pool has no SFR panel");
+    const t = Engine.panelTracker(c, p), tag = JSON.stringify([typed, amount]);
+    assert.equal(s === null ? t.max : s.value, t.max, `twin ${tag}`);
+    if (t.max !== null) assert.ok(Number.isFinite(t.max) && t.max >= 0, `max ${tag}`);
+    assert.ok(t.typed === null || (Number.isFinite(t.typed) && t.typed >= 0), `typed ${tag}`);
+  }
 });

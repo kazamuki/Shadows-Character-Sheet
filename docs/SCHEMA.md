@@ -5959,6 +5959,18 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** the title row gets a third action, or long titles crowd it at 1280px.
      - **Built:** app 0.75.1; the second gmGuide copy fix's PR.
 
+312. **SFR max and Rate of Use take Manual Adjustments, as the other maximums do.**
+     *2026-11-22 · Deighton + Ken + Claude · Touches: Manual Adjustments, `sfr()`, `panelMax`, `panelTracker`, SFR max, Rate of Use, the Custom SFR pool, Admin*
+     - **Decided:** Two more targets join Decision 26's ledger: `SFR` (the pool's max) and `ROU` (its Rate of Use), read by `sfr()` after the formula and the Majors, and never below 0. They're offered only to a character whose pool has that number; a Custom pool's adjustment adds to the max its player typed, which stays what the box shows. What's left is the max less what's spent, so raising the max raises it, as HP's does. Admin opens them with a button; it has no control of its own.
+     - **Why:** Deighton wanted a GM to rule SFR up or down, and the ledger already does that for SAN, LUCK and HP: a delta with a reason, logged and undone, that keeps moving when WILL does.
+     - **Rejected:**
+       - A number on Admin that sets the max outright: it freezes the max against a later WILL raise, says nothing about why, and is a second way to say what the ledger says.
+       - Keeping what's left still when the max moves, as Drained does for TOL (Decision 110): an SFR ruling is about the pool's size, and HP's max already moves what's left.
+       - The target list moved into the data: 26's targets are code, and a target is something the engine reads (Decision 135).
+     - **Replaces:** nothing. Extends 26 (its targets) and 225 (the Custom pool's max).
+     - **Revisit if:** a rule in the book or a Major starts adjusting SFR or RoU the same way across many entries; then it's a `grants` type, as `sfrMax` and `rou` already are.
+     - **Built:** app 0.76.0; pools-and-numbers J1 (PR #381); log entry 2026-11-22.
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data
