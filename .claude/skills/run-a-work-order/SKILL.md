@@ -105,3 +105,7 @@ review comments on the PR instead.
   relay only if that fails.
 - **A session's turn-end note** is its report, not proof. Check the PR or
   the branch before you repeat it.
+- **A turn that ends on a wait isn't a stop.** A builder that ends its turn
+  on a background command or a Monitor is woken when that finishes. Read its
+  last lines first: only an error, a question, or a *Stop and ask* item needs
+  you or Ken. Don't nudge it, and don't tell Ken it stopped (J1's build).
