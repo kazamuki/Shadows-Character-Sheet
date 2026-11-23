@@ -4,7 +4,7 @@
 
 **Built on:** Decision 153 (the write-in archetype, its `mechanics` and `when`; its *Revisit if* names W48–W50), 135 (a data key is read by code; no panel id in code), 225 (the Custom SFR pool's typed max, its card on Main), 214 (the card alone on Main's last row), 81 (one writer for a mirror), 124 (a file is untrusted), 312 (J1: `panelMax`, `panelTracker.typed`).
 
-**Status: drafted 2026-11-22** by Claude (Opus), J1's reviewer, at the conductor's request for Ken ("Lets get the J1 reviewer to build the J2 work order!"). **Not approved.** JQ13–JQ16 are open.
+**Status: drafted 2026-11-22** by Claude (Opus), J1's reviewer, at the conductor's request for Ken ("Lets get the J1 reviewer to build the J2 work order!"). **Approved by Ken 2026-11-22: "Approved"**, with the default on JQ13–JQ16 (his picks: Popover, Admin can, Warn don't block, Up to four; recorded by the conductor in the session Ken answered in).
 
 **Branch:** cut from `origin/main` at the pre-flight commit. PR to `main`. Nothing ships switched off. **No release** at the end (JQ6), and **no app bump**: J1 moved `[Unreleased]` to 0.76.0, and J2's lines go under that heading (see §2).
 
@@ -133,7 +133,7 @@ INDEX §3, under *Archetypes & specialization* (where 153 is):
 
 ## 4. Questions for Ken
 
-JQ1–JQ8 are the plan's (answered: JQ4 a list, JQ5 a card on Main, JQ6 one release). JQ9–JQ12 were J1's. **This order's: JQ13–JQ16, open.**
+JQ1–JQ8 are the plan's (answered: JQ4 a list, JQ5 a card on Main, JQ6 one release). JQ9–JQ12 were J1's. **This order's, answered 2026-11-22 (Ken): Default on all four.**
 
 - **JQ13 — What a pool's card on Main does.**
   - **Default:** a button that opens a popover with the pool's count, **−1** and **+1**, and **On Trackers**, as the SFR card does. Spending on Main is where a pool is spent, in play.
