@@ -64,7 +64,8 @@ place to write it and counts it.
   control.
 - **A named pool is a panel the player writes.** A Custom character's
   `writeIn` gains `pools`: a list of `{ id, name }`, the id issued once and
-  never reused (`pool-1`, `pool-2`, …). Each draws a tracker panel exactly as
+  never reused (`pool-` and eight random characters: J2's order, since a
+  counted `pool-2` would come back for the next pool added). Each draws a tracker panel exactly as
   the Custom SFR pool does (counts down, max typed on Trackers, stored in the
   generic `trackers.panel[id]`), so the engine's panel readers, undo and
   Turn Reset need nothing new. Its name is the player's text, escaped
@@ -82,8 +83,8 @@ place to write it and counts it.
 
 | Session | Name | What a player or GM gets | Tier · versions | Waits on | Status |
 |---|---|---|---|---|---|
-| **J1** | SFR max and Rate of Use by hand | Deighton's request: **SFR max** and **SFR Rate of Use** as Manual Adjustment targets, offered only to a character with an SFR pool; the pool's card and popover say what's adjusted ("WILL × 3 + 5, +2 adjusted"); never below 0. Admin says where to make the change. Riders: **W174** (Esc in ⋮ gives focus back to ⋮) and **W153** (the no-data heading in tool voice) | *Rule or shape* (extends 26) · app minor, no data or schema bump | Nothing | **Built** (Decision 312, app 0.76.0, 2026-11-22): [`J1-sfr-by-hand.md`](pools-and-numbers/J1-sfr-by-hand.md) |
-| **J2** | A pool the player names | **W49**: the Custom archetype's third mechanic, **Uses another pool**. The player names it (Glamour, Chi) and the GM sizes it; it counts down on Trackers and Main like the Custom SFR pool, sits in a power's **Uses** list, and prints on the archetype's page | *Rule or shape* · app minor, character schema bump, game data bump (a new mechanic a character can choose) | J1 merged | Planned |
+| **J1** | SFR max and Rate of Use by hand | Deighton's request: **SFR max** and **SFR Rate of Use** as Manual Adjustment targets, offered only to a character with an SFR pool; the Trackers SFR panel says what's adjusted (JQ10); never below 0. Admin has a button that goes there (JQ11). Riders: **W174** (Esc in ⋮ gives focus back to ⋮) and **W153** (the no-data heading in tool voice) | *Rule or shape* (extends 26) · app minor, no data or schema bump | Nothing | **Built** (Decision 312, app 0.76.0, 2026-11-22): [`J1-sfr-by-hand.md`](pools-and-numbers/J1-sfr-by-hand.md) |
+| **J2** | A pool the player names | **W49**: the Custom archetype's third mechanic, **Uses another pool**, up to four (JQ16). The player names each (Glamour, Chi) and the GM sizes it; it counts down on Trackers and on a Main card with a −1/+1 popover (JQ13), like the Custom SFR pool, is a suggestion in a power's **Uses**, and prints on the archetype's page. Admin renames, adds and removes (JQ14). The Activity Log names every tracker by its title | *Rule or shape* · character schema bump, game data bump (a new mechanic a character can choose); no app bump, its lines go under J1's 0.76.0 (JQ6) | J1 merged | Order drafted: [`J2-named-pools.md`](pools-and-numbers/J2-named-pools.md), awaiting Ken (JQ13–JQ16) |
 | **J3** | Type a number into a stepper | **W121**: every wizard stepper takes a typed number and the arrow keys, held to the caps and pools + and − are. Rider: **W152** (an overspent pool reads with a true minus), since the pills it touches are the ones a typed number overspends | *Rule or shape* · app minor | J1 merged (J2 isn't needed) | Planned |
 | **J4** | Spend several at once | **W176**: a tracker's ±1 takes an amount: SFR, TOL Spent and J2's pools. One change, one Undo; the round's count moves by the amount, and at or past Rate of Use it warns as one press does now (Decision 225) | *Rule or shape* · app minor | J2 and J3 merged (it reuses J3's control on J2's panels) | Planned |
 
