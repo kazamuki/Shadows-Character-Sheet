@@ -360,8 +360,8 @@ function renderFooter(){
 // ── Boot ─────────────────────────────────────────────────────────────
 function boot(){
   if (!window.SHADOWS_DATA){
-    $("main").innerHTML = `<div class="home-hero"><h1>No game data</h1>
-      <p>Place <span style="font-family:var(--mono)">shadows-data.js</span> next to this file and reload.</p></div>`;
+    $("main").innerHTML = `<div class="home-hero"><h1>This sheet is missing a file</h1>
+      <p>Put <span style="font-family:var(--mono)">shadows-data.js</span> back in the folder beside this page, then reload.</p></div>`;
     return;
   }
   applyFeatureQuery(location.search);   // before the first render (Decision 173)
@@ -409,7 +409,11 @@ function boot(){
       if (!layer && S.vitalsOpen) closeVitals();
       const menu=$("hdrmenu");
       if (!layer && !(menu && !menu.hidden) && helpEscCloses()) closeHelp();   // a table's Help (Decision 278): one layer at a time
+      // W174: with focus inside the menu, Esc hands it back to ⋮ (the next Tab carries on from there). Only Esc does:
+      // an outside click closes the same menu and must leave focus where the click put it.
+      const focusWasInMenu = !layer && menu && !menu.hidden && menu.contains(document.activeElement);
       closeMenu();
+      if (focusWasInMenu){ const kb=document.querySelector("#hdractions [data-menu-toggle]"); if (kb) kb.focus(); }
     }
   });
   document.addEventListener("click", e=>{ const a=$("hdractions"); if (a && !a.contains(e.target)) closeMenu(); });

@@ -2475,3 +2475,108 @@ test("E7 2: Main's weapons table carries its hook, and Loadout's doesn't", () =>
   assert.ok(!lw.classList.contains("wpn"), "Loadout's weapons table carries the hook");
   assert.deepEqual(lo.errors, []);
 });
+
+// ── J1: SFR max and Rate of Use by hand (Decision 312), and W174 ─────────────
+
+function lockedWerewolf() {
+  const ch = lockedCharacter();
+  ch.identity.archetype = "werewolf";
+  for (const id of Object.keys(ch.stats)) ch.stats[id].base = 6;
+  ch.archetypeChoices.specialization = ["trueborn"];
+  return ch;
+}
+const adjOptions = app => [...app.$$("[data-adjtarget] option")].map(o => o.value);
+function applyAdj(app, target, amount, note = "a ruling") {
+  const sel = app.$("[data-adjtarget]"); sel.value = target;
+  const amt = app.$("[data-adjamt]"); amt.value = String(amount);
+  app.$("[data-adjnote]").value = note;
+  app.click("[data-adjadd]");
+}
+const sfrPanel = app => [...app.$$("#main .trk")].find(t => /^SFR/.test(t.querySelector("h2").textContent));
+
+test("J1: Manual Adjustments offers SFR max and Rate of Use to a Werewolf, and neither to a Professional", () => {
+  const ww = openSheet(lockedWerewolf(), "trackers");
+  assert.deepEqual(adjOptions(ww).slice(-2), ["SFR", "ROU"]);
+  assert.deepEqual([...ww.$$("[data-adjtarget] option")].slice(-2).map(o => o.textContent), ["SFR max", "SFR Rate of Use"]);
+  const pro = lockedCharacter(); pro.identity.archetype = "professional";
+  const p = openSheet(pro, "trackers");
+  assert.deepEqual(adjOptions(p).filter(v => v === "SFR" || v === "ROU"), []);
+  assert.deepEqual(ww.errors, []);
+});
+
+test("J1: +2 SFR max reads 10 on Main's card and the Trackers panel, and Undo takes it back to 8", () => {
+  const ch = lockedWerewolf();
+  const base = Engine.sfr(ch).value;
+  const app = openSheet(ch, "trackers");
+  applyAdj(app, "SFR", 2);
+  assert.match(sfrPanel(app).querySelector(".big").textContent, new RegExp(`/ ${base + 2}$`));
+  assert.match(sfrPanel(app).querySelector("[data-sfrbyhand]").textContent, /^\+2 max by hand, in Manual Adjustments\.$/);
+  app.click('[data-sec="main"]');
+  assert.match(app.$('#main [data-vpop="sfr"]').textContent, new RegExp(`${base + 2}`));
+  app.click('[data-sec="progression"]');
+  app.click("button[data-undolast]");
+  app.click('[data-sec="trackers"]');
+  assert.match(sfrPanel(app).querySelector(".big").textContent, new RegExp(`/ ${base}$`));
+  assert.equal(sfrPanel(app).querySelector("[data-sfrbyhand]"), null, "the line stayed after Undo");
+  assert.deepEqual(app.errors, []);
+});
+
+test("J1: a Custom pool's box keeps what was typed, and the adjustment doesn't count twice", () => {
+  const ch = writtenInCharacter();
+  ch.archetypeChoices.writeIn.mechanics = ["sfr"];
+  ch.trackers.panel = { sfr: { value: 0, max: 20 } };
+  const app = openSheet(ch, "trackers");
+  applyAdj(app, "SFR", -3);
+  assert.equal(app.$('[data-trkmax="sfr"]').value, "20", "the box shows the adjusted max");
+  assert.match(sfrPanel(app).querySelector(".big").textContent, /\/ 17$/);
+  const box = app.$('[data-trkmax="sfr"]'); box.value = "25"; box.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  assert.equal(activeChar(app).trackers.panel.sfr.max, 25, "an edit stored something other than what was typed");
+  assert.equal(Engine.sfr(activeChar(app)).value, 22);
+  assert.deepEqual(app.errors, []);
+});
+
+test("J1: the journal names SFR max and SFR Rate of Use, and prints any other target as text", () => {
+  const ch = lockedWerewolf();
+  ch.trackers.adjustments.push({ target: "<b>x</b>", amount: 1, note: "", date: "2026-11-22" });
+  const app = openSheet(ch, "trackers");
+  applyAdj(app, "SFR", 1); applyAdj(app, "ROU", -1);
+  const what = [...app.$$(".journal .what")].map(e => e.textContent);
+  assert.deepEqual(what, ["<b>x</b>", "SFR max", "SFR Rate of Use"]);
+  assert.equal(app.$(".journal .what b"), null, "a hostile target rendered as markup");
+  assert.match(app.$("#main").textContent, /\+1 max and −1 RoU by hand, in Manual Adjustments\./);
+});
+
+test("J1: a Vampire's +1 Rate of Use reads RoU 5 on Main's card", () => {
+  const app = openSheet(streetVampire(), "trackers");
+  applyAdj(app, "ROU", 1);
+  app.click('[data-sec="main"]');
+  assert.match(app.$('#main [data-vpop="sfr"]').textContent, /RoU 5/);
+});
+
+test("J1: Admin's button opens Trackers with focus on the target", () => {
+  const app = openSheet(lockedWerewolf(), "main");
+  app.click("[data-menu-toggle]"); app.click("[data-admin]");
+  assert.equal(app.$("[data-admin-adjmax]").textContent, D.appCopy.adminAdjustMaximum);
+  app.click("[data-admin-adjmax]");
+  assert.ok(app.$("[data-adjtarget]"), "Trackers didn't open");
+  assert.equal(focused(app), app.$("[data-adjtarget]"));
+  assert.deepEqual(app.errors, []);
+});
+
+test("W174: Esc with ⋮ open puts focus back on ⋮, and an outside click doesn't", () => {
+  const app = openSheet(lockedCharacter(), "main");
+  const toggle = () => app.$("#hdractions [data-menu-toggle]");
+  const esc = () => app.doc.activeElement.dispatchEvent(new app.window.KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
+  app.click("[data-menu-toggle]");
+  const item = app.$("#hdrmenu button"); item.focus();
+  assert.equal(focused(app), item);
+  esc();
+  assert.equal(app.$("#hdrmenu").hidden, true);
+  assert.equal(focused(app), toggle(), "focus stayed on a hidden menu item");
+  app.click("[data-menu-toggle]");
+  const other = app.$("#main button, #main a, #main input"); other.focus();
+  other.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  assert.equal(app.$("#hdrmenu").hidden, true);
+  assert.equal(focused(app), other, "an outside click pulled focus back to the menu button");
+  assert.deepEqual(app.errors, []);
+});

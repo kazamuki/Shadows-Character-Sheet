@@ -8970,7 +8970,7 @@ test("P11 7: a Custom pool's max is read by the engine, and it has no Rate of Us
   assert.equal(Engine.panelMax(ch, panel()), null);
   ch.trackers.panel = { sfr: { value: 0, max: 12 } };
   ch.trackers.sfr.spent = 5;
-  same(Engine.sfr(ch), { value: 12, rou: null, formula: "", setBy: "player" });
+  same(Engine.sfr(ch), { value: 12, rou: null, formula: "", setBy: "player", byHand: { sfrMax: 0, rou: 0 } });
   const t = Engine.panelTracker(ch, panel());
   same([t.max, t.shown, t.turn], [12, 7, null]);
   Engine.adjustPanelTracker(ch, "sfr", 2);
@@ -14369,4 +14369,74 @@ test("Decision 303: editSession saves a name, trimmed, and the list still sorts 
   Engine.editSession(t, b, { date: "2026-01-01" });
   assert.equal(t.sessions.find(s => s.id === b).title, "", "a save of another field leaves the name");
   assert.equal(Engine.tableSearch(t, "mid").some(h => h.kind === "session" && h.id === c), true, "Find reads the name");
+});
+
+// ── J1: SFR max and Rate of Use by hand (Decision 312) ───────────────
+const j1Adj = (ch, target, amount) => { ch.trackers.adjustments.push({ target, amount, note: "", date: "2026-11-22" }); return ch; };
+const j1Panel = ch => Engine.archPanels(ch).find(x => x.id === "sfr");
+const j1Custom = typed => { const c = writtenIn({ mechanics: ["sfr"] }); c.trackers.panel = { sfr: { value: 0, max: typed } }; return c; };
+
+test("J1: an SFR adjustment moves a Werewolf's pool and its tracker", () => {
+  const ch = werewolf("trueborn", { base: 5 });
+  const base = Engine.sfr(ch).value;
+  j1Adj(ch, "SFR", 2);
+  const s = Engine.sfr(ch), t = Engine.panelTracker(ch, j1Panel(ch));
+  same([s.value, s.byHand.sfrMax, t.max, t.shown], [base + 2, 2, base + 2, base + 2]);
+});
+
+test("J1: a ROU adjustment moves Rate of Use and the round's cap", () => {
+  const ch = rou11();
+  j1Adj(ch, "ROU", 1);
+  same(Engine.sfr(ch).rou, 5);
+  Engine.adjustPanelTracker(ch, "sfr", 5);
+  const t = Engine.panelTracker(ch, j1Panel(ch));
+  same([t.turn.cap, t.turn.at], [5, true]);
+});
+
+test("J1: SFR and Rate of Use never go below 0, and the floor comes after the sum", () => {
+  const ch = werewolf("trueborn");
+  j1Adj(ch, "SFR", -50); j1Adj(ch, "ROU", -50);
+  const s = Engine.sfr(ch), t = Engine.panelTracker(ch, j1Panel(ch));
+  same([s.value, s.rou, t.max, t.shown, t.turn.cap], [0, 0, 0, 0, 0]);
+  const g = Engine.sfr(werewolf("trueborn")).value;
+  const huge = j1Adj(werewolf("trueborn"), "SFR", -(g + 3));
+  same(Engine.sfr(huge).value, 0);
+  assert.equal(Engine.sfr(j1Adj(werewolf("trueborn"), "SFR", 1e300)).value > 0, true);
+  assert.ok(Number.isFinite(Engine.sfr(j1Adj(werewolf("trueborn"), "SFR", -1e300)).value));
+});
+
+test("J1: a Custom pool's adjustment adds to its typed max, and the box keeps what was typed", () => {
+  const ch = j1Custom(20);
+  j1Adj(ch, "SFR", -3);
+  const t = Engine.panelTracker(ch, j1Panel(ch));
+  same([Engine.sfr(ch).value, t.max, t.typed], [17, 17, 20]);
+  same(Engine.sfr(ch).value, t.max, "the twin: sfr() and the panel agree");
+  j1Adj(ch, "SFR", -50);
+  same([Engine.sfr(ch).value, Engine.panelTracker(ch, j1Panel(ch)).max], [0, 0]);
+  const none = writtenIn({ mechanics: ["sfr"] }); j1Adj(none, "SFR", 4);
+  same([Engine.sfr(none), Engine.panelMax(none, j1Panel(none))], [null, null], "no typed max: still none");
+});
+
+test("J1: sfr() and the SFR panel's max agree for every SFR archetype and specialization, adjusted or not", () => {
+  for (const a of D.archetypes) for (const sp of [null, ...(a.coreMechanic && a.coreMechanic.specializations || []).map(x => x.id)]) {
+    const ch = subject(); ch.identity.archetype = a.id; ch.archetypeChoices.specialization = sp ? [sp] : [];
+    for (const adj of [0, 3, -2]) {
+      ch.trackers.adjustments = adj ? [{ target: "SFR", amount: adj, note: "", date: "d" }] : [];
+      const s = Engine.sfr(ch), p = Engine.archPanels(ch).find(x => x.type === "tracker" && x.resource === "sfr");
+      if (!s || !p) continue;
+      assert.equal(Engine.panelTracker(ch, p).max, s.value, `${a.id}/${sp}/${adj}`);
+    }
+  }
+});
+
+test("J1: a character with no SFR pool ignores SFR and ROU adjustments", () => {
+  const ch = subject(); ch.identity.archetype = "professional";
+  j1Adj(ch, "SFR", 5); j1Adj(ch, "ROU", 5);
+  assert.equal(Engine.sfr(ch), null);
+  assert.equal(Engine.archPanels(ch).some(x => x.resource === "sfr"), false);
+});
+
+test("J1: a Custom pool has no Rate of Use to adjust", () => {
+  const ch = j1Custom(12); j1Adj(ch, "ROU", 2);
+  assert.equal(Engine.sfr(ch).rou, null);
 });

@@ -421,3 +421,17 @@ test("P9b 12: a part-used magazine prints its rounds", () => {
   assert.match(p, /15 shots left/, "a Power Cell doesn't print its shots");
   assert.deepEqual(app.errors, []);
 });
+
+// W153: a page whose data file didn't load says which file, in tool voice. The built page inlines the data, so the
+// data block is renamed to make it "missing"; the script errors that follow are the point of the case.
+test("W153: the no-data screen says which file is missing and what to do", async () => {
+  const { JSDOM, VirtualConsole } = await import("jsdom");
+  const { buildHtml } = await import("../tools/build.mjs");
+  const html = buildHtml().replace("window.SHADOWS_DATA = {", "window.__NOT_THE_DATA = {");
+  assert.notEqual(html, buildHtml(), "the data block wasn't found to rename");
+  const dom = new JSDOM(html, { runScripts: "dangerously", pretendToBeVisual: true, url: "https://shadows.test/", virtualConsole: new VirtualConsole() });
+  const main = dom.window.document.querySelector("#main");
+  assert.equal(main.querySelector("h1").textContent, "This sheet is missing a file");
+  assert.equal(main.querySelector("p").textContent, "Put shadows-data.js back in the folder beside this page, then reload.");
+  dom.window.close();
+});
