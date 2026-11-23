@@ -14440,3 +14440,26 @@ test("J1: a Custom pool has no Rate of Use to adjust", () => {
   const ch = j1Custom(12); j1Adj(ch, "ROU", 2);
   assert.equal(Engine.sfr(ch).rou, null);
 });
+
+test("J1: Feeding's cap and the Thirst's day follow SFR max and Rate of Use by hand", () => {
+  const feed = ch => Engine.feedView(ch, Engine.archPanels(ch).find(x => x.id === "thirst"));
+  const base = vampire("draugur", { pl: "street" }), b = feed(base);
+  const up = j1Adj(vampire("draugur", { pl: "street" }), "SFR", 2), u = feed(up);
+  same(u.max, b.max + 2);
+  same(u.kinds.map((k, i) => k.upTo - b.kinds[i].upTo).filter(d => d !== 0).length > 0, true);
+  same(u.kinds.filter((k, i) => b.kinds[i].upTo === b.max).every(k => k.upTo === u.max), true, "a kind that fills the pool stopped at the old max");
+  assert.ok(u.kinds.some((k, i) => k.upTo > b.kinds[i].upTo), "no Feeding cap moved with the max");
+  const lo = feed(j1Adj(vampire("draugur", { pl: "street" }), "ROU", -1));
+  assert.ok(lo.unfed.amount <= b.unfed.amount, "the day unfed grew when Rate of Use fell");
+  same(lo.rou, b.rou - 1);
+});
+
+test("J1: a Werewolf's Start says 'more than your RoU' at the old RoU and not at the adjusted one", () => {
+  const w = wildblood(3);
+  Engine.setToggle(w, "form", "Werewolf");
+  j1Adj(w, "ROU", 1);
+  same([Engine.sfr(w).rou], [4]);
+  const r = Engine.startPower(w, "let-it-loose");
+  assert.equal(r.ok, true, r.why);
+  same([w.trackers.sfr.spent, r.overCap, r.turn > r.cap, r.cap], [4, null, false, 4]);
+});

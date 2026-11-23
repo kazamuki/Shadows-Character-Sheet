@@ -1695,3 +1695,20 @@ test(`J1: a hostile ${archetype} file's SFR and Rate of Use adjustments leave ev
     assert.ok(Number.isFinite(h.value) && h.value >= 0 && Number.isFinite(h.rou) && h.rou >= 0, `${huge}: ${JSON.stringify(h)}`);
   }
 });
+
+// J1: the Custom pool reads its typed max in two places (sfr() and panelMax); a hostile typed max and a hostile adjustment leave both finite, equal and not below 0.
+test("J1: a hostile Custom SFR pool: sfr() and the panel agree, finite and not below 0, and typed is a number or null", () => {
+  const typedCases = [P("typed"), -5, 1e300, 12.7, "12", null, NaN, 20];
+  for (const typed of typedCases) for (const amount of [P("amt"), -1e300, 1e300, -3, 4]) {
+    const ch = hostileCharacter({ archetype: WRITE_IN });
+    ch.trackers.panel = { sfr: { value: 0, max: typed } };
+    ch.trackers.adjustments = [{ target: "SFR", amount, note: "", date: "" }];
+    const c = Engine.migrate(ch);
+    const s = Engine.sfr(c), p = Engine.archPanels(c).find(x => x.type === "tracker" && x.resource === "sfr");
+    assert.ok(p, "the Custom pool has no SFR panel");
+    const t = Engine.panelTracker(c, p), tag = JSON.stringify([typed, amount]);
+    assert.equal(s === null ? t.max : s.value, t.max, `twin ${tag}`);
+    if (t.max !== null) assert.ok(Number.isFinite(t.max) && t.max >= 0, `max ${tag}`);
+    assert.ok(t.typed === null || (Number.isFinite(t.typed) && t.typed >= 0), `typed ${tag}`);
+  }
+});
