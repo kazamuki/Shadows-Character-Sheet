@@ -2535,6 +2535,19 @@ test("J1: a Custom pool's box keeps what was typed, and the adjustment doesn't c
   assert.deepEqual(app.errors, []);
 });
 
+test("J1: a Custom pool's line never names a Rate of Use it doesn't have", () => {
+  const ch = writtenInCharacter();
+  ch.archetypeChoices.writeIn.mechanics = ["sfr"];
+  ch.trackers.panel = { sfr: { value: 0, max: 20 } };
+  ch.trackers.adjustments.push({ target: "ROU", amount: 2, note: "a hand-edited file", date: "2026-11-22" });
+  const app = openSheet(ch, "trackers");
+  assert.equal(sfrPanel(app).querySelector("[data-sfrbyhand]"), null, "the line names a Rate of Use the pool doesn't have");
+  applyAdj(app, "SFR", -3);
+  assert.equal(sfrPanel(app).querySelector("[data-sfrbyhand]").textContent, "−3 max by hand, in Manual Adjustments.");
+  assert.equal(activeChar(app).audit.at(-1).label, "Adjust SFR max −3 (a ruling)", "the Activity Log names the target as the journal does");
+  assert.deepEqual(app.errors, []);
+});
+
 test("J1: the journal names SFR max and SFR Rate of Use, and prints any other target as text", () => {
   const ch = lockedWerewolf();
   ch.trackers.adjustments.push({ target: "<b>x</b>", amount: 1, note: "", date: "2026-11-22" });

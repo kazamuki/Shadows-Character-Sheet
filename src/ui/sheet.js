@@ -1678,6 +1678,17 @@ function vitalPopover(ch, key){
   return null;
 }
 
+// What the GM has moved on the SFR pool by hand, as one line for its Trackers panel (Decision 312): "+2 max and −1 RoU by hand, in Manual Adjustments."
+function sfrByHandText(s){
+  const h = s && s.byHand; if (!h) return "";
+  const parts = [];
+  if (h.sfrMax) parts.push(`${signed(h.sfrMax)} max`);
+  if (h.rou && typeof s.rou==="number") parts.push(`${signed(h.rou)} RoU`);
+  return parts.length ? `${parts.join(" and ")} by hand, in Manual Adjustments.` : "";
+}
+// The labels for the targets the sheet offers beyond the Stats (a journal row reads them; anything else prints as the file wrote it).
+const ADJ_LABELS = { SFR:"SFR max", ROU:"SFR Rate of Use" };
+const adjLabel = t => Object.prototype.hasOwnProperty.call(ADJ_LABELS, t) ? ADJ_LABELS[t] : t;
 function renderShTrackers(){
   const ch=S.ch, hp=Engine.health(ch), pain=Engine.painState(ch);
   const luck=Engine.luckState(ch), san=Engine.sanState(ch);
@@ -1822,7 +1833,7 @@ ${esc(painIgnoredText(pain))}: ${signed(-pain.ignored)} Pain Level${pain.ignored
     h += `<div class="journal">` + adjs.map((a2,i)=>`<div class="jrow">
       <span class="d">${esc(String(a2.date||"").slice(0,10))}</span>
       <span class="amt ${a2.amount<0?"spend":"grant"}">${signed(a2.amount)}</span>
-      <span class="what">${esc(Object.prototype.hasOwnProperty.call(ADJ_LABELS, a2.target) ? ADJ_LABELS[a2.target] : a2.target)}</span><span class="note">${esc(a2.note)}</span>
+      <span class="what">${esc(adjLabel(a2.target))}</span><span class="note">${esc(a2.note)}</span>
       <button class="x" data-adjdel="${i}" title="remove">✕</button></div>`).join("") + `</div>`;
   }
   return h;
@@ -2805,16 +2816,6 @@ function renderShNotes(){
 // ── Sheet: ADMIN (free edit) ───────────────────────────────────────────
 // Direct edits to stored inputs, bypassing creation caps/pools. Every change
 // here routes through commit(), so it lands in the Activity Log and is undoable.
-// What the GM has moved on the SFR pool by hand, as one line for its Trackers panel (Decision 312): "+2 max and −1 RoU by hand, in Manual Adjustments."
-function sfrByHandText(s){
-  const h = s && s.byHand; if (!h) return "";
-  const parts = [];
-  if (h.sfrMax) parts.push(`${signed(h.sfrMax)} max`);
-  if (h.rou) parts.push(`${signed(h.rou)} RoU`);
-  return parts.length ? `${parts.join(" and ")} by hand, in Manual Adjustments.` : "";
-}
-// The labels for the targets the sheet offers beyond the Stats (a journal row reads them; anything else prints as the file wrote it).
-const ADJ_LABELS = { SFR:"SFR max", ROU:"SFR Rate of Use" };
 function renderShAdmin(){
   const ch=S.ch;
   let h = sheetHeader("Admin — Free Edit", termsHtml(copy("introAdmin")));
@@ -4224,13 +4225,13 @@ function bindSheet(){
     const amt=num(main.querySelector("[data-adjamt]"));
     const note=(main.querySelector("[data-adjnote]")||{}).value||"";
     if (!target || amt==null || !amt) return;
-    commit("adjustment", `Adjust ${target} ${signed(Math.trunc(amt))}${note?` (${note})`:""}`, ()=>{
+    commit("adjustment", `Adjust ${adjLabel(target)} ${signed(Math.trunc(amt))}${note?` (${note})`:""}`, ()=>{
       ch.trackers.adjustments.push({target, amount:Math.trunc(amt), note, date:new Date().toISOString()});
     });
   });
   main.querySelectorAll("[data-adjdel]").forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.adjdel), a2=ch.trackers.adjustments[i]||{};
-    commit("adjustment", `Remove adjustment ${esc(a2.target||"")}`, ()=>{ ch.trackers.adjustments.splice(i,1); });
+    commit("adjustment", `Remove adjustment ${esc(adjLabel(a2.target||""))}`, ()=>{ ch.trackers.adjustments.splice(i,1); });
   });
 
   // IP
