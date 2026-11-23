@@ -42,7 +42,7 @@ and that Goes with is mutual.
 ### Wizard
 
 **W121 — Type a number into a stepper.** *Claude, from P13 · 💡 · Fix (UI) · raised 2026-10-16*\
-**Plan:** none yet · **Goes with:** W131
+**Plan:** [pools-and-numbers J3](plans/pools-and-numbers.md), approved 2026-11-22 · **Goes with:** W131
 
 *The finding-things plan (closed; E1b, EQ10) set this aside: its order was the first-timer's, and this is the veteran's.*
 
@@ -165,6 +165,11 @@ But a new player opening Trackers or Progression still has nowhere to ask what t
 *The finding-things plan (closed; E7, EQ64) set this aside: filling the row changes every card's width at 1280, and so its height, which is E3's revisit condition.*
 
 Main's vitals grid has five tracks at 768 and eight of 142px at 1280, so seven cards leave three empty cells at 768 and one at 1280. At 768 it reads as a tablet layout, not a break. Filling the row (for example `auto-fill` to `auto-fit` with a maximum) would widen the cards and change their heights. *To respect:* Decision 140 (the header) and E3's balance at 1280×860 (measured in the plan's E3 order), so measure Main's Combat top and the fight's bottom before and after, and bring it back to Ken as E3's question.
+
+**W176 — Spend several at once on a tracker.** *Ken + Claude, from the pools-and-numbers plan, 2026-11-22 · 💡 · Rule or shape*\
+**Plan:** [pools-and-numbers J4](plans/pools-and-numbers.md), approved 2026-11-22
+
+A tracker counts by **+1** and **−1**, so a 6-SFR power is six presses, each counted against the round's Rate of Use one at a time. Typing the amount would make it one change and one Undo. *To respect:* Decision 225 (the round warns at and past Rate of Use, never blocks), Decision 266 (`adjustPanelTracker` is the one writer of a spend), and TOL Spent's Cascade past zero, where how an amount that crosses zero is checked is the CRB's to say, or Deighton's.
 
 ### Rules in play: powers, rounds, encounters, Sanity
 
@@ -502,7 +507,7 @@ trait has no `grants`. *To respect:* how Natural Armor answers a hit is the
 F25 stub, still Deighton's.
 
 **W49 — A resource pool the player names.** *Claude · 💡*\
-**Plan:** none yet
+**Plan:** [pools-and-numbers J2](plans/pools-and-numbers.md), approved 2026-11-22
 
 *Set aside by the player sheet's plan when it closed (2026-10-24, `plans/archive/sheet-wishlist.md` §4): an idea, not shaped.*
 
@@ -915,7 +920,7 @@ prep second. *To respect:* the cast and city keep their add fields at the foot o
 is a choice to make for every page at once, not one-off; and Jot's note stays a note unless the GM asks otherwise.
 
 **W152 — An overspent pool reads with a true minus.** *Ken, from E5's review, 2026-11-13 · 🔧 · Fix*\
-**Plan:** none yet
+**Plan:** [pools-and-numbers J3](plans/pools-and-numbers.md), approved 2026-11-22
 
 In the wizard, a pool spent past its total shows a hyphen-minus ("-3 / 40", `wizard.js` lines 72–74) and the Character Points pill
 does the same (line 55). E5 made the sheet's numbers read with a true minus (`numText`/`signed`); the wizard's are the same
@@ -923,7 +928,7 @@ mistake, left because E5 is the sheet. *To respect:* `voice.test.mjs`'s minus ch
 pass over an overspent draft to hold the fix.
 
 **W153 — The no-data screen stops saying "game data".** *Ken, from E5's review, 2026-11-13 · 🔧 · Fix*\
-**Plan:** none yet
+**Plan:** [pools-and-numbers J1](plans/pools-and-numbers.md), approved 2026-11-22
 
 `app.js` line 349: when the data file doesn't load, the page's heading says "No game data". E5 took the phrase out of everything
 a player reads on a sheet, and this is the one place left. It's a screen only seen when something is broken, so it's tool voice:
@@ -945,7 +950,7 @@ E4 struck RES on the sheet for a body piece at Integrity 0, because the engine a
 S26's Print button prints a session, a cast member or an encounter as it reads. The browser's own Print (Ctrl+P, the menu) on a table page still prints `#printSheet`, which is empty or holds the last character printed. It would have to tell a character's print from a table page's. *To respect:* the character's print must not move (Decision 304).
 
 **W174 — Esc in ⋮ should hand focus back to the ⋮ button.** *Claude, from K4's review (PR #375), 2026-11-20 · ⏭ · Fix (UI) · raised 2026-11-20*\
-**Plan:** none yet
+**Plan:** [pools-and-numbers J1](plans/pools-and-numbers.md), approved 2026-11-22
 
 Esc inside the ⋮ menu closes it, but focus drops to the page's body instead of going back to the ⋮ button, so the next Tab starts from the top of the page. It's old behaviour, and more noticeable since K4 put Guide lines and the sheet's ? key switch in ⋮ (Decision 306), where a keyboard user flips them with the menu open. *To respect:* a press on a ⋮ switch leaves ⋮ open with focus on the item (K4), Esc with ⋮ open closes the menu before Help (Decision 278's one layer at a time), and `closeMenu` in `app.js` is the one place that shuts it.
 
@@ -1190,7 +1195,7 @@ A GM who wants to post jobs, see which the crew has taken and keep the ones nobo
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W176.** Everything above is open. What was built is in
+- **Next free number: W177.** Everything above is open. What was built is in
   [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)

@@ -73,6 +73,7 @@ Each id is defined in exactly one place and referenced everywhere.
 | `KQ`_n_, `K`_n_ | A question the help-on-the-sheet plan (W156) raises for Ken, and its sessions K1–K3 (K for know the sheet) | `plans/help-on-the-sheet.md` §5 and §3; KQ9–KQ12 in `plans/help-on-the-sheet/K1-one-help.md` §4; KQ13–KQ18 in `K2-every-word.md` §4; KQ19–KQ22 in `K3-guide-lines.md` §4 |
 | `LQ`_n_, `L`_n_ | A question the vehicles-and-gear plan raises for Ken, and its sessions L1–L5b and L8–L10 (L6 and L7 left it 2026-11-15) | `plans/loadout-and-gear.md` §5 and §3 |
 | `NQ`_n_, `N`_n_ | A question the accounts-and-sync plan (W138) raises for Ken, and its sessions N0–N6 | `plans/accounts-and-sync.md` §5 and §3 |
+| `JQ`_n_, `J`_n_ | A question the pools-and-numbers plan (SFR by hand, W49, W121, W176) raises for Ken, and its sessions J1–J4 | `plans/pools-and-numbers.md` §5 and §3; JQ9–JQ12 in `plans/pools-and-numbers/J1-sfr-by-hand.md` §4 |
 | `BQ`_n_ | A question W143's work order (powers bought with CP) raises for Ken | `plans/archive/w143-powers-bought-with-cp.md` §4 |
 | `HQ`_n_, `H`_n_ | A question the powers-that-run plan (W110, W132) raises for Ken, and its sessions H1–H3 (H for Held: not `R`, which is the audit's) | `plans/archive/powers-that-run.md` §5 and §3; H1's own questions in `plans/archive/powers-that-run/H1-sustained-powers.md` §4 |
 | `UQ`_n_, `U`_n_ | A question the GM-at-the-table plan raises for Ken, and its sessions U1–U5 (U for use at the table; its findings are `#`_n_, inside the plan only) | `plans/archive/gm-at-the-table.md` §5 and §4 |
