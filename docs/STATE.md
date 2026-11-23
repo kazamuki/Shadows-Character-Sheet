@@ -146,8 +146,8 @@ rev 9's `C1`–`C3` are still forward notes.
   Vehicles and Powered Armor (were L6, L7) left the plan 2026-11-15 (W91, W69). The plan ends with natural-weapon follow-ons, each waiting on an answer: L8 the Werewolf's damage (LQ40), L9 a trained weapon as natural (W160), L10 hand cyberware (W90).
   The player sheet's plan (`plans/archive/sheet-wishlist.md`) closed 2026-10-24, P1–P21 built.
 - **Help on the sheet** (`plans/help-on-the-sheet.md`, W156): K1–K4 built (289, 291, 298, 306–307); voice pass left.
-- **Closed 2026-11-14** (`plans/archive/`): finding-things-on-the-sheet (E1a–E8, Decisions 273–287; its closing entry holds the re-run critique, and its leftovers are W152–W157 and W159).
-- **Closed 2026-11-07** (`plans/archive/`): powers-that-run (H1–H3, 266–268; W132's last two powers wait on the book, `plans/crb-catch-up.md`) and GM-at-the-table (U1–U5).
+- **Pools and numbers** (`plans/pools-and-numbers.md`, approved 2026-11-22): SFR by hand, W49, W121, W176 as J1–J4, one release; J1's order is approved, ready to build.
+- **Closed plans** are in `plans/archive/`; finding-things left W152–W157 and W159, and powers-that-run W132's last two powers (`plans/crb-catch-up.md`).
 - **W90**, cybernetics: six questions before a plan.
 
 **Ken alone:** F12 and F32, W38's plan (`plans/two-tabs-one-character.md`,
