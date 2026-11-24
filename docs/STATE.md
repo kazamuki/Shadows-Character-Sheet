@@ -146,7 +146,7 @@ rev 9's `C1`–`C3` are still forward notes.
   Vehicles and Powered Armor (were L6, L7) left the plan 2026-11-15 (W91, W69). The plan ends with natural-weapon follow-ons, each waiting on an answer: L8 the Werewolf's damage (LQ40), L9 a trained weapon as natural (W160), L10 hand cyberware (W90).
   The player sheet's plan (`plans/archive/sheet-wishlist.md`) closed 2026-10-24, P1–P21 built.
 - **Help on the sheet** (`plans/help-on-the-sheet.md`, W156): K1–K4 built (289, 291, 298, 306–307); voice pass left.
-- **Pools and numbers** (`plans/pools-and-numbers.md`, approved 2026-11-22): SFR by hand, W49, W121, W176 as J1–J4, one release; J1 and J2 are built (Decisions 312, 313); J3 is next.
+- **Pools and numbers** (`plans/pools-and-numbers.md`, approved 2026-11-22): SFR by hand, W49, W121, W176 as J1–J4, one release; J1–J3 are built (Decisions 312–314); J4 is next.
 - **Closed plans** are in `plans/archive/`; finding-things left W152–W157 and W159, and powers-that-run W132's last two powers (`plans/crb-catch-up.md`).
 - **W90**, cybernetics: six questions before a plan.
 

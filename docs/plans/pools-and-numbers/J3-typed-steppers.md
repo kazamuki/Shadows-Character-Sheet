@@ -128,6 +128,15 @@ Each has its default. A blank answer is the default; Ken answered every one with
 - **JQ-J3-5: the field's look.** **Answered: Default (Ken, 2026-11-23).** **Default:** the same 42px cell as today's value, a text field with `inputmode="numeric"` and an aria-label naming the stepper. *Alternative:* a wider field, and the buttons drawn as steppers around it, as they are now.
 - **JQ-J3-6: W152's rider in this order.** **Answered: Default (Ken, 2026-11-23).** **Default:** yes, in J3, since its fix is the same pills. *Alternative:* W152 moves to its own small order.
 
+## 4a. Ken's answers to the review, recorded by the conductor (2026-11-24)
+
+These amend §8, §9 and §11 to match the build. Ken's answers: (1) `currentOf` isn't built: each press re-renders and reads the rendered field's value, so there is no table to keep. The builder's approach stands. (2) The field's aria-label is the stepper's name alone, not `<name> value`; the field's own value is what the player hears with it.
+
+- **§8 (`currentOf`):** not built. `stepTo`'s current value is the field's rendered value (`defaultValue`) after each redraw. A press the button greys out, or `applyStep` refuses, stops the loop. The 17-site table is the `stepper()` call sites, not a `currentOf` table.
+- **§9 (aria-label):** `aria-label` = the stepper's name (for example "Body"). No " value" suffix.
+- **§11 (totality):** `stepTo` isn't exported and the typed path only reaches it with a whole number (`^-?\d+$`), so NaN, Infinity, a fraction, and a string are refused before a loop starts. The test for that is the non-whole-number case (`J3: text that isn't a whole number leaves the value as it was`).
+- **§11 (hostile):** the test is in `tests/hostile.test.mjs` (`J3: a typed value on a hostile stepper key writes nothing`).
+
 ## 5. The assumption sweep
 
 | What changes | True today (where) | After | Guards and readers · where it renders · text that points at it |

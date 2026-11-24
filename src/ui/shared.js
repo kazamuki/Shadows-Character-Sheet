@@ -112,7 +112,8 @@ function announce(text){
 function announceStep(dataStep){
   const b=[...document.querySelectorAll("#main [data-step]")].find(x=>x.dataset.step===dataStep);
   const st=b && b.closest(".stepper"), val=st && st.querySelector(".val");
-  if (st && val) announce(`${st.dataset.name} ${val.textContent}`);
+  // J3: a stepper's value is a field now, so its value is what the player sees; a span's is its text.
+  if (st && val) announce(`${st.dataset.name} ${val.tagName==="INPUT" ? val.value : val.textContent}`);
 }
 
 // Decision 173: an unfinished feature ships switched off. A browser turns
