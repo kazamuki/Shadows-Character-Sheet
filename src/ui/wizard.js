@@ -1075,12 +1075,25 @@ function bindMain(){
     update();
   });
   // steppers
+  // J3: a press on a stepper's buttons while its field holds a typed value. The mousedown keeps focus in the field (so
+  // no blur and no redraw land between the press and its click); the click commits the typed value first, then presses.
+  const dirtyField = b => { const st=b.closest(".stepper"), f=st && st.querySelector("[data-val]"); return f && f.value!==f.defaultValue ? f : null; };
+  main.querySelectorAll("[data-step]").forEach(b=>b.onmousedown=e=>{ if (dirtyField(b)) e.preventDefault(); });
   main.querySelectorAll("[data-step]").forEach(b=>b.onclick=()=>{
-    const [key,delta]=b.dataset.step.split("|").reduce((acc,part,i,arr)=>{
+    // A typed value commits first, then the press is taken on the button as the commit left it: a value that greys
+    // the button out stops the press (its disabled state is the gate, not applyStep).
+    let btn = b;
+    const pending = dirtyField(b);
+    if (pending){
+      typedCommit(pending);
+      btn = main.querySelector(attrSel("data-step", b.dataset.step));
+      if (!btn || btn.disabled) return;
+    }
+    const [key,delta]=btn.dataset.step.split("|").reduce((acc,part,i,arr)=>{
       if(i===arr.length-1) acc[1]=Number(part); else acc[0]=(acc[0]?acc[0]+"|":"")+part; return acc; },[null,0]);
     // Decision 279: a − that folds the pick away takes the stepper with it; the list's fold button stands in.
-    const list = b.closest("[data-cp-list]"), listKey = list && list.dataset.cpList, had = document.activeElement===b;
-    applyStep(key, delta); update(); announceStep(b.dataset.step);
+    const list = btn.closest("[data-cp-list]"), listKey = list && list.dataset.cpList, had = document.activeElement===btn;
+    applyStep(key, delta); update(); announceStep(btn.dataset.step);
     const now = document.activeElement;   // keepPlace may have put it on the pick before the filter hid it
     if (had && listKey && (!now || now===document.body || now.closest("[hidden]"))){
       const fb = main.querySelector(`[data-cp-all="${listKey}"]`); if (fb) fb.focus({ preventScroll:true });
@@ -1088,8 +1101,10 @@ function bindMain(){
   });
   // J3 (W121): a stepper's value is a field. Enter or leaving it commits a whole number; Escape puts the value back;
   // the arrows step by one, through the same press the buttons make.
+  // Leaving the field by Tab or a click elsewhere: the commit waits a tick, so focus has moved, and the redraw puts
+  // focus on whatever the player went to (its twin), not on <body>.
   main.querySelectorAll("[data-val]").forEach(f=>{
-    f.onchange = () => typedCommit(f);
+    f.onchange = () => setTimeout(() => typedCommit(f), 0);
     f.onkeydown = e => {
       if (e.key==="Enter"){ e.preventDefault(); typedCommit(f); }
       else if (e.key==="Escape"){ e.preventDefault(); f.value = f.defaultValue; }

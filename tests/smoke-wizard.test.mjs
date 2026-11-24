@@ -2235,7 +2235,7 @@ const pressToEnd = (setup, key) => {
   }
   return app.$(`#main [data-val="${key}"]`)?.defaultValue;
 };
-test("J3: a typed value stops where a press would open no more, on an Advantage (its affordability gate)", async () => {
+test("J3: a typed value stops where an Advantage's + greys out (its affordability gate)", async () => {
   const setup = () => onStep("professional", "street", "character-points", () => {});
   const probe = setup();
   const key = [...probe.$$("#main .stepper .val")].map(v => v.dataset.val)
@@ -2251,15 +2251,28 @@ test("J3: a typed value stops where a press would open no more, on an Advantage 
   assert.deepEqual(app.errors, []);
 });
 
-test("J3: a typed value on a key no stepper shows changes nothing and throws nothing", async () => {
+test("J3: a typed value then a press on + takes the typed value first, then the press", async () => {
   const app = statsDraft();
-  const before = JSON.stringify(stored(app, { locked: false }));
-  const ghost = app.doc.createElement("input");
-  ghost.className = "val"; ghost.dataset.val = "stat|NOPE"; ghost.value = "9";
-  app.$("#main").appendChild(ghost);
-  ghost.dispatchEvent(new app.window.KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
-  ghost.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  const from = D.statRules.base;
+  const f = setField(app, "stat|BOD", String(from + 3));
+  const plus = app.$('#main [data-step="stat|BOD|1"]');
+  const down = new app.window.MouseEvent("mousedown", { bubbles: true, cancelable: true });
+  plus.dispatchEvent(down);
+  assert.ok(down.defaultPrevented, "the mousedown let focus leave the field, so the redraw would land before the click");
+  plus.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
   await later(app);
-  assert.equal(JSON.stringify(stored(app, { locked: false })), before, "a stepper that isn't shown wrote to the character");
+  assert.equal(statBase(app, "BOD"), from + 4, "the typed value and the press didn't both land");
+  assert.deepEqual(app.errors, []);
+});
+
+test("J3: a typed value stops at a cap on the press that follows it, and the press is then refused", async () => {
+  const app = statsDraft();
+  const f = setField(app, "stat|BOD", "99");
+  const plus = app.$('#main [data-step="stat|BOD|1"]');
+  plus.dispatchEvent(new app.window.MouseEvent("mousedown", { bubbles: true, cancelable: true }));
+  plus.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  await later(app);
+  const ch = stored(app, { locked: false });
+  assert.ok(Engine.statSpent(ch) <= Engine.statPool(ch).total, "the typed value and the press overspent the Stat pool");
   assert.deepEqual(app.errors, []);
 });

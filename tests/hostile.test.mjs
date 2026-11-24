@@ -1751,3 +1751,26 @@ test("J2: an undo that writes junk pools back leaves the readers total and the i
   assert.equal(Engine.archPanels(ch).filter(p => p.id === "sfr").length, 1, "the SFR panel was doubled");
   assert.equal(Engine.poolIdFree(ch, "pool-bbbbbbbb"), false);
 });
+
+// J3 (W121): a typed value on a stepper key the page doesn't show writes nothing and throws nothing.
+test("J3: a typed value on a hostile stepper key writes nothing", async () => {
+  const steps = D.creationFlow.steps.map(s => s.id);
+  const ch = Engine.newCharacter();
+  ch.identity.name = "Probe";
+  ch.identity.archetype = D.archetypes.find(a => !a.writeIn).id;
+  ch.creation.powerLevel = D.powerLevels[0].id;
+  ch.creation.rolls = { statPoints: 40, skillPoints: 30, credits: 1000 };
+  for (const id of Object.keys(ch.stats)) ch.stats[id].base = D.statRules.base;
+  const app = boot({ storage: { "shadows.draft.v1": { ch, step: steps.indexOf("stats"), maxReached: steps.length - 1 } } });
+  app.$$("#main button").find(b => /Resume draft/.test(b.textContent))
+    .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  const before = JSON.stringify(app.window.localStorage.getItem("shadows.draft.v1"));
+  const ghost = app.doc.createElement("input");
+  ghost.className = "val"; ghost.dataset.val = "stat|NOPE|x"; ghost.value = "9";
+  app.$("#main").appendChild(ghost);
+  ghost.dispatchEvent(new app.window.KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+  ghost.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  await new Promise(r => app.window.setTimeout(r, 60));
+  assert.equal(JSON.stringify(app.window.localStorage.getItem("shadows.draft.v1")), before, "a stepper that isn't shown wrote to the character");
+  assert.deepEqual(app.errors, []);
+});
