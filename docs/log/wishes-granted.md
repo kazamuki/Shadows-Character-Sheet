@@ -15,6 +15,8 @@ what the app does now, the decision named in the pointer is the authority.
 
 ### Trackers & vitals
 
+**W176 — Spend several at once on a tracker.** *Ken + Claude, from the pools-and-numbers plan, 2026-11-22 → pools-and-numbers J4, Decision 315, app 0.76.0 (unreleased): a tracker's − and + take a typed amount, one change and one Undo, counted against the round as the amount. Order: [J4-spend-several](plans/pools-and-numbers/J4-spend-several.md)*
+
 **W1 — Trackers wastes the right half of the screen.** *Ken · → Decision 112, app 0.20.0: two columns from 1000px, the body on the left*
 Every tracker card is full-width with its controls packed left: Damage's
 stepper and action row, Sanity, Luck, Çredits. At a desktop width most of each

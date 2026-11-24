@@ -1621,6 +1621,38 @@ const crankNote = st => st.below ? D.resources.crank.belowText : st.paidOff ? D.
 const crankNoteHtml = st => crankNote(st) ? `<p class="step-note crank-note">${esc(crankNote(st))}</p>${st.paidOff && !st.below ? sheetLine("burnedRemove") : ""}` : "";
 const crankCardMeta = st => st.below ? crankNote(st) : [st.tier ? st.tier.name : "", st.paidOff ? crankNote(st) : ""].filter(Boolean).join(" · ");
 
+// ── J4: a tracker's − and + spend a typed amount (Decision 315, W176) ──
+// The amount is browser state, never saved (constraint 7): a map from a panel id to the amount typed, kept per
+// character (a WeakMap on the character, so another character starts at 1). It's 1 until the player types another,
+// and a press puts it back to 1 (JQ-J4-3). The engine's adjustPanelTracker takes the amount; nothing here counts.
+const trkAmts = new WeakMap();
+function trkAmount(id){ const m = S.ch && trkAmts.get(S.ch); return m && m[id] || 1; }
+function setTrkAmount(id, n){
+  if (!S.ch) return;
+  let m = trkAmts.get(S.ch); if (!m) trkAmts.set(S.ch, m = {});
+  if (n===1) delete m[id]; else m[id] = n;
+}
+// What a field's text names: a whole number from 1 to 9999, or null for anything else (zero, a fraction, a sign, letters, a blank).
+function amountOf(text){
+  const s = String(text==null ? "" : text).trim();
+  return /^[0-9]{1,4}$/.test(s) && Number(s)>=1 ? Number(s) : null;
+}
+// The control beside a tracker's name: − , the amount, + . One group on each twin: the Trackers row, the SFR popover,
+// a named pool's popover. The amount is read from its field at a press; the − and + keep the `id|d` attribute.
+function trkControlHtml(id, title){
+  const n = trkAmount(id), nm = esc(title);
+  return `<span class="trk-ctl"><button class="btn sm" data-trk="${esc(id)}|-1" aria-label="Take back ${n} from ${nm}">−</button>` +
+    `<input class="trk-amt" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" data-trkamt="${esc(id)}" data-trkname="${nm}" value="${n}" aria-label="${nm} amount">` +
+    `<button class="btn sm" data-trk="${esc(id)}|1" aria-label="Spend ${n} on ${nm}">+</button></span>`;
+}
+// Shows an amount in its field and in the names of its − and + (a name says what a press does).
+function paintTrkAmount(f, n){
+  f.value = String(n);
+  const pid = f.dataset.trkamt, nm = f.dataset.trkname, row = f.parentElement;
+  const minus = row && row.querySelector(attrSel("data-trk", `${pid}|-1`)), plus = row && row.querySelector(attrSel("data-trk", `${pid}|1`));
+  if (minus) minus.setAttribute("aria-label", `Take back ${n} from ${nm}`);
+  if (plus) plus.setAttribute("aria-label", `Spend ${n} on ${nm}`);
+}
 // Decision 225: SFR spent this round. The pool's tracker panel is found by its resource, not its id;
 // `turn` is null for a pool with no Rate of Use (a written-in one), and nothing is said then.
 const sfrPanel = ch => Engine.archPanels(ch).find(x=>x.type==="tracker" && x.resource==="sfr") || null;
@@ -1678,7 +1710,7 @@ function vitalPopover(ch, key){
       starts.map(r=>`<div class="run-row"><button type="button" class="btn sm" data-runtoggle="${esc(r.id)}|start" aria-label="Start ${esc(r.name)}"${r.can.ok ? "" : ` disabled title="${esc(r.can.why)}"`}>Start ${esc(r.name)}</button>${runWhyHtml(r)}</div>`).join("") + `</div>` : "";
     return { title:"SFR",
       html: now(`${left} / ${sf.value}`, turn && (turn.at||turn.past) ? "bad" : "", sf.rou!=null ? `RoU ${sf.rou}` : "") +
-        `<div class="trk-row"><button class="btn sm" data-trk="${esc(p.id)}|-1">−1</button><button class="btn sm" data-trk="${esc(p.id)}|1">+1</button></div>` +
+        `<div class="trk-row">${trkControlHtml(p.id, p.title)}</div>` +
         (line ? `<p class="sub sfr-round" data-sfrround>${esc(line)}</p>` : "") + runHtml +
         (turn && turn.spent ? `<div class="trk-actions"><button class="btn sm" data-popreset>Turn Reset</button></div>` : "") }; }
   if (key==="cred") return { title:"Çredits",
@@ -1695,7 +1727,7 @@ function vitalPopover(ch, key){
     if (!c) return null;
     return { title:c.panel.title,
       html: now(`${c.t.shown} / ${c.t.max}`, "", "") +
-        `<div class="trk-row"><button class="btn sm" data-trk="${esc(id)}|-1">−1</button><button class="btn sm" data-trk="${esc(id)}|1">+1</button></div>` +
+        `<div class="trk-row">${trkControlHtml(id, c.panel.title)}</div>` +
         `<div class="trk-actions"><button class="btn sm" data-popgo="trackers">On Trackers</button></div>` };
   }
   return null;
@@ -1788,8 +1820,7 @@ ${esc(painIgnoredText(pain))}: ${signed(-pain.ignored)} Pain Level${pain.ignored
     const cur = down ? (effMax!=null?Math.max(0,effMax-val):null) : val;
     h += `<div class="trk"><h2>${esc(p.title)}</h2>
       <span class="big ${effMax!=null&&!down&&cur>=effMax?"bad":""}">${cur==null?"—":cur}${effMax!=null?" / "+effMax:""}</span>
-      <button class="btn sm" data-trk="${p.id}|-1">−1</button>
-      <button class="btn sm" data-trk="${p.id}|1">+1</button>
+      ${trkControlHtml(p.id, p.title)}
       ${manualMax!==null?`<label class="field" style="margin:0"><input type="number" min="0" data-trkmax="${p.id}" value="${manualMax}" placeholder="max" aria-label="${esc(p.title)} max" style="width:84px"></label>`:""}
       <span class="sub">${p.atMax&&effMax!=null&&cur>=effMax?esc(p.atMax):p.note?esc(p.note):p.max==="TOL"?"Capped by Tolerance (computed).":"Set the max when the rules land — the tracker won't block on un-modeled rules."}</span>
       ${byHand?`<span class="sub sfr-byhand" data-sfrbyhand>${esc(byHand)}</span>`:""}
@@ -4010,9 +4041,30 @@ function bindVitalControls(root){
   });
 
   // Generic archetype trackers (SFR / panel trackers): the Trackers row's and Main's SFR popover's, one commit.
+  // J4 (Decision 315): a press spends the amount in its field beside − and + (1 until one is typed). A field that
+  // doesn't hold a whole amount moves nothing and shows the last amount again.
   root.querySelectorAll("[data-trk]").forEach(b=>b.onclick=()=>{
-    const [pid,d]=b.dataset.trk.split("|"), delta=Number(d);
-    commit("tracker", `${trackerTitle(ch, pid)} ${signed(delta)}`, ()=>{ Engine.adjustPanelTracker(ch, pid, delta); });
+    const [pid,d]=b.dataset.trk.split("|"), sign=Number(d)<0 ? -1 : 1;
+    const f=b.parentElement && b.parentElement.querySelector(attrSel("data-trkamt", pid));
+    const amt = f ? amountOf(f.value) : 1;
+    if (amt==null){ paintTrkAmount(f, trkAmount(pid)); return; }
+    setTrkAmount(pid, 1);
+    // A change that trails the press (Enter fires one, after this handler) reads the field: it must read 1, not the spent amount.
+    if (f) f.value = "1";
+    commit("tracker", `${trackerTitle(ch, pid)} ${signed(sign*amt)}`, ()=>{ Engine.adjustPanelTracker(ch, pid, sign*amt); });
+  });
+  // The amount field: a change keeps a whole amount (anything else goes back to the last one). Enter spends it (the +);
+  // Escape puts it back to 1 and stops there, so the popover stays open.
+  root.querySelectorAll("[data-trkamt]").forEach(f=>{
+    const pid=f.dataset.trkamt;
+    // A change to text that isn't an amount keeps the text: reverting it on blur would turn a tap on + (which blurs
+    // the field first) into a spend of the last amount. The press refuses it and shows the last amount instead.
+    // A field that a press has just replaced still gets its change (Enter fires one after the press): it's out of the page, so it's ignored.
+    f.onchange=()=>{ if (!f.isConnected) return; const v=amountOf(f.value); if (v!=null){ setTrkAmount(pid, v); paintTrkAmount(f, v); } };
+    f.onkeydown=e=>{
+      if (e.key==="Enter"){ e.preventDefault(); const p=f.parentElement.querySelector(attrSel("data-trk", `${pid}|1`)); if (p) p.click(); }
+      else if (e.key==="Escape"){ e.preventDefault(); e.stopPropagation(); setTrkAmount(pid, 1); paintTrkAmount(f, 1); }
+    };
   });
 
   // Decision 266: Start and Stop, on a power's card and in the SFR popover: one commit, so one undo takes back the SFR too.

@@ -233,6 +233,13 @@ textarea{min-height:150px; resize:vertical; line-height:1.6}
 .stepper .val{font-family:var(--mono); width:42px; height:30px; box-sizing:border-box; text-align:center; font-size:.95rem; background:var(--panel-2); color:var(--text); border:0; border-radius:0; padding:0; -moz-appearance:textfield; appearance:textfield}
 .stepper .val::-webkit-outer-spin-button, .stepper .val::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
 .stepper .val:focus-visible{outline:2px solid var(--cyan); outline-offset:-2px}
+/* J4 (Decision 315): the amount beside a tracker's − and +. Its digits are the amount; 44px on a phone (above). */
+/* The control beside a tracker: − , the amount, + , kept on one line. */
+.trk-ctl{display:inline-flex; align-items:center; gap:6px; flex-wrap:nowrap}
+/* The field is an input, so the page's full-width input rule would stretch it: these select it as input.trk-amt, one step past that rule. */
+input[type="text"].trk-amt{width:48px; height:30px; box-sizing:border-box; text-align:center; font-family:var(--mono); font-size:.95rem; background:var(--panel-2); color:var(--text); border:1px solid var(--frame); border-radius:4px; padding:0; -moz-appearance:textfield; appearance:textfield}
+.trk input[type="text"].trk-amt{width:48px; flex:0 0 auto; min-width:0}
+input[type="text"].trk-amt:focus-visible{outline:2px solid var(--cyan); outline-offset:1px}
 .mod{font-family:var(--mono); font-size:.78rem; width:3.2em; text-align:right; color:var(--dim)}
 .mod.pos{color:var(--green)} .mod.neg{color:var(--magenta-text)}
 .sect{font-family:var(--mono); font-size:.7rem; letter-spacing:.16em; text-transform:uppercase;
@@ -1409,6 +1416,8 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
   button.x{min-width:44px; min-height:44px}
   .stepper button{width:44px; height:44px}
   .stepper .val{width:44px; height:44px}
+  input[type="text"].trk-amt{width:44px; height:44px}
+  .trk input[type="text"].trk-amt{width:44px; flex:0 0 auto; min-width:0}
   details.group > summary, .cond-add > summary{padding-block:13px}
   .tags{gap:6px}
   .tags .tag{min-height:44px}

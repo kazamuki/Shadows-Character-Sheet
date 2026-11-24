@@ -2790,7 +2790,7 @@ test("J4: a take-back of more than the count stops at zero and takes back the ro
 
 test("J4: an amount past TOL shows the Cascade panel once, with no roll", () => {
   const ch = lockedCharacter();
-  const n = Engine.derived(ch).TOL + 1;
+  const n = Engine.derived(ch).TOL + 3;   // three points past the max: a panel per point would show three
   const app = openSheet(ch, "trackers");
   typeAmount(app, "#main", "tol-spent", String(n));
   press(app, '#main [data-trk="tol-spent|1"]');
@@ -2824,9 +2824,16 @@ test("J4: Enter spends the typed amount and Escape puts the field back to 1", ()
   app.click('#main [data-vpop="sfr"]');
   const key = (sel, k) => app.$(sel).dispatchEvent(new app.window.KeyboardEvent("keydown", { key: k, bubbles: true, cancelable: true }));
   typeAmount(app, "#vpop", "sfr", "5");
+  const typed = app.$('#vpop [data-trkamt="sfr"]');
   key('#vpop [data-trkamt="sfr"]', "Enter");
   assert.equal(trkOf(app).spent, 5, "Enter didn't spend the typed amount");
   assert.equal(app.$('#vpop [data-trkamt="sfr"]').value, "1", "the press didn't put the field back to 1");
+  // Enter's own change lands on the field the press replaced: it must not keep the 5 for the next draw.
+  typed.value = "5"; typed.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  app.click('#main [data-vpop="sfr"]');   // closes the popover
+  app.click('#main [data-vpop="sfr"]');   // and draws it again from the amount kept
+  assert.equal(app.$('#vpop [data-trkamt="sfr"]').value, "1", "a change on the field Enter replaced kept 5 for the next draw");
+  assert.equal(trkOf(app).spent, 5, "the reopen spent something");
   typeAmount(app, "#vpop", "sfr", "7");
   key('#vpop [data-trkamt="sfr"]', "Escape");
   assert.equal(app.$('#vpop [data-trkamt="sfr"]').value, "1", "Escape didn't put the field back to 1");
