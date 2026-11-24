@@ -5979,6 +5979,14 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. Extends 153 (its *Revisit if* names W49) and 225.
      - **Revisit if:** a pool needs its own rule; a book archetype gets a named pool (W109); four is too few at a real table.
      - **Built:** game data 0.60, character schema 0.35 (`migrate()` step), app 0.76.0 (unreleased), PR (this one), log entry 2026-11-23.
+314. **A wizard stepper takes a typed number, held to the caps and pools its buttons are.**
+     *2026-11-23 · Ken + Claude · Touches: stepper(), applyStep, the [data-step] and [data-val] binders, pressKey, stepTo, keepPlace (164), the CP fold re-focus (279), W59's announcement, the creation rail and Vitals pills, W121, W152*
+     - **Decided:** each wizard stepper's value is a field (`data-val`). A typed whole number steps the stepper toward it one press at a time, each the button's own `applyStep(key, ±1)` followed by a redraw, so every cap, floor, pool and gate the buttons read applies to it too. The loop stops at the first press a button greys out or `applyStep` refuses. Enter or leaving commits; Escape reverts; the arrows step by one. The rail's and Vitals' pills read a true minus (`numText`).
+     - **Why:** a veteran knows the target (W121). A typed number that went around the gates would make a pool's number lie.
+     - **Rejected:** writing the typed value straight to the character (it skips the gates and makes a second writer, Decision 81); a native `number` input (it announces twice, W59); an error past a cap (the buttons already stop at the cap).
+     - **Replaces:** nothing. Extends 164 and 279.
+     - **Revisit if:** a long typed step proves slow (then a bulk apply is its own decision); a stepper gains a rule a press can't express.
+     - **Built:** app 0.76.0 (unreleased), PR (this one), log entry 2026-11-23.
 
 ## 5. Open Flags
 

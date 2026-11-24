@@ -41,16 +41,6 @@ and that Goes with is mutual.
 
 ### Wizard
 
-**W121 — Type a number into a stepper.** *Claude, from P13 · 💡 · Fix (UI) · raised 2026-10-16*\
-**Plan:** [pools-and-numbers J3](plans/pools-and-numbers/J3-typed-steppers.md) (order drafted 2026-11-23; the plan row is pools-and-numbers.md §3) · **Goes with:** W131
-
-*The finding-things plan (closed; E1b, EQ10) set this aside: its order was the first-timer's, and this is the veteran's.*
-
-Every rank in the wizard is one click: spending the Skill pool alone is about 30, before stats, boosts and Advantages. An experienced player knows the
-targets. The stepper's value could take a typed number and the arrow keys, held to the same caps and pools as + and −.
-*To respect:* W59 (each control says what it changes, and the new value is announced; a native spinbutton announces itself, so check the two don't double
-up). It touches all 16 `stepper()` calls, so it's its own order.
-
 **W122 — Make a copy of a character, from Home.** *Claude, from P13 · 💡 · Rule or shape · raised 2026-10-16*\
 **Plan:** none yet
 
@@ -59,7 +49,7 @@ Home offers Open, Export and Remove, and no copy, so a second character of the s
 choice someone could make differently: a numbered decision.
 
 **W131 — Expert mode as one long page.** *Ken, after P13 · 💡 · Rule or shape · raised 2026-10-17*\
-**Plan:** none yet · **Goes with:** W121
+**Plan:** none yet
 
 *The finding-things plan (closed; E1b, EQ10) set this aside: its order was the first-timer's, and this is the veteran's.*
 
@@ -908,14 +898,6 @@ exclusive: the add field leads the Threads section, or **Jot** (the header's qui
 "make it a thread" choice, so a thread is a keystroke away wherever the GM is. The second is the one that fits play first,
 prep second. *To respect:* the cast and city keep their add fields at the foot of their lists today, so moving only this one
 is a choice to make for every page at once, not one-off; and Jot's note stays a note unless the GM asks otherwise.
-
-**W152 — An overspent pool reads with a true minus.** *Ken, from E5's review, 2026-11-13 · 🔧 · Fix*\
-**Plan:** [pools-and-numbers J3](plans/pools-and-numbers/J3-typed-steppers.md) (order drafted 2026-11-23; the plan row is pools-and-numbers.md §3)
-
-In the wizard, a pool spent past its total shows a hyphen-minus ("-3 / 40", `wizard.js` lines 72–74) and the Character Points pill
-does the same (line 55). E5 made the sheet's numbers read with a true minus (`numText`/`signed`); the wizard's are the same
-mistake, left because E5 is the sheet. *To respect:* `voice.test.mjs`'s minus check reads the sheet only, so it needs a wizard
-pass over an overspent draft to hold the fix.
 
 **W155 — Stealth reads the light: +1 in Dim, +3 in Dark, +5 in Blind.** *Ken, from E8's review, 2026-11-14 · 🔧 · Content*\
 **Plan:** none yet

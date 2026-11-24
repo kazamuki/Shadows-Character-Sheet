@@ -1043,6 +1043,24 @@ W143's idea, weighed and set aside. Every power would start at rank 0 and carry 
 - **The Werewolf's starter power** is a specialization's feature, not a pool power. Nothing here moves it.
 - **Revisit if** the book gives either power ranks, or prints a maximum that holds in play rather than only at creation. Either would make a per-power maximum that binds in play worth adding to the data, and then `ranked: false` could fold into it.
 
+**W121 — Type a number into a stepper.** *Claude, from P13 · 💡 → pools-and-numbers J3, Decision 314, app 0.76.0 (unreleased)*\
+**Plan:** [pools-and-numbers J3](plans/pools-and-numbers/J3-typed-steppers.md), approved 2026-11-23
+
+*The finding-things plan (closed; E1b, EQ10) set this aside: its order was the first-timer's, and this is the veteran's.*
+
+Every rank in the wizard is one click: spending the Skill pool alone is about 30, before stats, boosts and Advantages. An experienced player knows the
+targets. The stepper's value could take a typed number and the arrow keys, held to the same caps and pools as + and −.
+*To respect:* W59 (each control says what it changes, and the new value is announced; a native spinbutton announces itself, so check the two don't double
+up). It touches all 16 `stepper()` calls, so it's its own order.
+
+**W152 — An overspent pool reads with a true minus.** *Ken, from E5's review, 2026-11-13 · 🔧 → pools-and-numbers J3, Decision 314, app 0.76.0 (unreleased)*\
+**Plan:** [pools-and-numbers J3](plans/pools-and-numbers/J3-typed-steppers.md), approved 2026-11-23
+
+In the wizard, a pool spent past its total shows a hyphen-minus ("-3 / 40", `wizard.js` lines 72–74) and the Character Points pill
+does the same (line 55). E5 made the sheet's numbers read with a true minus (`numText`/`signed`); the wizard's are the same
+mistake, left because E5 is the sheet. *To respect:* `voice.test.mjs`'s minus check reads the sheet only, so it needs a wizard
+pass over an overspent draft to hold the fix.
+
 ### Modals & pickers
 
 These build on the modal primitive (`openModal`, Decision 111), whose first

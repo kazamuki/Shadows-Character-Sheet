@@ -33,6 +33,8 @@ own in the footer.
 - **Your GM can move your SFR.** Manual Adjustments on Trackers take SFR max and Rate of Use, up or down, with a note, and Undo takes it back. Admin has a button that goes straight there.
 - **Esc in the ⋮ menu** puts you back on ⋮, so the next Tab carries on from there.
 - **A sheet missing its rules file** says which file and what to do.
+- **You can type a number into a wizard stepper.** Type it in the box and press Enter, or leave the box; the arrow keys step by one. It stops at the most the buttons would reach.
+- **An overspent pool reads with a true minus** in the creation rail and the Vitals panel: it reads −3 when you are three over.
 
 ### GM mode
 
