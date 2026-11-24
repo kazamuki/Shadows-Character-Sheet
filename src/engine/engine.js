@@ -4518,28 +4518,23 @@ const Engine = (() => {
   };
   // Schema 0.35 (Decision 313): the pools a write-in archetype names, `writeIn.pools`. `keptPools` is the one
   // normalizer: migrate() runs it on a file, and every reader runs it again, because an undo can put anything back.
-  // A row keeps its id only when the id is `pool-` and eight lowercase letters or digits, unique, and not a data
-  // panel's id; at most four. A name is text.
+  // A row keeps its id only when the id is `pool-` and eight lowercase letters or digits, unique; at most four.
+  // A name is text. The pattern is what keeps a file's id from naming another panel: no data id matches it.
   const POOL_ID = /^pool-[a-z0-9]{8}$/, POOL_MAX = 4;
-  const dataPanelIds = () => {
-    const ids = new Set();
-    for (const a of D().archetypes||[]) for (const p of ((a && a.coreMechanic && a.coreMechanic.panels) || [])) if (p && typeof p.id==="string") ids.add(p.id);
-    return ids;
-  };
   const keptPools = raw => {
-    const out = [], seen = new Set(), panels = dataPanelIds();
+    const out = [], seen = new Set();
     for (const r of Array.isArray(raw) ? raw : []){
       if (out.length>=POOL_MAX) break;
-      if (!isPlainObj(r) || typeof r.id!=="string" || !POOL_ID.test(r.id) || seen.has(r.id) || panels.has(r.id)) continue;
+      if (!isPlainObj(r) || typeof r.id!=="string" || !POOL_ID.test(r.id) || seen.has(r.id)) continue;
       seen.add(r.id); out.push({ id:r.id, name:txt(r.name) });
     }
     return out;
   };
   const poolsOf = ch => keptPools(writeInOf(ch).pools);
-  // Free for a new pool: not held in the list, not a key of trackers.panel (a removed pool's count must never come
-  // back onto a new pool, Decision 313), and not a data panel's id.
+  // Free for a new pool: not held in the list, and not a key of trackers.panel (a removed pool's count must never come
+  // back onto a new pool, Decision 313).
   const poolIdFree = (ch, id) => {
-    if (typeof id!=="string" || !POOL_ID.test(id) || dataPanelIds().has(id)) return false;
+    if (typeof id!=="string" || !POOL_ID.test(id)) return false;
     const held = Array.isArray(writeInOf(ch).pools) && writeInOf(ch).pools.some(r=>isPlainObj(r) && r.id===id);
     const panel = ch && ch.trackers && isPlainObj(ch.trackers.panel) ? ch.trackers.panel : null;
     return !held && !(panel && Object.prototype.hasOwnProperty.call(panel, id));
@@ -6498,7 +6493,7 @@ const Engine = (() => {
         if (!c) T("Choose a classification for your archetype.");
         else if (c.writeIn && !txt(w.classificationText).trim()) W(`Say what ${c.name} means for you, in a word or two.`);
         // A named pool is the only thing a pool needs (Decision 313): one with no name warns, and the lock stays open.
-        if (mechanicsOn(ch).includes("pools")) for (const p of poolsOf(ch)) if (!p.name.trim()) W("Name your pool, or remove it.");
+        if (mechanicsOn(ch).includes("pools") && poolsOf(ch).some(p=>!p.name.trim())) W("Name your pool, or remove it.");
         // A row with words but no name never shows on the sheet; an empty one is just unused.
         const nameless = rows => rows.filter(r=>!r.name.trim() && [r.description, r.uses, r.effect, r.notes].some(v=>txt(v).trim())).length;
         for (const [rows, noun] of [[textRows(w.traits), "trait"], [ownPowers(ch), "power"], [textRows(w.vulnerabilities), "vulnerability"]]){

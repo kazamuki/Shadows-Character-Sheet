@@ -14500,6 +14500,9 @@ test("J2: an unnamed pool warns and reads Pool", () => {
   same(issues.filter(i => i.msg.includes("pool")).map(i => [i.level, i.msg]), [["warn", "Name your pool, or remove it."]]);
   assert.equal(issues.filter(i => i.level === "error" && i.msg.includes("pool")).length, 0, "an unnamed pool never blocks");
   same(Engine.archPanels(ch).find(x => x.id === "pool-aaaaaaaa").title, "Pool");
+  // One line for every unnamed pool, not one per pool (Ken, PR #383).
+  ch.archetypeChoices.writeIn.pools = [{ id: "pool-aaaaaaaa", name: "" }, { id: "pool-bbbbbbbb", name: " " }, { id: "pool-cccccccc", name: "Chi" }];
+  same(Engine.validate("archetype", ch).filter(i => i.msg.includes("pool")).map(i => i.msg), ["Name your pool, or remove it."], "two unnamed pools gave two warnings");
 });
 
 test("J2: a named pool is a suggestion in a power's Uses", () => {
