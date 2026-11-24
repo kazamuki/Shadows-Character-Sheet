@@ -36,6 +36,16 @@ test("CRANK: Main's card reads 0 and Novice; the popover's Job done makes it 1, 
   assert.deepEqual(app.errors, []);
 });
 
+test("K5: Main's CRANK button is named from the walked outcome's data name, Abandoned", () => {
+  const app = openSheet(lockedCharacter(), "trackers", { storage: CRANK_ON });
+  const name = D.resources.crank.outcomes.find(o => o.id === "walked").name;
+  assert.equal(name, "Abandoned");
+  const btn = app.$('#main [data-crk="-2"]');
+  assert.ok(btn.textContent.startsWith(name), "the button says: " + btn.textContent);
+  assert.doesNotMatch(app.$("#main").textContent, /Walked out/);
+  assert.deepEqual(app.errors, []);
+});
+
 test("Decision 296: walked out at 0 stays at 0; a Burned character below 0 reads Novice at half pay, in the card, the tip and Trackers", () => {
   const app = openSheet(lockedCharacter(), "trackers", { storage: CRANK_ON });
   app.click('#main [data-crk="-2"]');

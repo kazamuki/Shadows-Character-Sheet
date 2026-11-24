@@ -2,6 +2,28 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.76.1",
+    "date": null,
+    "intro": [],
+    "items": [],
+    "groups": [
+      {
+        "title": "Character sheet",
+        "items": [
+          "**CRANK's −2 job is called Abandoned**, as the rulebook calls it, on Main, on Trackers and in CRANK's own description.",
+          "**Skills says Synergy Bonus**, and its Help reads the way you roll: 1d10 + that total.",
+          "**The armor line on Trackers** says where to get it: buy it or wear it under Loadout."
+        ]
+      },
+      {
+        "title": "GM mode",
+        "items": [
+          "**The job form** says \"abandoned\" where it used to say \"walked out\"."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.76.0",
     "date": "2026-11-24",
     "intro": [],

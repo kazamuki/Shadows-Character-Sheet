@@ -287,13 +287,13 @@ window.SHADOWS_DATA = {
     },
     "crank": {
       "name": "CRANK rep",
-      "description": "CRANK is the gray market's job board, on every device in NYTE City. Your rep is your record there: one job at a time, and it doesn't fade. Walking out on a client is the one thing that follows you. Walking away from a client who broke the contract first isn't walking out, and costs nothing.",
+      "description": "CRANK is the gray market's job board, on every device in NYTE City. Your rep is your record there: one job at a time, and it doesn't fade. Abandoning a contract is the one thing that follows you. Walking away from a client who broke it first isn't abandoning it, and costs nothing.",
       "jobDone": 1,
       "jobWalkedOut": -2,
       "outcomes": [
         { "id": "done",   "name": "Seen through",        "rep": 1,  "paid": true },
         { "id": "failed", "name": "Failed",              "rep": 0,  "paid": false },
-        { "id": "walked", "name": "Walked out",          "rep": -2, "paid": false },
+        { "id": "walked", "name": "Abandoned",           "rep": -2, "paid": false },
         { "id": "broken", "name": "The client broke it", "rep": 0,  "paid": false }
       ],
       "belowText": "Below 0: Novice, and every payout is halved.",
@@ -1240,7 +1240,7 @@ window.SHADOWS_DATA = {
     { "id": "botch", "title": "Botch", "forms": ["botches", "botch", "Botch"], "from": { "check": "botch" } },
     { "id": "defensive-action", "title": "Defensive Actions", "forms": ["Defensive Actions", "Defensive Action"], "bookSource": "0530 Combat Encounters, Defensive Actions",
       "description": "Dodge. You can attempt to dodge against any attack. Parry. You can attempt to parry hand-to-hand attacks (Melee and Martial Arts) only, and only with a handheld weapon (Melee and Martial Arts). Scramble. You can attempt to get out of the way of attacks that expand outward from a single point — a grenade, a charge, a spell, etc." },
-    { "id": "skill-check", "title": "A Skill check", "forms": ["Primary Stat", "Synergy", "Rank"], "from": { "check": "trained" } },
+    { "id": "skill-check", "title": "A Skill check", "forms": ["Primary Stat", "Synergy Bonus", "Synergy", "Rank"], "from": { "check": "trained" } },
     { "id": "TOL", "forms": ["TOL"], "from": { "derived": "TOL" } },
     { "id": "WILL", "forms": ["WILL"], "from": { "derived": "WILL" } },
     { "id": "SAN", "forms": ["SAN"], "from": { "derived": "SAN" } },
@@ -4241,7 +4241,7 @@ window.SHADOWS_DATA = {
     "orphanLine": "{kind} \"{name}\" isn't in the current rules. The character keeps it, and your GM says what it does now.",
     "orphanChip": "not in the current rules",
     "orphanNote": "This {kind} isn't in the current rules.",
-    "introSkills": "A trained Skill rolls 1d10 + its Rank, its Primary Stat and its Synergy. An untrained one rolls 1d10 + its Primary Stat, and nothing else.",
+    "introSkills": "A trained Skill rolls 1d10 + its Rank, its Primary Stat and its Synergy Bonus. An untrained one rolls 1d10 + its Primary Stat, and nothing else.",
     "introProgression": "Log a session when it truly ends. It pays {perHour} IP an hour of play (your table can change the rate below), 1 Milestone Point, and refreshes your LUCK.",
     "introAdmin": "Change any number directly, past creation's caps and pools. It's for fixing mistakes: every change is logged in the Activity Log on Progression and can be undone.",
     "adminAdjustMaximum": "Adjust a maximum"
@@ -5093,7 +5093,7 @@ window.SHADOWS_DATA = {
       "skills": {
         "title": "Skills",
         "intro": "Every Skill you have, and what you add to the roll.",
-        "for": "Every Skill, trained or not, with the total you add to a d10. A Skill's **?** says what it covers and what's particular to it.",
+        "for": "Every Skill, trained or not, and its total: you roll 1d10 + that. A Skill's **?** says what it covers and what's particular to it.",
         "when": ["during"],
         "words": ["skill-check", "kicker-die", "explode", "botch", "difficulty"],
         "tips": [
@@ -5174,10 +5174,10 @@ window.SHADOWS_DATA = {
       "tolWillWhere": "Change the Stats they come from, or add a Manual Adjustment on {tab:trackers}.",
       "trainLearnFirst": "Learn one with IP first, then train it here.",
       "armorRepairs": "Repairs are on {tab:loadout}.",
-      "armorPutOn": "Pick it up or put it on under {tab:loadout}.",
+      "armorPutOn": "Buy it or wear it under {tab:loadout}.",
       "undoOlder": "To fix an older mistake, switch on Admin mode (⋮ menu) and edit the value directly; that edit is logged here too and is itself undoable.",
       "luckOnTrackers": "Current LUCK during play is tracked on {tab:trackers}.",
-      "crankJobsWhere": "Jobs done and walked out are on {tab:main} and {tab:trackers}.",
+      "crankJobsWhere": "Jobs done and abandoned are on {tab:main} and {tab:trackers}.",
       "burnedRemove": "Remove it on Admin."
     },
     // A seat's copy (KQ20): the rule line that tells the player to act, said to the GM. Keyed by the line's appCopy key.

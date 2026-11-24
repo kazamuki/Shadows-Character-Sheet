@@ -2997,11 +2997,11 @@ test("Decision 302: walked out says −2 with the true minus, the client's breac
   app.click('[data-co-job="1"] [data-cj-key="juno"] [data-cj="on"]');
   app.click("[data-co-write]");
   const log = app.$$(".co-log li").map(l => l.textContent);
-  assert.match(log[0], /From Dock <b>job<\/b>, walked out: −2 CRANK rep\./, "markup is text");
+  assert.match(log[0], /From Dock <b>job<\/b>, abandoned: −2 CRANK rep\./, "markup is text");
   assert.match(log[0], /From Second, the client broke it: no rep lost\./);
   assert.doesNotMatch(log[1], /Second/);
   assert.equal(app.$(".co-log b"), null, "no markup rendered");
-  assert.equal(log.at(-1), "Jobs: Dock <b>job</b>, walked out; Second, the client broke it.");
+  assert.equal(log.at(-1), "Jobs: Dock <b>job</b>, abandoned; Second, the client broke it.");
   assert.deepEqual(app.errors, []);
 });
 

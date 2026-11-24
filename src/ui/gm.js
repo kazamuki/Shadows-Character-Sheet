@@ -3130,7 +3130,7 @@ function coJobCard(c, j, i){
 function coJobs(c){
   const present=c.lines.some(l=>l.present);
   return `<h2 class="cast-h sec-h" tabindex="-1" data-co-jobs-h>CRANK jobs</h2>
-    <p class="field-hint">A job the crew finished, failed or walked out of tonight. Each name on it gets their share and their rep in the log.</p>
+    <p class="field-hint">A job the crew finished, failed or abandoned tonight. Each name on it gets their share and their rep in the log.</p>
     ${c.jobs.length ? `<ul class="int-list co-rows">${c.jobs.map((j, i)=>coJobCard(c, j, i)).join("")}</ul>` : ""}
     ${present ? `<p><button type="button" class="btn" data-cj-add>Add a job</button></p>` : `<p class="step-note">Add who was there to put a job on the crew.</p>`}`;
 }
