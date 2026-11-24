@@ -2,7 +2,7 @@
 
 **Plan:** [`../help-on-the-sheet.md`](../help-on-the-sheet.md) §3, the **Voice** row. **Built on:** K1 (Decision 289), K3 (Decision 298), K4 (Decisions 306–307). Decisions 68, 135, 287, 296, 302.
 
-**Status: drafted 2026-11-24** by Claude (Opus), the K3 conductor, from the **Sheet Help Read** page (https://claude.ai/artifact/DdAkpXKn1WaN6KMaFyXHo5). Ken and Scott each answered all 29 lines. Deighton hadn't answered, and Ken judged two reads enough (2026-11-24). **Ken settled every split on 2026-11-24**, in the conductor's session (§4). KQ30 is open, with a default.
+**Status: drafted 2026-11-24** by Claude (Opus), the K3 conductor, from the **Sheet Help Read** page (https://claude.ai/artifact/DdAkpXKn1WaN6KMaFyXHo5). Ken and Scott each answered all 29 lines. Deighton hadn't answered, and Ken judged two reads enough (2026-11-24). **Ken settled every split on 2026-11-24**, in the conductor's session (§2). **Approved by Ken 2026-11-24, in the conductor's session: "Approve, Default"** (KQ30 on its default).
 
 **Tier: Fix.** It changes copy and one display name. No rule moves, no id changes, and no decision is needed. **App:** a patch bump, plus a CHANGELOG line, since a player sees it. **Game data: no bump** (Decision 68): renaming an outcome's display name changes no computed value and no available choice, and its id `walked` stays. **Schemas:** none.
 
@@ -23,7 +23,7 @@ Done when every row in §3 reads as written, every reader in §5 agrees, `npm ru
 | Skills rule line (`introSkills`) | reword: "Synergy Bonus" | reword: "Synergy bonus", "just to be clear it's the +4 not the 10" | **Synergy Bonus** (`0300`'s capitalisation) |
 | Skills tab, *What it's for* | reads | reword: passive, and the reverse of the book's `1d10+x` | **Reword** (§3, row 2) |
 | CRANK jobs line (`crankJobsWhere`) | reads | reword: "abandoned" instead of "walked out" | **Abandoned everywhere**, the outcome's name included |
-| Armor, none worn (`armorPutOn`) | reword: "Buy or equip under Loadout" | reads | **Ken's**, in Loadout's own verb (KQ30) |
+| Armor, none worn (`armorPutOn`) | reword: "Buy or equip under Loadout" | reads | **Ken's**, in Loadout's own verb: "Buy it or wear it" (KQ30, Default) |
 | Main tab | reads | reads, with a note that "guide line" as two words feels odd | **Keep "Guide lines"** |
 | Burned paid off (`burnedRemove`) | reword: Burned should come off without Admin mode | reads | **Its own order.** This is a behaviour change (§6). The line stays as it is |
 | The other 23 | reads | reads | unchanged |
@@ -37,7 +37,7 @@ Done when every row in §3 reads as written, every reader in §5 agrees, `npm ru
 | 3 | `resources.crank.outcomes`, id `walked`, `name` | "Walked out" | "Abandoned" |
 | 4 | `sheetGuide.lines.crankJobsWhere` | "Jobs done and walked out are on {tab:main} and {tab:trackers}." | "Jobs done and abandoned are on {tab:main} and {tab:trackers}." |
 | 5 | `resources.crank.description`, its last two sentences | "Walking out on a client is the one thing that follows you. Walking away from a client who broke the contract first isn't walking out, and costs nothing." | "Abandoning a contract is the one thing that follows you. Walking away from a client who broke it first isn't abandoning it, and costs nothing." |
-| 6 | `sheetGuide.lines.armorPutOn` | "Pick it up or put it on under {tab:loadout}." | KQ30's answer. Default: "Buy it or wear it under {tab:loadout}." |
+| 6 | `sheetGuide.lines.armorPutOn` | "Pick it up or put it on under {tab:loadout}." | "Buy it or wear it under {tab:loadout}." (KQ30, Default) |
 | 7 | the sheet's CRANK button (`crankControlsHtml`, sheet.js ~1616) | the literal `Walked out` | the `walked` outcome's `name` from the data, so the button and the GM's log can't drift apart again |
 | 8 | GM mode's job hint (gm.js ~3133) | "A job the crew finished, failed or walked out of tonight." | "A job the crew finished, failed or abandoned tonight." |
 
@@ -45,7 +45,7 @@ Row 5 is checked against `2625`, which reads "bailing on a client is the one thi
 
 ## 4. Questions for Ken
 
-- **KQ30: the armor line's verb.**
+- **KQ30: the armor line's verb.** **Answered Default** (Ken, 2026-11-24).
   - **Default:** "Buy it or wear it under {tab:loadout}." Loadout's armor row has a **Worn** box and a **Buy** button, and its log says "Put on". "Wear" matches what the player taps.
   - *Alternative:* "Buy or equip it under {tab:loadout}.", Ken's own words on the page. Loadout doesn't use "equip" anywhere, so the player looks for a button that isn't there.
 
