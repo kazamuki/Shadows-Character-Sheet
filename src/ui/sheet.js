@@ -1637,20 +1637,27 @@ function amountOf(text){
   const s = String(text==null ? "" : text).trim();
   return /^[0-9]{1,4}$/.test(s) && Number(s)>=1 ? Number(s) : null;
 }
+// The names of a tracker's − and + (Decision 315) follow which way the panel counts (its data's `counts`, Decision
+// 135): a pool that counts down is spent and taken back ("Spend 3 on SFR"); a count that goes up is added to and taken
+// off ("Add 2 to Call of the Wild"), since a withdrawal step or a load isn't a spend.
+function trkNames(n, title, down){
+  return down ? [`Take back ${n} from ${title}`, `Spend ${n} on ${title}`] : [`Take ${n} off ${title}`, `Add ${n} to ${title}`];
+}
 // The control beside a tracker's name: − , the amount, + . One group on each twin: the Trackers row, the SFR popover,
 // a named pool's popover. The amount is read from its field at a press; the − and + keep the `id|d` attribute.
-function trkControlHtml(id, title){
-  const n = trkAmount(id), nm = esc(title);
-  return `<span class="trk-ctl"><button class="btn sm" data-trk="${esc(id)}|-1" aria-label="Take back ${n} from ${nm}">−</button>` +
-    `<input class="trk-amt" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" data-trkamt="${esc(id)}" data-trkname="${nm}" value="${n}" aria-label="${nm} amount">` +
-    `<button class="btn sm" data-trk="${esc(id)}|1" aria-label="Spend ${n} on ${nm}">+</button></span>`;
+// `down` is the panel's `counts==="down"`: it picks the buttons' names, and the field carries it for the repaint.
+function trkControlHtml(id, title, down){
+  const n = trkAmount(id), nm = esc(title), [less, more] = trkNames(n, nm, !!down);
+  return `<span class="trk-ctl"><button class="btn sm" data-trk="${esc(id)}|-1" aria-label="${less}">−</button>` +
+    `<input class="trk-amt" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" data-trkamt="${esc(id)}" data-trkname="${nm}"${down?" data-trkdown":""} value="${n}" aria-label="${nm} amount">` +
+    `<button class="btn sm" data-trk="${esc(id)}|1" aria-label="${more}">+</button></span>`;
 }
 // The names of an amount's − and + say what a press does, so they follow the amount as it's typed (no commit).
 function paintTrkNames(f, n){
-  const pid = f.dataset.trkamt, nm = f.dataset.trkname, row = f.parentElement;
+  const pid = f.dataset.trkamt, row = f.parentElement, [less, more] = trkNames(n, f.dataset.trkname, f.hasAttribute("data-trkdown"));
   const minus = row && row.querySelector(attrSel("data-trk", `${pid}|-1`)), plus = row && row.querySelector(attrSel("data-trk", `${pid}|1`));
-  if (minus) minus.setAttribute("aria-label", `Take back ${n} from ${nm}`);
-  if (plus) plus.setAttribute("aria-label", `Spend ${n} on ${nm}`);
+  if (minus) minus.setAttribute("aria-label", less);
+  if (plus) plus.setAttribute("aria-label", more);
 }
 // Shows an amount in its field and in the names of its − and +.
 function paintTrkAmount(f, n){ f.value = String(n); paintTrkNames(f, n); }
@@ -1722,7 +1729,7 @@ function vitalPopover(ch, key){
       starts.map(r=>`<div class="run-row"><button type="button" class="btn sm" data-runtoggle="${esc(r.id)}|start" aria-label="Start ${esc(r.name)}"${r.can.ok ? "" : ` disabled title="${esc(r.can.why)}"`}>Start ${esc(r.name)}</button>${runWhyHtml(r)}</div>`).join("") + `</div>` : "";
     return { title:"SFR",
       html: now(`${left} / ${sf.value}`, turn && (turn.at||turn.past) ? "bad" : "", sf.rou!=null ? `RoU ${sf.rou}` : "") +
-        `<div class="trk-row">${trkControlHtml(p.id, p.title)}</div>` +
+        `<div class="trk-row">${trkControlHtml(p.id, p.title, p.counts==="down")}</div>` +
         (line ? `<p class="sub sfr-round" data-sfrround>${esc(line)}</p>` : "") + runHtml +
         (turn && turn.spent ? `<div class="trk-actions"><button class="btn sm" data-popreset>Turn Reset</button></div>` : "") }; }
   if (key==="cred") return { title:"Çredits",
@@ -1739,7 +1746,7 @@ function vitalPopover(ch, key){
     if (!c) return null;
     return { title:c.panel.title,
       html: now(`${c.t.shown} / ${c.t.max}`, "", "") +
-        `<div class="trk-row">${trkControlHtml(id, c.panel.title)}</div>` +
+        `<div class="trk-row">${trkControlHtml(id, c.panel.title, c.panel.counts==="down")}</div>` +
         `<div class="trk-actions"><button class="btn sm" data-popgo="trackers">On Trackers</button></div>` };
   }
   return null;
@@ -1832,7 +1839,7 @@ ${esc(painIgnoredText(pain))}: ${signed(-pain.ignored)} Pain Level${pain.ignored
     const cur = down ? (effMax!=null?Math.max(0,effMax-val):null) : val;
     h += `<div class="trk"><h2>${esc(p.title)}</h2>
       <span class="big ${effMax!=null&&!down&&cur>=effMax?"bad":""}">${cur==null?"—":cur}${effMax!=null?" / "+effMax:""}</span>
-      ${trkControlHtml(p.id, p.title)}
+      ${trkControlHtml(p.id, p.title, down)}
       ${manualMax!==null?`<label class="field" style="margin:0"><input type="number" min="0" data-trkmax="${p.id}" value="${manualMax}" placeholder="max" aria-label="${esc(p.title)} max" style="width:84px"></label>`:""}
       <span class="sub">${p.atMax&&effMax!=null&&cur>=effMax?esc(p.atMax):p.note?esc(p.note):p.max==="TOL"?"Capped by Tolerance (computed).":"Set the max when the rules land — the tracker won't block on un-modeled rules."}</span>
       ${byHand?`<span class="sub sfr-byhand" data-sfrbyhand>${esc(byHand)}</span>`:""}

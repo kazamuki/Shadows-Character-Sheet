@@ -1226,3 +1226,17 @@ test("J4: a spend a max clamps logs what came off: Call of the Wild at 1 of 3, t
   assert.equal(activeChar(app).trackers.panel["call-of-the-wild"].value, 3, "the count didn't stop at its max");
   assert.equal(activeChar(app).audit.at(-1).label, "Call of the Wild +2", "the log named the typed 5, not the 2 that moved");
 });
+
+test("J4: a count that goes up is added to and taken off, not spent: Call of the Wild's − and + say so, and follow the amount", () => {
+  const ch = wolf("trueborn");
+  ch.panelData.form = "Werewolf";
+  const app = openSheet(ch, "trackers");
+  const name = d => app.$(`#main [data-trk="call-of-the-wild|${d}"]`).getAttribute("aria-label");
+  assert.equal(name(1), "Add 1 to Call of the Wild", "a withdrawal step reads as a spend");
+  assert.equal(name(-1), "Take 1 off Call of the Wild");
+  const field = app.$('#main [data-trkamt="call-of-the-wild"]');
+  field.value = "2";
+  field.dispatchEvent(new app.window.Event("input", { bubbles: true }));
+  assert.equal(name(1), "Add 2 to Call of the Wild", "the repaint went back to the spend wording");
+  assert.equal(name(-1), "Take 2 off Call of the Wild");
+});
