@@ -2,7 +2,7 @@
 
 **Plan:** [`../pools-and-numbers.md`](../pools-and-numbers.md) §3, row J4. **Source:** **W176** (spend several at once on a tracker), raised by the plan. J4 is the **last row** of the plan's §3 table (J1, J2, J3, J4), so when it merges the plan is done and the release is Ken's (JQ6).
 
-**Status: drafted 2026-11-24** by Claude (Opus), at J2's session's request, for Ken. **Awaiting Ken's answers** on §4 (each has its default; nothing here is approved). Nothing is built, and no builder has been started.
+**Status: drafted 2026-11-24** by Claude, at J2's session's request, for Ken. **Awaiting Ken's answers** on §4 (each has its default; nothing here is approved). Nothing is built, and no builder has been started.
 
 **Built on:** Decision 225 (the round counts `trackers.<resource>.turn`, warns at and past Rate of Use and never blocks), 266 (`adjustPanelTracker` is the one writer of a spend), 26 (Manual Adjustments), 106 (the Cascade, which the engine reads and never rolls), 201 (Feeding never counts against the round), 312 (J1: SFR max and RoU by hand), 313 (J2: a named pool's card and popover), 314 (J3: a typed number in a stepper, and its misses), 164 (`keepPlace`), 135 (a data key is read by code).
 
