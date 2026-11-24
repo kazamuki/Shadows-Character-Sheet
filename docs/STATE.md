@@ -136,7 +136,7 @@ rev 9's `C1`–`C3` are still forward notes.
 
 ## 5. Where to start
 
-**The live site is v0.75.0** (data 0.56, schema 0.34), released 2026-11-20.
+**The live site is v0.76.0** (data 0.60, schema 0.35), released 2026-11-24.
 
 **Next is Ken's pick**, each built through a work order (`WORK-ORDERS.md`):
 - **The `/impeccable audit`** of the whole app is its own read-only session; Ken triages its report.
@@ -146,8 +146,7 @@ rev 9's `C1`–`C3` are still forward notes.
   Vehicles and Powered Armor (were L6, L7) left the plan 2026-11-15 (W91, W69). The plan ends with natural-weapon follow-ons, each waiting on an answer: L8 the Werewolf's damage (LQ40), L9 a trained weapon as natural (W160), L10 hand cyberware (W90).
   The player sheet's plan (`plans/archive/sheet-wishlist.md`) closed 2026-10-24, P1–P21 built.
 - **Help on the sheet** (`plans/help-on-the-sheet.md`, W156): K1–K4 built (289, 291, 298, 306–307); voice pass left.
-- **Pools and numbers** (`plans/pools-and-numbers.md`, approved 2026-11-22): SFR by hand, W49, W121, W176 as J1–J4, one release; J1–J4 built (Decisions 312–315); J4's merge completes the plan.
-- **Closed plans** are in `plans/archive/`; finding-things left W152–W157 and W159, and powers-that-run W132's last two powers (`plans/crb-catch-up.md`).
+- **Closed plans** are in `plans/archive/`; finding-things left W152–W157 and W159, powers-that-run W132's last two powers (`plans/crb-catch-up.md`), and pools-and-numbers (J1–J4, 312–315, released in 0.76.0) F56 for Deighton.
 - **W90**, cybernetics: six questions before a plan.
 
 **Ken alone:** F12 and F32, W38's plan (`plans/two-tabs-one-character.md`,

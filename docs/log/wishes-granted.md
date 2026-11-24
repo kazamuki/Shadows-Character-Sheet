@@ -15,7 +15,7 @@ what the app does now, the decision named in the pointer is the authority.
 
 ### Trackers & vitals
 
-**W176 — Spend several at once on a tracker.** *Ken + Claude, from the pools-and-numbers plan, 2026-11-22 → pools-and-numbers J4, Decision 315, app 0.76.0 (unreleased): a tracker's − and + take a typed amount, one change and one Undo, counted against the round as the amount. Order: [J4-spend-several](plans/pools-and-numbers/J4-spend-several.md)*
+**W176 — Spend several at once on a tracker.** *Ken + Claude, from the pools-and-numbers plan, 2026-11-22 → pools-and-numbers J4, Decision 315, app 0.76.0 (unreleased): a tracker's − and + take a typed amount, one change and one Undo, counted against the round as the amount. Order: [J4-spend-several](../plans/archive/pools-and-numbers/J4-spend-several.md)*
 
 **W1 — Trackers wastes the right half of the screen.** *Ken · → Decision 112, app 0.20.0: two columns from 1000px, the body on the left*
 Every tracker card is full-width with its controls packed left: Damage's
@@ -1046,7 +1046,7 @@ W143's idea, weighed and set aside. Every power would start at rank 0 and carry 
 - **Revisit if** the book gives either power ranks, or prints a maximum that holds in play rather than only at creation. Either would make a per-power maximum that binds in play worth adding to the data, and then `ranked: false` could fold into it.
 
 **W121 — Type a number into a stepper.** *Claude, from P13 · 💡 → pools-and-numbers J3, Decision 314, app 0.76.0 (unreleased)*\
-**Plan:** [pools-and-numbers J3](plans/pools-and-numbers/J3-typed-steppers.md), approved 2026-11-23
+**Plan:** [pools-and-numbers J3](../plans/archive/pools-and-numbers/J3-typed-steppers.md), approved 2026-11-23
 
 *The finding-things plan (closed; E1b, EQ10) set this aside: its order was the first-timer's, and this is the veteran's.*
 
@@ -1056,7 +1056,7 @@ targets. The stepper's value could take a typed number and the arrow keys, held 
 up). It touches all 16 `stepper()` calls, so it's its own order.
 
 **W152 — An overspent pool reads with a true minus.** *Ken, from E5's review, 2026-11-13 · 🔧 → pools-and-numbers J3, Decision 314, app 0.76.0 (unreleased)*\
-**Plan:** [pools-and-numbers J3](plans/pools-and-numbers/J3-typed-steppers.md), approved 2026-11-23
+**Plan:** [pools-and-numbers J3](../plans/archive/pools-and-numbers/J3-typed-steppers.md), approved 2026-11-23
 
 In the wizard, a pool spent past its total shows a hyphen-minus ("-3 / 40", `wizard.js` lines 72–74) and the Character Points pill
 does the same (line 55). E5 made the sheet's numbers read with a true minus (`numText`/`signed`); the wizard's are the same
@@ -1559,7 +1559,7 @@ plain, short, and saying what to do. *To respect:* it can't use `appCopy`, since
 Esc inside the ⋮ menu closes it, but focus drops to the page's body instead of going back to the ⋮ button, so the next Tab starts from the top of the page. It's old behaviour, and more noticeable since K4 put Guide lines and the sheet's ? key switch in ⋮ (Decision 306), where a keyboard user flips them with the menu open. *To respect:* a press on a ⋮ switch leaves ⋮ open with focus on the item (K4), Esc with ⋮ open closes the menu before Help (Decision 278's one layer at a time), and `closeMenu` in `app.js` is the one place that shuts it.
 
 **W49 — A resource pool the player names.** *Claude · 💡 → pools-and-numbers J2, Decision 313, app 0.76.0 (unreleased)*\
-**Plan:** [pools-and-numbers J2](plans/pools-and-numbers.md), approved 2026-11-22
+**Plan:** [pools-and-numbers J2](../plans/archive/pools-and-numbers.md), approved 2026-11-22
 
 *Set aside by the player sheet's plan when it closed (2026-10-24, `plans/archive/sheet-wishlist.md` §4): an idea, not shaped.*
 
