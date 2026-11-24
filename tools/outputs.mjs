@@ -91,6 +91,13 @@ function engineOutputs(ch) {
 function visible(app) {
   const clone = app.doc.body.cloneNode(true);
   for (const el of [...clone.querySelectorAll("script, style")]) el.remove();
+  // A field's digits live in its value, not its textContent: read each live
+  // input's and textarea's value in place of the clone's markup, by document order.
+  const live = [...app.doc.body.querySelectorAll("input, textarea")];
+  [...clone.querySelectorAll("input, textarea")].forEach((el, i) => {
+    const v = live[i] ? live[i].value : el.value;
+    el.replaceWith(clone.ownerDocument.createTextNode(` [${v}] `));
+  });
   return norm(clone.textContent);
 }
 const clickEl = (app, el) => el && el.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
