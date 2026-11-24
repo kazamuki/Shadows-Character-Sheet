@@ -506,16 +506,6 @@ advantages, Major Milestones and specializations (Decision 104); a written-in
 trait has no `grants`. *To respect:* how Natural Armor answers a hit is the
 F25 stub, still Deighton's.
 
-**W49 — A resource pool the player names.** *Claude · 💡*\
-**Plan:** [pools-and-numbers J2](plans/pools-and-numbers.md), approved 2026-11-22
-
-*Set aside by the player sheet's plan when it closed (2026-10-24, `plans/archive/sheet-wishlist.md` §4): an idea, not shaped.*
-
-Glamour, Chi, a Blood Pool. The plan's checkboxes cover what the rules have
-today (TOL, SFR). A third, **Uses another pool**, would give a tracker whose
-title and max the player types. Tracker titles come from the data today, so
-this needs a little code.
-
 **W50 — Stat changes at creation.** *Claude · 💡*\
 **Plan:** none yet
 

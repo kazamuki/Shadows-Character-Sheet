@@ -702,7 +702,7 @@ more (Decision 135): `counts: "down"` shows what's left of the max, and
 `sfr` panel has both, so its spend is `trackers.sfr.spent`, which Main reads.
 
 Any panel may carry `when` (Decision 153): it names one of a write-in
-archetype's `writeIn.mechanics`, and `Engine.archPanels` leaves the panel out
+archetype's `writeIn.mechanics`, and `Engine.archPanels` leaves the panel out A panel with `perPool` is drawn once per named pool, its id and title the pool's (Decision 313).
 unless the character ticked that box. A `powers` panel draws the character's
 own `powers` rows; `Engine.addPower` and `newPower` refuse on an archetype without one.
 Every archetype reads `powers` and can be given a custom one (Decision 216).
@@ -767,7 +767,7 @@ It renders on the Character tab (Decision 158).
 ```js
 {
   meta: {
-    schemaVersion: "0.34",
+    schemaVersion: "0.35",
     // (0.11, Decisions 128 and 133) The character's TAG, its permanent
     // identity: TAG- + 12 Crockford base-32 characters. Issued by
     // newCharacter(), backfilled by migrate(), never reissued. 0.12 renamed
@@ -854,6 +854,7 @@ It renders on the Character tab (Decision 158).
       classification: null,          // a classifications id
       classificationText: "",        // a writeIn classification's own words: "Fae"
       mechanics: [],                 // ticked writeIn.mechanics ids: ["sfr"]
+      pools: [],                     // (0.35, Decision 313) "Uses another pool": [{ id: "pool-k3x9q2ma", name: "Glamour" }], up to four
       traits: [],                    // [{ name, description }], always on
       vulnerabilities: []            // [{ name, description }], text only
     }
@@ -5970,6 +5971,15 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. Extends 26 (its targets) and 225 (the Custom pool's max).
      - **Revisit if:** a rule in the book or a Major starts adjusting SFR or RoU the same way across many entries; then it's a `grants` type, as `sfrMax` and `rou` already are.
      - **Built:** app 0.76.0; pools-and-numbers J1 (PR #381); log entry 2026-11-22.
+
+313. **A Custom archetype can name pools of its own, each a tracker it sizes, as its SFR pool is.**
+     *2026-11-22 · Ken + Claude · Touches: writeIn.pools, Uses another pool, perPool, archPanels, writeInOptions, powerUses, tracker labels, Main's pool cards, the pool popover, Admin's write-in editor, print archetype page, schema 0.35, W49*
+     - **Decided:** Uses another pool keeps up to four named pools in `archetypeChoices.writeIn.pools` (`{ id, name }`; the id is `pool-` and eight characters, issued once). A data panel with `perPool: true` is drawn once per pool by `archPanels`, so every panel reader counts it as the Custom SFR pool: down from a max typed on Trackers. Main gets a card and popover per sized pool. A pool's name is the player's text, escaped everywhere; a tracker's Activity Log line names its title.
+     - **Why:** W49: Glamour, Chi, a battery lived in Notes, where nothing counted them. The SFR pool's tracker already does all of it except take a name.
+     - **Rejected:** One pool (JQ4: a list of one is cheap). Pool rules such as a Rate of Use or a refill (the plan's §4). Player-written panels in `panelData` (a second panel shape). Ids `pool-1`, `pool-2` (a removed id would come back onto its old count).
+     - **Replaces:** nothing. Extends 153 (its *Revisit if* names W49) and 225.
+     - **Revisit if:** a pool needs its own rule; a book archetype gets a named pool (W109); four is too few at a real table.
+     - **Built:** game data 0.60, character schema 0.35 (`migrate()` step), app 0.76.0 (unreleased), PR (this one), log entry 2026-11-23.
 
 ## 5. Open Flags
 

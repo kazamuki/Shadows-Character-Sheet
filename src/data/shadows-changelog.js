@@ -10,6 +10,8 @@ window.SHADOWS_CHANGELOG = [
       {
         "title": "Character sheet",
         "items": [
+          "**A Custom archetype can track a pool of its own.** Tick **Uses another pool**, name it (Glamour, Chi, a battery), and set its size with your GM on Trackers. It counts down there and on Main, and it's a suggestion when you write what a power uses.",
+          "**The Activity Log names a tracker by its name**: TOL Spent, not TOL-SPENT.",
           "**Your GM can move your SFR.** Manual Adjustments on Trackers take SFR max and Rate of Use, up or down, with a note, and Undo takes it back. Admin has a button that goes straight there.",
           "**Esc in the ⋮ menu** puts you back on ⋮, so the next Tab carries on from there.",
           "**A sheet missing its rules file** says which file and what to do."
