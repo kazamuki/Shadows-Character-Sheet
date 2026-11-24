@@ -2850,3 +2850,28 @@ test("J4: the amount parser is total: a whole number from 1 to 9999, or nothing"
   assert.equal(app.window.amountOf(" 42 "), 42);
   assert.equal(app.window.amountOf("9999"), 9999);
 });
+
+test("J4: a take-back at zero moves nothing, so it writes no log line and no Undo entry", () => {
+  const app = openSheet(streetVampire(), "main");
+  app.click('#main [data-vpop="sfr"]');
+  const before = activeChar(app).audit.length;
+  press(app, '#vpop [data-trk="sfr|-1"]');
+  typeAmount(app, "#vpop", "sfr", "4");
+  press(app, '#vpop [data-trk="sfr|-1"]');
+  assert.equal(activeChar(app).audit.length, before, "a take-back that moved nothing wrote a log line");
+  assert.equal(app.$("#undotoast [data-toastundo]"), null, "a take-back that moved nothing offered an Undo");
+  assert.equal(app.$('#vpop [data-trkamt="sfr"]').value, "4", "the typed amount was thrown away by a take-back that moved nothing");
+});
+
+test("J4: the names of + and − follow the typed amount before the field is left", () => {
+  const app = openSheet(streetVampire(), "main");
+  app.click('#main [data-vpop="sfr"]');
+  const field = app.$('#vpop [data-trkamt="sfr"]');
+  field.value = "6";
+  field.dispatchEvent(new app.window.Event("input", { bubbles: true }));
+  assert.equal(app.$('#vpop [data-trk="sfr|1"]').getAttribute("aria-label"), "Spend 6 on SFR", "+ still says 1 while the field holds 6");
+  assert.equal(app.$('#vpop [data-trk="sfr|-1"]').getAttribute("aria-label"), "Take back 6 from SFR", "− still says 1 while the field holds 6");
+  assert.equal(trkOf(app).spent ?? 0, 0, "typing spent something before a press");
+  press(app, '#vpop [data-trk="sfr|1"]');
+  assert.equal(trkOf(app).spent, 6, "the press didn't spend the typed 6");
+});

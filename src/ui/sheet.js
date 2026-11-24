@@ -1645,13 +1645,25 @@ function trkControlHtml(id, title){
     `<input class="trk-amt" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" data-trkamt="${esc(id)}" data-trkname="${nm}" value="${n}" aria-label="${nm} amount">` +
     `<button class="btn sm" data-trk="${esc(id)}|1" aria-label="Spend ${n} on ${nm}">+</button></span>`;
 }
-// Shows an amount in its field and in the names of its − and + (a name says what a press does).
-function paintTrkAmount(f, n){
-  f.value = String(n);
+// The names of an amount's − and + say what a press does, so they follow the amount as it's typed (no commit).
+function paintTrkNames(f, n){
   const pid = f.dataset.trkamt, nm = f.dataset.trkname, row = f.parentElement;
   const minus = row && row.querySelector(attrSel("data-trk", `${pid}|-1`)), plus = row && row.querySelector(attrSel("data-trk", `${pid}|1`));
   if (minus) minus.setAttribute("aria-label", `Take back ${n} from ${nm}`);
   if (plus) plus.setAttribute("aria-label", `Spend ${n} on ${nm}`);
+}
+// Shows an amount in its field and in the names of its − and +.
+function paintTrkAmount(f, n){ f.value = String(n); paintTrkNames(f, n); }
+// What a spend of `delta` moves a tracker's count by: the count after less the count before, both read by the engine,
+// so a clamp (at a max, or at zero) shows in the log and in Undo. Nothing is written: the spend runs on a copy.
+function trkMoved(ch, pid, delta){
+  const p = Engine.archPanels(ch).find(x=>x.id===pid && x.type==="tracker");
+  if (!p) return 0;
+  const before = Engine.panelTracker(ch, p).count;
+  const dry = clone(ch);
+  Engine.adjustPanelTracker(dry, pid, delta);
+  const dp = Engine.archPanels(dry).find(x=>x.id===pid && x.type==="tracker");
+  return Math.abs(Engine.panelTracker(dry, dp).count - before);
 }
 // Decision 225: SFR spent this round. The pool's tracker panel is found by its resource, not its id;
 // `turn` is null for a pool with no Rate of Use (a written-in one), and nothing is said then.
@@ -4048,12 +4060,12 @@ function bindVitalControls(root){
     const f=b.parentElement && b.parentElement.querySelector(attrSel("data-trkamt", pid));
     const amt = f ? amountOf(f.value) : 1;
     if (amt==null){ paintTrkAmount(f, trkAmount(pid)); return; }
+    // The log and Undo name what came off (a clamp at a max or at zero moves less than typed). Nothing moved: no entry.
+    const moved = trkMoved(ch, pid, sign*amt);
+    if (!moved){ paintTrkAmount(f, amt); return; }
     setTrkAmount(pid, 1);
     // A change that trails the press (Enter fires one, after this handler) reads the field: it must read 1, not the spent amount.
     if (f) f.value = "1";
-    // The log and Undo name what came off: a take-back past zero logs only the count it took (9 with 2 spent logs −2).
-    const tp = Engine.archPanels(ch).find(x=>x.id===pid && x.type==="tracker");
-    const moved = sign>0 ? amt : Math.min(amt, tp ? Engine.panelTracker(ch, tp).count : 0);
     commit("tracker", `${trackerTitle(ch, pid)} ${signed(sign*moved)}`, ()=>{ Engine.adjustPanelTracker(ch, pid, sign*amt); });
   });
   // The amount field: a change keeps a whole amount (anything else goes back to the last one). Enter spends it (the +);
@@ -4064,6 +4076,8 @@ function bindVitalControls(root){
     // the field first) into a spend of the last amount. The press refuses it and shows the last amount instead.
     // A field that a press has just replaced still gets its change (Enter fires one after the press): it's out of the page, so it's ignored.
     f.onchange=()=>{ if (!f.isConnected) return; const v=amountOf(f.value); if (v!=null){ setTrkAmount(pid, v); paintTrkAmount(f, v); } };
+    // While typing, the names follow the amount; nothing is stored or spent until a change, a press or Enter.
+    f.oninput=()=>{ const v=amountOf(f.value); if (v!=null) paintTrkNames(f, v); };
     f.onkeydown=e=>{
       if (e.key==="Enter"){ e.preventDefault(); const p=f.parentElement.querySelector(attrSel("data-trk", `${pid}|1`)); if (p) p.click(); }
       else if (e.key==="Escape"){ e.preventDefault(); e.stopPropagation(); setTrkAmount(pid, 1); paintTrkAmount(f, 1); }

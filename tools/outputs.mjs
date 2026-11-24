@@ -95,9 +95,15 @@ function visible(app) { return textOf(app.doc.body); }
 function textOf(region) {
   const clone = region.cloneNode(true);
   for (const el of [...clone.querySelectorAll("script, style")]) el.remove();
-  const live = [...region.querySelectorAll("input, textarea")];
-  [...clone.querySelectorAll("input, textarea")].forEach((el, i) => {
-    const v = live[i] ? live[i].value : el.value;
+  // A field's state, not its markup: an input's or textarea's value, a checkbox's or radio's checked, a select's chosen options.
+  const FIELDS = "input, textarea, select";
+  const live = [...region.querySelectorAll(FIELDS)];
+  [...clone.querySelectorAll(FIELDS)].forEach((el, i) => {
+    const now = live[i] || el;
+    let v;
+    if (now.tagName === "SELECT") v = [...now.selectedOptions].map(o => o.textContent.trim()).join(", ");
+    else if (now.tagName === "INPUT" && ["checkbox", "radio"].includes(now.type)) v = now.checked ? "checked" : "unchecked";
+    else v = now.value;
     el.replaceWith(clone.ownerDocument.createTextNode(` [${v}] `));
   });
   return norm(clone.textContent);
