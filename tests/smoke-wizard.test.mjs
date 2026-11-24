@@ -1277,7 +1277,7 @@ test("P13 4: the CP Boosts heading names Max CP Boost, and every stepper keeps i
       assert.doesNotMatch(h.textContent, /up to \d+ each/);
       for (const s of app.$$("#main .stepper")) {
         const kids = [...s.children].map(c => c.tagName + (c.className ? "." + c.className : ""));
-        assert.deepEqual(kids, ["BUTTON", "SPAN.val", "BUTTON"]);
+        assert.deepEqual(kids, ["BUTTON", "INPUT.val", "BUTTON"]);   // J3: the value is a typed field
       }
     }
   }
@@ -1505,7 +1505,7 @@ test("P19 10: Expert mode folds the Stats step's descriptions and keeps every co
   }
   const body = rows[0];
   assert.match(body.querySelector(".name").textContent, /^Body/);
-  assert.equal(body.querySelector(".stepper .val").textContent, "7");
+  assert.equal(body.querySelector(".stepper .val").value, "7");   // J3: the value is a typed field
   const next = body.querySelector(".next-cost");
   assert.ok(next && !hiddenIn(next), "the price folded");
   assert.match(next.textContent, /^The next point costs 2\.$/);
@@ -1516,7 +1516,7 @@ test("P19 10: Expert mode folds the Stats step's descriptions and keeps every co
   assert.match(descs().find(s => !s.hidden).textContent, /\S/);
   on.click('[data-step="stat|BOD|-1"]');
   assert.equal(descs().filter(s => !s.hidden).length, 1, "a stepper press closed it");
-  assert.equal(on.$$("#main .alloc-row")[0].querySelector(".stepper .val").textContent, "6");
+  assert.equal(on.$$("#main .alloc-row")[0].querySelector(".stepper .val").value, "6");   // J3: the value is a typed field
   // The pool and the buy rule stay.
   assert.match(on.$("#main .pool").textContent, /Pool/);
   assert.ok(on.$("#main .dice-note") && !hiddenIn(on.$("#main .dice-note")), "the buy rule folded");
@@ -2077,5 +2077,189 @@ test("J2: changing archetype clears the pools and their counts together", () => 
   const ch = stored(app, { locked: false });
   assert.deepEqual(ch.archetypeChoices.writeIn.pools, []);
   assert.equal(ch.trackers.panel["pool-aaaaaaaa"], undefined, "a cleared pool kept its count");
+  assert.deepEqual(app.errors, []);
+});
+
+// ── J3: a stepper takes a typed number (W121, W152) ─────────────────
+// A typed value is a field (data-val="<key>"). Enter or a change (leaving the field) commits it through the same
+// press the buttons make; Escape reverts; the arrows step by one. Each press re-renders, so a press's gate is read fresh.
+const typed = (app, key) => app.$(`#main [data-val="${key}"]`);
+const setField = (app, key, text) => { const f = typed(app, key); f.value = text; return f; };
+const keyIn = (app, f, key) => f.dispatchEvent(new app.window.KeyboardEvent("keydown", { key, bubbles: true }));
+const changeIn = (app, f) => f.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+const later = app => new Promise(r => app.window.setTimeout(r, 60));
+const statBase = (app, id) => stored(app, { locked: false }).stats[id].base;
+
+test("J3: a typed value commits on Enter or blur, through the same press the buttons make", async () => {
+  const app = statsDraft();
+  const from = D.statRules.base;
+  const f = setField(app, "stat|BOD", String(from + 2));
+  keyIn(app, f, "Enter");
+  await later(app);
+  assert.equal(statBase(app, "BOD"), from + 2, "Enter didn't commit the typed value");
+  const g = setField(app, "stat|BOD", String(from + 4));
+  changeIn(app, g);                       // leaving the field
+  await later(app);
+  assert.equal(statBase(app, "BOD"), from + 4, "leaving the field didn't commit the typed value");
+  assert.deepEqual(app.errors, []);
+});
+
+test("J3: a typed value is held to the caps and pools the buttons are", async () => {
+  // The Stat pool is the gate here: a Stat's + is greyed by the pool's room (next <= left), and applyStep alone
+  // caps only at the stat's maximum, so a typed value that skipped the button's state would overspend the pool.
+  const key = "stat|BOD";
+  // Spend the pool on the other stats first, so the pool, not the stat's cap, is what stops BOD.
+  const spendOthers = app => {
+    for (let round = 0; round < 40; round++) for (const s of D.stats.filter(x => x.id !== "BOD")) {
+      const b = app.$(`#main [data-step="stat|${s.id}|1"]`);
+      if (b && !b.disabled) app.click(`#main [data-step="stat|${s.id}|1"]`);
+    }
+  };
+  const probe = statsDraft();
+  spendOthers(probe);
+  for (let i = 0; i < 200; i++) {
+    const b = probe.$(`#main [data-step="${key}|1"]`);
+    if (!b || b.disabled) break;
+    probe.click(`#main [data-step="${key}|1"]`);
+  }
+  const reached = statBase(probe, "BOD");
+  const app = statsDraft();
+  spendOthers(app);
+  const f = setField(app, key, "99");
+  keyIn(app, f, "Enter");
+  await later(app);
+  assert.equal(statBase(app, "BOD"), reached, "a typed 99 went past where the + button stops");
+  const ch = stored(app, { locked: false });
+  assert.ok(Engine.statSpent(ch) <= Engine.statPool(ch).total, "the typed value overspent the Stat pool");
+  assert.deepEqual(app.errors, []);
+});
+
+test("J3: a typed value below the floor stops at the floor", async () => {
+  const floor = D.statRules.base;
+  const app = statsDraft({ BOD: floor + 1 });
+  const f = setField(app, "stat|BOD", "0");
+  keyIn(app, f, "Enter");
+  await later(app);
+  assert.equal(statBase(app, "BOD"), floor, "a typed 0 went below the floor");
+  assert.equal(typed(app, "stat|BOD").value, String(floor), "the field doesn't show the floor");
+});
+
+test("J3: text that isn't a whole number leaves the value as it was", async () => {
+  const app = statsDraft({ BOD: D.statRules.base + 1 });
+  const before = statBase(app, "BOD");
+  for (const text of ["x", "1.5", "", "-"]) {
+    const f = setField(app, "stat|BOD", text);
+    keyIn(app, f, "Enter");
+    await later(app);
+    assert.equal(statBase(app, "BOD"), before, `"${text}" changed the value`);
+  }
+  const f = setField(app, "stat|BOD", "9");
+  keyIn(app, f, "Escape");
+  await later(app);
+  assert.equal(statBase(app, "BOD"), before, "Escape committed");
+  assert.equal(typed(app, "stat|BOD").value, String(before), "Escape didn't put the value back");
+});
+
+test("J3: the arrow keys step the field by one and keep its place", async () => {
+  const app = statsDraft({ BOD: D.statRules.base + 1 });
+  const before = statBase(app, "BOD");
+  typed(app, "stat|BOD").focus();                       // the player is in the field
+  keyIn(app, typed(app, "stat|BOD"), "ArrowUp");
+  await later(app);
+  assert.equal(statBase(app, "BOD"), before + 1, "ArrowUp didn't step by one");
+  assert.equal(app.doc.activeElement, typed(app, "stat|BOD"), "focus left the field");
+  keyIn(app, typed(app, "stat|BOD"), "ArrowDown");
+  await later(app);
+  assert.equal(statBase(app, "BOD"), before, "ArrowDown didn't step back");
+});
+
+test("J3: a typed value is announced once, not twice", async () => {
+  const app = statsDraft();
+  const calls = [];
+  const real = app.window.announce;
+  app.window.announce = (text) => { calls.push(text); return real(text); };
+  const f = setField(app, "stat|BOD", String(D.statRules.base + 3));
+  keyIn(app, f, "Enter");
+  await later(app);
+  assert.equal(calls.length, 1, `announced ${calls.length} times: ${JSON.stringify(calls)}`);
+  assert.equal(app.$("#announcer").textContent, `${sName("BOD")} ${D.statRules.base + 3}`);
+  assert.notEqual(typed(app, "stat|BOD").getAttribute("type"), "number", "the field is a native spinbutton, which announces itself too");
+});
+
+test("J3: every one of the 17 steppers takes a typed value", async () => {
+  // Every stepper on every creation step is a field keyed as its buttons are, and where its + button is open, a typed
+  // value one above the current moves it by one, as the + button does.
+  const kinds = new Set();
+  let fields = 0, typedUp = 0;
+  for (const step of D.creationFlow.steps.map(s => s.id)) {
+    const app = onStep("professional", "street", step, () => {});
+    const found = app.$$("#main .stepper .val");
+    for (const v of found) {
+      const key = v.dataset.val;
+      assert.ok(v.tagName === "INPUT" && key, `${step}: a stepper's value is not a field`);
+      assert.ok(app.$(`#main [data-step="${key}|-1"]`) && app.$(`#main [data-step="${key}|1"]`), `${key} has no pair of buttons`);
+      kinds.add(key.split("|")[0]);
+      fields++;
+    }
+    // Each commit redraws, so each field is read again from the page, never from the list above.
+    for (const key of found.map(v => v.dataset.val)) {
+      const plus = app.$(`#main [data-step="${key}|1"]`);
+      if (!plus || plus.disabled) continue;
+      const cur = Number(typed(app, key).defaultValue), f = typed(app, key);
+      f.value = String(cur + 1);
+      keyIn(app, f, "Enter");
+      await later(app);
+      assert.equal(Number(typed(app, key)?.defaultValue), cur + 1, `${step} ${key}: a typed ${cur + 1} didn't move it as + does`);
+      typedUp++;
+    }
+  }
+  assert.ok(fields >= 17, `only ${fields} stepper fields across the steps (17 call sites)`);
+  assert.ok(typedUp >= 5, `only ${typedUp} steppers took a typed press`);
+  assert.ok(kinds.size >= 6, `only ${kinds.size} stepper kinds found`);
+});
+
+test("W152: an overspent pool reads with a true minus in the wizard", () => {
+  const app = onStep("professional", "street", "skills", ch => { ch.skills[D.skills[0].id] = { rank: 40, ipe: 0 }; });
+  const text = [...app.$$(".vstrip .vv")].map(v => v.textContent).join(" | ");
+  assert.doesNotMatch(text, /(^|[^−\d])-\d/, `an overspent pool reads with a hyphen-minus: ${text}`);
+  assert.match(text, /−\d+/, `an overspent pool doesn't read −: ${text}`);
+});
+
+// J3: a typed value reaches where the + button reaches, one press at a time, and no further.
+const pressToEnd = (setup, key) => {
+  const app = setup();
+  for (let i = 0; i < 200; i++) {
+    const b = app.$(`#main [data-step="${key}|1"]`);
+    if (!b || b.disabled) break;
+    app.click(`#main [data-step="${key}|1"]`);
+  }
+  return app.$(`#main [data-val="${key}"]`)?.defaultValue;
+};
+test("J3: a typed value stops where a press would open no more, on an Advantage (its affordability gate)", async () => {
+  const setup = () => onStep("professional", "street", "character-points", () => {});
+  const probe = setup();
+  const key = [...probe.$$("#main .stepper .val")].map(v => v.dataset.val)
+    .find(k => k.startsWith("adv|") && probe.$(`#main [data-step="${k}|1"]`) && !probe.$(`#main [data-step="${k}|1"]`).disabled);
+  assert.ok(key, "no Advantage with an open + on the Character Points step");
+  const reached = pressToEnd(setup, key);
+  const app = setup();
+  const f = app.$(`#main [data-val="${key}"]`);
+  f.value = "99";
+  keyIn(app, f, "Enter");
+  await later(app);
+  assert.equal(app.$(`#main [data-val="${key}"]`).defaultValue, reached, "a typed 99 went past where the + button stops");
+  assert.deepEqual(app.errors, []);
+});
+
+test("J3: a typed value on a key no stepper shows changes nothing and throws nothing", async () => {
+  const app = statsDraft();
+  const before = JSON.stringify(stored(app, { locked: false }));
+  const ghost = app.doc.createElement("input");
+  ghost.className = "val"; ghost.dataset.val = "stat|NOPE"; ghost.value = "9";
+  app.$("#main").appendChild(ghost);
+  ghost.dispatchEvent(new app.window.KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+  ghost.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  await later(app);
+  assert.equal(JSON.stringify(stored(app, { locked: false })), before, "a stepper that isn't shown wrote to the character");
   assert.deepEqual(app.errors, []);
 });

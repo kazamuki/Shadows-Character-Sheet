@@ -331,3 +331,22 @@ test("a minus is a minus: a hurt character's Pain reads −, in text and in attr
   assert.ok(sawPain > 3, "no Pain line was read, so the check proves nothing");
   assert.deepEqual(seen, [], "a Pain number rendered with a hyphen (sheet.js painSummary, painChip, the vitals pill, Main's and Skills' lines)");
 });
+
+// W152: the wizard's rail and Vitals pills read a true minus too, not the hyphen the wizard printed before J3.
+test("W152: the wizard's overspent pool is checked for a true minus", () => {
+  const ch = Engine.newCharacter();
+  ch.identity.name = "Probe";
+  ch.identity.archetype = D.archetypes.find(a => !a.writeIn).id;
+  ch.creation.powerLevel = D.powerLevels[0].id;
+  ch.creation.rolls = { statPoints: 40, skillPoints: 30, credits: 1000 };
+  for (const id of Object.keys(ch.stats)) ch.stats[id].base = 8;
+  ch.skills[D.skills[0].id] = { rank: 40, ipe: 0 };   // overspends the Skill pool, so its pill and rail row go negative
+  const steps = D.creationFlow.steps.map(s => s.id);
+  const app = boot({ storage: { "shadows.draft.v1": { ch, step: steps.indexOf("skills"), maxReached: steps.length - 1 } } });
+  app.$$("#main button").find(b => /Resume draft/.test(b.textContent))
+    .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  const rail = [...app.doc.querySelectorAll(".vstrip .vv, #vitals .vrow")].map(e => e.textContent).join("\n");
+  assert.match(rail, /−\d+/, "the overspent pool doesn't read with a true minus");
+  assert.doesNotMatch(rail, HYPHEN_MINUS, "the overspent pool reads with a hyphen-minus");
+  assert.deepEqual(app.errors, []);
+});

@@ -50,9 +50,10 @@ function wizardStripHtml(ch){
   if (Engine.powerLevel(ch) && !ch.creation.locked){
     const sp=Engine.statPool(ch), kp=Engine.skillPool(ch), cp=Engine.cp(ch);
     const sLeft = sp.total==null ? null : sp.total-Engine.statSpent(ch), kLeft = kp.total-Engine.skillSpent(ch);
-    h += pill("Stats", sLeft==null ? "roll "+esc(sp.rollDie) : `${sLeft}<small>/${sp.total}</small>`, sLeft!=null && sLeft<0);
-    h += pill("Skills", `${kLeft}<small>/${kp.total}</small>`, kLeft<0);
-    h += pill("CP", `${cp.left}<small>/${cp.budget}</small>`, cp.left<0);
+    // W152: an overspent pool reads with a true minus (numText, as the sheet's numbers do), not a hyphen.
+    h += pill("Stats", sLeft==null ? "roll "+esc(sp.rollDie) : `${numText(sLeft)}<small>/${sp.total}</small>`, sLeft!=null && sLeft<0);
+    h += pill("Skills", `${numText(kLeft)}<small>/${kp.total}</small>`, kLeft<0);
+    h += pill("CP", `${numText(cp.left)}<small>/${cp.budget}</small>`, cp.left<0);
   }
   return h + `<button type="button" class="vpill toggle" data-wiz-vitals aria-haspopup="dialog" aria-label="Open full vitals"><span class="vtext"><span class="vk">Vitals</span><span class="vv">View ▸</span></span></button></div>`;
 }
@@ -69,9 +70,9 @@ function wizardRailHtml(ch){
   if (pl && !locked){
     const sp=Engine.statPool(ch), kp=Engine.skillPool(ch), cp=Engine.cp(ch);
     h += `<div class="vgroup">`;
-    h += vrow("Stat Points", sp.total==null?"roll "+sp.rollDie:(sp.total-Engine.statSpent(ch))+" / "+sp.total, sp.total!=null&&sp.total-Engine.statSpent(ch)<0?"over":"");
-    h += vrow("Skill Points", (kp.total-Engine.skillSpent(ch))+" / "+kp.total, kp.total-Engine.skillSpent(ch)<0?"over":"");
-    h += vrow("Character Pts", cp.left+" / "+cp.budget, cp.left<0?"over":"gold");
+    h += vrow("Stat Points", sp.total==null?"roll "+sp.rollDie:numText(sp.total-Engine.statSpent(ch))+" / "+sp.total, sp.total!=null&&sp.total-Engine.statSpent(ch)<0?"over":"");
+    h += vrow("Skill Points", numText(kp.total-Engine.skillSpent(ch))+" / "+kp.total, kp.total-Engine.skillSpent(ch)<0?"over":"");
+    h += vrow("Character Pts", numText(cp.left)+" / "+cp.budget, cp.left<0?"over":"gold");
     h += `</div>`;
   }
   if (locked){
@@ -116,11 +117,13 @@ function wizardRailHtml(ch){
 // `name` is what the row changes ("Body", "Handguns"): the buttons read
 // "Raise Body", and announceStep() reads it back with the new value (W59).
 // `up` is the + button's verb: "Learn" for a power not held yet (W59), "Raise" otherwise.
+// J3 (W121): the value is a field keyed as its buttons are (data-val). Typing a whole number commits it
+// through the same press the buttons make (typedCommit, below); the field's own text is never the truth.
 function stepper(val, dataAttr, downOk, upOk, name, up = "Raise"){
   const n = esc(name);
   return `<div class="stepper" data-name="${n}">
     <button data-step="${dataAttr}|-1" ${downOk?"":"disabled"} aria-label="Lower ${n}">−</button>
-    <span class="val">${val}</span>
+    <input class="val" type="text" inputmode="numeric" pattern="-?[0-9]*" autocomplete="off" data-val="${dataAttr}" value="${val}" aria-label="${n}">
     <button data-step="${dataAttr}|1" ${upOk?"":"disabled"} aria-label="${esc(up)} ${n}">+</button></div>`;
 }
 // A stat a trait caps says so under its name, a price-like line Expert mode never folds (Decision 235).
@@ -1083,6 +1086,16 @@ function bindMain(){
       const fb = main.querySelector(`[data-cp-all="${listKey}"]`); if (fb) fb.focus({ preventScroll:true });
     }
   });
+  // J3 (W121): a stepper's value is a field. Enter or leaving it commits a whole number; Escape puts the value back;
+  // the arrows step by one, through the same press the buttons make.
+  main.querySelectorAll("[data-val]").forEach(f=>{
+    f.onchange = () => typedCommit(f);
+    f.onkeydown = e => {
+      if (e.key==="Enter"){ e.preventDefault(); typedCommit(f); }
+      else if (e.key==="Escape"){ e.preventDefault(); f.value = f.defaultValue; }
+      else if (e.key==="ArrowUp" || e.key==="ArrowDown"){ e.preventDefault(); pressOne(f, e.key==="ArrowUp" ? 1 : -1); }
+    };
+  });
   main.querySelectorAll("[data-stat-floor]").forEach(b=>b.onclick=()=>{
     const r = Engine.raiseStatsToFloor(ch);
     if (r.ok && r.short.length){
@@ -1335,4 +1348,60 @@ function applyStep(key, delta){
   if (kind==="bp") Engine.placeBasePower(ch, id, delta);
   if (kind==="apow") Engine.buyPowerRank(ch, id, delta);
   if (kind==="boost"){ const [type,tid]=[rest[0],rest.slice(1).join("|")]; Engine.addBoost(ch,type,tid,delta); }
+}
+
+// ── J3 (W121): a typed value goes through the buttons' press ────────
+// A typed number never writes the character: each step is applyStep(key, ±1), the same press a button makes, and
+// the loop stops at the first press the button greys out or applyStep refuses. The gates a button reads (a pool's
+// room, an Advantage's affordability, a pick) live in the render, so each press is followed by the redraw the
+// button's own press makes, and the next press reads the new button state. Decision 164's focus rule and
+// Decision 279's fold re-focus apply to each press, as they do to a button.
+function pressKey(key, delta){
+  const main=$("main"); if (!main) return false;
+  const b=main.querySelector(attrSel("data-step", `${key}|${delta}`));
+  if (!b || b.disabled) return false;
+  const anchor=main.querySelector(attrSel("data-val", key)) || b;
+  const list=anchor.closest("[data-cp-list]"), listKey=list && list.dataset.cpList, had=document.activeElement===anchor;
+  applyStep(key, delta); update();
+  const now=document.activeElement;   // Decision 279: a fold that takes the stepper with it leaves its list's button in charge
+  if (had && listKey && (!now || now===document.body || now.closest("[hidden]"))){
+    const fb=$("main").querySelector(`[data-cp-all="${listKey}"]`); if (fb) fb.focus({ preventScroll:true });
+  }
+  return true;
+}
+// Steps the stepper `key` toward `target` one press at a time, and returns how many presses were taken. The loop is
+// bounded by the distance (and a hard cap), and stops where the button greys out, a press is refused, or the stepper is gone.
+function stepTo(key, target){
+  const field=()=>$("main") && $("main").querySelector(attrSel("data-val", key));
+  let pressed=0;
+  while (pressed<200){
+    const f=field(); if (!f) break;
+    const cur=Number(f.defaultValue);
+    if (cur===target) break;
+    if (!pressKey(key, target>cur ? 1 : -1)) break;
+    pressed++;
+    const g=field(); if (!g || Number(g.defaultValue)===cur) break;   // the press changed nothing: refused
+  }
+  return pressed;
+}
+// The announcement for a stepper's value after a typed commit or an arrow press: "<name> <value>", once (W59).
+function announceField(key){
+  const g=$("main") && $("main").querySelector(attrSel("data-val", key)), st=g && g.closest(".stepper");
+  if (st) announce(`${st.dataset.name} ${g.defaultValue}`);
+}
+// The arrow keys: one press, as the + and − buttons make it.
+function pressOne(f, delta){
+  if (pressKey(f.dataset.val, delta)) announceField(f.dataset.val);
+}
+// Enter or leaving the field. A field a redraw has replaced is stale: the new one is the stepper now.
+function typedCommit(f){
+  if (!f.isConnected) return;
+  const key=f.dataset.val, text=f.value.trim();
+  if (!/^-?\d+$/.test(text)){ f.value=f.defaultValue; return; }   // not a whole number: no change, no message
+  const target=Number(text);
+  if (target===Number(f.defaultValue)){ f.value=f.defaultValue; return; }
+  stepTo(key, target);
+  const g=$("main") && $("main").querySelector(attrSel("data-val", key));
+  if (g) g.value=g.defaultValue;   // a value the buttons can't reach stops short, and the field shows where it stopped
+  announceField(key);
 }

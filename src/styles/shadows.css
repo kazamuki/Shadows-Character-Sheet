@@ -229,7 +229,10 @@ textarea{min-height:150px; resize:vertical; line-height:1.6}
 .stepper button{background:var(--panel-2); border:0; color:var(--text); width:30px; height:30px; font-size:1rem; line-height:1}
 .stepper button:hover:not(:disabled){background:var(--frame); color:var(--on-accent)}
 .stepper button:disabled{opacity:.3; cursor:default}
-.stepper .val{font-family:var(--mono); width:42px; text-align:center; font-size:.95rem}
+/* J3 (W121): the value is a field, the same 42px cell, with no spin buttons. */
+.stepper .val{font-family:var(--mono); width:42px; height:30px; box-sizing:border-box; text-align:center; font-size:.95rem; background:var(--panel-2); color:var(--text); border:0; border-radius:0; padding:0; -moz-appearance:textfield; appearance:textfield}
+.stepper .val::-webkit-outer-spin-button, .stepper .val::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
+.stepper .val:focus-visible{outline:2px solid var(--cyan); outline-offset:-2px}
 .mod{font-family:var(--mono); font-size:.78rem; width:3.2em; text-align:right; color:var(--dim)}
 .mod.pos{color:var(--green)} .mod.neg{color:var(--magenta-text)}
 .sect{font-family:var(--mono); font-size:.7rem; letter-spacing:.16em; text-transform:uppercase;
@@ -1405,6 +1408,7 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
   .vpill.toggle{min-height:44px}
   button.x{min-width:44px; min-height:44px}
   .stepper button{width:44px; height:44px}
+  .stepper .val{width:44px; height:44px}
   details.group > summary, .cond-add > summary{padding-block:13px}
   .tags{gap:6px}
   .tags .tag{min-height:44px}
