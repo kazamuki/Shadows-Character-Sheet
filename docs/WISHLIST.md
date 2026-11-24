@@ -42,7 +42,7 @@ and that Goes with is mutual.
 ### Wizard
 
 **W121 — Type a number into a stepper.** *Claude, from P13 · 💡 · Fix (UI) · raised 2026-10-16*\
-**Plan:** [pools-and-numbers J3](plans/pools-and-numbers.md), approved 2026-11-22 · **Goes with:** W131
+**Plan:** [pools-and-numbers J3](plans/pools-and-numbers/J3-typed-steppers.md) (order drafted 2026-11-23; the plan row is pools-and-numbers.md §3) · **Goes with:** W131
 
 *The finding-things plan (closed; E1b, EQ10) set this aside: its order was the first-timer's, and this is the veteran's.*
 
@@ -910,7 +910,7 @@ prep second. *To respect:* the cast and city keep their add fields at the foot o
 is a choice to make for every page at once, not one-off; and Jot's note stays a note unless the GM asks otherwise.
 
 **W152 — An overspent pool reads with a true minus.** *Ken, from E5's review, 2026-11-13 · 🔧 · Fix*\
-**Plan:** [pools-and-numbers J3](plans/pools-and-numbers.md), approved 2026-11-22
+**Plan:** [pools-and-numbers J3](plans/pools-and-numbers/J3-typed-steppers.md) (order drafted 2026-11-23; the plan row is pools-and-numbers.md §3)
 
 In the wizard, a pool spent past its total shows a hyphen-minus ("-3 / 40", `wizard.js` lines 72–74) and the Character Points pill
 does the same (line 55). E5 made the sheet's numbers read with a true minus (`numText`/`signed`); the wizard's are the same
