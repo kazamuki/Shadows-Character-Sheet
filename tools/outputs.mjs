@@ -88,9 +88,24 @@ function engineOutputs(ch) {
   }));
 }
 
-function visible(app) {
-  const clone = app.doc.body.cloneNode(true);
+function visible(app) { return textOf(app.doc.body); }
+
+// The text a region shows, with each field's value in place of the field: a field's digits live in its value,
+// not its textContent. Read each live input's and textarea's value, by document order, into the clone.
+function textOf(region) {
+  const clone = region.cloneNode(true);
   for (const el of [...clone.querySelectorAll("script, style")]) el.remove();
+  // A field's state, not its markup: an input's or textarea's value, a checkbox's or radio's checked, a select's chosen options.
+  const FIELDS = "input, textarea, select";
+  const live = [...region.querySelectorAll(FIELDS)];
+  [...clone.querySelectorAll(FIELDS)].forEach((el, i) => {
+    const now = live[i] || el;
+    let v;
+    if (now.tagName === "SELECT") v = [...now.selectedOptions].map(o => o.textContent.trim()).join(", ");
+    else if (now.tagName === "INPUT" && ["checkbox", "radio"].includes(now.type)) v = now.checked ? "checked" : "unchecked";
+    else v = now.value;
+    el.replaceWith(clone.ownerDocument.createTextNode(` [${v}] `));
+  });
   return norm(clone.textContent);
 }
 const clickEl = (app, el) => el && el.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
@@ -113,7 +128,7 @@ function sheetTexts(ch, key, out) {
       const b = app.$(`#main ${sel}`); if (!b) continue;
       clickEl(app, b);
       const o = app.$("#modal[open]") || app.$("#vpop:not([hidden])");
-      if (o) out[`${key}/tab:${sec} ${sel}`] = norm(o.textContent);
+      if (o) out[`${key}/tab:${sec} ${sel}`] = textOf(o);
       closeOverlays(app);
     }
   }

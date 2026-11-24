@@ -1212,3 +1212,17 @@ test("K3: A day without rest's line names its button", () => {
   assert.ok(line.textContent.startsWith(label), `the line doesn't begin with the button's label "${label}": ${line.textContent}`);
   assert.equal(btn.getAttribute("title"), line.textContent, "the button's title is the same sentence");
 });
+
+// ── J4 review: a spend that a max clamps logs what came off (Decision 315) ──
+test("J4: a spend a max clamps logs what came off: Call of the Wild at 1 of 3, typed 5, + logs +2", () => {
+  const ch = wolf("trueborn");
+  ch.panelData.form = "Werewolf";
+  ch.trackers.panel["call-of-the-wild"] = { value: 1 };
+  const app = openSheet(ch, "trackers");
+  const field = app.$('#main [data-trkamt="call-of-the-wild"]');
+  field.value = "5";
+  field.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  app.click('#main [data-trk="call-of-the-wild|1"]');
+  assert.equal(activeChar(app).trackers.panel["call-of-the-wild"].value, 3, "the count didn't stop at its max");
+  assert.equal(activeChar(app).audit.at(-1).label, "Call of the Wild +2", "the log named the typed 5, not the 2 that moved");
+});

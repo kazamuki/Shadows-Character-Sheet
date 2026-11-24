@@ -5007,6 +5007,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. Extends Decisions 201 and 135.
      - **Revisit if:** sustained powers' costs become numbers (W110); a Custom pool needs a Rate of Use; GM mode's encounter Reset (Decision 189) should clear a linked character's count.
      - **Built:** app 0.47.0, game data 0.40, character schema 0.27, PR #198. Log 2026-10-15 (P11).
+     - **Extended by 315:** the round counts the amount a press spends.
 
 226. **Movement is computed from MOB: Walk, Run and Sprint by the book's multipliers, Jump as Sprint ÷ 4 rounded down, and Fleet of Foot doubles Run and Sprint while active.**
      *2026-10-15 · Ken + Claude · Touches: movementRules, movement(), MOB, statTable, Walk, Run, Sprint, Jump, Fleet of Foot, grants type "movement", while, True Warrior, Main's Combat section, Prone, Restrained, the quick reference's movement table, W98*
@@ -5988,6 +5989,15 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** a long typed step proves slow (then a bulk apply is its own decision); a stepper gains a rule a press can't express.
      - **Built:** app 0.76.0 (unreleased), PR (this one), log entry 2026-11-23.
 
+315. **A tracker's spend takes an amount: one change, one Undo, counted against the round as the amount.**
+     *2026-11-24 · Ken + Claude · Touches: adjustPanelTracker, trackers.sfr.turn, the tracker controls (the Trackers row, the SFR popover, a named pool's popover), the Activity Log's label for a spend, TOL Spent's overMax, W176*
+     - **Decided:** a tracker's − and + take a whole amount from the field beside them, 1 to 9999, and the amount is 1 until the player types another. A press is one change: one Undo entry; the count moves by the amount and clamps at 0; the round (`turn`) moves by the amount, and a take-back takes back from it first, never below 0. Nothing is refused: at or past Rate of Use the round line warns as it does now (225), and past a TOL Spent max the Cascade panel shows once, with no roll.
+     - **Why:** W176. A 6-SFR power is six presses, each one Activity Log line and one Undo step; the round should read the spend as the one thing it was.
+     - **Rejected:** a confirmation for large amounts (one more click per spend); holding the spend to what's left (225 says the sheet never blocks, and a named pool already reads 0 past its max); one Cascade per point on TOL Spent (the CRB's Cascade is one roll; whether a voluntary spend Cascades at all, and how many, is F56's question, not a count the sheet invents).
+     - **Replaces:** nothing. Extends 225 (the round counts the amount) and 266 (the one writer takes the amount).
+     - **Revisit if:** F56 is answered (a Cascade per point, or by degree): the TOL overMax shape changes; a spend needs a room rule (SFR's room, a pool's room) the table asks for.
+     - **Built:** app 0.76.0 (unreleased), PR (this one), log entry 2026-11-24.
+
 ## 5. Open Flags
 
 A rules question the app must not answer. Each row is stubbed in the data
@@ -6023,5 +6033,6 @@ here are in `log/archive.md`.
 | F53 | **What Spirit damage is.** 0480 names Spirit in its Warding rows and its Backlash table and never says what it is. Stubbed (K2, Decision 291): the damage type has no description, is `flagged`, and shows its `playerNote` on Every word | Deighton | Doesn't block K2 |
 | F54 | **What Aether damage is.** 0480 names Aether in its Warding rows and its Backlash table and never says what it is. Stubbed (K2, Decision 291): the damage type has no description, is `flagged`, and shows its `playerNote` on Every word | Deighton | Doesn't block K2 |
 | F55 | **Does Bone Spines' "+5 while grappling" replace the +3 or add to it, and does a rank add to the +5?** `0413`: "+3 melee damage, +5 while grappling", "+1 damage (max 5)" a rank. Stubbed (L5b, Decision 292): the mark computes the +3 with its rank and prints "+5 while grappling" as the book writes it; the power is `flagged` with a `playerNote` that the GM rules it | Deighton | Doesn't block L5b |
+| F56 | **Does a voluntary TOL spend past zero Cascade, and once or per point?** The glossary says "Below zero, a Cascade follows" and 0480's TOL section says a Rupture that pushes TOL below zero "a Cascade follows immediately" (0480:107). Cosmic Intervention is "the mechanic is identical" (0480:394), and the text doesn't say a voluntary spend past zero Cascades. The app's note on the Bound's TOL Spent says "Past zero, you Cascade." (`shadows-data.js`, the Bound's coreMechanic). `Engine.cascade` takes a Rupture's degree (Decision 106); a voluntary spend has none. J4 (Decision 315) shows the Cascade panel once, as today, and rolls nothing | Deighton | Doesn't block J4 |
 F42 and F43 go to Deighton.
 

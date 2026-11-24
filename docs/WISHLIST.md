@@ -156,11 +156,6 @@ But a new player opening Trackers or Progression still has nowhere to ask what t
 
 Main's vitals grid has five tracks at 768 and eight of 142px at 1280, so seven cards leave three empty cells at 768 and one at 1280. At 768 it reads as a tablet layout, not a break. Filling the row (for example `auto-fill` to `auto-fit` with a maximum) would widen the cards and change their heights. *To respect:* Decision 140 (the header) and E3's balance at 1280×860 (measured in the plan's E3 order), so measure Main's Combat top and the fight's bottom before and after, and bring it back to Ken as E3's question.
 
-**W176 — Spend several at once on a tracker.** *Ken + Claude, from the pools-and-numbers plan, 2026-11-22 · 💡 · Rule or shape*\
-**Plan:** [pools-and-numbers J4](plans/pools-and-numbers/J4-spend-several.md), drafted 2026-11-24 (awaiting Ken); the plan's row is in [pools-and-numbers](plans/pools-and-numbers.md) §3
-
-A tracker counts by **+1** and **−1**, so a 6-SFR power is six presses, each counted against the round's Rate of Use one at a time. Typing the amount would make it one change and one Undo. *To respect:* Decision 225 (the round warns at and past Rate of Use, never blocks), Decision 266 (`adjustPanelTracker` is the one writer of a spend), and TOL Spent's Cascade past zero, where how an amount that crosses zero is checked is the CRB's to say, or Deighton's.
-
 ### Rules in play: powers, rounds, encounters, Sanity
 
 **W128 — The sheet knows when an encounter ends.** *Claude, from P18's sign-off · 🔎 · Rule or shape · raised 2026-10-16*\

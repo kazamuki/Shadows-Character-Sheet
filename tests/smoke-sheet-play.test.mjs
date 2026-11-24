@@ -2712,3 +2712,166 @@ test("J2: print's archetype page lists the pools", () => {
   const off = page(app.window.renderPrintView(poolChar({ mechanics: [] })));
   assert.equal([...off.querySelectorAll(".p-section")].some(s => s.textContent === "Pools"), false, "an unticked pool printed");
 });
+
+// ── J4: spend several at once (Decision 315, W176) ───────────────────
+
+// The amount field beside a tracker's − and +, found in the card or popover (`scope`) that holds them.
+const typeAmount = (app, scope, pid, v) => setVal(app, `${scope} [data-trkamt="${pid}"]`, v);
+const trkOf = app => activeChar(app).trackers.sfr;
+
+test("J4: every tracker control has an amount field on each of its twins", () => {
+  const twins = (app, scope, label) => {
+    const btns = app.$$(`${scope} [data-trk]`);
+    assert.ok(btns.length, `${label}: no tracker buttons`);
+    for (const b of btns) {
+      const pid = b.dataset.trk.split("|")[0];
+      assert.ok(b.parentElement.querySelector(`[data-trkamt="${pid}"]`), `${label}: ${pid} has no amount field beside its − and +`);
+    }
+  };
+  twins(openSheet(poolChar({ mechanics: ["magic", "pools"], panel: { "pool-aaaaaaaa": { value: 0, max: 6 } } }), "trackers"), "#main", "the Trackers row");
+  const sf = openSheet(streetVampire(), "main");
+  sf.click('#main [data-vpop="sfr"]');
+  twins(sf, "#vpop", "the SFR popover");
+  const pool = openSheet(poolChar({ panel: { "pool-aaaaaaaa": { value: 0, max: 6 } } }), "main");
+  pool.click('#main [data-vpop="pool:pool-aaaaaaaa"]');
+  twins(pool, "#vpop", "a named pool's popover");
+});
+
+test("J4: at the default amount a press is the ±1 it was", () => {
+  const app = openSheet(streetVampire(), "main");
+  app.click('#main [data-vpop="sfr"]');
+  assert.equal(app.$('#vpop [data-trkamt="sfr"]').value, "1", "the amount field doesn't start at 1");
+  press(app, '#vpop [data-trk="sfr|1"]');
+  assert.equal(activeChar(app).audit.at(-1).label, "SFR +1");
+  assert.deepEqual([trkOf(app).spent, trkOf(app).turn], [1, 1]);
+  assert.equal(app.$('#vpop [data-trkamt="sfr"]').value, "1", "a press left the field off 1");
+  assert.match(app.$("#vpop").textContent, /1 of 4 this round/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("J4: a typed amount is one change and one Undo", () => {
+  const app = openSheet(streetVampire(), "main");
+  app.click('#main [data-vpop="sfr"]');
+  const before = activeChar(app).audit.length;
+  typeAmount(app, "#vpop", "sfr", "6");
+  press(app, '#vpop [data-trk="sfr|1"]');
+  assert.equal(trkOf(app).spent, 6, "the amount didn't spend all six");
+  assert.equal(activeChar(app).audit.length, before + 1, "six presses' worth of log lines, not one");
+  assert.equal(activeChar(app).audit.at(-1).label, "SFR +6");
+  app.click("#undotoast [data-toastundo]");
+  assert.deepEqual([trkOf(app).spent, trkOf(app).turn || 0], [0, 0], "Undo didn't take all six back");
+});
+
+test("J4: an amount counts against the round as its amount, and warns at and past Rate of Use", () => {
+  const app = openSheet(streetVampire(), "main");
+  app.click('#main [data-vpop="sfr"]');
+  typeAmount(app, "#vpop", "sfr", "3");
+  press(app, '#vpop [data-trk="sfr|1"]');
+  assert.match(app.$("#vpop").textContent, /3 of 4 this round/);
+  typeAmount(app, "#vpop", "sfr", "3");
+  press(app, '#vpop [data-trk="sfr|1"]');
+  assert.match(app.$("#vpop").textContent, /6 this round, 2 past your Rate of Use\. Your GM's call\./);
+  assert.ok(app.$('#main [data-vpop="sfr"]').classList.contains("danger"), "the card didn't go to the danger class past RoU");
+});
+
+test("J4: a take-back of more than the count stops at zero and takes back the round first", () => {
+  const app = openSheet(streetVampire(), "main");
+  app.click('#main [data-vpop="sfr"]');
+  typeAmount(app, "#vpop", "sfr", "2");
+  press(app, '#vpop [data-trk="sfr|1"]');
+  const before = activeChar(app).audit.length;
+  typeAmount(app, "#vpop", "sfr", "9");
+  press(app, '#vpop [data-trk="sfr|-1"]');
+  assert.deepEqual([trkOf(app).spent, trkOf(app).turn], [0, 0], "a take-back went below zero");
+  assert.equal(activeChar(app).audit.length, before + 1, "the take-back wrote more than one entry");
+  assert.equal(activeChar(app).audit.at(-1).label, "SFR −2", "the log named 9 when only 2 came off");
+  app.click("#undotoast [data-toastundo]");
+  assert.deepEqual([trkOf(app).spent, trkOf(app).turn], [2, 2], "Undo didn't put the spend back");
+});
+
+test("J4: an amount past TOL shows the Cascade panel once, with no roll", () => {
+  const ch = lockedCharacter();
+  const n = Engine.derived(ch).TOL + 3;   // three points past the max: a panel per point would show three
+  const app = openSheet(ch, "trackers");
+  typeAmount(app, "#main", "tol-spent", String(n));
+  press(app, '#main [data-trk="tol-spent|1"]');
+  assert.equal(activeChar(app).trackers.panel["tol-spent"].value, n, "the amount didn't spend all of it");
+  assert.equal(app.$$("[data-cascadepanel]").length, 1, "the Cascade panel isn't shown once");
+  assert.equal(activeChar(app).audit.at(-1).label, `TOL Spent +${n}`);
+});
+
+test("J4: a named pool's amount moves its count and is named in the Activity Log", () => {
+  const app = openSheet(poolChar({ panel: { "pool-aaaaaaaa": { value: 0, max: 6 } } }), "main");
+  app.click('#main [data-vpop="pool:pool-aaaaaaaa"]');
+  typeAmount(app, "#vpop", "pool-aaaaaaaa", "4");
+  press(app, '#vpop [data-trk="pool-aaaaaaaa|1"]');
+  assert.equal(activeChar(app).trackers.panel["pool-aaaaaaaa"].value, 4);
+  assert.equal(activeChar(app).audit.at(-1).label, "Glamour +4");
+});
+
+test("J4: text that isn't a whole amount from 1 to 9999 changes nothing", () => {
+  const app = openSheet(poolChar({ mechanics: ["magic", "pools"], panel: { "pool-aaaaaaaa": { value: 0, max: 6 } } }), "trackers");
+  const before = activeChar(app).audit.length;
+  for (const v of ["x", "1.5", "0", "-2", "", "10000"]) {
+    typeAmount(app, "#main", "pool-aaaaaaaa", v);
+    press(app, '#main [data-trk="pool-aaaaaaaa|1"]');
+    assert.equal(activeChar(app).trackers.panel["pool-aaaaaaaa"].value, 0, `"${v}" moved the count`);
+  }
+  assert.equal(activeChar(app).audit.length, before, "a refused amount wrote a log line");
+});
+
+test("J4: Enter spends the typed amount and Escape puts the field back to 1", () => {
+  const app = openSheet(streetVampire(), "main");
+  app.click('#main [data-vpop="sfr"]');
+  const key = (sel, k) => app.$(sel).dispatchEvent(new app.window.KeyboardEvent("keydown", { key: k, bubbles: true, cancelable: true }));
+  typeAmount(app, "#vpop", "sfr", "5");
+  const typed = app.$('#vpop [data-trkamt="sfr"]');
+  key('#vpop [data-trkamt="sfr"]', "Enter");
+  assert.equal(trkOf(app).spent, 5, "Enter didn't spend the typed amount");
+  assert.equal(app.$('#vpop [data-trkamt="sfr"]').value, "1", "the press didn't put the field back to 1");
+  // Enter's own change lands on the field the press replaced: it must not keep the 5 for the next draw.
+  typed.value = "5"; typed.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  app.click('#main [data-vpop="sfr"]');   // closes the popover
+  app.click('#main [data-vpop="sfr"]');   // and draws it again from the amount kept
+  assert.equal(app.$('#vpop [data-trkamt="sfr"]').value, "1", "a change on the field Enter replaced kept 5 for the next draw");
+  assert.equal(trkOf(app).spent, 5, "the reopen spent something");
+  typeAmount(app, "#vpop", "sfr", "7");
+  key('#vpop [data-trkamt="sfr"]', "Escape");
+  assert.equal(app.$('#vpop [data-trkamt="sfr"]').value, "1", "Escape didn't put the field back to 1");
+  assert.equal(trkOf(app).spent, 5, "Escape spent");
+  assert.equal(app.$("#vpop").hidden, false, "Escape closed the popover");
+});
+
+test("J4: the amount parser is total: a whole number from 1 to 9999, or nothing", () => {
+  const app = boot();
+  for (const v of ["x", "1.5", "0", "-2", "", "10000", "NaN", "Infinity", "-0", "1e308", "+3", "9".repeat(400), null, undefined])
+    assert.equal(app.window.amountOf(v), null, `${String(v).slice(0, 20)} parsed as an amount`);
+  assert.equal(app.window.amountOf("1"), 1);
+  assert.equal(app.window.amountOf(" 42 "), 42);
+  assert.equal(app.window.amountOf("9999"), 9999);
+});
+
+test("J4: a take-back at zero moves nothing, so it writes no log line and no Undo entry", () => {
+  const app = openSheet(streetVampire(), "main");
+  app.click('#main [data-vpop="sfr"]');
+  const before = activeChar(app).audit.length;
+  press(app, '#vpop [data-trk="sfr|-1"]');
+  typeAmount(app, "#vpop", "sfr", "4");
+  press(app, '#vpop [data-trk="sfr|-1"]');
+  assert.equal(activeChar(app).audit.length, before, "a take-back that moved nothing wrote a log line");
+  assert.equal(app.$("#undotoast [data-toastundo]"), null, "a take-back that moved nothing offered an Undo");
+  assert.equal(app.$('#vpop [data-trkamt="sfr"]').value, "4", "the typed amount was thrown away by a take-back that moved nothing");
+});
+
+test("J4: the names of + and − follow the typed amount before the field is left", () => {
+  const app = openSheet(streetVampire(), "main");
+  app.click('#main [data-vpop="sfr"]');
+  const field = app.$('#vpop [data-trkamt="sfr"]');
+  field.value = "6";
+  field.dispatchEvent(new app.window.Event("input", { bubbles: true }));
+  assert.equal(app.$('#vpop [data-trk="sfr|1"]').getAttribute("aria-label"), "Spend 6 on SFR", "+ still says 1 while the field holds 6");
+  assert.equal(app.$('#vpop [data-trk="sfr|-1"]').getAttribute("aria-label"), "Take back 6 from SFR", "− still says 1 while the field holds 6");
+  assert.equal(trkOf(app).spent ?? 0, 0, "typing spent something before a press");
+  press(app, '#vpop [data-trk="sfr|1"]');
+  assert.equal(trkOf(app).spent, 6, "the press didn't spend the typed 6");
+});
