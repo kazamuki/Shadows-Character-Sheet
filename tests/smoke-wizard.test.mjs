@@ -2064,3 +2064,18 @@ test("J2: changing archetype clears the pools", () => {
   assert.deepEqual(stored(app, { locked: false }).archetypeChoices.writeIn.pools, []);
   assert.equal(app.$$("[data-wipool]").length, 0);
 });
+
+test("J2: changing archetype clears the pools and their counts together", () => {
+  const custom = D.archetypes.find(a => a.writeIn);
+  const app = onStep(custom.id, D.powerLevels[0].id, "archetype", ch => {
+    ch.archetypeChoices.writeIn.mechanics = ["pools"];
+    ch.archetypeChoices.writeIn.pools = [{ id: "pool-aaaaaaaa", name: "Glamour" }];
+    ch.trackers.panel = { "pool-aaaaaaaa": { value: 2, max: 6 } };
+  });
+  app.click('[data-arch="werewolf"]');
+  app.click(`[data-arch="${custom.id}"]`);
+  const ch = stored(app, { locked: false });
+  assert.deepEqual(ch.archetypeChoices.writeIn.pools, []);
+  assert.equal(ch.trackers.panel["pool-aaaaaaaa"], undefined, "a cleared pool kept its count");
+  assert.deepEqual(app.errors, []);
+});

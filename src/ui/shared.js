@@ -941,6 +941,9 @@ function vrow(k,v,cls="",ico="",pop=""){
 // ch.advantages, so clearing one side strands the other. A mirror needs one
 // writer (Decision 81).
 function resetArchetypeChoices(ch){
+  // A named pool's count goes with its name (Decision 313): one undo brings both back.
+  const pools = Engine.poolsOf(ch);
+  if (ch.trackers && ch.trackers.panel && typeof ch.trackers.panel==="object") for (const p of pools) delete ch.trackers.panel[p.id];
   // The engine's shape, so a field it grows is reset with the rest.
   ch.archetypeChoices = Engine.newCharacter().archetypeChoices;
   // Powers are the archetype's too (Decision 153, XQ3): the one being left
