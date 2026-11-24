@@ -2,7 +2,7 @@
 
 **Plan:** [`../pools-and-numbers.md`](../pools-and-numbers.md) §3, row J4. **Source:** **W176** (spend several at once on a tracker), raised by the plan. J4 is the **last row** of the plan's §3 table (J1, J2, J3, J4), so when it merges the plan is done and the release is Ken's (JQ6).
 
-**Status: drafted 2026-11-24** by Claude, at J2's session's request, for Ken. **Awaiting Ken's answers** on §4 (each has its default; nothing here is approved). Nothing is built, and no builder has been started.
+**Status: Awaiting Ken's approval.** Drafted 2026-11-24 by Claude, at J2's session's request. The §4 questions are answered (recorded below, 2026-11-24). Nothing is built, and no builder has been started.
 
 **Built on:** Decision 225 (the round counts `trackers.<resource>.turn`, warns at and past Rate of Use and never blocks), 266 (`adjustPanelTracker` is the one writer of a spend), 26 (Manual Adjustments), 106 (the Cascade, which the engine reads and never rolls), 201 (Feeding never counts against the round), 312 (J1: SFR max and RoU by hand), 313 (J2: a named pool's card and popover), 314 (J3: a typed number in a stepper, and its misses), 164 (`keepPlace`), 135 (a data key is read by code).
 
@@ -120,15 +120,17 @@ Flag for `SCHEMA.md` §5 and INDEX §2 (opened by the build, closed only by Deig
 
 ## 4. Questions for Ken
 
+*Recorded by the conductor from Ken's answers (2026-11-24): JQ-J4-2 is not held to what's left (the default); JQ-J4-7 is one Cascade panel with no roll, and F56 opens for Deighton. JQ-J4-1, -3, -4, -5 and -6 take their defaults. The order is awaiting Ken's approval.*
+
 Each has its default. A blank answer is the default.
 
 - **JQ-J4-1: where the amount is typed.** **Default:** a number field between the − and + of each tracker's control, on the Trackers row, the SFR popover and a named pool's popover (the three twins), not as a separate dialog. *Alternative:* the amount is typed on Trackers only; the popovers keep ±1.
-- **JQ-J4-2: is the spend held to what's left?** **Default:** no (225: the sheet never blocks; a named pool past its max reads 0 already). *Alternative:* an amount past the room (SFR's max less its spend, a pool's count to its max) is refused with the room said in words.
+- **JQ-J4-2: is the spend held to what's left?** **Answered 2026-11-24 (Ken): the default.** **Default:** no (225: the sheet never blocks; a named pool past its max reads 0 already). *Alternative:* an amount past the room (SFR's max less its spend, a pool's count to its max) is refused with the room said in words.
 - **JQ-J4-3: does the amount go back to 1 after a press?** **Default:** yes. A stale 6 can't be spent again by a second tap. *Alternative:* it stays until changed.
 - **JQ-J4-4: a cap on the amount.** **Default:** 1 to 9999; more, zero, a fraction or text changes nothing (the same refusal J3 gives a stepper). *Alternative:* no cap.
 - **JQ-J4-5: Enter and Escape in the field.** **Default:** Enter spends the typed amount (the + side); Escape puts the field back to 1. *Alternative:* Enter does nothing; the buttons are the only commit.
 - **JQ-J4-6: the amount field's label.** **Default:** `<title> amount` (a card has three controls, and "SFR" alone would be ambiguous beside the buttons). *Alternative:* the title alone, as J3's stepper field is named.
-- **JQ-J4-7: the TOL question (FN).** **Default:** J4 ships as §3 says: one Cascade panel for the amount, no roll, and FN goes to Deighton with the evidence. *Alternative:* none. The answer changes only the TOL panel's shape, not this order's mechanics.
+- **JQ-J4-7: the TOL question (FN).** **Answered 2026-11-24 (Ken): the default, and F56 opens for Deighton.** **Default:** J4 ships as §3 says: one Cascade panel for the amount, no roll, and FN goes to Deighton with the evidence. *Alternative:* none. The answer changes only the TOL panel's shape, not this order's mechanics.
 
 ## 5. The assumption sweep
 
