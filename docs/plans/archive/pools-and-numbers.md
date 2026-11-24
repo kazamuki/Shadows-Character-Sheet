@@ -1,6 +1,9 @@
 # Plan — Pools and numbers
 
-**Status:** **approved 2026-11-22** (Ken: JQ1 yes, JQ2–JQ8 on their defaults). Nothing here is a
+**Status:** **closed 2026-11-24, kept as history** (Ken; J1–J4 are built as Decisions 312–315 and released
+together in app 0.76.0, as JQ6 planned). It left **F56** for Deighton: whether a Custom archetype's TOL, spent
+as its powers say, Cascades past zero. A second read on Opus (J2–J4 were built on Haiku) rescoped F56 and named
+the tracker buttons by the way they count, in the fix after J4. Approved 2026-11-22 (Ken: JQ1 yes, JQ2–JQ8 on their defaults). Nothing here was a
 decision until the session that builds it numbers it in `SCHEMA.md` §4. Its
 sessions are `J`_n_ (the next free letter: `R` is the 2026-09 audit's, `P`
 and `T` are taken) and its questions `JQ`_n_ (§5). Its orders will be in
