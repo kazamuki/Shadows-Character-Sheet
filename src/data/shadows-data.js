@@ -2594,7 +2594,9 @@ window.SHADOWS_DATA = {
             "max": "TOL",
             "note": "Every Rupture spends TOL equal to its degree: Duds minus Hits.",
             "atMax": "Exhausted. No Spellcraft until TOL is back above zero. An hour's rest restores 1.",
-            "overMax": "cascade"
+            "overMax": "cascade",
+            "flagged": true,
+            "flagNote": "F56: does a voluntary TOL spend past zero Cascade, and once or per point? The panel shows the Cascade once, with no roll, until Deighton rules."
           },
           {
             "id": "magic-reference",
@@ -3630,6 +3632,8 @@ window.SHADOWS_DATA = {
             "note": "Spend TOL as your powers say. Past zero, you Cascade.",
             "atMax": "Exhausted. No more TOL to spend until it's back above zero. An hour's rest restores 1.",
             "overMax": "cascade",
+            "flagged": true,
+            "flagNote": "F56: does a voluntary TOL spend past zero Cascade, and once or per point? The panel shows the Cascade once, with no roll, until Deighton rules.",
             "when": "magic"
           },
           {

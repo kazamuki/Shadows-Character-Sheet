@@ -4051,7 +4051,10 @@ function bindVitalControls(root){
     setTrkAmount(pid, 1);
     // A change that trails the press (Enter fires one, after this handler) reads the field: it must read 1, not the spent amount.
     if (f) f.value = "1";
-    commit("tracker", `${trackerTitle(ch, pid)} ${signed(sign*amt)}`, ()=>{ Engine.adjustPanelTracker(ch, pid, sign*amt); });
+    // The log and Undo name what came off: a take-back past zero logs only the count it took (9 with 2 spent logs −2).
+    const tp = Engine.archPanels(ch).find(x=>x.id===pid && x.type==="tracker");
+    const moved = sign>0 ? amt : Math.min(amt, tp ? Engine.panelTracker(ch, tp).count : 0);
+    commit("tracker", `${trackerTitle(ch, pid)} ${signed(sign*moved)}`, ()=>{ Engine.adjustPanelTracker(ch, pid, sign*amt); });
   });
   // The amount field: a change keeps a whole amount (anything else goes back to the last one). Enter spends it (the +);
   // Escape puts it back to 1 and stops there, so the popover stays open.

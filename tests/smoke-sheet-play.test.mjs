@@ -2784,6 +2784,7 @@ test("J4: a take-back of more than the count stops at zero and takes back the ro
   press(app, '#vpop [data-trk="sfr|-1"]');
   assert.deepEqual([trkOf(app).spent, trkOf(app).turn], [0, 0], "a take-back went below zero");
   assert.equal(activeChar(app).audit.length, before + 1, "the take-back wrote more than one entry");
+  assert.equal(activeChar(app).audit.at(-1).label, "SFR −2", "the log named 9 when only 2 came off");
   app.click("#undotoast [data-toastundo]");
   assert.deepEqual([trkOf(app).spent, trkOf(app).turn], [2, 2], "Undo didn't put the spend back");
 });
