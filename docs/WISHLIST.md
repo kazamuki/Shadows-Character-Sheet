@@ -159,7 +159,7 @@ Main's vitals grid has five tracks at 768 and eight of 142px at 1280, so seven c
 ### Rules in play: powers, rounds, encounters, Sanity
 
 **W128 — The sheet knows when an encounter ends.** *Claude, from P18's sign-off · 🔎 · Rule or shape · raised 2026-10-16*\
-**Plan:** none yet
+**Plan:** set aside by [motion](plans/motion.md) §4: an encounter's end takes the register's stamp once its design exists
 
 Many effects run "per encounter", "once per session" or "for 12 rounds": Favored Skill's re-roll, Untouchable's uses, Spirit Guide's calls, Time Sense,
 True Faith's aura, Blood Lust's state after a failed check. Ken wants some of them tracked (Divine Intervention spent, Favors used, Nine Lives counting
@@ -185,7 +185,7 @@ P20b taught Take a hit and Rest what a held **trait** does (Scrapper, Giant, Thi
 *To respect:* P20b's `meleeTaken` stage (Decision 236: after Natural Armor, before Wither Ward) is where a reduction joins the hit. Most rows need to know a power is **running**, which nothing stores yet (W110, P21's PQ2). Battle Hardened and Elemental Blood need a **saved pick** (a schema bump, with P21 §7's Skill Paragon and Weapon Expert group). Silverscar needs the hit to know **silver**, which `damageTypes` doesn't say. Regeneration reads the Form (Decision 195). Likely two orders: the hit, then healing. Each row's sentence is in `plans/archive/sheet-wishlist/P21-inventory.md` (c44–c53, b21).
 
 **W134 — Sanity Loss and Recovery on the sheet.** *Claude, from the 2026-10-22 mirror · 💡 · Rule or shape · raised 2026-10-22*\
-**Plan:** none yet · **Goes with:** W90
+**Plan:** set aside by [motion](plans/motion.md) §4: a band crossed takes the Pain Level's beat once the book has the rules · **Goes with:** W90
 
 Scott's Sanity proposal was accepted on 2026-09-29 (`private/crb/APPROVED_SAN_Loss_and_Recovery.md`) and
 is in no chapter yet. The sheet's SAN card counts loss and nothing else. The document gives it three
@@ -222,7 +222,7 @@ and a new area on the character's sheet to see them. GM mode's cast stat block (
 *2026-10-16:* Deighton: "we'll need to define what a minion or companion is. Are they controlled by GM or player? are they a combatant? What are their stats/skills?" Those answers come before the sheet.
 
 **W124 — Poverty's debt as a balance you pay into.** *Ken, from P18's sign-off · 💡 · Rule or shape · raised 2026-10-16*\
-**Plan:** none yet · **Goes with:** W129
+**Plan:** set aside by [motion](plans/motion.md) §4: I2's Milestone beat carries the money once Deighton's rules are built · **Goes with:** W129
 
 Poverty sets a debt of at least Ç75,000, more each rank, takes half of what the character earns against it, and bars legal gear until it's paid. The
 sheet shows none of it. A debt balance beside the Çredits ledger, with "half of income goes to the debt" applied when Çredits come in, would.
@@ -247,7 +247,7 @@ Enemies', would let the sheet show "Minor Contacts: Rook (fence), Vee (LINK hack
 *To respect:* Decision 77's picks (`type: "text"`, `perRank`); the Character tab's cards already show picks (`selHtml`). `gamedataVersion` per 68.
 
 **W129 — Wealthy pays out at each Milestone.** *Deighton and Ken, from P18's sign-off · 💡 · Rule or shape · raised 2026-10-16*\
-**Plan:** none yet · **Goes with:** W124
+**Plan:** set aside by [motion](plans/motion.md) §4: the payday arrives on I2's Milestone beat once the rule is Deighton's · **Goes with:** W124
 
 Wealthy grants Ç2,000 a month per rank, and the sheet doesn't track months. Deighton: "I'd love if wealthy paid out at each milestone", and maybe a payday at
 every Minor or Major Milestone for everyone ("UBI or your wealthy advantage or something"). Taking a Milestone could add the Çredits through the ledger.
@@ -560,7 +560,7 @@ with a button to reload from the newer copy. *To respect:* the app works
 without storage, so the listener is guarded like every other read.
 
 **W62 — Slotting a file in reads it on screen, like a script loading in NYTE City.** *Ken · 💡 · raised 2026-10-02 with GQ10's packs*\
-**Plan:** none yet · **Goes with:** W63
+**Plan:** [motion](plans/motion.md), I4 · **Goes with:** W63
 
 *Set aside by the player sheet's plan when it closed (2026-10-24, `plans/archive/sheet-wishlist.md` §4): an idea, not shaped.*
 
