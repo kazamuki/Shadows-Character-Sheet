@@ -528,6 +528,7 @@ function writeInHtml(ch, wi){
   h += `<div class="sect">What it uses</div><div class="wi-mechanics">` + wi.mechanics.map(m=>`
     <label class="check"><input type="checkbox" data-wimech="${esc(m.id)}" ${m.on?"checked":""}>
       <span><b>${esc(m.label)}</b>${m.note?` <small>${esc(m.note)}</small>`:""}</span></label>`).join("") + `</div>`;
+  if (wi.mechanics.some(m=>m.id==="pools" && m.on)) h += poolsHtml(ch);
   const textList = (key, title, note, noun) => {
     const rows = Array.isArray(w[key]) ? w[key] : [];
     return `<div class="sect">${esc(title)}</div><p class="step-note">${esc(note)}</p>` +
@@ -551,6 +552,16 @@ function writeInHtml(ch, wi){
     `<button class="btn sm" data-pwadd>+ Add a power</button>`;
   h += textList("vulnerabilities", "Vulnerabilities", copy("writeInVulnerabilities"), "vulnerability");
   return h;
+}
+
+// The pools a player names under "Uses another pool" (Decision 313): a row each, the name and Remove, then Add while
+// there are fewer than four. Each row is keyed by its id, so a rename or a removal finds its own row.
+function poolsHtml(ch){
+  const pools = Engine.poolsOf(ch);
+  return `<div class="sect">Pools</div>` + pools.map(p=>`<div class="pick wi-row">
+      <label class="field"><span>Name</span><input type="text" data-wipool="${esc(p.id)}" value="${esc(p.name)}" placeholder="Glamour, Chi…" maxlength="40"></label>
+      <button class="btn sm" data-wipoolrm="${esc(p.id)}" aria-label="Remove this pool">Remove</button></div>`).join("") +
+    (pools.length<4 ? `<button class="btn sm" data-wipooladd>+ Add a pool</button>` : "");
 }
 
 function renderHistory(){
@@ -1173,7 +1184,31 @@ function bindWriteIn(main, ch){
     const id = box.dataset.wimech, on = new Set(Array.isArray(w.mechanics) ? w.mechanics : []);
     box.checked ? on.add(id) : on.delete(id);
     w.mechanics = [...on];
+    // Ticking Uses another pool with none yet adds one empty row, and its name takes the focus (Decision 313).
+    const pools = id==="pools" && box.checked;
+    if (pools){ if (!Array.isArray(w.pools)) w.pools = []; if (!w.pools.length) w.pools.push({ id:Engine.newPoolId(ch), name:"" }); }
     update();
+    if (pools) focusLast(`[data-wipool]`);
+  });
+  main.querySelectorAll("[data-wipool]").forEach(inp=>inp.oninput=()=>{
+    const row = (w.pools||[]).find(r=>r && r.id===inp.dataset.wipool);
+    if (row) { row.name = inp.value; typed(); }
+  });
+  main.querySelectorAll("[data-wipooladd]").forEach(b=>b.onclick=()=>{
+    if (!Array.isArray(w.pools)) w.pools = [];
+    if (w.pools.length>=4) return;
+    w.pools.push({ id:Engine.newPoolId(ch), name:"" });
+    update(); focusLast(`[data-wipool]`);
+  });
+  // Remove takes the pool's count with it (its tracker's entry), and the focus goes to the next row's name, or to Add.
+  main.querySelectorAll("[data-wipoolrm]").forEach(b=>b.onclick=()=>{
+    const id = b.dataset.wipoolrm, at = Engine.poolsOf(ch).findIndex(p=>p.id===id);
+    if (Array.isArray(w.pools)) w.pools = w.pools.filter(r=>!(r && r.id===id));
+    if (ch.trackers && ch.trackers.panel && typeof ch.trackers.panel==="object") delete ch.trackers.panel[id];
+    update();
+    const rows = main.querySelectorAll("[data-wipool]");
+    if (rows[at]) rows[at].focus();
+    else { const add = main.querySelector("[data-wipooladd]"); if (add) add.focus(); }
   });
   main.querySelectorAll("[data-wirow]").forEach(inp=>inp.oninput=()=>{
     const [key, i, field] = inp.dataset.wirow.split("|"), row = (w[key]||[])[Number(i)];

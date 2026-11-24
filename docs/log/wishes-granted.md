@@ -1537,3 +1537,14 @@ plain, short, and saying what to do. *To respect:* it can't use `appCopy`, since
 
 **W174 — Esc in ⋮ should hand focus back to the ⋮ button.** *Claude, from K4's review (PR #375), 2026-11-20 → pools-and-numbers J1, app 0.76.0: Esc with ⋮ open puts focus back on ⋮; an outside click still moves none*\
 Esc inside the ⋮ menu closes it, but focus drops to the page's body instead of going back to the ⋮ button, so the next Tab starts from the top of the page. It's old behaviour, and more noticeable since K4 put Guide lines and the sheet's ? key switch in ⋮ (Decision 306), where a keyboard user flips them with the menu open. *To respect:* a press on a ⋮ switch leaves ⋮ open with focus on the item (K4), Esc with ⋮ open closes the menu before Help (Decision 278's one layer at a time), and `closeMenu` in `app.js` is the one place that shuts it.
+
+**W49 — A resource pool the player names.** *Claude · 💡 → pools-and-numbers J2, Decision 313, app 0.76.0 (unreleased)*\
+**Plan:** [pools-and-numbers J2](plans/pools-and-numbers.md), approved 2026-11-22
+
+*Set aside by the player sheet's plan when it closed (2026-10-24, `plans/archive/sheet-wishlist.md` §4): an idea, not shaped.*
+
+Glamour, Chi, a Blood Pool. The plan's checkboxes cover what the rules have
+today (TOL, SFR). A third, **Uses another pool**, would give a tracker whose
+title and max the player types. Tracker titles come from the data today, so
+this needs a little code.
+

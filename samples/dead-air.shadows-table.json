@@ -5362,9 +5362,9 @@
       "importedAt": "2026-10-17T23:58:00.000Z",
       "character": {
         "meta": {
-          "schemaVersion": "0.34",
+          "schemaVersion": "0.35",
           "id": "TAG-6909-DCC1-2V6T",
-          "gamedataVersion": "0.59",
+          "gamedataVersion": "0.60",
           "created": "2026-07-18T16:00:00.000Z",
           "updated": "2026-10-17T23:55:00.000Z"
         },
@@ -5417,6 +5417,7 @@
             "classification": null,
             "classificationText": "",
             "mechanics": [],
+            "pools": [],
             "traits": [],
             "vulnerabilities": []
           }
@@ -5711,9 +5712,9 @@
       "importedAt": "2026-10-17T23:58:00.000Z",
       "character": {
         "meta": {
-          "schemaVersion": "0.34",
+          "schemaVersion": "0.35",
           "id": "TAG-N4NA-A7JD-99HS",
-          "gamedataVersion": "0.59",
+          "gamedataVersion": "0.60",
           "created": "2026-07-18T16:00:00.000Z",
           "updated": "2026-10-17T23:55:00.000Z"
         },
@@ -5764,6 +5765,7 @@
             "classification": null,
             "classificationText": "",
             "mechanics": [],
+            "pools": [],
             "traits": [],
             "vulnerabilities": []
           }
@@ -6028,9 +6030,9 @@
       "importedAt": "2026-09-26T23:58:00.000Z",
       "character": {
         "meta": {
-          "schemaVersion": "0.34",
+          "schemaVersion": "0.35",
           "id": "TAG-TJPT-T8MA-HWNW",
-          "gamedataVersion": "0.59",
+          "gamedataVersion": "0.60",
           "created": "2026-07-18T16:00:00.000Z",
           "updated": "2026-09-26T23:55:00.000Z"
         },
@@ -6080,6 +6082,7 @@
             "classification": null,
             "classificationText": "",
             "mechanics": [],
+            "pools": [],
             "traits": [],
             "vulnerabilities": []
           }
@@ -6335,9 +6338,9 @@
       "importedAt": "2026-08-22T23:50:00.000Z",
       "character": {
         "meta": {
-          "schemaVersion": "0.34",
+          "schemaVersion": "0.35",
           "id": "TAG-BQEH-V2QQ-EP8P",
-          "gamedataVersion": "0.59",
+          "gamedataVersion": "0.60",
           "created": "2026-07-11T16:00:00.000Z",
           "updated": "2026-08-22T23:55:00.000Z"
         },
@@ -6386,6 +6389,7 @@
             "classification": null,
             "classificationText": "",
             "mechanics": [],
+            "pools": [],
             "traits": [],
             "vulnerabilities": []
           }
@@ -6531,9 +6535,9 @@
       "importedAt": "2026-07-11T23:30:00.000Z",
       "character": {
         "meta": {
-          "schemaVersion": "0.34",
+          "schemaVersion": "0.35",
           "id": "TAG-W7BN-RVS2-XDT0",
-          "gamedataVersion": "0.59",
+          "gamedataVersion": "0.60",
           "created": "2026-07-11T16:00:00.000Z",
           "updated": "2026-07-11T23:55:00.000Z"
         },
@@ -6584,6 +6588,7 @@
             "classification": null,
             "classificationText": "",
             "mechanics": [],
+            "pools": [],
             "traits": [],
             "vulnerabilities": []
           }

@@ -22,7 +22,7 @@ const Engine = (() => {
   const INTAKE_RE = new RegExp(`^TAG-${INTAKE_BODY}$`);
   const OLD_INTAKE_RE = new RegExp(`^NCR-(${INTAKE_BODY})$`);
   // The character file's shape. A bump needs a migrate() step in the same change.
-  const SCHEMA_VERSION = "0.34";
+  const SCHEMA_VERSION = "0.35";
   const isIntakeId = v => typeof v==="string" && INTAKE_RE.test(v);
   function randomChars(n){
     const c = typeof globalThis!=="undefined" && globalThis.crypto && typeof globalThis.crypto.getRandomValues==="function" ? globalThis.crypto : null;
@@ -63,8 +63,9 @@ const Engine = (() => {
                          // Schema 0.16 (Decision 153): what a write-in archetype
                          // is, in the player's words. Read only when the
                          // archetype declares `writeIn`; its powers are `powers`.
+                         // Schema 0.35 (Decision 313): `pools` are the named pools of "Uses another pool".
                          writeIn:{ name:"", description:null, classification:null,
-                                   classificationText:"", mechanics:[],
+                                   classificationText:"", mechanics:[], pools:[],
                                    traits:[], vulnerabilities:[] } },
       // Schema 0.23 (Decision 220): a GM's rule for this character, off by default.
       // `keepDamagePastZero` keeps the damage past zero when healing starts, so
@@ -4503,11 +4504,46 @@ const Engine = (() => {
   // A panel with `when` shows only while its write-in mechanic is ticked
   // (Decision 153): "Uses magic" turns on TOL Spent, and nothing names an id.
   // A panel with `origin` is that specialization's alone (a Draugur's Code).
+  // A panel with `perPool` is drawn once per pool the player named (Decision 313): its id and title are the pool's,
+  // and it reads as any tracker does. Its `perPool` key is dropped, so no panel carries it.
   const archPanels = ch => {
     const a = archetype(ch);
     const on = mechanicsOn(ch), origins = specializationIds(ch);
-    return ((a && a.coreMechanic && a.coreMechanic.panels) || []).filter(p=>p && (!p.when || on.includes(p.when)) && (!p.origin || origins.includes(p.origin)));
+    return ((a && a.coreMechanic && a.coreMechanic.panels) || []).filter(p=>p && (!p.when || on.includes(p.when)) && (!p.origin || origins.includes(p.origin)))
+      .flatMap(p => {
+        if (!p.perPool) return [p];
+        if (!writeInSpec(ch)) return [];
+        return poolsOf(ch).map(pl => { const { perPool, ...rest } = p; return { ...rest, id:pl.id, title:pl.name.trim() || p.title }; });
+      });
   };
+  // Schema 0.35 (Decision 313): the pools a write-in archetype names, `writeIn.pools`. `keptPools` is the one
+  // normalizer: migrate() runs it on a file, and every reader runs it again, because an undo can put anything back.
+  // A row keeps its id only when the id is `pool-` and eight lowercase letters or digits, unique; at most four.
+  // A name is text. The pattern is what keeps a file's id from naming another panel: no data id matches it.
+  const POOL_ID = /^pool-[a-z0-9]{8}$/, POOL_MAX = 4;
+  const keptPools = raw => {
+    const out = [], seen = new Set();
+    for (const r of Array.isArray(raw) ? raw : []){
+      if (out.length>=POOL_MAX) break;
+      if (!isPlainObj(r) || typeof r.id!=="string" || !POOL_ID.test(r.id) || seen.has(r.id)) continue;
+      seen.add(r.id); out.push({ id:r.id, name:txt(r.name) });
+    }
+    return out;
+  };
+  const poolsOf = ch => keptPools(writeInOf(ch).pools);
+  // Free for a new pool: not held in the list, and not a key of trackers.panel (a removed pool's count must never come
+  // back onto a new pool, Decision 313).
+  const poolIdFree = (ch, id) => {
+    if (typeof id!=="string" || !POOL_ID.test(id)) return false;
+    const held = Array.isArray(writeInOf(ch).pools) && writeInOf(ch).pools.some(r=>isPlainObj(r) && r.id===id);
+    const panel = ch && ch.trackers && isPlainObj(ch.trackers.panel) ? ch.trackers.panel : null;
+    return !held && !(panel && Object.prototype.hasOwnProperty.call(panel, id));
+  };
+  function newPoolId(ch){
+    let id;
+    do id = `pool-${randomChars(8).toLowerCase()}`; while (!poolIdFree(ch, id));
+    return id;
+  }
   // The size a player typed for a tracker whose data gives none: a number or nothing.
   const storedMax = (ch, p) => {
     const panel = ch && ch.trackers && isPlainObj(ch.trackers.panel) ? ch.trackers.panel : null;
@@ -5338,8 +5374,10 @@ const Engine = (() => {
     const spec = writeInSpec(ch);
     if (!spec) return null;
     const on = mechanicsOn(ch);
+    // A named pool is a suggestion in a power's Uses while its mechanic is ticked (Decision 313): trimmed, no blanks, no repeats.
+    const names = on.includes("pools") ? poolsOf(ch).map(p=>p.name.trim()).filter(Boolean) : [];
     return { mechanics:(spec.mechanics||[]).map(m=>({ id:m.id, label:m.label, note:m.note||"", on:on.includes(m.id) })),
-             powerUses:(spec.powerUses||[]).slice(),
+             powerUses:[...new Set([...(spec.powerUses||[]), ...names])],
              classifications:(D().classifications||[]).slice() };
   }
   // The panel gate (the write-in archetype's Add power, the wizard's blank
@@ -6008,6 +6046,8 @@ const Engine = (() => {
       classification: typeof w.classification==="string" ? w.classification : null,
       classificationText:txt(w.classificationText),
       mechanics:[...new Set((Array.isArray(w.mechanics) ? w.mechanics : []).filter(x=>typeof x==="string"))],
+      // Schema 0.35 (Decision 313): a file from before has none, and gets []. The pools a file names are kept as keptPools reads them.
+      pools:keptPools(w.pools),
       traits:textRows(w.traits), vulnerabilities:textRows(w.vulnerabilities) };
     // Schema 0.19 (Decision 200): Base Powers placed, a whole positive count
     // per power id, and a specialization's creation picks: an option id, or
@@ -6452,6 +6492,8 @@ const Engine = (() => {
         if (!txt(w.name).trim()) T("Name your archetype. What are you?");
         if (!c) T("Choose a classification for your archetype.");
         else if (c.writeIn && !txt(w.classificationText).trim()) W(`Say what ${c.name} means for you, in a word or two.`);
+        // A named pool is the only thing a pool needs (Decision 313): one with no name warns, and the lock stays open.
+        if (mechanicsOn(ch).includes("pools") && poolsOf(ch).some(p=>!p.name.trim())) W("Name your pool, or remove it.");
         // A row with words but no name never shows on the sheet; an empty one is just unused.
         const nameless = rows => rows.filter(r=>!r.name.trim() && [r.description, r.uses, r.effect, r.notes].some(v=>txt(v).trim())).length;
         for (const [rows, noun] of [[textRows(w.traits), "trait"], [ownPowers(ch), "power"], [textRows(w.vulnerabilities), "vulnerability"]]){
@@ -10656,7 +10698,7 @@ const Engine = (() => {
     newCharacter, isIntakeId, tagReading, tagNumber, migrate, versionCheck, buildExport,
     statMax, statMaxText, statAtCap, humanMax, statOverCaps, statOverCap, derivedParts, startingCredits,
     // Stats, skills and derived values
-    powerLevel, archetype, classification, canBuyAdvantage, archetypeContent, writeInOptions, addPower, addCustomPower, ownPowers, improvePower, newPower, removePower, statMod, statValue, statTable, baseStatTable, statReading, termSpans, term, word, words, archStatBonus, scalingRow,
+    powerLevel, archetype, classification, canBuyAdvantage, archetypeContent, writeInOptions, poolsOf, poolIdFree, newPoolId, addPower, addCustomPower, ownPowers, improvePower, newPower, removePower, statMod, statValue, statTable, baseStatTable, statReading, termSpans, term, word, words, archStatBonus, scalingRow,
     derived, health, sfr, skillLine, adjFor, skillRankCap, disciplineCap, disciplineRanks, powerRanks, archetypePowers, powerAllowance,
     powerPool, basePowerState, placeBasePower, powerCpOf, powerCpSpent, powerCpState, buyPowerRank, buyDisciplineRank, optionChoices, setOptionPick, archetypeWeapons, painImmunity,
     feedView, feedGain, feed, goUnfed, goUnrested,

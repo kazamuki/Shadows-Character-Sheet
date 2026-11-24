@@ -53,7 +53,7 @@ window.SHADOWS_DATA = {
      docs/log/archive.md (it was a `notes` string here that shipped to every
      player; audit C10). `meta` holds only what the app reads. */
   "meta": {
-    "gamedataVersion": "0.59",
+    "gamedataVersion": "0.60",
     "rulesetVersion": "CRB v4 (in progress)",
     "updated": "2026-11-11"
   },
@@ -3607,6 +3607,11 @@ window.SHADOWS_DATA = {
             "id": "sfr",
             "label": "Uses SFR",
             "note": "Tracks an SFR pool. Its size is your GM's call."
+          },
+          {
+            "id": "pools",
+            "label": "Uses another pool",
+            "note": "Tracks a pool you name: Glamour, Chi, a battery. Its size is your GM's call."
           }
         ],
         "powerUses": [
@@ -3635,6 +3640,15 @@ window.SHADOWS_DATA = {
             "resource": "sfr",
             "note": "Set the pool's size with your GM, then count down as you spend.",
             "when": "sfr"
+          },
+          {
+            "id": "pool",
+            "type": "tracker",
+            "title": "Pool",
+            "counts": "down",
+            "perPool": true,
+            "when": "pools",
+            "note": "Set the pool's size with your GM, then count down as you spend."
           },
           {
             "id": "powers",

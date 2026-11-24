@@ -1,5 +1,7 @@
 # Work order J2: a pool the player names
 
+*Amended 2026-11-23 on Ken's answers in PR #383 (comment 7119412103): the data-panel-id check is dropped (the id pattern is the check), the §10 popover example spends with +1, one warning for all unnamed pools, and an archetype change clears the pools' counts with their names.*
+
 **Plan:** [`../pools-and-numbers.md`](../pools-and-numbers.md) §3, row J2. **Source:** **W49** (a resource pool the player names), raised by the plan and approved with it (JQ4: a list; JQ5: a card on Main if it fits at 375px; JQ6: one release).
 
 **Built on:** Decision 153 (the write-in archetype, its `mechanics` and `when`; its *Revisit if* names W48–W50), 135 (a data key is read by code; no panel id in code), 225 (the Custom SFR pool's typed max, its card on Main), 214 (the card alone on Main's last row), 81 (one writer for a mirror), 124 (a file is untrusted), 312 (J1: `panelMax`, `panelTracker.typed`).
@@ -152,7 +154,7 @@ JQ1–JQ8 are the plan's (answered: JQ4 a list, JQ5 a card on Main, JQ6 one rele
 
 | What changes | True today (where) | After | Guards that read it · where it renders · text that points at it |
 |---|---|---|---|
-| `writeIn.pools` (new) | absent; `migrate()` drops it (6006) | `[{ id, name }]`, up to 4, ids `^pool-[a-z0-9]{8}$`, unique, never a data panel id; `newCharacter()` gives `[]` | Readers: `archPanels`, `writeInOptions` (Uses), the wizard step, Admin's editor, print, `validate()`. `resetArchetypeChoices` (shared 943) resets it with the shape: no edit, a test pins it |
+| `writeIn.pools` (new) | absent; `migrate()` drops it (6006) | `[{ id, name }]`, up to 4, ids `^pool-[a-z0-9]{8}$`, unique, the pattern is the check (no data panel id matches it); `newCharacter()` gives `[]` | Readers: `archPanels`, `writeInOptions` (Uses), the wizard step, Admin's editor, print, `validate()`. `resetArchetypeChoices` (shared 943) resets it with the shape: no edit, a test pins it |
 | The Custom archetype's mechanics | `magic`, `sfr` (data 3599) | + `{ id:"pools", label:"Uses another pool", note:… }` | `mechanicsOn`, `writeInOptions`, wizard 528 (draws every mechanic: no edit). Breaks engine.test 2973 (expected, §13) |
 | The Custom archetype's panels | `tol-spent`, `sfr`, `powers` | + `{ id:"pool", type:"tracker", title:"Pool", counts:"down", note:…, when:"pools", perPool:true }` | Decision 135's key guard: `perPool` must be read (by `archPanels`) |
 | `archPanels(ch)` | the data's panels, by `when`/`origin` (4506) | a `perPool` panel becomes one panel per pool: the data panel's keys, `id` the pool's, `title` the pool's name or the data title when blank, `perPool` dropped; none when no pool | **Every panel reader**: Trackers 1755, `panelTracker`, `adjustPanelTracker` 4575, `panelStore` (no `resource`: `trackers.panel[id].value`), `panelMax` (no `resource`: no J1 adjustment), `playerPool` 4519 (`resource==="sfr"` only: a pool never matches), `resolveReset` 3252/3284 (`turnCap` only: never), `sfrPanel` sheet 1613 (`resource==="sfr"`: never), Character 725 and Loadout 2727 (`type` other than tracker: never) |
@@ -163,8 +165,8 @@ JQ1–JQ8 are the plan's (answered: JQ4 a list, JQ5 a card on Main, JQ6 one rele
 | Trackers | every tracker panel (1755) | draws pools with no edit to the loop; the heading, aria-label and note are escaped already | The max box binder (4215) writes `trackers.panel[pid]`: unchanged |
 | Admin's write-in editor | no mechanics, no pools (2184) | a **Pools** list (JQ14) while the mechanic is ticked: rename, **+ Add a pool** (to 4), **Remove**; each a `commit()` | Remove deletes `writeIn.pools[i]` **and** `trackers.panel[id]` in one commit |
 | Print, archetype page | no trackers (3239) | a **Pools** table: name, max (blank line for none) while ticked | Escaped as the other rows are (`pRowsTableHtml`) |
-| `validate()`, write-in | name, classification; nameless rows (6450) | + a warning per unnamed pool | Player copy in the engine (CLAUDE.md, *Player-facing copy*) |
-| `migrate()` | rebuilds `writeIn` (6006) | + `pools`: plain objects only, `id` kept when it matches the id pattern and isn't taken or a data panel id (else dropped), `name` as text, at most 4 | Hostile: an id `"sfr"`, `"tol-spent"`, `"__proto__"`, a number; a name with markup or 10,000 characters (kept as text; the UI's `maxlength` is 40) |
+| `validate()`, write-in | name, classification; nameless rows (6450) | + one warning if any pool is unnamed | Player copy in the engine (CLAUDE.md, *Player-facing copy*) |
+| `migrate()` | rebuilds `writeIn` (6006) | + `pools`: plain objects only, `id` kept when it matches the id pattern and isn't taken (else dropped), `name` as text, at most 4 | Hostile: an id `"sfr"`, `"tol-spent"`, `"__proto__"`, a number; a name with markup or 10,000 characters (kept as text; the UI's `maxlength` is 40) |
 | `newCharacter()`, `SCHEMA_VERSION` | `0.34` | `0.35`, `pools: []` | engine.test's schema pin; SCHEMA.md §2's `writeIn` block |
 
 ## 6. Read first
@@ -202,8 +204,8 @@ pools: [ { id: "pool-k3x9q2ma", name: "Glamour" } ]   // up to 4; id ^pool-[a-z0
 
 - **`archPanels(ch)`**: a panel with `perPool: true` is replaced by `poolsOf(ch).map(pl => ({ ...p, id: pl.id, title: pl.name.trim() || p.title, perPool: undefined }))` (drop the key rather than set it undefined, so a whole-object comparison sees none). `poolsOf(ch)` reads `writeIn.pools` through the same normalizing as `migrate()` (an undo can put anything back, Decision 153's note), so a bad row never reaches a panel. Only while the archetype declares `writeIn` (`writeInSpec`).
 - **`writeInOptions(ch).powerUses`**: the data's, then each named pool's trimmed name when `pools` is ticked, no blanks, no duplicates (case-sensitive, as typed).
-- **`Engine.newPoolId(ch)`**: `pool-` + 8 of `randomChars`, redrawn while `poolIdFree(ch, id)` is false. **`poolIdFree(ch, id)`** (exported, pure): false when `id` is held in `writeIn.pools`, is a key of `trackers.panel` (so a removed pool's id isn't reused onto a count Undo might bring back), or is a data panel's id. Both exported for the wizard and Admin; the tests test `poolIdFree` directly, since `randomChars` has no seam.
-- **`migrate()`**: `pools` = the file's rows that are plain objects, `id` a string matching `^pool-[a-z0-9]{8}$`, not already taken in this list, not the id of any panel in the data; `name` as text. The first four kept. Anything else dropped.
+- **`Engine.newPoolId(ch)`**: `pool-` + 8 of `randomChars`, redrawn while `poolIdFree(ch, id)` is false. **`poolIdFree(ch, id)`** (exported, pure): false when `id` is held in `writeIn.pools`, is a key of `trackers.panel` (so a removed pool's id isn't reused onto a count Undo might bring back). Both exported for the wizard and Admin; the tests test `poolIdFree` directly, since `randomChars` has no seam.
+- **`migrate()`**: `pools` = the file's rows that are plain objects, `id` a string matching `^pool-[a-z0-9]{8}$`, not already taken in this list, `name` as text. The first four kept. Anything else dropped.
 - **On bad input** (constraint 8): `archPanels`, `writeInOptions` and `panelTracker` on any character `migrate()` gives return as now; a pool with no stored max gives `max: null`, `shown: null`, as the Custom SFR pool does unset.
 
 ## 9. The UI
@@ -241,7 +243,7 @@ Write these first; show each failing on `main` (or say why it passes).
 `tests/engine.test.mjs`:
 - **`J2: a perPool panel is drawn once per named pool, with its id and name`**: Custom, `pools` ticked, two pools → two tracker panels after `sfr`, ids and titles the pools', no `perPool` key; unticked → none.
 - **`J2: a named pool is a tracker that counts down from the max you type`** (engine half): `trackers.panel[id] = { value:2, max:6 }` → `panelTracker` max 6, shown 4; `adjustPanelTracker(ch, id, 1)` → ok, value 3; no max → `max: null`.
-- **`J2: an unnamed pool warns and reads Pool`** (engine half): title "Pool"; `validate()` has one warning "Name your pool, or remove it." and no error.
+- **`J2: an unnamed pool warns and reads Pool`** (engine half): title "Pool"; `validate()` has one warning "Name your pool, or remove it." and no error. Two unnamed pools give that one warning, not two.
 - **`J2: a named pool is a suggestion in a power's Uses`** (engine half): `powerUses` = the data's + ["Glamour", "Chi"]; a blank and a duplicate are left out; unticked → the data's only.
 - **`J2: migrate gives pools [] and keeps a file's own`**: a 0.34 file → `pools: []`, schema 0.35; a 0.35 file's two pools survive; a fifth is dropped.
 - **`J2: an id a count still holds is never given out again`**: `poolIdFree(ch, "pool-aaaaaaaa")` is false with `trackers.panel["pool-aaaaaaaa"]` present and no pool, false for a held pool's id and for `"sfr"`, true otherwise; `newPoolId(ch)` matches the pattern and `poolIdFree`.
@@ -254,7 +256,7 @@ Write these first; show each failing on `main` (or say why it passes).
 
 `tests/smoke-sheet-play.test.mjs`:
 - **`J2: a named pool is a tracker that counts down from the max you type`** (Trackers half: heading, box, ±1).
-- **`J2: Main shows a card per sized pool, and its popover spends it`**: an unsized pool has no card; sized, the card reads `6/6`; −1 in the popover → `5/6`, one Undo → `6/6`; `alone` lands on the right card with 1 and 2 pools.
+- **`J2: Main shows a card per sized pool, and its popover spends it`**: an unsized pool has no card; sized, the card reads `6/6`; +1 in the popover (a spend) → `5/6`, −1 gives it back to `6/6`, one Undo → `5/6`; `alone` lands on the right card with 1 and 2 pools.
 - **`J2: the Activity Log names a tracker by its title`**: a pool's +1, TOL Spent's −1, SFR's max.
 - **`J2: a pool named with markup prints as text everywhere`**: name `<img src=x onerror=alert(1)>` on Trackers, Main's card, the popover, the Uses datalist, Admin, print and the Activity Log: no `img` element, the characters shown.
 - **`J2: Admin renames, adds and removes a pool, and Undo puts each back`**.
@@ -263,7 +265,7 @@ Write these first; show each failing on `main` (or say why it passes).
 
 ## 11. Tests beyond the examples
 
-- **Hostile** (`hostile.test.mjs`): the hostile Custom character gets `pools` with a markup name, an id of `"sfr"`, `"tol-spent"`, `"__proto__"`, `5`, a duplicate id, a 10,000-character name and a sixth row. After `migrate()`: every id matches the pattern, none is a data panel id, at most four; `archPanels`, `writeInOptions`, `panelTracker` on each pool and `validate()` return without throwing. **One hostile case per new reader**: `archPanels`, `writeInOptions`, `poolsOf` via an undo that writes a bad `pools` back (`undoLastAction` on an audit entry whose diff writes junk `pools` back).
+- **Hostile** (`hostile.test.mjs`): the hostile Custom character gets `pools` with a markup name, an id of `"sfr"`, `"tol-spent"`, `"__proto__"`, `5`, a duplicate id, a 10,000-character name and a sixth row. After `migrate()`: every id matches the pattern, at most four; `archPanels`, `writeInOptions`, `panelTracker` on each pool and `validate()` return without throwing. **One hostile case per new reader**: `archPanels`, `writeInOptions`, `poolsOf` via an undo that writes a bad `pools` back (`undoLastAction` on an audit entry whose diff writes junk `pools` back).
 - **Totality**: add a Custom character with `pools` ticked to `degenerates()` (engine.test 666), so *no exported reader throws* covers it; add `newPoolId` to the readers list if it takes `(ch)` alone.
 - **Voice** (`voice.test.mjs`): the new data strings and the `validate()` warning pass.
 - **Nothing else moves**: the outputs diff over every archetype and specialization (`WORK-ORDERS.md`). Expected: the Custom archetype's `writeInOptions` mechanics (a third), and nothing for a Custom character with `pools` unticked. Every other difference is a finding.
@@ -317,7 +319,7 @@ The two prompts in `WORK-ORDERS.md` with this order's path, `docs/plans/pools-an
 
 - **`cond()` doesn't escape its name.** Every card today passes a literal. A pool's name is the player's: escape it before passing it, and the popover's title too.
 - **The id prints in two Activity Log labels** (sheet.js 3970, 4215). Use the panel's title, for every tracker.
-- **A file's pool id can name another panel.** An id of `"sfr"` would draw a second panel onto the SFR pool's count. `migrate()` checks every id against the data's panel ids and the pattern, and `archPanels` reads pools through the same check (an undo can bring junk back).
+- **A file's pool id can name another panel.** An id of `"sfr"` would draw a second panel onto the SFR pool's count. `migrate()` checks every id against the pattern (no data panel id matches it), and `archPanels` reads pools through the same check (an undo can bring junk back).
 - **Never reissue an id a count still holds.** `newPoolId` checks `trackers.panel`'s keys as well as the list.
 - **Take the outputs snapshot in a scratch worktree on `main`** with its own `npm ci` and its own temp dir, before step 2. Not by checking `main`'s `src/` out into your worktree, and never into another checkout (J1's build).
 - **One commit history the reviewer can read.** No `wip:` commits on the branch at PR time; Ken squashes, but the reviewer reads the commits.

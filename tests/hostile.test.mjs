@@ -1149,7 +1149,7 @@ test("Decision 216: powerIpe naming another Bloodline's or a nonexistent power h
 const same = (a, b, msg) => assert.equal(JSON.stringify(a), JSON.stringify(b), msg);
 test("P12b 10: migrate keeps the house rule, a running training and a landed entry's fields, and nothing else", () => {
   const mk = patch => { const c = Engine.newCharacter(); patch(c); return Engine.migrate(JSON.parse(JSON.stringify(c))); };
-  assert.equal(Engine.newCharacter().meta.schemaVersion, "0.34");
+  assert.equal(Engine.newCharacter().meta.schemaVersion, "0.35");
   assert.equal(mk(c => { c.houseRules.training = true; }).houseRules.training, true, "true survives");
   for (const junk of ["yes", 1, "true", {}, [], null])
     assert.equal(mk(c => { c.houseRules.training = junk; }).houseRules.training, false, `houseRules.training ${JSON.stringify(junk)}`);
@@ -1168,7 +1168,7 @@ test("P12b 10: migrate keeps the house rule, a running training and a landed ent
   assert.equal(log({ via: "training", mp: 3 }).mp, 3);
   for (const via of ["x", {}, 7, null, ["training"]]) assert.equal("via" in log({ via }), false, `via ${JSON.stringify(via)}`);
   for (const mp of ["3", -1, {}, 1.5, null, NaN]) assert.equal("mp" in log({ via: "training", mp }), false, `mp ${JSON.stringify(mp)}`);
-  assert.equal(Engine.migrate({}).meta.schemaVersion, "0.34");
+  assert.equal(Engine.migrate({}).meta.schemaVersion, "0.35");
 });
 
 test("a rule's text of markup renders as text on the CP step and a folded Character card (Decision 231)", () => {
@@ -1711,4 +1711,43 @@ test("J1: a hostile Custom SFR pool: sfr() and the panel agree, finite and not b
     if (t.max !== null) assert.ok(Number.isFinite(t.max) && t.max >= 0, `max ${tag}`);
     assert.ok(t.typed === null || (Number.isFinite(t.typed) && t.typed >= 0), `typed ${tag}`);
   }
+});
+
+// J2 (Decision 313): a named pool is a file's text and ids, read by every new reader and undone like any other field.
+test("J2: a hostile file's pools come out ids and text, and no reader throws on them", () => {
+  const evil = "<img src=x onerror=alert(1)>";
+  const h = Engine.migrate({ identity: { archetype: "custom", name: "x" }, creation: { powerLevel: D.powerLevels[0].id },
+    archetypeChoices: { writeIn: { mechanics: ["magic", "sfr", "pools"], pools: [
+      { id: "sfr", name: "S" }, { id: "tol-spent", name: "T" }, { id: "__proto__", name: "P" }, { id: 5, name: "n" },
+      { id: "pool-aaaaaaaa", name: evil }, { id: "pool-aaaaaaaa", name: "dup" }, { id: "pool-bbbbbbbb", name: "x".repeat(10000) },
+      { id: "pool-cccccccc", name: "c" }, { id: "pool-dddddddd", name: "d" }, null, 7] } },
+    trackers: { panel: { sfr: { value: 4, max: 6 }, "pool-aaaaaaaa": { value: "x", max: "y" } } } });
+  const pools = h.archetypeChoices.writeIn.pools;
+  assert.equal(JSON.stringify(pools.map(p => p.id)), JSON.stringify(["pool-aaaaaaaa", "pool-bbbbbbbb", "pool-cccccccc", "pool-dddddddd"]), "a hostile id or a fifth pool survived migrate()");
+  assert.equal(pools[0].name, evil, "a name is kept as text, unescaped in the data");
+  const ids = Engine.archPanels(h).map(p => p.id);
+  assert.equal(ids.filter(id => id === "sfr").length, 1, "a pool id drew a second SFR panel");
+  assert.equal(ids.filter(id => id === "tol-spent").length, 1, "a pool id drew a second TOL panel");
+  assert.equal(Engine.archPanels(h).find(p => p.id === "pool-aaaaaaaa").title, evil, "the title isn't the name as text");
+  assert.equal(Engine.panelTracker(h, Engine.archPanels(h).find(p => p.id === "pool-aaaaaaaa")).max, null, "a junk max reads as a number");
+  assert.equal(Object.prototype.polluted, undefined, "__proto__ wrote through");
+  assert.ok(Engine.writeInOptions(h).powerUses.includes(evil), "the Uses suggestion isn't the name as text");
+  assert.doesNotThrow(() => Engine.validate("archetype", h));
+});
+
+test("J2: an undo that writes junk pools back leaves the readers total and the ids held", () => {
+  const ch = Engine.newCharacter();
+  ch.identity.archetype = "custom";
+  ch.archetypeChoices.writeIn.mechanics = ["sfr", "pools"];
+  ch.archetypeChoices.writeIn.pools = [{ id: "pool-aaaaaaaa", name: "Glamour" }];
+  const junk = JSON.parse(JSON.stringify(ch));
+  junk.archetypeChoices.writeIn.pools = [{ id: "sfr", name: "S" }, null, { id: "pool-bbbbbbbb", name: "<b>" }];
+  Engine.recordAction(ch, "edit", "the junk", junk);     // the entry an undo walks back to
+  Engine.undoLastAction(ch);
+  assert.equal(JSON.stringify(ch.archetypeChoices.writeIn.pools.map(p => p && p.id)), JSON.stringify(["sfr", null, "pool-bbbbbbbb"]), "undo didn't write the junk back (the test is void)");
+  assert.doesNotThrow(() => Engine.archPanels(ch));
+  assert.doesNotThrow(() => Engine.writeInOptions(ch));
+  assert.equal(JSON.stringify(Engine.poolsOf(ch).map(p => p.id)), JSON.stringify(["pool-bbbbbbbb"]), "a junk id reached a reader");
+  assert.equal(Engine.archPanels(ch).filter(p => p.id === "sfr").length, 1, "the SFR panel was doubled");
+  assert.equal(Engine.poolIdFree(ch, "pool-bbbbbbbb"), false);
 });
