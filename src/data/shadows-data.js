@@ -2594,9 +2594,7 @@ window.SHADOWS_DATA = {
             "max": "TOL",
             "note": "Every Rupture spends TOL equal to its degree: Duds minus Hits.",
             "atMax": "Exhausted. No Spellcraft until TOL is back above zero. An hour's rest restores 1.",
-            "overMax": "cascade",
-            "flagged": true,
-            "flagNote": "F56: does a voluntary TOL spend past zero Cascade, and once or per point? The panel shows the Cascade once, with no roll, until Deighton rules."
+            "overMax": "cascade"
           },
           {
             "id": "magic-reference",
@@ -3629,11 +3627,11 @@ window.SHADOWS_DATA = {
             "type": "tracker",
             "title": "TOL Spent",
             "max": "TOL",
-            "note": "Spend TOL as your powers say. Past zero, you Cascade.",
+            "note": "Spend TOL as your powers say. Past zero, the Cascade panel opens; whether a spend sets one off is your GM's call.",
             "atMax": "Exhausted. No more TOL to spend until it's back above zero. An hour's rest restores 1.",
             "overMax": "cascade",
             "flagged": true,
-            "flagNote": "F56: does a voluntary TOL spend past zero Cascade, and once or per point? The panel shows the Cascade once, with no roll, until Deighton rules.",
+            "flagNote": "F56: the CRB Cascades a Rupture that takes TOL below zero (0480), one Cascade per Rupture. Does a Custom archetype's TOL spent as its powers say (Uses magic) Cascade past zero too? The panel shows the Cascade once, with no roll, until Deighton rules.",
             "when": "magic"
           },
           {

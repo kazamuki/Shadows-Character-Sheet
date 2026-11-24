@@ -14571,3 +14571,14 @@ test("J4: adjustPanelTracker takes an amount, takes a take-back from the round f
   Engine.adjustPanelTracker(ch, p.id, 1);
   assert.deepEqual(round(), [5, 5], "a spend past Rate of Use didn't count on the round");
 });
+
+test("F56 is the Custom archetype's only: a Rupture's Cascade is the CRB's (0480), so the Arcanist's TOL Spent isn't flagged, and Custom's note doesn't promise one", () => {
+  const panel = id => D.archetypes.find(a => a.id === id).coreMechanic.panels.find(p => p.id === "tol-spent");
+  const arc = panel("arcanist"), custom = panel("custom");
+  assert.ok(!arc.flagged && !arc.flagNote, "the Arcanist's TOL Spent carries a flag the CRB answers");
+  assert.equal(custom.flagged, true);
+  assert.match(custom.flagNote, /^F56:/);
+  assert.match(custom.note, /GM's call/, "Custom's note doesn't say the GM decides past zero");
+  assert.doesNotMatch(custom.note, /you Cascade/, "Custom's note still states the unruled Cascade as a rule");
+  assert.doesNotMatch(custom.flagNote, /\bBound\b/, "the flag names an archetype that doesn't exist");
+});

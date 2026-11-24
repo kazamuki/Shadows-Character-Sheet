@@ -354,9 +354,13 @@ test("W152: the wizard's overspent pool is checked for a true minus", () => {
 // ── J4: spend several at once (Decision 315, W176) ───────────────────
 test("J4: the amount's buttons and label say what they do, with no decision number or wish id", () => {
   const app = boot();
-  const html = app.window.trkControlHtml("sfr", "SFR");
+  const html = app.window.trkControlHtml("sfr", "SFR", true);
   assert.match(html, /Spend 1 on SFR/, "the + doesn't say what it spends");
   assert.match(html, /Take back 1 from SFR/, "the − doesn't say what it takes back");
   assert.match(html, /SFR amount/, "the field has no label");
-  assert.doesNotMatch(html, /Decision|\bW\d|TBD|\bF\d/, "the amount controls name a decision, a wish or TBD");
+  // A count that goes up (TOL Spent, a withdrawal step) is added to, not spent.
+  const up = app.window.trkControlHtml("tol-spent", "TOL Spent", false);
+  assert.match(up, /Add 1 to TOL Spent/);
+  assert.match(up, /Take 1 off TOL Spent/);
+  for (const h of [html, up]) assert.doesNotMatch(h, /Decision|\bW\d|TBD|\bF\d/, "the amount controls name a decision, a wish or TBD");
 });

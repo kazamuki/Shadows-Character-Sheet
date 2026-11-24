@@ -162,7 +162,7 @@ Full text in `SCHEMA.md` §5; who can clear each is in `STATE.md` §3.
 | `F53` | What Spirit damage is? 0480 names it and never says. Stubbed: no description, flagged, a player note on Every word (K2, Decision 291) | Deighton |
 | `F54` | What Aether damage is? 0480 names it and never says. Stubbed: no description, flagged, a player note on Every word (K2, Decision 291) | Deighton |
 | `F55` | Does Bone Spines' +5 while grappling replace the +3 or add to it, and does a rank add to it? Stubbed: the mark computes the +3 with its rank and prints the +5 as the book does; a player note says the GM rules it (L5b, Decision 292) | Deighton |
-| `F56` | Does a voluntary TOL spend past zero Cascade, and once or per point? The glossary's "Below zero, a Cascade follows" is a Rupture's; the text doesn't say a voluntary spend does. Shown once, as today, with no roll (J4, Decision 315) | Deighton |
+| `F56` | Does a Custom archetype's TOL, spent as its powers say (Uses magic), Cascade past zero, and once or per point? A Rupture's Cascade is the CRB's (0480), so the Arcanist isn't flagged. Shown once, with no roll, and the note says it's the GM's call (J4, Decision 315) | Deighton |
 Every `flagged: true` in the data names an F-number open here; `tests/docs.test.mjs`
 fails on one that doesn't (audit A7).
 
