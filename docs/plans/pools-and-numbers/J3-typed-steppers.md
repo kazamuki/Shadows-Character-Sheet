@@ -4,7 +4,7 @@
 
 **Built on:** Decision 164 (a press that re-renders keeps the keyboard's place: `keepPlace`, `PLACES`), W59 (a control says what it changes, and the new value is announced), 312 (J1, the last decision on `main` before J2's 313), 313 (J2: its pool steppers are wizard-free, so J3 doesn't touch them, but its Remove and Add follow the same focus rule).
 
-**Status: drafted 2026-11-23** by Claude (Opus), the orchestrator, from the approved plan row. **Awaiting Ken's approval.** His answers to the questions in §4 are recorded (2026-11-23, all on the defaults); the order is not approved, and no builder starts until he says so.
+**Status: Approved (Ken, 2026-11-23).** Drafted 2026-11-23 by Claude (Opus), the orchestrator, from the approved plan row. Ken's answers to the questions in §4 are recorded (all on the defaults).
 
 **Branch:** `claude/j3-typed-steppers`, cut from `origin/main` at **0be3075** (J2 merged, #383). PR to `main`. Nothing ships switched off. **No release**; its lines go under `## [Unreleased] — app 0.76.0` (JQ6: the release is cut once, after J4). **No app bump.**
 
