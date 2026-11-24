@@ -88,12 +88,14 @@ function engineOutputs(ch) {
   }));
 }
 
-function visible(app) {
-  const clone = app.doc.body.cloneNode(true);
+function visible(app) { return textOf(app.doc.body); }
+
+// The text a region shows, with each field's value in place of the field: a field's digits live in its value,
+// not its textContent. Read each live input's and textarea's value, by document order, into the clone.
+function textOf(region) {
+  const clone = region.cloneNode(true);
   for (const el of [...clone.querySelectorAll("script, style")]) el.remove();
-  // A field's digits live in its value, not its textContent: read each live
-  // input's and textarea's value in place of the clone's markup, by document order.
-  const live = [...app.doc.body.querySelectorAll("input, textarea")];
+  const live = [...region.querySelectorAll("input, textarea")];
   [...clone.querySelectorAll("input, textarea")].forEach((el, i) => {
     const v = live[i] ? live[i].value : el.value;
     el.replaceWith(clone.ownerDocument.createTextNode(` [${v}] `));
@@ -120,7 +122,7 @@ function sheetTexts(ch, key, out) {
       const b = app.$(`#main ${sel}`); if (!b) continue;
       clickEl(app, b);
       const o = app.$("#modal[open]") || app.$("#vpop:not([hidden])");
-      if (o) out[`${key}/tab:${sec} ${sel}`] = norm(o.textContent);
+      if (o) out[`${key}/tab:${sec} ${sel}`] = textOf(o);
       closeOverlays(app);
     }
   }
