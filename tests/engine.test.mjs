@@ -14553,3 +14553,21 @@ test("J2: no pool reaches the SFR readers (its panel has no resource, turn cap, 
   without.archetypeChoices.writeIn.mechanics = ["sfr"];
   same(Engine.sfr(ch), Engine.sfr(without), "the SFR pool reads the same with a named pool beside it");
 });
+
+test("J4: adjustPanelTracker takes an amount, takes a take-back from the round first, clamps at zero, and moves nothing on a non-finite delta", () => {
+  const ch = vampire("strigoi", { pl: "street", locked: false });
+  const p = Engine.archPanels(ch).find(x => x.type === "tracker" && x.resource === "sfr");
+  assert.equal(Engine.sfr(ch).rou, 4, "the probe needs a Street vampire at RoU 4");
+  const round = () => [ch.trackers.sfr.spent, ch.trackers.sfr.turn];
+  assert.equal(Engine.adjustPanelTracker(ch, p.id, 6).ok, true);
+  assert.deepEqual(round(), [6, 6], "an amount of 6 didn't count as 6 on the round");
+  Engine.adjustPanelTracker(ch, p.id, -2);
+  assert.deepEqual(round(), [4, 4], "a take-back didn't come off the round");
+  Engine.adjustPanelTracker(ch, p.id, -9);
+  assert.deepEqual(round(), [0, 0], "a take-back went below zero");
+  assert.equal(Engine.adjustPanelTracker(ch, p.id, Infinity).ok, true, "a non-finite delta didn't report ok");
+  assert.deepEqual(round(), [0, 0], "a non-finite delta moved the count");
+  ch.trackers.sfr.spent = 4; ch.trackers.sfr.turn = 4;
+  Engine.adjustPanelTracker(ch, p.id, 1);
+  assert.deepEqual(round(), [5, 5], "a spend past Rate of Use didn't count on the round");
+});

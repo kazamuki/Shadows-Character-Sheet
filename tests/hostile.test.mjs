@@ -16,7 +16,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { boot, loadEngine } from "./harness.mjs";
-import { edit } from "./smokekit.mjs";
+import { edit, openSheet, writtenInCharacter, activeChar } from "./smokekit.mjs";
 
 const { Engine, D } = loadEngine();
 
@@ -1773,4 +1773,19 @@ test("J3: a typed value on a hostile stepper key writes nothing", async () => {
   await new Promise(r => app.window.setTimeout(r, 60));
   assert.equal(JSON.stringify(app.window.localStorage.getItem("shadows.draft.v1")), before, "a stepper that isn't shown wrote to the character");
   assert.deepEqual(app.errors, []);
+});
+
+// ── J4: spend several at once (Decision 315, W176) ───────────────────
+test("J4: a hostile tracker title with markup is escaped in the amount's label and its Activity Log line", () => {
+  const evil = "<img src=x onerror=alert(1)>";
+  const ch = writtenInCharacter();
+  ch.archetypeChoices.writeIn.mechanics = ["magic", "pools"];
+  ch.archetypeChoices.writeIn.pools = [{ id: "pool-aaaaaaaa", name: evil }];
+  ch.trackers.panel = { "pool-aaaaaaaa": { value: 0, max: 6 } };
+  const app = openSheet(ch, "trackers");
+  assert.equal(app.$$("#main img").length, 0, "the Trackers row drew an img from a pool's name");
+  assert.equal(app.$('#main [data-trkamt="pool-aaaaaaaa"]').getAttribute("aria-label"), `${evil} amount`, "the amount's label isn't the name as text");
+  app.click('#main [data-trk="pool-aaaaaaaa|1"]');
+  assert.equal(activeChar(app).audit.at(-1).label, `${evil} +1`, "the log dropped the name");
+  assert.equal(app.$("#undotoast img"), null, "the Activity Log's toast drew an img");
 });

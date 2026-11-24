@@ -350,3 +350,13 @@ test("W152: the wizard's overspent pool is checked for a true minus", () => {
   assert.doesNotMatch(rail, HYPHEN_MINUS, "the overspent pool reads with a hyphen-minus");
   assert.deepEqual(app.errors, []);
 });
+
+// ── J4: spend several at once (Decision 315, W176) ───────────────────
+test("J4: the amount's buttons and label say what they do, with no decision number or wish id", () => {
+  const app = boot();
+  const html = app.window.trkControlHtml("sfr", "SFR");
+  assert.match(html, /Spend 1 on SFR/, "the + doesn't say what it spends");
+  assert.match(html, /Take back 1 from SFR/, "the − doesn't say what it takes back");
+  assert.match(html, /SFR amount/, "the field has no label");
+  assert.doesNotMatch(html, /Decision|\bW\d|TBD|\bF\d/, "the amount controls name a decision, a wish or TBD");
+});
