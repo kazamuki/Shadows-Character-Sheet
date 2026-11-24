@@ -702,8 +702,7 @@ more (Decision 135): `counts: "down"` shows what's left of the max, and
 `sfr` panel has both, so its spend is `trackers.sfr.spent`, which Main reads.
 
 Any panel may carry `when` (Decision 153): it names one of a write-in
-archetype's `writeIn.mechanics`, and `Engine.archPanels` leaves the panel out A panel with `perPool` is drawn once per named pool, its id and title the pool's (Decision 313).
-unless the character ticked that box. A `powers` panel draws the character's
+archetype's `writeIn.mechanics`, and `Engine.archPanels` leaves the panel out unless the character ticked that box. A panel with `perPool` is drawn once per named pool, its id and title the pool's (Decision 313). A `powers` panel draws the character's
 own `powers` rows; `Engine.addPower` and `newPower` refuse on an archetype without one.
 Every archetype reads `powers` and can be given a custom one (Decision 216).
 

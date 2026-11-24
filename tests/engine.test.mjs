@@ -14539,7 +14539,7 @@ test("J2: an id a count still holds is never given out again", () => {
   assert.equal(Engine.poolIdFree(ch, id), true);
 });
 
-test("J2: no pool reaches the SFR, Turn Reset or Feeding readers", () => {
+test("J2: no pool reaches the SFR readers (its panel has no resource, turn cap, feed or toggle)", () => {
   const ch = writtenIn({ mechanics: ["sfr", "pools"] });
   ch.archetypeChoices.writeIn.pools = [{ id: "pool-aaaaaaaa", name: "Glamour" }];
   ch.trackers.panel = { "pool-aaaaaaaa": { value: 1, max: 6 } };
