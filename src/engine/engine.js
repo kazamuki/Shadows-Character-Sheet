@@ -6497,9 +6497,9 @@ const Engine = (() => {
         if (!txt(w.name).trim()) T("Name your archetype. What are you?");
         if (!c) T("Choose a classification for your archetype.");
         else if (c.writeIn && !txt(w.classificationText).trim()) W(`Say what ${c.name} means for you, in a word or two.`);
-        // A row with words but no name never shows on the sheet; an empty one is just unused.
         // A named pool is the only thing a pool needs (Decision 313): one with no name warns, and the lock stays open.
         if (mechanicsOn(ch).includes("pools")) for (const p of poolsOf(ch)) if (!p.name.trim()) W("Name your pool, or remove it.");
+        // A row with words but no name never shows on the sheet; an empty one is just unused.
         const nameless = rows => rows.filter(r=>!r.name.trim() && [r.description, r.uses, r.effect, r.notes].some(v=>txt(v).trim())).length;
         for (const [rows, noun] of [[textRows(w.traits), "trait"], [ownPowers(ch), "power"], [textRows(w.vulnerabilities), "vulnerability"]]){
           const n = nameless(rows);
