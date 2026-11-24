@@ -4,7 +4,7 @@
 
 **Built on:** Decision 164 (a press that re-renders keeps the keyboard's place: `keepPlace`, `PLACES`), W59 (a control says what it changes, and the new value is announced), 312 (J1, the last decision on `main` before J2's 313), 313 (J2: its pool steppers are wizard-free, so J3 doesn't touch them, but its Remove and Add follow the same focus rule).
 
-**Status: drafted 2026-11-23** by Claude (Opus), the orchestrator, from the approved plan row. **Not yet approved.** Ken answers the questions in §4 before a builder starts. The defaults are the recommendations, so a blank answer is "Default" (see the unanswered-defaults note in memory).
+**Status: drafted 2026-11-23** by Claude (Opus), the orchestrator, from the approved plan row. **Awaiting Ken's approval.** His answers to the questions in §4 are recorded (2026-11-23, all on the defaults); the order is not approved, and no builder starts until he says so.
 
 **Branch:** `claude/j3-typed-steppers`, cut from `origin/main` at **0be3075** (J2 merged, #383). PR to `main`. Nothing ships switched off. **No release**; its lines go under `## [Unreleased] — app 0.76.0` (JQ6: the release is cut once, after J4). **No app bump.**
 
@@ -117,14 +117,16 @@ INDEX §3, under *Wizard & creation UI* (where 164 is):
 
 ## 4. Questions for Ken
 
-Each has its default. A blank answer is the default.
+*Recorded by the conductor from Ken's answers (2026-11-23): all six on the defaults. The order itself is **awaiting Ken's approval**, not approved.*
 
-- **JQ-J3-1: a typed value past the cap.** **Default:** the value stops at the highest the buttons reach, and the field shows it, with the announcement "<name> <value>" once. *Alternative:* the field refuses the commit and keeps the old value, with a short message.
-- **JQ-J3-2: a typed value below the floor** (a stat under its base, a skill under 0). **Default:** stops at the floor, as the − button does. *Alternative:* refuses.
-- **JQ-J3-3: a typed value that would open a pick** (an Advantage whose choice comes after it, a Base Power's open choice). **Default:** the typed value stops at the last press that is taken, and the pick stays for the player to take, as a + press does. *Alternative:* a typed value doesn't take a stepper that opens a pick; the field is read-only there.
-- **JQ-J3-4: commit timing.** **Default:** Enter, or leaving the field, as Decision 164 says for typed values. *Alternative:* each keystroke commits (no Enter).
-- **JQ-J3-5: the field's look.** **Default:** the same 42px cell as today's value, a text field with `inputmode="numeric"` and an aria-label naming the stepper. *Alternative:* a wider field, and the buttons drawn as steppers around it, as they are now.
-- **JQ-J3-6: W152's rider in this order.** **Default:** yes, in J3, since its fix is the same pills. *Alternative:* W152 moves to its own small order.
+Each has its default. A blank answer is the default; Ken answered every one with it.
+
+- **JQ-J3-1: a typed value past the cap.** **Answered: Default (Ken, 2026-11-23).** **Default:** the value stops at the highest the buttons reach, and the field shows it, with the announcement "<name> <value>" once. *Alternative:* the field refuses the commit and keeps the old value, with a short message.
+- **JQ-J3-2: a typed value below the floor** (a stat under its base, a skill under 0). **Answered: Default (Ken, 2026-11-23).** **Default:** stops at the floor, as the − button does. *Alternative:* refuses.
+- **JQ-J3-3: a typed value that would open a pick** (an Advantage whose choice comes after it, a Base Power's open choice). **Answered: Default (Ken, 2026-11-23).** **Default:** the typed value stops at the last press that is taken, and the pick stays for the player to take, as a + press does. *Alternative:* a typed value doesn't take a stepper that opens a pick; the field is read-only there.
+- **JQ-J3-4: commit timing.** **Answered: Default (Ken, 2026-11-23).** **Default:** Enter, or leaving the field, as Decision 164 says for typed values. *Alternative:* each keystroke commits (no Enter).
+- **JQ-J3-5: the field's look.** **Answered: Default (Ken, 2026-11-23).** **Default:** the same 42px cell as today's value, a text field with `inputmode="numeric"` and an aria-label naming the stepper. *Alternative:* a wider field, and the buttons drawn as steppers around it, as they are now.
+- **JQ-J3-6: W152's rider in this order.** **Answered: Default (Ken, 2026-11-23).** **Default:** yes, in J3, since its fix is the same pills. *Alternative:* W152 moves to its own small order.
 
 ## 5. The assumption sweep
 
