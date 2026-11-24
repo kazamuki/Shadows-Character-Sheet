@@ -2000,3 +2000,67 @@ test("Decision 280: Show all on Natural Advantages resets when the subtype chang
   for (let i = 0; i < need; i++) app.click(`[data-step="natadv|${first}|1"]`);
   assert.ok(natCards(app).some(p => !p.querySelector(".desc")), "Show all survived a subtype change");
 });
+
+// ── J2: a pool the player names (Decision 313, W49) ──────────────────
+
+const tickPools = (app, on = true) => {
+  const box = app.$('[data-wimech="pools"]');
+  box.checked = on; box.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+};
+
+test("J2: ticking Uses another pool gives a pool to name, and Add a pool stops at four", () => {
+  const custom = D.archetypes.find(a => a.writeIn);
+  const app = onArchetypeStep(custom.id);
+  assert.equal(app.$('[data-wipool]'), null, "a pool row shows before the mechanic is ticked");
+  tickPools(app);
+  assert.equal(app.$$("[data-wipool]").length, 1, "ticking gave no pool to name");
+  assert.equal(app.doc.activeElement, app.$('[data-wipool]'), "the new pool's name didn't take focus");
+  for (let i = 0; i < 3; i++) app.click("[data-wipooladd]");
+  assert.equal(app.$$("[data-wipool]").length, 4);
+  assert.equal(app.$("[data-wipooladd]"), null, "Add a pool is still offered at four");
+  const pools = stored(app, { locked: false }).archetypeChoices.writeIn.pools;
+  assert.equal(pools.length, 4);
+  assert.ok(pools.every(p => /^pool-[a-z0-9]{8}$/.test(p.id)), "a pool's id isn't pool- and eight lowercase characters");
+  assert.equal(new Set(pools.map(p => p.id)).size, 4, "two pools share an id");
+  assert.deepEqual(app.errors, []);
+});
+
+test("J2: unticking hides the pools and keeps them", () => {
+  const custom = D.archetypes.find(a => a.writeIn);
+  const app = onArchetypeStep(custom.id);
+  tickPools(app);
+  type(app, '[data-wipool]', "Glamour");
+  app.click("[data-wipooladd]");
+  const second = app.$$("[data-wipool]")[1];
+  second.value = "Chi"; second.dispatchEvent(new app.window.Event("input", { bubbles: true }));
+  tickPools(app, false);
+  assert.equal(app.$$("[data-wipool]").length, 0, "the pools still show with the mechanic unticked");
+  assert.equal(JSON.stringify(stored(app, { locked: false }).archetypeChoices.writeIn.pools.map(p => p.name)), JSON.stringify(["Glamour", "Chi"]));
+  tickPools(app);
+  assert.equal(JSON.stringify(app.$$("[data-wipool]").map(i => i.value)), JSON.stringify(["Glamour", "Chi"]), "ticking again didn't bring them back");
+});
+
+test("J2: a named pool is a suggestion in a power's Uses", () => {
+  const custom = D.archetypes.find(a => a.writeIn);
+  const app = onArchetypeStep(custom.id);
+  tickPools(app);
+  type(app, '[data-wipool]', "Glamour");
+  app.click("[data-wipooladd]");   // a redraw, so the Uses list picks up the name
+  const uses = () => app.$$("#power-uses option").map(o => o.value);
+  assert.ok(uses().includes("Glamour"), "the Uses list has no suggestion for a named pool");
+  assert.ok(uses().includes("SFR"), "the Uses list lost the data's suggestions");
+  tickPools(app, false);
+  app.click("[data-pwadd]");
+  assert.ok(!uses().includes("Glamour"), "an unticked pool is still a suggestion");
+});
+
+test("J2: changing archetype clears the pools", () => {
+  const custom = D.archetypes.find(a => a.writeIn);
+  const app = onArchetypeStep(custom.id);
+  tickPools(app);
+  type(app, '[data-wipool]', "Glamour");
+  app.click('[data-arch="werewolf"]');
+  app.click(`[data-arch="${custom.id}"]`);
+  assert.deepEqual(stored(app, { locked: false }).archetypeChoices.writeIn.pools, []);
+  assert.equal(app.$$("[data-wipool]").length, 0);
+});

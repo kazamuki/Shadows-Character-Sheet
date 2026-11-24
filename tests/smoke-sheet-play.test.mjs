@@ -42,7 +42,7 @@ test("Resume draft migrates the draft, like every other load path (review #3)", 
   const resumed = stored(app, { locked: false });
   assert.deepEqual([...resumed.archetypeChoices.specialization], ["arcane-fortitude"],
     "the resumed draft lost its specialization");
-  assert.equal(resumed.meta.schemaVersion, "0.34");
+  assert.equal(resumed.meta.schemaVersion, "0.35");
   // And the choice is visibly selected, not merely stored.
   assert.equal(app.$$('[data-spec].toggle').filter(b => /Chosen|Selected/.test(b.textContent)).length, 1);
 });
@@ -2592,4 +2592,123 @@ test("W174: Esc with ⋮ open puts focus back on ⋮, and an outside click doesn
   assert.equal(app.$("#hdrmenu").hidden, true);
   assert.equal(focused(app), other, "an outside click pulled focus back to the menu button");
   assert.deepEqual(app.errors, []);
+});
+
+// ── J2: a pool the player names (Decision 313, W49) ─────────────────
+
+const POOLS = [{ id: "pool-aaaaaaaa", name: "Glamour" }, { id: "pool-bbbbbbbb", name: "Chi" }];
+function poolChar({ mechanics = ["pools"], pools = POOLS.slice(0, 1), panel = {} } = {}) {
+  const ch = writtenInCharacter();
+  ch.archetypeChoices.writeIn.mechanics = mechanics;
+  ch.archetypeChoices.writeIn.pools = pools.map(p => ({ ...p }));
+  ch.trackers.panel = panel;
+  return ch;
+}
+// Admin is behind the menu (Decision 281's Admin mode), not a section button.
+const openAdmin = ch => { const app = openSheet(ch, "main"); app.click("[data-menu-toggle]"); app.click("[data-admin]"); return app; };
+const setVal = (app, sel, v) => {
+  const el = app.$(sel); assert.ok(el, `no ${sel}`);
+  el.value = v; el.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+};
+
+test("J2: a named pool is a tracker that counts down from the max you type", () => {
+  const app = openSheet(poolChar(), "trackers");
+  const trk = app.$$("#main .trk").find(t => t.querySelector("h2") && t.querySelector("h2").textContent === "Glamour");
+  assert.ok(trk, "no Glamour tracker on Trackers");
+  setVal(app, '[data-trkmax="pool-aaaaaaaa"]', "6");
+  assert.equal(activeChar(app).trackers.panel["pool-aaaaaaaa"].max, 6, "the max box didn't size the pool");
+  press(app, '#main [data-trk="pool-aaaaaaaa|1"]');
+  press(app, '#main [data-trk="pool-aaaaaaaa|1"]');
+  assert.equal(activeChar(app).trackers.panel["pool-aaaaaaaa"].value, 2, "+1 didn't count the pool down");
+  press(app, '#main [data-trk="pool-aaaaaaaa|-1"]');
+  assert.equal(activeChar(app).trackers.panel["pool-aaaaaaaa"].value, 1);
+  assert.deepEqual(app.errors, []);
+});
+
+test("J2: Main shows a card per sized pool, and its popover spends it", () => {
+  const app = openSheet(poolChar({ pools: POOLS.slice(), panel: { "pool-aaaaaaaa": { value: 0, max: 6 } } }), "main");
+  const card = () => app.$('#main [data-vpop="pool:pool-aaaaaaaa"]');
+  assert.match(card().textContent, /6\/6/, "the card doesn't read left/max");
+  assert.equal(app.$('#main [data-vpop="pool:pool-bbbbbbbb"]'), null, "an unsized pool has a card");
+  assert.equal(app.$("#main .cond.cred").classList.contains("alone"), false, "one sized pool left Çredits alone");
+  app.click('#main [data-vpop="pool:pool-aaaaaaaa"]');
+  // A count-down tracker counts what's spent, so +1 spends (as SFR's does) and −1 gives one back.
+  press(app, '#vpop [data-trk="pool-aaaaaaaa|1"]');
+  assert.match(card().textContent, /5\/6/, "the popover's +1 didn't spend the pool");
+  press(app, '#vpop [data-trk="pool-aaaaaaaa|-1"]');
+  assert.match(card().textContent, /6\/6/, "the popover's −1 didn't give the spend back");
+  press(app, '#vpop [data-trk="pool-aaaaaaaa|1"]');
+  app.click("#undotoast [data-toastundo]");
+  assert.match(card().textContent, /6\/6/, "Undo didn't put the pool back");
+  // One sized pool and CRANK (on here): three cards, so CRANK is the last and sits alone. Two sized pools: four, none alone.
+  assert.equal(app.$("#main .cond.crank").classList.contains("alone"), true, "one pool left CRANK off its row");
+  const two = openSheet(poolChar({ pools: POOLS.slice(), panel: { "pool-aaaaaaaa": { value: 0, max: 6 }, "pool-bbbbbbbb": { value: 0, max: 3 } } }), "main");
+  assert.equal(two.$("#main .alone"), null, "two pools left a card alone on its row");
+  assert.match(two.$('#main [data-vpop="pool:pool-bbbbbbbb"]').textContent, /3\/3/);
+  assert.deepEqual(app.errors, []);
+});
+
+test("J2: the Activity Log names a tracker by its title", () => {
+  const app = openSheet(poolChar({ mechanics: ["magic", "pools"], panel: { "pool-aaaaaaaa": { value: 0, max: 6 } } }), "trackers");
+  press(app, '#main [data-trk="pool-aaaaaaaa|1"]');
+  assert.equal(activeChar(app).audit.at(-1).label, "Glamour +1");
+  press(app, '#main [data-trk="tol-spent|1"]');
+  assert.equal(activeChar(app).audit.at(-1).label, "TOL Spent +1", "TOL Spent's log line used its id");
+  setVal(app, '[data-trkmax="pool-aaaaaaaa"]', "8");
+  assert.equal(activeChar(app).audit.at(-1).label, "Glamour max → 8");
+});
+
+test("J2: a pool named with markup prints as text everywhere", () => {
+  const evil = "<img src=x onerror=alert(1)>";
+  const ch = () => poolChar({ mechanics: ["magic", "pools"], pools: [{ id: "pool-aaaaaaaa", name: evil }], panel: { "pool-aaaaaaaa": { value: 0, max: 6 } } });
+  for (const section of ["trackers", "main", "admin"]) {
+    const app = section === "admin" ? openAdmin(ch()) : openSheet(ch(), section);
+    assert.equal(app.$$("#main img").length, 0, `${section} drew an img from a pool's name`);
+    if (section !== "admin") assert.ok(app.$("#main").textContent.includes(evil), `${section} doesn't show the name as text`);
+    else assert.equal(app.$('[data-admin-pool="pool-aaaaaaaa"]').value, evil, "Admin's Name field doesn't hold the name");
+    if (section === "main") {
+      app.click('#main [data-vpop="pool:pool-aaaaaaaa"]');
+      assert.equal(app.$("#vpop img"), null, "the popover drew an img");
+      assert.ok(app.$("#vpop").textContent.includes(evil), "the popover's title isn't the name");
+    }
+    const box = app.doc.createElement("div"); box.innerHTML = app.window.renderPrintView(activeChar(app));
+    assert.equal(box.querySelectorAll("img").length, 0, `${section}: print drew an img`);
+    assert.ok(box.textContent.includes(evil), `${section}: print doesn't show the name`);
+  }
+  const app = openSheet(ch(), "trackers");
+  press(app, '#main [data-trk="pool-aaaaaaaa|1"]');
+  assert.equal(app.$("#undotoast img"), null, "the Activity Log's toast drew an img");
+  assert.ok(activeChar(app).audit.at(-1).label.includes(evil), "the log's label dropped the name");
+});
+
+test("J2: Admin renames, adds and removes a pool, and Undo puts each back", () => {
+  const app = openAdmin(poolChar({ pools: POOLS.slice(), panel: { "pool-aaaaaaaa": { value: 2, max: 6 } } }));
+  const pools = () => activeChar(app).archetypeChoices.writeIn.pools;
+  setVal(app, '[data-admin-pool="pool-aaaaaaaa"]', "Mana");
+  assert.equal(pools()[0].name, "Mana", "the rename didn't stick");
+  app.click("#undotoast [data-toastundo]");
+  assert.equal(pools()[0].name, "Glamour", "Undo didn't put the name back");
+  app.click('[data-admin-poolrm="pool-aaaaaaaa"]');
+  assert.equal(pools().length, 1);
+  assert.equal(activeChar(app).trackers.panel["pool-aaaaaaaa"], undefined, "a removed pool kept its count");
+  app.click("#undotoast [data-toastundo]");
+  assert.equal(pools().length, 2);
+  assert.deepEqual(activeChar(app).trackers.panel["pool-aaaaaaaa"], { value: 2, max: 6 }, "Undo didn't bring the count back");
+  app.click("[data-admin-pooladd]");
+  assert.equal(pools().length, 3, "Add a pool didn't add one");
+  app.click("#undotoast [data-toastundo]");
+  assert.equal(pools().length, 2);
+  assert.deepEqual(app.errors, []);
+});
+
+test("J2: print's archetype page lists the pools", () => {
+  const app = openSheet(poolChar({ pools: POOLS.slice(), panel: { "pool-aaaaaaaa": { value: 0, max: 6 } } }), "main");
+  const page = html => { const box = app.doc.createElement("div"); box.innerHTML = html; const p = box.querySelectorAll(".p-page"); return p[p.length - 1]; };
+  const pg = page(app.window.renderPrintView(activeChar(app)));
+  const heads = [...pg.querySelectorAll(".p-section")].find(s => s.textContent === "Pools");
+  assert.ok(heads, "the archetype page has no Pools");
+  const rows = [...heads.nextElementSibling.querySelectorAll("tbody tr")].map(tr => [...tr.cells].map(td => td.textContent.trim()));
+  assert.equal(JSON.stringify(rows), JSON.stringify([["Glamour", "6"], ["Chi", ""]]), "a pool with no max should print a blank");
+  const off = page(app.window.renderPrintView(poolChar({ mechanics: [] })));
+  assert.equal([...off.querySelectorAll(".p-section")].some(s => s.textContent === "Pools"), false, "an unticked pool printed");
 });

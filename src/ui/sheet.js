@@ -510,6 +510,15 @@ function skillTableHtml(ch, cid, cname, {includeUntrained=false}={}){
 }
 
 // ── Sheet: MAIN (what you need right now) ────────────────────────────
+// The named pools that have a max, as Main's cards draw them (Decision 313): the panel and its tracker reading.
+// A pool's card and its popover both read this, so a pool that's unticked or unsized has neither.
+function poolCardsOf(ch){
+  return Engine.poolsOf(ch).map(pl => {
+    const panel = Engine.archPanels(ch).find(x=>x.id===pl.id && x.type==="tracker") || null;
+    const t = panel ? Engine.panelTracker(ch, panel) : null;
+    return t && t.max!=null ? { panel, t } : null;
+  }).filter(Boolean);
+}
 function renderShMain(){
   const ch=S.ch, pl=Engine.powerLevel(ch), a=Engine.archetype(ch);
   const hp=Engine.health(ch), pain=Engine.painState(ch), held=Engine.heldSpells(ch);
@@ -543,13 +552,17 @@ function renderShMain(){
   h += cond(`luck ${luck.current===0?"danger":""}`,"Luck","luck",
     `${luck.current}<small>/${luck.max}</small>`, "", pct(luck.current,luck.max), "", "luck");
   const hasSfr = sf && sf.value!=null, crk = Engine.crankState(ch);
-  const cardsAfterLuck = (hasSfr?1:0) + 1 + (crankOn()?1:0);
+  // A named pool with a max is a card too (Decision 313), after SFR and before Çredits: its count is what's left of its max.
+  const poolCards = poolCardsOf(ch);
+  const cardsAfterLuck = (hasSfr?1:0) + 1 + (crankOn()?1:0) + poolCards.length;
   if (hasSfr){
     const sfLeft=Math.max(0,sf.value-(ch.trackers.sfr.spent||0));
     const turn = sfrTurn(ch);
     h += cond(`sfr${turn && (turn.at||turn.past) ? " danger" : ""}`,"SFR","sfr", `${sfLeft}<small>/${sf.value}</small>`,
       esc(sfrCardMeta(sf, turn)), pct(sfLeft,sf.value), "", "sfr");
   }
+  // The pool's name is the player's text: escaped here, since cond() puts its name in unescaped.
+  for (const c of poolCards) h += cond("pool", esc(c.panel.title), "tab_trackers", `${c.t.shown}<small>/${c.t.max}</small>`, "", pct(c.t.shown, c.t.max), "", `pool:${c.panel.id}`);
   // W45: whichever card is alone on its row in two columns takes the whole row.
   // Decision 214: that is the last of [SFR, Çredits, CRANK] actually shown, when their count is odd.
   const aloneLast = cardsAfterLuck%2===1;
@@ -1675,6 +1688,16 @@ function vitalPopover(ch, key){
     return { title:D.resources.crank.name,
       html: now(`${st.rep} · <span data-tip="crank" tabindex="0">${esc(st.tier?st.tier.name:"")}</span>`, "", crankSubHtml(st)) + crankNoteHtml(st) + `<div class="trk-row pop-cred">${crankControlsHtml()}</div>
       <button class="btn sm" data-popgo="trackers">Ledger on Trackers</button>` }; }
+  // A named pool's popover (Decision 313), keyed `pool:<id>`: its count and −1/+1. Only a pool the player named answers,
+  // so a key of `pool:sfr` is nothing, never SFR's popover. Its title is the pool's name, escaped where it's drawn.
+  if (key.indexOf("pool:")===0){
+    const id = key.slice(5), c = poolCardsOf(ch).find(x=>x.panel.id===id);
+    if (!c) return null;
+    return { title:c.panel.title,
+      html: now(`${c.t.shown} / ${c.t.max}`, "", "") +
+        `<div class="trk-row"><button class="btn sm" data-trk="${esc(id)}|-1">−1</button><button class="btn sm" data-trk="${esc(id)}|1">+1</button></div>` +
+        `<div class="trk-actions"><button class="btn sm" data-popgo="trackers">On Trackers</button></div>` };
+  }
   return null;
 }
 
@@ -1689,6 +1712,8 @@ function sfrByHandText(s){
 // The labels for the targets the sheet offers beyond the Stats (a journal row reads them; anything else prints as the file wrote it).
 const ADJ_LABELS = { SFR:"SFR max", ROU:"SFR Rate of Use" };
 const adjLabel = t => Object.prototype.hasOwnProperty.call(ADJ_LABELS, t) ? ADJ_LABELS[t] : t;
+// A tracker's name for the Activity Log (Decision 313): its title, never its id ("Glamour +1", "TOL Spent −1").
+const trackerTitle = (ch, pid) => { const p = Engine.archPanels(ch).find(x=>x.id===pid); return p ? p.title : "Tracker"; };
 function renderShTrackers(){
   const ch=S.ch, hp=Engine.health(ch), pain=Engine.painState(ch);
   const luck=Engine.luckState(ch), san=Engine.sanState(ch);
@@ -2181,9 +2206,20 @@ function adminArchChoicesHtml(ch){
     <span class="sub">Changing it clears what the old one asked for, and Base Powers placed in its powers.</span></div>`
     + `<div class="admin-arch">${optionChoicesHtml(ch)}${basePowersHtml(ch, a, false)}</div>`;
 }
+// Admin's pools (Decision 313, JQ14) while Uses another pool is ticked: a name and Remove per pool, then Add while fewer than four.
+// Each row is keyed by its id, and Remove deletes the pool's count with it, in the one change.
+function adminPoolsHtml(ch){
+  const pools = Engine.poolsOf(ch);
+  return `<div class="sect">Pools</div>` + pools.map(p=>`<div class="pick wi-row">
+      <label class="field"><span>Name</span><input type="text" data-admin-pool="${esc(p.id)}" value="${esc(p.name)}" maxlength="40"></label>
+      <button class="btn sm danger" data-admin-poolrm="${esc(p.id)}" aria-label="Remove this pool">remove</button></div>`).join("") +
+    (pools.length<4 ? `<button class="btn sm" data-admin-pooladd>+ Add a pool</button>` : "");
+}
 function adminWriteInHtml(ch){
-  if (!Engine.writeInOptions(ch)) return "";
+  const opts = Engine.writeInOptions(ch);
+  if (!opts) return "";
   const w = ch.archetypeChoices.writeIn, cls = Engine.classification(ch);
+  const poolsOn = opts.mechanics.some(m=>m.id==="pools" && m.on);
   const rows = (key, noun) => (Array.isArray(w[key]) ? w[key] : []).map((r, i)=>`<div class="pick wi-row">
       <label class="field"><span>${esc(noun)} name</span><input type="text" data-admin-wirow="${key}|${i}|name" value="${esc(r && r.name)}"></label>
       <label class="field"><span>What it does</span><textarea rows="2" data-admin-wirow="${key}|${i}|description">${esc(r && r.description)}</textarea></label>
@@ -2194,6 +2230,7 @@ function adminWriteInHtml(ch){
     <label class="field"><span>Description</span><textarea rows="2" data-admin-wi="description">${esc(w.description||"")}</textarea></label>
     ${cls && cls.writeIn ? `<label class="field"><span>${esc(cls.name)}: in their words</span><input type="text" data-admin-wi="classificationText" value="${esc(w.classificationText)}"></label>` : ""}
     <p class="step-note">Classification: <b>${esc(cls ? cls.name : "none")}</b>. It stays as it was at lock.</p>
+    ${poolsOn ? adminPoolsHtml(ch) : ""}
     ${sheetLine("powersOnCharacter")}
     <div class="sect">Baseline traits</div>${rows("traits", "Trait")}
     <div class="sect">Vulnerabilities</div>${rows("vulnerabilities", "Vulnerability")}`;
@@ -3247,6 +3284,12 @@ function pArchetypePage(ch){
   h += `<div class="p-section">Baseline Traits</div>${pRowsTableHtml(textRows(content && content.traits), ["name","description"], ["Trait","What it does"], 5, "p-archtable")}`;
   const powers = named(content && content.powers).map(p=>({ name:p.rank!=null ? `${p.name} (rank ${p.rank})` : p.name, uses:p.uses||p.drain||p.cost||"", effect:[p.effect||p.description, p.perRank && `Per rank: ${p.perRank}`, p.notes].filter(Boolean).join(" — ") }));
   h += `<div class="p-section">Powers</div>${pRowsTableHtml(powers, ["name","uses","effect"], ["Power","Uses","Effect"], 8, "p-archtable p-powertable")}`;
+  // Decision 313: while Uses another pool is ticked, its pools with their max, or a blank to write one in.
+  const wiOpts = ch ? Engine.writeInOptions(ch) : null;
+  if (wiOpts && wiOpts.mechanics.some(m=>m.id==="pools" && m.on)){
+    const pools = Engine.poolsOf(ch).map(pl => { const p = Engine.archPanels(ch).find(x=>x.id===pl.id); return { name: p ? p.title : pl.name, max: p ? Engine.panelTracker(ch, p).max : null }; });
+    h += `<div class="p-section">Pools</div>${pRowsTableHtml(pools, ["name","max"], ["Pool","Max"], 2, "p-archtable")}`;
+  }
   h += `<div class="p-section">Vulnerabilities</div>${pRowsTableHtml(textRows(content && content.vulnerabilities), ["name","description"], ["Vulnerability","What it does"], 4, "p-archtable")}`;
   return h;
 }
@@ -3969,7 +4012,7 @@ function bindVitalControls(root){
   // Generic archetype trackers (SFR / panel trackers): the Trackers row's and Main's SFR popover's, one commit.
   root.querySelectorAll("[data-trk]").forEach(b=>b.onclick=()=>{
     const [pid,d]=b.dataset.trk.split("|"), delta=Number(d);
-    commit("tracker", `${pid.toUpperCase()} ${signed(delta)}`, ()=>{ Engine.adjustPanelTracker(ch, pid, delta); });
+    commit("tracker", `${trackerTitle(ch, pid)} ${signed(delta)}`, ()=>{ Engine.adjustPanelTracker(ch, pid, delta); });
   });
 
   // Decision 266: Start and Stop, on a power's card and in the SFR popover: one commit, so one undo takes back the SFR too.
@@ -4214,7 +4257,7 @@ function bindSheet(){
   });
   main.querySelectorAll("[data-trkmax]").forEach(inp=>inp.onchange=()=>{
     const pid=inp.dataset.trkmax, mx=inp.value===""?null:Math.max(0,Number(inp.value));
-    commit("tracker", `${pid.toUpperCase()} max → ${mx==null?"—":mx}`, ()=>{
+    commit("tracker", `${trackerTitle(ch, pid)} max → ${mx==null?"—":mx}`, ()=>{
       const e=ch.trackers.panel[pid]||(ch.trackers.panel[pid]={value:0}); e.max=mx;
     });
   });
@@ -4703,6 +4746,28 @@ function bindSheet(){
     const [key, i, f] = el.dataset.adminWirow.split("|"), row = wi && Array.isArray(wi[key]) ? wi[key][Number(i)] : null;
     if (!row || row[f]===el.value) return;
     commit("admin", `Admin: ${row.name||key} ${f} → ${el.value===""?"—":el.value.slice(0,40)}`, ()=>{ row[f] = el.value; });
+  });
+  // Pools (Decision 313, JQ14): a rename is one change; Add and Remove are one change each, and Remove takes the count too.
+  const poolRow = id => wi && Array.isArray(wi.pools) ? wi.pools.find(r=>r && r.id===id) : null;
+  main.querySelectorAll("[data-admin-pool]").forEach(el=>el.onchange=()=>{
+    const row = poolRow(el.dataset.adminPool);
+    if (!row || row.name===el.value) return;
+    commit("admin", `Admin: pool name → ${el.value===""?"—":el.value.slice(0,40)}`, ()=>{ row.name = el.value; });
+  });
+  main.querySelectorAll("[data-admin-pooladd]").forEach(b=>b.onclick=()=>{
+    if (!wi || (Array.isArray(wi.pools) && wi.pools.length>=4)) return;
+    commit("admin", "Admin: added a pool", ()=>{
+      if (!Array.isArray(wi.pools)) wi.pools = [];
+      wi.pools.push({ id:Engine.newPoolId(ch), name:"" }); });
+    const names = document.querySelectorAll("[data-admin-pool]");
+    if (names.length) names[names.length-1].focus();
+  });
+  main.querySelectorAll("[data-admin-poolrm]").forEach(b=>b.onclick=()=>{
+    const id = b.dataset.adminPoolrm, row = poolRow(id);
+    if (!row) return;
+    commit("admin", `Admin: removed ${(row.name||"").trim() || "a pool"}`, ()=>{
+      wi.pools = wi.pools.filter(r=>!(r && r.id===id));
+      if (ch.trackers && ch.trackers.panel) delete ch.trackers.panel[id]; });
   });
   main.querySelectorAll("[data-admin-wiadd]").forEach(b=>b.onclick=()=>{
     const key = b.dataset.adminWiadd; if (!wi) return;
