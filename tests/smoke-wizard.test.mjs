@@ -2276,3 +2276,18 @@ test("J3: a typed value stops at a cap on the press that follows it, and the pre
   assert.ok(Engine.statSpent(ch) <= Engine.statPool(ch).total, "the typed value and the press overspent the Stat pool");
   assert.deepEqual(app.errors, []);
 });
+
+test("J3: a typed value in one stepper survives a press on another stepper's +", async () => {
+  const app = statsDraft();
+  const from = D.statRules.base;
+  const f = setField(app, "stat|REF", String(from + 3));
+  const plus = app.$('#main [data-step="stat|BOD|1"]');
+  const down = new app.window.MouseEvent("mousedown", { bubbles: true, cancelable: true });
+  plus.dispatchEvent(down);
+  assert.ok(down.defaultPrevented, "the press let focus leave the other stepper's field");
+  plus.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  await later(app);
+  assert.equal(statBase(app, "REF"), from + 3, "the typed value in REF was lost to a press on BOD");
+  assert.equal(statBase(app, "BOD"), from + 1, "the press on BOD didn't land");
+  assert.deepEqual(app.errors, []);
+});

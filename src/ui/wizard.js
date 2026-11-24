@@ -1077,13 +1077,15 @@ function bindMain(){
   // steppers
   // J3: a press on a stepper's buttons while its field holds a typed value. The mousedown keeps focus in the field (so
   // no blur and no redraw land between the press and its click); the click commits the typed value first, then presses.
-  const dirtyField = b => { const st=b.closest(".stepper"), f=st && st.querySelector("[data-val]"); return f && f.value!==f.defaultValue ? f : null; };
-  main.querySelectorAll("[data-step]").forEach(b=>b.onmousedown=e=>{ if (dirtyField(b)) e.preventDefault(); });
+  // Any stepper's field in #main, not only the pressed button's own: a field left with a typed value (even another
+  // stepper's) would otherwise blur on the press, and its deferred commit would run after the press's redraw.
+  const dirtyField = () => [...main.querySelectorAll("[data-val]")].find(f => f.value !== f.defaultValue) || null;
+  main.querySelectorAll("[data-step]").forEach(b=>b.onmousedown=e=>{ if (dirtyField()) e.preventDefault(); });
   main.querySelectorAll("[data-step]").forEach(b=>b.onclick=()=>{
     // A typed value commits first, then the press is taken on the button as the commit left it: a value that greys
     // the button out stops the press (its disabled state is the gate, not applyStep).
     let btn = b;
-    const pending = dirtyField(b);
+    const pending = dirtyField();
     if (pending){
       typedCommit(pending);
       btn = main.querySelector(attrSel("data-step", b.dataset.step));
