@@ -3472,7 +3472,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
     **0.21.0** with Decision 115. (Ken + Claude, 2026-09-24)
 
 117. **(Let a hit land — W15, app)** **An action that leaves more damage
-    than before flashes what it changed, once.** Ken's wishlist item, picked
+    than before flashes what it changed, once.** → **Superseded in part by Decision 316**: a heal now counts and gets a green line, and each cell's flash waits for its fill. Ken's wishlist item, picked
     up in the 2026-09-24 wishlist session under his "everything, no pauses".
     No rules, data or schema change.
     - **One hook, in `commit()`.** `landedFrom(before, ch)` compares the
@@ -6032,6 +6032,21 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. Extends 225 (the round counts the amount) and 266 (the one writer takes the amount).
      - **Revisit if:** F56 is answered (a Cascade per point, or by degree): the TOL overMax shape changes; a spend needs a room rule (SFR's room, a pool's room) the table asks for.
      - **Built:** app 0.76.0 (unreleased), PR (this one), log entry 2026-11-24.
+
+316. **What an action changes on the sheet moves once: its numbers count to where they landed, the change floats off the readout you're looking at, and a heal gets a green line.**
+     *2026-11-24 · Ken + Claude · Touches: commit, beatsFrom, S.beats, playBeats, calm, countHtml, data-count, data-float, landedCls, the vitals pills, Main's cards, Trackers' readouts, the popover's readout, prefers-reduced-motion, I1*
+     - **Decided:** Every `commit()` on a locked sheet notes what HP, Sanity, Luck, SFR, each named pool and Çredits were and are, and which Health Level cells moved; the render after it takes that once, on every screen. Every place that draws one of those numbers counts to the new value over .3s, and the change floats off one readout (the popover's if open, else Main's card or Trackers' block). Cells fill in order, 60ms apart; a Main meter holds its lost part .25s; a heal gets one green line (.35s). The right number is in the HTML from the start. Nothing moves on undo, in the wizard, or under reduced motion.
+     - **Why:** Ken, after the Motion Lab (2026-11-24). A number that jumps shows where you landed, not what it cost. One hook in `commit()`, as 117's, covers every control that changes a tracker, future ones included.
+     - **Rejected:**
+       - Counting inside the renderer: a re-render mid-count restarts it, and the HTML shows the old number until a frame is drawn.
+       - Animating only the readout pressed: its twins would jump.
+       - A float on every twin: two or three floats for one spend.
+       - Counting IP and MP here: they're I2's.
+       - Flashing a heal as a hit: magenta means harm.
+     - **Replaces:** Decision 117 in part: a heal now moves (the count and a green line; undo still doesn't), and each cell's flash waits for that cell's fill.
+     - **Revisit if:** players find the count slow in a fight (keep the float, drop the count); a tracker is added that doesn't change through `commit()`.
+     - **Built:** app 0.77.0 (unreleased), PR (this one), log entry 2026-11-24.
+
 
 ## 5. Open Flags
 

@@ -2,7 +2,7 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
-    "version": "0.76.1",
+    "version": "0.77.0",
     "date": null,
     "intro": [],
     "items": [],
@@ -10,6 +10,9 @@ window.SHADOWS_CHANGELOG = [
       {
         "title": "Character sheet",
         "items": [
+          "**The numbers move now.** Spend Luck, pay Çredits, take a hit or lose Sanity, and the number counts to where it landed, with what it cost floating off it.",
+          "**A hit fills its Health Levels one after another, and a meter on Main holds what you lost for a moment before it drains.** A heal gets a quiet green line.",
+          "**If your device is set to reduce motion, none of it moves.**",
           "**CRANK's −2 job is called Abandoned**, as the rulebook calls it, on Main, on Trackers and in CRANK's own description.",
           "**Skills says Synergy Bonus**, and its Help reads the way you roll: 1d10 + that total.",
           "**The armor line on Trackers** says where to get it: buy it or wear it under Loadout."

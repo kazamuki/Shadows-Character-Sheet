@@ -24,10 +24,13 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.76.1
+## [Unreleased] — app 0.77.0
 
 ### Character sheet
 
+- **The numbers move now.** Spend Luck, pay Çredits, take a hit or lose Sanity, and the number counts to where it landed, with what it cost floating off it.
+- **A hit fills its Health Levels one after another, and a meter on Main holds what you lost for a moment before it drains.** A heal gets a quiet green line.
+- **If your device is set to reduce motion, none of it moves.**
 - **CRANK's −2 job is called Abandoned**, as the rulebook calls it, on Main, on Trackers and in CRANK's own description.
 - **Skills says Synergy Bonus**, and its Help reads the way you roll: 1d10 + that total.
 - **The armor line on Trackers** says where to get it: buy it or wear it under Loadout.
