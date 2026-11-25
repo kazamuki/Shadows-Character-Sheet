@@ -145,7 +145,8 @@ rev 9's `C1`–`C3` are still forward notes.
   L4 (Decision 290) and L5b (Decision 292) are built, in 0.70.0 and 0.72.0; Bone Spines' grappling waits on Deighton (F55).
   Vehicles and Powered Armor (were L6, L7) left the plan 2026-11-15 (W91, W69). The plan ends with natural-weapon follow-ons, each waiting on an answer: L8 the Werewolf's damage (LQ40), L9 a trained weapon as natural (W160), L10 hand cyberware (W90).
   The player sheet's plan (`plans/archive/sheet-wishlist.md`) closed 2026-10-24, P1–P21 built.
-- **Help on the sheet** (`plans/help-on-the-sheet.md`, W156): K1–K5 built (289, 291, 298, 306–307; K5 was copy only); one thing left on the plan: removing Burned without Admin mode, its own order.
+- **Motion** (`plans/motion.md`): approved, IQ1–IQ10 Default; I1's order is ready to build.
+- **Help on the sheet** (`plans/help-on-the-sheet.md`, W156): K1–K5 built (289, 291, 298, 306–307); left: removing Burned without Admin mode, its own order.
 - **Closed plans** are in `plans/archive/`; finding-things left W152–W157 and W159, powers-that-run W132's last two powers (`plans/crb-catch-up.md`), and pools-and-numbers (J1–J4, 312–315, released in 0.76.0) F56 for Deighton.
 - **W90**, cybernetics: six questions before a plan.
 
