@@ -1609,11 +1609,11 @@ const creditControlsHtml = () => `<input type="number" data-cramt placeholder="a
     <button class="btn sm" data-cr="1">+ Earn</button>
     <button class="btn sm" data-cr="-1">− Spend</button>`;
 
-const crankControlsHtml = () => { const R=D.resources.crank, up=R.jobDone, down=R.jobWalkedOut;
+const crankControlsHtml = () => { const R=D.resources.crank, up=R.jobDone, down=R.jobWalkedOut, downName=((R.outcomes||[]).find(o=>o.id==="walked")||{}).name||"Abandoned";
   const sg = n => `${n>0?"+":"−"}${Math.abs(n)}`;
   return `<input type="text" data-crknote placeholder="which job" aria-label="CRANK job note">
     <button class="btn sm" data-crk="${up}">Job done ${sg(up)}</button>
-    <button class="btn sm" data-crk="${down}">Walked out ${sg(down)}</button>`; };
+    <button class="btn sm" data-crk="${down}">${esc(downName)} ${sg(down)}</button>`; };
 const crankSubHtml = st => st.next ? `${st.toNext} to ${esc(st.next.name)}` : "Top tier";
 // Decision 296: below 0 a character is a Novice at half pay (only Burned goes there); a held Burned at 0 or more is paid off.
 const crankNote = st => st.below ? D.resources.crank.belowText : st.paidOff ? D.resources.crank.paidOffText : "";
