@@ -63,6 +63,41 @@ distributable file, same architecture. This was a manual step until Phase 3.4
 made it a command (Decision 54); `npm run check` verifies the inline without
 writing.
 
+### Conventions
+
+What a change here follows. These were in `STATE.md` §2 and §4 until
+2026-11-24. They're lasting rules, not current state, so they live here.
+
+- **Two entries declare `excludes`, none `requires`:** Dwarf excludes Giant
+  (Deighton, 235) and Reputation excludes Burned (the book, 296). `requires`
+  is tested against a synthetic fixture. A new real pair is a rules question
+  for Deighton (77).
+- **`grants()` reads advantages, disadvantages and taken Majors** (199);
+  a Major is looked up with `majorById`, never `majorGeneral` alone. Natural
+  Armor still scans for itself, specializations included (104).
+- **A number another table holds is a path** (`"powerLevel.x"`, read by
+  `Engine.dataPath`); a formula is `{ stat, times, plus }` (Decision 135).
+- **Proving a change invisible** (Decision 68): `node tools/outputs.mjs a.json`,
+  change it, then `--against a.json`. About four minutes each way.
+- **Reuse, don't copy:** `openPopover`, `openCatalog(kind)` over
+  `Engine.catalogLine`, `bindVitalControls(root)`, and `openModal`. A new
+  "what does this mean" is a `TIPS` kind in `shared.js` (139). Refusals are
+  `notice()`, confirmations `askFirst()`.
+- **Gear rows and weapon rows share a shape**: a catalog reference or
+  `custom: true`, and `migrate()` never guesses between them (Decisions
+  120–121).
+- **Binders sit beside their renderers** (`wizard.js`, `sheet.js`); a
+  migration that reshapes a row migrates the audit's patches too (142).
+- **The roster** (141): a character is `shadows.char.v1.<TAG>`; a test reads
+  one back with `stored()`. Seeding the old slot keys still works, through the
+  migration.
+- **The flyout's state goes through `syncVitals`** (166), never by hand; a
+  sideways row is a `.scroll-row` bound by `bindScrollRows` (165), which gives
+  it the mouse wheel too. In jsdom, `boot({ width })` gives the page a
+  `matchMedia`.
+- **A redraw a press causes goes through `keepPlace`** (164), or Enter there
+  drops focus to `<body>`.
+
 ---
 
 ## 2. Game Data Schema (`shadows-data.js`)
