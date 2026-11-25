@@ -304,6 +304,7 @@ function update(rerenderMain=true){
   if (S.screen==="table") saveTable();   // gm.js (Decision 172)
   if (rerenderMain){ renderMain(); sweepTip(); }
   renderLedger(); renderVitals();
+  playBeats();   // last: the drawer and the popover are drawn by now (Decision 316)
   if (S.screen==="table") paintTonight();   // gm.js: update(false) skips renderTable, and the strip reports exactly those changes (Decision 270)
 }
 
@@ -333,6 +334,7 @@ function commit(kind, label, fn){
   // an older copy of itself. diffChar skips meta: nothing here is undoable.
   if (r && r.ok){ if (!ch.meta || typeof ch.meta!=="object") ch.meta={}; ch.meta.updated=new Date().toISOString(); }
   S.landed=landedFrom(before, ch);
+  S.beats=beatsFrom(before, ch);      // Decision 316: the render after this takes it once (renderMain), playBeats plays it (update)
   update();
   if (r && r.ok) showUndoToast(ch, ch.audit[ch.audit.length-1], label);
 }
@@ -341,8 +343,9 @@ function commit(kind, label, fn){
 // hit, Hurt, a Turn Reset tick), the next render marks the HP readouts, the
 // Health Level boxes that took it, and the Pain readouts if the Pain Level
 // went up. The render takes it once (landedNow), so the flash plays once and
-// a later re-render doesn't replay it. Healing and undo never flash. The CSS
-// drops the animation under prefers-reduced-motion.
+// a later re-render doesn't replay it. Undo never moves; a heal's beat is
+// beatsFrom's (Decision 316). The CSS drops the animation under
+// prefers-reduced-motion.
 let landedNow=null;
 function landedFrom(before, ch){
   if (!ch.creation || !ch.creation.locked) return null;
@@ -353,8 +356,130 @@ function landedFrom(before, ch){
   const pb=Engine.painState(before), pa=Engine.painState(ch);
   return { cells, pain: pa.level>pb.level || (pa.down && !pb.down) };
 }
-const landedCls = (what, i) => !landedNow ? "" : what==="hp" ? " struck"
+// A heal's green line (Decision 316) is class-borne like the flash: a heal isn't a hit, so `mended` and `struck` never meet.
+const landedCls = (what, i) => what==="hp" && !landedNow ? (beatsNow && beatsNow.healed && !calm() ? " mended" : "")
+  : !landedNow ? "" : what==="hp" ? " struck"
   : what==="pain" ? (landedNow.pain ? " painup" : "") : landedNow.cells.has(i) ? " landed" : "";
+
+// ── What an action changed moves once (Decision 316, I1) ──────────────
+// commit() notes what the six numbers and the Health Level cells were and are (beatsFrom, in S.beats); the render after it
+// takes that once (renderMain, on every screen) and update() plays it last (playBeats), once the drawer and the popover are
+// drawn. Every twin of a number is a countHtml span, so the count reaches all of them. The right number is in the HTML from the
+// start: a count writes into a span only inside a frame callback, so a pane that isn't drawing shows the new number and
+// nothing else. Undo, the wizard and reduced motion never get a beat. View state only: nothing here is saved (constraint 7).
+
+// True when the player asked for less motion. Read on every call, never cached at boot.
+function calm(){
+  try { return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); } catch(e){ return false; }
+}
+let beatsNow=null;
+const BEAT_COUNT_MS=300, BEAT_STEP_MS=60, BEAT_FLOAT_MS=750, BEAT_TAIL_HOLD=250, BEAT_TAIL_MS=400;
+let beatRun=null;
+
+// The six numbers as the renderers draw them: { key: { v, max } }. HP is signed, so a hit past zero still has a size; a number
+// a reader can't give is left out, never guessed. Total, so a hostile file reports nothing rather than throwing.
+function beatReads(ch){
+  const r={};
+  const put=(k, fn)=>{ try { const x=fn(); if (x && Number.isFinite(x.v)) r[k]=x; } catch(e){} };
+  put("hp", ()=>{ const p=Engine.painState(ch); return { v:p.hpLeft-(p.pastZero||0), max:Engine.health(ch).total }; });
+  put("san", ()=>{ const x=Engine.sanState(ch); return { v:x.current, max:x.max }; });
+  put("luck", ()=>{ const x=Engine.luckState(ch); return { v:x.current, max:x.max }; });
+  put("sfr", ()=>{ const sf=Engine.sfr(ch); return sf && sf.value!=null ? { v:Math.max(0, sf.value-(ch.trackers.sfr.spent||0)), max:sf.value } : null; });
+  put("cred", ()=>({ v:Number(ch.trackers.credits.current)||0 }));
+  try { poolCardsOf(ch).forEach(c=>put("pool:"+c.panel.id, ()=>({ v:c.t.shown, max:c.t.max }))); } catch(e){}
+  return r;
+}
+// What a commit changed, for the render after it. null unless ch is locked and something moved.
+function beatsFrom(before, ch){
+  try {
+    if (!ch || !ch.creation || !ch.creation.locked) return null;
+    const a=beatReads(ch), b=beatReads(before), counts={};
+    Object.keys(a).forEach(k=>{ if (b[k] && a[k].v!==b[k].v) counts[k]={ from:b[k].v, to:a[k].v, max:a[k].max }; });
+    const hb=Engine.hlState(before), ha=Engine.hlState(ch), was=hlCells(before), cells=[];
+    hlCells(ch).forEach((c,i)=>{ const from=was[i] ? was[i].frac : 0; if (from!==c.frac) cells.push({ i, from, to:c.frac }); });
+    if (!Object.keys(counts).length && !cells.length) return null;
+    const up=ha.damage>hb.damage || ha.massive>hb.massive;
+    return { counts, cells: up ? cells : cells.reverse(), healed: ha.damage<hb.damage && !up };
+  } catch(e){ return null; }
+}
+// The number, wrapped so playBeats finds every twin. `text` is already formatted and escaped by the caller.
+const countHtml = (key, text) => `<span data-count="${esc(key)}">${text}</span>`;
+
+function stopBeats(){
+  if (beatRun){
+    if (beatRun.raf && typeof cancelAnimationFrame==="function") cancelAnimationFrame(beatRun.raf);
+    beatRun.timers.forEach(clearTimeout);
+    beatRun=null;
+  }
+  document.querySelectorAll(".beat-float, .beat-tail").forEach(el=>el.remove());
+}
+const beatKeyed = (root, attr, key) => root ? [...root.querySelectorAll(`[${attr}]`)].find(e=>e.getAttribute(attr)===key) : null;
+const beatText = (key, n) => key==="cred" ? numText(Math.round(n)) : String(Math.round(n));
+
+// The post-render pass. Reads beatsNow, clears it, returns nothing. A no-op when there is none, or under reduced motion.
+function playBeats(){
+  const b=beatsNow; beatsNow=null;
+  if (!b || calm() || typeof requestAnimationFrame!=="function") return;
+  stopBeats();
+  const run=beatRun={ raf:0, timers:[] };
+  const later=(fn, ms)=>run.timers.push(setTimeout(fn, ms));
+  // The count: tag every twin now (an attribute, not its text), and let the first frame rewind and run it.
+  const items=[];
+  Object.keys(b.counts).forEach(k=>{
+    const c=b.counts[k];
+    if (k==="hp" && (c.from<0 || c.to<0)) return;               // past zero the text isn't a plain number
+    document.querySelectorAll("[data-count]").forEach(el=>{ if (el.getAttribute("data-count")===k){ el.setAttribute("data-from", String(c.from)); items.push({ el, key:k, from:c.from, to:c.to }); } });
+  });
+  const land=()=>{ items.forEach(it=>{ if (it.el.hasAttribute("data-from")){ it.el.textContent=beatText(it.key, it.to); it.el.removeAttribute("data-from"); } }); };
+  // One float per moved key, on one host: the open popover's readout, else the page's.
+  const pop=document.getElementById("vpop"), main=document.getElementById("main");
+  Object.keys(b.counts).forEach(k=>{
+    const c=b.counts[k], d=c.to-c.from;
+    const host=(pop && !pop.hidden && beatKeyed(pop, "data-float", k)) || beatKeyed(main, "data-float", k);
+    if (!host) return;
+    const f=document.createElement("span");
+    f.className=`beat-float k-${k.split(":")[0]} ${d<0?"dn":"up"}`; f.setAttribute("aria-hidden","true");
+    f.textContent=(d<0?"−":"+")+(k==="cred" ? Engine.creditSymbol()+numText(Math.abs(d)) : Math.abs(d));
+    host.appendChild(f);
+    f.addEventListener("animationend", ()=>f.remove());
+    later(()=>f.remove(), BEAT_FLOAT_MS);
+  });
+  later(()=>{ if (beatRun===run){ if (run.raf && typeof cancelAnimationFrame==="function") cancelAnimationFrame(run.raf); land(); } }, BEAT_COUNT_MS+100);
+  run.raf=requestAnimationFrame(t0=>{
+    const live=items.filter(it=>it.el.isConnected && it.el.hasAttribute("data-from"));
+    live.forEach(it=>{ it.el.textContent=beatText(it.key, it.from); });
+    // The cells: rewind each moved one with no transition, then fill it in order, 60ms apart; a flash waits for its fill.
+    const mainEl=document.getElementById("main");
+    if (mainEl) b.cells.forEach((c, n)=>{
+      mainEl.querySelectorAll(`[data-cell="${c.i}"]`).forEach(cell=>{
+        const fill=cell.matches(".seg") ? cell.querySelector("i") : cell.querySelector(".fill");
+        if (!fill) return;
+        const st=fill.style;
+        st.transitionProperty="none"; st.transform=`scaleX(${c.from.toFixed(2)})`; void fill.offsetWidth;
+        st.transitionProperty="transform"; st.transitionDuration="180ms"; st.transitionTimingFunction="ease-out"; st.transitionDelay=`${n*BEAT_STEP_MS}ms`;
+        st.transform=`scaleX(${c.to.toFixed(2)})`;
+        if (cell.classList.contains("landed")) cell.style.animationDelay=`${n*BEAT_STEP_MS}ms`;
+      });
+    });
+    // The tail: a meter that lost something holds the lost part for a beat, then drains it.
+    Object.keys(b.counts).forEach(k=>{
+      const c=b.counts[k]; if (c.to>=c.from || !(c.max>0)) return;
+      const meter=beatKeyed(mainEl, "data-meter", k), bar=meter && meter.querySelector("i");
+      if (!bar) return;
+      const tail=document.createElement("i"); tail.className=`beat-tail k-${k.split(":")[0]}`;
+      tail.style.width=`${Math.max(0, Math.min(100, c.from/c.max*100))}%`;
+      meter.insertBefore(tail, bar);
+      later(()=>{ tail.style.transition=`width ${BEAT_TAIL_MS}ms ease-out`; tail.style.width=bar.style.width||"0%"; }, BEAT_TAIL_HOLD);
+      later(()=>tail.remove(), BEAT_TAIL_HOLD+BEAT_TAIL_MS+50);
+    });
+    const step=t=>{
+      const k=Math.min(1, Math.max(0, (t-t0)/BEAT_COUNT_MS)), e=1-Math.pow(1-k, 3);
+      live.forEach(it=>{ if (it.el.isConnected && it.el.hasAttribute("data-from")) it.el.textContent=beatText(it.key, it.from+(it.to-it.from)*e); });
+      if (k<1) run.raf=requestAnimationFrame(step); else land();
+    };
+    run.raf=requestAnimationFrame(step);
+  });
+}
 
 // W12 — undo where the action happened. Every commit() that changed something
 // offers its own undo for a few seconds, through the same LIFO undo the

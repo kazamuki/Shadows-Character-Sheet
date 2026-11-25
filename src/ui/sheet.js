@@ -326,7 +326,7 @@ function hlMiniHtml(ch){
   const hp=Engine.health(ch);
   if (hp.levels<=0 || hp.hpPer<=0) return "";
   return `<span class="hl-mini" aria-hidden="true">` + hlCells(ch).map((c,i)=>
-    `<span class="seg ${c.gone?"gone":""} ${c.massive?"massive":""}${landedCls("hl",i)}"><i style="transform:scaleX(${c.frac.toFixed(2)})"></i></span>`
+    `<span class="seg ${c.gone?"gone":""} ${c.massive?"massive":""}${landedCls("hl",i)}" data-cell="${i}"><i style="transform:scaleX(${c.frac.toFixed(2)})"></i></span>`
   ).join("") + `</span>`;
 }
 
@@ -353,15 +353,15 @@ function sheetVitalsBar(ch){
   // W45: one row that scrolls sideways on a phone; the toggle sits outside
   // it, so what opens the full panel (and Pin) is never scrolled away.
   let h=`<div class="vbar" aria-label="Vitals"><div class="vbar-row scroll-row" data-row="vbar">`;
-  h+=pill((pain.down?"hp danger":"hp")+landedCls("hp"),"health","HP",`${pain.pastZero?"−"+pain.pastZero:pain.hpLeft}<small>/${hp.total}</small>`,"hp");
+  h+=pill((pain.down?"hp danger":"hp")+landedCls("hp"),"health","HP",`${pain.pastZero?"−"+pain.pastZero:countHtml("hp", pain.hpLeft)}<small>/${hp.total}</small>`,"hp");
   h+=pill((pain.level?"danger":"")+landedCls("pain"),"pain","Pain",pain.down?"DOWN":(pain.level?`Lv ${pain.level} <small>${signed(pain.skillPenalty)}</small>`:"&mdash;"),"pain");
   const cs=Engine.conditionState(ch);
   if (cs.active.length) h+=pill(cs.isHelpless?"danger":"","","Cond",cs.isHelpless?"HELPLESS":`${cs.active.length}`,"cond");
-  h+=pill(san.current<=san.max/2?"san danger":"san","sanity","SAN",`${san.current}<small>/${san.max}%</small>`,"san");
-  h+=pill(luck.current===0?"luck danger":"luck","luck","LUCK",`${luck.current}<small>/${luck.max}</small>`,"luck");
+  h+=pill(san.current<=san.max/2?"san danger":"san","sanity","SAN",`${countHtml("san", san.current)}<small>/${san.max}%</small>`,"san");
+  h+=pill(luck.current===0?"luck danger":"luck","luck","LUCK",`${countHtml("luck", luck.current)}<small>/${luck.max}</small>`,"luck");
   if (sf && sf.value!=null){ const left=Math.max(0,sf.value-(ch.trackers.sfr.spent||0));
-    h+=pill("sfr","sfr","SFR",`${left}<small>/${sf.value}</small>`); }
-  h+=pill("cred","credits",CR,numText(ch.trackers.credits.current),"cred");
+    h+=pill("sfr","sfr","SFR",`${countHtml("sfr", left)}<small>/${sf.value}</small>`); }
+  h+=pill("cred","credits",CR,countHtml("cred", numText(ch.trackers.credits.current)),"cred");
   h+=pill(ip.available<0?"danger":"","","IP",`${numText(ip.available)}`);
   h+=pill("","","MP",`${ms.mp}`);
   h+=`</div><button class="vpill toggle" data-vitals-toggle aria-label="Open full vitals"><span class="vtext"><span class="vk">Vitals</span><span class="vv">View ▸</span></span></button>`;
@@ -385,13 +385,13 @@ function vitalsPanelHtml(ch){
   h += `<div class="vgroup">`;
   // Each one the vitals bar opens, this opens too, to the left (Decision 160).
   const cs=Engine.conditionState(ch);
-  h += vrow("HP", (pain.pastZero?"−"+pain.pastZero:pain.hpLeft)+" / "+hp.total, pain.down?"over":"hp", "", "hp");
+  h += vrow("HP", (pain.pastZero?"−"+pain.pastZero:countHtml("hp", pain.hpLeft))+" / "+hp.total, pain.down?"over":"hp", "", "hp");
   h += vrow("Pain", pain.down?"DOWN":"Lv "+pain.level+(pain.level?" ("+signed(pain.skillPenalty)+" skill)":""), pain.level?"over":"", "", "pain");
   if (cs.active.length) h += vrow("Cond", cs.isHelpless?"HELPLESS":cs.active.length, "over", "", "cond");
-  h += vrow("SAN", san.current+" / "+san.max+"%", san.current<=san.max/2?"over":"", "", "san");
-  h += vrow("LUCK", luck.current+" / "+luck.max, luck.current===0?"over":"gold", "", "luck");
-  if (sfr && sfr.value!=null) h += vrow("SFR", Math.max(0,sfr.value-(ch.trackers.sfr.spent||0))+" / "+sfr.value);
-  h += vrow(CR, numText(ch.trackers.credits.current), "gold", "", "cred");
+  h += vrow("SAN", countHtml("san", san.current)+" / "+san.max+"%", san.current<=san.max/2?"over":"", "", "san");
+  h += vrow("LUCK", countHtml("luck", luck.current)+" / "+luck.max, luck.current===0?"over":"gold", "", "luck");
+  if (sfr && sfr.value!=null) h += vrow("SFR", countHtml("sfr", Math.max(0,sfr.value-(ch.trackers.sfr.spent||0)))+" / "+sfr.value);
+  h += vrow(CR, countHtml("cred", numText(ch.trackers.credits.current)), "gold", "", "cred");
   h += `</div><div class="vgroup">`;
   h += vrow("IP", numText(ip.available), ip.available<0?"over":"");
   h += vrow("Milestone Pts", ms.mp);
@@ -401,7 +401,7 @@ function vitalsPanelHtml(ch){
   h += `<div class="vgroup">`
      + vrow("TOL", der.TOL, "", "TOL")   + `<div class="vbd">${esc(derivedBreakdownStr(ch,"TOL"))}</div>`
      + vrow("WILL", der.WILL, "", "WILL") + `<div class="vbd">${esc(derivedBreakdownStr(ch,"WILL"))}</div>`
-     + vrow("SAN", san.current+" / "+san.max+"%", "", "SAN") + `<div class="vbd">${esc(derivedBreakdownStr(ch,"SAN"))}</div>`
+     + vrow("SAN", countHtml("san", san.current)+" / "+san.max+"%", "", "SAN") + `<div class="vbd">${esc(derivedBreakdownStr(ch,"SAN"))}</div>`
      + `</div>`;
   return h;
 }
@@ -535,22 +535,22 @@ function renderShMain(){
   // its pill on the other tabs (spans inside, since a button holds no divs).
   const cond = (cls,name,uiName,big,meta,meter,seg,pop)=>{
     const inner=`<span class="corner">${uiIcon(uiName)}</span>
-    <span class="lab">${name}</span><span class="big">${big}</span>${meta?`<span class="meta">${meta}</span>`:""}${seg?seg:(meter!=null?`<span class="meter"><i style="width:${meter}%"></i></span>`:"")}`;
+    <span class="lab">${name}</span><span class="big"${pop?` data-float="${esc(pop)}"`:""}>${big}</span>${meta?`<span class="meta">${meta}</span>`:""}${seg?seg:(meter!=null?`<span class="meter"${pop?` data-meter="${esc(pop)}"`:""}><i style="width:${meter}%"></i></span>`:"")}`;
     return pop ? `<button class="cond act ${cls}" data-vpop="${pop}" aria-haspopup="dialog" aria-expanded="false">${inner}</button>` : `<div class="cond ${cls}">${inner}</div>`; };
   // W45: Pin, from Main. Main has no vitals bar, so on a screen wide enough
   // to pin, this is how the panel gets there (CSS shows it from 1280px).
   h += `<div class="main-pin"><button class="btn ghost" data-vitals-pin-main>Pin vitals</button></div>`;
   h += `<div class="cond-grid">`;
   h += cond(`hp ${pain.down?"danger":""}${landedCls("hp")}`,"Health","health",
-    `${pain.hpLeft}<small>/${hp.total}</small>`, pain.down?"DOWN"+(pain.pastZero?" · "+pastZeroText(pain):""):`${hp.levels} HL × ${hp.hpPer}`, null, hlMiniHtml(ch), "hp");
+    `${countHtml("hp", pain.hpLeft)}<small>/${hp.total}</small>`, pain.down?"DOWN"+(pain.pastZero?" · "+pastZeroText(pain):""):`${hp.levels} HL × ${hp.hpPer}`, null, hlMiniHtml(ch), "hp");
   h += cond(`${pain.level?"danger":""}${landedCls("pain")}`,"Pain","pain",
     pain.level?`Lv ${pain.level}`:"—", (pain.level?painPenaltyLine(pain,false)+(painWhyLine(pain)?` · ${esc(painWhyLine(pain))}`:""):(painWhyLine(pain)?`no penalties · ${esc(painWhyLine(pain))}`:"no penalties"))
       + (held.held.length ? `<br>${esc(holdingSentence(held))}` : ""), null, "", "pain");
   h += vitalVerbsHtml(ch);     // W42: its own row, straight under Health and Pain
   h += cond(`san ${san.current<=san.max/2?"danger":""}`,"Sanity","sanity",
-    `${san.current}<small>/${san.max}%</small>`, "", pct(san.current,san.max), "", "san");
+    `${countHtml("san", san.current)}<small>/${san.max}%</small>`, "", pct(san.current,san.max), "", "san");
   h += cond(`luck ${luck.current===0?"danger":""}`,"Luck","luck",
-    `${luck.current}<small>/${luck.max}</small>`, "", pct(luck.current,luck.max), "", "luck");
+    `${countHtml("luck", luck.current)}<small>/${luck.max}</small>`, "", pct(luck.current,luck.max), "", "luck");
   const hasSfr = sf && sf.value!=null, crk = Engine.crankState(ch);
   // A named pool with a max is a card too (Decision 313), after SFR and before Çredits: its count is what's left of its max.
   const poolCards = poolCardsOf(ch);
@@ -558,15 +558,15 @@ function renderShMain(){
   if (hasSfr){
     const sfLeft=Math.max(0,sf.value-(ch.trackers.sfr.spent||0));
     const turn = sfrTurn(ch);
-    h += cond(`sfr${turn && (turn.at||turn.past) ? " danger" : ""}`,"SFR","sfr", `${sfLeft}<small>/${sf.value}</small>`,
+    h += cond(`sfr${turn && (turn.at||turn.past) ? " danger" : ""}`,"SFR","sfr", `${countHtml("sfr", sfLeft)}<small>/${sf.value}</small>`,
       esc(sfrCardMeta(sf, turn)), pct(sfLeft,sf.value), "", "sfr");
   }
   // The pool's name is the player's text: escaped here, since cond() puts its name in unescaped.
-  for (const c of poolCards) h += cond("pool", esc(c.panel.title), "tab_trackers", `${c.t.shown}<small>/${c.t.max}</small>`, "", pct(c.t.shown, c.t.max), "", `pool:${c.panel.id}`);
+  for (const c of poolCards) h += cond("pool", esc(c.panel.title), "tab_trackers", `${countHtml("pool:"+c.panel.id, c.t.shown)}<small>/${c.t.max}</small>`, "", pct(c.t.shown, c.t.max), "", `pool:${c.panel.id}`);
   // W45: whichever card is alone on its row in two columns takes the whole row.
   // Decision 214: that is the last of [SFR, Çredits, CRANK] actually shown, when their count is odd.
   const aloneLast = cardsAfterLuck%2===1;
-  h += cond(aloneLast && !crankOn() ? "cred alone" : "cred","Çredits","credits", `${CR}${numText(ch.trackers.credits.current)}`, "", null, "", "cred");
+  h += cond(aloneLast && !crankOn() ? "cred alone" : "cred","Çredits","credits", `${CR}${countHtml("cred", numText(ch.trackers.credits.current))}`, "", null, "", "cred");
   // Decision 169, 214: CRANK shows only with its switch on.
   if (crankOn()) h += cond(aloneLast?"crank alone":"crank", "CRANK", "crank", `${crk.rep}`, esc(crankCardMeta(crk)), null, "", "crank");
   h += `</div>`;
@@ -1568,7 +1568,7 @@ function hlTrackHtml(ch){
   return `<div class="hl-track">` + bands.map(b=>{
     const at = b.level===pPainBandFor(here).level;
     return `<div class="hl-band pl-${b.level}${at?" here":""}"><span class="hl-band-k">Pain ${b.level}</span><div class="hl-band-cells">` +
-      b.cells.map(([c,i])=>`<div class="hl ${c.gone?"gone":""} ${c.massive?"massive":""}${landedCls("hl",i)}" ${c.massive?'title="Removed by Massive damage"':""}><div class="fill" style="transform:scaleX(${c.frac.toFixed(2)})"></div><span>${c.massive?"—":c.gone?"✕":c.left+"/"+hpPer}</span></div>`).join("") +
+      b.cells.map(([c,i])=>`<div class="hl ${c.gone?"gone":""} ${c.massive?"massive":""}${landedCls("hl",i)}" data-cell="${i}" ${c.massive?'title="Removed by Massive damage"':""}><div class="fill" style="transform:scaleX(${c.frac.toFixed(2)})"></div><span>${c.massive?"—":c.gone?"✕":c.left+"/"+hpPer}</span></div>`).join("") +
       `</div></div>`; }).join("") + `</div>`;
 }
 // Decision 220: the damage past zero, as Trackers' Damage card and Main's Health
@@ -1705,19 +1705,19 @@ function movementLineHtml(ch){
 // when the key isn't one (the popover closes).
 function vitalPopover(ch, key){
   const pain=Engine.painState(ch), hp=Engine.health(ch);
-  const now = (big, cls, sub) => `<div class="pop-now"><span class="big ${cls}">${big}</span>${sub?`<span class="sub">${sub}</span>`:""}</div>`;
+  const now = (big, cls, sub, fl) => `<div class="pop-now"${fl?` data-float="${esc(fl)}"`:""}><span class="big ${cls}">${big}</span>${sub?`<span class="sub">${sub}</span>`:""}</div>`;
   if (key==="hp") return { title:"Health",
-    html: now(`${pain.hpLeft} / ${hp.total} HP`, pain.down?"bad":"hp", esc(pain.label)+(pain.pastZero?" · "+pastZeroText(pain):"")) + damageStepperHtml(ch) + Engine.surgeable(ch).map(x=>surgeHtml(ch, x.id)).join("") +
+    html: now(`${countHtml("hp", pain.hpLeft)} / ${hp.total} HP`, pain.down?"bad":"hp", esc(pain.label)+(pain.pastZero?" · "+pastZeroText(pain):""), "hp") + damageStepperHtml(ch) + Engine.surgeable(ch).map(x=>surgeHtml(ch, x.id)).join("") +
       `<div class="trk-actions"><button class="btn sm primary" data-pophit>Take a hit</button>
        <button class="btn sm" data-popgo="trackers">Recovery on Trackers</button></div>` };
   if (key==="pain" || key==="cond") return { title:"Pain & Conditions",
     html: now(pain.down?"DOWN":pain.level?`Pain Lv ${pain.level}`:"No Pain", pain.level||pain.down?"bad":"",
       pain.level?esc(painPenaltyLine(pain,false)):"no penalties") + holdingNoteHtml(ch) + conditionsHtml(ch) };
   if (key==="san"){ const san=Engine.sanState(ch);
-    return { title:"Sanity", html: now(`${san.current} / ${san.max}%`, san.current<=san.max/2?"bad":"san", "") +
+    return { title:"Sanity", html: now(`${countHtml("san", san.current)} / ${san.max}%`, san.current<=san.max/2?"bad":"san", "", "san") +
       `<div class="trk-row">${sanControlsHtml(ch)}</div>` }; }
   if (key==="luck"){ const luck=Engine.luckState(ch);
-    return { title:"LUCK", html: now(`${luck.current} / ${luck.max}`, luck.current===0?"bad":"gold", "") +
+    return { title:"LUCK", html: now(`${countHtml("luck", luck.current)} / ${luck.max}`, luck.current===0?"bad":"gold", "", "luck") +
       `<div class="trk-row">${luckControlsHtml(luck)}</div>` }; }
   if (key==="sfr"){ const sf=Engine.sfr(ch), p=sfrPanel(ch);
     if (!sf || sf.value==null || !p) return null;
@@ -1728,12 +1728,12 @@ function vitalPopover(ch, key){
       runs.map(r=>`<div class="run-row"><span class="sub">${esc(runWords(r, r.name, `${r.name} · running`))}</span><button type="button" class="btn sm" data-runtoggle="${esc(r.id)}|stop" aria-label="Stop ${esc(r.name)}">Stop</button></div>`).join("") +
       starts.map(r=>`<div class="run-row"><button type="button" class="btn sm" data-runtoggle="${esc(r.id)}|start" aria-label="Start ${esc(r.name)}"${r.can.ok ? "" : ` disabled title="${esc(r.can.why)}"`}>Start ${esc(r.name)}</button>${runWhyHtml(r)}</div>`).join("") + `</div>` : "";
     return { title:"SFR",
-      html: now(`${left} / ${sf.value}`, turn && (turn.at||turn.past) ? "bad" : "", sf.rou!=null ? `RoU ${sf.rou}` : "") +
+      html: now(`${countHtml("sfr", left)} / ${sf.value}`, turn && (turn.at||turn.past) ? "bad" : "", sf.rou!=null ? `RoU ${sf.rou}` : "", "sfr") +
         `<div class="trk-row">${trkControlHtml(p.id, p.title, p.counts==="down")}</div>` +
         (line ? `<p class="sub sfr-round" data-sfrround>${esc(line)}</p>` : "") + runHtml +
         (turn && turn.spent ? `<div class="trk-actions"><button class="btn sm" data-popreset>Turn Reset</button></div>` : "") }; }
   if (key==="cred") return { title:"Çredits",
-    html: now(`${CR} ${numText(ch.trackers.credits.current)}`, "gold", "") + `<div class="trk-row pop-cred">${creditControlsHtml()}</div>
+    html: now(`${CR} ${countHtml("cred", numText(ch.trackers.credits.current))}`, "gold", "", "cred") + `<div class="trk-row pop-cred">${creditControlsHtml()}</div>
       <button class="btn sm" data-popgo="trackers">Ledger on Trackers</button>` };
   if (key==="crank"){ if (!crankOn()) return null; const st=Engine.crankState(ch);
     return { title:D.resources.crank.name,
@@ -1745,7 +1745,7 @@ function vitalPopover(ch, key){
     const id = key.slice(5), c = poolCardsOf(ch).find(x=>x.panel.id===id);
     if (!c) return null;
     return { title:c.panel.title,
-      html: now(`${c.t.shown} / ${c.t.max}`, "", "") +
+      html: now(`${countHtml("pool:"+id, c.t.shown)} / ${c.t.max}`, "", "", "pool:"+id) +
         `<div class="trk-row">${trkControlHtml(id, c.panel.title, c.panel.counts==="down")}</div>` +
         `<div class="trk-actions"><button class="btn sm" data-popgo="trackers">On Trackers</button></div>` };
   }
@@ -1782,8 +1782,8 @@ function renderShTrackers(){
 
   // Damage. The headline is HP left, so the stepper says Heal and Hurt
   // rather than signs on the damage total it edits (W11).
-  h += `<div class="trk"><h2>Damage</h2>
-    <span class="big ${pain.down?"bad":"hp"}${landedCls("hp")}">${pain.hpLeft} / ${hp.total} HP</span>
+  h += `<div class="trk" data-float="hp"><h2>Damage</h2>
+    <span class="big ${pain.down?"bad":"hp"}${landedCls("hp")}">${countHtml("hp", pain.hpLeft)} / ${hp.total} HP</span>
     ${pain.down?'<span class="chip pain">DOWN</span>':""}${pain.pastZero?`<span class="sub pastzero">${pastZeroText(pain)}</span>`:""}
     ${damageStepperHtml(ch)}
     <span class="sub">${hp.levels} Health Levels × ${hp.hpPer} HP. ${pain.hlLost} HL lost.${
@@ -1817,14 +1817,14 @@ ${esc(painIgnoredText(pain))}: ${signed(-pain.ignored)} Pain Level${pain.ignored
   h += `</div><div class="trk-col">`;
 
   // SAN
-  h += `<div class="trk"><h2>Sanity</h2>
-    <span class="big ${san.current<=san.max/2?"bad":""}">${san.current} / ${san.max}%</span>
+  h += `<div class="trk" data-float="san"><h2>Sanity</h2>
+    <span class="big ${san.current<=san.max/2?"bad":""}">${countHtml("san", san.current)} / ${san.max}%</span>
     ${sanControlsHtml(ch)}
     <span class="sub">Max is ${esc(Engine.derivedParts(ch,"SAN").length ? derivedBreakdownStr(ch,"SAN") : Engine.formulaText((D.derived.find(d=>d.id==="SAN")||{}).formula))}, computed. Track loss here; recovery is a story, not a button.</span></div>`;
 
   // LUCK
-  h += `<div class="trk"><h2>LUCK</h2>
-    <span class="big ${luck.current===0?"bad":"gold"}">${luck.current} / ${luck.max}</span>${luckControlsHtml(luck)}
+  h += `<div class="trk" data-float="luck"><h2>LUCK</h2>
+    <span class="big ${luck.current===0?"bad":"gold"}">${countHtml("luck", luck.current)} / ${luck.max}</span>${luckControlsHtml(luck)}
     <span class="sub">${esc(luck.refresh)} Logging a session refreshes it automatically.</span></div>`;
 
   // Archetype tracker panels (declared in data, rendered generically)
@@ -1837,8 +1837,10 @@ ${esc(painIgnoredText(pain))}: ${signed(-pain.ignored)} Pain Level${pain.ignored
     const byHand = p.resource==="sfr" ? sfrByHandText(Engine.sfr(ch)) : "";
     const roundLine = sfrRoundText(t.turn);
     const cur = down ? (effMax!=null?Math.max(0,effMax-val):null) : val;
-    h += `<div class="trk"><h2>${esc(p.title)}</h2>
-      <span class="big ${effMax!=null&&!down&&cur>=effMax?"bad":""}">${cur==null?"—":cur}${effMax!=null?" / "+effMax:""}</span>
+    // Decision 316: the SFR panel and a named pool are numbers that count; any other tracker panel is plain.
+    const bk = p.resource==="sfr" ? "sfr" : Engine.poolsOf(ch).some(pl=>pl.id===p.id) ? "pool:"+p.id : null;
+    h += `<div class="trk"${bk?` data-float="${esc(bk)}"`:""}><h2>${esc(p.title)}</h2>
+      <span class="big ${effMax!=null&&!down&&cur>=effMax?"bad":""}">${cur==null?"—":bk?countHtml(bk, cur):cur}${effMax!=null?" / "+effMax:""}</span>
       ${trkControlHtml(p.id, p.title, down)}
       ${manualMax!==null?`<label class="field" style="margin:0"><input type="number" min="0" data-trkmax="${p.id}" value="${manualMax}" placeholder="max" aria-label="${esc(p.title)} max" style="width:84px"></label>`:""}
       <span class="sub">${p.atMax&&effMax!=null&&cur>=effMax?esc(p.atMax):p.note?esc(p.note):p.max==="TOL"?"Capped by Tolerance (computed).":"Set the max when the rules land — the tracker won't block on un-modeled rules."}</span>
@@ -1857,7 +1859,7 @@ ${esc(painIgnoredText(pain))}: ${signed(-pain.ignored)} Pain Level${pain.ignored
 
   // Çredits
   h += `<div class="sect">Çredits</div>
-    <div class="trk"><h2>Balance</h2><span class="big gold">${CR} ${numText(ch.trackers.credits.current)}</span>
+    <div class="trk" data-float="cred"><h2>Balance</h2><span class="big gold">${CR} ${countHtml("cred", numText(ch.trackers.credits.current))}</span>
     ${creditControlsHtml()}</div>`;
   const ledger = ch.trackers.credits.ledger||[];
   if (ledger.length){

@@ -24,6 +24,14 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.77.0
+
+### Character sheet
+
+- **The numbers move now.** Spend Luck, pay Çredits, take a hit or lose Sanity, and the number counts to where it landed, with what it cost floating off it.
+- **A hit fills its Health Levels one after another, and a meter on Main holds what you lost for a moment before it drains.** A heal gets a quiet green line.
+- **If your device is set to reduce motion, none of it moves.**
+
 ## v0.76.0 — 2026-11-24
 
 ### Character sheet
