@@ -1,7 +1,9 @@
 # Plan — Motion
 
-**Status:** **proposed 2026-11-24** (Ken: "These are all awesome. They add
-some flair and impact", after the Motion Lab page). Nothing here is a decision
+**Status:** **approved 2026-11-24** (Ken: "These are all awesome. They add
+some flair and impact", after the Motion Lab page; then, on I1's order, "I
+agree with the defaults for all the questions", with IQ1–IQ6 left blank, so
+Default). Nothing here is a decision
 until the session that builds it numbers it in `SCHEMA.md` §4. Its sessions
 are `I`_n_ (I for impact) and its questions `IQ`_n_ (§5). Its orders are in
 `plans/motion/`.
@@ -71,7 +73,7 @@ from it instead of inventing one.
 
 | Session | What a player or GM gets | Tier · app | Waits on |
 |---|---|---|---|
-| **I1 — What it changed** · order drafted 2026-11-24: [`I1-what-it-changed.md`](motion/I1-what-it-changed.md) | The kit. On the sheet, every tracker readout counts to its new value and the change floats off the one you touched: HP, Sanity, Luck, SFR, a named pool, Çredits. A hit fills its Health Levels left to right; a meter's lost part lingers for a beat; a heal gets one quiet green line. Undo stays still | *Rule or shape* · minor | Ken's approval |
+| **I1 — What it changed** · order drafted 2026-11-24: [`I1-what-it-changed.md`](motion/I1-what-it-changed.md), approved 2026-11-24 (Ken: IQ7–IQ10 Default) | The kit. On the sheet, every tracker readout counts to its new value and the change floats off the one you touched: HP, Sanity, Luck, SFR, a named pool, Çredits. A hit fills its Health Levels left to right; a meter's lost part lingers for a beat; a heal gets one quiet green line. Undo stays still | *Rule or shape* · minor | the builder |
 | **I2 — The night's end** | Log session writes the night into History: the row drops in, its title prints, its IP and MP take a gold stamp, and the Milestone count draws its new point. At a Minor Milestone (5, 15, 25 MP) a small gold burst and its plate; at a Major (10, 20, 30 MP) every point lights in turn, a bigger burst, and the Major plate prints in, both ending on **Choose**. A Milestone taken settles into the list. Lock & Export rings three times when the wizard's last step is done | *Rule or shape* · minor | I1 merged |
 | **I3 — Across the table** | GM mode: Next turn slides the cyan edge to the row acting now, and a new round takes a stamp. A clock's + draws its segment in, and *Full* takes the TAG's stamp. A row that goes down fades back instead of snapping, *Down* takes a stamp and Tonight's chip slides in. Writing a close-out turns the draft lines into register lines one seat at a time, a seat that crosses a Major gets a small burst, and the session takes its *Written* stamp | *Rule or shape* · minor | I2 merged (the register line and burst are I2's) |
 | **I4 — A file reads in** (W62) | Opening a character, a table or a pack reads the file's real contents onto the screen for about a second: the name, the archetype and TAG (or the table's or pack's own lines), the counts, what was repaired. Any tap or key finishes it; a second load of the same file in a sitting gives the summary only; a refused file drops the fiction and says what to do | *Rule or shape* · minor, and the lines are `appCopy` with a voice pass | I1 merged |
@@ -121,7 +123,8 @@ code, so it can go any time after I1.
 
 ## 5. Questions for Ken
 
-Each has a default; one left blank is answered "Default".
+Each has a default; one left blank is answered "Default". **All six are
+Default** (Ken left them blank when he approved I1, 2026-11-24).
 
 - **IQ1 — The set and its order.** I1 to I4 as §3 says. *Default: yes.*
 - **IQ2 — Tab settle.** Leave it out (§4). *Default: out.*

@@ -8,7 +8,7 @@ and, after trying it: "These are all awesome. They add some flair and impact."
 
 **Built on:** Decision 117 (a hit flashes what it changed, once), 163 (the take-once of `S.issued`), 164 (`keepPlace`), 166 (`syncVitals`), 313 (named pools' cards), 315 (spend an amount).
 
-**Status: drafted 2026-11-24** by Claude (Opus), in the session that built the Motion Lab. **Not yet approved.** Ken answers the plan's IQ1–IQ6 (`../motion.md` §5) and this order's IQ7–IQ10 (§4); a blank one is "Default".
+**Status: drafted 2026-11-24** by Claude (Opus), in the session that built the Motion Lab. **Approved by Ken 2026-11-24, in that session:** "I agree with the defaults for all the questions in the work order 'what it changed'". So IQ7–IQ10 are Default. The plan's IQ1–IQ6 (`../motion.md` §5), which this order builds on (IQ6 most of all), were left blank, so they're Default too (`WORK-ORDERS.md`, step 3).
 
 **Branch:** cut from `origin/main` at the pre-flight commit. PR to `main`. Nothing ships switched off.
 
@@ -100,7 +100,7 @@ N. **What an action changes on the sheet moves once: its numbers count to where 
 
 ## 4. Questions for Ken
 
-Answered before the build starts. A blank one is "Default".
+All four answered **Default** (Ken, 2026-11-24).
 
 - **IQ7 — Which readouts count.** HP, Sanity, Luck, SFR, each named pool, Çredits. Not CRANK's rep (it moves between sessions, not mid-scene), not IP or MP (I2). *Default: those six.*
 - **IQ8 — The float for Çredits.** `−Ç200` and `+Ç200`, the sign first, as the ledger writes an amount. *Default: yes.*
