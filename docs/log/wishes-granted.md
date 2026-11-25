@@ -1069,6 +1069,31 @@ These build on the modal primitive (`openModal`, Decision 111), whose first
 user is the spell picker. They belong in that primitive or the picker's
 shared renderer, so the sheet and the wizard both get them.
 
+**W156 — Help on the character sheet: what each tab is for, every word it uses, and a switch for the guide lines.** → *help-on-the-sheet K1–K5, app 0.70.0–0.76.1, Decisions 289, 291, 298, 306–307 (2026-11-24)* *Ken, 2026-11-14 · 💡 · Rule or shape*\
+**Plan:** [help-on-the-sheet K1–K5](../plans/archive/help-on-the-sheet.md), closed 2026-11-25
+
+Ken wants this as a plan of its own, after the finding-things plan (`plans/archive/finding-things-on-the-sheet.md`, closed). GM mode has Help on every page (Decision 278, S31): a **?** in the header and the **?** key open a panel for the page that's open, read from `gmGuide` in the data. It says what the page is for, when it's used, and the words on it. A **Guide lines** switch turns each section's one-line guide off once a GM knows the ground. The player's sheet has no such thing.
+
+**What the player feels today.** The sheet now names a lot of the game:
+- E8 made the rules' own words tappable inside the sheet's lines (`gameTerms`).
+- Decision 139 put a tip on every rule the sheet names.
+- E5 rewrote the tab intros in the city's voice.
+
+But a new player opening Trackers or Progression still has nowhere to ask what the tab is *for*, why its numbers are there, or what a word means before they meet it in a line. The intros are always on, so a player who knows the sheet can't put them away.
+
+**The idea.** Do for the sheet what S31 did for the table:
+- a **?** that opens Help for the tab that's open: what it's for, when you use it (making the character, at the table, between sessions), and the words on it, each with its tip;
+- an *Every word* page that lists the game's terms once, from the same data the tips read;
+- a **Guide lines** switch that hides the tab intros and section notes, remembered by this browser like GM mode's `shadows.ui.gmGuide`.
+
+*To respect:*
+- **The copy lives in the data** (Decision 71, `appCopy`, beside `gmGuide`), in NYTE voice per `VOICE-APP.md`. Help is tool voice where the player is stuck.
+- **The words come from what the tips already read** (`gameTerms`, Decision 139's tips, the Stat and Condition entries), defined once. A glossary must not become a second copy that drifts (Decision 135).
+- **The switch is view state, not character state.** It goes in browser storage like `gmGuide`, never in the `.shadows.json` (constraint 7).
+- **GM mode's seat sheet draws the player's tabs** (Decision 256). Decide whether a seat shows the player's Help or the table's.
+- **The phone** (E6): S31's review found Help's foot about 530px below the fold on a phone. Since K4 (Decision 306) Help's tabs are at its top and stay there.
+- **Rules questions go to Deighton.** If a definition has to say something the CRB doesn't, it's a flag, not copy.
+
 **W23 — Clicking anywhere on a row picks it.** *Ken · → Decision 112, app 0.20.0*
 In the spell picker, only the small button at the end of a row acts. The
 whole row should: Add, Choose, Remove or Link yours, whichever the row's
@@ -1487,7 +1512,7 @@ against `0450` and Redeemed is an open book question (the CRB folder's HANDOFF f
 *Built as S25: Reputation is the book's (4 points, max 3, creation only, 5 / 12 / 20), Burned is new, and the start is written once at the lock as a ledger line, not computed (GQ49). A saved rank-4 Reputation reads as 3 and writes nothing. Burned's buy-off against `0450` and Redeemed is still the open book question; the sheet leaves the IP buy-off as it was.*
 
 **W154 — GM mode's seat sheet reads as read-only in its intros.** → *K3, app 0.73.0, Decision 298 (2026-11-18)* *Ken, from E5's review, 2026-11-13 · 🔧 · Fix*\
-**Plan:** [help-on-the-sheet K3](plans/help-on-the-sheet.md)
+**Plan:** [help-on-the-sheet K3](../plans/archive/help-on-the-sheet.md)
 
 The seat sheet draws the player's tabs, so its Progression intro says "Log a session when it truly ends…" on a sheet nobody can
 log on. A seat's intro could read as what the table sees, not what the player does. *To respect:* the seat sheet draws the same

@@ -14,7 +14,7 @@
 
 **Branch:** cut from `origin/main` at the pre-flight commit. PR to `main`. Nothing ships switched off.
 
-**Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../WORK-ORDERS.md). The conductor starts **K4 build** (Sonnet), then a fresh **K4 review** (Opus) once the PR is open. §15 is the hand-over.
+**Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../../WORK-ORDERS.md). The conductor starts **K4 build** (Sonnet), then a fresh **K4 review** (Opus) once the PR is open. §15 is the hand-over.
 
 **Runs alone.** It touches `shared.js` (the panel, `jumpTo`, `anchorKept`, the popover and tip placement), `gm.js` (Help's body and 50 jumps to the top), `sheet.js` (Help's body, the vitals head, 6 jumps), `app.js` (2 jumps, the wizard's vitals head), `wizard.js` (2 jumps), `shadows.css`, `shadows-data.js` (`gmGuide.ui`, `sheetGuide.ui`), `tools/phone-check.mjs`, the tests and the docs. It's no engine change. **`gmGuide`'s copy moves only where this order says** (§8): the night's three entries and their three labels, from Deighton's notes; the tab labels; `ui.back` and the switch labels go. Everything else in it waits for the renames round (Round 3 on the S31 page), which edits the same strings.
 
