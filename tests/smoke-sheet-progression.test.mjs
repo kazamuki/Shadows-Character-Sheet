@@ -36,6 +36,19 @@ test("CRANK: Main's card reads 0 and Novice; the popover's Job done makes it 1, 
   assert.deepEqual(app.errors, []);
 });
 
+test("K5: Main's CRANK button is named from the walked outcome's data name, not a literal", () => {
+  const app = openSheet(lockedCharacter(), "trackers", { storage: CRANK_ON });
+  assert.equal(D.resources.crank.outcomes.find(o => o.id === "walked").name, "Abandoned");
+  const label = () => app.$('#main [data-crk="-2"]').textContent.trim();
+  assert.equal(label(), "Abandoned −2");
+  assert.doesNotMatch(app.$("#main").textContent, /Walked out/);
+  // Rename the outcome in the page's own data and render again: the button must follow it.
+  app.window.eval('SHADOWS_DATA.resources.crank.outcomes.find(o => o.id === "walked").name = "Bailed"');
+  app.click('[data-sec="main"]'); app.click('[data-sec="trackers"]');
+  assert.equal(label(), "Bailed −2", "the button doesn't read the outcome's name from data");
+  assert.deepEqual(app.errors, []);
+});
+
 test("Decision 296: walked out at 0 stays at 0; a Burned character below 0 reads Novice at half pay, in the card, the tip and Trackers", () => {
   const app = openSheet(lockedCharacter(), "trackers", { storage: CRANK_ON });
   app.click('#main [data-crk="-2"]');

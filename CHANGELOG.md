@@ -24,6 +24,18 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.76.1
+
+### Character sheet
+
+- **CRANK's −2 job is called Abandoned**, as the rulebook calls it, on Main, on Trackers and in CRANK's own description.
+- **Skills says Synergy Bonus**, and its Help reads the way you roll: 1d10 + that total.
+- **The armor line on Trackers** says where to get it: buy it or wear it under Loadout.
+
+### GM mode
+
+- **The job form** says "abandoned" where it used to say "walked out".
+
 ## v0.76.0 — 2026-11-24
 
 ### Character sheet
