@@ -1,7 +1,7 @@
 # State of the build
 
 **Updated:** 2026-11-24
-**Versions:** app `0.77.0` · game data `0.60` · character schema `0.35` · table schema `0.22` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
+**Versions:** app `0.78.0` · game data `0.60` · character schema `0.35` · table schema `0.22` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -108,7 +108,7 @@ economics) are in `plans/archive/`.
 - **The `/impeccable audit`** of the whole app is its own read-only session; Ken triages its report.
 - **GM mode, what's next** (`plans/gm-mode-next.md`): Scott's play report first (S22), then Ken's pick.
 - **Loadout and gear** (`plans/loadout-and-gear.md`): ends with natural-weapon follow-ons, each waiting on an answer: L8 the Werewolf's damage (LQ40), L9 a trained weapon as natural (W160), L10 hand cyberware (W90). Bone Spines' grappling waits on Deighton (F55).
-- **Motion** (`plans/motion.md`): approved; I2's order is approved and building.
+- **Motion** (`plans/motion.md`): approved; I3 (GM mode's beats) is next, and I4 after it.
 - **Closed plans** are in `plans/archive/`; finding-things left W152–W157 and W159, powers-that-run W132's last two powers (`plans/crb-catch-up.md`), pools-and-numbers (J1–J4, 312–315, released in 0.76.0) F56 for Deighton, and help-on-the-sheet (K1–K5) W177, removing Burned without Admin mode (with Scott), and Deighton's read of the sheet's Help copy.
 - **W90**, cybernetics: six questions before a plan.
 

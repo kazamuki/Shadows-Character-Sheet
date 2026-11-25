@@ -603,3 +603,15 @@ test("K4: nothing but the page's scroll helpers scrolls or reads the window's sc
     assert.deepEqual(bad, [], `${f}: the window's scroll is read or moved outside the page helpers (use scrollPageTop / pageScrollTo / pageScrollBy)`);
   }
 });
+
+// Decision 317 (I2): a loop is how motion gets annoying. The Admin banner's dot used to pulse forever; it holds still now, and a
+// button that becomes the next thing to do rings three times, once (the ring is `animation: … 3`, never `infinite`).
+test("the Admin dot holds still, and nothing in the night's end loops (Decision 317)", () => {
+  const css = readFileSync(join(ROOT, "src/styles/shadows.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  assert.doesNotMatch(css, /pulseDot/, "the pulseDot keyframes are back");
+  const dot = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(m => /\.admin-banner \.dot\b/.test(m[1]));
+  assert.ok(dot.length >= 1, "the dot's rule is gone");
+  for (const m of dot) assert.doesNotMatch(m[2], /animation/, `.admin-banner .dot animates: ${m[2]}`);
+  const loops = [...css.matchAll(/([^{}]+)\{([^{}]*animation[^{}]*infinite[^{}]*)\}/g)].map(m => m[1].trim()).filter(s => /beat-|\.night|\.mp-pip|\.ms-plate|data-lock/.test(s));
+  assert.deepEqual(loops, []);
+});

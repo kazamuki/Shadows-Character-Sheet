@@ -885,6 +885,84 @@ const seed = JSON.stringify({ ch: lockedCharacter("arcanist", 0, ["long-lived"],
 const majorSeed = JSON.stringify({ ch: lockedCharacter("professional", 10), section: "main" });
 const MAJOR = "progression: a Major";
 
+// I2 (Decision 317): where the night's end lands, measured in a real layout (jsdom has none, and I1's float went wrong twice for want of
+// this). Log a session at 4 MP (a Minor) and at 9 MP (a Major), at 1280px and 375px: the register line above the track and inside the
+// viewport, the Minor burst on the new point, the Major burst inside the track, the plate on the Log block's content edge, each
+// float's right edge at its number's, and no sideways scroll. Then once under reduced motion (nothing running a frame after the log)
+// and once in the light theme (the plate's line and title resolve to the light theme's gold, read with getComputedStyle).
+const NIGHT_WIDTHS = [{ name: "1280px", width: 1280, height: 900 }, { name: "375px", width: 375, height: 812 }];
+async function nightFloors(browser, file, rows) {
+  const make = n => { const ch = lockedCharacter("arcanist", 0); ch.sessions = Array.from({ length: n }, (_, i) => ({ date: `2026-10-${String(i + 1).padStart(2, "0")}`, title: `Night ${i + 1}`, ipEarned: 10, milestonePoint: true, notes: "" })); return ch; };
+  const run = async (w, n, { reduced = false, light = false } = {}) => {
+    const c = await browser.newContext({ viewport: { width: w.width, height: w.height }, reducedMotion: reduced ? "reduce" : "no-preference", colorScheme: light ? "light" : "dark" });
+    await c.addInitScript(([s, theme]) => { try { localStorage.setItem("shadows.active.v1", s); if (theme) localStorage.setItem("shadows.theme", theme); } catch (e) {} }, [JSON.stringify({ ch: make(n), section: "main" }), light ? "light" : null]);
+    const page = await c.newPage(), errors = [];
+    page.on("pageerror", e => errors.push(e.message));
+    await page.goto(pathToFileURL(file).href);
+    await page.click("[data-open]");
+    await page.click('#topnav [data-sec="progression"]');
+    await page.fill("[data-sestitle]", "Dead Air");
+    await page.fill("[data-seshours]", "2");
+    await page.click("[data-seslog]");
+    await page.waitForTimeout(reduced ? 120 : 330);   // the burst is in by the first frame and lives to ~1.2s; the floats to .75s
+    const m = await page.evaluate(({ major, reduced, light }) => {
+      const bad = [], near = (a, b, t, what) => { if (Math.abs(a - b) > t) bad.push(`${what}: ${Math.round(a)} vs ${Math.round(b)}`); };
+      const R = el => el && el.getBoundingClientRect(), $ = s => document.querySelector("#main " + s);
+      const info = {};
+      const line = $(".night-line"), track = $(".mp-track"), plate = $(".ms-plate"), block = line && line.closest(".review-block");
+      if (!line || !track || !plate) { bad.push("the strip is missing a part"); return { bad, info }; }
+      const vw = document.documentElement.clientWidth;
+      if (!(R(line).bottom <= R(track).top + 1)) bad.push("the register line isn't above the track");
+      if (R(line).right > vw + 0.5 || R(line).left < -0.5) bad.push("the register line leaves the viewport");
+      const bs = getComputedStyle(block), edge = R(block).left + parseFloat(bs.borderLeftWidth) + parseFloat(bs.paddingLeft);
+      near(R(plate).left, edge, 2, "the plate's left edge vs the Log block's content edge");
+      if (R(plate).right > vw + 0.5) bad.push("the plate leaves the viewport");
+      // Each float's right edge is its number's right edge (measured from the text, as the float itself is placed).
+      for (const k of ["ip", "mp"]) {
+        const f = $(`.trk[data-float="${k}"] .beat-float`);
+        if (!f) { if (!reduced) bad.push(`no ${k} float`); continue; }
+        const num = $(`.trk[data-float="${k}"] [data-count="${k}"]`), rg = document.createRange(); rg.selectNodeContents(num.closest(".big") || num);
+        near(R(f).right, rg.getBoundingClientRect().right, 6, `the ${k} float's right edge vs its number's`);
+      }
+      const burst = $(".beat-burst");
+      if (reduced) {
+        if (burst) bad.push("a burst under reduced motion");
+        if (document.getAnimations().length) bad.push(`${document.getAnimations().length} animation(s) running under reduced motion`);
+      } else if (!burst) bad.push("no burst");
+      else if (major) {
+        const b = R(burst), t = R(track);
+        if (!(b.left >= t.left - 1 && b.left <= t.right + 1 && b.top >= t.top - 1 && b.top <= t.bottom + 1)) bad.push("the Major burst isn't inside the track");
+        info.rays = [...burst.querySelectorAll("i")].every(i => { const r = R(i); return r.left >= -1 && r.right <= vw + 1; });
+        if (!info.rays) bad.push("a Major ray leaves the viewport");
+      } else {
+        const pip = $('[data-pip="5"]'), p = R(pip), b = R(burst);
+        near(b.left, p.left + p.width / 2, 6, "the Minor burst's x vs pip 5's centre");
+        near(b.top, p.top + p.height / 2, 6, "the Minor burst's y vs pip 5's centre");
+      }
+      const de = document.documentElement;
+      if (de.scrollWidth !== de.clientWidth) bad.push(`the page scrolls sideways by ${de.scrollWidth - de.clientWidth}px`);
+      if (light) {
+        const probe = document.createElement("i"); probe.style.color = "var(--gold)"; document.body.appendChild(probe);
+        const gold = getComputedStyle(probe).color; probe.remove();
+        const title = getComputedStyle(plate.querySelector(".ms-title")).color, line1 = getComputedStyle(plate).borderTopColor;
+        if (title !== gold) bad.push(`the plate's title is ${title}, the light theme's gold is ${gold}`);
+        if (line1 !== gold) bad.push(`the plate's line is ${line1}, the light theme's gold is ${gold}`);
+        if (gold === "rgb(242, 201, 76)") bad.push("the light theme still resolves --gold to the dark theme's gold");
+        info.gold = gold;
+      }
+      return { bad, info };
+    }, { major: n === 9, reduced, light });
+    await c.close();
+    return { bad: [...m.bad, ...errors.map(e => `page error: ${e}`)], info: m.info };
+  };
+  for (const w of NIGHT_WIDTHS) {
+    for (const [label, n, opts] of [["a Minor", 4, {}], ["a Major", 9, {}], ["reduced motion", 4, { reduced: true }], ["reduced motion, a Major", 9, { reduced: true }], ["light theme", 4, { light: true }], ["light theme, a Major", 9, { light: true }]]) {
+      const r = await run(w, n, opts);
+      rows.push({ width: w.name, screen: `night's end: ${label}`, layout: r.bad.length ? r.bad.join("; ") : `ok${r.info.gold ? ` (--gold ${r.info.gold})` : ""}`, ok: !r.bad.length });
+    }
+  }
+}
+
 const browser = await launch();
 // K4 (Decision 307): from 1280px the page scrolls in #app, not the window. `__pg()` is whichever box scrolls, as the app's pageScroller() says,
 // in every page this run opens; each scroll and each read of the scroll position below goes through it.
@@ -1065,6 +1143,7 @@ try {
   await weaponFloors(browser, file, rows);
   await sheetHelp(browser, file, rows);
   await printFloors(browser, file, rows);
+  await nightFloors(browser, file, rows);
   // P16 (Decision 246): the Character tab's layout. jsdom has no layout, so this is where it's held.
   for (const w of LAYOUT_WIDTHS) {
     for (const f of characterFixtures()) {

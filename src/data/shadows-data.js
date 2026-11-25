@@ -4190,6 +4190,7 @@ window.SHADOWS_DATA = {
     "tagless": { "label": "Off grid", "text": "TAGless: no government identity, no 625Ç UBI, business done in skrip." }
   },
   "appCopy": {
+    "msPlate": { "lineIp": "+{n} IP", "lineMp": "+{n} MP", "untitled": "{date}", "minorTitle": "Minor Milestone", "majorTitle": "Major Milestone", "left": "{n} to pick", "choose": "Choose", "minorReady": "Minor Milestone ready", "majorReady": "Major Milestone ready" },
     "termLightPenalty": "Attacks against targets in {name} areas take {n}.",
     "termLightNone": "Attacks against targets in {name} areas take no penalty.",
     "termPainPenalties": "{s} Skill checks · {e} Essence dice · {b}% Breaker",

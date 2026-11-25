@@ -359,6 +359,8 @@ The Night-Shift Readout itself: the numbers a player comes back for.
 - **Stat cells:** icon, mono id, Oxanium score, a green or magenta modifier.
 - **Hit landing:** one magenta flash (.7s, ease-out) on each Health Level box as it fills, 60ms apart, on the HP readouts, and twice on the Pain readouts when the Pain Level rose. A heal gets one green line (.35s) instead. Never on undo, never under reduced motion.
 - **Counting:** a tracker's readouts count to their new value over .3s, and the change floats off the one in view, in the colour of what it is. A meter on Main holds its lost part for .25s before it drains. The right number is in the page from the first frame.
+- **The night's end:** under Log session, the night's register line prints in and its IP and MP stamp gold, and History's new row drops in quietly. The Milestone track draws its new point. A Minor gets a small gold burst and its plate; a Major lights every point in turn and gets the one beat past a second (about 1.3s; a tap skips it). The plate holds still while a Milestone is owed and ends on Choose.
+- **Nudge:** a button that becomes the next thing to do rings three times, once a sitting, then holds still. Nothing loops: the Admin dot holds still.
 
 ### Tips, toasts and the modal
 - **Tip:** Raised Panel, 4px, a 3px cyan left edge, the floating shadow, a mono caps title in cyan, a gold note line when a rule is flagged. It opens on hover, focus or tap, and stays put when pinned.

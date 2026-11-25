@@ -90,7 +90,7 @@ const normSection = s => s==="admin" ? (S.admin?"admin":"main")
 let S = { screen:"home", ch:null, step:0, maxReached:0, section:"main", admin:false };
 // One way home (W64): the wizard, the sheet's menu and the GM table all land
 // here. A character is already saved by every update(), so nothing is lost.
-function homeState(){ return { screen:"home", ch:null, step:0, maxReached:0, section:"main", admin:false }; }
+function homeState(){ return { screen:"home", ch:null, step:0, maxReached:0, section:"main", admin:false, lockRung:S && S.lockRung }; }
 function goHome(){ S=homeState(); renderHome(); }
 
 // W59: one polite live region, outside #main (which every render replaces),
@@ -386,8 +386,31 @@ function beatReads(ch){
   put("luck", ()=>{ const x=Engine.luckState(ch); return { v:x.current, max:x.max }; });
   put("sfr", ()=>{ const sf=Engine.sfr(ch); return sf && sf.value!=null ? { v:Math.max(0, sf.value-(ch.trackers.sfr.spent||0)), max:sf.value } : null; });
   put("cred", ()=>({ v:Number(ch.trackers.credits.current)||0 }));
+  // Decision 317 (I2): IP and Milestone Points count too, wherever they are drawn as a number.
+  put("ip", ()=>({ v:Engine.ipState(ch).available }));
+  put("mp", ()=>({ v:Engine.milestoneState(ch).mp }));
   try { poolCardsOf(ch).forEach(c=>put("pool:"+c.panel.id, ()=>({ v:c.t.shown, max:c.t.max }))); } catch(e){}
   return r;
+}
+// Decision 317 (I2): what a commit did to the night. Each is read apart, so a hostile file loses only the part it breaks.
+// `logged`: a session was added. `opened`: how far Minor and Major slots rose, read from the data's own cadence and the
+// character's grants (milestoneState), never from MP against a number. `taken`: the journal row just added.
+function nightFrom(before, ch){
+  const n = x => x && Array.isArray(x.sessions) ? x.sessions.length : 0;
+  let logged=false, opened=null, taken=null;
+  try { logged = n(ch)===n(before)+1; } catch(e){}
+  try {
+    const a=Engine.milestoneState(ch), b=Engine.milestoneState(before);
+    const minor=a.minorAvail-b.minorAvail, major=a.majorAvail-b.majorAvail;
+    if (minor>0 || major>0) opened={ minor:Math.max(0, minor), major:Math.max(0, major) };
+  } catch(e){}
+  try {
+    const m=ch.progression.milestones, o=before.progression.milestones;
+    for (const kind of ["minor", "major"]){
+      if (Array.isArray(m[kind]) && Array.isArray(o[kind]) && m[kind].length===o[kind].length+1){ taken={ kind, index:m[kind].length-1 }; break; }
+    }
+  } catch(e){}
+  return { logged, opened, taken };
 }
 // What a commit changed, for the render after it. null unless ch is locked and something moved.
 function beatsFrom(before, ch){
@@ -397,9 +420,10 @@ function beatsFrom(before, ch){
     Object.keys(a).forEach(k=>{ if (b[k] && a[k].v!==b[k].v) counts[k]={ from:b[k].v, to:a[k].v, max:a[k].max }; });
     const hb=Engine.hlState(before), ha=Engine.hlState(ch), was=hlCells(before), cells=[];
     hlCells(ch).forEach((c,i)=>{ const from=was[i] ? was[i].frac : 0; if (from!==c.frac) cells.push({ i, from, to:c.frac }); });
-    if (!Object.keys(counts).length && !cells.length) return null;
+    const night=nightFrom(before, ch);
+    if (!Object.keys(counts).length && !cells.length && !night.logged && !night.opened && !night.taken) return null;
     const up=ha.damage>hb.damage || ha.massive>hb.massive;
-    return { counts, cells: up ? cells : cells.reverse(), healed: ha.damage<hb.damage && !up };
+    return { counts, cells: up ? cells : cells.reverse(), healed: ha.damage<hb.damage && !up, ...night };
   } catch(e){ return null; }
 }
 // The number, wrapped so playBeats finds every twin. `text` is already formatted and escaped by the caller.
@@ -409,16 +433,19 @@ function stopBeats(){
   if (beatRun){
     if (beatRun.raf && typeof cancelAnimationFrame==="function") cancelAnimationFrame(beatRun.raf);
     beatRun.timers.forEach(clearTimeout);
+    if (beatRun.off) beatRun.off();
     beatRun=null;
   }
-  document.querySelectorAll(".beat-float, .beat-tail").forEach(el=>el.remove());
+  document.querySelectorAll(".beat-float, .beat-tail, .beat-burst").forEach(el=>el.remove());
 }
 const beatKeyed = (root, attr, key) => root ? [...root.querySelectorAll(`[${attr}]`)].find(e=>e.getAttribute(attr)===key) : null;
-const beatText = (key, n) => key==="cred" ? numText(Math.round(n)) : String(Math.round(n));
+const beatText = (key, n) => key==="cred" || key==="ip" ? numText(Math.round(n)) : String(Math.round(n));
 
 // The post-render pass. Reads beatsNow, clears it, returns nothing. A no-op when there is none, or under reduced motion.
 function playBeats(){
   const b=beatsNow; beatsNow=null;
+  // The screen reader hears a Milestone open whether or not anything moves (Decision 317): reduced motion drops the motion, not the news.
+  if (b && b.opened) announce(msCopy(b.opened.major>0 ? "majorReady" : "minorReady"));
   if (!b || calm() || typeof requestAnimationFrame!=="function") return;
   stopBeats();
   const run=beatRun={ raf:0, timers:[] };
@@ -484,6 +511,7 @@ function playBeats(){
       later(()=>{ tail.style.transition=`width ${BEAT_TAIL_MS}ms ease-out`; tail.style.width=bar.style.width||"0%"; }, BEAT_TAIL_HOLD);
       later(()=>tail.remove(), BEAT_TAIL_HOLD+BEAT_TAIL_MS+50);
     });
+    playNight(b, run);
     const step=t=>{
       const k=Math.min(1, Math.max(0, (t-t0)/BEAT_COUNT_MS)), e=1-Math.pow(1-k, 3);
       live.forEach(it=>{ if (it.el.isConnected && it.el.hasAttribute("data-from")) it.el.textContent=beatText(it.key, it.from+(it.to-it.from)*e); });
@@ -491,6 +519,69 @@ function playBeats(){
     };
     run.raf=requestAnimationFrame(step);
   });
+}
+
+// ── The night's end (Decision 317, I2) ─────────────────────────────────────
+// Under Log session the strip holds the night's register line, the Milestone track and, while one is owed, the plate (sheet.js).
+// The line and the plate are state, drawn from the character on every render; this is the beat on top of them: the new point
+// draws in, a Minor gets a small burst, a Major lights every point in turn and a bigger one. Everything here runs in the first
+// frame, so a pane that never draws shows the right strip and nothing else; nothing is measured after it's inserted.
+const MS_LINE_MS=350, MS_FLASH_STEP_MS=50, MS_MAJOR_END_MS=1000;
+const msCopy = k => ((D.appCopy||{}).msPlate||{})[k] || "";
+function playNight(b, run){
+  const strip=document.querySelector("#main [data-night]");
+  if (!strip || !(b.opened || (b.counts && b.counts.mp))) return;
+  const later=(fn, ms)=>run.timers.push(setTimeout(fn, ms));
+  const base=b.logged ? MS_LINE_MS : 0;                         // a manual point has no line to wait for
+  const major=!!(b.opened && b.opened.major>0), minor=!major && !!(b.opened && b.opened.minor>0);
+  const keyed=n=>[...strip.querySelectorAll("[data-pip]")].find(e=>e.getAttribute("data-pip")===String(n));
+  const track=strip.querySelector(".mp-track"), plate=strip.querySelector(".ms-plate");
+  const delay=(el, ms)=>{ el.style.animationDelay=`${ms}ms`; };
+  // The new point draws in left to right.
+  const mp=b.counts && b.counts.mp, pip=mp && mp.to>mp.from ? keyed(mp.to) : null;
+  if (pip){ const i=pip.querySelector("i"); if (i){ i.classList.add("beat-draw"); delay(i, base); } }
+  // A burst's origin is measured against its host before the burst goes in (a ray inside the host would move the box).
+  const burst=(host, n, cls, x, y, ms, reach)=>{
+    const el=document.createElement("span");
+    el.className=`beat-burst${cls}`; el.setAttribute("aria-hidden","true");
+    el.style.left=`${Math.round(x)}px`; el.style.top=`${Math.round(y)}px`; el.style.setProperty("--bd", `${ms}ms`); el.style.setProperty("--reach", `${reach}px`);
+    for (let k=0; k<n; k++){ const r=document.createElement("i"); r.style.setProperty("--a", `${(k*360/n).toFixed(1)}deg`); el.appendChild(r); }
+    host.appendChild(el);
+    return el;
+  };
+  if (minor && plate){
+    let x=0, y=0;
+    try { const hr=plate.getBoundingClientRect(), pr=pip && pip.getBoundingClientRect(); if (pr){ x=pr.left+pr.width/2-hr.left; y=pr.top+pr.height/2-hr.top; } else { x=hr.width/2; y=0; } } catch(e){}
+    burst(plate, 8, "", x, y, base+200, 34);
+    plate.classList.add("beat-in"); delay(plate, base+200);
+  }
+  if (major){
+    const pips=[...strip.querySelectorAll("[data-pip]")];
+    pips.forEach((p, n)=>{ p.classList.add("beat-flash"); delay(p, base+n*MS_FLASH_STEP_MS); });
+    if (track){
+      let x=0, y=0;
+      try { const hr=track.getBoundingClientRect(); x=hr.width/2; y=hr.height/2; } catch(e){}
+      burst(track, 12, " major", x, y, base+250, 84);
+    }
+    if (plate){ plate.classList.add("beat-in"); delay(plate, base+500); }
+    // One tap or key finishes it, and still does what it does: capture, passive, never preventDefault (and it takes itself off).
+    const finish=()=>{
+      off();
+      strip.querySelectorAll(".beat-burst").forEach(e=>e.remove());
+      strip.querySelectorAll(".beat-flash, .beat-draw, .beat-in, .beat-print, .beat-stamp").forEach(e=>{ e.classList.remove("beat-flash", "beat-draw", "beat-in", "beat-print", "beat-stamp"); e.style.animationDelay=""; });
+      strip.querySelectorAll("[style*='animation-delay']").forEach(e=>{ e.style.animationDelay=""; });
+    };
+    const evs=["pointerdown", "keydown"];
+    const off=()=>{ evs.forEach(t=>document.removeEventListener(t, finish, { capture:true })); run.off=null; };
+    evs.forEach(t=>document.addEventListener(t, finish, { capture:true, passive:true }));
+    run.off=off;
+    later(()=>{ if (beatRun===run) off(); }, base+MS_MAJOR_END_MS);
+  }
+  // A burst takes itself off when it's done, and what the frame added is taken back off, so nothing waits to replay.
+  later(()=>{
+    strip.querySelectorAll(".beat-burst").forEach(e=>e.remove());
+    strip.querySelectorAll(".beat-flash, .beat-draw, .beat-in").forEach(e=>{ e.classList.remove("beat-flash", "beat-draw", "beat-in"); e.style.animationDelay=""; });
+  }, base+1050);
 }
 
 // W12 — undo where the action happened. Every commit() that changed something
