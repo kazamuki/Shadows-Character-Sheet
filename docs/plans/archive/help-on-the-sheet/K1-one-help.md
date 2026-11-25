@@ -1,12 +1,12 @@
 # Work order K1: one Help, on the sheet too
 
-**Plan:** [`../help-on-the-sheet.md`](../help-on-the-sheet.md) §3, row K1, and §2's shape. **Wishes:** [W156](../../WISHLIST.md) (Help on the sheet, its first part) and W150 (Help's polish, its layout half). **Built on:** [`../gm-mode-next/S31-help.md`](../gm-mode-next/S31-help.md), the order that built GM mode's Help. Decisions 139, 160, 166, 256, 272, 278, 281, 282, 287.
+**Plan:** [`../help-on-the-sheet.md`](../help-on-the-sheet.md) §3, row K1, and §2's shape. **Wishes:** [W156](../../../WISHLIST.md) (Help on the sheet, its first part) and W150 (Help's polish, its layout half). **Built on:** [`../gm-mode-next/S31-help.md`](../gm-mode-next/S31-help.md), the order that built GM mode's Help. Decisions 139, 160, 166, 256, 272, 278, 281, 282, 287.
 
 **Status: drafted 2026-11-15** by Claude (Opus). **Approved by Ken 2026-11-15, in the drafting session: "Approved, build it".** The plan's KQ1–KQ8 are answered (Ken, 2026-11-15: every default). **This order's KQ9–KQ12 are answered too (Ken, 2026-11-15, in the drafting session):** KQ10–KQ12 on their defaults, and KQ9 as Ken and Claude reshaped it: from 1280px Help is a column, as on a table, and with vitals pinned it takes their column while it's open, the vitals showing as the bar; it starts closed each visit (§4). Ken's standing requirement, from the plan: **the Guide lines switch is a must**, so a veteran player gets a clean sheet.
 
 **Branch:** cut from `claude/l4-order` at the approval commit, since this order and its plan aren't on `main` yet (L4's builder was cut the same way); PR to `main`. The PR carries that branch's docs commits until one of the two PRs lands them. Nothing ships switched off.
 
-**Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../WORK-ORDERS.md). The conductor starts **K1 build** (Sonnet), then a fresh **K1 review** (Opus) once the PR is open. §15 is the hand-over.
+**Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../../WORK-ORDERS.md). The conductor starts **K1 build** (Sonnet), then a fresh **K1 review** (Opus) once the PR is open. §15 is the hand-over.
 
 **Runs alone, or beside L4.** It touches `shared.js` (the panel, lifted), `gm.js` (Help's code moves out, and its host is what's left), `sheet.js` (`sheetHeader`'s lines), `app.js` (the sheet's header, a `?` key), `shadows-data.js` (`sheetGuide`, and three `appCopy` keys move into it), `shadows.css` (Help's rules, renamed off "a GM table's"), and the docs. L4 touches `sheet.js`'s Weapons table and print, `engine.js` and other data: the two collide only in versions, CHANGELOG's heading and decision numbers. Whichever merges second takes the next minor and the next decision number.
 
