@@ -9,6 +9,7 @@ This is the working document. It says where the build stands, what is in flight,
 and who can clear what. It is **rewritten, not appended** — if a line here is out
 of date it is a bug. History lives in `log/`; the authority on architecture,
 schemas, decisions and flags is `SCHEMA.md`; `INDEX.md` finds anything else.
+**What a plan built, and in which version, is in that plan's file**, not here.
 
 ---
 
@@ -27,9 +28,9 @@ decision; that's how this section reached 1,500 words (`log/archive.md` §4).
 - **The player sheet** is built and covered by tests: the whole wizard; every
   sheet tab; damage, Pain, armor, Conditions, healing and Take a hit; Sanity,
   Luck, Çredits, IP, Milestones and the session log; loadout with the gear
-  catalog; Expert mode; an undoable audit trail; a printable sheet, filled or
-  blank. Traits' effects are data (`grants`), computed where the engine can
-  and shown as tags everywhere.
+  catalog; Expert mode; Help and Guide lines; an undoable audit trail; a
+  printable sheet, filled or blank. Traits' effects are data (`grants`),
+  computed where the engine can and shown as tags everywhere.
 - **The archetypes**: the Professional and the Arcanist (`draft`), the
   Werewolf (`0414`) and the Vampire (`0413`), both `draft` with their Majors,
   and a player-written **Custom** one. The Cyborg is cut, still `tbd`, and
@@ -37,10 +38,12 @@ decision; that's how this section reached 1,500 words (`log/archive.md` §4).
   (240, 264) and play stops at 10 (194).
 - **Magic** (spells, Cascade, Aberrations, holding a spell) and **combat**
   are built end to end, and both plans are closed.
-- **GM mode** is **launched** in app 0.57.0 (260), on for everyone: a
-  table file with its cast, players and their characters as copies, packs and the Codex, encounters, sessions and the
-  close-out, the Reference, Find and Jot, undo, and keys; U1–U5 (269–272) made it work in play. The switch stays, on; tests reach its
-  switched-off path through the harness's `GM_OFF`. What's left is `plans/gm-mode-next.md`.
+- **GM mode** is **launched** (260), on for everyone: a table file with its
+  cast, players and their characters as copies, packs and the Codex,
+  encounters, sessions and the close-out, the Reference, Find and Jot, undo,
+  Help and keys. The switch stays, on; tests reach its switched-off path
+  through the harness's `GM_OFF`. A GM session is an ordinary batch, with its
+  changelog lines and an app bump.
 - **CRANK** reputation is on for everyone (239). Rep stops at 0 but for **Burned**; Reputation and Burned set a starting rep (295, 296).
 - The engine reproduces the CRB's worked examples (`tests/rules.test.mjs`),
   and a hostile file renders safely everywhere (`tests/hostile.test.mjs`).
@@ -53,38 +56,15 @@ on screen but not in Chrome's print/PDF output (Decision 94). Cosmetic only.
 
 ## 2. Shipped, and what it left behind
 
-The batch board is `log/shipped.md`. This section keeps only what shipped work
-left that is still true now.
+The batch board is `log/shipped.md`. **Demo hosting:**
+`charactersheet.shadowsrpg.com`, via GitHub Pages, deployed only by the
+**release** workflow (Decision 138). The live version is the latest `v*` tag.
+How to release is in `CLAUDE.md`, and only there.
 
-**Demo hosting:** `charactersheet.shadowsrpg.com`, via GitHub Pages, deployed
-only by the **release** workflow (Decision 138): from main with a version, a
-pushed `v*` tag, or a dry run on a branch. The live version is the latest
-`v*` tag. How to release is in `CLAUDE.md`, and only there.
-
-**Things a next session should know.**
-
-- **Name the change tier first** (`CLAUDE.md`). A Docs or Fix change doesn't
-  rewrite this file unless what's next changed. `.claude/skills/` walks the
-  procedures; `npm run bump` moves the app version; `test:fast` is the quick loop.
-- **Before proposing anything, search SCHEMA §4's Touches lines** for what it
-  touches, and read the Rejected and Revisit if of what you find (Decision 130).
-- **Two entries declare `excludes`, none `requires`:** Dwarf excludes Giant
-  (Deighton, 235) and Reputation excludes Burned (the book, 296). `requires` is tested against a
-  synthetic fixture. A new real pair is a rules question for Deighton (77).
-- **`grants()` reads advantages, disadvantages and taken Majors** (199);
-  a Major is looked up with `majorById`, never `majorGeneral` alone. Natural
-  Armor still scans for itself, specializations included (104).
-- **A number another table holds is a path** (`"powerLevel.x"`, read by
-  `Engine.dataPath`); a formula is `{ stat, times, plus }` (Decision 135).
-- **Proving a change invisible** (Decision 68): `node tools/outputs.mjs a.json`,
-  change it, then `--against a.json`. About four minutes each way.
-- **Reuse, don't copy:** `openPopover`, `openCatalog(kind)` over
-  `Engine.catalogLine`, `bindVitalControls(root)` (0.22), and `openModal`.
-- **Gear rows and weapon rows share a shape**: a catalog reference or
-  `custom: true`, and `migrate()` never guesses between them (Decisions
-  120–121).
-- **Retired text lives in `log/archive.md`**, verbatim: SCHEMA's old roadmap,
-  the closed-flag notes, and the data's old `meta.notes`.
+**The conventions a change follows** (`excludes`, `grants()`, data paths,
+proving a change invisible, the helpers to reuse, focus and redraws) are in
+`SCHEMA.md` §1, *Conventions*. Retired text lives in `log/archive.md`,
+verbatim.
 
 ---
 
@@ -98,39 +78,25 @@ is the authority on a flag's full text.
 
 | Area | Status | Waiting on |
 |---|---|---|
-| **Audit remediation** — `plans/archive/audit-2026-09-remediation.md` | ✅ S1–S7 done, every finding closed, plan closed | Nobody |
-| **Gear & Combat** — Conditions, damage, armor, mods, the hit, healing | ✅ built, plan closed; Deighton's 2026-10-10 rulings all built (P8a–P9b, Decisions 219–222) | Deighton: **F42** (which damage Resistance answers) |
-| **Custom archetype & classification** — `plans/archive/custom-archetype.md` | ✅ built and released (Decisions 152–156) | Nobody. W48–W55 are its follow-ons |
-| **Creation-pool economics** — W37 | ✅ built (Decisions 150, 157) | Nobody |
-| **Milestones** — F12, F32 | ✅ P6 built (Decision 217): any Minor repeats, each with its chooser | Ken: **F32** (Arcanist Majors; until then **Add one** is the stand-in) and **F12** |
-| **Advantages/Disadvantages fine print** | 🔶 mostly settled · F17 closed (97) · one `excludes` pair, Dwarf and Giant (235) | Deighton. The CRB names no other pair, so none is invented |
-| **Cyborg** — F6, F19 | ⏸ **cut as an archetype and retired from the picker** (Decision 277, E1b): a new character can't choose it, a saved one opens and plays as before; cybernetics become a list and a mini-game, Professionals only; data still `tbd` | Deighton's system is mirrored (`private/crb/Cybernetics_*`); **W90** holds the six questions before a plan. Then W61 folds saved Cyborgs into Custom and F6 and F19 close |
-| **Vampire** — `0413` | ✅ built (Decisions 200–202, 215, 223, 240, 264, 266): Bloodlines, the Thirst, 22 Majors; Base Powers and CP as the 2026-10-22 book prints; sustained powers run (Start/Stop, Turn Reset charges them) | Nobody. Whether it leaves `draft` is Ken's (the chapter dropped "Under Construction") |
-| **Werewolf** — `0414` | ✅ built (Decisions 195–197, 199, 215, 240, 264, 266): Origins, Form, Call of the Wild, its own Majors; Base Powers and CP as the book prints; its powers run only in Werewolf Form | Nobody. As the Vampire: `draft` is Ken's call |
-| **Arcanist / Magic** | 🔶 spells, Cascade, Aberrations, magic on the sheet, holding a spell (Decision 224), Disciplines as Boosts with their prerequisites (Decision 265) all built · Origins still `draft` | Deighton: **F43** (the held spell's check). Deighton + Scott + Bill + Ken: Origins and spheres/implements, after the four-way comparison; not blocking |
-| **GM mode** — `plans/gm-mode-next.md` | 🔶 **launched in 0.57.0** (260); its first plan (S1–S21) and GM-at-the-table (U1–U5: the encounter row, the Tonight strip, records that open to read, keys; 269–272, in 0.63.0–0.66.0) are built and archived, and **S31** (Help on every table page, 278) is built in 0.67.0, S24–S25, S11a, S23 and S11b (293–297, 299–302) in 0.73.0, S26 (303–305) in 0.74.0, S28 (308–310) in 0.75.0. | Scott: a session on the live version first (S22), then his to-dos (the plan's §4: Codex v2 for S12a and S17, the Site Profiles, the print files). Then Ken's pick. **Deighton's read of Help's words** (GQ39) arrives as edits to `gmGuide` in the data |
-| **The book** — `plans/crb-catch-up.md` | 📋 what the CRB still needs from the sheet, by chapter, re-checked against the mirror at `c99bb58` (2026-11-15). The four inscribed Cantrips follow it to TN 7 (Scott to confirm it's his change). FG-1 "Thunderclap" takes the book's Injured / Maimed (Ken, 2026-11-16; Deighton to see it, past his "2x+ Injured stands"). The 2026-11-12 rulings on Luck, spending SFR and "EM pulse" are in it; the sheet says the first two already, the GM Reference's SFR line ahead of the book (Decision 288) | Ken. The sheet-from-book syncs are closed (`plans/archive/`); the next mirror refresh gets a new one. Ken: the EMP *names* (the tag `EMP`, `EMP Shielding`, the EMP Tip, Forge Fang's weakness) wait on the book and on a `name` beside a glossary id. Deighton: whether a power that prints its own action (Vitality Surge's Fast Action, Odin's Aegis as a reaction, changing shape) keeps it under the free-SFR ruling |
-| **Print sheet — visual system** — `plans/print-sheet-scotts-look.md` | 📋 Scott's export landed 2026-09-23 (landscape) · front-page restyle proposed and mocked up · one known cosmetic defect | Ken: approve the plan. Scott said yes to PQ1 (embed Cerulean Nights) and PQ2 (all his artwork) and answered PQ4, 2026-11-03; he still has to send the files. Deighton: PQ3 (do the stat groups mean anything). The frame/texture print defect blocks on no one |
+| **Gear & Combat** | ✅ built, plan closed | Deighton: **F42** (which damage Resistance answers), **F48** (the book's ten untyped weapons) |
+| **Milestones** — F12, F32 | ✅ built: any Minor repeats, each with its chooser | Ken: **F32** (Arcanist Majors; until then **Add one** is the stand-in) and **F12** |
+| **Advantages/Disadvantages fine print** | 🔶 mostly settled · two `excludes` pairs (235, 296) | Deighton. The CRB names no other pair, so none is invented |
+| **Cyborg** — F6, F19 | ⏸ **cut and retired from the picker** (277): a saved one opens and plays as before; cybernetics become a list and a mini-game, Professionals only | **W90** holds the six questions before a plan. Then W61 folds saved Cyborgs into Custom and F6, F19 and F5 close |
+| **Vampire** — `0413` · **Werewolf** — `0414` | ✅ built as the 2026-10-22 book prints | Nobody. Whether they leave `draft` is Ken's (the chapters dropped "Under Construction") |
+| **Arcanist / Magic** | 🔶 built · Origins still `draft` | Deighton: **F43** (the held spell's check). Deighton + Scott + Bill + Ken: Origins and spheres/implements; not blocking |
+| **GM mode** — `plans/gm-mode-next.md` | 🔶 launched; built through S28 (the plan says what each session built) | Scott: a session on the live version first (S22), then his to-dos (the plan's §4). Then Ken's pick. **Deighton's read of Help's words** (GQ39) arrives as edits to `gmGuide` |
+| **The book** — `plans/crb-catch-up.md` | 📋 what the CRB still needs from the sheet, by chapter, against the mirror at `c99bb58` | Ken: the EMP *names* wait on the book. Scott: confirm the four inscribed Cantrips' TN 7 is his change. Deighton: whether a power that prints its own action keeps it under the free-SFR ruling, and FG-1's Injured / Maimed |
+| **Print sheet — visual system** — `plans/print-sheet-scotts-look.md` | 📋 front-page restyle proposed and mocked up | Ken: approve the plan. Scott: send the files (PQ1, PQ2). Deighton: PQ3 |
 
-F5 (Cyber-Prophetical) isn't its own row — it waits wholly on the cybernetics mini-game; don't ask it separately.
-
-Archetype status in the data: `arcanist: draft · professional: draft ·
-werewolf: draft · cyborg: tbd · vampire: draft`. The 2026-10-22 book dropped
-"Under Construction" from `0413` and `0414`; whether the two leave `draft` is Ken's call.
+Closed areas (audit remediation, the custom archetype, creation-pool
+economics) are in `plans/archive/`.
 
 ---
 
 ## 4. Open engineering work
 
-**The audit plan is done, S7 included.** `npm run phone-check` passes (140) after header work.
-- **Binders sit beside their renderers** (`wizard.js`, `sheet.js`); a migration that reshapes a row migrates the audit's patches too (142).
-- **The roster** (141): a character is `shadows.char.v1.<TAG>`; a test reads one
-  back with `stored()`. Seeding the old slot keys still works, through the migration.
-- **The flyout's state goes through `syncVitals`** (166), never by hand; a sideways row is a `.scroll-row` bound by `bindScrollRows` (165), which gives it the mouse wheel too. In jsdom, `boot({ width })` gives the page a `matchMedia`.
-- **A redraw a press causes goes through `keepPlace`** (164), or Enter there drops focus to `<body>`. **Reuse the tip** (139): a new "what does this mean" is a `TIPS` kind in
-  `shared.js`. Refusals are `notice()`, confirmations `askFirst()`.
-
-rev 9's `C1`–`C3` are still forward notes.
+**The audit plan is done**, and `npm run phone-check` passes (140). rev 9's
+`C1`–`C3` are still forward notes.
 
 ---
 
@@ -141,27 +107,22 @@ rev 9's `C1`–`C3` are still forward notes.
 **Next is Ken's pick**, each built through a work order (`WORK-ORDERS.md`):
 - **The `/impeccable audit`** of the whole app is its own read-only session; Ken triages its report.
 - **GM mode, what's next** (`plans/gm-mode-next.md`): Scott's play report first (S22), then Ken's pick.
-- **The vehicles-and-gear plan** (`plans/loadout-and-gear.md`) is approved (Ken, 2026-10-24, LQ1–LQ10 on their defaults); L1, L2, L2b, L3 and L5 are built.
-  L4 (Decision 290) and L5b (Decision 292) are built, in 0.70.0 and 0.72.0; Bone Spines' grappling waits on Deighton (F55).
-  Vehicles and Powered Armor (were L6, L7) left the plan 2026-11-15 (W91, W69). The plan ends with natural-weapon follow-ons, each waiting on an answer: L8 the Werewolf's damage (LQ40), L9 a trained weapon as natural (W160), L10 hand cyberware (W90).
-  The player sheet's plan (`plans/archive/sheet-wishlist.md`) closed 2026-10-24, P1–P21 built.
+- **Loadout and gear** (`plans/loadout-and-gear.md`): ends with natural-weapon follow-ons, each waiting on an answer: L8 the Werewolf's damage (LQ40), L9 a trained weapon as natural (W160), L10 hand cyberware (W90). Bone Spines' grappling waits on Deighton (F55).
 - **Motion** (`plans/motion.md`): approved, IQ1–IQ10 Default; I1's order is ready to build.
 - **Help on the sheet** (`plans/help-on-the-sheet.md`, W156): K1–K5 built (289, 291, 298, 306–307); left: removing Burned without Admin mode, its own order.
 - **Closed plans** are in `plans/archive/`; finding-things left W152–W157 and W159, powers-that-run W132's last two powers (`plans/crb-catch-up.md`), and pools-and-numbers (J1–J4, 312–315, released in 0.76.0) F56 for Deighton.
 - **W90**, cybernetics: six questions before a plan.
 
 **Ken alone:** F12 and F32, W38's plan (`plans/two-tabs-one-character.md`,
-TQ1–TQ3), and the print plan (`plans/print-sheet-scotts-look.md`). GM mode's
-GM mode is launched (260): a GM session is an ordinary batch now, with its changelog lines and an app bump.
+TQ1–TQ3), and the print plan (`plans/print-sheet-scotts-look.md`).
 
 **Waiting on others:**
-- **Deighton** answered every open rules question on 2026-10-10 (`reference/rulings-2026-10-10.md`). Still his: what a rank of Educated bought in play gives (F44: the IP buy refuses it until then), the TN and TH of the WILL check that keeps a held spell (F43), and whether a Supernatural's Skills and Powers share its stats' headroom past 10 (Ken asked). **One ruling on kickers may clear F46 and F47 together:** do dice stack, and which one is "your Kicker Die"; F45 is Concierge's appraising Skill. **F48** is which damage type the book's ten untyped weapons deal (bows, damaging grenades, the HRL-1 and HXC-1). **CRANK** is kept and back on for everyone (239, 2026-10-23); Scott's GQ7, F37 and GQ28 are built (S25, 295–296). Burned's buy-off against `0450` and Redeemed waits on the book.
+- **Deighton:** what a rank of Educated bought in play gives (F44: the IP buy refuses it until then), the held spell's WILL check (F43), and whether a Supernatural's Skills and Powers share its stats' headroom past 10. **One ruling on kickers may clear F46 and F47 together:** do dice stack, and which one is "your Kicker Die". F45 is Concierge's appraising Skill. Burned's buy-off against `0450` and Redeemed waits on the book.
 - **Deighton, on vehicles (W91, off the plan):** 17 of the 28 follow-up questions
-  (`reference/rulings-2026-10-23.md`), SH3 (a typed vehicle), VK1b (the Mods number),
-  and his in-person talk on vehicles without PROT and RES. The loadout plan's §6
-  lists everything else it asks him.
+  (`reference/rulings-2026-10-23.md`), SH3, VK1b, and his in-person talk on
+  vehicles without PROT and RES. The loadout plan's §6 lists the rest.
 - **GM mode's open questions** (`GQ`_n_) and who holds each: `plans/gm-mode-next.md` §5.
-- **Scott:** no questions left. He answered his page on 2026-11-03 (the Cantrips keep TN 7; he fixes the Book of Known Spells). What's his now is to-dos, listed in `plans/gm-mode-next.md` §4, a session on the live version first: he tells Ken when one is done, and nobody asks him to reopen the page. His TOL rewrite is in 0200 and 0400.
+- **Scott:** no questions left. What's his is to-dos (`plans/gm-mode-next.md` §4), a session on the live version first: he tells Ken when one is done, and nobody asks him to reopen a page.
 
 **Don't invest in** the Arcanist's creation-time Unique Aberrations: they
 follow `0411` (Decision 110), and Ken expects the Origins subtypes to replace
@@ -180,7 +141,9 @@ them.
 - **§3 is organized by topic, not by sequence, on purpose (2026-09-12).**
   Several areas are blocked on different people and resolve in whatever
   order those people answer. Don't reintroduce a `#` column to §3.
-- **Describe what shipped in `log/`, not here.** A paragraph about a finished
-  batch is history; this file keeps only what's still true and what's next.
+- **Describe what shipped in `log/` and the plan's file, not here.** A
+  paragraph about a finished batch, or a list of which session built what in
+  which version, is history; this file keeps only what's still true and
+  what's next.
 - **Rewrite §1–§5 when the change tier says so** (`CLAUDE.md`), in the same
   commit as the work.
