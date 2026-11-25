@@ -13426,6 +13426,13 @@ const spans = t => J(Engine.termSpans(t));
 const J = v => JSON.parse(JSON.stringify(v));
 const e8Hurt = () => { const ch = subject({ bod: 8 }); ch.trackers.damage = 5 * Engine.health(ch).hpPer + 2; return ch; };   // five Health Levels gone: Pain Level 2
 
+test("K5: Synergy Bonus is one tip trigger, not Synergy alone (the Skills rule line says it)", () => {
+  assert.match(D.appCopy.introSkills, /Synergy Bonus/, "the Skills rule line doesn't say Synergy Bonus");
+  // Only the first of each term's forms in a sentence is a trigger, so the form is proved on a sentence where it leads.
+  const s = spans("Its Synergy Bonus adds to the roll.").filter(x => x.id === "skill-check");
+  assert.deepEqual(s.map(x => [x.start, x.end]), [[4, 17]], "Synergy Bonus isn't a single trigger");
+});
+
 test("E8 1: termSpans finds each listed term once, whole words, longest first", () => {
   assert.equal(typeof Engine.termSpans, "function", "Engine.termSpans doesn't exist");
   const dd = spans("No Dim or Dark penalty on visual checks");
