@@ -28,6 +28,7 @@ test("I1: a spend counts in every place it's drawn and floats off the readout yo
   assert.equal(floats.length, 1, "one float per action, not one per twin");
   assert.ok(app.$('#main .trk[data-float="luck"]').contains(floats[0]), "the float should sit in Trackers' Luck block");
   assert.equal(floats[0].textContent, `−${cost}`);
+  assert.ok(floats[0].style.right && floats[0].style.top, "the float is placed from the readout, not left at the host's corner");
   await wait(450);
   assert.equal(app.$$("[data-from]").length, 0, "the count should have landed");
   assert.deepEqual(luckNow(app), spans.map(() => now));
@@ -117,6 +118,7 @@ test("I1: on Main a meter holds what you lost, and with the popover open the flo
   const floats = app.$$(".beat-float");
   assert.equal(floats.length, 1, "one float for the last press");
   assert.ok(app.$("#vpop").contains(floats[0]), "the float goes on the popover's readout");
+  assert.ok(floats[0].style.right && floats[0].style.top, "the float is placed from the readout");
   assert.equal(app.$$('#main .beat-float').length, 0, "not on the card behind it");
   const tails = app.$$('#main [data-meter="san"] .beat-tail');
   assert.equal(tails.length, 1, "the card's meter holds one tail");
