@@ -124,31 +124,6 @@ alone (Ken took PQ7's default). A character who plays from paper has the style c
 print renderer for a skill row; the line is `Engine.maneuverChecks`, so print only draws it. Print's front page is full (Decision 96): put it on the skills page.
 *To respect:* Decision 229. Player-visible: a CHANGELOG line and a patch bump.
 
-**W156 — Help on the character sheet: what each tab is for, every word it uses, and a switch for the guide lines.** *Ken, 2026-11-14 · 💡 · Rule or shape*\
-**Plan:** [help-on-the-sheet K1–K3](plans/help-on-the-sheet.md), approved 2026-11-15; K3 built in 0.73.0 (Decision 298); K1 built in 0.70.0 ([`K1-one-help.md`](plans/help-on-the-sheet/K1-one-help.md)); K2 built in 0.71.0 (*Every word*, Decision 291): [`K2-every-word.md`](plans/help-on-the-sheet/K2-every-word.md); K3 (*Guide lines everywhere*: every guide sentence obeys the switch, KQ19–KQ22): [`K3-guide-lines.md`](plans/help-on-the-sheet/K3-guide-lines.md). Left: Deighton's voice pass over `sheetGuide`
-
-Ken wants this as a plan of its own, after the finding-things plan (`plans/archive/finding-things-on-the-sheet.md`, closed). GM mode has Help on every page (Decision 278, S31): a **?** in the header and the **?** key open a panel for the page that's open, read from `gmGuide` in the data. It says what the page is for, when it's used, and the words on it. A **Guide lines** switch turns each section's one-line guide off once a GM knows the ground. The player's sheet has no such thing.
-
-**What the player feels today.** The sheet now names a lot of the game:
-- E8 made the rules' own words tappable inside the sheet's lines (`gameTerms`).
-- Decision 139 put a tip on every rule the sheet names.
-- E5 rewrote the tab intros in the city's voice.
-
-But a new player opening Trackers or Progression still has nowhere to ask what the tab is *for*, why its numbers are there, or what a word means before they meet it in a line. The intros are always on, so a player who knows the sheet can't put them away.
-
-**The idea.** Do for the sheet what S31 did for the table:
-- a **?** that opens Help for the tab that's open: what it's for, when you use it (making the character, at the table, between sessions), and the words on it, each with its tip;
-- an *Every word* page that lists the game's terms once, from the same data the tips read;
-- a **Guide lines** switch that hides the tab intros and section notes, remembered by this browser like GM mode's `shadows.ui.gmGuide`.
-
-*To respect:*
-- **The copy lives in the data** (Decision 71, `appCopy`, beside `gmGuide`), in NYTE voice per `VOICE-APP.md`. Help is tool voice where the player is stuck.
-- **The words come from what the tips already read** (`gameTerms`, Decision 139's tips, the Stat and Condition entries), defined once. A glossary must not become a second copy that drifts (Decision 135).
-- **The switch is view state, not character state.** It goes in browser storage like `gmGuide`, never in the `.shadows.json` (constraint 7).
-- **GM mode's seat sheet draws the player's tabs** (Decision 256). Decide whether a seat shows the player's Help or the table's.
-- **The phone** (E6): S31's review found Help's foot about 530px below the fold on a phone. Since K4 (Decision 306) Help's tabs are at its top and stay there.
-- **Rules questions go to Deighton.** If a definition has to say something the CRB doesn't, it's a flag, not copy.
-
 **W159 — Main's vitals row fills its width at 768 and 1280.** *Claude, from E7's pre-flight, 2026-11-14 · 💡 · Rule or shape*\
 **Plan:** none yet
 
@@ -264,6 +239,11 @@ condition's numbers), Age (MOB out of its caps; how it meets Werewolves and Vamp
 words in `reference/rulings-2026-10-16.md`.
 *To respect:* rules changes, so a design talk first, then the book (`crb-catch-up.md`), then the data and P18's tags in one pass each. Age's MOB bears
 on P20's stat caps: ask before P20 is written.
+
+**W177 — A player removes Burned once it's paid off, without Admin mode.** *Ken, from the Sheet Help Read, 2026-11-24 · 💡 · Rule or shape*\
+**Plan:** none yet
+
+Once a Burned character earns CRANK rep back to 0, the sheet says "Burned is paid off. Remove it on Admin." (`resources.crank.paidOffText` and `sheetGuide.lines.burnedRemove`). Today a held Disadvantage comes off only on the Admin tab, which needs Admin mode, so a player clearing a debt the book says they've cleared has to switch into the GM's correction mode. Ken wants it removable without Admin mode. Decision 296 rejected the engine removing Burned on its own ("the engine never edits what a player holds") but never ruled on a player's own Remove button, so this is a new player-facing behaviour: a decision, and CRANK's rules are Scott's. *To respect:* the start rep written at the lock stays (296), removing Burned moves no rep, and it's one `commit()` with an Undo. `burnedRemove`'s line changes with it.
 
 ### Loadout & catalog
 
@@ -876,7 +856,9 @@ Build it only if hand entry drifts, or when live sync starts: [accounts-and-sync
 dispatches to a player's inbox, posted instead of saved, and builds on this. Its open question is GQ3 (one file per table).
 
 **W150 — Help's polish: the foot links, an A–Z jump in Every word, a stronger heading.** *Claude, from S31's re-critique (PR #323), 2026-11-12; Ken: one W item · 💡 · Fix*\
-**Plan:** [help-on-the-sheet K1](plans/help-on-the-sheet.md), built in 0.70.0 ([`K1-one-help.md`](plans/help-on-the-sheet/K1-one-help.md); the foot's switches lead on a phone for the sheet's Help); the A–Z jump, with a filter, for both panels' Every word was built in K2 (0.71.0, Decision 291): [`K2-every-word.md`](plans/help-on-the-sheet/K2-every-word.md). What's left is the stronger heading
+**Plan:** none yet
+
+*The help-on-the-sheet plan (closed 2026-11-25) built the rest: K1 (0.70.0) the foot's switches on a phone, K2 (0.71.0) the A–Z jump and filter in Every word, and K4 (0.75.0) Help's heading, tabs and Close held at the panel's top. Left: whether the heading itself is strong enough, checked in the app against K4's head before it closes.*
 
 Not planned: best done after Deighton's read of Help's words (S31, GQ39) is in, since his answers may move the copy these sit around. S31's Help panel works, and its review found three things that read poorly. On a phone the foot (A night at the table, Every word,
 Keys and the Guide lines switch) is about 530px below the fold, so a GM has to scroll the whole page's help to reach the one link
@@ -1150,7 +1132,7 @@ A GM who wants to post jobs, see which the crew has taken and keep the ones nobo
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W177.** Everything above is open. What was built is in
+- **Next free number: W178.** Everything above is open. What was built is in
   [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)

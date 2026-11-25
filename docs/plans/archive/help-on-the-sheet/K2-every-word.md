@@ -1,12 +1,12 @@
 # Work order K2: Every word
 
-**Plan:** [`../help-on-the-sheet.md`](../help-on-the-sheet.md) §3, row K2, and K2's pre-flight line. **Wishes:** [W156](../../WISHLIST.md) (Help on the sheet, its *Every word* part) and W150 (Help's polish, its A–Z jump). **Built on:** [`K1-one-help.md`](K1-one-help.md), the order that built the sheet's Help (Decision 289). Decisions 68, 71, 116, 135, 139, 207, 278, 287, 289.
+**Plan:** [`../help-on-the-sheet.md`](../help-on-the-sheet.md) §3, row K2, and K2's pre-flight line. **Wishes:** [W156](../../../WISHLIST.md) (Help on the sheet, its *Every word* part) and W150 (Help's polish, its A–Z jump). **Built on:** [`K1-one-help.md`](K1-one-help.md), the order that built the sheet's Help (Decision 289). Decisions 68, 71, 116, 135, 139, 207, 278, 287, 289.
 
 **Status: drafted 2026-11-15** by Claude (Opus), the K1 reviewer, at the conductor's request. **Approved by Ken 2026-11-15, in the conductor's session: "Approved, build it".** The plan's KQ1–KQ8 are answered (Ken, 2026-11-15: every default); this order's KQ13–KQ18 (§4) are **answered (Ken, 2026-11-15, in the conductor's session): Default on all six** ("Not in K2", "A row per meaning", "It stays open", "Defaults on all three" for KQ15–KQ17).
 
 **Branch:** cut from `origin/main` at the pre-flight commit; PR to `main`. Nothing ships switched off.
 
-**Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../WORK-ORDERS.md). The conductor starts **K2 build** (Sonnet), then a fresh **K2 review** (Opus) once the PR is open. §15 is the hand-over.
+**Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../../WORK-ORDERS.md). The conductor starts **K2 build** (Sonnet), then a fresh **K2 review** (Opus) once the PR is open. §15 is the hand-over.
 
 **Runs alone, or beside L4.** It touches `engine.js` (one reader, two exports), `shared.js` (Every word's list, filter and jump, shared by both panels), `sheet.js` (the sheet's host draws the link and the view), `gm.js` (the table's Every word takes the shared list), `shadows-data.js` (`gameTerms` rows, `damageTypes` descriptions, `sheetGuide`), `shadows.css`, the tests and the docs. L4 touches `sheet.js`'s Weapons table and print, `engine.js`'s weapon lines and other data. The two meet in `engine.js` and `shadows-data.js` (different sections), and in the versions, CHANGELOG's heading and decision numbers: whichever merges second takes the next minor and the next decision number.
 

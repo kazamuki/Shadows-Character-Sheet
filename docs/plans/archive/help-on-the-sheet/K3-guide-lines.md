@@ -1,12 +1,12 @@
 # Work order K3: Guide lines everywhere
 
-**Plan:** [`../help-on-the-sheet.md`](../help-on-the-sheet.md) §3, row K3, and K3's pre-flight line. **Wishes:** [W156](../../WISHLIST.md) (Help on the sheet: the guide lines beyond the tab intros) and W154 (the seat sheet's intros). **Built on:** [`K1-one-help.md`](K1-one-help.md) (the switch, the tab intros, Decision 289) and [`K2-every-word.md`](K2-every-word.md) (`Engine.word`, Decision 291). Decisions 68, 135, 139, 201, 215, 256, 273, 278, 282, 287, 289, 291.
+**Plan:** [`../help-on-the-sheet.md`](../help-on-the-sheet.md) §3, row K3, and K3's pre-flight line. **Wishes:** [W156](../../../WISHLIST.md) (Help on the sheet: the guide lines beyond the tab intros) and W154 (the seat sheet's intros). **Built on:** [`K1-one-help.md`](K1-one-help.md) (the switch, the tab intros, Decision 289) and [`K2-every-word.md`](K2-every-word.md) (`Engine.word`, Decision 291). Decisions 68, 135, 139, 201, 215, 256, 273, 278, 282, 287, 289, 291.
 
 **Status: drafted 2026-11-16** by Claude (Opus), the K2 reviewer, at the conductor's request. **Approved by Ken 2026-11-16, in the conductor's session: "Approve it, so we can document it, but don't start the builder just yet".** The plan's KQ1–KQ8 are answered (Ken, 2026-11-15: every default). This order's KQ19–KQ22 (§4) are **answered (Ken, 2026-11-16, in the conductor's session): Default on all four** ("No Help in it", "No guide lines on a seat", "Hides with guide lines", "Out of K3").
 
 **Branch:** cut from `origin/main` at the pre-flight commit. PR to `main`. Nothing ships switched off.
 
-**Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../WORK-ORDERS.md). The conductor starts **K3 build** (Sonnet), then a fresh **K3 review** (Opus) once the PR is open. §15 is the hand-over.
+**Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../../WORK-ORDERS.md). The conductor starts **K3 build** (Sonnet), then a fresh **K3 review** (Opus) once the PR is open. §15 is the hand-over.
 
 **Runs alone.** It touches `sheet.js` (about a dozen lines and one helper), `gm.js` (the seat's Help context and the seat's lines), `shadows-data.js` (`sheetGuide.lines`, `sheetGuide.seat`, `appCopy.ranksAdvanceInPlay` moves, the Thirst panel's `unrested.text`, the Difficulty quote), the tests and the docs. It's no engine change. If another order is open when this one builds, the versions, CHANGELOG's heading and the decision number go to whichever merges second.
 
