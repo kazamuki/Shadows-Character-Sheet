@@ -459,7 +459,9 @@ h2 > .term:only-child::after{content:""; position:absolute; left:0; top:50%; wid
 .cond.mended, .vpill.mended, .big.mended{animation:mended .35s ease-out}
 .cond .meter{position:relative}
 .cond .meter i{position:relative}
-.cond .meter i.beat-tail{position:absolute; left:0; top:0; background:rgba(242,201,76,.5)}
+.cond .meter i.beat-tail{position:absolute; left:0; top:0}
+/* Named by its key, so the pale colour outranks a card's own bar (.cond.luck .meter i, .cond.danger .meter i). */
+.cond .meter i.beat-tail.k-luck, .cond .meter i.beat-tail.k-sfr, .cond .meter i.beat-tail.k-pool{background:rgba(242,201,76,.5)}
 .cond .meter i.beat-tail.k-san{background:rgba(188,72,154,.55)}
 /* W46 (Decision 163) — a lock prints the TAG: the bars wipe in left to right,
    then the number (and a Ghost TAG's or Off grid's label) takes one stamp
