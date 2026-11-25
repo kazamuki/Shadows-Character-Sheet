@@ -4,7 +4,7 @@
 
 **Built on:** Decision 316 (I1's kit: `beatsFrom`, `S.beats` taken once in `renderMain`, `playBeats` last in `update()`, `calm()`, `countHtml`, the float placed from its readout), 117 (a hit flashes), 163 (the lock prints the TAG: `S.issued`), 164 (`keepPlace`), 217 (any Minor repeats; five Minors ask by a chooser), 228 (IP from hours), 230 (a training lands on a Milestone Point), 266 (a session stops running powers), 281 (Progression's order: Log a session, IP, Milestones, History, Activity Log), 67 (the cadence is the data's).
 
-**Status: drafted 2026-11-25** by Claude (Opus), I1's reviewer, at the conductor's request. **Not yet approved.** IQ11–IQ17 (§4) wait on Ken; one left blank is answered "Default" (`WORK-ORDERS.md`, step 3). The plan's IQ1–IQ10 are Default (Ken, 2026-11-24: "I agree with the defaults for all the questions"), IQ3 and IQ4 most of all.
+**Status: drafted 2026-11-25** by Claude (Opus), I1's reviewer, at the conductor's request. **Not yet approved.** Ken answered IQ11 with option (d) (2026-11-25, through the conductor); IQ12–IQ17 (§4) wait on Ken; one left blank is answered "Default" (`WORK-ORDERS.md`, step 3). The plan's IQ1–IQ10 are Default (Ken, 2026-11-24: "I agree with the defaults for all the questions"), IQ3 and IQ4 most of all.
 
 **Branch:** cut from `origin/main` at the pre-flight commit. PR to `main`. Nothing ships switched off.
 
@@ -83,14 +83,15 @@ phone-check        tools/phone-check.mjs: real Chromium (playwright-core), outsi
 
 ## 1. Goal and Done when
 
-**Goal.** Logging a session reads as the end of a night. The session drops into History with its title printed and its IP and MP stamped gold. IP and MP count to where they landed. A Milestone track under Log session draws its new point. When that point opens a Minor Milestone, a small gold burst and a plate say so; when it opens a Major, every point on the track lights in turn, a bigger burst fires, and the Major plate prints in. Both plates end on **Choose**, which takes you to the pick. A Milestone taken settles into its list. On Review, Lock & Export rings three times when it's ready, then holds still. The Admin banner's dot stops pulsing. Undo, reduced motion, a later render and a tab switch move nothing.
+**Goal.** Logging a session reads as the end of a night, where the player is looking. Under Log session's button, the night's register line prints in (its title or date, its IP and its MP) and takes a gold stamp, IP and MP count to where they landed, and a Milestone track draws its new point. The real History row further down drops in quietly. When that point opens a Minor Milestone, a small gold burst and a plate say so; when it opens a Major, every point on the track lights in turn, a bigger burst fires, and the Major plate prints in. Both plates end on **Choose**, which takes you to the pick. A Milestone taken settles into its list. On Review, Lock & Export rings three times when it's ready, then holds still. The Admin banner's dot stops pulsing. Undo, reduced motion, a later render and a tab switch move nothing.
 
 **Done when:**
-- Logging a session at 4 MP: the IP and MP pills count to their new values. One `+1` floats off Progression's MP block and one `+<IP>` off its IP block. The track's fifth pip draws in. A Minor burst plays, and the plate "Minor Milestone" prints in under the track with **Choose**. History's first row has the drop-in, the title print and the gold stamp.
+- Logging a session at 4 MP: the IP and MP pills count to their new values. One `+1` floats off Progression's MP block and one `+<IP>` off its IP block. In the strip under Log session's button, in this order: the register line prints in (the session's title, or its date when untitled; `+10 IP`; `+1 MP`) and stamps gold, the track's fifth pip draws in, then a Minor burst plays and the plate "Minor Milestone" chips in under the track with **Choose**. History's first row drops in. The page doesn't scroll anywhere new.
 - At 9 MP to 10: every pip lights in turn, 60ms apart. The Major burst fires, and the Major plate prints in. The whole beat is about 1.3s from the click, and any tap or key during it jumps to the end, while that tap or key still does what it does.
 - **Choose** opens the owed group (Major first if both are owed), brings it into view and focuses its first enabled **Take**. It never opens 273's dialog.
 - The plate stays while a Milestone is owed (IQ13), with no motion after its first render. Once the last owed Milestone is taken it's gone, and the taken row settles into its journal with a gold line.
-- `+1 manual` MP across a threshold plays the same Milestone beat (IQ12). It doesn't play History's beat, because no session was added.
+- `+1 manual` MP across a threshold plays the track's point, the burst and the plate (IQ12). It doesn't print a register line or drop a History row, because no session was added.
+- The register line stays: it always shows the latest session in `ch.sessions` (read from the character, so a reload keeps it). Only its print-in and stamp are the beat. With no sessions, there's no line.
 - On Review, the first time Lock & Export is drawn enabled for a character in a sitting, it rings three times (.7s each) and then holds still. Going Back and returning doesn't ring it again. Neither does fixing and re-breaking an issue.
 - The Admin banner's dot holds still, gold.
 - Undo, a tab switch, a later render: nothing counts, prints, bursts or rings. With reduced motion: the numbers, the pip, the plate and the row are already final, nothing moves, and the screen reader hears "Minor Milestone ready" or "Major Milestone ready" once.
@@ -111,8 +112,8 @@ Paste as written; fill *Built*. It is under 350 words.
 
 ```
 N. **A night's end moves once: a logged session drops into History, IP and MP count, a track draws the new point, and an opened Milestone gets a burst and a plate ending on Choose.**
-     *2026-11-NN · Ken + Claude · Touches: beatsFrom, beatReads, playBeats, ip, mp, logged, opened, taken, mpTrackHtml, msPlateHtml, data-mschoose, beat-burst, beat-ring, S.lockRung, data-lock, Log session, History, Milestones, .admin-banner .dot, pulseDot, announce, phone-check, appCopy.msPlate, I2*
-     - **Decided:** A commit that logs a session, or opens a Minor or Major, plays once. IP and MP count everywhere they're drawn. A track under Log session, marked from the data's cadence, draws the new point. A Minor gets a small burst; a Major lights every point in turn and a bigger burst (about 1.3s; a tap skips it). A plate stays under the track while a Milestone is owed; its Choose opens that group at its first Take. History's new row drops in and stamps gold; a Milestone taken settles in. Lock & Export rings three times once a sitting. The Admin dot holds still. Nothing moves on undo or under reduced motion.
+     *2026-11-NN · Ken + Claude · Touches: beatsFrom, beatReads, playBeats, ip, mp, logged, opened, taken, nightLineHtml, mpTrackHtml, msPlateHtml, data-mschoose, beat-burst, beat-ring, S.lockRung, data-lock, Log session, History, Milestones, .admin-banner .dot, pulseDot, announce, phone-check, appCopy.msPlate, I2*
+     - **Decided:** A commit that logs a session, or opens a Minor or Major, plays once. IP and MP count everywhere they're drawn. Under Log session, the night's register line prints and stamps gold, and a track marked from the data's cadence draws the new point. A Minor gets a small burst; a Major lights every point in turn and a bigger burst (about 1.3s; a tap skips it). A plate stays under the track while a Milestone is owed; its Choose opens that group at its first Take. History's new row drops in; a Milestone taken settles in. Lock & Export rings three times once a sitting. The Admin dot holds still. Nothing moves on undo or under reduced motion.
      - **Why:** Ken, after the Motion Lab (2026-11-24). The fifth Milestone Point looked like the fourth, and the pick is the point of the moment.
      - **Rejected:**
        - The plate only for the beat: a later render would lose Choose.
@@ -129,13 +130,13 @@ N. **A night's end moves once: a logged session drops into History, IP and MP co
 
 Each has a default. One left blank is answered **Default**.
 
-- **IQ11 — Where the night lands.** The page and the Lab differ (pre-flight finding 3). *Default:* a strip directly under Log session's button holds the track and, while a Milestone is owed, its plate. Log session still lands at the page's top, where the strip sits. History's new row takes its beat where it is, further down, and it has finished by the time you scroll there. *Alternatives:* (b) Log session scrolls to History afterwards, so the row's beat is seen and the plate is a scroll away; (c) the track goes in the Milestones block and Log session scrolls there.
+- **IQ11 — Where the night lands.** The page and the Lab differ (pre-flight finding 3). **Ken's answer: (d)** (2026-11-25, through the conductor). A strip directly under Log session's button holds, top to bottom: the night's register line, the track, and, while a Milestone is owed, the plate. The register line shows the session's title (or its date when untitled), its IP earned and its MP earned, and is where the "read into the register" beat plays, since Log session still lands at the page's top. The page doesn't scroll anywhere new. The real History row further down gets only its quiet drop-in. The sequence is the register line printing, the IP and MP stamp, the track's new point, then any burst and plate, all inside §2's timing (a Major about 1.3s; a tap or key skips to the end). *Not taken:* the default (the strip without the register line), (b) scroll to History, (c) the track in the Milestones block.
 - **IQ12 — What plays the Milestone beat.** *Default:* any commit that raises `minorAvail` or `majorAvail`: Log session, `+1 manual`, an Admin edit. One hook, as I1's IQ9. History's beat plays only when a session was added.
 - **IQ13 — The plate stays while owed.** *Default:* yes. The burst and the print-in play once; the plate itself stays under the track, still, until nothing is owed. *Alternative:* the plate shows only for the beat, and the group summary's "n to pick" is all that's left.
 - **IQ14 — What Choose does.** *Default:* it opens the owed group (Major first if both are owed), scrolls it into view under the sticky header and the jump bar (`jumpTo`'s own reckoning), and focuses its first enabled **Take**. The Minors that ask by a chooser (217) open it from there as they do today.
 - **IQ15 — When Lock & Export rings.** *Default:* the first time in a sitting that Review draws it enabled for that character, whether arriving at Review already complete or fixing the last issue there. Three rings of .7s, then still, and never again that sitting for that character. *Alternative:* every time it turns from disabled to enabled.
 - **IQ16 — IP and MP count.** *Default:* yes. I1's count in the pills, the drawer's rows and Progression's IP and MP blocks, and one float off each block, as I1's IQ7 left them for I2. The sentences that name them (History's heading, "earned · spent", the raise status lines) don't count.
-- **IQ17 — The plate's words** (a voice pass; `appCopy`, so editable without code). *Default:* `Minor Milestone` / `Major Milestone` as the plate's title, a line "*n* to pick" (as the group summary says it), and **Choose**. Screen reader: "Minor Milestone ready" / "Major Milestone ready". Ken or a voice pass may want the city's voice on the title line.
+- **IQ17 — The strip's words** (a voice pass; `appCopy`, so editable without code). *Default:* the register line reads the session's title (its date when untitled), `+n IP` and `+n MP`, the numbers as History writes them; `Minor Milestone` / `Major Milestone` as the plate's title, a line "*n* to pick" (as the group summary says it), and **Choose**. Screen reader: "Minor Milestone ready" / "Major Milestone ready". Ken or a voice pass may want the city's voice on the title line.
 
 ## 5. The assumption sweep
 
@@ -155,11 +156,12 @@ Every reader, found by grepping `ms.mp`, `ip.available`, `ip.earned`, `sessions.
 | Milestones heading | `sheet.js:1968` | "Milestones — 5 Milestone Points" | **unchanged** (a sentence) |
 | MP block | `sheet.js:1969` | `.big` | count span; `data-float="mp"` on its `.trk` |
 | History heading | `sheet.js:2069` | a sentence | **unchanged** |
-| History rows | `sheet.js:2070-2075` | newest first | the first row takes `beat-row`, its `h2` `beat-print`, its `.cost` `beat-stamp`, on the render after a `logged` beat only |
+| History rows | `sheet.js:2070-2075` | newest first | the first row takes `beat-row` (the quiet drop-in, nothing else), on the render after a `logged` beat only |
 | Minor / Major groups | `sheet.js:1976, 2006` | summary "n to pick", opens itself | unchanged markup; each gets an id (`ms-minor`, `ms-major`) so Choose can find it |
 | Taken journals | `sheet.js:1996-1999, 2027-2036` | rows | the row at `taken.index` takes `beat-settle` once |
-| Log a session | `sheet.js:2048-2066` | the form | the strip goes after its button row: `mpTrackHtml(ch)` then `msPlateHtml(ch)` |
-| Log session's binder | `sheet.js:4448-4460` | commit, `scrollPageTop()` | unchanged (IQ11 default). Under (b) or (c) it changes, and its tests with it |
+| Log a session | `sheet.js:2048-2066` | the form | the strip goes after its button row: `nightLineHtml(ch)`, `mpTrackHtml(ch)`, then `msPlateHtml(ch)` |
+| The register line | new, in the strip | | the latest session: title or date, `+n IP`, `+1 MP` (or nothing for MP when it earned none); `beat-print` and `beat-stamp` on the render after a `logged` beat only. A second reader of `ch.sessions`' last entry beside History's first row: both read the same entry, never a copy |
+| Log session's binder | `sheet.js:4448-4460` | commit, `scrollPageTop()` | unchanged: the strip is at the page's top (IQ11 (d)) |
 | `+1 manual` MP | `sheet.js:4371` `[data-mp]` binder | commit | unchanged; its commit plays the Milestone beat (IQ12) |
 | Raise / IP-buy status lines | `sheet.js:3528, 3707, 3867` (aria-live) | "You have n IP" | **unchanged**: a count inside `aria-live` reads out every step (I1's stop) |
 | Print | `sheet.js:3292` | | **unchanged** |
@@ -176,7 +178,7 @@ Every reader, found by grepping `ms.mp`, `ip.available`, `ip.earned`, `sessions.
 
 **Which guards read a value this changes?** None of the engine's; no character value moves. The contrast guard (`textless`), W43's guard, I1's beats tests (`beatsFrom`'s shape grows: test 9 accepts null or an object with `cells`, so it still passes), and `keepPlace` (164): Choose and the plate's button are new controls, so the builder checks that `dataKey` finds `data-mschoose`'s twin after a re-render.
 
-**Where does each new thing render?** The track and plate: Progression's Log block only. The burst: inside the plate (Minor) or over the track (Major). The stamps: History's first row. The settle: the taken journal row. The ring: Review's Lock & Export. Count spans: the six IP and MP rows above.
+**Where does each new thing render?** The register line, the track and the plate: Progression's Log block only. The burst: inside the plate (Minor) or over the track (Major). The stamps: History's first row. The settle: the taken journal row. The ring: Review's Lock & Export. Count spans: the six IP and MP rows above.
 
 **What text points at it?** The plan's §3 I2 row and §4's IQ3 line; DESIGN.md's *Readouts*; the wishlist's W124 and W129 **Plan** lines, which already point at I2's beat and stay; `copy("majorGmChip")` and the group summaries (unchanged).
 
@@ -197,7 +199,7 @@ Every reader, found by grepping `ms.mp`, `ip.available`, `ip.earned`, `sessions.
 - **GM mode** (I3): the close-out's register, a seat's burst. I2's `opened` and the burst are what I3 reuses, so keep them in `shared.js`.
 - **A file reading in** (I4).
 - **Tabs, What's new's nudge**: the Lab showed the nudge on What's new too. The plan names only Lock & Export (§3). Leave What's new.
-- **Changing what a press does.** Every number lands where it lands on `main`. Log session still scrolls to the top (IQ11 default).
+- **Changing what a press does.** Every number lands where it lands on `main`. Log session still scrolls to the top (IQ11 (d)).
 
 ## 8. The shapes
 
@@ -210,6 +212,9 @@ opened: null | { minor: number, major: number }, // how far minorAvail and major
 taken:  null | { kind: "minor"|"major", index: number }   // the journal row just added
 
 // counts gains "ip" and "mp" (beatReads), each skipped when its reader can't give a finite number.
+
+nightLineHtml(ch) -> string   // "" with no sessions; else one line for the last of ch.sessions: its title (escaped) or its date,
+// "+n IP" and, when it earned one, "+1 MP" (the per-session MP from the data's rules). Words from appCopy.msPlate.
 
 mpTrackHtml(ch) -> string     // "" when the cadence can't make a band (majorEvery not a positive integer ≤ 20)
 // One .mp-pip per point from the last Major threshold reached to the next (majorEvery of them), .on up to mp,
@@ -227,24 +232,26 @@ msPlateHtml(ch) -> string     // "" when nothing is owed; else one plate: .ms-pl
 
 ## 9. The UI
 
-**The strip** (IQ11 default) sits under Log session's button row, inside its `review-block`. The track first, the plate under it. On a phone it's full width.
+**The strip** (IQ11 (d)) sits under Log session's button row, inside its `review-block`: the register line, then the track, then the plate. On a phone it's full width. The register line looks like the Lab's register row: the date in mono, the title in weight 600, the IP and MP in the numeric face in gold.
 
 **The beat on Log session or `+1 manual`** (played by `playBeats`, never under `calm()`):
 
 | Moment | What moves | When |
 |---|---|---|
+| The register line | drops in (.25s) and its title prints left to right (.3s); render-time class, on `logged` only | 0 |
+| The stamp | the line's IP and MP take the gold stamp (.3s) | +.2s |
 | The count | IP and MP count in every twin; one float off each Progression block | first frame, .3s |
-| The new pip | the pip at the new MP draws in left to right (`tagPrint`, .25s) | first frame |
-| Minor opened | a burst of 8 short gold rays from the new pip (.55s); the plate chips in (.32s) | after the pip, ~.25s |
-| Major opened | the band's pips flash gold in turn, 60ms apart; a burst of 12 rays, gold and cyan, from the track's middle (.85s); the plate prints in (`tagPrint` .45s), its title settling from wide letter-spacing (.55s, +.2s) | ~1.3s from the click in all |
-| History | the first row drops in (.3s), its title prints (.42s, +.08s), its `.cost` stamps gold (.4s, +.42s) | render-time classes, on `logged` only |
+| The new pip | the pip at the new MP draws in left to right (`tagPrint`, .25s) | +.35s (at the first frame when no line printed: `+1 manual`) |
+| Minor opened | a burst of 8 short gold rays from the new pip (.5s); the plate chips in (.3s) | +.55s; done by ~1.05s |
+| Major opened | the band's pips flash gold in turn, 50ms apart (+.35s to ~.85s); a burst of 12 rays, gold and cyan, from the track's middle (.7s, from +.6s); the plate prints in (`tagPrint` .4s, from +.85s), its title settling (.4s, +.1s) | done by ~1.35s, inside §2's "about 1.3s" |
+| History | the first row drops in (.3s), nothing else | render-time class, on `logged` only, off-screen |
 | A Milestone taken | its journal row chips in with a gold line fading to the frame (.9s) | render-time, on `taken` only |
 
 **Where things land** (focus and place):
 
 | Press | The number in the HTML | What moves | Where focus is |
 |---|---|---|---|
-| Log session at 4 MP | the new IP and MP; pip 5 on; the Minor plate | count, floats, pip, Minor burst, plate chip-in, History row | the page's top, as today; focus as `keepPlace` leaves it |
+| Log session at 4 MP | the register line, the new IP and MP; pip 5 on; the Minor plate | register line print and stamp, count, floats, pip, Minor burst, plate chip-in, History row's drop-in | the page's top, as today; focus as `keepPlace` leaves it |
 | Log session at 9 MP | the same, pip 10, the Major plate | the Major beat | as above |
 | A tap or key during the Major beat | | the beat jumps to its end; the tap or key does what it does | wherever that press puts it |
 | Choose | | nothing moves; the owed group opens | its first enabled Take |
@@ -259,22 +266,22 @@ msPlateHtml(ch) -> string     // "" when nothing is owed; else one plate: .ms-pl
 **The Admin dot:** `.admin-banner .dot` keeps its size and gold. `animation` and `@keyframes pulseDot` are deleted, and so is its line in the reduced block.
 
 **DESIGN.md** (*Readouts*), add after **Counting**:
-- **The night's end:** Log session drops the session into History (.3s), prints its title and stamps its numbers gold. The Milestone track draws its new point. A Minor gets a small gold burst and its plate; a Major lights every point in turn and gets the one beat past a second (about 1.3s; a tap skips it). The plate holds still while a Milestone is owed and ends on Choose.
+- **The night's end:** under Log session, the night's register line prints in and its IP and MP stamp gold, and History's new row drops in quietly. The Milestone track draws its new point. A Minor gets a small gold burst and its plate; a Major lights every point in turn and gets the one beat past a second (about 1.3s; a tap skips it). The plate holds still while a Milestone is owed and ends on Choose.
 - **Nudge:** a button that becomes the next thing to do rings three times, once a sitting, then holds still. Nothing loops: the Admin dot holds still.
 
-**Copy** (`appCopy.msPlate`, a voice pass, IQ17): `{ minorTitle: "Minor Milestone", majorTitle: "Major Milestone", left: "{n} to pick", choose: "Choose", minorReady: "Minor Milestone ready", majorReady: "Major Milestone ready" }`. The builder pastes each as it renders into the PR.
+**Copy** (`appCopy.msPlate`, a voice pass, IQ17): `{ lineIp: "+{n} IP", lineMp: "+{n} MP", untitled: "{date}", minorTitle: "Minor Milestone", majorTitle: "Major Milestone", left: "{n} to pick", choose: "Choose", minorReady: "Minor Milestone ready", majorReady: "Major Milestone ready" }`. The builder pastes each as it renders into the PR.
 
 ## 10. Worked examples, as named tests
 
 A new file, `tests/smoke-sheet-night.test.mjs`. Write these first and show each failing on `main`.
 
-1. **`I2: logging a session counts IP and MP, floats them, draws the new point and drops the row in`** — `lockedCharacter()` with four sessions, on Progression. Enter 2 hours and press Log session. Immediately: every `[data-count="ip"]` and `[data-count="mp"]` reads the new value and carries `data-from`. There's one `.beat-float` in the IP block reading `+10` and one in the MP block reading `+1`. The pip `[data-pip="5"]` is `.on`. History's first `.pick` has `beat-row`, its `h2` `beat-print`, its `.cost` `beat-stamp`. After 1.5s: no `data-from`, no `.beat-float`.
+1. **`I2: logging a session prints its register line, counts IP and MP, floats them, draws the new point and drops the row in`** — `lockedCharacter()` with four sessions, on Progression. Enter 2 hours and press Log session. Immediately: every `[data-count="ip"]` and `[data-count="mp"]` reads the new value and carries `data-from`. There's one `.beat-float` in the IP block reading `+10` and one in the MP block reading `+1`. The strip's register line, above the track, reads the session's title, `+10 IP` and `+1 MP`, and has `beat-print` and `beat-stamp`. The pip `[data-pip="5"]` is `.on`. History's first `.pick` has `beat-row`. After 1.5s: no `data-from`, no `.beat-float`. Switch tabs and back: the register line is still there, with no beat class.
 2. **`I2: the fifth point opens a Minor: a burst, and a plate that stays and ends on Choose`** — the same press. `.ms-plate.minor` with `[data-mschoose="minor"]`, one `.beat-burst` inside the plate, and `announce`'s line reads "Minor Milestone ready" once a frame has run. Switch to Main and back: the plate is still there, with no burst and no animation class.
-3. **`I2: the tenth point lights every point in turn, and a tap skips to the end`** — nine sessions. Log one. Pips 1–10 carry flash delays 0, 60, …, 540ms, ascending. There's one `.beat-burst.major` and `.ms-plate.major`. Dispatch a `pointerdown` on `document` at 100ms: no `.beat-burst`, every pip `.on` with no inline delay, the plate at rest, and the pointerdown's own target still got its click.
+3. **`I2: the tenth point lights every point in turn, and a tap skips to the end`** — nine sessions. Log one. Pips 1–10 carry flash delays 350, 400, …, 800ms, ascending (after the register line and stamp). There's one `.beat-burst.major` and `.ms-plate.major`. Dispatch a `pointerdown` on `document` at 100ms: no `.beat-burst`, every pip `.on` with no inline delay, the plate at rest, and the pointerdown's own target still got its click.
 4. **`I2: Choose opens the owed group at its first Take, and never the Focused Skill dialog`** — with a Minor owed, press Choose. `#ms-minor` is `open`, `document.activeElement` is its first enabled `[data-takeminor]`, and `#modal` isn't open. With a Major and a Minor owed, Choose goes to `#ms-major`.
-5. **`I2: a manual Milestone Point plays the Milestone beat, not History's`** — at 4 MP, press `+1 manual`. Plate and burst as in test 2. No `beat-row` on History.
-6. **`I2: a beat plays once: undo, a later render and a tab switch move nothing`** — log at 4 MP, wait 1.5s, `update(false)`, switch tabs. No `data-from`, `.beat-float`, `.beat-burst`, `beat-row` or `beat-settle`. Undo from the toast: none either, and the plate is gone (nothing owed).
-7. **`I2: reduced motion gets the end state, and the screen reader still hears it`** — stub `matchMedia` as I1's test 5 does. Log at 9 MP. Every number final, pip 10 `.on`, the Major plate present, no `data-from`, `.beat-float`, `.beat-burst`, no inline transition or delay on a pip, and the announcer reads "Major Milestone ready".
+5. **`I2: a manual Milestone Point plays the Milestone beat, not History's`** — at 4 MP, press `+1 manual`. Plate and burst as in test 2. No register-line beat class and no `beat-row` on History; the register line still shows the last session, unchanged.
+6. **`I2: a beat plays once: undo, a later render and a tab switch move nothing`** — log at 4 MP, wait 1.5s, `update(false)`, switch tabs. No `data-from`, `.beat-float`, `.beat-burst`, `beat-row`, `beat-print`, `beat-stamp` or `beat-settle`. Undo from the toast: none either, and the plate is gone (nothing owed).
+7. **`I2: reduced motion gets the end state, and the screen reader still hears it`** — stub `matchMedia` as I1's test 5 does. Log at 9 MP. Every number final, the register line present, pip 10 `.on`, the Major plate present, no `data-from`, `.beat-float`, `.beat-burst`, no inline transition or delay on a pip, and the announcer reads "Major Milestone ready".
 8. **`I2: with no frame drawn, the new number and the new point are all that ever show`** — stub `requestAnimationFrame` never to call back. A MutationObserver on the MP spans and the track: the old MP never appears, and pip 5 is never un-`.on`.
 9. **`I2: a Milestone taken settles into its list once`** — with a Minor owed, take Improved (or any Minor that takes no chooser). The new journal row has `beat-settle`. After a tab switch it doesn't.
 10. **`I2: Lock & Export rings three times the first time it's ready, then never again that sitting`** — a draft one issue short of locking, on Review. Fix it (the input that clears the last error): `[data-lock]` is enabled and has `beat-ring`. Go Back and return: no `beat-ring`. A second draft reaching Review complete: it rings.
@@ -283,6 +290,7 @@ A new file, `tests/smoke-sheet-night.test.mjs`. Write these first and show each 
 ## 11. Tests beyond the examples
 
 - **Position, in real Chromium** (`tools/phone-check.mjs`, a new pass; outside `npm test`, as phone-check is). It has to run, and the PR pastes its output. At 1280px and 375px:
+  - the register line above the track, inside the Log block, its right edge inside the viewport at 375px;
   - the Minor burst's centre within 6px of pip 5's centre;
   - the Major burst within the track's box;
   - the plate's left edge on the Log block's content edge;
@@ -298,6 +306,8 @@ A new file, `tests/smoke-sheet-night.test.mjs`. Write these first and show each 
   - Choose reusing `data-fowedopen` (test 4)
   - the skip listener left on after the beat (test 3: a later `pointerdown` changes nothing, and the listener count is back to 0)
   - `logged` set by `+1 manual` (test 5)
+  - the register line drawn only during the beat, not from `ch.sessions` (test 1's tab switch)
+  - the register line reading a copy of the session rather than the last entry (a test deleting the last session: the line shows the one before)
   - the ring on every enable (test 10)
   - the pip rewound before the first frame (test 8)
   - dropping `calm()` from the burst (test 7)
@@ -312,11 +322,11 @@ A new file, `tests/smoke-sheet-night.test.mjs`. Write these first and show each 
 5. `playBeats`: the pip, the bursts, the plate's print-in, the skip; History's and the journal's render-time classes; `announce`. The CSS, each animated rule in the reduced block. `npm run verify`.
 6. Lock & Export's ring (`S.lockRung`, `wizNav`, `refreshNav`); the Admin dot. `npm run verify`.
 7. **The walk, in the dev preview** (`shadows-dev-preview`; seed a locked character with four sessions as `shadows.active.v1` and press Open sheet; drive frames with the 16ms shim if the pane is hidden), each item named in the PR with what was seen:
-   1. Log a session at 4 MP: the count, both floats, pip 5, the Minor burst, the plate, then scroll to History's row.
+   1. Log a session at 4 MP: the register line prints and stamps, the count, both floats, pip 5, the Minor burst, the plate, in that order; then scroll to History's row (its drop-in has finished).
    2. At 9 MP: the Major beat, start to end, then again with a tap at ~.3s.
    3. Choose with a Minor owed, then with both owed.
    4. Take the Minor: the settle, and the plate goes.
-   5. `+1 manual` across 15: the Minor beat, no History beat.
+   5. `+1 manual` across 15: the track's point, the burst and the plate; no register-line beat, no History beat.
    6. Undo from the toast and from the Activity Log: nothing moves.
    7. **Reduced motion, the OS's or DevTools' emulation, by eye**: nothing moves, every number right, the plate there.
    8. **The light theme, by eye**: the plate, the burst's rays, the pips and the stamps fold as the tokens do.
@@ -334,7 +344,7 @@ Stop and ask the conductor if:
 - a reader §5 doesn't list draws IP or MP as a number;
 - `keepPlace` matches on an attribute this order adds;
 - a test outside §10 has to change, other than the version literals `npm run bump` moves;
-- IQ11's default doesn't fit the page as built (say what you saw, with a screenshot or the metrics).
+- IQ11's (d) doesn't fit the page as built (say what you saw, with a screenshot or the metrics).
 
 **Not stops:** `docs.test.mjs` failing until N's INDEX line is in; the contrast guard asking for a `textless` entry for a new filled shape (add it with a one-line comment); I1's beats test 9 needing nothing (its shape check still holds); `phone-check`'s B19 phone-width header failure, which fails on `main` by design.
 
@@ -343,7 +353,7 @@ Stop and ask the conductor if:
 `close-the-session`, *Rule or shape* tier:
 - Decision **N** pasted whole, *Built* filled; its INDEX §3 line under *Sheet & play tracking*, beside 316.
 - `npm run bump -- 0.78.0`; `CHANGELOG.md` under `[Unreleased] — app 0.78.0`, then `npm run changelog`:
-  - *Logging a session reads as the end of a night: it drops into History, and your IP and Milestone Points count up.*
+  - *Logging a session reads as the end of a night: the night prints in under the button, and your IP and Milestone Points count up.*
   - *A track under Log session shows how far you are from the next Milestone. When you reach one, it says so, and Choose takes you to the pick.*
   - *Lock & Export rings when your character is ready to lock. The Admin dot holds still.*
 - `DESIGN.md` (§9). The plan's I2 row (built, the decision, the app version) and §4's IQ3 line. **STATE: one line, Motion's** ("I3 is next" or what Ken picks). It's under its 2,500-word cap; check with `node --test tests/docs.test.mjs`. A `docs/log/2026.md` entry and a `docs/log/shipped.md` row.
@@ -353,7 +363,8 @@ Stop and ask the conductor if:
 **Review checklist** (beyond the suite passing):
 - Re-grep IP's and MP's readers on the PR (`ms.mp`, `ip.available`, `ip.earned`): every one is a count span or an "unchanged" row.
 - Run `phone-check`'s new pass yourself, and the walk's items 1, 2, 6, 7 and 8 in the dev preview.
-- Measure the burst's and plate's places in the browser yourself; don't take the PR's numbers (Carried over).
+- Measure the register line's, the burst's and the plate's places in the browser yourself; don't take the PR's numbers (Carried over).
+- The sequence by eye at Slow (or with the 16ms shim): register line, stamp, point, then burst and plate; a Major inside about 1.3s.
 - Every new colour rule's computed value in both themes, against the card it sits on (Carried over: the tail).
 - `S.beats` and `S.lockRung` are never in a saved character.
 - Choose never reaches `openFocusedPicker`.
@@ -370,5 +381,6 @@ The two prompts in `WORK-ORDERS.md`, with this order's path: `docs/plans/motion/
 - **`.pip` and `data-mp` are taken.** Use `.mp-pip` and `data-pip`: `sheet.js:4371` binds every `[data-mp]` as the manual stepper.
 - **A new filled shape meets the contrast guard.** Draw it on `::after` or an `i`, or add it to `textless`.
 - **Reduced motion is three places:** the CSS block, `calm()` for anything a script moves, and `announce()`, which speaks either way.
-- **History's beat plays off-screen** under IQ11's default. That's accepted; don't scroll to it.
+- **The register line is state, its print-in is the beat.** Draw it from the last of `ch.sessions` on every render; only `logged` adds `beat-print` and `beat-stamp`. The same split as the plate.
+- **History's drop-in plays off-screen** under IQ11 (d). That's accepted; don't scroll to it.
 - **The pane may be hidden.** Drive frames with the 16ms shim, and check reduced motion and the light theme in `phone-check`, where they're measured.

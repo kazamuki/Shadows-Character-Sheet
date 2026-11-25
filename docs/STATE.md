@@ -108,7 +108,7 @@ economics) are in `plans/archive/`.
 - **The `/impeccable audit`** of the whole app is its own read-only session; Ken triages its report.
 - **GM mode, what's next** (`plans/gm-mode-next.md`): Scott's play report first (S22), then Ken's pick.
 - **Loadout and gear** (`plans/loadout-and-gear.md`): ends with natural-weapon follow-ons, each waiting on an answer: L8 the Werewolf's damage (LQ40), L9 a trained weapon as natural (W160), L10 hand cyberware (W90). Bone Spines' grappling waits on Deighton (F55).
-- **Motion** (`plans/motion.md`): approved; I2's order is drafted and waits on Ken (IQ11–IQ17).
+- **Motion** (`plans/motion.md`): approved; I2's order is drafted; IQ12–IQ17 wait on Ken.
 - **Help on the sheet** (`plans/help-on-the-sheet.md`, W156): K1–K5 built (289, 291, 298, 306–307); left: removing Burned without Admin mode, its own order.
 - **Closed plans** are in `plans/archive/`; finding-things left W152–W157 and W159, powers-that-run W132's last two powers (`plans/crb-catch-up.md`), and pools-and-numbers (J1–J4, 312–315, released in 0.76.0) F56 for Deighton.
 - **W90**, cybernetics: six questions before a plan.
