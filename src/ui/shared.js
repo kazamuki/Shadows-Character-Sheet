@@ -440,9 +440,9 @@ function playBeats(){
     const f=document.createElement("span");
     f.className=`beat-float k-${k.split(":")[0]} ${d<0?"dn":"up"}`; f.setAttribute("aria-hidden","true");
     f.textContent=(d<0?"−":"+")+(k==="cred" ? Engine.creditSymbol()+numText(Math.abs(d)) : Math.abs(d));
-    host.appendChild(f);
-    // At the readout's top right, not the host box's: the host is wider than the number (Decision 316). Set from layout once
-    // the float is in the host; a pane with no layout leaves 0px, which is the host's own corner.
+    // At the readout's top right, not the host box's: the host is wider than the number (Decision 316). Measured before the
+    // float goes in: on Main the host is the .big itself, and a float inside it would stretch the text's extent to its own
+    // corner. A pane with no layout leaves 0px, which is the host's own corner.
     try {
       const num=[...host.querySelectorAll("[data-count]")].find(e=>e.getAttribute("data-count")===k);
       const big=num && (num.closest(".big") || num);
@@ -452,6 +452,7 @@ function playBeats(){
       f.style.right=`${rr ? Math.max(0, Math.round(hr.right-rr.right)) : 0}px`;
       f.style.top=`${rr ? Math.round(rr.top-hr.top)-2 : -2}px`;
     } catch(e){ f.style.right="0px"; f.style.top="-2px"; }
+    host.appendChild(f);
     f.addEventListener("animationend", ()=>f.remove());
     later(()=>f.remove(), BEAT_FLOAT_MS);
   });
