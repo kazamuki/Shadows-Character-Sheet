@@ -178,7 +178,7 @@ Every reader, found by grepping `ms.mp`, `ip.available`, `ip.earned`, `sessions.
 
 **Which guards read a value this changes?** None of the engine's; no character value moves. The contrast guard (`textless`), W43's guard, I1's beats tests (`beatsFrom`'s shape grows: test 9 accepts null or an object with `cells`, so it still passes), and `keepPlace` (164): Choose and the plate's button are new controls, so the builder checks that `dataKey` finds `data-mschoose`'s twin after a re-render.
 
-**Where does each new thing render?** The register line, the track and the plate: Progression's Log block only. The burst: inside the plate (Minor) or over the track (Major). The stamps: History's first row. The settle: the taken journal row. The ring: Review's Lock & Export. Count spans: the six IP and MP rows above.
+**Where does each new thing render?** The register line, the track and the plate: Progression's Log block only. The burst: inside the plate (Minor) or over the track (Major). The print and stamp: the register line. The quiet drop-in: History's first row. The settle: the taken journal row. The ring: Review's Lock & Export. Count spans: the six IP and MP rows above.
 
 **What text points at it?** The plan's §3 I2 row and §4's IQ3 line; DESIGN.md's *Readouts*; the wishlist's W124 and W129 **Plan** lines, which already point at I2's beat and stay; `copy("majorGmChip")` and the group summaries (unchanged).
 
