@@ -1087,7 +1087,7 @@ async function readoutFloors(browser, file, rows) {
     if (cs.pointerEvents !== "none") out.push("the readout takes the pointer");
     const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
     if (hit && ro.contains(hit)) out.push("a tap at the readout's centre lands on it");
-    const rgb = c => (c.match(/[d.]+/g) || []).slice(0, 3).map(Number);
+    const rgb = c => (c.match(/[\d.]+/g) || []).slice(0, 3).map(Number);
     const lum = c => { const [a, b, d] = rgb(c).map(v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }); return .2126 * a + .7152 * b + .0722 * d; };
     const ratio = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); };
     const bg = cs.backgroundColor;

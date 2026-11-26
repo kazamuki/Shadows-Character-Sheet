@@ -78,8 +78,9 @@ test("I4: the load check's findings print as a count, and stay above the sheet",
   const n = app.window.eval("(S.importIssues||[]).length");
   const f = lines(app).find(x => /to look at/.test(x));
   assert.ok(f, lines(app).join("|"));
-  assert.ok(n === 0 || f.startsWith(String(n)) || /One thing/.test(f));
-  assert.ok(/^\d+ to look at, above the sheet$|^One thing/.test(f));
+  assert.equal(n, 2, "the fixture should hold two findings");
+  assert.equal(f, "2 to look at, above the sheet");
+  assert.equal(app.$$(".import-issues li").length, 2, "the findings left the banner");
   assert.deepEqual(app.errors, []);
 });
 
@@ -169,10 +170,10 @@ test("I4: a tap or a key ends it, and still does what it does", async () => {
   app2.window.eval("goHome()");
   await bring(app2, t);
   assert.ok(app2.$("#readout"));
-  const ke = new app2.window.KeyboardEvent("keydown", { key: "2", bubbles: true, cancelable: true });
+  const ke = new app2.window.KeyboardEvent("keydown", { key: "2", code: "Digit2", bubbles: true, cancelable: true });
   app2.doc.body.dispatchEvent(ke);
   assert.equal(app2.$("#readout"), null, "a key didn't end it");
-  assert.equal(ke.defaultPrevented, false);
+  assert.equal(app2.window.eval("S.tsection"), "players", "the key ended the readout but didn't move the tab");
   assert.deepEqual(app.errors, []); assert.deepEqual(app2.errors, []);
 });
 
@@ -188,6 +189,15 @@ test("I4: a refused file never reads in", async () => {
   const app = homeGm();
   await bring(app, { meta: { kind: "shadows-other" } });
   assert.equal(app.$("#readout"), null); assert.match(toast(app), /isn't a character, a table or a pack/);
+  // Not JSON: GM on says the file is none of the three.
+  const input = app.$("#file-import");
+  Object.defineProperty(input, "files", { value: [new app.window.File(["{ not json"], "x.json")], configurable: true });
+  input.dispatchEvent(new app.window.Event("change")); await wait(60);
+  assert.equal(app.$("#readout"), null); assert.equal(toast(app), "That file isn't a character, a table or a pack.");
+  // A table with GM mode off.
+  const offT = boot(GM_OFF);
+  await bring(offT, seedTable("Off")[0]);
+  assert.equal(offT.$("#readout"), null); assert.equal(toast(offT), "That file isn't a character.");
   const bad = syntheticPack(); bad.meta.id = "PK-bad";
   await bring(app, bad);
   assert.equal(app.$("#readout"), null); assert.match(toast(app), /no id/);
