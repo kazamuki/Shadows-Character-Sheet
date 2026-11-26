@@ -65,7 +65,7 @@
    "7 section.main-conditions 16,721.7,358,94.5",
    "8 div.main-grid 16,830.2,358,1367.3"
   ],
-  "deep": "365 boxes, 77c93354"
+  "deep": "369 boxes, 985d637d"
  },
  "sheet: skills @390": {
   "header": [
@@ -102,7 +102,7 @@
    "6 div.skill-cols 16,450.3,358,3699.7",
    "7 details.group 16,4150,358,30.3"
   ],
-  "deep": "792 boxes, cab44e7f"
+  "deep": "798 boxes, baf6a30f"
  },
  "sheet: character @390": {
   "header": [
@@ -142,7 +142,7 @@
    "9 div.reference 16,4349.1,358,298.8",
    "10 div.tab-links 16,4665.9,358,62"
   ],
-  "deep": "734 boxes, ca02610e"
+  "deep": "740 boxes, a4b7d2de"
  },
  "sheet: trackers @390": {
   "header": [
@@ -161,7 +161,7 @@
    0,
    88.2,
    390,
-   2738.3
+   2805.6
   ],
   "vitals": [
    0,
@@ -174,13 +174,13 @@
    "1 div.import-issues 16,182.1,358,64",
    "2 h1.step-title 16,260.2,358,32.2",
    "3 p.step-note.guide-line 16,296.4,358,46.5",
-   "4 div.trk-grid 16,364.9,358,2001.5",
-   "5 div.sect 16,2390.4,358,23.4",
-   "6 p.step-note.guide-line 16,2425.8,358,46.5",
-   "7 p.step-note 16,2494.3,358,69.8",
-   "8 div.trk 16,2586,358,158.6"
+   "4 div.trk-grid 16,364.9,358,2045.5",
+   "5 div.sect 16,2434.4,358,23.4",
+   "6 p.step-note.guide-line 16,2469.8,358,46.5",
+   "7 p.step-note 16,2538.3,358,93",
+   "8 div.trk 16,2653.3,358,158.6"
   ],
-  "deep": "191 boxes, 84002e13"
+  "deep": "203 boxes, 94dc25a1"
  },
  "sheet: progression @390": {
   "header": [
@@ -199,7 +199,7 @@
    0,
    88.2,
    390,
-   2873.2
+   2988.3
   ],
   "vitals": [
    0,
@@ -215,22 +215,22 @@
    "4 p.step-note 16,341.7,358,93",
    "5 nav.jumpbar.row 16,456.7,358,28.3",
    "6 div.sect 16,509,358,23.4",
-   "7 div.review-block 16,544.4,358,525.3",
-   "8 div.trk 16,1083.7,358,153",
-   "9 div.raise-row.spend 16,1250.7,358,154",
-   "10 details.group 16,1422.7,358,30.3",
-   "11 div.sect 16,1477,358,23.4",
-   "12 div.trk 16,1512.4,358,150.7",
-   "13 details.group 16,1675,358,756.8",
-   "14 details.group 16,2441.9,358,30.3",
-   "15 div.sect 16,2496.2,358,23.4",
-   "16 p.step-note 16,2531.6,358,23.3",
-   "17 p.step-note.guide-line 16,2576.8,358,23.3",
-   "18 div.sect 16,2624.1,358,23.4",
-   "19 div.trk 16,2659.5,358,174.7",
-   "20 p.step-note 16,2846.2,358,23.3"
+   "7 div.review-block 16,544.4,358,640.4",
+   "8 div.trk 16,1198.7,358,153",
+   "9 div.raise-row.spend 16,1365.7,358,154",
+   "10 details.group 16,1537.7,358,30.3",
+   "11 div.sect 16,1592.1,358,23.4",
+   "12 div.trk 16,1627.4,358,150.7",
+   "13 details.group 16,1790.1,358,756.8",
+   "14 details.group 16,2557,358,30.3",
+   "15 div.sect 16,2611.3,358,23.4",
+   "16 p.step-note 16,2646.7,358,23.3",
+   "17 p.step-note.guide-line 16,2691.9,358,23.3",
+   "18 div.sect 16,2739.2,358,23.4",
+   "19 div.trk 16,2774.5,358,174.7",
+   "20 p.step-note 16,2961.3,358,23.3"
   ],
-  "deep": "198 boxes, 3fca43d1"
+  "deep": "235 boxes, 18014396"
  },
  "sheet: loadout @390": {
   "header": [
@@ -273,7 +273,7 @@
    "12 p.step-note 16,715.8,358,23.3",
    "13 div.lo-add 16,761.1,358,27"
   ],
-  "deep": "92 boxes, 4a5e4434"
+  "deep": "98 boxes, b901da04"
  },
  "sheet: notes @390": {
   "header": [
@@ -307,7 +307,7 @@
    "3 p.step-note.guide-line 16,296.4,358,46.5",
    "4 label.field 16,364.9,358,368.6"
   ],
-  "deep": "75 boxes, 6f9f04d7"
+  "deep": "81 boxes, aafaf7a7"
  },
  "wizard: power-level @390": {
   "header": [
@@ -418,7 +418,7 @@
    "7 div 16,1854.6,358,20.3",
    "8 div.wiznav 16,749,358,95"
   ],
-  "deep": "109 boxes, b0769389"
+  "deep": "109 boxes, 752b792c"
  },
  "wizard: archetype @390": {
   "header": [
@@ -489,7 +489,7 @@
    "40 div 16,5085.4,358,90.4",
    "41 div.wiznav 16,749,358,95"
   ],
-  "deep": "230 boxes, 2f223f1b"
+  "deep": "230 boxes, dbb510be"
  },
  "wizard: history @390": {
   "header": [
@@ -567,7 +567,7 @@
    "12 div 16,4618,358,20.3",
    "13 div.wiznav 16,749,358,95"
   ],
-  "deep": "683 boxes, a73fc65c"
+  "deep": "683 boxes, 8b18feca"
  },
  "wizard: character-points @390": {
   "header": [
@@ -616,7 +616,7 @@
    "18 div 16,2081.8,358,20.3",
    "19 div.wiznav 16,749,358,95"
   ],
-  "deep": "125 boxes, 816c8d6b"
+  "deep": "125 boxes, a9eb2749"
  },
  "wizard: review @390": {
   "header": [
@@ -690,7 +690,7 @@
    "6 div 16,1086.3,358,20.3",
    "7 div.wiznav 16,749,358,95"
   ],
-  "deep": "108 boxes, 302fc185"
+  "deep": "108 boxes, 8487e91f"
  },
  "wizard: archetype, Expert @390": {
   "header": [
@@ -760,7 +760,7 @@
    "39 div 16,3697.9,358,90.4",
    "40 div.wiznav 16,749,358,95"
   ],
-  "deep": "232 boxes, ad74328d"
+  "deep": "232 boxes, 831d0ab8"
  },
  "wizard: skills, Expert @390": {
   "header": [
@@ -802,7 +802,7 @@
    "11 div 16,2645.8,358,20.3",
    "12 div.wiznav 16,749,358,95"
   ],
-  "deep": "682 boxes, 8b540998"
+  "deep": "682 boxes, f63e9232"
  },
  "wizard: character-points, Expert @390": {
   "header": [
@@ -850,7 +850,7 @@
    "17 div 16,1948.8,358,20.3",
    "18 div.wiznav 16,749,358,95"
   ],
-  "deep": "124 boxes, e44704"
+  "deep": "124 boxes, c8c8a340"
  },
  "home @768": {
   "header": [
@@ -918,7 +918,7 @@
    "7 section.main-conditions 16,608.2,736,94.5",
    "8 div.main-grid 16,716.7,736,1063.8"
   ],
-  "deep": "377 boxes, 88aa366"
+  "deep": "381 boxes, a210d735"
  },
  "sheet: skills @768": {
   "header": [
@@ -955,7 +955,7 @@
    "6 div.skill-cols 16,415.9,736,2047.9",
    "7 details.group 16,2463.8,736,30.3"
   ],
-  "deep": "814 boxes, ca1ed6db"
+  "deep": "820 boxes, 8526051"
  },
  "sheet: character @768": {
   "header": [
@@ -995,7 +995,7 @@
    "9 div.reference 16,3117.5,736,298.8",
    "10 div.tab-links 16,3434.3,736,27"
   ],
-  "deep": "734 boxes, 7e533944"
+  "deep": "740 boxes, 18b420a2"
  },
  "sheet: trackers @768": {
   "header": [
@@ -1033,7 +1033,7 @@
    "7 p.step-note 16,2048.5,586.7,46.5",
    "8 div.trk 16,2117,736,158.6"
   ],
-  "deep": "191 boxes, 9174037b"
+  "deep": "203 boxes, 2b2f9555"
  },
  "sheet: progression @768": {
   "header": [
@@ -1052,7 +1052,7 @@
    0,
    88.2,
    768,
-   2371.7
+   2486.8
   ],
   "vitals": [
    0,
@@ -1068,22 +1068,22 @@
    "4 p.step-note 16,330.5,586.7,46.5",
    "5 nav.jumpbar.row 16,399,736,28.3",
    "6 div.sect 16,451.4,736,23.4",
-   "7 div.review-block 16,486.8,736,488",
-   "8 div.trk 16,988.8,736,67",
-   "9 div.raise-row.spend 16,1069.8,736,88",
-   "10 details.group 16,1175.8,736,30.3",
-   "11 div.sect 16,1230.1,736,23.4",
-   "12 div.trk 16,1265.5,736,91.3",
-   "13 details.group 16,1368.8,736,598.2",
-   "14 details.group 16,1977.1,736,30.3",
-   "15 div.sect 16,2031.4,736,23.4",
-   "16 p.step-note 16,2066.8,586.7,23.3",
-   "17 p.step-note.guide-line 16,2112,586.7,23.3",
-   "18 div.sect 16,2159.3,736,23.4",
-   "19 div.trk 16,2194.6,736,138",
-   "20 p.step-note 16,2344.7,586.7,23.3"
+   "7 div.review-block 16,486.8,736,603.1",
+   "8 div.trk 16,1103.9,736,67",
+   "9 div.raise-row.spend 16,1184.9,736,88",
+   "10 details.group 16,1290.9,736,30.3",
+   "11 div.sect 16,1345.2,736,23.4",
+   "12 div.trk 16,1380.6,736,91.3",
+   "13 details.group 16,1483.9,736,598.2",
+   "14 details.group 16,2092.1,736,30.3",
+   "15 div.sect 16,2146.5,736,23.4",
+   "16 p.step-note 16,2181.8,586.7,23.3",
+   "17 p.step-note.guide-line 16,2227.1,586.7,23.3",
+   "18 div.sect 16,2274.3,736,23.4",
+   "19 div.trk 16,2309.7,736,138",
+   "20 p.step-note 16,2459.7,586.7,23.3"
   ],
-  "deep": "198 boxes, 3cbb580d"
+  "deep": "235 boxes, 2d746180"
  },
  "sheet: loadout @768": {
   "header": [
@@ -1126,7 +1126,7 @@
    "12 p.step-note 16,681.5,586.7,23.3",
    "13 div.lo-add 16,726.7,736,27"
   ],
-  "deep": "92 boxes, 3d09b028"
+  "deep": "98 boxes, 3ee3a02a"
  },
  "sheet: notes @768": {
   "header": [
@@ -1160,7 +1160,7 @@
    "3 p.step-note.guide-line 16,285.3,586.7,23.3",
    "4 label.field 16,330.5,736,368.6"
   ],
-  "deep": "75 boxes, a67d2b59"
+  "deep": "81 boxes, df29579f"
  },
  "wizard: power-level @768": {
   "header": [
@@ -1271,7 +1271,7 @@
    "7 div 16,1129.3,736,20.3",
    "8 div.wiznav 16,929,736,95"
   ],
-  "deep": "109 boxes, 82306e03"
+  "deep": "109 boxes, ff5e7f64"
  },
  "wizard: archetype @768": {
   "header": [
@@ -1342,7 +1342,7 @@
    "40 div 16,3725.8,736,90.4",
    "41 div.wiznav 16,929,736,95"
   ],
-  "deep": "230 boxes, 968622f"
+  "deep": "230 boxes, f1159c23"
  },
  "wizard: history @768": {
   "header": [
@@ -1420,7 +1420,7 @@
    "12 div 16,2537.3,736,20.3",
    "13 div.wiznav 16,929,736,95"
   ],
-  "deep": "683 boxes, 67b7c341"
+  "deep": "683 boxes, 7059af1e"
  },
  "wizard: character-points @768": {
   "header": [
@@ -1469,7 +1469,7 @@
    "18 div 16,1798.8,736,20.3",
    "19 div.wiznav 16,929,736,95"
   ],
-  "deep": "125 boxes, 764c0a47"
+  "deep": "125 boxes, 784fcde0"
  },
  "wizard: review @768": {
   "header": [
@@ -1543,7 +1543,7 @@
    "6 div 16,965.3,736,20.3",
    "7 div.wiznav 16,929,736,95"
   ],
-  "deep": "108 boxes, d568bf"
+  "deep": "108 boxes, 202cd83"
  },
  "wizard: archetype, Expert @768": {
   "header": [
@@ -1613,7 +1613,7 @@
    "39 div 16,2739.9,736,90.4",
    "40 div.wiznav 16,929,736,95"
   ],
-  "deep": "232 boxes, c0449c7f"
+  "deep": "232 boxes, 5efc5a35"
  },
  "wizard: skills, Expert @768": {
   "header": [
@@ -1655,7 +1655,7 @@
    "11 div 16,2088.2,736,20.3",
    "12 div.wiznav 16,929,736,95"
   ],
-  "deep": "682 boxes, 45c340f0"
+  "deep": "682 boxes, 4391a475"
  },
  "wizard: character-points, Expert @768": {
   "header": [
@@ -1703,7 +1703,7 @@
    "17 div 16,1728.8,736,20.3",
    "18 div.wiznav 16,929,736,95"
   ],
-  "deep": "124 boxes, d39ccbb9"
+  "deep": "124 boxes, e8c8eb57"
  },
  "home @1300": {
   "header": [
@@ -1771,7 +1771,7 @@
    "7 section.main-conditions 30,545,1240,94.5",
    "8 div.main-grid 30,653.5,1240,581.7"
   ],
-  "deep": "379 boxes, aac0e12e"
+  "deep": "383 boxes, 433265e3"
  },
  "sheet: skills @1300": {
   "header": [
@@ -1808,7 +1808,7 @@
    "6 div.skill-cols 30,421.9,1240,1499.2",
    "7 details.group 30,1921.1,1240,30.3"
   ],
-  "deep": "814 boxes, 91309825"
+  "deep": "820 boxes, 66dc4d8b"
  },
  "sheet: character @1300": {
   "header": [
@@ -1848,7 +1848,7 @@
    "9 div.reference 30,2936.1,1240,298.8",
    "10 div.tab-links 30,3252.9,1240,27"
   ],
-  "deep": "734 boxes, e3c9a37c"
+  "deep": "740 boxes, 66fca07a"
  },
  "sheet: trackers @1300": {
   "header": [
@@ -1886,7 +1886,7 @@
    "7 p.step-note 30,1658.3,586.7,46.5",
    "8 div.trk 30,1726.8,1240,158.6"
   ],
-  "deep": "191 boxes, d453444"
+  "deep": "203 boxes, 9783bdb6"
  },
  "sheet: progression @1300": {
   "header": [
@@ -1905,7 +1905,7 @@
    0,
    88.2,
    1300,
-   2131
+   2246
   ],
   "vitals": [
    0,
@@ -1921,22 +1921,22 @@
    "4 p.step-note 30,336.5,586.7,46.5",
    "5 nav.jumpbar.row 30,405,1240,28.3",
    "6 div.sect 30,457.4,1240,23.4",
-   "7 div.review-block 30,492.8,1240,338.3",
-   "8 div.trk 30,845.1,1240,67",
-   "9 div.raise-row.spend 30,926.1,1240,39",
-   "10 details.group 30,983.1,1240,30.3",
-   "11 div.sect 30,1037.4,1240,23.4",
-   "12 div.trk 30,1072.8,1240,91.3",
-   "13 details.group 30,1176.1,1240,558.6",
-   "14 details.group 30,1744.7,1240,30.3",
-   "15 div.sect 30,1799,1240,23.4",
-   "16 p.step-note 30,1834.4,586.7,23.3",
-   "17 p.step-note.guide-line 30,1879.6,586.7,23.3",
-   "18 div.sect 30,1926.9,1240,23.4",
-   "19 div.trk 30,1962.3,1240,119.7",
-   "20 p.step-note 30,2093.9,586.7,23.3"
+   "7 div.review-block 30,492.8,1240,453.4",
+   "8 div.trk 30,960.2,1240,67",
+   "9 div.raise-row.spend 30,1041.2,1240,39",
+   "10 details.group 30,1098.2,1240,30.3",
+   "11 div.sect 30,1152.5,1240,23.4",
+   "12 div.trk 30,1187.9,1240,91.3",
+   "13 details.group 30,1291.2,1240,558.6",
+   "14 details.group 30,1859.8,1240,30.3",
+   "15 div.sect 30,1914.1,1240,23.4",
+   "16 p.step-note 30,1949.5,586.7,23.3",
+   "17 p.step-note.guide-line 30,1994.7,586.7,23.3",
+   "18 div.sect 30,2042,1240,23.4",
+   "19 div.trk 30,2077.3,1240,119.7",
+   "20 p.step-note 30,2209,586.7,23.3"
   ],
-  "deep": "198 boxes, 49284a01"
+  "deep": "235 boxes, 44482c7d"
  },
  "sheet: loadout @1300": {
   "header": [
@@ -1979,7 +1979,7 @@
    "12 p.step-note 30,687.5,586.7,23.3",
    "13 div.lo-add 30,732.7,1240,27"
   ],
-  "deep": "92 boxes, db391c52"
+  "deep": "98 boxes, 59171a7c"
  },
  "sheet: notes @1300": {
   "header": [
@@ -2013,7 +2013,7 @@
    "3 p.step-note.guide-line 30,291.3,586.7,23.3",
    "4 label.field 30,336.5,1240,368.6"
   ],
-  "deep": "75 boxes, e2f14add"
+  "deep": "81 boxes, c17c943b"
  },
  "sheet: main @1300 pinned": {
   "header": [
@@ -2051,7 +2051,7 @@
    "7 section.main-conditions 30,502,940,94.5",
    "8 div.main-grid 30,610.5,940,650.1"
   ],
-  "deep": "377 boxes, cb9acfe1"
+  "deep": "381 boxes, 436edcdc"
  },
  "sheet: skills @1300 pinned": {
   "header": [
@@ -2166,7 +2166,7 @@
    "7 p.step-note 30,1640.7,586.7,46.5",
    "8 div.trk 30,1709.2,940,158.6"
   ],
-  "deep": "125 boxes, d7c7d512"
+  "deep": "131 boxes, 556b329c"
  },
  "sheet: progression @1300 pinned": {
   "header": [
@@ -2185,7 +2185,7 @@
    0,
    88.2,
    1000,
-   2082.7
+   2197.8
   ],
   "vitals": [
    0,
@@ -2201,22 +2201,22 @@
    "4 p.step-note 30,248.6,586.7,46.5",
    "5 nav.jumpbar.row 30,317.1,940,28.3",
    "6 div.sect 30,369.5,940,23.4",
-   "7 div.review-block 30,404.8,940,338.3",
-   "8 div.trk 30,757.2,940,67",
-   "9 div.raise-row.spend 30,838.2,940,39",
-   "10 details.group 30,895.2,940,30.3",
-   "11 div.sect 30,949.5,940,23.4",
-   "12 div.trk 30,984.9,940,91.3",
-   "13 details.group 30,1088.2,940,598.2",
-   "14 details.group 30,1696.4,940,30.3",
-   "15 div.sect 30,1750.8,940,23.4",
-   "16 p.step-note 30,1786.1,586.7,23.3",
-   "17 p.step-note.guide-line 30,1831.4,586.7,23.3",
-   "18 div.sect 30,1878.6,940,23.4",
-   "19 div.trk 30,1914,940,119.7",
-   "20 p.step-note 30,2045.7,586.7,23.3"
+   "7 div.review-block 30,404.8,940,453.4",
+   "8 div.trk 30,872.3,940,67",
+   "9 div.raise-row.spend 30,953.3,940,39",
+   "10 details.group 30,1010.3,940,30.3",
+   "11 div.sect 30,1064.6,940,23.4",
+   "12 div.trk 30,1100,940,91.3",
+   "13 details.group 30,1203.3,940,598.2",
+   "14 details.group 30,1811.5,940,30.3",
+   "15 div.sect 30,1865.9,940,23.4",
+   "16 p.step-note 30,1901.2,586.7,23.3",
+   "17 p.step-note.guide-line 30,1946.5,586.7,23.3",
+   "18 div.sect 30,1993.7,940,23.4",
+   "19 div.trk 30,2029.1,940,119.7",
+   "20 p.step-note 30,2160.8,586.7,23.3"
   ],
-  "deep": "132 boxes, dc55c5d4"
+  "deep": "163 boxes, 906fdf66"
  },
  "sheet: loadout @1300 pinned": {
   "header": [
@@ -2404,7 +2404,7 @@
    "7 div 248,1028.4,774,20.3",
    "8 div.wiznav 248,805,774,95"
   ],
-  "deep": "109 boxes, ac1c5702"
+  "deep": "109 boxes, 33b85c32"
  },
  "wizard: archetype @1300": {
   "header": [
@@ -2475,7 +2475,7 @@
    "40 div 248,3623.4,774,90.4",
    "41 div.wiznav 248,805,774,95"
   ],
-  "deep": "230 boxes, 8407005e"
+  "deep": "230 boxes, 199b4c22"
  },
  "wizard: history @1300": {
   "header": [
@@ -2553,7 +2553,7 @@
    "12 div 248,2416.6,774,20.3",
    "13 div.wiznav 248,805,774,95"
   ],
-  "deep": "683 boxes, e69f7e5e"
+  "deep": "683 boxes, a2521bea"
  },
  "wizard: character-points @1300": {
   "header": [
@@ -2602,7 +2602,7 @@
    "18 div 248,1679.1,774,20.3",
    "19 div.wiznav 248,805,774,95"
   ],
-  "deep": "125 boxes, 9f7ad395"
+  "deep": "125 boxes, 6753937d"
  },
  "wizard: review @1300": {
   "header": [
@@ -2676,7 +2676,7 @@
    "6 div 248,864.4,774,20.3",
    "7 div.wiznav 248,805,774,95"
   ],
-  "deep": "108 boxes, a95542cb"
+  "deep": "108 boxes, 5d07e14f"
  },
  "wizard: archetype, Expert @1300": {
   "header": [
@@ -2746,7 +2746,7 @@
    "39 div 248,2637.5,774,90.4",
    "40 div.wiznav 248,805,774,95"
   ],
-  "deep": "232 boxes, 5534e107"
+  "deep": "232 boxes, 952316d0"
  },
  "wizard: skills, Expert @1300": {
   "header": [
@@ -2788,7 +2788,7 @@
    "11 div 248,1985.8,774,20.3",
    "12 div.wiznav 248,805,774,95"
   ],
-  "deep": "682 boxes, bb075b85"
+  "deep": "682 boxes, 8417a698"
  },
  "wizard: character-points, Expert @1300": {
   "header": [
@@ -2836,7 +2836,7 @@
    "17 div 248,1609,774,20.3",
    "18 div.wiznav 248,805,774,95"
   ],
-  "deep": "124 boxes, 127648f0"
+  "deep": "124 boxes, b8766cae"
  },
  "home @1980": {
   "header": [
@@ -2904,7 +2904,7 @@
    "7 section.main-conditions 30,545,1920,94.5",
    "8 div.main-grid 30,653.5,1920,548"
   ],
-  "deep": "379 boxes, 81674088"
+  "deep": "383 boxes, f0362f5"
  },
  "sheet: skills @1980": {
   "header": [
@@ -2941,7 +2941,7 @@
    "6 div.skill-cols 30,421.9,1920,1021.1",
    "7 details.group 30,1443,1920,30.3"
   ],
-  "deep": "814 boxes, bad086f8"
+  "deep": "820 boxes, 3ac78c22"
  },
  "sheet: character @1980": {
   "header": [
@@ -2981,7 +2981,7 @@
    "9 div.reference 30,2484.2,1920,298.8",
    "10 div.tab-links 30,2801,1920,27"
   ],
-  "deep": "734 boxes, 36fd85"
+  "deep": "740 boxes, 26e82b0f"
  },
  "sheet: trackers @1980": {
   "header": [
@@ -3019,7 +3019,7 @@
    "7 p.step-note 30,1538.1,586.7,46.5",
    "8 div.trk 30,1606.6,1920,158.6"
   ],
-  "deep": "191 boxes, f58c298c"
+  "deep": "203 boxes, 50610223"
  },
  "sheet: progression @1980": {
   "header": [
@@ -3038,7 +3038,7 @@
    0,
    88.2,
    1980,
-   2131
+   2246
   ],
   "vitals": [
    0,
@@ -3054,22 +3054,22 @@
    "4 p.step-note 30,336.5,586.7,46.5",
    "5 nav.jumpbar.row 30,405,1920,28.3",
    "6 div.sect 30,457.4,1920,23.4",
-   "7 div.review-block 30,492.8,1920,338.3",
-   "8 div.trk 30,845.1,1920,67",
-   "9 div.raise-row.spend 30,926.1,1920,39",
-   "10 details.group 30,983.1,1920,30.3",
-   "11 div.sect 30,1037.4,1920,23.4",
-   "12 div.trk 30,1072.8,1920,91.3",
-   "13 details.group 30,1176.1,1920,558.6",
-   "14 details.group 30,1744.7,1920,30.3",
-   "15 div.sect 30,1799,1920,23.4",
-   "16 p.step-note 30,1834.4,586.7,23.3",
-   "17 p.step-note.guide-line 30,1879.6,586.7,23.3",
-   "18 div.sect 30,1926.9,1920,23.4",
-   "19 div.trk 30,1962.3,1920,119.7",
-   "20 p.step-note 30,2093.9,586.7,23.3"
+   "7 div.review-block 30,492.8,1920,453.4",
+   "8 div.trk 30,960.2,1920,67",
+   "9 div.raise-row.spend 30,1041.2,1920,39",
+   "10 details.group 30,1098.2,1920,30.3",
+   "11 div.sect 30,1152.5,1920,23.4",
+   "12 div.trk 30,1187.9,1920,91.3",
+   "13 details.group 30,1291.2,1920,558.6",
+   "14 details.group 30,1859.8,1920,30.3",
+   "15 div.sect 30,1914.1,1920,23.4",
+   "16 p.step-note 30,1949.5,586.7,23.3",
+   "17 p.step-note.guide-line 30,1994.7,586.7,23.3",
+   "18 div.sect 30,2042,1920,23.4",
+   "19 div.trk 30,2077.3,1920,119.7",
+   "20 p.step-note 30,2209,586.7,23.3"
   ],
-  "deep": "198 boxes, 24061f00"
+  "deep": "235 boxes, a9d49c5a"
  },
  "sheet: loadout @1980": {
   "header": [
@@ -3112,7 +3112,7 @@
    "12 p.step-note 30,687.5,586.7,23.3",
    "13 div.lo-add 30,732.7,1920,27"
   ],
-  "deep": "92 boxes, c925c0b4"
+  "deep": "98 boxes, d373ee7a"
  },
  "sheet: notes @1980": {
   "header": [
@@ -3146,7 +3146,7 @@
    "3 p.step-note.guide-line 30,291.3,586.7,23.3",
    "4 label.field 30,336.5,1920,368.6"
   ],
-  "deep": "75 boxes, a23b35e2"
+  "deep": "81 boxes, 3f084bf4"
  },
  "sheet: main @1980 pinned": {
   "header": [
@@ -3184,7 +3184,7 @@
    "7 section.main-conditions 30,502,1620,94.5",
    "8 div.main-grid 30,610.5,1620,548"
   ],
-  "deep": "377 boxes, 26d05a81"
+  "deep": "381 boxes, cab6a9a1"
  },
  "sheet: skills @1980 pinned": {
   "header": [
@@ -3299,7 +3299,7 @@
    "7 p.step-note 30,1450.2,586.7,46.5",
    "8 div.trk 30,1518.7,1620,158.6"
   ],
-  "deep": "125 boxes, d0ff19d8"
+  "deep": "131 boxes, e37ab54c"
  },
  "sheet: progression @1980 pinned": {
   "header": [
@@ -3318,7 +3318,7 @@
    0,
    88.2,
    1680,
-   2043
+   2158.1
   ],
   "vitals": [
    0,
@@ -3334,22 +3334,22 @@
    "4 p.step-note 30,248.6,586.7,46.5",
    "5 nav.jumpbar.row 30,317.1,1620,28.3",
    "6 div.sect 30,369.5,1620,23.4",
-   "7 div.review-block 30,404.8,1620,338.3",
-   "8 div.trk 30,757.2,1620,67",
-   "9 div.raise-row.spend 30,838.2,1620,39",
-   "10 details.group 30,895.2,1620,30.3",
-   "11 div.sect 30,949.5,1620,23.4",
-   "12 div.trk 30,984.9,1620,91.3",
-   "13 details.group 30,1088.2,1620,558.6",
-   "14 details.group 30,1656.8,1620,30.3",
-   "15 div.sect 30,1711.1,1620,23.4",
-   "16 p.step-note 30,1746.5,586.7,23.3",
-   "17 p.step-note.guide-line 30,1791.7,586.7,23.3",
-   "18 div.sect 30,1839,1620,23.4",
-   "19 div.trk 30,1874.3,1620,119.7",
-   "20 p.step-note 30,2006,586.7,23.3"
+   "7 div.review-block 30,404.8,1620,453.4",
+   "8 div.trk 30,872.3,1620,67",
+   "9 div.raise-row.spend 30,953.3,1620,39",
+   "10 details.group 30,1010.3,1620,30.3",
+   "11 div.sect 30,1064.6,1620,23.4",
+   "12 div.trk 30,1100,1620,91.3",
+   "13 details.group 30,1203.3,1620,558.6",
+   "14 details.group 30,1771.9,1620,30.3",
+   "15 div.sect 30,1826.2,1620,23.4",
+   "16 p.step-note 30,1861.6,586.7,23.3",
+   "17 p.step-note.guide-line 30,1906.8,586.7,23.3",
+   "18 div.sect 30,1954.1,1620,23.4",
+   "19 div.trk 30,1989.4,1620,119.7",
+   "20 p.step-note 30,2121.1,586.7,23.3"
   ],
-  "deep": "132 boxes, a6749c66"
+  "deep": "163 boxes, 75ea4e5f"
  },
  "sheet: loadout @1980 pinned": {
   "header": [
@@ -3537,7 +3537,7 @@
    "7 div 248,973.4,860,20.3",
    "8 div.wiznav 248,985,860,95"
   ],
-  "deep": "109 boxes, d78daf17"
+  "deep": "109 boxes, 2aac1c7f"
  },
  "wizard: archetype @1980": {
   "header": [
@@ -3608,7 +3608,7 @@
    "40 div 248,3538.7,860,90.4",
    "41 div.wiznav 248,985,860,95"
   ],
-  "deep": "230 boxes, 69a8176e"
+  "deep": "230 boxes, 62fb587b"
  },
  "wizard: history @1980": {
   "header": [
@@ -3686,7 +3686,7 @@
    "12 div 248,2379.9,860,20.3",
    "13 div.wiznav 248,985,860,95"
   ],
-  "deep": "683 boxes, c0d0eea4"
+  "deep": "683 boxes, 595d4d5c"
  },
  "wizard: character-points @1980": {
   "header": [
@@ -3735,7 +3735,7 @@
    "18 div 248,1670.1,860,20.3",
    "19 div.wiznav 248,985,860,95"
   ],
-  "deep": "125 boxes, 7b1b8495"
+  "deep": "125 boxes, fb8e5a29"
  },
  "wizard: review @1980": {
   "header": [
@@ -3809,7 +3809,7 @@
    "6 div 248,864.4,860,20.3",
    "7 div.wiznav 248,914.8,860,95"
   ],
-  "deep": "108 boxes, 8988fcc0"
+  "deep": "108 boxes, aacf49bc"
  },
  "wizard: archetype, Expert @1980": {
   "header": [
@@ -3879,7 +3879,7 @@
    "39 div 248,2620.7,860,90.4",
    "40 div.wiznav 248,985,860,95"
   ],
-  "deep": "232 boxes, a599eeb8"
+  "deep": "232 boxes, 986fc8e3"
  },
  "wizard: skills, Expert @1980": {
   "header": [
@@ -3921,7 +3921,7 @@
    "11 div 248,1967.5,860,20.3",
    "12 div.wiznav 248,985,860,95"
   ],
-  "deep": "682 boxes, 146fc07e"
+  "deep": "682 boxes, fa1a0f6f"
  },
  "wizard: character-points, Expert @1980": {
   "header": [
@@ -3969,6 +3969,6 @@
    "17 div 248,1600,860,20.3",
    "18 div.wiznav 248,985,860,95"
   ],
-  "deep": "124 boxes, f73767ac"
+  "deep": "124 boxes, 765f0460"
  }
 }
