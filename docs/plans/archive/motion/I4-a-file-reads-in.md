@@ -365,7 +365,7 @@ Stop and ask the conductor if:
 
 ## 15. Handing it over
 
-Use the two prompts in `WORK-ORDERS.md`, with this order's path: `docs/plans/motion/I4-a-file-reads-in.md`. Add the conductor's notes path. This order's traps:
+Use the two prompts in `WORK-ORDERS.md`, with this order's path: `docs/plans/archive/motion/I4-a-file-reads-in.md`. Add the conductor's notes path. This order's traps:
 
 - **The page opens first, the readout goes over it.** Tests read the destination in the same tick (finding 5). Call `readIn` last, inside each `proceed`.
 - **Inside `proceed`, never before the ask.** Cancel on an older copy must read nothing in.

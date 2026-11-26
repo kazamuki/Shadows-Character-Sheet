@@ -1,12 +1,15 @@
 # Plan — Motion
 
-**Status:** **approved 2026-11-24** (Ken: "These are all awesome. They add
+**Status:** **closed 2026-11-26, kept as history** (Ken; I1–I4 are built:
+Decisions 316–319, app 0.77.0–0.80.0, released together in 0.80.0). It left
+W124, W129, W134 and W128 set aside (§4), each waiting on its own rules.
+**Approved 2026-11-24** (Ken: "These are all awesome. They add
 some flair and impact", after the Motion Lab page; then, on I1's order, "I
 agree with the defaults for all the questions", with IQ1–IQ6 left blank, so
 Default). Nothing here is a decision
 until the session that builds it numbers it in `SCHEMA.md` §4. Its sessions
 are `I`_n_ (I for impact) and its questions `IQ`_n_ (§5). Its orders are in
-`plans/motion/`.
+`plans/archive/motion/`.
 **Covers:** W62 (a file reads in, I4). It sets aside W124, W129, W134 and
 W128, which each want one of this plan's beats once their own rules are built
 (§4).

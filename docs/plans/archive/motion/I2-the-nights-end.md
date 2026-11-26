@@ -371,7 +371,7 @@ Stop and ask the conductor if:
 
 ## 15. Handing it over
 
-The two prompts in `WORK-ORDERS.md`, with this order's path: `docs/plans/motion/I2-the-nights-end.md`. This order's traps:
+The two prompts in `WORK-ORDERS.md`, with this order's path: `docs/plans/archive/motion/I2-the-nights-end.md`. This order's traps:
 
 - **The plate is two things.** Its print-in and burst are a beat (once, `playBeats`, never under `calm()`). Its presence is state: drawn while a Milestone is owed, on every render. Don't make the plate itself take-once.
 - **Thresholds come from the data.** `opened` compares `minorAvail` and `majorAvail`, never MP against 5 or 10. Long-Lived adds a slot with no MP, and the cadence is data (Decision 67).
