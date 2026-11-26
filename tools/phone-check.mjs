@@ -936,8 +936,8 @@ async function nightFloors(browser, file, rows) {
         if (!info.rays) bad.push("a Major ray leaves the viewport");
       } else {
         const pip = $('[data-pip="5"]'), p = R(pip), b = R(burst);
-        near(b.left, p.left + p.width / 2, 6, "the Minor burst's x vs pip 5's centre");
-        near(b.top, p.top + p.height / 2, 6, "the Minor burst's y vs pip 5's centre");
+        near(b.left, p.left + p.width / 2, 1.5, "the Minor burst's x vs pip 5's centre");
+        near(b.top, p.top + p.height / 2, 1.5, "the Minor burst's y vs pip 5's centre");
       }
       const de = document.documentElement;
       if (de.scrollWidth !== de.clientWidth) bad.push(`the page scrolls sideways by ${de.scrollWidth - de.clientWidth}px`);

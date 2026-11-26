@@ -540,7 +540,8 @@ function playNight(b, run){
   // The new point draws in left to right.
   const mp=b.counts && b.counts.mp, pip=mp && mp.to>mp.from ? keyed(mp.to) : null;
   if (pip){ const i=pip.querySelector("i"); if (i){ i.classList.add("beat-draw"); delay(i, base); } }
-  // A burst's origin is measured against its host before the burst goes in (a ray inside the host would move the box).
+  // A burst's origin is measured against its host before the burst goes in, from the host's padding edge (its `left`/`top` origin:
+  // the plate's 3px left border would otherwise carry it off the point).
   const burst=(host, n, cls, x, y, ms, reach)=>{
     const el=document.createElement("span");
     el.className=`beat-burst${cls}`; el.setAttribute("aria-hidden","true");
@@ -551,7 +552,7 @@ function playNight(b, run){
   };
   if (minor && plate){
     let x=0, y=0;
-    try { const hr=plate.getBoundingClientRect(), pr=pip && pip.getBoundingClientRect(); if (pr){ x=pr.left+pr.width/2-hr.left; y=pr.top+pr.height/2-hr.top; } else { x=hr.width/2; y=0; } } catch(e){}
+    try { const hr=plate.getBoundingClientRect(), pr=pip && pip.getBoundingClientRect(); if (pr){ x=pr.left+pr.width/2-hr.left-plate.clientLeft; y=pr.top+pr.height/2-hr.top-plate.clientTop; } else { x=hr.width/2; y=0; } } catch(e){}
     burst(plate, 8, "", x, y, base+200, 34);
     plate.classList.add("beat-in"); delay(plate, base+200);
   }
