@@ -4191,6 +4191,12 @@ window.SHADOWS_DATA = {
   },
   "appCopy": {
     "tableRound": "Round {n}",
+    "readout": { "head": "Slotting in {file}", "recSessions": "{n} sessions on the record", "recSession1": "1 session on the record", "recIp": "{n} IP to spend", "recMp": "{n} MP", "draft": "Still in intake",
+      "findings": "{n} to look at, up top", "findings1": "One to look at, up top", "charIn": "{name} is in.",
+      "sessions": "{n} sessions", "session1": "1 session", "cast": "{n} in the cast", "players": "{n} at the table", "player1": "1 at the table",
+      "fight": "A fight is on: round {n}", "tableIn": "{name} is in play.", "version": "Version {v}",
+      "threats": "{n} threats", "threat1": "1 threat", "npcs": "{n} NPCs", "npc1": "1 NPC",
+      "packIn": "{name} slotted in: {n} entries.", "packIn1": "{name} slotted in: 1 entry." },
     "msPlate": { "lineIp": "+{n} IP", "lineMp": "+{n} MP", "untitled": "{date}", "minorTitle": "Minor Milestone", "majorTitle": "Major Milestone", "left": "{n} to pick", "choose": "Choose", "minorReady": "Minor Milestone ready", "majorReady": "Major Milestone ready" },
     "termLightPenalty": "Attacks against targets in {name} areas take {n}.",
     "termLightNone": "Attacks against targets in {name} areas take no penalty.",

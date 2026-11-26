@@ -1059,12 +1059,89 @@ async function tableBeatFloors(browser, file, rows) {
   }
 }
 
+// I4 (Decision 319): a file reads in. For each kind (a character, a table, a pack from Home, a pack from the Threats tab) the readout
+// must sit under the header and above the toast, inside the viewport, take no tap and push nothing sideways; its text and its edge
+// must show against its own panel; and it must be gone by 1.3s. Then under reduced motion (nothing drawn, nothing animating) and in
+// the light theme, where --cyan is --frame and the edge has to be --gold to show.
+async function readoutFloors(browser, file, rows) {
+  const seed = tableSeed();
+  const init = ([theme]) => { try { localStorage.setItem("shadows.feature.gm", "on"); if (theme) localStorage.setItem("shadows.theme", theme); } catch (e) {} };
+  const kinds = [
+    { label: "a character", name: "dez.shadows.json", obj: seed.char, sel: "#file-import" },
+    { label: "a table", name: "dead-air.shadows-table.json", obj: seed.table.table, sel: "#file-import" },
+    { label: "a pack, from Home", name: "test.shadows-pack.json", obj: seed.pack.pack, sel: "#file-import" },
+    { label: "a pack, from the Threats tab", name: "test.shadows-pack.json", obj: seed.pack.pack, sel: "#pack-file", threats: true },
+  ];
+  const measure = (reduced) => {
+    const out = [], R = el => el.getBoundingClientRect(), vh = window.innerHeight, vw = document.documentElement.clientWidth, de = document.documentElement;
+    const ro = document.getElementById("readout"), hdr = document.querySelector("header.top"), toast = document.getElementById("undotoast");
+    if (reduced) { if (ro) out.push("a readout was drawn under reduced motion"); if (document.getAnimations().length) out.push(document.getAnimations().length + " animation(s) running under reduced motion"); return { out }; }
+    if (!ro) return { out: ["no readout"] };
+    const r = R(ro), hb = R(hdr).bottom;
+    if (r.top < hb - 0.5) out.push("the readout's top " + Math.round(r.top) + " is above the header's bottom " + Math.round(hb));
+    if (toast && !toast.hidden && r.bottom > R(toast).top + 0.5) out.push("the readout's bottom " + Math.round(r.bottom) + " runs into the toast at " + Math.round(R(toast).top));
+    if (r.left < -0.5 || r.right > vw + 0.5 || r.bottom > vh + 0.5) out.push("the readout leaves the viewport: " + Math.round(r.left) + "–" + Math.round(r.right) + ", bottom " + Math.round(r.bottom));
+    for (const l of ro.querySelectorAll(".ro-line")) if (l.scrollWidth > l.clientWidth + 0.5) out.push("a line is cut off: " + l.textContent);
+    if (de.scrollWidth !== de.clientWidth) out.push("the page scrolls sideways by " + (de.scrollWidth - de.clientWidth) + "px");
+    const cs = getComputedStyle(ro);
+    if (cs.pointerEvents !== "none") out.push("the readout takes the pointer");
+    const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+    if (hit && ro.contains(hit)) out.push("a tap at the readout's centre lands on it");
+    const rgb = c => (c.match(/[\d.]+/g) || []).slice(0, 3).map(Number);
+    const lum = c => { const [a, b, d] = rgb(c).map(v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }); return .2126 * a + .7152 * b + .0722 * d; };
+    const ratio = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); };
+    const bg = cs.backgroundColor;
+    for (const l of ro.querySelectorAll(".ro-line")) { const k = ratio(getComputedStyle(l).color, bg); if (k < 4.5) out.push("'" + l.textContent.slice(0, 20) + "' is " + k.toFixed(2) + ":1 on the panel"); }
+    if (cs.borderLeftColor === cs.borderTopColor) out.push("the panel's edge " + cs.borderLeftColor + " is its border's colour");
+    return { out, edge: cs.borderLeftColor, bg };
+  };
+  const run = async (w, { reduced = false, light = false } = {}) => {
+    const errors = [], bad = [], info = {};
+    for (const k of kinds) {
+      // A fresh browser context per file: each read-in saves its table or pack, and the next must find Home and the Threats tab empty.
+      const c = await browser.newContext({ viewport: { width: w.width, height: w.height }, reducedMotion: reduced ? "reduce" : "no-preference", colorScheme: light ? "light" : "dark" });
+      await c.addInitScript(init, [light ? "light" : null]);
+      const p = await c.newPage(); p.on("pageerror", e => errors.push(e.message));
+      await p.goto(pathToFileURL(file).href);
+      if (k.threats) {
+        await p.click("#btn-run-table"); await p.fill("#tbl-name", "Probe"); await p.click("#modal [data-nameyes]"); await p.click('[data-tsec="threats"]');
+        await p.waitForSelector("#pack-file", { state: "attached" });
+      }
+      await p.setInputFiles(k.sel, { name: k.name, mimeType: "application/json", buffer: Buffer.from(JSON.stringify(k.obj)) });
+      await p.waitForTimeout(300);
+      const m = await p.evaluate(measure, reduced);
+      for (const o of m.out) bad.push(k.label + ": " + o);
+      if (m.edge) info.edge = m.edge + " on " + m.bg;
+      if (!reduced) {
+        const spoke = await p.evaluate(() => (document.getElementById("undotoast") || {}).textContent || "");
+        if (!/is in\.|is in play\.|slotted in/.test(spoke)) bad.push(k.label + ": the toast says '" + spoke + "'");
+        await p.waitForTimeout(1000);
+        if (await p.$("#readout")) bad.push(k.label + ": the readout was still there at 1.3s");
+      }
+      await c.close();
+    }
+    return { bad: [...bad, ...errors.map(e => "page error: " + e)], info };
+  };
+  for (const w of NIGHT_WIDTHS) {
+    for (const [label, opts] of [["", {}], ["reduced motion", { reduced: true }], ["light theme", { light: true }]]) {
+      const r = await run(w, opts);
+      rows.push({ width: w.name, screen: "a file reads in" + (label ? ": " + label : ""), layout: r.bad.length ? r.bad.join("; ") : "ok" + (r.info.edge ? " (edge " + r.info.edge + ")" : ""), ok: !r.bad.length });
+    }
+  }
+}
+
 const browser = await launch();
 // K4 (Decision 307): from 1280px the page scrolls in #app, not the window. `__pg()` is whichever box scrolls, as the app's pageScroller() says,
 // in every page this run opens; each scroll and each read of the scroll position below goes through it.
 { const nc = browser.newContext.bind(browser);
   browser.newContext = async (...a) => { const c = await nc(...a); await c.addInitScript(() => { window.__pg = () => (matchMedia("(min-width:1280px)").matches && document.getElementById("app")) || document.scrollingElement; }); return c; }; }
 const rows = [], tableNumbers = [];
+// --readout: only I4's pass.
+if (args.includes("--readout")) {
+  try { await readoutFloors(browser, file, rows); } finally { await browser.close(); rmSync(dir, { recursive: true, force: true }); }
+  console.table(rows.map(r => ({ ...r, ok: r.ok ? "ok" : "OVER" })));
+  process.exit(rows.some(r => !r.ok) ? 1 : 0);
+}
 // --table-beats: only I3's pass, for the inner loop (the full run still runs it).
 if (args.includes("--table-beats")) {
   try { await tableBeatFloors(browser, file, rows); } finally { await browser.close(); rmSync(dir, { recursive: true, force: true }); }
@@ -1247,6 +1324,7 @@ try {
   await printFloors(browser, file, rows);
   await nightFloors(browser, file, rows);
   await tableBeatFloors(browser, file, rows);
+  await readoutFloors(browser, file, rows);
   // P16 (Decision 246): the Character tab's layout. jsdom has no layout, so this is where it's held.
   for (const w of LAYOUT_WIDTHS) {
     for (const f of characterFixtures()) {

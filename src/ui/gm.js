@@ -250,15 +250,15 @@ function guardReplaceTable(saved, incoming, proceed){
 }
 // Home's one Import hands a table or a pack here, already known to be one
 // (Decision 181): the third call-in point, widened.
-function gmImportFile(raw, kind){
-  if (kind==="pack") gmImportPack(raw); else gmImportTable(raw);
+function gmImportFile(raw, kind, file){
+  if (kind==="pack") gmImportPack(raw, file); else gmImportTable(raw, file);
 }
-function gmImportTable(raw){
+function gmImportTable(raw, file){
   const t=Engine.migrateTable(raw), id=t.meta.id;
   guardReplaceTable((savedTable(id)||{}).table, t, ()=>{
     openTable(t);
     markTableExported(id);   // the file just opened holds what's now saved
-    const w=Engine.tableCheck(t); if (w.length) notice(w[0]);
+    readIn("table", t, { file, warnings:Engine.tableCheck(t) });   // last: the toast says the line, then the warning (Decision 319)
   });
 }
 
@@ -3470,7 +3470,7 @@ function packSupersedes(incoming, saved){
   const a=Date.parse(incoming.meta.updated), b=Date.parse(saved.meta.updated);
   return Number.isFinite(a) && Number.isFinite(b) && a>=b;
 }
-function gmImportPack(raw){
+function gmImportPack(raw, file){
   const p=Engine.migratePack(raw), chk=Engine.packCheck(p);
   if (chk.refuse){ notice(chk.refuse); return; }
   const have=savedPack(p.meta.id), haveP=have && Engine.migratePack(have.pack);
@@ -3479,19 +3479,17 @@ function gmImportPack(raw){
       html:`<p>This file is older than the copy of <b>${esc(packName(haveP))}</b> slotted in here. Slotting it in puts it in place of the newer one.</p>`,
       foot:`<button class="btn" data-modalclose>Cancel</button><button class="btn primary" data-replacego>Put the older copy in place</button>`,
       bind(body, foot){
-        foot.querySelector("[data-replacego]").onclick=()=>{ closeModal(); slotPack(p, chk.warnings); };
+        foot.querySelector("[data-replacego]").onclick=()=>{ closeModal(); slotPack(p, chk.warnings, file); };
         foot.querySelector("[data-modalclose]").focus();
       } });
     return;
   }
-  slotPack(p, chk.warnings);
+  slotPack(p, chk.warnings, file);
 }
 // One setItem, so a pack that doesn't fit leaves what was there as it was.
-function slotPack(p, warnings){
+function slotPack(p, warnings, file){
   try{ localStorage.setItem(packKey(p.meta.id), JSON.stringify({ pack:p, imported:new Date().toISOString() })); }
   catch(e){ notice("This browser is out of room for that pack."); return; }
-  const n=p.entries.length;
-  notice(`${packName(p)} slotted in: ${n} ${n===1?"entry":"entries"}.${warnings.length ? " "+warnings[0] : ""}`);
   if (S.screen==="table"){
     renderTable();
     const el=$("main").querySelector("[data-tsearch]"); if (el) el.focus();
@@ -3499,6 +3497,7 @@ function slotPack(p, warnings){
     renderHome();
     const el=$("main").querySelector(attrSel("data-pcard", p.meta.id)); if (el) el.focus();
   }
+  readIn("pack", p, { file, warnings });   // last: today's words are the toast's, the readout goes over the page (Decision 319)
 }
 // The picker on the empty Threats tab: its own input, and only a pack goes through.
 function bindPackPicker(main){
@@ -3511,7 +3510,7 @@ function bindPackPicker(main){
       let raw;
       try{ raw=JSON.parse(rd.result); }catch(err){ notice("That file isn't a pack."); return; }
       if (Engine.fileKind(raw)!=="pack"){ notice("That file isn't a pack."); return; }
-      gmImportFile(raw, "pack");
+      gmImportFile(raw, "pack", f.name);
     };
     rd.readAsText(f);
     input.value="";
