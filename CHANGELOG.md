@@ -24,7 +24,7 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.78.0
+## [Unreleased] — app 0.79.0
 
 ### Character sheet
 
@@ -42,6 +42,10 @@ own in the footer.
 ### GM mode
 
 - **The job form** says "abandoned" where it used to say "walked out".
+- **At the table, Next marks who's up:** their name in the bar, and the edge on their row. A new round stamps its number.
+- **A clock draws its new segment, and Full lands with a stamp.** A row that goes down says so.
+- **Writing the award log prints it in, line by line.**
+- **After Next, the row that is up stays clear of the Undo toast.**
 
 ## v0.76.0 — 2026-11-24
 

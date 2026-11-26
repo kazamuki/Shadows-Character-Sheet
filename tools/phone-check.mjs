@@ -974,12 +974,102 @@ async function nightFloors(browser, file, rows) {
   }
 }
 
+// I3 (Decision 318): where the table's beats land, measured in a real layout, from where Playwright's own click leaves the control (never
+// a centred one: I2's centred button hid MF1's edge, and its first nudge hid the toast). The Dead Air sample's running encounter at 1280px
+// and 375px: Next four times (the bar's stamped name inside the viewport under the header, the acting row inside the viewport and
+// above the undo toast, its edge drawn), Next session's clock line + from Tonight's chip (the stamped Full inside the viewport and above
+// the toast), and Write on the open session (the heading and every printed line inside the viewport and above the toast). No sideways
+// scroll. Then under reduced motion (nothing running a frame after each press) and in the light theme (.co-mp resolves to --gold).
+async function tableBeatFloors(browser, file, rows) {
+  const seed = tableSeed();
+  const init = ([s, pk, pack, theme]) => { try { localStorage.setItem("shadows.feature.gm", "on"); if (theme) localStorage.setItem("shadows.theme", theme);
+    localStorage.setItem("shadows.table.v1." + s.table.meta.id, JSON.stringify(s)); localStorage.setItem(pk, JSON.stringify(pack)); } catch (e) {} };
+  const run = async (w, { reduced = false, light = false } = {}) => {
+    const c = await browser.newContext({ viewport: { width: w.width, height: w.height }, reducedMotion: reduced ? "reduce" : "no-preference", colorScheme: light ? "light" : "dark" });
+    await c.addInitScript(init, [seed.table, seed.packKey, seed.pack, light ? "light" : null]);
+    const errors = [], bad = [], info = {};
+    const open = async () => { const p = await c.newPage(); p.on("pageerror", e => errors.push(e.message)); await p.goto(pathToFileURL(file).href); await p.click("[data-topen]"); return p; };
+    // What a beat must satisfy wherever it lands: inside the viewport, under the sticky header, above the toast, no sideways scroll.
+    const judge = (p, what, sel, extra) => p.evaluate(([what, sel, extra, reduced]) => {
+      const out = [], R = el => el.getBoundingClientRect(), vh = window.innerHeight, vw = document.documentElement.clientWidth;
+      const hdr = document.querySelector("header.top"), bar = document.querySelector("#main .enc-bar"), toast = document.getElementById("undotoast");
+      const floor = toast && !toast.hidden ? R(toast).top : vh, ceil = Math.max(hdr ? R(hdr).bottom : 0, bar ? R(bar).bottom : 0);
+      const els = [...document.querySelectorAll(sel)];
+      if (!els.length) return [`${what}: nothing matches ${sel}`];
+      for (const el of els) {
+        const r = R(el);
+        if (r.top < (sel.includes("enc-status") ? (hdr ? R(hdr).bottom : 0) : ceil) - 1 || r.bottom > floor + 0.5 || r.left < -0.5 || r.right > vw + 0.5)
+          out.push(`${what}: ${sel} at ${Math.round(r.top)}–${Math.round(r.bottom)} (header ${Math.round(ceil)}, toast/viewport ${Math.round(floor)} of ${vh})`);
+      }
+      const de = document.documentElement;
+      if (de.scrollWidth !== de.clientWidth) out.push(`${what}: the page scrolls sideways by ${de.scrollWidth - de.clientWidth}px`);
+      if (extra === "edge") {
+        const row = document.querySelector("#main .enc-row.active"), ps = row && getComputedStyle(row, "::before");
+        if (!reduced && !(row && row.classList.contains("beat-edge") && ps && ps.content !== "none" && parseFloat(ps.width) === 4)) out.push(`${what}: the acting row's edge isn't drawn`);
+      }
+      if (reduced) { if (document.getAnimations().length) out.push(`${what}: ${document.getAnimations().length} animation(s) running under reduced motion`); if (document.querySelector("#main [class*=beat-]")) out.push(`${what}: a beat class under reduced motion`); }
+      return out;
+    }, [what, sel, extra || "", reduced]);
+    // Next ×3.
+    {
+      const p = await open();
+      await p.click('[data-tn="fight"]');
+      for (let i = 1; i <= 3; i++) {   // the fourth press is the round's reset, which has no acting row
+        await p.click("[data-enext]"); await p.waitForTimeout(150);
+        bad.push(...await judge(p, `Next ${i}, the name`, "#main .enc-status [data-eactor]"));
+        bad.push(...await judge(p, `Next ${i}, the row`, "#main .enc-row.active", "edge"));
+      }
+    }
+    // A clock's + from Tonight's chip.
+    {
+      const p = await open();
+      // The chip is the way there where the strip shows it; at phone width a running fight leads and the clock chip folds away, so the line is reached on the page.
+      if (await p.locator('[data-tn="clock"]').isVisible()) await p.click('[data-tn="clock"]'); else await p.click('[data-tsec="sessions"]');
+      await p.waitForTimeout(80);
+      await p.click('[data-cline="CK-T9E5BJ91"] [data-clkplus]'); await p.waitForTimeout(250);
+      bad.push(...await judge(p, "a clock's +, its Full", '[data-cline="CK-T9E5BJ91"] [data-cline-n]'));
+      const full = await p.evaluate(() => { const n = document.querySelector('[data-cline="CK-T9E5BJ91"] [data-cline-n]'); return n && n.textContent + (n.classList.contains("beat-stamp") ? " stamped" : ""); });
+      if (!reduced && full !== "Full stamped") bad.push(`a clock's +: the line reads ${JSON.stringify(full)}`);
+    }
+    // Write on the open session.
+    {
+      const p = await open();
+      await p.click('[data-tsec="sessions"]'); await p.click("[data-sopen]"); await p.click("[data-co-open]");
+      await p.click("[data-co-write]"); await p.waitForTimeout(100);
+      bad.push(...await judge(p, "Write, the heading", "#main [data-coend-h]"));
+      bad.push(...await judge(p, "Write, the lines", "#main .co-log > li"));
+      const g = await p.evaluate(({ light }) => {
+        const mp = document.querySelector("#main .co-mp"), probe = document.createElement("i"); probe.style.color = "var(--gold)"; document.body.appendChild(probe);
+        const gold = getComputedStyle(probe).color; probe.remove();
+        return { mp: mp ? getComputedStyle(mp).color : null, gold, lines: document.querySelectorAll("#main .co-log > .beat-print").length };
+      }, { light });
+      if (g.mp && g.mp !== g.gold) bad.push(`.co-mp is ${g.mp}, --gold is ${g.gold}`);
+      if (light && g.gold === "rgb(242, 201, 76)") bad.push("the light theme still resolves --gold to the dark theme's gold");
+      info.gold = g.gold; info.mp = !!g.mp;
+    }
+    await c.close();
+    return { bad: [...bad, ...errors.map(e => `page error: ${e}`)], info };
+  };
+  for (const w of NIGHT_WIDTHS) {
+    for (const [label, opts] of [["", {}], ["reduced motion", { reduced: true }], ["light theme", { light: true }]]) {
+      const r = await run(w, opts);
+      rows.push({ width: w.name, screen: `the table's beats${label ? ": " + label : ""}`, layout: r.bad.length ? r.bad.join("; ") : `ok${r.info.mp ? ` (.co-mp seen, --gold ${r.info.gold})` : ""}`, ok: !r.bad.length });
+    }
+  }
+}
+
 const browser = await launch();
 // K4 (Decision 307): from 1280px the page scrolls in #app, not the window. `__pg()` is whichever box scrolls, as the app's pageScroller() says,
 // in every page this run opens; each scroll and each read of the scroll position below goes through it.
 { const nc = browser.newContext.bind(browser);
   browser.newContext = async (...a) => { const c = await nc(...a); await c.addInitScript(() => { window.__pg = () => (matchMedia("(min-width:1280px)").matches && document.getElementById("app")) || document.scrollingElement; }); return c; }; }
 const rows = [], tableNumbers = [];
+// --table-beats: only I3's pass, for the inner loop (the full run still runs it).
+if (args.includes("--table-beats")) {
+  try { await tableBeatFloors(browser, file, rows); } finally { await browser.close(); rmSync(dir, { recursive: true, force: true }); }
+  console.table(rows.map(r => ({ ...r, ok: r.ok ? "ok" : "OVER" })));
+  process.exit(rows.some(r => !r.ok) ? 1 : 0);
+}
 try {
   for (const w of WIDTHS) {
     const errors = [];
@@ -1155,6 +1245,7 @@ try {
   await sheetHelp(browser, file, rows);
   await printFloors(browser, file, rows);
   await nightFloors(browser, file, rows);
+  await tableBeatFloors(browser, file, rows);
   // P16 (Decision 246): the Character tab's layout. jsdom has no layout, so this is where it's held.
   for (const w of LAYOUT_WIDTHS) {
     for (const f of characterFixtures()) {

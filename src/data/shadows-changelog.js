@@ -2,7 +2,7 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
-    "version": "0.78.0",
+    "version": "0.79.0",
     "date": null,
     "intro": [],
     "items": [],
@@ -25,7 +25,11 @@ window.SHADOWS_CHANGELOG = [
       {
         "title": "GM mode",
         "items": [
-          "**The job form** says \"abandoned\" where it used to say \"walked out\"."
+          "**The job form** says \"abandoned\" where it used to say \"walked out\".",
+          "**At the table, Next marks who's up:** their name in the bar, and the edge on their row. A new round stamps its number.",
+          "**A clock draws its new segment, and Full lands with a stamp.** A row that goes down says so.",
+          "**Writing the award log prints it in, line by line.**",
+          "**After Next, the row that is up stays clear of the Undo toast.**"
         ]
       }
     ]

@@ -93,12 +93,93 @@ function typingNow(){
 }
 // What a delete's ask says (Decisions 171, 176, 212): the table can always take it back.
 const UNDO_ASK = "Undo brings it back, from the toast or ⋮ → Activity.";
+// ── The table moves once (Decision 318, I3) ───────────────────────────
+// tableChange notes what the press moved, against the table as of the last record (tableBase.copy: a press writes first and calls
+// tableChange after, so a copy taken inside would see nothing). update() plays it (playTableBeats), on update(false) too, so a
+// clock's + plays on its own press. Module state, never S (openTable and renderTable replace S): taken once, by the update
+// that follows. The close-out's end page is a render-time take-once instead (coJustWritten), because Write's tableChange
+// doesn't redraw and the page draws on the update after. Undo, typing and reduced motion never get a beat.
+let tableBeat=null;
+let coJustWritten=null;
+const BEAT_TABLE_MS=550;
+const tableEncs = x => x && Array.isArray(x.encounters) ? x.encounters.filter(e=>e && typeof e==="object") : [];
+const downRows = (t, e) => { const down=new Set(); try { Engine.encounterView(t, e.id, packsMemo).rows.forEach(v=>{ if (v && v.health && v.health.down && v.row) down.add(v.row.id); }); } catch(x){} return down; };
+function tableBeatsFrom(before, t){
+  const b={ turn:null, round:null, clocks:[], out:[], down:[] };
+  try {
+    tableEncs(t).filter(e=>e.status==="running").forEach(e=>{
+      const was=tableEncs(before).find(x=>x.id===e.id); if (!was) return;
+      try {
+        const rows=Array.isArray(e.rows) ? e.rows : [];
+        if (!b.turn && typeof e.turn==="string" && e.turn!==was.turn && rows.some(r=>r && r.id===e.turn)) b.turn={ enc:e.id, row:e.turn };
+        if (!b.round && Number.isFinite(e.round) && e.round>(Number.isFinite(was.round) ? was.round : 0)) b.round={ enc:e.id, n:e.round };
+      } catch(x){}
+    });
+  } catch(x){}
+  try {
+    const was=new Map((Array.isArray(before && before.clocks) ? before.clocks : []).filter(c=>c && typeof c==="object").map(c=>[c.id, c]));
+    (Array.isArray(t && t.clocks) ? t.clocks : []).forEach(c=>{
+      const w=c && was.get(c.id);
+      if (w && Number.isFinite(w.filled) && Number.isFinite(c.filled) && c.filled>w.filled)
+        b.clocks.push({ id:c.id, from:w.filled, to:c.filled, full:Number.isFinite(c.segments) && c.filled>=c.segments });
+    });
+  } catch(x){}
+  try {
+    tableEncs(t).forEach(e=>{
+      const was=tableEncs(before).find(x=>x.id===e.id); if (!was) return;
+      const rowsWas=new Map((Array.isArray(was.rows) ? was.rows : []).filter(r=>r && typeof r==="object").map(r=>[r.id, r]));
+      (Array.isArray(e.rows) ? e.rows : []).forEach(r=>{ const w=r && rowsWas.get(r.id); if (w && r.out===true && w.out!==true) b.out.push(r.id); });
+      if (e.status==="running"){
+        // The seat copies aren't in the baseline (tableCopy), so the "before" borrows them: a copy never changes in a press.
+        const was2=downRows(Object.assign({}, before, { copies:t.copies }), e), now=downRows(t, e);
+        now.forEach(id=>{ if (!was2.has(id) && rowsWas.has(id)) b.down.push(id); });
+      }
+    });
+  } catch(x){}
+  return b.turn || b.round || b.clocks.length || b.out.length || b.down.length ? b : null;
+}
+// The post-render pass. Everything runs in the first frame, after the binders' in-place paints and toActive's scroll, so every
+// element is looked up there and a pane that never draws shows the right table and nothing else. Reduced motion still says the round.
+function playTableBeats(){
+  const b=tableBeat; tableBeat=null;
+  if (!b) return;
+  if (b.round) announce((((D.appCopy||{}).tableRound)||"Round {n}").replace("{n}", String(b.round.n)));
+  if (calm() || typeof requestAnimationFrame!=="function") return;
+  stopBeats();
+  const run=beatRun={ raf:0, timers:[], off:null }, added=[];
+  const mark=(el, cls, delay)=>{ if (!el) return; el.classList.add(cls); if (delay) el.style.animationDelay=`${delay}ms`; added.push([el, cls, !!delay]); };
+  run.off=()=>added.forEach(([el, cls, d])=>{ el.classList.remove(cls); if (d) el.style.animationDelay=""; });
+  run.timers.push(setTimeout(()=>{ if (beatRun===run){ run.off(); beatRun=null; } }, BEAT_TABLE_MS));
+  run.raf=requestAnimationFrame(()=>{
+    if (beatRun!==run) return;
+    const main=document.getElementById("main"); if (!main) return;
+    const bar=main.querySelector(".enc-bar .enc-status"), row=id=>main.querySelector(attrSel("data-erow", id));
+    if (b.round && bar && S.encOpen===b.round.enc) mark(bar.querySelector("[data-eround]"), "beat-stamp");
+    if (b.turn){
+      if (bar && S.encOpen===b.turn.enc) mark(bar.querySelector("[data-eactor]"), "beat-stamp");
+      const r=row(b.turn.row); if (r && r.classList.contains("active")) mark(r, "beat-edge");
+    }
+    b.clocks.forEach(c=>{
+      main.querySelectorAll(attrSel("data-clock", c.id)).forEach(root=>{
+        const boxes=root.querySelectorAll(".clock-box");
+        for (let i=c.from; i<c.to; i++) mark(boxes[i], "beat-draw", (i-c.from)*60);
+        if (c.full) mark(root.querySelector("[data-clockfull] strong"), "beat-stamp", 150);
+      });
+      if (c.full) main.querySelectorAll(attrSel("data-cline", c.id)).forEach(l=>mark(l.querySelector("[data-cline-n]"), "beat-stamp", 150));
+    });
+    b.out.forEach(id=>{ const r=row(id); if (r && r.classList.contains("out")) mark(r, "beat-fade"); });
+    b.down.forEach(id=>{ const r=row(id); if (r) mark(r.querySelector(".enc-down"), "beat-stamp"); });
+  });
+}
 function tableChange(fn, redraw=true, label){
   const t=S.table;
   fn();
   const typing=typingNow();
   let r=null;
-  if (tableBase && tableBase.table===t) r=Engine.recordTableAction(t, tableBase.copy, label, undefined, { fold:typing });
+  if (tableBase && tableBase.table===t){
+    if (!typing) tableBeat=tableBeatsFrom(tableBase.copy, t);
+    r=Engine.recordTableAction(t, tableBase.copy, label, undefined, { fold:typing });
+  }
   rebaseTable();
   t.meta.updated=new Date().toISOString();
   update(redraw);
@@ -3040,7 +3121,7 @@ function coJobsLine(c){
 function coLogLine(l, c){
   const who=esc(l.name), note=l.note ? esc(l.note) : "";
   if (l.present){
-    const head=(l.ip!==null || l.milestone) ? `log a session${l.ip!==null ? ` with <strong>${l.ip} IP</strong>` : ""}${l.milestone ? `${l.ip!==null ? " and" : " with"} the Milestone Point` : ""}` : "";
+    const head=(l.ip!==null || l.milestone) ? `log a session${l.ip!==null ? ` with <strong>${l.ip} IP</strong>` : ""}${l.milestone ? `${l.ip!==null ? " and" : " with"} <span class="co-mp">the Milestone Point</span>` : ""}` : "";
     const bits=[ head, l.credits!==null ? `+${coMoney(l.credits)} Çredits` : "" ].filter(Boolean).join("; ");
     return `${who}: ${[bits ? bits + "." : "", note, ...coJobClauses(c, l.name)].filter(Boolean).join(" ") || "nothing this time."}`;
   }
@@ -3179,12 +3260,20 @@ function closeSheetHtml(s){
 const closeEndNow = s => S.coEnd===s.id && !!s.close;
 function closeEndHtml(s){
   const title=Engine.sessionTitle(s), lines=(s.close && s.close.lines) || [];
+  // Decision 318: the page Write just drew takes the beat once (read and cleared here), under reduced motion not at all. The
+  // heading stamps, and each line prints in 60ms apart, eight at most, the rest with the eighth.
+  const fresh=coJustWritten===s.id && !calm(); coJustWritten=null;
+  const print=html=>fresh ? html.replace('<li class="int-line', '<li class="beat-print int-line') : html;   // bindCloseEnd spaces them (no inline style here)
+  const items=lines.map(l=>print(`<li class="int-line">${coLogLine(l, s.close)}</li>`));
+  const jobs=coJobsLine(s.close);
   return `<div class="tbl-bar scroll-row" data-row="tblbar"><button type="button" class="btn sm" data-coend-back>Back to ${esc(title)}</button></div>
-    <h1 class="step-title tbl-title" tabindex="-1" data-coend-h>${esc(title)} is closed out</h1>
-    ${lines.length ? `<ul class="int-list co-log">${lines.map(l=>`<li class="int-line">${coLogLine(l, s.close)}</li>`).join("")}${coJobsLine(s.close)}</ul>` : `<p class="step-note">It said nothing.</p>`}
+    <h1 class="step-title tbl-title${fresh ? " beat-stamp" : ""}" tabindex="-1" data-coend-h>${esc(title)} is closed out</h1>
+    ${lines.length ? `<ul class="int-list co-log">${items.join("")}${jobs ? print(jobs) : ""}</ul>` : `<p class="step-note">It said nothing.</p>`}
     <p class="co-end-btns"><button type="button" class="btn primary" data-coend-export>Export the table</button> <button type="button" class="btn" data-coend-done>Done</button></p>`;
 }
 function bindCloseEnd(main, s){
+  // The lines print in 60ms apart, eight at most, the rest with the eighth (Decision 318).
+  main.querySelectorAll(".co-log > .beat-print").forEach((li, i)=>{ li.style.animationDelay=`${Math.min(i, 7)*60}ms`; });
   const focus = sel => { const el=$("main").querySelector(sel); if (el) el.focus(); return !!el; };
   const leave = () => { S.coEnd=null; scrollPageTop(); update(); focus("[data-sco-h]"); };
   main.querySelector("[data-coend-back]").onclick=leave;
@@ -3238,7 +3327,7 @@ function bindCloseOut(main, s){
       if (el) el.focus(); else focus('[data-crew-seat], [data-crew-name], [data-crew-add]');
       return;
     }
-    S.closeOut=null; S.coEnd=id; S.keepUnx=true; scrollPageTop(); update(); focus("[data-coend-h]");
+    S.closeOut=null; S.coEnd=id; S.keepUnx=true; coJustWritten=id; scrollPageTop(); update(); focus("[data-coend-h]");
   };
   function bindLists(){
     box.querySelectorAll("[data-co]").forEach(el=>{
@@ -4301,10 +4390,11 @@ function encPageHtml(e){
   const canOpen = !ended && !wrapping && (e.status==="planned" || (running && e.round===1 && !(e.acted||[]).length));
   const openingText = v.opening && !canOpen && (ended || (running && e.round===1)) ? ` · ${v.opening.kind==="ambush" ? "Ambush" : "Surprise"} by ${v.opening.title}` : "";
   const actor = running ? v.rows.find(r=>r.active) : null;
-  const status = (running ? `Round ${e.round}${actor ? ` · ${actor.label}` : ""}` : ended ? (e.round ? `Ended · ${encRounds(e.round)}` : "Ended · not run") : "Planned") + openingText;
+  // The round and the name are their own spans, so the turn's beat can stamp each (Decision 318); the words are the same.
+  const statusHtml = (running ? `Round <span data-eround>${esc(e.round)}</span>${actor ? ` · <span data-eactor>${esc(actor.label)}</span>` : ""}` : esc(ended ? (e.round ? `Ended · ${encRounds(e.round)}` : "Ended · not run") : "Planned")) + esc(openingText);
   const from=backFromLineTitle();
   // Back is the bar's first button, and the bar is the page's first thing (Decision 258).
-  const bar = `<div class="enc-bar"><button class="btn sm" data-enc-back>${from ? `Back to ${esc(from)}` : "Back to encounters"}</button><b class="enc-status">${esc(status)}</b>
+  const bar = `<div class="enc-bar"><button class="btn sm" data-enc-back>${from ? `Back to ${esc(from)}` : "Back to encounters"}</button><b class="enc-status">${statusHtml}</b>
     ${e.status==="planned" ? `<button class="btn primary" data-enc-start>Start</button><button class="btn" data-enc-end>End</button>` : ""}
     ${running && !wrapping ? `${v.atReset ? `<button class="btn primary" data-efinish${encResetOk(e) ? "" : " disabled"}${keysOn() ? ' aria-keyshortcuts="N" title="Key: N"' : ""}>Finish the round</button>` : `<button class="btn primary" data-enext${keysOn() ? ' aria-keyshortcuts="N" title="Key: N"' : ""}>Next</button>`}<button class="btn" data-enc-end>End the encounter</button>` : ""}</div>`;
   const turns = `${!ended && !wrapping ? `<div class="enc-turns"><div class="form-toggle" role="group" aria-label="Turns">
@@ -4355,7 +4445,11 @@ function bindEncounters(main){
   const eid = () => S.encOpen;
   const edit = (rowId, f) => change(()=>Engine.editParticipant(S.table, eid(), rowId, f));
   const rowEl = id => $("main").querySelector(attrSel("data-erow", id));
-  const toActive = () => { const el=$("main").querySelector(".enc-row.active"); if (el && el.scrollIntoView) el.scrollIntoView({ block:"nearest" }); };
+  // Decision 318 (IQ19): while the undo toast shows, the row is kept above it: its scroll margin is what the toast covers, plus 8, plus the 8px it is still sliding up (its rect is read mid-slide).
+  const toActive = () => { const el=$("main").querySelector(".enc-row.active"); if (!el || !el.scrollIntoView) return;
+    const toast=document.getElementById("undotoast"), top=toast && !toast.hidden ? toast.getBoundingClientRect().top : 0;
+    el.style.scrollMarginBottom = top>0 ? `${Math.ceil(window.innerHeight-top)+16}px` : "";
+    el.scrollIntoView({ block:"nearest" }); el.style.scrollMarginBottom=""; };
   // Next keeps focus on Next and says who acts, once, from the page's one live region (outside <main>, so a redraw leaves it).
   const next = () => { const r=Engine.nextTurn(S.table, eid()); if (!r.ok){ notice(r.why); return; } S.encDelay=null; tableChange(()=>{});
     if (r.reset) focus("[data-esrc]") || focus("[data-efinish]");
