@@ -316,3 +316,21 @@ test("I2: Lock & Export rings three times the first time it's ready, then never 
   assert.ok(lock().classList.contains("beat-ring"), "a second draft, complete on Review, rings once");
   assert.deepEqual(probe.errors, []);
 });
+
+test("I2: Log session nudges the page just far enough to show the strip, never to the top and never past the header", () => {
+  const app = openSheet(night(4), "sessions");
+  const w = app.window;
+  // jsdom has no layout, so the rects are stood in for: [strip end bottom, button top].
+  w.eval(`window.__calls = []; window.pageScrollBy = dy => window.__calls.push(dy); window.scrollPageTop = () => window.__calls.push("top");
+    window.__geo = { end: 1000, btn: 400 };
+    Element.prototype.getBoundingClientRect = function(){ const g = window.__geo, z = (t, b) => ({ top: t, bottom: b, left: 0, right: 0, width: 0, height: b - t });
+      return this.matches && this.matches("header.top") ? z(0, 56) : this.matches && this.matches("[data-seslog]") ? z(g.btn, g.btn + 30) : this.matches && this.matches(".ms-plate, .mp-track") ? z(g.end - 40, g.end) : z(0, 0); };
+    Object.defineProperty(window, "innerHeight", { value: 800, configurable: true });`);
+  const nudge = geo => { w.eval(`window.__calls.length = 0; window.__geo = ${JSON.stringify(geo)}; nudgeToNight();`); return JSON.parse(w.eval("JSON.stringify(window.__calls)")); };
+  assert.deepEqual(nudge({ end: 1000, btn: 400 }), [208], "exactly what's missing, plus the margin");
+  assert.deepEqual(nudge({ end: 1000, btn: 100 }), [36], "capped so the button stays under the header");
+  assert.deepEqual(nudge({ end: 700, btn: 400 }), [], "nothing when the strip already shows");
+  w.eval(`window.__calls.length = 0; window.__geo = { end: 1000, btn: 400 };`);
+  app.click("[data-seslog]");   // a real press runs the same call, and never scrollPageTop
+  assert.deepEqual(JSON.parse(w.eval("JSON.stringify(window.__calls)")), [208], "the press nudged by what the strip needed, and never to the top");
+});

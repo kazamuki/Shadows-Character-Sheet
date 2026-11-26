@@ -30,7 +30,7 @@ own in the footer.
 
 - **Logging a session reads as the end of a night.** The night prints in under the button, and your IP and Milestone Points count up.
 - **A track under Log session shows how far you are from the next Milestone.** When you reach one, it says so, and **Choose** takes you to the pick.
-- **Logging a session keeps you where you are,** so the night's line and any Milestone are right under the button.
+- **Logging a session keeps your place, and brings the night's line into view.**
 - **Lock & Export rings when your character is ready to lock.** The Admin dot holds still.
 - **The numbers move now.** Spend Luck, pay Çredits, take a hit or lose Sanity, and the number counts to where it landed, with what it cost floating off it.
 - **A hit fills its Health Levels one after another, and a meter on Main holds what you lost for a moment before it drains.** A heal gets a quiet green line.

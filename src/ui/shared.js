@@ -522,6 +522,22 @@ function playBeats(){
   });
 }
 
+// Log session keeps your place, and brings the night into view (Decision 317, Ken 2026-11-25): if the strip under the button ends
+// below the viewport, the page scrolls by exactly that much (instant, the page's own helper), never so far that the button goes up
+// under the sticky header, and never to the top. Nothing moves when the strip already shows.
+function nudgeToNight(){
+  try {
+    const strip=document.querySelector("#main [data-night]"); if (!strip) return;
+    const end=strip.querySelector(".ms-plate") || strip.querySelector(".mp-track") || strip;
+    const btn=document.querySelector("#main [data-seslog]"), hdr=document.querySelector("header.top");
+    const need=Math.ceil(end.getBoundingClientRect().bottom + 8 - window.innerHeight);
+    if (!(need>0)) return;
+    const room=btn ? Math.floor(btn.getBoundingClientRect().top - (hdr ? hdr.getBoundingClientRect().bottom : 0) - 8) : need;
+    const dy=Math.min(need, room);
+    if (dy>0) pageScrollBy(dy);
+  } catch(e){}
+}
+
 // ── The night's end (Decision 317, I2) ─────────────────────────────────────
 // Under Log session the strip holds the night's register line, the Milestone track and, while one is owed, the plate (sheet.js).
 // The line and the plate are state, drawn from the character on every render; this is the beat on top of them: the new point
