@@ -305,7 +305,7 @@ function update(rerenderMain=true){
   if (rerenderMain){ renderMain(); sweepTip(); }
   renderLedger(); renderVitals();
   playBeats();   // last: the drawer and the popover are drawn by now (Decision 316)
-  if (S.screen==="table") paintTonight();   // gm.js: update(false) skips renderTable, and the strip reports exactly those changes (Decision 270)
+  if (S.screen==="table"){ paintTonight(); playTableBeats(); }   // gm.js: update(false) skips renderTable, and the strip reports exactly those changes (Decision 270); the table's beats play on the same update (Decision 318)
 }
 
 // Every state-changing sheet action runs through commit(): snapshot

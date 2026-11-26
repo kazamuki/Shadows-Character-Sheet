@@ -6061,6 +6061,19 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** W129 or W124 is ruled (money arrives on this beat), or a Milestone can be crossed without a commit.
      - **Built:** app 0.78.0 (unreleased), PR (this one), log entry 2026-11-25.
 
+318. **The table moves once too: the acting row and the round, a clock's segment and its Full, a row going down, and the award log printing in.**
+     *2026-11-26 · Ken + Claude · Touches: tableChange, tableBeatsFrom, playTableBeats, tableBeat, enc-bar, enc-status, enc-row.active, toActive, enc-row.out, enc-down, clockHtml, clockLineHtml, data-clockfull, data-cline-n, Tonight, paintTonight, closeEndHtml, co-log, co-mp, coJustWritten, announce, appCopy.tableRound, phone-check, I3*
+     - **Decided:** A table press that moves the turn stamps the bar's actor name and draws the acting row's cyan edge; Finish the round (and Start) stamps the round. A clock's + draws its segment in on the clock's block, and a clock that fills stamps Full, on the block and the line. A row marked out fades; a row gone Down stamps it. Writing a close-out prints the award log's lines in on its end page, one by one, under a stamped heading. The acting row is kept clear of the undo toast. Nothing moves on undo, typing, a later render or under reduced motion; the screen reader hears the turn and the round.
+     - **Why:** Ken, after the Motion Lab (2026-11-24): a GM who looks up has lost the turn.
+     - **Rejected:**
+       - A cyan edge that slides from the old row to the new: the page scrolls under it, so it would be measured mid-scroll.
+       - A burst when a seat crosses a Major: the table doesn't hold a seat's Milestone Points (IQ21).
+       - Tonight's chip sliding in when a row goes down: the strip isn't drawn on the encounter page (IQ20).
+       - The beat kept in S for the next render: a press that doesn't redraw (a clock's +) would replay it later.
+     - **Replaces:** nothing. It extends Decisions 316 and 317's kit to GM mode.
+     - **Revisit if:** the table learns a seat's Milestone Points (a seat's copy updated by the close-out), or the encounter page draws the Tonight strip.
+     - **Built:** app 0.79.0 (unreleased), PR (this one), log entry 2026-11-26.
+
 
 ## 5. Open Flags
 

@@ -522,6 +522,22 @@ h2 > .term:only-child::after{content:""; position:absolute; left:0; top:50%; wid
 .pick.beat-row{animation:rowDrop .3s ease-out}
 .jrow.beat-settle{animation:rowSettle .9s ease-out}
 [data-lock].beat-ring{animation:ringOut .7s ease-out 3}
+/* The table moves once (Decision 318, I3). The turn's edge draws top to bottom over the row's own cyan border, which sits back
+   to the frame colour for the beat, so the draw shows; a stamp is nightStamp; a clock's segment prints in; a row going out fades. */
+@keyframes edgeDraw{from{transform:scaleY(0)} to{transform:scaleY(1)}}
+@keyframes rowFade{from{opacity:1} to{opacity:.65}}
+.enc-row.active.beat-edge{position:relative; border-left-color:transparent}
+.enc-row.beat-edge::before{content:""; position:absolute; left:-4px; top:-1px; bottom:-1px; width:4px; background:var(--cyan); border-radius:6px 0 0 6px; transform-origin:top; animation:edgeDraw .25s ease-out both}
+.enc-row.out.beat-fade{animation:rowFade .3s ease-out}
+.enc-status .beat-stamp, .enc-down.beat-stamp, .clock-full .beat-stamp, .clock-line-n.beat-stamp{animation:nightStamp .3s ease-out both}
+.clock-box.beat-draw{animation:tagPrint .25s cubic-bezier(.16,1,.3,1) both}
+.co-log li.beat-print{animation:tagPrint .3s cubic-bezier(.16,1,.3,1) both}
+.step-title.beat-stamp{animation:nightStamp .3s ease-out .1s both}
+.co-mp{color:var(--gold)}
+@media (prefers-reduced-motion: reduce){
+  .enc-row.beat-edge::before, .enc-row.out.beat-fade, .enc-status .beat-stamp, .enc-down.beat-stamp, .clock-full .beat-stamp, .clock-line-n.beat-stamp,
+  .clock-box.beat-draw, .co-log li.beat-print, .step-title.beat-stamp{animation:none}
+}
 @media (prefers-reduced-motion: reduce){
   .night-line.beat-print, .night-line.beat-print .nl-title, .night-line .beat-stamp, .mp-pip i.beat-draw, .mp-pip.beat-flash,
   .ms-plate.beat-in, .ms-plate.major.beat-in, .ms-plate.beat-in .ms-title, .beat-burst i, .pick.beat-row, .jrow.beat-settle, [data-lock].beat-ring{animation:none}
