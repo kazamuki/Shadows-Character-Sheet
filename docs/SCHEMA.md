@@ -6047,6 +6047,20 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** players find the count slow in a fight (keep the float, drop the count); a tracker is added that doesn't change through `commit()`.
      - **Built:** app 0.77.0 (unreleased), PR (this one), log entry 2026-11-24.
 
+317. **A night's end moves once: a logged session drops into History, IP and MP count, a track draws the new point, and an opened Milestone gets a burst and a plate ending on Choose.**
+     *2026-11-25 · Ken + Claude · Touches: beatsFrom, beatReads, playBeats, ip, mp, logged, opened, taken, nightLineHtml, mpTrackHtml, msPlateHtml, data-mschoose, beat-burst, beat-ring, lockRung, data-lock, Log session, History, Milestones, .admin-banner .dot, pulseDot, announce, phone-check, appCopy.msPlate, I2*
+     - **Decided:** A commit that logs a session, or opens a Minor or Major, plays once. IP and MP count everywhere they're drawn. Under Log session, the night's register line prints and stamps gold, and a track marked from the data's cadence draws the new point. A Minor gets a small burst; a Major lights every point in turn and a bigger burst (about 1.3s; a tap skips it). A plate stays under the track while a Milestone is owed; its Choose opens that group at its first Take. History's new row drops in; a Milestone taken settles in. Lock & Export rings three times once a sitting. Log session keeps your place: no scroll to the top, only a nudge as far as the strip needs. The Admin dot holds still. Nothing moves on undo or under reduced motion.
+     - **Why:** Ken, after the Motion Lab (2026-11-24). The fifth Milestone Point looked like the fourth, and the pick is the point of the moment.
+     - **Rejected:**
+       - The plate only for the beat: a later render would lose Choose.
+       - Reusing Decision 273's Choose: that dialog is the Focused Skill picker.
+       - A track in the Milestones block: the player is at Log session.
+       - A burst for every Milestone Point: only a threshold is an event.
+       - A ring that loops, or a light sweep: a loop is how motion gets annoying (IQ3).
+     - **Replaces:** nothing. It extends Decision 316's kit with IP and MP.
+     - **Revisit if:** W129 or W124 is ruled (money arrives on this beat), or a Milestone can be crossed without a commit.
+     - **Built:** app 0.78.0 (unreleased), PR (this one), log entry 2026-11-25.
+
 
 ## 5. Open Flags
 

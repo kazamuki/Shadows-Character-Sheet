@@ -840,7 +840,7 @@ function renderReview(){
   h += `<div class="wiznav">
     <button class="btn" data-nav="-1">Back</button>
     <button class="btn" data-export="draft">Export draft</button>
-    <button class="btn go" data-lock="1" ${blocked?"disabled":""}>Lock &amp; Export</button>
+    <button class="btn go${blocked ? "" : lockRingCls()}" data-lock="1" ${blocked?"disabled":""}>Lock &amp; Export</button>
     ${wizWhyHtml(issues)}
   </div>
   <p class="step-note" style="margin-top:12px">Locking finalizes creation. The exported <span style="font-family:var(--mono)">.shadows.json</span> is the character — keep it, share it, bring it to the table.</p>`;
@@ -1280,6 +1280,15 @@ function bindWriteIn(main, ch){
   }
 }
 
+// Decision 317 (I2): Lock & Export rings three times the first time it's drawn ready for this character in a sitting, then holds
+// still. lockRung (shared.js) is a sitting's view state (a Set of meta.id), never saved. Reading it is what rings it: ask once per draw.
+function lockRingCls(){
+  const id = S.ch && S.ch.meta && S.ch.meta.id || "?";
+  if (lockRung.has(id) || calm()) return "";
+  lockRung.add(id);
+  return " beat-ring";
+}
+
 function refreshNav(){
   // re-evaluate Continue button + issue list without nuking input focus
   const st=STEPS[S.step]; if(!st) return;
@@ -1288,7 +1297,7 @@ function refreshNav(){
   const btn=nav.querySelector('[data-nav="1"]');
   if(btn) btn.disabled=errors>0;
   const lock=nav.querySelector("[data-lock]");
-  if(lock) lock.disabled=errors>0;
+  if(lock){ lock.disabled=errors>0; if (errors===0 && lockRingCls()) lock.classList.add("beat-ring"); }
   const old=document.getElementById("wiz-issues"); if(old) old.remove();
   nav.insertAdjacentHTML("beforebegin", wizIssuesHtml(issues));
   const why=nav.querySelector(".wiznav-why"); if(why) why.remove();

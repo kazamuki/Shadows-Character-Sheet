@@ -362,8 +362,8 @@ function sheetVitalsBar(ch){
   if (sf && sf.value!=null){ const left=Math.max(0,sf.value-(ch.trackers.sfr.spent||0));
     h+=pill("sfr","sfr","SFR",`${countHtml("sfr", left)}<small>/${sf.value}</small>`); }
   h+=pill("cred","credits",CR,countHtml("cred", numText(ch.trackers.credits.current)),"cred");
-  h+=pill(ip.available<0?"danger":"","","IP",`${numText(ip.available)}`);
-  h+=pill("","","MP",`${ms.mp}`);
+  h+=pill(ip.available<0?"danger":"","","IP",countHtml("ip", numText(ip.available)));
+  h+=pill("","","MP",countHtml("mp", ms.mp));
   h+=`</div><button class="vpill toggle" data-vitals-toggle aria-label="Open full vitals"><span class="vtext"><span class="vk">Vitals</span><span class="vv">View ▸</span></span></button>`;
   return h+`</div>`;
 }
@@ -393,8 +393,8 @@ function vitalsPanelHtml(ch){
   if (sfr && sfr.value!=null) h += vrow("SFR", countHtml("sfr", Math.max(0,sfr.value-(ch.trackers.sfr.spent||0)))+" / "+sfr.value);
   h += vrow(CR, countHtml("cred", numText(ch.trackers.credits.current)), "gold", "", "cred");
   h += `</div><div class="vgroup">`;
-  h += vrow("IP", numText(ip.available), ip.available<0?"over":"");
-  h += vrow("Milestone Pts", ms.mp);
+  h += vrow("IP", countHtml("ip", numText(ip.available)), ip.available<0?"over":"");
+  h += vrow("Milestone Pts", countHtml("mp", ms.mp));
   h += `</div><div class="vgroup">` + D.stats.map(s=>{
     const m=t[s.id].mod; return vrow(s.id, t[s.id].value+" ("+modText(m)+")", "", s.id);
   }).join("") + `</div>`;
@@ -1929,7 +1929,7 @@ function renderShProgression(){
   const head = sheetHeader("Progression", termsHtml(seatRule ? seatRule.replace("{perHour}", String(D.ip.perHour)) : copyFill("introProgression", { perHour: D.ip.perHour })));
   let h = logSessionHtml(ch, secs);
 
-  h += `<div class="trk" ${secs.at("IP")}><h2>IP</h2><span class="big ${ip.available<0?"bad":""}">${numText(ip.available)}</span>
+  h += `<div class="trk" ${secs.at("IP")} data-float="ip"><h2>IP</h2><span class="big ${ip.available<0?"bad":""}">${countHtml("ip", numText(ip.available))}</span>
     <span class="sub" style="flex-basis:auto">earned ${ip.earned} · spent ${ip.spent}</span>
     <input type="number" min="0" data-ipamt placeholder="amount" aria-label="IP grant amount">
     <input type="text" data-ipnote placeholder="note (e.g. Improved roll, GM bonus)" aria-label="IP grant note">
@@ -1966,14 +1966,14 @@ function renderShProgression(){
 
   // Milestones
   h += secs.sect("Milestones", `Milestones — ${ms.mp} Milestone Point${ms.mp===1?"":"s"}`) + `
-    <div class="trk"><h2>MP</h2><span class="big">${ms.mp}</span>
+    <div class="trk" data-float="mp"><h2>MP</h2><span class="big">${countHtml("mp", ms.mp)}</span>
     <span class="sub" style="flex-basis:auto">${ms.sessionMP} from sessions · ${ms.manualMP} manual</span>
     <button class="btn sm" data-mp="-1" ${ms.manualMP<=0?"disabled":""}>−1 manual</button>
     <button class="btn sm" data-mp="1">+1 manual</button>
     <span class="sub">Minor unlock at ${ms.minorCadence} · Major at ${ms.majorCadence}  Unlocked: ${ms.minorAvail} Minor (${ms.minorTaken.length} taken) · ${ms.majorAvail} Major (${ms.majorTaken.length} taken).</span></div>`;
 
   // Minor
-  h += `<details class="group" ${ms.minorLeft>0?"open":""}><summary>Minor Milestones ${ms.minorLeft>0?`— <b style="color:var(--green)">${ms.minorLeft} to pick</b>`:""}</summary>`;
+  h += `<details class="group" id="ms-minor" ${ms.minorLeft>0?"open":""}><summary>Minor Milestones ${ms.minorLeft>0?`— <b style="color:var(--green)">${ms.minorLeft} to pick</b>`:""}</summary>`;
   const askSpec = S.askRoll && Engine.ipRoll(S.askRoll);
   if (askSpec){
     const askName = (D.milestones.minorShared.find(m=>m.id===S.askRoll)||{name:S.askRoll}).name;
@@ -1996,14 +1996,14 @@ function renderShProgression(){
   }).join("");
   if (ms.minorTaken.length) h += `<div class="journal">` + ms.minorTaken.map((t,i)=>{
     const m=D.milestones.minorShared.find(x=>x.id===t.id)||{name:t.id};
-    return `<div class="jrow"><span class="d">${esc(String(t.date||"").slice(0,10))}</span><span class="what">${esc(m.name)}</span>
+    return `<div class="jrow${settleCls("minor", i)}"><span class="d">${esc(String(t.date||"").slice(0,10))}</span><span class="what">${esc(m.name)}</span>
       <button class="x" data-delminor="${i}" title="remove">✕</button></div>`; }).join("") + `</div>`;
   h += `</details>`;
 
   // Major
   const offered = Engine.majorOffered(ch), shared = new Set((D.milestones.majorGeneral||[]).map(m=>m.id));
   const own = offered.filter(m=>!shared.has(m.id)), arch = D.archetypes.find(a=>a.id===ch.identity.archetype);
-  h += `<details class="group" ${ms.majorLeft>0?"open":""}><summary>Major Milestones ${ms.majorLeft>0?`— <b style="color:var(--green)">${ms.majorLeft} to pick</b>`:""}</summary>
+  h += `<details class="group" id="ms-major" ${ms.majorLeft>0?"open":""}><summary>Major Milestones ${ms.majorLeft>0?`— <b style="color:var(--green)">${ms.majorLeft} to pick</b>`:""}</summary>
     <p class="step-note">Each once, in any order, when you meet what it asks.</p>${sheetLine("majorGmChip")}`;
   const majorHtml = m=>{
     const taken = ms.majorTaken.some(t=>t.id===m.id);
@@ -2036,7 +2036,7 @@ function renderShProgression(){
     // Decision 263: a Major that goes on a weapon or armor says which.
     const mr = Engine.majorRows(ch).find(r=>r.id===t.id);
     const where = !mr ? "" : mr.follows ? `goes with ${(Engine.majorById(ch, mr.follows)||{name:mr.follows}).name}` : mr.rowName || (mr.kind==="armor" ? "not on armor yet" : "not on a weapon yet");
-    return `<div class="jrow"><span class="d">${esc(String(t.date||"").slice(0,10))}</span><span class="what">${esc(m.name)}${pick?`: ${esc(pick)}`:""}${where?`: ${esc(where)}`:""}</span>
+    return `<div class="jrow${settleCls("major", i)}"><span class="d">${esc(String(t.date||"").slice(0,10))}</span><span class="what">${esc(m.name)}${pick?`: ${esc(pick)}`:""}${where?`: ${esc(where)}`:""}</span>
       ${text?`<span class="note">${esc(text)}</span>`:""}<button class="x" data-delmajor="${i}" title="remove">✕</button></div>`; }).join("") + `</div>`;
   h += `</details>`;
   h += sessionHistoryHtml(ch, secs);
@@ -2061,13 +2061,58 @@ function logSessionHtml(ch, secs){
       <label class="check ses-mp"><input type="checkbox" data-sesmp checked> Milestone Point</label>
       <button class="btn go" data-seslog="1" disabled>Log session</button>
       <span class="sub" data-seswhy>Enter the hours played or the IP earned.</span>
-    </div></div>`;
+    </div>
+    <div class="night" data-night>${nightLineHtml(ch)}${mpTrackHtml(ch)}${msPlateHtml(ch)}</div></div>`;
   return h;
+}
+// Decision 317 (I2): the strip under Log session's button. The register line, the track and the plate are all state, drawn from
+// the character on every render, so a reload or a tab switch shows them as they stand. Their motion is the render-time classes
+// below (the line, History's row, a taken Milestone's row) and playBeats (the point, the bursts, the plate), on a beat only.
+const settleCls = (kind, i) => beatsNow && beatsNow.taken && beatsNow.taken.kind===kind && beatsNow.taken.index===i && !calm() ? " beat-settle" : "";
+function nightLineHtml(ch){
+  const list = ch && Array.isArray(ch.sessions) ? ch.sessions : [], s = list[list.length-1];
+  if (!s || typeof s!=="object") return "";
+  const per = Number((D.milestones.rules||{}).milestonePointsPerSession);
+  const title = typeof s.title==="string" ? s.title.trim() : "", date = typeof s.date==="string" ? s.date : "";
+  const ip = Number(s.ipEarned), mp = s.milestonePoint!==false ? (Number.isFinite(per) ? per : 1) : 0;
+  const cls = beatsNow && beatsNow.logged && !calm();
+  return `<div class="night-line${cls?" beat-print":""}">${title && date ? `<span class="nl-date">${esc(date)}</span>` : ""}
+    <b class="nl-title">${esc(title || msCopy("untitled").replace("{date}", date))}</b>
+    ${Number.isFinite(ip) ? `<span class="nl-ip${cls?" beat-stamp":""}">${esc(msCopy("lineIp").replace("{n}", numText(Math.max(0, Math.floor(ip)))))}</span>` : ""}
+    ${mp>0 ? `<span class="nl-mp${cls?" beat-stamp":""}">${esc(msCopy("lineMp").replace("{n}", String(mp)))}</span>` : ""}</div>`;
+}
+// One .mp-pip per point in the band the player is in: from the Major before it to the next one (Decision 67: both come from the
+// data). It stays on the band that ends at a threshold until the next point, so the point that opens a Major is the last one lit.
+function mpTrackHtml(ch){
+  try {
+    const r = D.milestones.rules, mp = Math.floor(Engine.milestoneState(ch).mp);
+    const every = r.majorEvery, first = r.majorFirstAt;
+    if (!Number.isInteger(every) || every<1 || every>20 || !Number.isInteger(first) || first<1 || !Number.isFinite(mp) || mp<0) return "";
+    const end = mp<=first ? first : first + Math.ceil((mp-first)/every)*every, start = Math.max(1, end-every+1);
+    const minorAt = n => Number.isInteger(r.minorFirstAt) && n>=r.minorFirstAt && Number.isInteger(r.minorEvery) && r.minorEvery>0 && (n-r.minorFirstAt)%r.minorEvery===0;
+    let h = `<div class="mp-track" aria-hidden="true">`;
+    for (let n=start; n<=end; n++){
+      const kind = n===end ? "major" : minorAt(n) ? "minor" : "";
+      h += `<span class="mp-pip${n<=mp?" on":""}${kind?" mark "+kind:""}" data-pip="${n}"><i></i>${kind ? `<em>${kind==="major" ? "Major" : "Minor"}</em>` : ""}</span>`;
+    }
+    return h + `</div>`;
+  } catch(e){ return ""; }
+}
+// While a Milestone is owed: Major first, then Minor. State, never the beat; Choose opens the group (data-mschoose, below).
+function msPlateHtml(ch){
+  try {
+    const ms = Engine.milestoneState(ch), kind = ms.majorLeft>0 ? "major" : ms.minorLeft>0 ? "minor" : "";
+    if (!kind) return "";
+    const n = kind==="major" ? ms.majorLeft : ms.minorLeft;
+    return `<div class="ms-plate ${kind}"><div class="ms-txt"><b class="ms-title">${esc(msCopy(kind==="major" ? "majorTitle" : "minorTitle"))}</b>
+      <span class="ms-left">${esc(msCopy("left").replace("{n}", String(n)))}</span></div>
+      <button class="btn sm go" data-mschoose="${kind}">${esc(msCopy("choose"))}</button></div>`;
+  } catch(e){ return ""; }
 }
 function sessionHistoryHtml(ch, secs){
   const ms=Engine.milestoneState(ch), ip=Engine.ipState(ch);
   let h = secs.sect("History", `History — ${ch.sessions.length} session${ch.sessions.length===1?"":"s"} · ${ms.mp} MP · ${ip.earned} IP earned`);
-  h += ch.sessions.length ? ch.sessions.map((s,i)=>`<div class="pick"><div class="head">
+  h += ch.sessions.length ? ch.sessions.map((s,i)=>`<div class="pick${i===ch.sessions.length-1 && beatsNow && beatsNow.logged && !calm() ? " beat-row" : ""}"><div class="head">
       <h2>${esc(s.title)||"Session "+(i+1)}</h2>
       <span class="cost">${esc(s.date)} · +${s.ipEarned} IP${s.milestonePoint?" · +1 MP":""}</span>
       <div class="controls"><button class="x" data-sesdel="${i}" title="delete" style="background:none;border:0;color:var(--dim);cursor:pointer">✕</button></div></div>
@@ -4374,6 +4419,15 @@ function bindSheet(){
     const landed = bump(clone(ch));       // a Milestone this reaches lands a training in the same commit (Decision 230)
     commit("milestone", `Manual MP ${signed(d)}${landedLabel(landed)}`, ()=>{ bump(ch); });
   });
+  // Decision 317 (I2): Choose opens the owed group and puts focus on its first Take. It is not the Focused Skill picker (Decision 273).
+  main.querySelectorAll("[data-mschoose]").forEach(b=>b.onclick=()=>{
+    const grp=document.getElementById(b.dataset.mschoose==="major" ? "ms-major" : "ms-minor"); if (!grp) return;
+    grp.open=true; jumpTo(grp.id);
+    const take=grp.querySelector(b.dataset.mschoose==="major" ? "[data-takemajor]:not(:disabled)" : "[data-takeminor]:not(:disabled)");
+    // Nothing to Take yet (a Major whose asks aren't met): focus goes to the group's own heading, so the keyboard carries on from there.
+    const to = take || grp.querySelector("summary");
+    if (to) to.focus({ preventScroll:true });
+  });
   main.querySelectorAll("[data-takeminor]").forEach(b=>b.onclick=()=>{
     const id=b.dataset.takeminor;
     if (Engine.ipRoll(id)){ S.askRoll=id; update(); return; }
@@ -4456,7 +4510,7 @@ function bindSheet(){
     // The Milestone Point may be the one a training waits for: logging lands it in the same commit (Decision 230).
     const dry = Engine.logSession(clone(ch), entry), landed = dry.trained, off = stoppedNames(ch, dry.stopped);
     commit("session", `Log session${title?`: ${title}`:""}${landedLabel(landed)}${off?`. ${off} stopped.`:""}`, ()=>{ Engine.logSession(ch, entry); });
-    scrollPageTop();
+    nudgeToNight();   // not to the top: only as far as the night's strip needs (Decision 317)
   });
   main.querySelectorAll("[data-sesdel]").forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.sesdel), s=ch.sessions[i]||{};
