@@ -918,6 +918,13 @@ async function nightFloors(browser, file, rows) {
       const vh = window.innerHeight, hdr = document.querySelector("header.top");
       if (R(line).top < (hdr ? R(hdr).bottom : 0) - 1 || R(line).bottom > vh) bad.push(`the register line is off screen (${Math.round(R(line).top)}–${Math.round(R(line).bottom)} of ${vh})`);
       if (R(plate).bottom > vh) bad.push(`the plate is off screen (bottom ${Math.round(R(plate).bottom)} of ${vh})`);
+      // The undo toast is up for the same seconds: the line and the plate sit above it, not under it.
+      const toast = document.getElementById("undotoast");
+      if (toast && !toast.hidden) {
+        const tt = R(toast).top;
+        if (R(line).bottom > tt) bad.push(`the toast covers the register line (line bottom ${Math.round(R(line).bottom)}, toast top ${Math.round(tt)})`);
+        if (R(plate).bottom > tt) bad.push(`the toast covers the plate (plate bottom ${Math.round(R(plate).bottom)}, toast top ${Math.round(tt)})`);
+      }
       const bs = getComputedStyle(block), edge = R(block).left + parseFloat(bs.borderLeftWidth) + parseFloat(bs.paddingLeft);
       near(R(plate).left, edge, 2, "the plate's left edge vs the Log block's content edge");
       if (R(plate).right > vw + 0.5) bad.push("the plate leaves the viewport");

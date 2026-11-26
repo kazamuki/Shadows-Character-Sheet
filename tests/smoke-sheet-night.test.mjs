@@ -322,15 +322,20 @@ test("I2: Log session nudges the page just far enough to show the strip, never t
   const w = app.window;
   // jsdom has no layout, so the rects are stood in for: [strip end bottom, button top].
   w.eval(`window.__calls = []; window.pageScrollBy = dy => window.__calls.push(dy); window.scrollPageTop = () => window.__calls.push("top");
-    window.__geo = { end: 1000, btn: 400 };
+    window.__geo = { end: 1000, btn: 400, toast: null };
     Element.prototype.getBoundingClientRect = function(){ const g = window.__geo, z = (t, b) => ({ top: t, bottom: b, left: 0, right: 0, width: 0, height: b - t });
-      return this.matches && this.matches("header.top") ? z(0, 56) : this.matches && this.matches("[data-seslog]") ? z(g.btn, g.btn + 30) : this.matches && this.matches(".ms-plate, .mp-track") ? z(g.end - 40, g.end) : z(0, 0); };
+      return this.matches && this.matches("header.top") ? z(0, 56) : this.matches && this.matches("[data-seslog]") ? z(g.btn, g.btn + 30) : this.matches && this.matches(".ms-plate, .mp-track") ? z(g.end - 40, g.end) : this.matches && this.matches("#undotoast") ? z(g.toast || 0, (g.toast || 0) + 60) : z(0, 0); };
     Object.defineProperty(window, "innerHeight", { value: 800, configurable: true });`);
   const nudge = geo => { w.eval(`window.__calls.length = 0; window.__geo = ${JSON.stringify(geo)}; nudgeToNight();`); return JSON.parse(w.eval("JSON.stringify(window.__calls)")); };
   assert.deepEqual(nudge({ end: 1000, btn: 400 }), [208], "exactly what's missing, plus the margin");
   assert.deepEqual(nudge({ end: 1000, btn: 100 }), [36], "capped so the button stays under the header");
   assert.deepEqual(nudge({ end: 700, btn: 400 }), [], "nothing when the strip already shows");
-  w.eval(`window.__calls.length = 0; window.__geo = { end: 1000, btn: 400 };`);
+  w.eval(`window.__calls.length = 0; window.__geo = { end: 1000, btn: 400, toast: 700 };`);
   app.click("[data-seslog]");   // a real press runs the same call, and never scrollPageTop
-  assert.deepEqual(JSON.parse(w.eval("JSON.stringify(window.__calls)")), [208], "the press nudged by what the strip needed, and never to the top");
+  assert.deepEqual(JSON.parse(w.eval("JSON.stringify(window.__calls)")), [308], "the press nudged to clear the undo toast's top (700 - 8), and never to the top");
+  // The toast only counts while it shows.
+  w.eval(`document.getElementById("undotoast").hidden = true;`);
+  assert.deepEqual(nudge({ end: 1000, btn: 400, toast: 700 }), [208], "a hidden toast is no floor");
+  w.eval(`document.getElementById("undotoast").hidden = false;`);
+  assert.deepEqual(nudge({ end: 1000, btn: 400, toast: 700 }), [308], "a shown toast is the floor");
 });

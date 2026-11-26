@@ -530,7 +530,9 @@ function nudgeToNight(){
     const strip=document.querySelector("#main [data-night]"); if (!strip) return;
     const end=strip.querySelector(".ms-plate") || strip.querySelector(".mp-track") || strip;
     const btn=document.querySelector("#main [data-seslog]"), hdr=document.querySelector("header.top");
-    const need=Math.ceil(end.getBoundingClientRect().bottom + 8 - window.innerHeight);
+    // The undo toast sits at the viewport's bottom for the same seconds as the beat, so its top is the floor when it shows.
+    const toast=document.getElementById("undotoast"), floor=(toast && !toast.hidden ? toast.getBoundingClientRect().top : window.innerHeight) - 8;
+    const need=Math.ceil(end.getBoundingClientRect().bottom - floor);
     if (!(need>0)) return;
     const room=btn ? Math.floor(btn.getBoundingClientRect().top - (hdr ? hdr.getBoundingClientRect().bottom : 0) - 8) : need;
     const dy=Math.min(need, room);
