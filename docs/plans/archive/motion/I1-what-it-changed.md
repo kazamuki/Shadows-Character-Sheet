@@ -307,7 +307,7 @@ Stop and ask the conductor if:
 
 ## 15. Handing it over
 
-The two prompts in `WORK-ORDERS.md`, with this order's path: `docs/plans/motion/I1-what-it-changed.md`. This order's traps:
+The two prompts in `WORK-ORDERS.md`, with this order's path: `docs/plans/archive/motion/I1-what-it-changed.md`. This order's traps:
 
 - **The frame trap is the one that matters.** Write nothing into a count span outside a frame callback. A count that rewinds first and counts second shows the old number in any pane that isn't drawing.
 - **Take `S.beats` on every screen.** Taking it only in the sheet branch, as `landedNow` is, leaves a seat's commit to replay on the next sheet.

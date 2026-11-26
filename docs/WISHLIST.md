@@ -134,7 +134,9 @@ Main's vitals grid has five tracks at 768 and eight of 142px at 1280, so seven c
 ### Rules in play: powers, rounds, encounters, Sanity
 
 **W128 — The sheet knows when an encounter ends.** *Claude, from P18's sign-off · 🔎 · Rule or shape · raised 2026-10-16*\
-**Plan:** set aside by [motion](plans/motion.md) §4: an encounter's end takes the register's stamp once its design exists
+**Plan:** none yet
+
+*the motion plan (closed 2026-11-26, its §4, in the archive) set this aside: an encounter's end takes the register's stamp once its design exists.*
 
 Many effects run "per encounter", "once per session" or "for 12 rounds": Favored Skill's re-roll, Untouchable's uses, Spirit Guide's calls, Time Sense,
 True Faith's aura, Blood Lust's state after a failed check. Ken wants some of them tracked (Divine Intervention spent, Favors used, Nine Lives counting
@@ -160,7 +162,9 @@ P20b taught Take a hit and Rest what a held **trait** does (Scrapper, Giant, Thi
 *To respect:* P20b's `meleeTaken` stage (Decision 236: after Natural Armor, before Wither Ward) is where a reduction joins the hit. Most rows need to know a power is **running**, which nothing stores yet (W110, P21's PQ2). Battle Hardened and Elemental Blood need a **saved pick** (a schema bump, with P21 §7's Skill Paragon and Weapon Expert group). Silverscar needs the hit to know **silver**, which `damageTypes` doesn't say. Regeneration reads the Form (Decision 195). Likely two orders: the hit, then healing. Each row's sentence is in `plans/archive/sheet-wishlist/P21-inventory.md` (c44–c53, b21).
 
 **W134 — Sanity Loss and Recovery on the sheet.** *Claude, from the 2026-10-22 mirror · 💡 · Rule or shape · raised 2026-10-22*\
-**Plan:** set aside by [motion](plans/motion.md) §4: a band crossed takes the Pain Level's beat once the book has the rules · **Goes with:** W90
+**Plan:** none yet · **Goes with:** W90
+
+*the motion plan (closed 2026-11-26, its §4, in the archive) set this aside: a band crossed takes the Pain Level's beat once the book has the rules.*
 
 Scott's Sanity proposal was accepted on 2026-09-29 (`private/crb/APPROVED_SAN_Loss_and_Recovery.md`) and
 is in no chapter yet. The sheet's SAN card counts loss and nothing else. The document gives it three
@@ -197,7 +201,9 @@ and a new area on the character's sheet to see them. GM mode's cast stat block (
 *2026-10-16:* Deighton: "we'll need to define what a minion or companion is. Are they controlled by GM or player? are they a combatant? What are their stats/skills?" Those answers come before the sheet.
 
 **W124 — Poverty's debt as a balance you pay into.** *Ken, from P18's sign-off · 💡 · Rule or shape · raised 2026-10-16*\
-**Plan:** set aside by [motion](plans/motion.md) §4: I2's Milestone beat carries the money once Deighton's rules are built · **Goes with:** W129
+**Plan:** none yet · **Goes with:** W129
+
+*the motion plan (closed 2026-11-26, its §4, in the archive) set this aside: I2's Milestone beat carries the money once Deighton's rules are built.*
 
 Poverty sets a debt of at least Ç75,000, more each rank, takes half of what the character earns against it, and bars legal gear until it's paid. The
 sheet shows none of it. A debt balance beside the Çredits ledger, with "half of income goes to the debt" applied when Çredits come in, would.
@@ -222,7 +228,9 @@ Enemies', would let the sheet show "Minor Contacts: Rook (fence), Vee (LINK hack
 *To respect:* Decision 77's picks (`type: "text"`, `perRank`); the Character tab's cards already show picks (`selHtml`). `gamedataVersion` per 68.
 
 **W129 — Wealthy pays out at each Milestone.** *Deighton and Ken, from P18's sign-off · 💡 · Rule or shape · raised 2026-10-16*\
-**Plan:** set aside by [motion](plans/motion.md) §4: the payday arrives on I2's Milestone beat once the rule is Deighton's · **Goes with:** W124
+**Plan:** none yet · **Goes with:** W124
+
+*the motion plan (closed 2026-11-26, its §4, in the archive) set this aside: the payday arrives on I2's Milestone beat once the rule is Deighton's.*
 
 Wealthy grants Ç2,000 a month per rank, and the sheet doesn't track months. Deighton: "I'd love if wealthy paid out at each milestone", and maybe a payday at
 every Minor or Major Milestone for everyone ("UBI or your wealthy advantage or something"). Taking a Milestone could add the Çredits through the ledger.
@@ -539,35 +547,8 @@ writes the entry for the open character, stop saving from this tab and say so,
 with a button to reload from the newer copy. *To respect:* the app works
 without storage, so the listener is guarded like every other read.
 
-**W62 — Slotting a file in reads it on screen, like a script loading in NYTE City.** *Ken · 💡 · raised 2026-10-02 with GQ10's packs*\
-**Plan:** [motion](plans/motion.md), I4 · **Goes with:** W63
-
-*Set aside by the player sheet's plan when it closed (2026-10-24, `plans/archive/sheet-wishlist.md` §4): an idea, not shaped.*
-
-Today a character file imports with a toast that names it, and a Codex pack
-(GQ10) would do the same. Ken's idea: a terminal opens, reads through what's
-in the file, and closes on what landed, so loading a character or slotting in
-the Codex feels like jacking a script into a deck rather than opening a file.
-*What the shape has to respect,* as Claude sees it:
-- **It reads what's really there.** The lines are the file's own contents as
-  the gate checks them (the character's name, archetype and TAG; the pack's
-  entries and traits by name), and the last line is the real outcome: counts,
-  what was repaired. Not a canned script on a timer.
-- **Short and skippable.** About a second, any key or tap finishes it, and it
-  never sits between a GM and a fight. Repeating the same load in one sitting
-  goes straight to the summary.
-- **Reduced motion gets the summary only** (the app already honours
-  `prefers-reduced-motion`), and a screen reader hears the outcome once, not
-  every line.
-- **A refused file drops the fiction.** That's the player being stuck, so it
-  speaks in tool voice (`VOICE-APP.md`) and says what to do.
-- **The copy is data** (`appCopy`, Decision 76) and gets a voice pass; the
-  mono font is already embedded, so nothing touches the network (137).
-- One primitive in `shared.js`, used by every import: a character, a table,
-  a pack, and a dispatch once that exists.
-
 **W63 — The hosted sheet is a demo; the full game is a pack you slot in.** *Ken · 🔎 · Rule or shape · raised 2026-10-04 · reopens GQ10 in part*\
-**Plan:** none yet · **Goes with:** W62
+**Plan:** none yet
 
 *Set aside by the player sheet's plan when it closed (2026-10-24, `plans/archive/sheet-wishlist.md` §4): waits on Ken: which slice is free.*
 

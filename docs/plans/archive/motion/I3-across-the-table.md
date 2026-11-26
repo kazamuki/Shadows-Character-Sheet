@@ -328,7 +328,7 @@ Stop and ask the conductor if:
 
 ## 15. Handing it over
 
-Use the two prompts in `WORK-ORDERS.md`, with this order's path: `docs/plans/motion/I3-across-the-table.md`. Add the conductor's notes path. This order's traps:
+Use the two prompts in `WORK-ORDERS.md`, with this order's path: `docs/plans/archive/motion/I3-across-the-table.md`. Add the conductor's notes path. This order's traps:
 
 - **The before is `tableBase.copy`, not a copy taken in `tableChange`.** Most presses write first and call `tableChange(()=>{})` after (gm.js:80-84). A copy taken inside would see no change.
 - **`update(false)` never renders, but it does call `playTableBeats`.** Take the beat there, on the same update, not in `renderMain`. A beat left in a variable that a later render reads is finding 5's replay.
