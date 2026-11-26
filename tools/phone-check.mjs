@@ -914,6 +914,10 @@ async function nightFloors(browser, file, rows) {
       const vw = document.documentElement.clientWidth;
       if (!(R(line).bottom <= R(track).top + 1)) bad.push("the register line isn't above the track");
       if (R(line).right > vw + 0.5 || R(line).left < -0.5) bad.push("the register line leaves the viewport");
+      // Log session keeps your place (Decision 317): after the press, the line and the plate are on screen, not scrolled away.
+      const vh = window.innerHeight, hdr = document.querySelector("header.top");
+      if (R(line).top < (hdr ? R(hdr).bottom : 0) - 1 || R(line).bottom > vh) bad.push(`the register line is off screen (${Math.round(R(line).top)}–${Math.round(R(line).bottom)} of ${vh})`);
+      if (R(plate).bottom > vh) bad.push(`the plate is off screen (bottom ${Math.round(R(plate).bottom)} of ${vh})`);
       const bs = getComputedStyle(block), edge = R(block).left + parseFloat(bs.borderLeftWidth) + parseFloat(bs.paddingLeft);
       near(R(plate).left, edge, 2, "the plate's left edge vs the Log block's content edge");
       if (R(plate).right > vw + 0.5) bad.push("the plate leaves the viewport");

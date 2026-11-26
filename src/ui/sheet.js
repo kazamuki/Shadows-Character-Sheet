@@ -4510,7 +4510,7 @@ function bindSheet(){
     // The Milestone Point may be the one a training waits for: logging lands it in the same commit (Decision 230).
     const dry = Engine.logSession(clone(ch), entry), landed = dry.trained, off = stoppedNames(ch, dry.stopped);
     commit("session", `Log session${title?`: ${title}`:""}${landedLabel(landed)}${off?`. ${off} stopped.`:""}`, ()=>{ Engine.logSession(ch, entry); });
-    scrollPageTop();
+    // No scroll to the top (Decision 317, Ken 2026-11-25): the night's strip is under this button, and you stay with it.
   });
   main.querySelectorAll("[data-sesdel]").forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.sesdel), s=ch.sessions[i]||{};
