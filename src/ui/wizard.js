@@ -955,7 +955,7 @@ function renderHome(){
       // Read the file's kind before anything else: migrate() reads any object as
       // a character, so a table file used to open as a blank one (Decision 170).
       const kind=Engine.fileKind(raw);
-      if ((kind==="table" || kind==="pack") && featureOn("gm")){ gmImportFile(raw, kind); return; }
+      if ((kind==="table" || kind==="pack") && featureOn("gm")){ gmImportFile(raw, kind, f.name); return; }
       if (kind!=="character"){ notice(featureOn("gm") ? GM_NOT_A_FILE : "That file isn't a character."); return; }
       let c;
       try{ c=Engine.migrate(raw); }
@@ -968,9 +968,11 @@ function renderHome(){
         lead:`This file is an older copy of <b>${esc(charName(c))}</b> (${esc(Engine.tagNumber(c))}) than the one saved in this browser. Opening it puts it in place of the newer one.`,
         go:"Open the older copy" }, ()=>{
           lastSaved=null; untouched=null;
-          S=Object.assign({screen: locked?"sheet":"wizard", ch:c, step:0, maxReached:STEPS.length-1, section:"main"}, loadFindings(c));
+          const found=loadFindings(c);   // counted before the render: a plain version note is shown once and then cleared
+          S=Object.assign({screen: locked?"sheet":"wizard", ch:c, step:0, maxReached:STEPS.length-1, section:"main"}, found);
           update();
           markExported(id);   // the file just opened holds what's now saved
+          readIn("character", c, { file:f.name, issues:found.importIssues.length });   // last: the page is open, the readout goes over it (Decision N)
         });
     };
     rd.readAsText(f);

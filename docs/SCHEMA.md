@@ -6074,6 +6074,19 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** the table learns a seat's Milestone Points (a seat's copy updated by the close-out), or the encounter page draws the Tonight strip.
      - **Built:** app 0.79.0 (unreleased), PR (this one), log entry 2026-11-26.
 
+319. **A file reads in: Home's Import and the Threats tab's Slot in a pack print what the file holds for about a second, then land on one line in the toast.**
+     *2026-11-26 · Ken + Claude · Touches: readIn, readoutLines, readSeen, #readout, appCopy.readout, Import a file, file-import, gmImportTable, slotPack, bindPackPicker, guardReplace, guardReplaceTable, toast, notice, announce, versionCheck, tableCheck, packCheck, seatImport, phone-check, W62, I4*
+     - **Decided:** A character, a table or a pack read through Home's Import, or a pack through the Threats tab, opens exactly as before, and a panel under the header prints the file's own contents over it: the name, what it is, its counts, and the load check's findings as a count. It lands on one line, which stays in the toast and is what the screen reader hears. Any tap or key ends it and still does what it does. The same file again in a sitting, or reduced motion, gets the toast's line only. A refused file, Cancel on an older-copy ask, and the Players tab's seat imports don't read in.
+     - **Why:** W62 (Ken, 2026-10-02): slotting a file in should feel like jacking a script into a deck. A character import said nothing at all.
+     - **Rejected:**
+       - A terminal that holds the screen until it ends: the page is ready, and a beat never makes anyone wait (the plan's rule 4).
+       - The readout before the page opens: a test, a GM and a player all read the page at once (pre-flight finding 5).
+       - A line saying what was repaired: no gate reports its repairs (IQ28).
+       - The Players tab's seat imports: a GM seats several files mid-table, and the notice already lists each (IQ30).
+     - **Replaces:** nothing. It builds what Decision 181 set aside as W62's session, on Decisions 316–318's kit.
+     - **Revisit if:** the gates learn to report what they repaired, or a dispatch (or another file kind) gets an import.
+     - **Built:** app 0.80.0 (unreleased), PR (this one), log entry 2026-11-26.
+
 
 ## 5. Open Flags
 

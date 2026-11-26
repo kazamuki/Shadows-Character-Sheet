@@ -24,10 +24,12 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
-## [Unreleased] — app 0.79.0
+## [Unreleased] — app 0.80.0
 
 ### Character sheet
 
+- **Slotting a file in reads it onto the screen.** A character's name, archetype and TAG, a table's sessions and cast, a pack's threats. Tap anywhere to skip it.
+- **A character or a table you import now says so, in the bar at the bottom.**
 - **Logging a session reads as the end of a night.** The night prints in under the button, and your IP and Milestone Points count up.
 - **A track under Log session shows how far you are from the next Milestone.** When you reach one, it says so, and **Choose** takes you to the pick.
 - **Logging a session keeps your place, and brings the night's line into view.**

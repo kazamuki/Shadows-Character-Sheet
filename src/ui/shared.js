@@ -983,6 +983,94 @@ function notice(msg){
   clearTimeout(toastTimer); toastTimer=setTimeout(hideUndoToast, TOAST_MS);
   el.querySelector("[data-toastclose]").onclick=hideUndoToast;
 }
+// ── A file reads in (Decision N, I4) ────────────────────────────────────────
+// A character, a table or a pack slotted in prints what it holds for about a second, over a destination that is already open and
+// usable, and lands on one line that stays in the toast. The lines are read from what the gate returned (never the raw file) and set
+// with textContent. readSeen and readRun are module state, never S: goHome, openTable and renderTable all replace S.
+let readSeen=new Set();   // `${kind}|${meta.id}|${meta.updated}` read in this sitting
+let readRun=null;         // { el, timers, off } while a readout is up
+const READ_FADE_MS=950, READ_END_MS=1150, READ_STEP_MS=90, READ_MAX_LINES=7;
+const roCopy = k => ((D.appCopy||{}).readout||{})[k] || "";
+const roFill = (k, v) => roCopy(k).replace(/\{(\w+)\}/g, (m, n)=>v && n in v ? String(v[n]) : m);
+function readoutLines(kind, obj, o){
+  o = o && typeof o==="object" ? o : {};
+  const lines=[], add=fn=>{ try{ const s=fn(); if (typeof s==="string" && s.trim()) lines.push(s); }catch(e){} };
+  const safe=(fn, none)=>{ try{ const s=fn(); return typeof s==="string" && s.trim() ? s : none; }catch(e){ return none; } };
+  const count=v=>Array.isArray(v) ? v.length : 0;
+  const part=(n, one, many)=>n===1 ? roFill(one) : roFill(many, { n });
+  add(()=>typeof o.file==="string" && o.file.trim() ? roFill("head", { file:o.file }) : "");
+  let last;
+  if (kind==="character"){
+    const c=obj;
+    const name=safe(()=>charName(c, "Unnamed"), "Unnamed");
+    last=roFill("charIn", { name });
+    add(()=>name);
+    add(()=>{ const a=D.archetypes.find(x=>x.id===c.identity.archetype); return a ? Engine.archetypeContent(c).name : ""; });
+    add(()=>{ const r=Engine.tagReading(c), n=Engine.tagNumber(c);
+      if (r && r.tagless && !r.counterfeit) return r.label;
+      return n ? (r && r.label ? `${r.label} · ${n}` : n) : ""; });
+    if (safe(()=>c.creation.locked===true ? "y" : "", "")){
+      add(()=>{ const s=count(c.sessions), ip=Engine.ipState(c).available, mp=Engine.milestoneState(c).mp;
+        return [s>0 ? roFill("recSessions", { n:s }) : "", ip>0 ? roFill("recIp", { n:ip }) : "", mp>0 ? roFill("recMp", { n:mp }) : ""].filter(Boolean).join(" · "); });
+    } else add(()=>roFill("draft"));
+    add(()=>{ const n=Number(o.issues)||0; return n>1 ? roFill("findings", { n }) : n===1 ? roFill("findings1") : ""; });
+  } else if (kind==="table"){
+    const t=obj;
+    const name=safe(()=>tableName(t), "Untitled table");
+    last=roFill("tableIn", { name });
+    add(()=>name);
+    add(()=>[ count(t.sessions) ? part(count(t.sessions), "session1", "sessions") : "", count(t.cast) ? roFill("cast", { n:count(t.cast) }) : "",
+      count(t.players) ? part(count(t.players), "player1", "players") : "" ].filter(Boolean).join(" · "));
+    add(()=>{ const e=Engine.runningEncounter(t); return e && Number.isFinite(e.round) ? roFill("fight", { n:e.round }) : ""; });
+  } else {
+    const p=obj;
+    const name=safe(()=>packName(p), "Untitled pack");
+    let n=0; try{ n=count(p.entries); }catch(e){}
+    last=roFill(n===1 ? "packIn1" : "packIn", { name, n });
+    add(()=>name);
+    add(()=>{ const v=String(p.meta.contentVersion||"").trim(); return v ? roFill("version", { v }) : ""; });
+    add(()=>{ const es=Array.isArray(p.entries) ? p.entries : [], npcs=es.filter(e=>e && e.kind==="npc").length, th=es.length-npcs;
+      return [th ? part(th, "threat1", "threats") : "", npcs ? part(npcs, "npc1", "npcs") : ""].filter(Boolean).join(" · "); });
+  }
+  const out=lines.slice(0, READ_MAX_LINES-1); out.push(last);
+  return { lines:out, last };
+}
+function stopReadIn(){
+  const r=readRun; readRun=null; if (!r) return;
+  r.timers.forEach(clearTimeout); if (r.off) r.off(); if (r.el.parentNode) r.el.remove();
+}
+function readIn(kind, obj, o){
+  o = o && typeof o==="object" ? o : {};
+  const r=readoutLines(kind, obj, o), warn=Array.isArray(o.warnings) && typeof o.warnings[0]==="string" ? " "+o.warnings[0] : "";
+  notice(r.last+warn);   // the toast speaks the line; nothing here announces it a second time
+  let key=null;
+  try{ const m=obj && obj.meta; if (m && typeof m.id==="string" && m.id) key=`${kind}|${m.id}|${m.updated}`; }catch(e){}
+  const seen=key!==null && readSeen.has(key);
+  if (key!==null) readSeen.add(key);
+  stopReadIn();
+  const head=document.querySelector("header.top");
+  if (calm() || seen || !head) return;
+  // Built with its text already in it and taken off by a timer, never a frame callback: a pane that doesn't draw shows nothing wrong.
+  const el=document.createElement("div");
+  el.id="readout"; el.className="readout"; el.setAttribute("aria-hidden","true");
+  let top=0; try{ top=Math.round(head.getBoundingClientRect().bottom)+8; }catch(e){}
+  el.style.top=`${top}px`;
+  r.lines.forEach((s, i)=>{
+    const d=document.createElement("div");
+    d.className="ro-line"+(i===0 && o.file && r.lines.length>1 ? " ro-dim" : "")+(i===r.lines.length-1 ? " ro-last" : "");
+    d.textContent=s; d.style.animationDelay=`${i*READ_STEP_MS}ms`;
+    el.appendChild(d);
+  });
+  document.body.appendChild(el);
+  const run={ el, timers:[], off:null }; readRun=run;
+  // One tap or key finishes it, and still does what it does: capture, passive, never preventDefault (as the night's does).
+  const finish=()=>{ if (readRun===run) stopReadIn(); else run.off && run.off(); };
+  const evs=["pointerdown","keydown"];
+  run.off=()=>{ evs.forEach(t=>document.removeEventListener(t, finish, { capture:true })); run.off=null; };
+  evs.forEach(t=>document.addEventListener(t, finish, { capture:true, passive:true }));
+  run.timers.push(setTimeout(()=>el.classList.add("ro-out"), READ_FADE_MS), setTimeout(()=>{ if (readRun===run) stopReadIn(); }, READ_END_MS));
+}
+
 function askFirst({ title, text, yes, then, danger=true }){
   openModal({ title, html:`<p>${esc(text)}</p>`,
     foot:`<button class="btn" data-modalclose>Cancel</button><button class="btn ${danger?"danger":"primary"}" data-askyes>${esc(yes)}</button>`,
