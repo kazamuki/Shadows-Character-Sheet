@@ -258,7 +258,7 @@ function gmImportTable(raw, file){
   guardReplaceTable((savedTable(id)||{}).table, t, ()=>{
     openTable(t);
     markTableExported(id);   // the file just opened holds what's now saved
-    readIn("table", t, { file, warnings:Engine.tableCheck(t) });   // last: the toast says the line, then the warning (Decision N)
+    readIn("table", t, { file, warnings:Engine.tableCheck(t) });   // last: the toast says the line, then the warning (Decision 319)
   });
 }
 
@@ -3497,7 +3497,7 @@ function slotPack(p, warnings, file){
     renderHome();
     const el=$("main").querySelector(attrSel("data-pcard", p.meta.id)); if (el) el.focus();
   }
-  readIn("pack", p, { file, warnings });   // last: today's words are the toast's, the readout goes over the page (Decision N)
+  readIn("pack", p, { file, warnings });   // last: today's words are the toast's, the readout goes over the page (Decision 319)
 }
 // The picker on the empty Threats tab: its own input, and only a pack goes through.
 function bindPackPicker(main){

@@ -983,7 +983,7 @@ function notice(msg){
   clearTimeout(toastTimer); toastTimer=setTimeout(hideUndoToast, TOAST_MS);
   el.querySelector("[data-toastclose]").onclick=hideUndoToast;
 }
-// ── A file reads in (Decision N, I4) ────────────────────────────────────────
+// ── A file reads in (Decision 319, I4) ────────────────────────────────────────
 // A character, a table or a pack slotted in prints what it holds for about a second, over a destination that is already open and
 // usable, and lands on one line that stays in the toast. The lines are read from what the gate returned (never the raw file) and set
 // with textContent. readSeen and readRun are module state, never S: goHome, openTable and renderTable all replace S.
@@ -1058,7 +1058,9 @@ function readIn(kind, obj, o){
   r.lines.forEach((s, i)=>{
     const d=document.createElement("div");
     d.className="ro-line"+(i===0 && o.file && r.lines.length>1 ? " ro-dim" : "")+(i===r.lines.length-1 ? " ro-last" : "");
-    d.textContent=s; d.style.animationDelay=`${i*READ_STEP_MS}ms`;
+    // One delay per animation: the last line's stamp waits .15s after its own print (an inline single value would start both at once).
+    const at=i*READ_STEP_MS;
+    d.textContent=s; d.style.animationDelay=i===r.lines.length-1 ? `${at}ms, ${at+150}ms` : `${at}ms`;
     el.appendChild(d);
   });
   document.body.appendChild(el);

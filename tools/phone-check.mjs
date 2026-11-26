@@ -1114,7 +1114,7 @@ async function readoutFloors(browser, file, rows) {
       if (m.edge) info.edge = m.edge + " on " + m.bg;
       if (!reduced) {
         const spoke = await p.evaluate(() => (document.getElementById("undotoast") || {}).textContent || "");
-        if (!/is in.|is open.|slotted in/.test(spoke)) bad.push(k.label + ": the toast says '" + spoke + "'");
+        if (!/is in\.|is open\.|slotted in/.test(spoke)) bad.push(k.label + ": the toast says '" + spoke + "'");
         await p.waitForTimeout(1000);
         if (await p.$("#readout")) bad.push(k.label + ": the readout was still there at 1.3s");
       }

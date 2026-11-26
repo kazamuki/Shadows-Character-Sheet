@@ -1259,7 +1259,7 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
 .toast[hidden]{display:none}
 .toast .toast-msg{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .toast .toast-msg.wrap{white-space:pre-line}
-/* A file reads in (Decision N, I4): a panel under the header, over the page that just opened. No state rule to outrank: over the
+/* A file reads in (Decision 319, I4): a panel under the header, over the page that just opened. No state rule to outrank: over the
    sticky bars (20–30) and the footer (40), under the header (60), the scrims (70), the toast (75) and the drawer and Help (80). */
 .readout{position:fixed; left:50%; transform:translateX(-50%); z-index:55; box-sizing:border-box; width:min(36rem, calc(100vw - 32px));
   padding:8px 12px; background:var(--panel); color:var(--text); border:1px solid var(--frame); border-left:3px solid var(--cyan); border-radius:4px;

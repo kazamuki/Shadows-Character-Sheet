@@ -972,7 +972,7 @@ function renderHome(){
           S=Object.assign({screen: locked?"sheet":"wizard", ch:c, step:0, maxReached:STEPS.length-1, section:"main"}, found);
           update();
           markExported(id);   // the file just opened holds what's now saved
-          readIn("character", c, { file:f.name, issues:found.importIssues.length });   // last: the page is open, the readout goes over it (Decision N)
+          readIn("character", c, { file:f.name, issues:found.importIssues.length });   // last: the page is open, the readout goes over it (Decision 319)
         });
     };
     rd.readAsText(f);

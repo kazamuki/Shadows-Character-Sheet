@@ -96,7 +96,7 @@ test("I4: a table reads in, and its newer-version warning stays in the toast", a
   assert.equal(toast(app), "Dead Air is open.");
   await wait(1250);
   const [t2] = seedTable("Later");
-  sheetHome; app.window.eval("goHome()");
+  app.window.eval("goHome()");
   const newer = clone(t2); newer.meta.tableSchemaVersion = "9.0";
   await bring(app, newer);
   assert.match(toast(app), /is open\./); assert.match(toast(app), /newer version of the app/);
