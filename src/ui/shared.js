@@ -90,7 +90,7 @@ const normSection = s => s==="admin" ? (S.admin?"admin":"main")
 let S = { screen:"home", ch:null, step:0, maxReached:0, section:"main", admin:false };
 // One way home (W64): the wizard, the sheet's menu and the GM table all land
 // here. A character is already saved by every update(), so nothing is lost.
-function homeState(){ return { screen:"home", ch:null, step:0, maxReached:0, section:"main", admin:false, lockRung:S && S.lockRung }; }
+function homeState(){ return { screen:"home", ch:null, step:0, maxReached:0, section:"main", admin:false }; }
 function goHome(){ S=homeState(); renderHome(); }
 
 // W59: one polite live region, outside #main (which every render replaces),
@@ -373,6 +373,7 @@ function calm(){
   try { return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); } catch(e){ return false; }
 }
 let beatsNow=null;
+let lockRung=new Set();   // Decision 317: Lock & Export has rung for these characters (meta.id) this sitting. Module state, not S: every way into a draft builds a fresh S.
 const BEAT_COUNT_MS=300, BEAT_STEP_MS=60, BEAT_FLOAT_MS=750, BEAT_TAIL_HOLD=250, BEAT_TAIL_MS=400;
 let beatRun=null;
 

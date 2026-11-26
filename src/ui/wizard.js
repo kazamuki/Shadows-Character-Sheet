@@ -1281,12 +1281,11 @@ function bindWriteIn(main, ch){
 }
 
 // Decision 317 (I2): Lock & Export rings three times the first time it's drawn ready for this character in a sitting, then holds
-// still. S.lockRung is view state (a Set of meta.id), never saved. Reading it is what rings it: ask once per draw.
+// still. lockRung (shared.js) is a sitting's view state (a Set of meta.id), never saved. Reading it is what rings it: ask once per draw.
 function lockRingCls(){
   const id = S.ch && S.ch.meta && S.ch.meta.id || "?";
-  if (!(S.lockRung instanceof Set)) S.lockRung = new Set();
-  if (S.lockRung.has(id) || calm()) return "";
-  S.lockRung.add(id);
+  if (lockRung.has(id) || calm()) return "";
+  lockRung.add(id);
   return " beat-ring";
 }
 

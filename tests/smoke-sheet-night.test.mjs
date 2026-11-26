@@ -307,9 +307,12 @@ test("I2: Lock & Export rings three times the first time it's ready, then never 
   assert.ok(!lock().classList.contains("beat-ring"), "fixing and re-breaking doesn't ring it again");
   probe.click('[data-nav="-1"]'); probe.click('[data-nav="1"]');
   assert.ok(lock() && !lock().classList.contains("beat-ring"), "back and forward doesn't either");
-  const done = onStep("professional", "street", "review");
-  stub(done); done.window.eval("S.lockRung = new Set(); update();");
-  assert.equal(done.$("[data-lock]").disabled, false);
-  assert.ok(done.$("[data-lock]").classList.contains("beat-ring"), "a complete draft opened on Review rings once");
-  assert.deepEqual([probe.errors, done.errors], [[], []]);
+  // Home and Resume build a fresh S: the draft that rang still doesn't ring again (the sitting's memory isn't S).
+  probe.click("header [data-home]");
+  probe.$$("#main button").find(b => /Resume draft/.test(b.textContent)).click();   // the stub is still in the window, so this very render draws Lock ready
+  assert.ok(lock() && lock().disabled === false && !lock().classList.contains("beat-ring"), "Home, then Resume, rang it again");
+  // A second draft reaching Review complete rings.
+  probe.window.eval(`S.ch.meta.id = "TAG-BBBB-CCCC-DDDD"; S.ch.identity.name = "B"; update();`);
+  assert.ok(lock().classList.contains("beat-ring"), "a second draft, complete on Review, rings once");
+  assert.deepEqual(probe.errors, []);
 });
