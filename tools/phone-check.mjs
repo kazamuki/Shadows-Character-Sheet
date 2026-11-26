@@ -1006,6 +1006,7 @@ async function tableBeatFloors(browser, file, rows) {
       if (extra === "edge") {
         const row = document.querySelector("#main .enc-row.active"), ps = row && getComputedStyle(row, "::before");
         if (!reduced && !(row && row.classList.contains("beat-edge") && ps && ps.content !== "none" && parseFloat(ps.width) === 4)) out.push(`${what}: the acting row's edge isn't drawn`);
+        else if (!reduced && getComputedStyle(row).borderLeftColor === ps.backgroundColor) out.push(`${what}: the acting row's border is already the edge's colour mid-beat (${ps.backgroundColor}), so the draw can't be seen`);
       }
       if (reduced) { if (document.getAnimations().length) out.push(`${what}: ${document.getAnimations().length} animation(s) running under reduced motion`); if (document.querySelector("#main [class*=beat-]")) out.push(`${what}: a beat class under reduced motion`); }
       return out;

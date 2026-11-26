@@ -526,7 +526,7 @@ h2 > .term:only-child::after{content:""; position:absolute; left:0; top:50%; wid
    to the frame colour for the beat, so the draw shows; a stamp is nightStamp; a clock's segment prints in; a row going out fades. */
 @keyframes edgeDraw{from{transform:scaleY(0)} to{transform:scaleY(1)}}
 @keyframes rowFade{from{opacity:1} to{opacity:.65}}
-.enc-row.beat-edge{position:relative; border-left-color:var(--frame)}
+.enc-row.active.beat-edge{position:relative; border-left-color:transparent}
 .enc-row.beat-edge::before{content:""; position:absolute; left:-4px; top:-1px; bottom:-1px; width:4px; background:var(--cyan); border-radius:6px 0 0 6px; transform-origin:top; animation:edgeDraw .25s ease-out both}
 .enc-row.out.beat-fade{animation:rowFade .3s ease-out}
 .enc-status .beat-stamp, .enc-down.beat-stamp, .clock-full .beat-stamp, .clock-line-n.beat-stamp{animation:nightStamp .3s ease-out both}
