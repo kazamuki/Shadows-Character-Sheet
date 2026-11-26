@@ -39,11 +39,11 @@ test("I4: a character reads in: its name, archetype, TAG and record, then lands 
   const r = app.$("#readout"); assert.ok(r, "no readout");
   assert.equal(r.getAttribute("aria-hidden"), "true");
   const l = lines(app), tag = Engine.tagNumber(Engine.migrate(clone(c)));
-  assert.equal(l[0], "Reading x.shadows.json");
+  assert.equal(l[0], "Slotting in x.shadows.json");
   assert.equal(l[1], "Mara Okonkwo");
   assert.equal(l[2], Engine.archetypeContent(Engine.migrate(clone(c))).name);
   assert.equal(l[3], tag);
-  assert.match(l[4], /^3 on the record · 6 IP to spend · 3 MP$/);
+  assert.match(l[4], /^3 sessions on the record · 6 IP to spend · 3 MP$/);
   assert.equal(l[l.length - 1], "Mara Okonkwo is in.");
   assert.equal(toast(app), "Mara Okonkwo is in.");
   assert.ok(!app.$("#main #readout"), "the readout sits inside #main");
@@ -59,7 +59,7 @@ test("I4: a draft reads in as a draft, and a TAGless one as Off grid", async () 
   await bring(app, d);
   assert.equal(app.window.eval("S.screen"), "wizard");
   const l = lines(app);
-  assert.ok(l.includes("Still on the intake form")); assert.ok(!l.some(x => /on the record|IP to spend/.test(x)));
+  assert.ok(l.includes("Still in intake")); assert.ok(!l.some(x => /on the record|IP to spend/.test(x)));
   await wait(1250);
   const t = char("Off Ollie"); t.identity.tagless = true; t.meta.id = "TAG-OFFG-RID1-2";
   app.window.eval("goHome()");
@@ -79,7 +79,7 @@ test("I4: the load check's findings print as a count, and stay above the sheet",
   const f = lines(app).find(x => /to look at/.test(x));
   assert.ok(f, lines(app).join("|"));
   assert.equal(n, 2, "the fixture should hold two findings");
-  assert.equal(f, "2 to look at, above the sheet");
+  assert.equal(f, "2 to look at, up top");
   assert.equal(app.$$(".import-issues li").length, 2, "the findings left the banner");
   assert.deepEqual(app.errors, []);
 });
@@ -93,14 +93,14 @@ test("I4: a table reads in, and its newer-version warning stays in the toast", a
   assert.equal(l[1], "Dead Air");
   assert.ok(l.some(x => /sessions/.test(x) && /in the cast/.test(x) && /at the table/.test(x)), l.join("|"));
   assert.ok(l.some(x => /^A fight is on: round \d+$/.test(x)), l.join("|"));
-  assert.equal(l[l.length - 1], "Dead Air is open.");
-  assert.equal(toast(app), "Dead Air is open.");
+  assert.equal(l[l.length - 1], "Dead Air is in play.");
+  assert.equal(toast(app), "Dead Air is in play.");
   await wait(1250);
   const [t2] = seedTable("Later");
   app.window.eval("goHome()");
   const newer = clone(t2); newer.meta.tableSchemaVersion = "9.0";
   await bring(app, newer);
-  assert.match(toast(app), /is open\./); assert.match(toast(app), /newer version of the app/);
+  assert.match(toast(app), /is in play\./); assert.match(toast(app), /newer version of the app/);
   assert.deepEqual(app.errors, []);
 });
 
@@ -117,7 +117,7 @@ test("I4: a pack reads in from Home and from the Threats tab, and keeps today's 
   runTable(app2, "Pack Table", { stay: true }); threatsTab(app2);
   await pickPack(app2, syntheticPack());
   assert.ok(app2.$("#readout"), "no readout from the Threats tab");
-  assert.equal(lines(app2)[0], "Reading t.shadows-pack.json");
+  assert.equal(lines(app2)[0], "Slotting in t.shadows-pack.json");
   assert.equal(toast(app2), "Test Pack slotted in: 3 entries.");
   assert.deepEqual(app.errors, []); assert.deepEqual(app2.errors, []);
 });
@@ -238,5 +238,12 @@ test("I4: readoutLines never throws, and reads hostile names as text", async () 
   await bring(app, c);
   assert.ok(app.$("#readout")); assert.equal(app.$("#readout img"), null, "a name was set as HTML");
   assert.ok(lines(app).some(x => x.includes("<img")));
+  assert.deepEqual(app.errors, []);
+});
+
+test("I4: one session on the record reads in the singular", async () => {
+  const app = homeGm();
+  await bring(app, char("Solo Sol", { sessions: [{ date: "2026-11-01", title: "", ipEarned: 0, milestonePoint: false, notes: "" }] }));
+  assert.ok(lines(app).includes("1 session on the record"), lines(app).join("|"));
   assert.deepEqual(app.errors, []);
 });

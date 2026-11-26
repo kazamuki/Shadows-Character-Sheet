@@ -1011,7 +1011,7 @@ function readoutLines(kind, obj, o){
       return n ? (r && r.label ? `${r.label} · ${n}` : n) : ""; });
     if (safe(()=>c.creation.locked===true ? "y" : "", "")){
       add(()=>{ const s=count(c.sessions), ip=Engine.ipState(c).available, mp=Engine.milestoneState(c).mp;
-        return [s>0 ? roFill("recSessions", { n:s }) : "", ip>0 ? roFill("recIp", { n:ip }) : "", mp>0 ? roFill("recMp", { n:mp }) : ""].filter(Boolean).join(" · "); });
+        return [s>0 ? (s===1 ? roFill("recSession1") : roFill("recSessions", { n:s })) : "", ip>0 ? roFill("recIp", { n:ip }) : "", mp>0 ? roFill("recMp", { n:mp }) : ""].filter(Boolean).join(" · "); });
     } else add(()=>roFill("draft"));
     add(()=>{ const n=Number(o.issues)||0; return n>1 ? roFill("findings", { n }) : n===1 ? roFill("findings1") : ""; });
   } else if (kind==="table"){
