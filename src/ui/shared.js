@@ -1787,7 +1787,7 @@ function notesListHtml(notes, sessions, view, o){
     ${tagsInUse.length ? `<div class="note-tagrow" role="group" aria-label="Filter by tag">${tagsInUse.map(x=>{ const on = tag!==null && x.toLowerCase()===tag.toLowerCase();
       return `<button type="button" class="tag note-tagpick${on?" on":""}" data-ntag="${esc(x)}" aria-pressed="${on}">${esc(x)}</button>`; }).join("")}</div>` : ""}`;
   const none = { category:"No category", session:"No session" };
-  const lists = groups.map(g=>`${v.by==="newest" ? "" : `<h2 class="ref-sub note-group">${esc(g.title===null ? none[v.by] : g.title)}</h2>`}
+  const lists = groups.map(g=>`${v.by==="newest" ? "" : `<h2 class="ref-sub note-group">${esc(g.title===null ? none[v.by] : v.by==="session" ? (o.sessionLabel(g.key) || g.title) : g.title)}</h2>`}
     <ul class="int-list note-list">${g.notes.map(n=>noteCardHtml(n, opts)).join("")}</ul>`).join("");
   return `${bar}${pinned ? `<ul class="int-list note-list note-pinned">${noteCardHtml(pinned, opts)}</ul>` : ""}${lists}`;
 }

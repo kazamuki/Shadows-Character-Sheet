@@ -585,7 +585,7 @@ function bindEdit(main, kind, id){
     if (first) first.focus();
   });
   main.querySelectorAll(`[data-edit-done="${kind}|${id}"]`).forEach(b=>b.onclick=()=>{
-    S.editing=null; renderTable();
+    S.editing=null; if (kind==="note") unhideNote(id); renderTable();
     const e=$("main").querySelector(`[data-edit="${kind}|${id}"]`); if (e) e.focus();
   });
 }
@@ -944,8 +944,13 @@ function openFound(kind, id, field){
   }
 }
 // The Notes tab with that note open to read and its row focused (Decision 271).
+// A tag filter the note doesn't hold would hide it: clear it, so a note opened (or finished) is a note drawn (Decision 323).
+function unhideNote(id){
+  const n=(S.table.notes||[]).find(x=>x.id===id);
+  if (n && S.noteTag && !(n.tags||[]).some(x=>x.toLowerCase()===S.noteTag.toLowerCase())) S.noteTag=null;
+}
 function openNote(id){
-  S.tsection="notes"; S.noteOpen=id; S.editing=null; scrollPageTop(); update();
+  unhideNote(id); S.tsection="notes"; S.noteOpen=id; S.editing=null; scrollPageTop(); update();
   const el=$("main").querySelector(attrSel("data-nopen", id)); if (el){ el.focus(); if (el.scrollIntoView) el.scrollIntoView({ block:"center" }); }
 }
 // Where a jot would go, said before it is saved: the session being played, whatever day it is dated (Decision 270).

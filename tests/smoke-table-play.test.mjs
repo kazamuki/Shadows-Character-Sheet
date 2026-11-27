@@ -3397,3 +3397,38 @@ test("323: New note under a tag filter is empty and open at the top", () => {
   assert.equal(app.doc.activeElement, app.$(`[data-ntitle="${note.id}"]`));
   assert.deepEqual(app.errors, []);
 });
+
+test("323: a note opened from Find or Jotted, or finished under a tag filter it doesn't hold, is drawn", () => {
+  const app = deadAirApp("notes");
+  const id = app.window.eval(`S.table.notes.find(n => n.title === "The pilot (before S1)").id`);
+  app.click('[data-ntag="listener"]');
+  assert.ok(!app.$(`[data-nopen="${id}"]`), "the filter hides it");
+  app.window.eval(`openNote("${id}")`);
+  assert.ok(app.$(`[data-nopen="${id}"]`), "Find's way in clears a filter that hides the note");
+  assert.equal(app.window.eval("S.noteTag"), null);
+  assert.equal(app.$(`[data-nopen="${id}"]`).getAttribute("aria-expanded"), "true");
+  // Done on a note the filter no longer matches: it reads open in its group, focus on Edit.
+  const lid = app.window.eval(`S.table.notes.find(n => n.title === "The Listener (spoilers)").id`);
+  app.click('[data-ntag="listener"]');
+  editNote(app, lid);
+  app.click(`[data-ntagrm="${lid}"][data-ntagi="0"]`);
+  done(app);
+  assert.equal(app.window.eval("S.noteOpen"), lid);
+  assert.ok(app.$(`[data-nopen="${lid}"]`), "Done under a filter the note lost still draws it");
+  assert.equal(app.doc.activeElement, app.$(`[data-edit="note|${lid}"]`));
+  // A New note, finished under a filter it doesn't hold.
+  app.click('[data-ntag="spoilers"]');
+  app.click("[data-tnew]");
+  const nid = app.window.eval("S.table.notes[0].id");
+  done(app);
+  assert.ok(app.$(`[data-nopen="${nid}"]`));
+  assert.equal(app.doc.activeElement, app.$(`[data-edit="note|${nid}"]`));
+  assert.deepEqual(app.errors, []);
+});
+
+test("323: the shared list heads a session group with the caller's label, not the table's", () => {
+  const app = deadAirApp("notes");
+  const html = app.window.eval(`notesListHtml(S.table.notes, S.table.sessions, { by:"session" }, { open:null, editing:null, editable:false, sessions:[], sessionLabel:id => id ? "Entry " + id.slice(-3) : "", editBtn:()=>"", doneBtn:()=>"" })`);
+  assert.match(html, /<h2 class="ref-sub note-group">Entry /);
+  assert.ok(!/note-group">Session 6/.test(html));
+});
