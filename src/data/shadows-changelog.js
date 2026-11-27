@@ -2,6 +2,20 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.81.0",
+    "date": null,
+    "intro": [],
+    "items": [],
+    "groups": [
+      {
+        "title": "Character sheet",
+        "items": [
+          "**The barcode under your name is a real one.** Point a phone at your TAG and it reads. On the dark theme, hover the barcode and press **Scan** to flip it to black on white, which phones read, and press it again to flip it back. Characters you've already made keep the same TAG."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.80.0",
     "date": "2026-11-26",
     "intro": [],

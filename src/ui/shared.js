@@ -1335,18 +1335,17 @@ function guardReplace(saved, incoming, words, proceed){
     } });
 }
 
-// The TAG as the form prints it, under the character's name. The
-// bars are drawn from the number itself, five per character: decoration
-// that reads as a barcode, not one a scanner would read.
+// The TAG as the form prints it, under the character's name: a real Code 128 of the number's twelve characters (Decision 320,
+// Z1), drawn from Engine.tagBars. One rect per bar. A whole number of CSS pixels a unit, so a bar is the same width at any
+// device pixel ratio (a fraction rounds a one-unit bar to one or two device pixels). The quiet zone is the patch's, not the
+// drawing's (see .intake-bars). The print header calls this too, so it draws the same bars.
+const TAG_UNIT = 2;
 function intakeBarsSvg(id){
-  const A = "0123456789ABCDEFGHJKMNPQRSTVWXYZ", s = String(id||"").replace(/^[A-Z]{3}-/, "").replace(/-/g, "");
-  if (!s) return "";
+  const b = Engine.tagBars(id);
+  if (!b) return "";
   let x = 0, bars = "";
-  const bar = w => { bars += `<rect x="${x}" y="0" width="${w}" height="20"/>`; x += w + 1; };
-  bar(1); bar(1); x += 1;
-  for (const ch of s){ const v = Math.max(0, A.indexOf(ch)); for (let b=4;b>=0;b--) bar((v>>b)&1 ? 2 : 1); x += 1; }
-  bar(1); bar(1);
-  return `<svg class="intake-bars" viewBox="0 0 ${x} 20" width="${Math.round(x*1.4)}" height="20" preserveAspectRatio="none" shape-rendering="crispEdges" fill="currentColor" aria-hidden="true">${bars}</svg>`;
+  b.runs.forEach((w, i) => { if (i % 2 === 0) bars += `<rect x="${x}" y="0" width="${w}" height="20"/>`; x += w; });
+  return `<svg class="intake-bars" viewBox="0 0 ${b.modules} 20" width="${b.modules * TAG_UNIT}" height="20" preserveAspectRatio="none" shape-rendering="crispEdges" fill="currentColor" aria-hidden="true">${bars}</svg>`;
 }
 // W41: TAG'd or TAGless, the player's pick like their name: the Identity
 // step and Admin draw the same toggle, each binding its own `attr`.
@@ -1360,10 +1359,29 @@ function taglessToggleHtml(ch, attr){
 // W46 (Decision 163): the render after a lock prints the TAG once. The lock
 // sets S.issued and renderMain takes it, as it takes a hit's flash.
 let issuedNow=false;
+// Z1 (Decision 320): the Scan button flips every TAG's bars to black on white, for a phone to read off the dark theme. View state
+// in module memory: never S, never storage, gone on reload. A press toggles a class on the .intakes already drawn, so nothing
+// re-renders and focus stays on the button; intakeHtml reads it for any render that follows, so a flip survives one.
+let tagScanOn=false;
+const tagScanWords = on => { const T=(D.appCopy||{}).tagScan||{}; return on ? T.back : T.flip; };
 function intakeHtml(ch){
-  const id = intakeOf(ch), r = Engine.tagReading(ch);
-  return id ? `<div class="intake${issuedNow?" issued":""}" title="${esc(r ? `${r.label}. ${r.text}` : (D.tag||{}).text||"")}">${r?`<span class="intake-label">${esc(r.label)}</span>`:""}${intakeBarsSvg(id)}<span class="intake-no">${esc(Engine.tagNumber(ch))}</span></div>` : "";
+  const id = intakeOf(ch), r = Engine.tagReading(ch), T = (D.appCopy||{}).tagScan||{}, w = esc(tagScanWords(tagScanOn));
+  return id ? `<div class="intake${issuedNow?" issued":""}${tagScanOn?" scan":""}" title="${esc(r ? `${r.label}. ${r.text}` : (D.tag||{}).text||"")}">${r?`<span class="intake-label">${esc(r.label)}</span>`:""}${intakeBarsSvg(id)}<button type="button" class="intake-flip" aria-pressed="${tagScanOn}" title="${w}" aria-label="${w}">${esc(T.button)}</button><span class="intake-no">${esc(Engine.tagNumber(ch))}</span></div>` : "";
 }
+document.addEventListener("click", e=>{
+  const b = e.target && e.target.closest ? e.target.closest(".intake-flip") : null;
+  if (!b) return;
+  tagScanOn = !tagScanOn;
+  for (const el of document.querySelectorAll(".intake")){
+    el.classList.toggle("scan", tagScanOn);
+    const f = el.querySelector(".intake-flip");
+    if (f){ f.setAttribute("aria-pressed", String(tagScanOn)); f.title = tagScanWords(tagScanOn); f.setAttribute("aria-label", tagScanWords(tagScanOn)); }
+    if (!calm()){   // one short wipe, on a press only; a re-render that keeps the flip never plays it
+      el.classList.remove("flipping"); void el.offsetWidth; el.classList.add("flipping");
+      el.addEventListener("animationend", ()=>el.classList.remove("flipping"), { once:true });
+    }
+  }
+});
 
 // C4: what versionCheck found when this character was loaded. Content the
 // game data no longer has, or a journal that disagrees with the totals,

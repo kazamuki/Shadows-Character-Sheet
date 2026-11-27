@@ -1,7 +1,7 @@
 # State of the build
 
-**Updated:** 2026-11-24
-**Versions:** app `0.80.0` · game data `0.60` · character schema `0.35` · table schema `0.22` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
+**Updated:** 2026-11-26
+**Versions:** app `0.81.0` · game data `0.60` · character schema `0.35` · table schema `0.22` · pack schema `0.3` · ruleset **CRB v4 (in progress)**
 The app prints its own version in the footer — compare it against this line before debugging anything.
 **Suite:** `npm run verify` passes · **0 todo** (a todo is a confirmed defect written as a failing test; CI reports the rest)
 
@@ -109,7 +109,7 @@ economics) are in `plans/archive/`.
 - **GM mode, what's next** (`plans/gm-mode-next.md`): Scott's play report first (S22), then Ken's pick.
 - **Loadout and gear** (`plans/loadout-and-gear.md`): ends with natural-weapon follow-ons, each waiting on an answer: L8 the Werewolf's damage (LQ40), L9 a trained weapon as natural (W160), L10 hand cyberware (W90). Bone Spines' grappling waits on Deighton (F55).
 - **Closed plans** are in `plans/archive/`; finding-things left W152–W157 and W159, powers-that-run W132's last two powers (`plans/crb-catch-up.md`), pools-and-numbers (J1–J4, 312–315, released in 0.76.0) F56 for Deighton, motion (I1–I4, 316–319, released in 0.80.0) W124, W129, W134 and W128 once their rules exist, and help-on-the-sheet (K1–K5) W177, removing Burned without Admin mode (with Scott), and Deighton's read of the sheet's Help copy.
-- **A TAG that scans** (`plans/tag-that-scans.md`): the barcode becomes a real Code 128 and a Scan button flips it for a phone on the dark theme. Its one order, Z1, is approved (ZQ1–ZQ8, all defaults) and ready to build.
+- **A TAG that scans** (`plans/tag-that-scans.md`): the barcode becomes a real Code 128 and a Scan button flips it for a phone on the dark theme. Its one order, Z1, is built (Decision 320, app 0.81.0) and waits on Ken scanning a flipped TAG with his phone before it merges.
 - **W90**, cybernetics: six questions before a plan.
 
 **Ken alone:** F12 and F32, W38's plan (`plans/two-tabs-one-character.md`,

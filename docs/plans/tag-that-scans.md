@@ -16,7 +16,7 @@ The barcode under a character's name becomes a real one. A phone pointed at it r
 
 | Id | Order | What it builds | Status |
 |---|---|---|---|
-| **Z1** | [`tag-that-scans/Z1-a-tag-that-scans.md`](tag-that-scans/Z1-a-tag-that-scans.md) | `Engine.tagBars`, the real barcode on the sheet, the Review step and the print header, and the flip button | approved, ready to build |
+| **Z1** | [`tag-that-scans/Z1-a-tag-that-scans.md`](tag-that-scans/Z1-a-tag-that-scans.md) | `Engine.tagBars`, the real barcode on the sheet, the Review step and the print header, and the flip button | **built** (Decision 320, app 0.81.0); merges after Ken scans a flipped TAG with his phone |
 
 One session. Nothing in it waits on Deighton, Scott or the book.
 

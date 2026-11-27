@@ -459,3 +459,13 @@ test("K3: a seat's copy draws no guide line, and its Progression says the player
   assert.doesNotMatch(app.$("#main").textContent, /Log a session when it truly ends/);
   assert.deepEqual(app.errors, []);
 });
+
+test("Z1 7: the read-only seat sheet's TAG has the Scan button too", () => {
+  const app = open();
+  openSheet(app);
+  const intake = app.$("#main .intake");
+  assert.ok(intake && intake.querySelector(".intake-flip"), "a seat sheet's TAG has no Scan button");
+  intake.querySelector(".intake-flip").click();
+  assert.ok(app.$("#main .intake").classList.contains("scan"));
+  assert.deepEqual(app.errors, []);
+});
