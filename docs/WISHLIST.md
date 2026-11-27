@@ -755,7 +755,7 @@ is the place; no new markup in `index.html` beyond what's there); Decision 164
 pinned stat block (W77) and the rail leaves the page the middle.
 
 **W140 — Notes that organise themselves: tags, categories, and the session they came from.** *Ken · 🔎 · Rule or shape · raised 2026-10-30*\
-**Plan:** [gm-mode-next](plans/gm-mode-next.md) S30, order drafted (PR 1, GM mode): [`S30-notes.md`](plans/gm-mode-next/S30-notes.md) · **Goes with:** W55
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S30, PR 1 built (GM mode, Decision 323; the sheet is PR 2): [`S30-notes.md`](plans/gm-mode-next/S30-notes.md) · **Goes with:** W55
 
 A GM takes notes for many reasons: a name to remember, a rule to look up, a
 hook for later, what a player promised. Today a table note is a dated line

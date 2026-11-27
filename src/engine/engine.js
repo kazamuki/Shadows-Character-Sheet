@@ -6863,6 +6863,34 @@ const Engine = (() => {
   }
   const _str = v => typeof v==="string" ? v : "";
   const _isoOrNull = v => typeof v==="string" && Number.isFinite(Date.parse(v)) ? v : null;
+  // A note, both sides (Decision 323): { id, title, text, category, tags, session, created, updated }. A category is one typed
+  // string; tags are typed strings, trimmed, at most 40 characters, each kept once whatever its case (the first spelling wins).
+  // Stored as written: nothing here is derived (constraint 7).
+  const NOTE_TAG_MAX = 40;
+  const _noteCategory = v => _str(v).trim();
+  function _noteTags(v){
+    const out = [], seen = new Set();
+    for (const x of (Array.isArray(v) ? v : [])){
+      if (typeof x!=="string") continue;
+      const tag = x.trim().slice(0, NOTE_TAG_MAX).trim(), key = tag.replace(/[‘’ʼ]/g, "'").toLowerCase();
+      if (!tag || seen.has(key)) continue;
+      seen.add(key); out.push(tag);
+    }
+    return out;
+  }
+  // Cleans one note in place. `sessionIds` is the set of ids the same file's sessions hold; a note naming none is unfiled.
+  function _note(n, usedIds, sessionIds){
+    n.title = _str(n.title);
+    n.text = _str(n.text);
+    n.category = _noteCategory(n.category);
+    n.tags = _noteTags(n.tags);
+    n.session = typeof n.session==="string" && sessionIds && sessionIds.has(n.session) ? n.session : null;
+    if (!(typeof n.id==="string" && NOTE_ID_RE.test(n.id)) || usedIds.has(n.id)) n.id = newTableNoteId(usedIds);
+    usedIds.add(n.id);
+    n.created = _isoOrNull(n.created);
+    n.updated = _isoOrNull(n.updated);
+    return n;
+  }
   const _isObj = o => !!o && typeof o==="object" && !Array.isArray(o);
   // Is `v` a version string newer than `base`? (_schemaBefore reads
   // meta.schemaVersion, so a table's own stamp needs its own twin.)
@@ -7212,7 +7240,7 @@ const Engine = (() => {
     x.updated = _isoOrNull(x.updated);
   }
   // The table file's shape. A bump needs a migrateTable() step in the same change.
-  const TABLE_SCHEMA_VERSION = "0.22";
+  const TABLE_SCHEMA_VERSION = "0.23";
   function newTable(name){
     const now = new Date().toISOString();
     return { meta:{ kind:"shadows-table", id:newTableId(), name:String(name ?? ""),
@@ -7343,6 +7371,9 @@ const Engine = (() => {
     //   Schema 0.22 (Decision 303): a session keeps a name. Nothing is guessed (203): every session starts unnamed.
     if (typeof arrived!=="string" || _versionNewer("0.22", arrived))
       for (const x of (Array.isArray(c.sessions) ? c.sessions : [])) if (_isObj(x)) x.title = "";
+    //   Schema 0.23 (Decision 323): a note keeps a category and tags. Nothing is guessed (203): every note starts with neither.
+    if (typeof arrived!=="string" || _versionNewer("0.23", arrived))
+      for (const n of (Array.isArray(c.notes) ? c.notes : [])) if (_isObj(n)){ n.category = ""; n.tags = []; }
     //   Schema 0.19 (Decision 261): a side keeps its Combat Sense roll. A wave fight not ended takes each side's best
     //   as 210 read it, so a fight saved mid-round opens in the order it had; everything else starts with none.
     //   The seed reads the gated rows, so the gate does it (_encounters).
@@ -7358,15 +7389,7 @@ const Engine = (() => {
     // Notes after sessions: a note's session is checked against the ids above (Decision 208).
     const used = new Set();
     c.notes = (Array.isArray(c.notes) ? c.notes : []).filter(_isObj);
-    for (const n of c.notes){
-      n.title = _str(n.title);
-      n.text = _str(n.text);
-      n.session = typeof n.session==="string" && usedSession.has(n.session) ? n.session : null;
-      if (!(typeof n.id==="string" && NOTE_ID_RE.test(n.id)) || used.has(n.id)) n.id = newTableNoteId(used);
-      used.add(n.id);
-      n.created = _isoOrNull(n.created);
-      n.updated = _isoOrNull(n.updated);
-    }
+    for (const n of c.notes) _note(n, used, usedSession);
     const usedPlace = new Set();
     c.places = (Array.isArray(c.places) ? c.places : []).filter(_isObj);
     for (const p of c.places) _place(p, usedPlace);
@@ -7493,6 +7516,21 @@ const Engine = (() => {
     }
     return null;
   }
+  // What a press on a note's tags or category did, from the note before and after it (Decision 323). Typing a title or text
+  // isn't one of these: null, and the caller falls back to "Changed the note ...".
+  function _noteChangeLabel(was, now){
+    const name = _str(now.title).trim(), wt = _noteTags(was.tags), nt = _noteTags(now.tags);
+    const key = x => _fold(x), has = (list, x) => list.some(y=>key(y)===key(x));
+    const who = name ? `"${name}"` : "a note";
+    const added = nt.filter(x=>!has(wt, x)), dropped = wt.filter(x=>!has(nt, x));
+    if (added.length || dropped.length){
+      return added.length ? `Tagged ${who} ${added.join(", ")}` : `Untagged ${who} ${dropped.join(", ")}`;
+    }
+    const c = _noteCategory(now.category);
+    if (c!==_noteCategory(was.category) && _str(was.title)===_str(now.title) && _str(was.text)===_str(now.text))
+      return c ? `Filed ${who} under ${c}` : `Filed ${who} under no category`;
+    return null;
+  }
   function tableActionLabel(before, after, patch){
     const fallback = "Changed the table";
     try {
@@ -7515,7 +7553,7 @@ const Engine = (() => {
           // A clock added with its owner changed in the same patch is collateral of that change (251): a profile's clock copied onto a place.
           if (!was.has(r.id) && coll==="clocks" && _clockOwnerChanged(before, after, r)) continue;
           if (!was.has(r.id)) came.push(_recLabel("Added", coll, r));
-          else if (!_eq(was.get(r.id), r)) changed.push((coll==="encounters" && _encChangeLabel(was.get(r.id), r)) || _recLabel("Changed", coll, was.get(r.id)));
+          else if (!_eq(was.get(r.id), r)) changed.push((coll==="encounters" && _encChangeLabel(was.get(r.id), r)) || (coll==="notes" && _noteChangeLabel(was.get(r.id), r)) || _recLabel("Changed", coll, was.get(r.id)));
         }
         // An owner's removal names the owner; the clocks that went with it are collateral, whoever owned them (245, 251).
         for (const [id, r] of was) if (!now.has(id)){
@@ -7565,6 +7603,8 @@ const Engine = (() => {
       const same = label ? label===last.label : true;
       if (same){
         last.date = when;
+        // A category being typed is one entry whose words follow it: "Filed X under Ru" becomes "... under Rules" (Decision 323).
+        if (!label && /^Filed /.test(last.label)) last.label = tableActionLabel(before, t, patch);
         for (const o of patch) if (isStamp(o) && !last.patch.some(q=>pathsOf([q])===pathsOf([o]))) last.patch.push(o);
         if (core(last.patch).every(o=>_eq(o.before, _pathGet(t, o.path)))){ log.pop(); return { ok:true, folded:true, dropped:true, entry:null }; }
         return { ok:true, folded:true, entry:last };
@@ -7641,7 +7681,7 @@ const Engine = (() => {
     // A jot files to the session being played (Decision 270); the Notes tab's New note, with no jot, keeps the day's one.
     const session = _sessions(t).some(e=>e.id===f.session) ? f.session
       : f.jot===true ? (openSession(t) || {}).id ?? null : _sessionOnDay(t, f.date);
-    const n = { id:newTableNoteId(used), title:_str(f.title), text:_str(f.text), session, created:now, updated:now };
+    const n = { id:newTableNoteId(used), title:_str(f.title), text:_str(f.text), category:_noteCategory(f.category), tags:_noteTags(f.tags), session, created:now, updated:now };
     t.notes.unshift(n);
     _tableStamp(t);
     return { ok:true, id:n.id };
@@ -7652,6 +7692,8 @@ const Engine = (() => {
     if (_isObj(f)){
       if ("title" in f) n.title = _str(f.title);
       if ("text" in f) n.text = _str(f.text);
+      if ("category" in f) n.category = _noteCategory(f.category);
+      if ("tags" in f) n.tags = _noteTags(f.tags);
       if ("session" in f && (f.session===null || _sessions(t).some(e=>e.id===f.session))) n.session = f.session;
     }
     _tableStamp(t, n);
@@ -8386,6 +8428,47 @@ const Engine = (() => {
   // The notes jotted in a session, newest first (Decision 208).
   const sessionNotes = (t, id) => _notes(t).filter(n=>n.session===id && typeof id==="string")
     .map((n, i)=>({ n, i })).sort((a, b)=>-_made(a.n, b.n) || a.i - b.i).map(e=>e.n);
+  // The notes' tags and categories in use, folded-unique, in first-use order: the tag row's chips and the forms' suggestions (Decision 323).
+  const _noteList = notes => (Array.isArray(notes) ? notes : []).filter(_isObj);
+  function _inUse(notes, read){
+    const out = [], seen = new Set();
+    for (const n of _noteList(notes)) for (const v of read(n)){
+      const k = _fold(v); if (!v || seen.has(k)) continue;
+      seen.add(k); out.push(v);
+    }
+    return out;
+  }
+  const noteTagsInUse = notes => _inUse(notes, n=>_noteTags(n.tags));
+  const noteCategoriesInUse = notes => _inUse(notes, n=>{ const c = _noteCategory(n.category); return c ? [c] : []; });
+  // The notes in groups: [{ key, title, notes }] (Decision 323). `by` is "category" (the default), "session" or "newest"; `tag`
+  // keeps only the notes holding it. A view, computed: nothing here is stored. Groups keep the list's order; it never sorts within one.
+  // A category is one group whatever its case, titled as first written; "" is the last group, titled null ("No category"). The
+  // session groups are newest first, the unfiled last, titled null ("No session"). `sessions` is a list of session records.
+  function noteGroups(notes, sessions, opts){
+    try {
+      const o = _isObj(opts) ? opts : {};
+      const tag = typeof o.tag==="string" && _fold(o.tag) ? _fold(o.tag) : null;
+      const list = _noteList(notes).filter(n=>!tag || _noteTags(n.tags).some(x=>_fold(x)===tag));
+      if (o.by==="newest") return list.length ? [{ key:"newest", title:null, notes:list }] : [];
+      const groups = [], at = new Map();
+      const put = (key, title, n) => { if (!at.has(key)){ at.set(key, { key, title, notes:[] }); groups.push(at.get(key)); } at.get(key).notes.push(n); };
+      if (o.by==="session"){
+        const known = sessionList({ sessions:Array.isArray(sessions) ? sessions : [] });
+        const ids = new Map(known.map(s=>[s.id, s]));
+        const order = new Map(known.map((s, i)=>[s.id, i]));
+        for (const n of list){
+          const s = typeof n.session==="string" ? ids.get(n.session) : null;
+          put(s ? s.id : "", s ? sessionTitle(s) : null, n);
+        }
+        return groups.sort((a, b)=>(a.key==="" ? 1 : 0) - (b.key==="" ? 1 : 0) || (order.get(a.key) ?? 0) - (order.get(b.key) ?? 0));
+      }
+      for (const n of list){
+        const c = _noteCategory(n.category);
+        put(c ? _fold(c) : "", c || null, n);
+      }
+      return groups.sort((a, b)=>(a.key==="" ? 1 : 0) - (b.key==="" ? 1 : 0));
+    } catch (e) { return []; }
+  }
   const sessionInteractions = (t, id) => _interactions(t).filter(x=>x.session===id).sort(_newest);
   function sessionOffered(t, id){
     const s = _sessions(t).find(e=>e.id===id);
@@ -8556,7 +8639,7 @@ const Engine = (() => {
         test("interaction", x.id, first || "A line", _interactionFields(t, x));
       }
       for (const h of threadList(t)) test("thread", h.id, _str(h.title).trim() || "Untitled", [["Thread", _str(h.title)], ["Notes", _str(h.notes)]]);
-      for (const n of _byMade(_notes(t))) test("note", n.id, _str(n.title).trim() || "Untitled note", [["Title", _str(n.title)], ["Note", _str(n.text)]]);
+      for (const n of _byMade(_notes(t))) test("note", n.id, _str(n.title).trim() || "Untitled note", [["Title", _str(n.title)], ["Category", _str(n.category)], ..._noteTags(n.tags).map(x=>["Tag", x]), ["Note", _str(n.text)]]);
       for (const e of _byMade(_encList(t))) test("encounter", e.id, encounterTitle(e), _encounterFields(t, e));
       for (const p of placeList(t)) test("place", p.id, placeTitle(t, p), _placeFields(t, p));
       for (const f of factionList(t)) test("faction", f.id, factionTitle(t, f), _factionFields(t, f));
@@ -10833,7 +10916,7 @@ const Engine = (() => {
     // Audit trail and undo
     diffChar, recordAction, undoLastAction,
     // The table file (GM mode): create, tell its kind, load, check, edit notes
-    newTable, isTableId, fileKind, migrateTable, tableCheck, diffTable, tableActionLabel, recordTableAction, undoTableAction, clearTableActivity, addTableNote, editTableNote, removeTableNote, sessionNotes, tableSearch,
+    newTable, isTableId, fileKind, migrateTable, tableCheck, diffTable, tableActionLabel, recordTableAction, undoTableAction, clearTableActivity, addTableNote, editTableNote, removeTableNote, sessionNotes, noteGroups, noteTagsInUse, noteCategoriesInUse, tableSearch,
     // Players and seats: a table's characters, kept as copies (Decisions 254, 255)
     addPlayer, editPlayer, removePlayer, importSeat, setSeat, removeSeat, seatFor, seatPicks, seatView, seatCharacter, playerList,
     // The pack file (GM mode): load, check, read, and copy an entry into the cast

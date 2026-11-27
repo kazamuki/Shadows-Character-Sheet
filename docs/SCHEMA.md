@@ -4856,6 +4856,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      → **Superseded in part by Decision 255** — Find finds a seat.
     → **Superseded in part by Decision 270** — a jot's session is the open session, not the one dated today.
     → **Superseded in part by Decision 271** — Notes lists titles, and one note opens at a time.
+    → **Superseded in part by Decision 323** — Find reads a note's category and its tags.
 
 209. **The Reference's jump bar shows every chip, wrapped: it sticks from 640px, and on a phone it stays at the top of the page.**
      *2026-10-09 · Ken + Claude · Touches: Reference tab, jump bar, jumpBarHtml wrap, jump-wrap, jumpbar.sticky, jumpTo, scroll-row, wheelSideways, phone, Decision 165, Decision 207, SQ8*
@@ -5576,6 +5577,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** a GM edits mid-scene more than reads, or W140 reshapes Notes.
      - **Built:** app 0.65.0, no schema move, PR #311, log 2026-11-06 (U3).
      → **Superseded in part by Decision 301** — Cast's quick-add no longer stays at the top: it sits below the list, as Players' does.
+    → **Superseded in part by Decision 323** — Notes lists its titles in groups (by Category, Session or Newest), with a row of tags that filters.
 
 272. **On a table, 1–8 open the sections, N runs Next turn on a running encounter's page, Ctrl/⌘+Z takes back the last change, A opens Activity and ? lists every key; the open section's tab is aria-current.**
      *2026-11-07 · Ken + Claude · Touches: keyboard shortcuts, keydown, inField, keysOn, shadows.ui.keys, Keys, openKeys, keyHints, aria-keyshortcuts, 1–8, section tabs, tableTabButtonsHtml, pickTableTab, aria-current, showActiveTab, N, Next turn, data-enext, Ctrl+Z, Cmd+Z, undoTableEntry, showTableDone, nothing to undo, A, Activity, openActivity, ?, phone-check, Decision 259, Decision 271*
@@ -6125,6 +6127,16 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** a GM asks for Spells or the Arcanist's powers here, or the Reference is too long to scroll at 375px with the sixteen.
      - **Built:** app 0.81.0, no data-version or schema bump (Decision 68); PR (this one), log 2026-11-27.
 
+323. **A note has a category and tags, and the Notes tab groups and filters by them and by session.**
+     *2026-11-27 · Ken + Claude · Touches: table notes, note category, note tags, addTableNote, editTableNote, noteGroups, notesListHtml, Notes tab, Group by, tag filter, tableSearch, Find, migrateTable, table schema 0.23, Decision 208, Decision 271, W140*
+     - **Decided:** a table note gains `category` (one typed string, "" for none) and `tags` (typed strings, at most 40 characters, each kept once whatever its case), both stored as written; the groupings are computed (`Engine.noteGroups`). The Notes tab groups its titles by Category (the default), Session or Newest first, and a row of the tags in use filters it; both are view state. Find reads a note's category and tags. One renderer in `shared.js` draws the list for the sheet to share. A tag or category press is one Activity entry with its own words; typing a category folds. The note in Edit sits above the groups until Done.
+     - **Why:** W140. A flat list of titles stops scaling after a few sessions. Typed text keeps the note an input (constraint 7), and the session link the note already has (208) is the third grouping for free.
+     - **Rejected:**
+       - Tags as links to the cast, threads or places: a line already ties a cast member, a thread, a place and a session together; a note is what doesn't fit a line.
+       - A category list the GM manages: a second record to keep in step, where the categories in use are already in the notes.
+       - **Replaces:** Decision 271 in part (Notes lists titles, now in groups); Decision 208 in part (Find reads a note's category and tags).
+     - **Revisit if:** a GM wants a note tied to a record (then a note gains links, and the line is reconsidered), or the tag row is too long to use at 375px.
+     - **Built:** app 0.81.0, table schema 0.22 → 0.23, no data-version move (Decision 68), PR (this one), log 2026-11-27 (S30 PR 1).
 
 ## 5. Open Flags
 

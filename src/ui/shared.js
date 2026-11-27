@@ -1738,3 +1738,56 @@ function panelRows(ch, key){
   if (!ch.panelData[key]) ch.panelData[key]=[];
   return ch.panelData[key];
 }
+
+// ── Notes, one list for both sides (Decision 323) ────────────────────────────
+// A note is { id, title, text, category, tags, session, created, updated } on a table and, soon, on a sheet. This draws the
+// list: the Group by control, the tag row, then the groups of titles, one note open at a time. It reads the notes it's given
+// and names no side; the caller says who may edit and how a session is spelled. Group by and the tag filter are view state
+// ({ by, tag }), never stored. `o`: { open, editing (note ids or null), editable, sessions (the choices, [{ id, label }]),
+// sessionLabel(id), editBtn(n), doneBtn(n) }. The data- attributes are the table's (data-nopen, data-ntitle, ...).
+const noteName = n => String(n.title||"").trim() || String(n.text||"").split(/\r?\n/).map(x=>x.trim()).find(Boolean) || "Untitled note";
+const NOTE_BYS = [["category","Category"], ["session","Session"], ["newest","Newest"]];
+const noteView = v => ({ by:v && NOTE_BYS.some(x=>x[0]===v.by) ? v.by : "category", tag:v && typeof v.tag==="string" ? v.tag : null });
+function noteTagFieldHtml(n, id, tagsInUse){
+  const tags = Array.isArray(n.tags) ? n.tags : [];
+  return `<div class="field note-tagfield" role="group" aria-label="Tags"><span>Tags</span>
+    ${tags.length ? `<span class="note-tags">${tags.map((x, i)=>`<span class="tag plain note-tag">${esc(x)}<button type="button" class="note-tagx" data-ntagrm="${id}" data-ntagi="${i}" aria-label="Remove tag ${esc(x)}">&times;</button></span>`).join("")}</span>` : ""}
+    <span class="note-tagadd"><input type="text" data-ntagin="${id}" list="ntags-${id}" maxlength="40" placeholder="Add a tag" aria-label="Add a tag" autocomplete="off">
+    <button type="button" class="btn sm" data-ntagadd="${id}">Add</button></span>
+    <datalist id="ntags-${id}">${tagsInUse.map(x=>`<option value="${esc(x)}"></option>`).join("")}</datalist></div>`;
+}
+function noteCardHtml(n, o){
+  const id = esc(n.id), open = o.open===n.id, editing = o.editable && open && o.editing===n.id, label = o.sessionLabel(n.session);
+  const cat = String(n.category||"").trim(), tags = Array.isArray(n.tags) ? n.tags : [];
+  const chips = (label ? ` <span class="tag plain">${esc(label)}</span>` : "") + (cat ? ` <span class="tag plain note-cat">${esc(cat)}</span>` : "")
+    + tags.map(x=>` <span class="tag plain note-tagc">${esc(x)}</span>`).join("");
+  const row = `<button type="button" class="cast-open note-open" data-nopen="${id}" aria-expanded="${open}">${esc(noteName(n))}</button>${chips}`;
+  if (!open) return `<li class="tbl-note" data-note="${id}"><div class="note-head">${row}</div></li>`;
+  if (!editing) return `<li class="tbl-note open" data-note="${id}"><div class="note-head">${row} ${o.editable ? o.editBtn(n) : ""}</div>
+    ${String(n.text||"").trim() ? `<p class="dos-p note-text">${esc(n.text)}</p>` : ""}</li>`;
+  return `<li class="tbl-note open editing" data-note="${id}"><div class="note-head">${row}</div>
+    <label class="field"><span>Title</span><input type="text" data-ntitle="${id}" value="${esc(n.title)}" placeholder="Untitled note" autocomplete="off"></label>
+    <label class="field"><span>Note</span><textarea data-ntext="${id}" placeholder="Leads, debts, names to remember.">${esc(n.text)}</textarea></label>
+    <label class="field"><span>Category</span><input type="text" data-ncat="${id}" list="ncats-${id}" value="${esc(cat)}" placeholder="No category" autocomplete="off">
+      <datalist id="ncats-${id}">${o.categories.map(x=>`<option value="${esc(x)}"></option>`).join("")}</datalist></label>
+    ${noteTagFieldHtml(n, id, o.tagsInUse)}
+    <label class="field"><span>Session</span><select data-nsess="${id}"><option value="">None</option>${o.sessions.map(s=>`<option value="${esc(s.id)}"${s.id===n.session ? " selected" : ""}>${esc(s.label)}</option>`).join("")}</select></label>
+    <p class="note-acts">${o.doneBtn(n)} <button class="btn sm danger" data-ndel="${id}">Delete</button></p></li>`;
+}
+function notesListHtml(notes, sessions, view, o){
+  const v = noteView(view), all = Array.isArray(notes) ? notes : [], tagsInUse = Engine.noteTagsInUse(all);
+  // A filter on a tag no note holds any more filters nothing.
+  const tag = v.tag && tagsInUse.some(x=>x.toLowerCase()===v.tag.toLowerCase()) ? v.tag : null;
+  const opts = { ...o, categories:Engine.noteCategoriesInUse(all), tagsInUse };
+  // The note being edited sits above the groups until Done: a category or tag typed into it never moves it under the GM's hands.
+  const pinned = o.editable ? all.find(n=>n.id===o.editing && n.id===o.open) : null;
+  const groups = Engine.noteGroups(all.filter(n=>n!==pinned), sessions, { by:v.by, tag });
+  const bar = `<div class="form-toggle note-by" role="group" aria-label="Group by">${NOTE_BYS.map(([k, name])=>
+      `<button type="button" data-ngroup="${k}" class="${k===v.by?"on":""}" aria-pressed="${k===v.by}">${esc(name)}</button>`).join("")}</div>
+    ${tagsInUse.length ? `<div class="note-tagrow" role="group" aria-label="Filter by tag">${tagsInUse.map(x=>{ const on = tag!==null && x.toLowerCase()===tag.toLowerCase();
+      return `<button type="button" class="tag note-tagpick${on?" on":""}" data-ntag="${esc(x)}" aria-pressed="${on}">${esc(x)}</button>`; }).join("")}</div>` : ""}`;
+  const none = { category:"No category", session:"No session" };
+  const lists = groups.map(g=>`${v.by==="newest" ? "" : `<h2 class="ref-sub note-group">${esc(g.title===null ? none[v.by] : g.title)}</h2>`}
+    <ul class="int-list note-list">${g.notes.map(n=>noteCardHtml(n, opts)).join("")}</ul>`).join("");
+  return `${bar}${pinned ? `<ul class="int-list note-list note-pinned">${noteCardHtml(pinned, opts)}</ul>` : ""}${lists}`;
+}

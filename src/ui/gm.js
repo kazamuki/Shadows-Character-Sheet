@@ -589,23 +589,18 @@ function bindEdit(main, kind, id){
     const e=$("main").querySelector(`[data-edit="${kind}|${id}"]`); if (e) e.focus();
   });
 }
-// A note's title, or its first line when it has none.
-const noteName = n => String(n.title||"").trim() || String(n.text||"").split(/\r?\n/).map(x=>x.trim()).find(Boolean) || "Untitled note";
-function noteCardHtml(n){
-  const id=esc(n.id), open=S.noteOpen===n.id, editing=open && editingNow("note", n.id), sess=sessionById(n.session);
-  const row=`<button type="button" class="cast-open note-open" data-nopen="${id}" aria-expanded="${open}">${esc(noteName(n))}</button>${sess ? ` <span class="tag plain">${esc(Engine.sessionTitle(sess))}</span>` : ""}`;
-  if (!open) return `<li class="tbl-note" data-note="${id}"><div class="note-head">${row}</div></li>`;
-  if (!editing) return `<li class="tbl-note open" data-note="${id}"><div class="note-head">${row} ${editBtnHtml("note", n.id, noteName(n))}</div>
-    ${String(n.text||"").trim() ? `<p class="dos-p note-text">${esc(n.text)}</p>` : ""}</li>`;
-  return `<li class="tbl-note open editing" data-note="${id}"><div class="note-head">${row}</div>
-    <label class="field"><span>Title</span><input type="text" data-ntitle="${id}" value="${esc(n.title)}" placeholder="Untitled note" autocomplete="off"></label>
-    <label class="field"><span>Note</span><textarea data-ntext="${id}" placeholder="Leads, debts, names to remember.">${esc(n.text)}</textarea></label>
-    <label class="field"><span>Session</span><select data-nsess="${id}"><option value="">None</option>${Engine.sessionList(S.table).map(s=>`<option value="${esc(s.id)}"${s.id===n.session ? " selected" : ""}>${esc(Engine.sessionTitle(s))}${s.date ? ` · ${esc(dayText(s.date))}` : ""}</option>`).join("")}</select></label>
-    <p class="note-acts">${doneBtnHtml("note", n.id, noteName(n))} <button class="btn sm danger" data-ndel="${id}">Delete</button></p></li>`;
-}
+// The notes list is shared.js's (Decision 323): the table says who edits, how a session reads and what its buttons are.
+// Group by and the tag filter are view state (S.noteGroup, S.noteTag): nothing about them is stored.
+const notesViewNow = () => ({ by:S.noteGroup, tag:S.noteTag });
 function notesTabHtml(t){
-  return `${t.notes.length ? `<ul class="int-list note-list">${t.notes.map(noteCardHtml).join("")}</ul>`
-      : emptyHtml("notes", true)}
+  if (!t.notes.length) return `${emptyHtml("notes", true)}
+    <p><button class="btn primary" data-tnew>New note</button></p>`;
+  const sessions = Engine.sessionList(t);
+  if (S.noteTag && !Engine.noteTagsInUse(t.notes).some(x=>x.toLowerCase()===S.noteTag.toLowerCase())) S.noteTag=null;   // the last note holding it let go
+  return `${notesListHtml(t.notes, t.sessions, notesViewNow(), { open:S.noteOpen, editing:S.editing && S.editing.kind==="note" ? S.editing.id : null, editable:true,
+      sessions:sessions.map(s=>({ id:s.id, label:Engine.sessionTitle(s) + (s.date ? ` · ${dayText(s.date)}` : "") })),
+      sessionLabel:id=>{ const s=sessionById(id); return s ? Engine.sessionTitle(s) : ""; },
+      editBtn:n=>editBtnHtml("note", n.id, noteName(n)), doneBtn:n=>doneBtnHtml("note", n.id, noteName(n)) })}
     <p><button class="btn primary" data-tnew>New note</button></p>`;
 }
 // ── Tonight (Decision 270) ───────────────────────────────────────────────
@@ -770,6 +765,37 @@ function bindNotes(main){
     tableChange(()=>Engine.editTableNote(S.table, el.dataset.ntext, { text:el.value }), false); });
   main.querySelectorAll("[data-nsess]").forEach(el=>el.onchange=()=>{
     tableChange(()=>Engine.editTableNote(S.table, el.dataset.nsess, { session:el.value || null }), false); });
+  main.querySelectorAll("[data-ncat]").forEach(el=>el.oninput=()=>{
+    tableChange(()=>Engine.editTableNote(S.table, el.dataset.ncat, { category:el.value }), false); });
+  // A tag is a press: one entry, its own words (Decision 212). Enter or a comma in the field adds it, so does Add.
+  const tagsOf = id => (S.table.notes.find(n=>n.id===id) || { tags:[] }).tags;
+  const addTags = id => {
+    const inp=main.querySelector(`[data-ntagin="${id}"]`), typed=inp ? inp.value.split(",").map(x=>x.trim()).filter(Boolean) : [];
+    if (!typed.length) return;
+    tableChange(()=>Engine.editTableNote(S.table, id, { tags:tagsOf(id).concat(typed) }));
+    const again=$("main").querySelector(`[data-ntagin="${id}"]`); if (again){ again.value=""; again.focus(); }
+  };
+  main.querySelectorAll("[data-ntagadd]").forEach(b=>b.onclick=()=>addTags(b.dataset.ntagadd));
+  main.querySelectorAll("[data-ntagin]").forEach(el=>el.onkeydown=ev=>{
+    if (ev.key==="Enter" || ev.key===","){ ev.preventDefault(); addTags(el.dataset.ntagin); } });
+  main.querySelectorAll("[data-ntagrm]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.ntagrm, at=Number(b.dataset.ntagi);
+    tableChange(()=>Engine.editTableNote(S.table, id, { tags:tagsOf(id).filter((x, i)=>i!==at) }));
+    const m=$("main"), next=m.querySelector(`[data-ntagrm="${id}"][data-ntagi="${at}"]`) || m.querySelector(`[data-ntagin="${id}"]`);
+    if (next) next.focus();
+  });
+  // Group by and the tag filter change what is shown, never the table: a note the filter hides shuts.
+  const reshow = focusAttr => {
+    const v=notesViewNow(), shown=new Set(Engine.noteGroups(S.table.notes, S.table.sessions, v).flatMap(g=>g.notes.map(n=>n.id)));
+    if (S.noteOpen && !shown.has(S.noteOpen)){ S.noteOpen=null; S.editing=null; }
+    renderTable();
+    const el=$("main").querySelector(focusAttr); if (el) el.focus();
+  };
+  main.querySelectorAll("[data-ngroup]").forEach(b=>b.onclick=()=>{ S.noteGroup=b.dataset.ngroup; reshow(attrSel("data-ngroup", S.noteGroup)); });
+  main.querySelectorAll("[data-ntag]").forEach(b=>b.onclick=()=>{
+    const tag=b.dataset.ntag, same=S.noteTag && S.noteTag.toLowerCase()===tag.toLowerCase();
+    S.noteTag = same ? null : tag; reshow(attrSel("data-ntag", tag));
+  });
   // One note open at a time: a press opens that note and shuts the other; pressing the open one shuts it. Focus stays on the row.
   main.querySelectorAll("[data-nopen]").forEach(b=>b.onclick=()=>{
     const id=b.dataset.nopen; S.noteOpen = S.noteOpen===id ? null : id; S.editing=null; renderTable();

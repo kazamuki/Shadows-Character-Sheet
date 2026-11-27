@@ -900,7 +900,7 @@ test("Decisions 203–204: export and import keep sessions and threads, and a 0.
   const before = JSON.parse(JSON.stringify(app.window.eval("({ s: S.table.sessions, t: S.table.threads })")));
   app.click("[data-menu-toggle]"); app.click("[data-texport-open]");
   const file = await tableFile(downloads[0]);
-  assert.equal(file.meta.tableSchemaVersion, "0.22");
+  assert.equal(file.meta.tableSchemaVersion, "0.23");
   assert.deepEqual(file.sessions, before.s); assert.deepEqual(file.threads, before.t);
   const fresh = boot({ storage: GM_ON });
   withDownloads(fresh);
@@ -913,7 +913,7 @@ test("Decisions 203–204: export and import keep sessions and threads, and a 0.
   const older = boot({ storage: GM_ON });
   withDownloads(older);
   await importFile(older, old);
-  assert.equal(older.window.eval("S.table.meta.tableSchemaVersion"), "0.22");
+  assert.equal(older.window.eval("S.table.meta.tableSchemaVersion"), "0.23");
   assert.equal(older.window.eval("S.table.sessions.length + S.table.threads.length"), 0);
   assert.equal(older.window.eval("S.table.interactions[0].session"), null);
   assert.deepEqual([...app.errors, ...fresh.errors, ...older.errors], []);
@@ -2680,7 +2680,7 @@ test("U3: Notes lists titles and opens one at a time", () => {
   assert.ok(app.$("[data-tnew]").compareDocumentPosition(app.$$("[data-nopen]").pop()) & app.window.Node.DOCUMENT_POSITION_PRECEDING, "New note sits below the list");
   const id = rows[4].dataset.nopen, name = rows[4].textContent;
   edit(app);
-  assert.equal(app.$$("#main .tbl-note textarea, #main .tbl-note input, #main .tbl-note select").length, 3);
+  assert.equal(app.$$("#main .tbl-note textarea, #main .tbl-note input, #main .tbl-note select").length, 5);
   app.click(`[data-ndel="${id}"]`);
   assert.match(app.$("#modal").textContent, new RegExp("Delete \u201c?\"" + name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   app.click("#modal [data-modalclose]");
@@ -3282,5 +3282,107 @@ test("322: the Reference tab draws Skills, Powers and Equipment and their jump c
   type(app, "[data-jumpfilter]", "nanomed");
   assert.ok(refChips(app).includes("Equipment") && !refChips(app).includes("Skills"));
   assert.equal(app.$$("#main .ref-panel").length, refChips(app).length);
+  assert.deepEqual(app.errors, []);
+});
+
+// ── Notes with a category and tags (Decision 323, S30 PR 1) ────────────────
+const noteHeads = app => app.$$("#main .note-group").map(h => h.textContent);
+const shownNotes = app => app.$$("#main [data-nopen]").map(b => b.textContent);
+const press = (app, el, key) => el.dispatchEvent(new app.window.KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }));
+
+test("323: the Notes tab groups by category, filters by a tag, and keeps the open note", () => {
+  const app = deadAirApp("notes");
+  assert.deepEqual(noteHeads(app), ["Table", "Secrets", "Leads", "No category"], "a heading per category, the unfiled last");
+  assert.equal(app.$$("#main [data-nopen]").length, 8, "every note is listed once");
+  assert.equal(app.$$("#main .tbl-note").length, 8, "the groups wrap the cards; the count holds");
+  assert.deepEqual(app.$$("#main .note-tagpick").map(b => b.textContent), ["pitch", "safety", "listener", "spoilers", "ruling", "cord", "rumor"]);
+  assert.equal(app.$("[data-ngroup=category]").getAttribute("aria-pressed"), "true");
+  // A tag chip leaves only its notes; an open note that matches stays open.
+  const listener = app.$$("#main [data-nopen]").find(b => b.textContent === "The Listener (spoilers)");
+  listener.click();
+  assert.equal(app.$$("#main .tbl-note.open").length, 1);
+  app.click('[data-ntag="listener"]');
+  assert.deepEqual(shownNotes(app).sort(), ["Session 6: loose ends", "The Listener (spoilers)"]);
+  assert.equal(app.$("[data-ntag=listener]").getAttribute("aria-pressed"), "true");
+  assert.equal(app.$$("#main .tbl-note.open").length, 1, "the open note matches the tag, so it stays open");
+  assert.equal(app.doc.activeElement, app.$("[data-ntag=listener]"), "focus stays on the chip pressed");
+  // A note the filter hides is shut.
+  app.click('[data-ntag="rumor"]');
+  assert.deepEqual(shownNotes(app), ["Rumors table (d6, Metro Core)"]);
+  assert.equal(app.window.eval("S.noteOpen"), null, "a filter that hides the open note closes it");
+  app.click('[data-ntag="rumor"]');
+  assert.equal(shownNotes(app).length, 8, "pressing it again clears the filter");
+  // Group by Session.
+  app.click("[data-ngroup=session]");
+  assert.equal(app.$("[data-ngroup=session]").getAttribute("aria-pressed"), "true");
+  const heads = noteHeads(app);
+  assert.match(heads[0], /^Session 6/); assert.equal(heads[heads.length - 1], "No session");
+  const under = [...app.$$("#main .note-group")].find(h => /^Session 6/.test(h.textContent)).nextElementSibling;
+  assert.ok([...under.querySelectorAll("[data-nopen]")].some(b => b.textContent === "Session 6: loose ends"));
+  // Newest first: one list, no headings, today's order.
+  app.click("[data-ngroup=newest]");
+  assert.deepEqual(noteHeads(app), []); assert.equal(app.$$("#main ul.note-list").length, 1);
+  // Group by and the filter are view state: nothing about them is in the table.
+  assert.ok(!/ngroup|noteGroup|noteTag/.test(JSON.stringify(app.window.eval("S.table"))));
+  assert.deepEqual(app.errors, []);
+});
+
+test("323: a hostile category or tag renders as text, and the tag row is absent when no note has a tag", () => {
+  const app = deadAirApp("notes");
+  app.window.eval(`(() => { const n = S.table.notes[0]; Engine.editTableNote(S.table, n.id, { category: "<img src=x onerror=boom()>", tags: ["<b>bold</b>", "x".repeat(10000)] }); tableChange(() => {}); })()`);
+  assert.equal(app.$$("#main img, #main .note-list b, #main .note-tagrow b").length, 0, "nothing in a category or tag is markup");
+  assert.ok(app.$("#main").textContent.includes("<img src=x onerror=boom()>"));
+  assert.ok(app.$$("#main .note-tagpick").some(b => b.textContent === "<b>bold</b>"));
+  assert.equal(app.window.eval("S.table.notes[0].tags[1].length"), 40, "a tag is cut at 40");
+  const bare = boot({ storage: GM_ON }); runTable(bare, "T"); notesTab(bare); bare.click("[data-tnew]");
+  assert.equal(bare.$("#main .note-tagrow"), null, "no tags in use, no row");
+  assert.deepEqual(app.errors, []);
+});
+
+test("323: a tag is a press with its own entry; a category typed is one entry; Done files the note", () => {
+  const app = deadAirApp("notes");
+  const id = app.window.eval(`S.table.notes.find(n => n.title === "House rulings so far").id`);
+  const log = () => app.window.eval("S.table.audit").map(e => e.label);
+  const before = log().length;
+  editNote(app, id);
+  assert.equal(app.$("#main .note-pinned [data-ntitle]").dataset.ntitle, id, "the note in edit sits above the groups");
+  assert.equal(app.$$("#main .note-group [data-nopen]").length, 0);
+  // Add tags with Enter: one entry, the field cleared and kept, the note still in edit.
+  type(app, `[data-ntagin="${id}"]`, " Lead , Debt ");
+  press(app, app.$(`[data-ntagin="${id}"]`), "Enter");
+  assert.deepEqual(Array.from(app.window.eval(`S.table.notes.find(n => n.id === "${id}").tags`)), ["ruling", "Lead", "Debt"]);
+  assert.equal(log().length, before + 1);
+  assert.equal(log().pop(), 'Tagged "House rulings so far" Lead, Debt');
+  assert.equal(app.doc.activeElement, app.$(`[data-ntagin="${id}"]`)); assert.equal(app.$(`[data-ntagin="${id}"]`).value, "");
+  assert.match(app.$("#undotoast").textContent, /Tagged "House rulings so far" Lead, Debt/);
+  assert.ok(app.$(`[data-ndel="${id}"]`), "still in edit");
+  // Remove one: its own entry, and focus on the next chip's remove.
+  app.click(`[data-ntagrm="${id}"][data-ntagi="1"]`);
+  assert.equal(log().pop(), 'Untagged "House rulings so far" Lead');
+  assert.equal(app.doc.activeElement, app.$(`[data-ntagrm="${id}"][data-ntagi="1"]`));
+  app.click(`[data-ntagrm="${id}"][data-ntagi="1"]`);
+  assert.equal(app.doc.activeElement, app.$(`[data-ntagin="${id}"]`), "the last chip gone, focus lands on the field");
+  assert.deepEqual(Array.from(app.window.eval(`S.table.notes.find(n => n.id === "${id}").tags`)), ["ruling"]);
+  // The category folds as typing, and the note stays where it is until Done.
+  const n = log().length;
+  type(app, `[data-ncat="${id}"]`, "H"); type(app, `[data-ncat="${id}"]`, "Hooks");
+  assert.equal(log().length, n + 1, "one entry for the burst");
+  assert.equal(log().pop(), 'Filed "House rulings so far" under Hooks');
+  assert.equal(app.$("#main .note-pinned [data-ntitle]").dataset.ntitle, id, "typing moves nothing");
+  done(app);
+  assert.ok(noteHeads(app).includes("Hooks"), "Done files it under its category");
+  assert.equal(app.window.eval("S.noteOpen"), id, "and it reads, open, in its group");
+  assert.equal(app.doc.activeElement, app.$(`[data-edit="note|${id}"]`));
+  assert.deepEqual(app.errors, []);
+});
+
+test("323: New note under a tag filter is empty and open at the top", () => {
+  const app = deadAirApp("notes");
+  app.click('[data-ntag="listener"]');
+  app.click("[data-tnew]");
+  const note = app.window.eval("S.table.notes[0]");
+  assert.deepEqual([note.category, note.tags.length], ["", 0], "no tag is put on a note because a filter is on");
+  assert.equal(app.$("#main .note-pinned [data-ntitle]").dataset.ntitle, note.id);
+  assert.equal(app.doc.activeElement, app.$(`[data-ntitle="${note.id}"]`));
   assert.deepEqual(app.errors, []);
 });
