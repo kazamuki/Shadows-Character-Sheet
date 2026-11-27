@@ -77,9 +77,7 @@ phone's Health card below 30% of the screen. A new control inherits those
 floors rather than re-arguing them.
 
 **W55 — Sticky notes on the Notes tab.** *Ken · 💡*\
-**Plan:** none yet
-
-*Set aside by the player sheet's plan when it closed (2026-10-24, `plans/archive/sheet-wishlist.md` §4): an idea, not shaped.*
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S30, order drafted (PR 2, the sheet; Ken, 2026-11-27): [`S30-notes.md`](plans/gm-mode-next/S30-notes.md) · **Goes with:** W140
 
 Small notes a player pins as cards at the top of Notes (a contact's number,
 a debt, tonight's lead), with the free-form page still below them. A note is
@@ -757,7 +755,7 @@ is the place; no new markup in `index.html` beyond what's there); Decision 164
 pinned stat block (W77) and the rail leaves the page the middle.
 
 **W140 — Notes that organise themselves: tags, categories, and the session they came from.** *Ken · 🔎 · Rule or shape · raised 2026-10-30*\
-**Plan:** [gm-mode-next](plans/gm-mode-next.md) S30 (no order yet); U3 (Decision 271) made Notes a list of titles, the screen this will fill
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S30, order drafted (PR 1, GM mode): [`S30-notes.md`](plans/gm-mode-next/S30-notes.md) · **Goes with:** W55
 
 A GM takes notes for many reasons: a name to remember, a rule to look up, a
 hook for later, what a player promised. Today a table note is a dated line
