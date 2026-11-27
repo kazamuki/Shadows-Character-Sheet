@@ -76,6 +76,7 @@ Each id is defined in exactly one place and referenced everywhere.
 | `LQ`_n_, `L`_n_ | A question the vehicles-and-gear plan raises for Ken, and its sessions L1–L5b and L8–L10 (L6 and L7 left it 2026-11-15) | `plans/loadout-and-gear.md` §5 and §3 |
 | `NQ`_n_, `N`_n_ | A question the accounts-and-sync plan (W138) raises for Ken, and its sessions N0–N6 | `plans/accounts-and-sync.md` §5 and §3 |
 | `JQ`_n_, `J`_n_ | A question the pools-and-numbers plan (SFR by hand, W49, W121, W176) raises for Ken, and its sessions J1–J4 | `plans/archive/pools-and-numbers.md` §5 and §3; JQ9–JQ12 in `plans/archive/pools-and-numbers/J1-sfr-by-hand.md` §4 |
+| `ZQ`_n_ | A question the faster-verify work order raises for Ken (Z: the letters before it were taken) | `plans/faster-verify.md` §4 |
 | `BQ`_n_ | A question W143's work order (powers bought with CP) raises for Ken | `plans/archive/w143-powers-bought-with-cp.md` §4 |
 | `HQ`_n_, `H`_n_ | A question the powers-that-run plan (W110, W132) raises for Ken, and its sessions H1–H3 (H for Held: not `R`, which is the audit's) | `plans/archive/powers-that-run.md` §5 and §3; H1's own questions in `plans/archive/powers-that-run/H1-sustained-powers.md` §4 |
 | `UQ`_n_, `U`_n_ | A question the GM-at-the-table plan raises for Ken, and its sessions U1–U5 (U for use at the table; its findings are `#`_n_, inside the plan only) | `plans/archive/gm-at-the-table.md` §5 and §4 |
