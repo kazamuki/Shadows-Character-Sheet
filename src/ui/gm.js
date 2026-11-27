@@ -580,7 +580,8 @@ const proseHtml = (label, text) => String(text||"").trim() ? `<h2 class="ref-sub
 function bindEdit(main, kind, id){
   main.querySelectorAll(`[data-edit="${kind}|${id}"]`).forEach(b=>b.onclick=()=>{
     S.editing={ kind, id };
-    if (kind==="note"){ const n=S.table.notes.find(x=>x.id===id); S.noteHold = n && S.noteNew!==id ? { id, category:n.category, session:n.session } : null; }
+    // Edit is never a new note: New note doesn't come through here, so a note made earlier and left without Done holds its group too.
+    if (kind==="note"){ const n=S.table.notes.find(x=>x.id===id); S.noteNew=null; S.noteHold = n ? { id, category:n.category, session:n.session } : null; }
     renderTable();
     // A member's form opens with Status above Name; Edit lands on Name (S23).
     const first=(kind==="member" && $("main").querySelector('[data-cf="name"]')) || Array.from($("main").querySelectorAll("input, select, textarea")).find(el=>!el.closest(".tbl-bar") && el.type!=="hidden");

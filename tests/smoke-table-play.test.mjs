@@ -3392,6 +3392,22 @@ test("323: after Delete, focus is on the next note in its group, not the next on
   assert.deepEqual(app.errors, []);
 });
 
+test("323: a new note left without Done, edited again later, stays in its group", () => {
+  const app = deadAirApp("notes");
+  app.click("[data-tnew]");
+  const nid = app.window.eval("S.table.notes[0].id");
+  assert.ok(app.$(`#main .note-pinned [data-note="${nid}"]`), "a new note opens at the top");
+  // Away without Done: open another note, then come back and press Edit.
+  const other = app.$$("#main .note-group + ul [data-nopen]").find(b => b.dataset.nopen !== nid).dataset.nopen;
+  app.click(`[data-nopen="${other}"]`);
+  app.click(`[data-nopen="${nid}"]`);
+  app.click(`[data-edit="note|${nid}"]`);
+  assert.equal(app.$("#main .note-pinned"), null, "an Edit press never pins");
+  const ul = app.$(`[data-note="${nid}"]`).closest("ul");
+  assert.equal(ul.previousElementSibling.textContent, "No category");
+  assert.deepEqual(app.errors, []);
+});
+
 test("323: New note under a tag filter is empty and open at the top", () => {
   const app = deadAirApp("notes");
   app.click('[data-ntag="listener"]');
