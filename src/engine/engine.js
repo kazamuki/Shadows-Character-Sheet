@@ -9427,7 +9427,7 @@ const Engine = (() => {
     const gearCats = _list(d.equipmentCategories), gear = _list(d.equipment);
     for (const c of gearCats) parts.push(_refPart(`Gear: ${_str(c.name)}`, {
       text:_str(c.note), columns:["Name", "Availability", "Cost", "What it does"],
-      rows:gear.filter(e=>e.category===c.id).map(e=>[_refNameJoin(e.name, e.playerNote), _str(e.availability), _refCost(e), _str(e.notes)]) }));
+      rows:gear.filter(e=>e.category===c.id).map(e=>[_refNameJoin(e.name, e.playerNote), _str(e.availability), _refCost(e), _str(e.notes).trim() ? _str(e.notes) : _str(e.spellName).trim() ? `Holds ${_str(e.spellName)}` : ""]) }));
     const weapons = _list(d.weapons);
     for (const c of _list(d.weaponCategories)) parts.push(_refPart(`Weapons: ${_str(c.name)}`, {
       text:_str(c.note), columns:["Name", "Skill", "Damage", "Reach", "Cost", "Tags"],

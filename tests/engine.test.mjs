@@ -14672,6 +14672,8 @@ test("322: Equipment lists gear, weapons and armor, counted from the data", () =
   assert.ok(worded.length, "a weapon whose cost is words");
   for (const w of worded) assert.equal(rows.find(r => r[0] === w.name || r[0].startsWith(w.name + " — "))[4], w.cost, `${w.id}: a cost in words reads as written, not a dash`);
   assert.ok(rows.every(r => r.every(c => typeof c === "string")));
+  const gear = parts.filter(p => p.title.startsWith("Gear: ")).flatMap(p => p.rows);
+  assert.ok(gear.every(r => r[3].trim()), `a gear row says nothing about what it does: ${gear.filter(r => !r[3].trim()).map(r => r[0])}`);
 });
 
 test("322: a search reaches the new panels", () => {
