@@ -4308,7 +4308,9 @@ window.SHADOWS_DATA = {
      "(...)" suffix. A few tags appear on weapon tables (Suppression, Blast,
      Anti-Materiel, and "Reach" as a tag distinct from the Reach column) with
      no definition in the source chapter. Anti-Materiel and Reach are defined by
-     Deighton's rulings of 2026-10-10 (Q9, Q10). A tag that still has no rule
+     Deighton's rulings of 2026-10-10 (Q9, Q10), ahead of the book, so each carries a
+     `rulingSource` (Decision 288, never shown; tests/rules.test.mjs checks it against
+     plans/crb-catch-up.md). A tag that still has no rule
      is carried with `flagged: true` rather than inventing one. */
   "weaponTagGlossary": [
     { "id": "AP", "description": "Armor Piercing. The weapon or round bypasses the target's RES entirely. PROT still rolls -- AP does not make armor irrelevant; it makes the flat damage reduction irrelevant." },
@@ -4338,8 +4340,8 @@ window.SHADOWS_DATA = {
     { "id": "Withering", "description": "Damage of this type cannot be regenerated supernaturally -- it must heal at the natural rate regardless of the target's normal recovery. The damage amount is not necessarily greater; the permanence is." },
     { "id": "Suppression", "description": "Sustained fire across an area rather than at a target. Declare the zone: until the start of the firer's next turn, that ground is Difficult Terrain. No attack roll and no damage; the rounds are aimed at the space, not at anyone in it. Whether a target gets hit is a matter of cover and line of sight, as ever. What it costs them is the ability to get anywhere useful." },
     { "id": "Blast", "description": "The weapon detonates at a point and catches everything within the radius: allies, enemies, bystanders and objects alike. The attack is made against the place, at Difficulty 10. Everyone caught Scrambles on a REF Essence Check at TN 8, TH 2, and the Threshold rises by one for every five meters of radius beyond the first five. Damage is the same for all of them; the Scramble decides what it costs. A lobbed blast needs no line of sight and reaches a target in Full Cover. A cone starts at the wielder and reaches only what the wielder can see." },
-    { "id": "Anti-Materiel", "description": "Vehicle armor doesn't stop it, so it deals full damage to vehicles. Against a person it's the weapon's AP and damage that count, nothing extra." },
-    { "id": "Reach", "description": "The weapon reaches as far as its Reach column says. The tag marks a reach that's unusual for its kind; it adds nothing to the number." }
+    { "id": "Anti-Materiel", "description": "Vehicle armor doesn't stop it, so it deals full damage to vehicles. Against a person it's the weapon's AP and damage that count, nothing extra.", "rulingSource": "2026-10-10 rulings, F30: Deighton ruled it ahead of the book (Decision 288)" },
+    { "id": "Reach", "description": "The weapon reaches as far as its Reach column says. The tag marks a reach that's unusual for its kind; it adds nothing to the number.", "rulingSource": "2026-10-10 rulings, F31: Deighton ruled it ahead of the book (Decision 288)" }
   ],
   "weaponFeatureGlossary": [
     { "id": "Bipod Mount", "description": "Integrated bipod for stable firing from prone or braced. Satisfies the Mounted tag's requirement without a separate mount." },
@@ -5600,7 +5602,7 @@ window.SHADOWS_DATA = {
           "during"
         ],
         "intro": "The rules you'll look up mid-session.",
-        "for": "The book's rules for the table: Conditions, the Codex, Defense, checks, damage, Pain Levels, recovery and more. Search it, or jump to a part.",
+        "for": "The book's rules for the table: Conditions, the Codex, Defense, checks, damage, Pain Levels, recovery, skills, powers, equipment and more. Search it, or jump to a part.",
         "words": [
           "codex"
         ],
@@ -5834,7 +5836,7 @@ window.SHADOWS_DATA = {
   /* GM mode's Reference (Decision 207): its panels, in order. A panel with
      `from` draws what the data or the slotted packs already hold
      (`conditions`, `packs`, `pain`, `hits`, `recovery`, `weaponTags`,
-     `crank`); one without carries `parts` quoted verbatim from the CRB
+     `crank`, `skills`, `powers`, `equipment`); one without carries `parts` quoted verbatim from the CRB
      section its `bookSource` names ("<4-digit file> <heading>", or just the
      file), which tests/rules.test.mjs checks piece by piece. A part is
      { title, text, columns, rows, items, footText }; an item is
@@ -5950,7 +5952,10 @@ window.SHADOWS_DATA = {
       { "id": "pain", "title": "Pain Levels", "from": "pain" },
       { "id": "recovery", "title": "Recovery", "from": "recovery" },
       { "id": "tags", "title": "Weapon tags", "from": "weaponTags" },
-      { "id": "crank", "title": "CRANK", "from": "crank" }
+      { "id": "crank", "title": "CRANK", "from": "crank" },
+      { "id": "skills", "title": "Skills", "from": "skills" },
+      { "id": "powers", "title": "Powers", "from": "powers" },
+      { "id": "equipment", "title": "Equipment", "from": "equipment" }
     ]
   },
 

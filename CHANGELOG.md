@@ -30,6 +30,10 @@ own in the footer.
 
 - **The barcode under your name is a real one.** Point a phone at your TAG and it reads. On the dark theme, hover the barcode and press **Scan** to flip it to black on white, which phones read, and press it again to flip it back. Characters you've already made keep the same TAG.
 
+### GM mode
+
+- **Skills, Powers and Equipment are on the Reference.** The skills with their stats, the Vampire's and Werewolf's powers with what they cost, and every piece of gear, weapon and armor, searched like the rest.
+
 ## v0.80.0 — 2026-11-26
 
 ### Character sheet

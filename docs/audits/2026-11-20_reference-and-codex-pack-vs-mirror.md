@@ -68,3 +68,7 @@ It read the mirror, not the book. If the live book has moved since 2026-11-15 th
 paraphrase can drift in a nuance a reader would catch and a script wouldn't: I read for what each panel *does* (numbers,
 tests, who rolls, what clears it), not its tone. The paraphrased panels are the part with no guard; the two tags above
 show how a ruling gets in unmarked.
+
+## Correction, 2026-11-27 (S27)
+
+The stat-row line above ("0 differences") was wrong: the audit script's regex for the stat table never matched, so no stat was compared. S27's guard (`codexpack.test.mjs`, "the pack's threats, groups and origins agree with the mirror") reads the row and counts it. Stats, tiers, skills and trait names agree; **TOL differs for two threats**: Entry 08 (2612 prints 2, the pack has 1) and Entry 10 (3 and 2). The pack follows the Stat Audit, as the builder is specified to; 2612 and the Stat Audit disagree with each other. Open for Ken and Deighton; the test names both as known.

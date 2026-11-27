@@ -3258,3 +3258,29 @@ test("Decision 304: where print() returns first and afterprint never comes, the 
   app.doc.body.dispatchEvent(new app.window.Event("pointerdown", { bubbles: true }));
   assert.equal(app.doc.body.classList.contains("table-print"), false);
 });
+
+test("322: the Reference tab draws Skills, Powers and Equipment and their jump chips; a hostile name renders as text", () => {
+  const app = boot({ storage: GM_ON });
+  runTable(app, "T");
+  const bad = "<img src=x onerror=alert(1)>";
+  app.D.skills[0].name = bad + "S";
+  app.D.archetypes.find(a => a.id === "vampire").powers[0].name = bad + "P";
+  app.D.weapons[0].name = bad + "W";
+  refTab(app);
+  assert.equal(refChips(app).length, app.D.gmReference.panels.length);
+  assert.deepEqual(refChips(app).slice(-3), ["Skills", "Powers", "Equipment"]);
+  assert.deepEqual(refHeads(app).slice(-3), ["Skills", "Powers", "Equipment"]);
+  for (const id of ["skills", "powers", "equipment"]) assert.ok(app.$(`#gr-${id}`), `#gr-${id}`);
+  assert.equal(app.$$("#main img").length, 0, "no markup came out of a name");
+  const text = app.$("#main").textContent;
+  for (const s of ["S", "P", "W"]) assert.ok(text.includes(bad + s), `the ${s} name reads as text`);
+  const rows = id => app.$(`#gr-${id}`).closest(".ref-panel").querySelectorAll("tbody tr").length;
+  assert.equal(rows("skills"), app.D.skills.length);
+  assert.equal(rows("equipment"), app.D.equipment.length + app.D.weapons.length + app.D.armor.length);
+  assert.equal(app.$(`#gr-powers`).closest(".ref-panel").querySelectorAll(".ref-items li").length, 45);
+  // The search narrows them like any panel, and the chips follow.
+  type(app, "[data-jumpfilter]", "nanomed");
+  assert.ok(refChips(app).includes("Equipment") && !refChips(app).includes("Skills"));
+  assert.equal(app.$$("#main .ref-panel").length, refChips(app).length);
+  assert.deepEqual(app.errors, []);
+});

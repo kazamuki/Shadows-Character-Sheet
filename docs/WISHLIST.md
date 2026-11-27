@@ -818,6 +818,16 @@ E4 struck RES on the sheet for a body piece at Integrity 0, because the engine a
 
 S26's Print button prints a session, a cast member or an encounter as it reads. The browser's own Print (Ctrl+P, the menu) on a table page still prints `#printSheet`, which is empty or holds the last character printed. It would have to tell a character's print from a table page's. *To respect:* the character's print must not move (Decision 304).
 
+**W179 — The Players tab says whether a character has a piece of gear.** *Deighton via GQ29, from S27's order (GQ89), 2026-11-27 · 💡 · Fix*\
+**Plan:** none yet
+
+Deighton's wording in GQ29 was "whether a character has a piece of gear". That is per character, so it isn't on the Reference (which lists what gear *is*, Decision 322); the Players tab holds each seat's sheet. A small read: a line on a seat that names a piece of gear the character carries, found by Find.
+
+**W180 — The Recovery panel's "With Skill" actions.** *Ken + Claude, from the 2026-11-20 mirror audit (GQ92), 2026-11-27 · 💡 · Content*\
+**Plan:** none yet
+
+The book's Recovery has *With Skill* actions (Medical: Stop the Bleeding, Treat the Agonized, Stabilize the Dying; Battle Chems) that the Reference's Recovery panel lacks. A gap, not drift (`docs/audits/2026-11-20_reference-and-codex-pack-vs-mirror.md`). A small Content order: new `recoveryRules` data and a panel part in `_refRecovery`.
+
 ### For the designers
 
 **W56 — A tuning bench: change the game's numbers, see what moves, hand back a change request.** *Ken · ⏭ · shaped with Claude 2026-10-01*\
@@ -1064,7 +1074,7 @@ Profile `smoke-sheet-help-lines` (three tests, about 55s each) and the other she
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W179.** Everything above is open. What was built is in
+- **Next free number: W181.** Everything above is open. What was built is in
   [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)

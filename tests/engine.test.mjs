@@ -6487,7 +6487,7 @@ test("207: gmReference with no pack and no search returns every panel in the dat
 
 test("207: every `from` in the data resolves, and a bad panel is left out, not thrown", () => {
   const froms = D.gmReference.panels.filter(p => p.from).map(p => p.from);
-  refEq(froms, ["conditions", "packs", "hits", "pain", "recovery", "weaponTags", "crank"]);
+  refEq(froms, ["conditions", "packs", "hits", "pain", "recovery", "weaponTags", "crank", "skills", "powers", "equipment"]);
   assert.equal(Engine.gmReference([], {}).length, D.gmReference.panels.length, "no panel the data lists is left out");
   withData(D, "weaponTagGlossary", [], () => assert.ok(!Engine.gmReference([], {}).some(p => p.id === "tags"), "a panel with nothing to show is left out, not drawn empty"));
   const old = D.gmReference.panels;
@@ -14588,4 +14588,135 @@ test("F56 is the Custom archetype's only: a Rupture's Cascade is the CRB's (0480
   assert.match(custom.note, /GM's call/, "Custom's note doesn't say the GM decides past zero");
   assert.doesNotMatch(custom.note, /you Cascade/, "Custom's note still states the unruled Cascade as a rule");
   assert.doesNotMatch(custom.flagNote, /\bBound\b/, "the flag names an archetype that doesn't exist");
+});
+
+// ── Skills, Powers and Equipment on the Reference (Decision 322, S27) ────────
+
+const refPartRows = (v, id) => refPanel(v, id).parts.flatMap(p => p.rows);
+const refPartItems = (v, id) => refPanel(v, id).parts.flatMap(p => p.items);
+const REF_THIRTEEN = JSON.parse(readFileSync(new URL("./ref-thirteen.fixture.json", import.meta.url), "utf8"));   // Engine.gmReference([], {}) on main before S27
+
+test("322: the Reference has Skills, Powers and Equipment after CRANK, and the thirteen are unchanged", () => {
+  const v = Engine.gmReference([], {});
+  assert.equal(v.length, 16);
+  refEq(v.slice(-4).map(p => p.id), ["crank", "skills", "powers", "equipment"]);
+  refEq(v.slice(0, 13), REF_THIRTEEN, "the thirteen read exactly as they did before the three were added");
+  refEq(D.gmReference.panels.slice(-3).map(p => p.from), ["skills", "powers", "equipment"]);
+});
+
+test("322: Skills lists every skill with its stats, and the roll is skillCheckRules'", () => {
+  const v = Engine.gmReference([], {}), parts = refPanel(v, "skills").parts;
+  assert.ok(parts[0].text.includes(D.skillCheckRules.trained) && parts[0].text.includes(D.skillCheckRules.untrained), "the roll, trained and untrained");
+  refEq(parts.slice(1).map(p => p.title), ["Combat", "Utility", "General"]);
+  const rows = refPartRows(v, "skills");
+  assert.equal(rows.length, D.skills.length, "a row per skill, counted from the data");
+  for (const s of D.skills) {
+    const r = rows.find(x => x[0] === s.name);
+    assert.ok(r, `${s.name} has a row`);
+    refEq(r.slice(0, 3), [s.name, s.primaryStat, s.synergyStat]);
+    assert.equal(r[3], s.covers.join("; "));
+  }
+  for (const p of parts.slice(1)) refEq(p.columns, ["Skill", "Primary", "Synergy", "Covers"]);
+});
+
+test("322: Powers lists the Vampire's and the Werewolf's, with cost and effect, and no flagNote", () => {
+  const v = Engine.gmReference([], {}), parts = refPanel(v, "powers").parts;
+  assert.equal(parts[0].text, D.resources.sfr.description);
+  const withPowers = D.archetypes.filter(a => Array.isArray(a.powers) && a.powers.length);
+  // Each archetype: its innate powers, then one part per specialization, in the data's order (as the sheet groups them).
+  const titles = withPowers.flatMap(a => [a.name, ...a.specialization.options.map(o => `${a.name}: ${o.name}`)]);
+  refEq(parts.slice(1).map(p => p.title), titles);
+  for (const a of withPowers) {
+    const innate = parts.find(p => p.title === a.name).items.map(i => i.term), mine = a.powers.filter(p => !p.origin).map(p => p.name);
+    refEq(innate, mine, `${a.name}'s innate powers`);
+    for (const o of a.specialization.options) refEq(parts.find(p => p.title === `${a.name}: ${o.name}`).items.map(i => i.term), a.powers.filter(p => p.origin === o.id).map(p => p.name), `${a.name}: ${o.name}`);
+  }
+  const items = refPartItems(v, "powers");
+  assert.equal(items.length, withPowers.reduce((n, a) => n + a.powers.length, 0), "every power, counted from the data");
+  for (const a of withPowers) for (const p of a.powers) {
+    const i = items.find(x => x.term === p.name);
+    assert.ok(i, `${p.name} is listed`);
+    assert.equal(i.text, p.effect);
+    assert.ok(i.more.includes(`Cost: ${p.cost}`), `${p.name}'s cost`);
+    if (p.playerNote) assert.ok(i.more.includes(p.playerNote), `${p.name} shows its playerNote`);
+  }
+  assert.ok(withPowers.some(a => a.powers.some(p => p.flagged && p.playerNote)), "the data still has a flagged power to show a playerNote for");
+});
+
+const refFlagNotes = () => {
+  const out = [];
+  (function walk(x) { if (Array.isArray(x)) x.forEach(walk); else if (x && typeof x === "object") for (const [k, v] of Object.entries(x)) { if (k === "flagNote" && typeof v === "string") out.push(v); else walk(v); } })(D);
+  return out;
+};
+
+test("322: no flagNote reaches the three panels, and a flagged entry shows its playerNote", () => {
+  const notes = refFlagNotes();
+  assert.ok(notes.length > 10, "the data's flagNotes were found");
+  const v = Engine.gmReference([], {}), text = ["skills", "powers", "equipment"].flatMap(id => refStrings(refPanel(v, id))).join("\n");
+  for (const n of notes) assert.ok(!text.includes(n), `a flagNote is on the page: ${n.slice(0, 60)}`);
+  const w = D.weapons.find(x => x.flagged && x.playerNote), a = D.armor.find(x => x.flagged && x.playerNote);
+  assert.ok(w && a, "a flagged weapon and armor piece with a playerNote");
+  assert.ok(refPartRows(v, "equipment").some(r => r[0] === `${w.name} — ${w.playerNote}`), "the weapon's playerNote");
+  assert.ok(refPartRows(v, "equipment").some(r => r[0] === `${a.name} — ${a.playerNote}`), "the armor's playerNote");
+});
+
+test("322: Equipment lists gear, weapons and armor, counted from the data", () => {
+  const v = Engine.gmReference([], {}), parts = refPanel(v, "equipment").parts;
+  const count = pre => parts.filter(p => p.title.startsWith(pre)).reduce((n, p) => n + p.rows.length, 0);
+  assert.equal(count("Gear: "), D.equipment.length);
+  assert.equal(count("Weapons: "), D.weapons.length);
+  assert.equal(parts.find(p => p.title === "Armor").rows.length, D.armor.length);
+  refEq(parts.find(p => p.title === "Armor").columns, ["Name", "Slot", "PROT", "RES", "Integrity", "Cost", "Notes"]);
+  refEq(parts.find(p => p.title.startsWith("Weapons: ")).columns, ["Name", "Skill", "Damage", "Reach / Range", "Cost", "Tags", "Notes"]);
+  refEq(parts.find(p => p.title.startsWith("Gear: ")).columns, ["Name", "Availability", "Cost", "What it does"]);
+  const rows = parts.flatMap(p => p.rows), cr = D.resources.credits.symbol;
+  const row = name => rows.find(r => r[0] === name);
+  const knife = D.weapons.find(w => w.id === "combat-knife");
+  refEq(row(knife.name), [knife.name, "Melee", "BOD+3", "1m", `100${cr}`, "Conceal", ""]);
+  const brace = D.equipment.find(e => e.costText && e.cost === null);
+  assert.equal(row(brace.name)[2], brace.costText, "a costText reads as the sheet prints it");
+  const worded = D.weapons.filter(w => typeof w.cost === "string");
+  assert.ok(worded.length, "a weapon whose cost is words");
+  for (const w of worded) assert.equal(rows.find(r => r[0] === w.name || r[0].startsWith(w.name + " — "))[4], w.cost, `${w.id}: a cost in words reads as written, not a dash`);
+  assert.ok(rows.every(r => r.every(c => typeof c === "string")));
+  // Notes: an armor piece's features and notes, a weapon's notes, and a grenade's blast.
+  const helm = D.armor.find(x => !x.prot && (x.feature || x.notes));
+  assert.ok(helm, "a piece with no PROT and a feature");
+  assert.equal(rows.find(r => r[0] === helm.name || r[0].startsWith(helm.name + " — "))[6], [helm.feature, helm.preInstalledFeatures, helm.notes].map(v => [].concat(v || []).join(", ")).filter(Boolean).join(" · "), "a helmet's effect reads in Notes");
+  const nade = D.weapons.find(x => x.escalation);
+  const nr = rows.find(r => r[0] === nade.name || r[0].startsWith(nade.name + " — "))[6];
+  for (const bit of [nade.notes, `Radius ${nade.radius}`, `Defense ${nade.defense}`, ...Object.entries(nade.escalation).map(([k, v]) => `${k}: ${v}`)]) assert.ok(nr.includes(bit), `a grenade's Notes has "${bit}"`);
+  assert.ok(D.weapons.filter(x => x.notes).every(x => rows.find(r => r[0] === x.name || r[0].startsWith(x.name + " — "))[6].includes(x.notes)), "a weapon's notes read in Notes");
+  const gear = parts.filter(p => p.title.startsWith("Gear: ")).flatMap(p => p.rows);
+  assert.ok(gear.every(r => r[3].trim()), `a gear row says nothing about what it does: ${gear.filter(r => !r[3].trim()).map(r => r[0])}`);
+});
+
+test("322: a search reaches the new panels", () => {
+  const ids = q => Engine.gmReference([], { q }).map(p => p.id);
+  assert.ok(ids("nanomed").includes("equipment") && ids("nanomed").includes("recovery"));
+  const skill = D.skills.find(s => s.name === "Spellcraft") || D.skills[0];
+  assert.ok(ids(skill.name).includes("skills"));
+  assert.ok(ids("Bestial").includes("powers"), "a power's name");
+  const eff = D.archetypes.find(a => a.id === "vampire").powers[0];
+  assert.ok(ids(eff.effect.split(" ").slice(0, 4).join(" ")).includes("powers"), "a power's effect");
+  const razor = Engine.gmReference([], { q: "razorwhip" });
+  refEq(razor.map(p => p.id).filter(id => ["skills", "powers"].includes(id)), [], "a weapon's name keeps neither Skills nor Powers");
+  assert.ok(razor.some(p => p.id === "equipment"));
+  const tag = refPanel(Engine.gmReference([], { q: "silent" }), "equipment");
+  assert.ok(tag && tag.parts.every(p => p.title.startsWith("Gear: ") || p.title.startsWith("Weapons: ")) && tag.parts.flatMap(p => p.rows).some(r => /Silent/.test(r[5] || "")), "a weapon's tag cell");
+  assert.ok(refPanel(Engine.gmReference([], { q: "Equipment" }), "equipment").parts.length > 10, "the panel's title keeps the whole panel");
+});
+
+test("322: the new readers are total", () => {
+  const hostile = [[], null, "x", 5, [null, 5, "x", [], { name: {}, category: {}, powers: "x", covers: 5, tags: "x", cost: {}, costText: 5 }, { name: "<b>", powers: [null, 7, { name: {}, effect: [], cost: null }] }], {}];
+  for (const [obj, key] of [[D, "skills"], [D, "archetypes"], [D, "equipment"], [D, "weapons"], [D, "armor"], [D, "equipmentCategories"], [D, "weaponCategories"], [D, "skillCheckRules"], [D.resources, "sfr"], [D, "resources"]]) {
+    for (const h of hostile) withData(obj, key, h, () => {
+      const v = Engine.gmReference([], {});
+      assert.ok(Array.isArray(v), `${key} = ${JSON.stringify(h)}`);
+      assert.ok(Array.isArray(Engine.gmReference([], { q: "x" })));
+    });
+  }
+  withData(D, "skills", [], () => assert.ok(!Engine.gmReference([], {}).some(p => p.id === "skills" && p.parts.some(x => x.rows.length)), "no skills, no rows"));
+  withData(D, "archetypes", [], () => assert.ok(!Engine.gmReference([], {}).some(p => p.id === "powers" && p.parts.some(x => x.items.length)), "no powers, none listed"));
+  withData(D, "equipment", [], () => withData(D, "weapons", [], () => withData(D, "armor", [], () => assert.ok(!Engine.gmReference([], {}).some(p => p.id === "equipment"), "nothing to list leaves the panel out"))));
 });

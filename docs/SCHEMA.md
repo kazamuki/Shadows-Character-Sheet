@@ -4832,7 +4832,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. 185's *Revisit if* (the glossary as a page) is met and its picker stands; 204 kept Next session off the tab row, and the Reference is its own surface.
      - **Revisit if:** GQ29 reorders the panels, a GM asks for the Reference over a running encounter, or the Quick Reference changes shape.
      - **Built:** switched off (173); no data or schema bump; log 2026-10-09 (the Reference).
-     → **Superseded in part by Decision 288** — an item marked `rulingSource` says a ruling ahead of the book, and an open line in `plans/crb-catch-up.md` names it and cites 288.
+     → **Superseded in part by Decisions 288 and 322** — an item marked `rulingSource` says a ruling ahead of the book, and an open line in `plans/crb-catch-up.md` names it and cites 288 (288); its `from` kinds grow by three: `skills`, `powers`, `equipment` (322).
 
 208. **A table's header has Find, one search over every record, and Jot, a line kept as a note with the session it was written in.**
      *2026-10-09 · Ken + Claude · Touches: Find, Jot, tableSearch, table notes, note session, addTableNote, editTableNote, removeSession, _sessionOnDay, header, hdractions, table schema 0.10, Decision 140, Decision 171, Decision 203, Decision 187, W85, W86*
@@ -6111,6 +6111,19 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing numbered. It amends `CLAUDE.md`'s "after a change, the full verify, always" and WORK-ORDERS' per-step verify.
      - **Revisit if:** a docs-only PR breaks `main` (a test reads a doc by a path no test can see, such as one built from pieces: `docs.test.mjs` checks every literal `.md` path in `tests/`); or a code PR passes its area run and fails the whole suite often enough that the per-step run misleads.
      - **Built:** no app, data or schema change. PR (this one), log entry 2026-11-26.
+
+322. **The Reference gains Skills, Powers and Equipment, read from the game data on every draw.**
+     *2026-11-27 · Ken + Claude · Touches: gmReference, _REF_FROM, _REF_READERS, from, Skills, Powers, Equipment, Reference tab, skills, archetypes powers, equipment, weapons, armor, resources.sfr, skillCheckRules, playerNote, flagNote, weaponTagGlossary, rulingSource, Decision 207, Decision 288, GQ29, GQ93, GQ94*
+     - **Decided:** `gmReference.panels` gains `skills`, `powers` and `equipment`, after CRANK, each with a `from` that `Engine.gmReference` reads out of the data on every draw: the skills by category with their stats and what they cover; the Vampire's and the Werewolf's powers (every archetype that has `powers`) with cost and effect; the gear, weapons and armor as tables. A flagged entry shows its `playerNote` and never its `flagNote`. The search and the jump bar treat them like the other panels. Nothing is stored. Anti-Materiel and Reach in `weaponTagGlossary` carry a `rulingSource` (288), and the pack's threats, groups and origins are re-read from the mirror by a test that shares nothing with the builder.
+     - **Why:** GQ29. Deighton and Scott look these up most, and the data already holds every figure, so the Reference reads it instead of quoting a second copy that could drift (135).
+     - **Rejected:**
+       - Book-quoted panels with `parts`: a third copy of the skills, powers and items to keep in step with the mirror.
+       - Powers on the Threats or Cast tab: they are the book's, not a pack's.
+       - The player's own gear on the Reference: it is per character; the Players tab holds the seat.
+       - Spells and the Arcanist's powers: a different shape, their own wish if asked.
+     - **Replaces:** Decision 207 in part (its `from` kinds: the list of what a panel may read grows by three).
+     - **Revisit if:** a GM asks for Spells or the Arcanist's powers here, or the Reference is too long to scroll at 375px with the sixteen.
+     - **Built:** app 0.81.0, no data-version or schema bump (Decision 68); PR (this one), log 2026-11-27.
 
 
 ## 5. Open Flags
