@@ -1,6 +1,6 @@
 # A TAG that scans
 
-**Status:** drafted 2026-11-26 by Claude (Opus) at Ken's request; the order below is **approved (all defaults)**. Nothing is built. **Source:** Ken, 2026-11-26, after asking whether the TAG's barcode was real (it wasn't: Decision 128 made it decoration on purpose) and seeing a Code 128 prototype beside today's bars.
+**Status:** **closed 2026-11-27, kept as history** (Ken): Z1 is built (Decision 320, app 0.81.0, unreleased) and merged. Earlier: drafted 2026-11-26 by Claude (Opus) at Ken's request; the order below is **approved (all defaults)**. Nothing is built. **Source:** Ken, 2026-11-26, after asking whether the TAG's barcode was real (it wasn't: Decision 128 made it decoration on purpose) and seeing a Code 128 prototype beside today's bars.
 
 ## 1. Goal
 

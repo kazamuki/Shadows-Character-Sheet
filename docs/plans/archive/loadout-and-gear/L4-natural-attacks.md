@@ -1,6 +1,6 @@
 # Work order L4: natural attacks and the unarmed strike
 
-**Plan:** [`../loadout-and-gear.md`](../loadout-and-gear.md) §3, row L4, and its *What each order settles* bullet. **Wish:** [W107](../../WISHLIST.md). **The rulings:** [`../../reference/meeting-2026-10-23.md`](../../reference/meeting-2026-10-23.md) (two a round) and [`../../reference/meeting-2026-11-12.md`](../../reference/meeting-2026-11-12.md) (what counts, Martial Arts, mastery, one action). **The handoff:** [`L4-handoff.md`](L4-handoff.md). **The book:** `0530` *Unarmed Attacks* and *Combat Maneuvers* (`private/crb/0530_Combat_Encounters.md` ~520–545), `0460` *Blunt* ("fists, clubs", ~111). Decisions 104, 195, 200, 229, 247, 248, 287.
+**Plan:** [`../loadout-and-gear.md`](../loadout-and-gear.md) §3, row L4, and its *What each order settles* bullet. **Wish:** [W107](../../../WISHLIST.md). **The rulings:** [`../../reference/meeting-2026-10-23.md`](../../../reference/meeting-2026-10-23.md) (two a round) and [`../../reference/meeting-2026-11-12.md`](../../../reference/meeting-2026-11-12.md) (what counts, Martial Arts, mastery, one action). **The handoff:** [`L4-handoff.md`](L4-handoff.md). **The book:** `0530` *Unarmed Attacks* and *Combat Maneuvers* (`private/crb/0530_Combat_Encounters.md` ~520–545), `0460` *Blunt* ("fists, clubs", ~111). Decisions 104, 195, 200, 229, 247, 248, 287.
 
 **Status: drafted 2026-11-15** by Claude (Opus), from the 2026-11-12 meeting. **Approved by Ken 2026-11-15** (in the drafting session: "I approve this"). **LQ35–LQ40 answered by Ken 2026-11-15 (in the drafting session): every default.** **LQ41's five open details were answered instead of flagged**, the same day: Scott answered four, and Ken ruled the fifth (worn bonuses), relayed by Ken in the drafting session. Deighton couldn't answer that day. The answers are in `reference/meeting-2026-11-12.md`, *Answered 2026-11-15*, and this order is revised to them: **it raises no flag.** **LQ42 answered by Ken 2026-11-15:** "if you only have two fists, then the 3rd melee attack would be another fist, yeah" (its default).
 
@@ -8,7 +8,7 @@
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
-**Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../WORK-ORDERS.md). The conductor starts **L4 build** (Sonnet), then a fresh **L4 review** (Opus) once the PR is open. Builder and reviewer message each other directly. Anything for Ken goes to the conductor. §15 is the hand-over.
+**Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../../WORK-ORDERS.md). The conductor starts **L4 build** (Sonnet), then a fresh **L4 review** (Opus) once the PR is open. Builder and reviewer message each other directly. Anything for Ken goes to the conductor. §15 is the hand-over.
 
 **Runs alone.** It touches `engine.js` (a new reader beside `archetypeWeapons` and `formView`, and `weaponDamage`'s formula), `shadows-data.js` (`weaponRules`, the Vampire's and the Werewolf form's `naturalWeapons`, True Warrior's Power Style), `sheet.js` (Main's Weapons table, print), `shadows.css` (one rule at most), and the docs. GM mode runs beside it: collisions only in versions, CHANGELOG's heading and decision numbers.
 

@@ -1,12 +1,12 @@
 # Work order L1: Weapon damage types
 
-**Plan:** [`../loadout-and-gear.md`](../loadout-and-gear.md) §3, row L1. **Wish:** [W69](../../WISHLIST.md) (worn gear modifiers), its data step. **The book:** `0460` Gear, *Damage Types* and the weapon tables. **Rulings:** Deighton's Q14 (2026-10-10: Electric and Burning count as energy, `reference/rulings-2026-10-10.md`). Ken's LQ2 (2026-10-24: flag what the book doesn't type). Decisions 68, 135.
+**Plan:** [`../loadout-and-gear.md`](../loadout-and-gear.md) §3, row L1. **Wish:** [W69](../../../WISHLIST.md) (worn gear modifiers), its data step. **The book:** `0460` Gear, *Damage Types* and the weapon tables. **Rulings:** Deighton's Q14 (2026-10-10: Electric and Burning count as energy, `reference/rulings-2026-10-10.md`). Ken's LQ2 (2026-10-24: flag what the book doesn't type). Decisions 68, 135.
 
 **Status: drafted 2026-10-24 by Claude (Opus), the plan's conductor. Approved by Ken 2026-10-24, with LQ11–LQ13 on their defaults** (§4). Ready for **L1 build**.
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
-**Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../WORK-ORDERS.md): **L1 build** (Sonnet), then a fresh **L1 review** (Opus) once the PR is open.
+**Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../../WORK-ORDERS.md): **L1 build** (Sonnet), then a fresh **L1 review** (Opus) once the PR is open.
 
 **Carried over.** This is the plan's first order, so no review has fed it yet. It applies these lessons from the sheet-wishlist plan's reviews:
 - **Sweep the readers that aren't about display.** P21's flag on Field Medic also stopped IP selling it. Here, `flagged` is read by `advantageBarred` (engine ~2602) for Advantages only, and by `flagHtml`'s callers in `sheet.js`. A flagged weapon is read by **nothing** today (§5).
