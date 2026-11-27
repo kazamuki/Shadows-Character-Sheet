@@ -3376,6 +3376,17 @@ test("323: a tag is a press with its own entry; a category typed is one entry; D
   assert.deepEqual(app.errors, []);
 });
 
+test("323: after Delete, focus is on the next note in its group, not the next one stored", () => {
+  const app = deadAirApp("notes");
+  const idOf = title => app.window.eval(`S.table.notes.find(n => n.title === ${JSON.stringify(title)}).id`);
+  // Stored, "Safety and table notes" is followed by "The Listener (spoilers)" (Secrets); drawn, by "House rulings so far" (Table).
+  const id = idOf("Safety and table notes");
+  editNote(app, id);
+  app.click(`[data-ndel="${id}"]`); app.click("#modal [data-askyes]");
+  assert.equal(app.doc.activeElement.dataset.nopen, idOf("House rulings so far"));
+  assert.deepEqual(app.errors, []);
+});
+
 test("323: New note under a tag filter is empty and open at the top", () => {
   const app = deadAirApp("notes");
   app.click('[data-ntag="listener"]');

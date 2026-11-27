@@ -809,12 +809,14 @@ function bindNotes(main){
     const el=titleOf(id); if (el) el.focus();
   };
   main.querySelectorAll("[data-ndel]").forEach(b=>b.onclick=()=>{
-    const id=b.dataset.ndel, at=S.table.notes.findIndex(n=>n.id===id), n=S.table.notes[at];
+    const id=b.dataset.ndel, n=S.table.notes.find(x=>x.id===id);
+    // The next note is the next one in its group as the list groups it (under the filter), not the next one stored.
+    const shown=Engine.noteGroups(S.table.notes, S.table.sessions, notesViewNow()).flatMap(g=>g.notes.map(x=>x.id)), at=shown.indexOf(id), nextId=at<0 ? null : shown[at + 1];
     askFirst({ title:`Delete "${noteName(n)}"?`, text:UNDO_ASK, yes:"Delete",
       then(){
         S.noteOpen=null; S.editing=null;
         tableChange(()=>Engine.removeTableNote(S.table, id));
-        const next=S.table.notes[at], el=next && $("main").querySelector(attrSel("data-nopen", next.id)) || $("main").querySelector("[data-tnew]");
+        const el=nextId && $("main").querySelector(attrSel("data-nopen", nextId)) || $("main").querySelector("[data-tnew]");
         if (el) el.focus();
       } });
   });

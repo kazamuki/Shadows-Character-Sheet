@@ -6129,12 +6129,14 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
 
 323. **A note has a category and tags, and the Notes tab groups and filters by them and by session.**
      *2026-11-27 · Ken + Claude · Touches: table notes, note category, note tags, addTableNote, editTableNote, noteGroups, notesListHtml, Notes tab, Group by, tag filter, tableSearch, Find, migrateTable, table schema 0.23, Decision 208, Decision 271, W140*
-     - **Decided:** a table note gains `category` (one typed string, "" for none) and `tags` (typed strings, at most 40 characters, each kept once whatever its case), both stored as written; the groupings are computed (`Engine.noteGroups`). The Notes tab groups its titles by Category (the default), Session or Newest first, and a row of the tags in use filters it; both are view state. Find reads a note's category and tags. One renderer in `shared.js` draws the list for the sheet to share. A tag or category press is one Activity entry with its own words; typing a category folds. The note in Edit sits above the groups until Done.
-     - **Why:** W140. A flat list of titles stops scaling after a few sessions. Typed text keeps the note an input (constraint 7), and the session link the note already has (208) is the third grouping for free.
+     - **Decided:** a table note gains `category` (one typed string, "" for none) and `tags` (typed strings, at most 40 characters, each kept once whatever its case), both stored as written; the groupings are computed (`Engine.noteGroups`). The Notes tab groups its titles by Category (the default), Session or Newest first, and a row of the tags in use filters it; both are view state. Find reads a note's category and tags. One `shared.js` renderer draws it for the sheet too. A tag or category press is one Activity entry with its own words; typing a category folds. The note in Edit sits above the groups until Done.
+     - **Why:** W140. A flat list of titles stops scaling. Typed text keeps the note an input (constraint 7), and the session link the note already has (208) is the third grouping for free.
      - **Rejected:**
        - Tags as links to the cast, threads or places: a line already ties a cast member, a thread, a place and a session together; a note is what doesn't fit a line.
        - A category list the GM manages: a second record to keep in step, where the categories in use are already in the notes.
-       - **Replaces:** Decision 271 in part (Notes lists titles, now in groups); Decision 208 in part (Find reads a note's category and tags).
+       - Several categories per note: tags do that.
+       - Storing the grouping: it's a view.
+     - **Replaces:** Decision 271 in part (Notes lists titles, now in groups); Decision 208 in part (Find reads a note's category and tags).
      - **Revisit if:** a GM wants a note tied to a record (then a note gains links, and the line is reconsidered), or the tag row is too long to use at 375px.
      - **Built:** app 0.81.0, table schema 0.22 → 0.23, no data-version move (Decision 68), PR (this one), log 2026-11-27 (S30 PR 1).
 
