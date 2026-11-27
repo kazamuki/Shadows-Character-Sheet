@@ -17,6 +17,7 @@ import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { loadEngine } from "./harness.mjs";
 import { ROOT } from "../tools/build.mjs";
+import * as TR from "../tools/test-run.mjs";
 
 const { D } = loadEngine();
 const read = p => readFileSync(join(ROOT, p), "utf8");
@@ -448,5 +449,69 @@ test("every open wish says which plan covers it, and the plans agree (WISHLIST.m
   const next = /\*\*Next free number: W(\d+)\.\*\*/.exec(WISH);
   assert.ok(next, "WISHLIST.md §2 lost its Next free number line");
   if (+next[1] !== max + 1) bad.push(`WISHLIST.md says the next free number is W${next[1]}; it is W${max + 1}`);
+  assert.deepEqual(bad, []);
+});
+
+// ── Which tests run where (Decision 321) ─────────────────────────────────
+// tools/test-run.mjs decides what CI's four jobs, the area runs and the docs-only run hold. A file missing from all of them
+// is a file CI never runs, and nothing else would say so.
+
+const allTests = () => readdirSync(join(ROOT, "tests")).filter(f => f.endsWith(".test.mjs")).sort();
+
+test("test runs: the four shards hold every test file exactly once", () => {
+  const files = allTests();
+  const jobs = TR.shards(TR.SHARDS, files, TR.loadTimings());
+  assert.equal(jobs.length, 4);
+  const dealt = jobs.flatMap(j => j.files);
+  const seen = new Map();
+  for (const f of dealt) seen.set(f, (seen.get(f) || 0) + 1);
+  assert.deepEqual(files.filter(f => seen.get(f) !== 1), [], "a test file is in no shard, or in more than one");
+  assert.deepEqual(dealt.filter(f => !files.includes(f)), [], "a shard names a file that isn't in tests/");
+  assert.equal(dealt.length, files.length);
+});
+
+test("test runs: timings.json names no missing file", () => {
+  const files = new Set(allTests());
+  assert.deepEqual(Object.keys(TR.loadTimings()).filter(f => !files.has(f)), []);
+});
+
+test("test runs: every test file is in an area or the whole-suite list", () => {
+  const files = allTests();
+  const homeless = files.filter(f => !TR.FAST.includes(f) && !TR.WHOLE_ONLY.includes(f.replace(/\.test\.mjs$/, "")) && !TR.areasOf(f, files).length);
+  assert.deepEqual(homeless, [], "add each to AREAS (or WHOLE_ONLY) in tools/test-run.mjs");
+  assert.deepEqual(TR.WHOLE_ONLY.filter(n => !files.includes(`${n}.test.mjs`)), [], "WHOLE_ONLY names a file that isn't there");
+});
+
+test("test runs: the docs-only rule", () => {
+  const docsOnly = TR.isDocsOnly;
+  assert.equal(docsOnly(["docs/plans/x.md"]), true);
+  assert.equal(docsOnly(["README.md", "docs/a.md"]), true);
+  assert.equal(docsOnly([".claude/skills/close-a-flag/SKILL.md", "CLAUDE.md"]), true);
+  assert.equal(docsOnly(["CHANGELOG.md"]), false, "three tests read it, and it regenerates a src/ file");
+  assert.equal(docsOnly(["docs/plans/crb-catch-up.md"]), false, "rules.test.mjs reads it (Decision 288)");
+  assert.equal(docsOnly(["docs/a.md", "src/ui/app.js"]), false);
+  assert.equal(docsOnly(["private"]), false, "the CRB mirror's pointer is code");
+  assert.equal(docsOnly(["package.json"]), false);
+  assert.equal(docsOnly([]), false, "an empty diff runs everything");
+  assert.equal(docsOnly([""]), false);
+  assert.equal(docsOnly(), false);
+});
+
+test("test runs: a repo .md path a test reads counts as code, not docs", () => {
+  // The docs-only run skips every test but docs.test and build.test, so a doc another test reads must not be a docs path
+  // (finding 6 missed crb-catch-up.md, read by rules.test.mjs). Scans each test file's string literals for an existing repo .md.
+  // It can't see a path built from pieces, join(ROOT, "docs", "x.md"): write those as one literal.
+  const bad = [];
+  let seen = 0;
+  for (const f of readdirSync(join(ROOT, "tests")).filter(f => f.endsWith(".mjs") && f !== "docs.test.mjs")) {
+    // A literal may be relative to tests/ (new URL("../docs/x.md", import.meta.url)): read it from the repo root.
+    for (const [, raw] of readFileSync(join(ROOT, "tests", f), "utf8").matchAll(/["'`]([^"'`\n]*\.md)["'`]/g)) {
+      const lit = raw.replace(/^\.\.\//, "");
+      if (lit.startsWith("private/") || !existsSync(join(ROOT, lit))) continue;
+      seen++;
+      if (TR.isDocsOnly([lit])) bad.push(`tests/${f} reads ${lit}, which isDocsOnly counts as docs: add it to CODE_DOCS in tools/test-run.mjs`);
+    }
+  }
+  assert.ok(seen >= 2, `found only ${seen} repo .md literals in tests/ (CHANGELOG.md, crb-catch-up.md): did the scan break?`);
   assert.deepEqual(bad, []);
 });

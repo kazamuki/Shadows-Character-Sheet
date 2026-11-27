@@ -1,5 +1,10 @@
 name: verify
 
+# What runs depends on what changed (Decision 321, docs/plans/faster-verify.md).
+#   - A pull request whose every changed path is a docs path (tools/test-run.mjs docs-only: ZQ1's rule) runs `npm run verify:docs`
+#     alone, and its summary says the full suite didn't run.
+#   - Anything else runs the whole suite as four jobs, each taking its files from `tools/test-run.mjs shard i/4`.
+#   - A push to main and a manual run always take the whole suite. An empty or unreadable diff does too.
 on:
   push:
     branches: [main]
@@ -7,7 +12,41 @@ on:
   workflow_dispatch:
 
 jobs:
-  verify:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      docs_only: ${{ steps.diff.outputs.docs_only }}
+      paths: ${{ steps.diff.outputs.paths }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - name: Is every changed path a docs path
+        id: diff
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          docs_only=false
+          # --no-renames: a moved file must list its old path too (archiving crb-catch-up.md would otherwise show only the new, docs-looking one).
+          paths=""
+          if [ "$EVENT" = "pull_request" ] && files=$(git diff --no-renames --name-only "$BASE...$HEAD") && [ -n "$files" ]; then
+            paths=$(printf '%s\n' "$files" | head -n 30 | paste -sd, - | sed 's/,/, /g')
+            if printf '%s\n' "$files" | tr '\n' '\0' | xargs -0 node tools/test-run.mjs docs-only; then
+              docs_only=true
+            fi
+          fi
+          echo "event=$EVENT docs_only=$docs_only"
+          echo "docs_only=$docs_only" >> "$GITHUB_OUTPUT"
+          echo "paths=$paths" >> "$GITHUB_OUTPUT"
+
+  docs:
+    needs: changes
+    if: needs.changes.outputs.docs_only == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -29,7 +68,51 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - name: Say what this run skipped
+        env:
+          PATHS: ${{ needs.changes.outputs.paths }}
+        run: |
+          echo "Docs-only change: the docs checks ran, the full suite didn't (paths: $PATHS)" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Docs checks (build check, docs.test, build.test)
+        run: npm run verify:docs
+
+  verify:
+    name: verify (${{ matrix.shard }}/4)
+    needs: changes
+    if: needs.changes.outputs.docs_only != 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v7
+      # The CRB mirror is a private submodule (Decision 167). Fetched on its
+      # own, at the commit this repo points at, with a read-only token that
+      # never becomes this job's git credential.
+      - name: Which private commit
+        id: private
+        run: echo "sha=$(git rev-parse HEAD:private)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v7
+        with:
+          repository: kazamuki/Shadows-Private
+          ref: ${{ steps.private.outputs.sha }}
+          token: ${{ secrets.PRIVATE_REPO_TOKEN }}
+          path: private
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
       - name: Build check (all local assets inline cleanly)
+        if: matrix.shard == 1
         run: npm run check
-      - name: Engine units, jsdom smoke, architecture guards
-        run: npm test
+      - name: Engine units, jsdom smoke, architecture guards (this job's share)
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: |
+          files=$(node tools/test-run.mjs shard "$SHARD/4")
+          if [ -z "$files" ]; then echo "shard $SHARD/4 is empty" >&2; exit 1; fi
+          echo "Full suite: shard $SHARD/4, $(echo "$files" | wc -l) files" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "$files" | xargs node --test

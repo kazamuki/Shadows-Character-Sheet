@@ -43,7 +43,7 @@ authority and is never read front to back; §1 below says which section to open.
 | Whether the current WIP text already answers an open flag | `../private/crb/README.md` (a private submodule, Decision 167) — mirrors of CRB documents, **never edited here**; re-pull instead |
 | What shipped in a release | `../CHANGELOG.md` — backward-looking only, in player voice |
 | How to work on this repo at all | `../CLAUDE.md` |
-| The commands and scripts (bump, release, test:fast, phone-check, dev server) | `../CLAUDE.md`, *Commands* |
+| The commands and scripts (bump, release, test:fast, the area runs, verify:docs, phone-check, dev server) | `../CLAUDE.md`, *Commands* |
 | A procedure step by step: close a session, number a decision, open or close a flag, cut a release | `../.claude/skills/` (the rules they follow stay in `CLAUDE.md`) |
 | How a release reaches players and the live site | `../CLAUDE.md`, *Working rhythm*, and `../.github/workflows/release.yml` (Decision 138) |
 | What a PR body says, section by section | `../.github/pull_request_template.md`; what each tier must touch stays in `../CLAUDE.md` |
@@ -576,6 +576,7 @@ How the project itself is organised.
 - **127** *(STATE's suite line — AQ2)* — STATE states the todo count only; no pass total, no live version.
 - **130** *(Decisions that stay decided — R1, AQ1)* — an entry is the decision, a *Touches* line, and Decided · Why · Rejected · Replaces · Revisit if · Built, in about 25 lines; search the Touches lines before proposing; the load-bearing fourteen are backfilled.
 - **131** *(Change tiers — R2)* — what each kind of change must touch; STATE and the log move when the tier says so, not on every change.
+- **321** *(Verify in parallel — faster-verify, ZQ1–ZQ5)* — a PR that changes only docs runs `verify:docs` (build check, docs.test, build.test) and says it skipped the rest; any other change, a push to main and a release run the whole suite, in CI as four jobs balanced by `tests/timings.json`; a builder runs `test:fast` plus its area after each step and the full verify before the PR; the six slowest smoke files are split in two.
 - **132** *(One orientation path — A4, C10, C11)* — `CLAUDE.md` → `STATE.md` → `INDEX.md`; `docs/README.md` and the HANDOFF stub go; retired text goes verbatim to `log/archive.md`; SCHEMA is §1–§5.
 - **137** *(Fonts embedded — C7, AQ6)* — the brand fonts are WOFF2 data URIs in a generated `fonts.css`, so the app makes no network request; big numbers are Oxanium (`--numeric`), headers keep the display face; build tests hold both.
 - **144** *(Wishes granted)* — a built `W` item moves, whole, to `log/wishes-granted.md`; `WISHLIST.md` shows only what's open.

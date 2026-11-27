@@ -31,7 +31,9 @@ Everything gets inlined into a single self-contained HTML file. Same architectur
 npm install       # dev tools only (jsdom, the font packages, playwright-core) — the app ships with zero dependencies
 npm test          # engine unit tests + jsdom end-to-end smoke
 npm run test:fast # engine, rules, docs and build tests: the quick loop
-npm run verify    # build check + tests (run this before every commit)
+npm run verify    # build check + every test (run this before a PR)
+npm run test:sheet  # a quicker area run while working (also test:table, test:wizard)
+npm run verify:docs # all a docs-only change needs
 ```
 
 The rest (`bump`, `release:check`, `phone-check`, the dev server) is under *Commands* in [`CLAUDE.md`](CLAUDE.md).

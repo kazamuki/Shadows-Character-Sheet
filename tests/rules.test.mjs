@@ -1984,7 +1984,7 @@ test("P12a 9: a session's IP is 5 an hour, rounded up (0450: every hour of play 
   assert.match(crb("0450_Advancement.md"), /every hour of play earns 5 IP/i, "the book's rate moved");
   assert.equal(D.ip.perHour, 5);
   assert.equal("perSession" in D.ip, false, "the flat 10 is gone from the data");
-  // The rounding itself is the Session Log's, pinned through the UI in smoke-sheet-progression (P12a 12).
+  // The rounding itself is the Session Log's, pinned through the UI in smoke-sheet-progression-spend (P12a 12).
 });
 
 test("P12a 4b: a SAN loss past the maximum sells only the SAN that shows, and a fraction is floored", () => {

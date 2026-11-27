@@ -40,9 +40,12 @@ maintains the CRB and builds this app.
 ## Commands
 
 ```bash
-npm run verify     # build check + full test suite — run AFTER every change (and before, see below)
+npm run verify     # build check + full test suite — before a PR and after review fixes (see below); `main` always passes it
 npm test           # engine units, CRB conformance, hostile files, voice, jsdom smoke, architecture guards
 npm run test:fast  # engine, rules, docs and build only: the inner loop while working. verify still gates
+npm run test:sheet # test:fast's four plus the sheet's files (also test:table, test:wizard): the check after each step
+npm run verify:docs    # build check + docs.test + build.test: all a docs-only change needs (Decision 321)
+npm run test:time  # re-time every test file alone and rewrite tests/timings.json, which balances CI's four jobs
 npm run build      # → dist/shadows-character-sheet.html (the file players get) and the blank sheet
 npm run changelog  # CHANGELOG.md → src/data/shadows-changelog.js (the app's What's new)
 npm run bump -- X.Y.Z  # the app version, everywhere it's written, plus CHANGELOG's [Unreleased] heading
@@ -64,8 +67,14 @@ here, and only here.
 **The baseline before a change.** On a branch freshly cut from `origin/main`,
 `npm run test:fast` is enough: CI keeps `main` green, so the full suite there
 has already passed. On a stale or inherited branch, run the full `npm run verify`
-first, so a failure you didn't cause is caught before you start. After a change,
-the full `npm run verify`, always.
+first, so a failure you didn't cause is caught before you start. **While you work,**
+after each step run `test:fast` plus the area run for the files you touched
+(`test:sheet`, `test:table`, `test:wizard`, or more than one). **Before the PR,
+and again after review fixes, the full `npm run verify`** — `main` is always
+openable and always passes it, and CI runs the whole suite on every code push. A
+docs-only change (every path under `docs/` or a `.md` file, except `CHANGELOG.md`
+and `docs/plans/crb-catch-up.md`, which tests read) runs `npm run verify:docs`,
+and CI says it skipped the rest (Decision 321).
 
 `docs/STATE.md` says how many `todo` tests to expect. Any `todo` tests are **confirmed
 defects written as failing assertions on purpose** — they flip green when fixed.
@@ -141,7 +150,8 @@ tests/                  Engine units, CRB conformance, hostile files, voice, gua
 tools/                  build.mjs (inlines everything into dist/), changelog.mjs,
                         release.mjs (bump, prep, check), fonts.mjs, outputs.mjs,
                         phone-check.mjs, devserver.mjs, session-start.mjs,
-                        sample-table.mjs (builds samples/).
+                        sample-table.mjs (builds samples/), test-run.mjs (the
+                        area runs, CI's four shards, the docs-only rule, timings).
 samples/                A lived-in GM table, "Dead Air" (mid-session, every part of a table
                         filled, players and their characters included), built by
                         tools/sample-table.mjs and checked by tests/sample-table.test.mjs.

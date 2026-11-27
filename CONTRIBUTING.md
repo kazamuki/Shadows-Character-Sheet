@@ -29,7 +29,9 @@ has to decide.
 
 ## Five things that aren't obvious
 
-- **Run `npm install` once, then `npm run verify` before every commit.** If a
+- **Run `npm install` once, then `npm run verify` before a PR** (`npm run verify:docs` for a
+  change to docs only, and `npm run test:fast` or an area run such as `npm run test:sheet` while
+  you work). If a
   test fails, fix the code, not the test.
 - **Never change an `id`** in the game data. Saved characters point at it.
   Rename the `name` instead.
