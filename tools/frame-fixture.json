@@ -65,7 +65,7 @@
    "7 section.main-conditions 16,721.7,358,94.5",
    "8 div.main-grid 16,830.2,358,1367.3"
   ],
-  "deep": "369 boxes, 985d637d"
+  "deep": "352 boxes, 985ac24d"
  },
  "sheet: skills @390": {
   "header": [
@@ -653,7 +653,7 @@
    "6 div.wiznav 16,698,358,146",
    "7 p.step-note 16,1208.3,358,69.8"
   ],
-  "deep": "111 boxes, 81480d83"
+  "deep": "94 boxes, a9322b57"
  },
  "wizard: stats, Expert @390": {
   "header": [
@@ -918,7 +918,7 @@
    "7 section.main-conditions 16,608.2,736,94.5",
    "8 div.main-grid 16,716.7,736,1063.8"
   ],
-  "deep": "381 boxes, a210d735"
+  "deep": "364 boxes, 8f8fd4a8"
  },
  "sheet: skills @768": {
   "header": [
@@ -1506,7 +1506,7 @@
    "6 div.wiznav 16,899.5,736,95",
    "7 p.step-note 16,1006.5,586.7,46.5"
   ],
-  "deep": "111 boxes, c4b78315"
+  "deep": "94 boxes, d158f7ac"
  },
  "wizard: stats, Expert @768": {
   "header": [
@@ -1771,7 +1771,7 @@
    "7 section.main-conditions 30,545,1240,94.5",
    "8 div.main-grid 30,653.5,1240,581.7"
   ],
-  "deep": "383 boxes, 433265e3"
+  "deep": "366 boxes, beeaafab"
  },
  "sheet: skills @1300": {
   "header": [
@@ -2051,7 +2051,7 @@
    "7 section.main-conditions 30,502,940,94.5",
    "8 div.main-grid 30,610.5,940,650.1"
   ],
-  "deep": "381 boxes, 436edcdc"
+  "deep": "364 boxes, 53c34bb4"
  },
  "sheet: skills @1300 pinned": {
   "header": [
@@ -2639,7 +2639,7 @@
    "6 div.wiznav 248,797.2,774,95",
    "7 p.step-note 248,904.2,586.7,46.5"
   ],
-  "deep": "111 boxes, a038fe5c"
+  "deep": "94 boxes, 4c999e0a"
  },
  "wizard: stats, Expert @1300": {
   "header": [
@@ -2904,7 +2904,7 @@
    "7 section.main-conditions 30,545,1920,94.5",
    "8 div.main-grid 30,653.5,1920,548"
   ],
-  "deep": "383 boxes, f0362f5"
+  "deep": "366 boxes, 553168b5"
  },
  "sheet: skills @1980": {
   "header": [
@@ -3184,7 +3184,7 @@
    "7 section.main-conditions 30,502,1620,94.5",
    "8 div.main-grid 30,610.5,1620,548"
   ],
-  "deep": "381 boxes, cab6a9a1"
+  "deep": "364 boxes, 1b5cf5a9"
  },
  "sheet: skills @1980 pinned": {
   "header": [
@@ -3772,7 +3772,7 @@
    "6 div.wiznav 248,797.2,860,95",
    "7 p.step-note 248,904.2,586.7,46.5"
   ],
-  "deep": "111 boxes, 26bf2349"
+  "deep": "94 boxes, 87592087"
  },
  "wizard: stats, Expert @1980": {
   "header": [

@@ -13,7 +13,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { boot, stored } from "./harness.mjs";
-import { Engine, D, lockedCharacter, openSheet, activeChar, draft, withDownloads, importFile, named, charKeys, card, sheetHome, draftOn, pick } from "./smokekit.mjs";
+import { Engine, D, lockedCharacter, openSheet, onStep, activeChar, draft, withDownloads, importFile, named, charKeys, card, sheetHome, draftOn, pick } from "./smokekit.mjs";
 
 // ── What's new (Decision 123) ─────────────────────────────────────────
 // Read from source so the tests never hard-code a version.
@@ -356,7 +356,7 @@ test("B18: the intake number sits under the name on Main and in the printed head
   app.$$("#main button").find(b => /Open sheet/.test(b.textContent)).click();
   const intake = app.$("#main .intake");
   assert.ok(intake && intake.textContent.includes(ch.meta.id), "Main doesn't show the intake number");
-  assert.match(intake.textContent.trim(), /^TAG-/, "Main labels the number instead of showing the TAG itself (Decision 133)");
+  assert.match(intake.querySelector(".intake-no").textContent.trim(), /^TAG-/, "Main labels the number instead of showing the TAG itself (Decision 133)");
   assert.ok(intake.querySelector("svg rect"), "the intake number has no bars");
   assert.match(app.$("#main").textContent, /Werewolf · Trueborn · /, "Main's subtitle still leaves out the specialization");
   app.window.print = () => {};
@@ -434,4 +434,79 @@ test("W153: the no-data screen says which file is missing and what to do", async
   assert.equal(main.querySelector("h1").textContent, "This sheet is missing a file");
   assert.equal(main.querySelector("p").textContent, "Put shadows-data.js back in the folder beside this page, then reload.");
   dom.window.close();
+});
+
+// ── Z1: the TAG's barcode scans, and a button flips it (Decision 320) ────
+const flipWords = on => D.appCopy.tagScan[on ? "back" : "flip"];
+const runsOf = id => [...Engine.tagBars(id).runs].filter((_, i) => i % 2 === 0).join(",");
+const barsOf = el => [...el.querySelectorAll("svg rect")].map(r => r.getAttribute("width")).join(",");
+
+test("Z1 6: Main's TAG has a flip button, and it flips every TAG", () => {
+  const ch = Engine.migrate(named("Vex Morrow"));
+  const app = openSheet(ch, "main");
+  const btn = () => app.$("#main .intake .intake-flip");
+  assert.ok(btn() && btn().tagName === "BUTTON", "no real button beside the bars");
+  assert.equal(btn().textContent, D.appCopy.tagScan.button);
+  assert.equal(btn().getAttribute("aria-pressed"), "false");
+  assert.equal(btn().title, flipWords(false)); assert.equal(btn().getAttribute("aria-label"), null, "the name must stay the visible word, Scan (label-in-name)");
+  btn().focus();
+  btn().click();
+  assert.equal(btn().getAttribute("aria-pressed"), "true");
+  assert.ok([...app.$$(".intake")].every(i => i.classList.contains("scan")), "a press didn't flip every .intake on the page");
+  assert.equal(btn().title, flipWords(true));
+  assert.equal(app.doc.activeElement, btn(), "a press moved the focus: it re-rendered");
+  // A re-render in the same sitting keeps the flip.
+  app.click('[data-sec="trackers"]'); app.click('[data-sec="main"]');
+  assert.ok(app.$("#main .intake").classList.contains("scan"), "a re-render dropped the flip");
+  assert.equal(btn().getAttribute("aria-pressed"), "true");
+  btn().click();
+  assert.equal(btn().getAttribute("aria-pressed"), "false");
+  assert.ok(![...app.$$(".intake")].some(i => i.classList.contains("scan")));
+  app.click('[data-sec="trackers"]'); app.click('[data-sec="main"]');
+  assert.ok(!app.$("#main .intake").classList.contains("scan"), "the flip came back after it was cleared");
+  assert.deepEqual(app.errors, []);
+});
+
+test("Z1 7: the Review step draws it too, and the print header draws the bars with no button", () => {
+  const app = onStep("arcanist", D.powerLevels[0].id, "review");
+  const intake = app.$("#main .review-block .intake");
+  assert.ok(intake && intake.querySelector(".intake-flip"), "the Review step's TAG has no button");
+  intake.querySelector(".intake-flip").click();
+  assert.ok(app.$("#main .review-block .intake").classList.contains("scan"));
+  assert.deepEqual(app.errors, []);
+
+  const ch = Engine.migrate(named("Vex Morrow"));
+  const sheet = openSheet(ch, "main");
+  sheet.window.print = () => {};
+  sheet.click("[data-menu-toggle]"); sheet.click("[data-print]");
+  assert.ok(sheet.$("#printSheet .p-intake svg"), "the print header lost its bars");
+  assert.equal(sheet.$("#printSheet .p-intake button"), null, "the print header has a button");
+  assert.equal(sheet.$("#printSheet .intake-flip"), null);
+  assert.equal(sheet.$("#printSheet .scan"), null, "the print header is flipped");
+  assert.deepEqual(sheet.errors, []);
+});
+
+test("Z1 8: the same TAG has the same bars everywhere", () => {
+  const ch = Engine.migrate(named("Vex Morrow"));
+  const sheet = openSheet(ch, "main");
+  const main = barsOf(sheet.$("#main .intake"));
+  assert.equal(main, runsOf(ch.meta.id), "Main's bars aren't the TAG's Code 128");
+  sheet.window.print = () => {};
+  sheet.click("[data-menu-toggle]"); sheet.click("[data-print]");
+  assert.equal(barsOf(sheet.$("#printSheet .p-intake")), main, "the print header's bars differ from Main's");
+  const review = onStep("arcanist", D.powerLevels[0].id, "review");
+  const id = review.$("#main .review-block .intake .intake-no").textContent;
+  assert.equal(barsOf(review.$("#main .review-block .intake")), runsOf(id), "the Review step's bars aren't its TAG's");
+});
+
+test("Z1 9: a Ghost TAG and a TAGless number read as before, with the new bars", () => {
+  const ch = Engine.migrate(named("Vex Morrow"));
+  ch.advantages.push({ id: "ghost-tag-s", rank: 1 });
+  const ghost = openSheet(ch, "main");
+  assert.equal(ghost.$("#main .intake .intake-label").textContent, "Ghost TAG");
+  assert.equal(barsOf(ghost.$("#main .intake")), runsOf(ch.meta.id));
+  const bare = Engine.migrate(named("Vex Morrow")); bare.identity.tagless = true;
+  const off = openSheet(bare, "main");
+  assert.equal(off.$("#main .intake .intake-no").textContent, bare.meta.id.slice(4));
+  assert.equal(barsOf(off.$("#main .intake")), runsOf(bare.meta.id), "a TAGless number's bars are still the stored TAG's");
 });

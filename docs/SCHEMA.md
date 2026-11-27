@@ -3783,7 +3783,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. Decision 63 holds: `migrate()` still invents no timestamps; `commit()` records one when something changes.
      - **Revisit if:** the roster (plan S6) gives each character its own slot, which turns "replace?" into "add".
      - **Built:** app 0.24.0; the audit plan's S1; `smoke.test.mjs` B18 ×4, `engine.test.mjs` B18 ×2.
-     → **Superseded in part by Decisions 133 and 141** — the number is a TAG (`TAG-XXXX-XXXX-XXXX`), shown without an "Intake No." label (133); each character has its own entry, so only an older copy of the same character asks (141).
+     → **Superseded in part by Decisions 133, 141 and 320** — the number is a TAG (`TAG-XXXX-XXXX-XXXX`), shown without an "Intake No." label (133); each character has its own entry, so only an older copy of the same character asks (141); the bars are a real Code 128 a decoder verified, no longer decoration (320).
 
 129. **Hardcore Parkour needs 1 Major Milestone, Acrobatics 4 and Danger Sense 1.**
      *2026-09-24 · Deighton (ruling), via Ken · Touches: Hardcore Parkour, Cat Like Balance, Time Sense, Danger Sense, Acrobatics, Major Milestone prerequisites, F27, B15*
@@ -6086,6 +6086,19 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** nothing. It builds what Decision 181 set aside as W62's session, on Decisions 316–318's kit.
      - **Revisit if:** the gates learn to report what they repaired, or a dispatch (or another file kind) gets an import.
      - **Built:** app 0.80.0 (unreleased), PR (this one), log entry 2026-11-26.
+
+320. **The TAG's barcode is a real Code 128 of its twelve characters, and a button beside it flips it to dark-on-white for scanning.**
+     *2026-11-26 · Ken + Claude · Touches: meta.id, TAG, tagBars, code128Runs, intakeBarsSvg, intakeHtml, intake-bars, intake-flip, tagScanOn, appCopy.tagScan, p-intake, prefers-reduced-motion, light theme, hover, @zxing/library*
+     - **Decided:** the bars under a character's name are Code 128 (subset B) of the TAG's twelve characters, drawn by `Engine.tagBars` and the UI's one drawing, on the sheet, the Review step and the print header. On the dark theme a **Scan** button beside the bars, shown on hover and focus, flips every TAG on the page to black on a white patch with a margin, and back. The flip is module memory: not saved, gone on reload. The light theme has no button.
+     - **Why:** Ken (2026-11-26): the barcode should be a real one, an easter egg for a curious scanner. Light-on-dark bars fail in a real decoder, so a scannable dark theme needs a patch, and a button leaves the look alone until someone asks.
+     - **Rejected:**
+       - Code 39: wider for the same text, no checksum.
+       - A QR code: square, so it breaks the line under the name; error correction by hand.
+       - A URL in the bars: twice the width (343 units against 167), and no page takes a TAG.
+       - Dark bars on a light patch all the time, or saving the flip: a rare scan isn't worth either.
+     - **Replaces:** Decision 128 in part: its "a scannable Code 39 barcode, until a decoder can verify it; the bars are decoration". A decoder now verifies it.
+     - **Revisit if:** a phone fails to read the flipped bars at the shipped size, or a page on shadowsrpg.com takes a TAG (then ZQ1's alternative is worth a look).
+     - **Built:** app 0.81.0 (unreleased), PR #404, log entry 2026-11-26.
 
 
 ## 5. Open Flags

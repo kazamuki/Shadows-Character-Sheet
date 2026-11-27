@@ -24,6 +24,12 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.81.0
+
+### Character sheet
+
+- **The barcode under your name is a real one.** Point a phone at your TAG and it reads. On the dark theme, hover the barcode and press **Scan** to flip it to black on white, which phones read, and press it again to flip it back. Characters you've already made keep the same TAG.
+
 ## v0.80.0 — 2026-11-26
 
 ### Character sheet

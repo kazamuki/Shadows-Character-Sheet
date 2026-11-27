@@ -320,7 +320,17 @@ table.ref td.num{font-family:var(--mono); color:var(--cyan)}
 .issues li.warn{color:var(--gold)}
 .issues li.todo{color:var(--dim)}
 .intake{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:2px 0 8px; color:var(--dim)}
-.intake-bars{flex:none; opacity:.85}
+.intake-bars{flex:0 1 auto; box-sizing:content-box; max-width:100%; opacity:.85; padding:8px; margin:-8px}   /* Z1: the padding is the flipped patch's margin, and the negative margin gives it back, so a flip moves nothing */
+/* Z1 (Decision 320): a real barcode, and a button to flip it to black on white for a phone to read off the dark theme. The button
+   keeps its space when hidden, so showing it moves nothing. The patch is dark-theme only: the light theme's bars read as they are. */
+.intake-flip{font-family:var(--mono); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; line-height:1.2; color:var(--dim); background:none; border:1px solid var(--toggle-ring); border-radius:3px; padding:1px 7px; cursor:pointer; opacity:0; transition:opacity .15s; position:relative}
+.intake-flip::after{content:""; position:absolute; inset:-14px -4px}   /* a finger's reach, 46px tall, without taking the line's height */
+@media (hover:none){ .intake-flip{opacity:.6} }
+.intake:hover .intake-flip, .intake:focus-within .intake-flip, .intake.scan .intake-flip{opacity:1}
+.intake-flip:hover, .intake-flip[aria-pressed="true"]{color:var(--cyan); border-color:var(--cyan)}
+.intake.scan .intake-bars{color:#000; background:#fff; opacity:1}
+:root[data-theme="light"] .intake-flip{display:none}
+:root[data-theme="light"] .intake.scan .intake-bars{color:inherit; background:none; opacity:.85}
 .intake-no{font-family:var(--mono); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; white-space:nowrap}
 .intake-label{font-family:var(--mono); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--magenta-text)}
 .import-issues{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:14px}
@@ -471,6 +481,7 @@ h2 > .term:only-child::after{content:""; position:absolute; left:0; top:50%; wid
 .intake.issued .intake-bars{animation:tagPrint .5s cubic-bezier(.16,1,.3,1)}
 .intake.issued .intake-no, .intake.issued .intake-label{animation:tagStamp .35s ease-out .4s}
 .intake.issued .intake-label{animation-name:tagStampLabel}
+.intake.flipping .intake-bars{animation:tagPrint .2s cubic-bezier(.16,1,.3,1)}   /* Z1: a press replaces a lock's wipe; it plays on the press only */
 @keyframes tagStampLabel{0%{text-shadow:0 0 10px currentColor} 100%{}}
 /* Decision 317 (I2) — the night's end. Under Log session: the night's register line (state, drawn from the last session), the
    Milestone track (one .mp-pip per point in the band), and, while a Milestone is owed, the plate. The line, History's row and a
@@ -546,7 +557,8 @@ h2 > .term:only-child::after{content:""; position:absolute; left:0; top:50%; wid
 @media (prefers-reduced-motion: reduce){
   .hl.landed, .hl-mini .seg.landed, .cond.painup, .vpill.painup, .pick.painup,
   .cond.struck .big, .vpill.struck .vv, .big.struck,
-  .intake.issued .intake-bars, .intake.issued .intake-no, .intake.issued .intake-label{animation:none}
+  .intake.issued .intake-bars, .intake.issued .intake-no, .intake.issued .intake-label, .intake.flipping .intake-bars{animation:none}
+  .intake-flip{transition:none}
   .beat-float, .cond.mended, .vpill.mended, .big.mended{animation:none}
   .beat-float, .beat-tail{display:none}
 }

@@ -4190,6 +4190,7 @@ window.SHADOWS_DATA = {
     "tagless": { "label": "Off grid", "text": "TAGless: no government identity, no 625Ç UBI, business done in skrip." }
   },
   "appCopy": {
+    "tagScan": { "button": "Scan", "flip": "Flip the barcode so a phone can read it", "back": "Flip it back" },
     "tableRound": "Round {n}",
     "readout": { "head": "Slotting in {file}", "recSessions": "{n} sessions on the record", "recSession1": "1 session on the record", "recIp": "{n} IP to spend", "recMp": "{n} MP", "draft": "Still in intake",
       "findings": "{n} to look at, up top", "findings1": "One to look at, up top", "charIn": "{name} is in.",

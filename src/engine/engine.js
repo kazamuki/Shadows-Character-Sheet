@@ -654,6 +654,42 @@ const Engine = (() => {
     return r && r.tagless && !r.counterfeit ? id.replace(/^TAG-/, "") : id;
   }
 
+  // Decision 320 (Z1): the bars under a character's name are a real Code 128 (subset B) of the TAG's
+  // twelve characters. The table is the standard's: each of the 106 symbols is six runs (bar, space,
+  // bar, space, bar, space) of 11 units; the stop is seven, 13. It lives here and nowhere else.
+  const CODE128 = ["212222","222122","222221","121223","121322","131222","122213","122312","132212","221213",
+    "221312","231212","112232","122132","122231","113222","123122","123221","223211","221132",
+    "221231","213212","223112","312131","311222","321122","321221","312212","322112","322211",
+    "212123","212321","232121","111323","131123","131321","112313","132113","132311","211313",
+    "231113","231311","112133","112331","132131","113123","113321","133121","313121","211331",
+    "231131","213113","213311","213131","311123","311321","331121","312113","312311","332111",
+    "314111","221411","431111","111224","111422","121124","121421","141122","141221","112214",
+    "112412","122114","122411","142112","142211","241211","221114","413111","241112","134111",
+    "111242","121142","121241","114212","124112","124211","411212","421112","421211","212141",
+    "214121","412121","111143","111341","131141","114113","114311","411113","411311","113141",
+    "114131","311141","411131","211412","211214","211232","2331112"];
+  // The runs, alternating bar and space and starting with a bar, or null (never a throw) for anything
+  // that isn't a non-empty string of codes 32-126.
+  function code128Runs(text){
+    if (typeof text!=="string" || !text) return null;
+    const vals = [104]; let sum = 104;
+    for (let i=0;i<text.length;i++){
+      const v = text.charCodeAt(i) - 32;
+      if (v<0 || v>94) return null;
+      vals.push(v); sum += v*(i+1);
+    }
+    vals.push(sum % 103, 106);
+    const out = [];
+    for (const v of vals) for (const d of CODE128[v]) out.push(+d);
+    return out;
+  }
+  // The TAG's barcode: its twelve characters, the runs, and the units across. null unless the id is a TAG.
+  function tagBars(id){
+    if (!isIntakeId(id)) return null;
+    const text = id.replace(/^TAG-/, "").replace(/-/g, ""), runs = code128Runs(text);
+    return runs ? { text, runs, modules: runs.reduce((a,b)=>a+b, 0) } : null;
+  }
+
   // Final stat value = creation base + archetype bonus + CP boosts + IPE + adjustments
   function statValue(ch, id){
     return ch.stats[id].base + archStatBonus(ch,id)
@@ -10695,7 +10731,7 @@ const Engine = (() => {
     D, dataPath, formulaText, creditSymbol, glossary, skillById, advById, disById,
     conditionById, locationById, damageTypeById, damageCategoryById, aberrationById, spellById,
     // The character file: create, load, check, export
-    newCharacter, isIntakeId, tagReading, tagNumber, migrate, versionCheck, buildExport,
+    newCharacter, isIntakeId, tagReading, tagNumber, tagBars, code128Runs, migrate, versionCheck, buildExport,
     statMax, statMaxText, statAtCap, humanMax, statOverCaps, statOverCap, derivedParts, startingCredits,
     // Stats, skills and derived values
     powerLevel, archetype, classification, canBuyAdvantage, archetypeContent, writeInOptions, poolsOf, poolIdFree, newPoolId, addPower, addCustomPower, ownPowers, improvePower, newPower, removePower, statMod, statValue, statTable, baseStatTable, statReading, termSpans, term, word, words, archStatBonus, scalingRow,

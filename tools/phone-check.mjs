@@ -846,6 +846,90 @@ async function printFloors(browser, file, rows) {
     await c.close();
   }
 }
+// Z1 (Decision 320): the TAG's Scan button. jsdom has no layout, so this is where "a flip moves nothing" is held: the label's,
+// the number's, the button's and the heading's boxes are the same before and after a press, the bars are inside the page's
+// width, and (dark theme) the flipped bars are black on a white patch. Reported: the bars' rendered width and the scale they
+// settled at (334px is 2px a unit; a narrower line shrinks them).
+async function tagScanFloors(browser, file, rows) {
+  const { Engine, D } = loadEngine();
+  const steps = D.creationFlow.steps.length;
+  const draft = JSON.parse(JSON.stringify((() => { const ch = Engine.newCharacter(); ch.identity.name = "Phone Check"; ch.identity.archetype = "arcanist";
+    ch.creation.powerLevel = D.powerLevels[0].id; ch.creation.rolls = { statPoints: 40, skillPoints: 30, credits: 1000 };
+    for (const id of Object.keys(ch.stats)) ch.stats[id].base = 8; ch.meta.id = "TAG-AAAA-BBBB-CCCC"; return ch; })()));
+  const sheetSeed = JSON.stringify({ ch: lockedCharacter("arcanist", 0), section: "main" });
+  const draftSeed = JSON.stringify({ ch: draft, step: steps, maxReached: steps });
+  const measure = () => {
+    const r = el => { if (!el) return null; const b = el.getBoundingClientRect(); return [b.x, b.y, b.width, b.height].map(n => Math.round(n * 100) / 100).join(","); };
+    const i = document.querySelector("#main .intake"), bars = i.querySelector(".intake-bars"), de = document.documentElement;
+    return { boxes: [i, i.querySelector(".intake-label"), bars, i.querySelector(".intake-flip"), i.querySelector(".intake-no"), document.querySelector("#main h1, #main h2")].map(r).join(" | "),
+      barsW: Math.round((bars.clientWidth - 16) * 10) / 10, over: de.scrollWidth - de.clientWidth, inView: bars.getBoundingClientRect().right <= de.clientWidth + 0.5, fits: [...i.children].every(k => k.getBoundingClientRect().right <= de.clientWidth + 0.5) };
+  };
+  const lum = ([r, g, b]) => { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
+  const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((m, n) => n - m); return (x + 0.05) / (y + 0.05); };
+  const rgb = t => (String(t).match(/[\d.]+/g) || []).slice(0, 3).map(Number);
+  for (const w of [320, 375, 390, 768, 1280]) {
+    for (const name of ["Main", "Review"]) {
+      const c = await browser.newContext({ viewport: { width: w, height: 900 } });
+      await c.addInitScript(([k, v]) => { try { localStorage.setItem(k, v); } catch (e) {} }, [name === "Main" ? "shadows.active.v1" : "shadows.draft.v1", name === "Main" ? sheetSeed : draftSeed]);
+      const page = await c.newPage();
+      const errors = []; page.on("pageerror", e => errors.push(e.message));
+      await page.goto(pathToFileURL(file).href);
+      if (name === "Main") await page.click("[data-open]");
+      else await page.evaluate(() => { [...document.querySelectorAll("#main button")].find(b => /Resume draft/.test(b.textContent)).click(); });
+      await page.waitForSelector("#main .intake .intake-flip");
+      await page.mouse.move(0, 0);
+      const bad = [];
+      const before = await page.evaluate(measure);
+      // Hover shows the button, moving off hides it, focus shows it.
+      const op = () => page.evaluate(() => getComputedStyle(document.querySelector("#main .intake-flip")).opacity);
+      await page.waitForTimeout(250);
+      if (await op() !== "0") bad.push("the button shows with no pointer over the TAG");
+      await page.hover("#main .intake-bars"); await page.waitForTimeout(250);
+      if (await op() !== "1") bad.push("hovering the TAG doesn't show the button");
+      await page.mouse.move(0, 0); await page.waitForTimeout(250);
+      await page.evaluate(() => { document.querySelector("#main .intake-flip").focus(); });
+      await page.waitForTimeout(250);
+      if (await op() !== "1") bad.push("focus in the TAG doesn't show the button");
+      await page.evaluate(() => { document.querySelector("#main .intake-flip").blur(); });
+      // Press.
+      await page.click("#main .intake-flip"); await page.waitForTimeout(400); await page.mouse.move(0, 0); await page.waitForTimeout(250);
+      const after = await page.evaluate(measure);
+      const st = await page.evaluate(() => { const i = document.querySelector("#main .intake"), b = getComputedStyle(i.querySelector(".intake-bars")); return { scan: i.classList.contains("scan"), color: b.color, bg: b.backgroundColor, pressed: i.querySelector(".intake-flip").getAttribute("aria-pressed"), focus: document.activeElement === i.querySelector(".intake-flip"), op: getComputedStyle(i.querySelector(".intake-flip")).opacity }; });
+      if (before.boxes !== after.boxes) bad.push("a flip moved a box: " + before.boxes + "  =>  " + after.boxes);
+      if (!st.scan || st.pressed !== "true") bad.push("the press didn't flip");
+      if (st.color !== "rgb(0, 0, 0)" || st.bg !== "rgb(255, 255, 255)") bad.push("flipped bars are " + st.color + " on " + st.bg);
+      if (!st.focus) bad.push("focus left the button");
+      if (st.op !== "1") bad.push("a flipped TAG hides its button");
+      // The Review step's rail overflows by itself at 320 (the step list, not the TAG), so what's held is that the TAG adds none.
+      if (after.over > before.over) bad.push("a flip pushed the page " + (after.over - before.over) + "px sideways");
+      if (!after.fits) bad.push("the TAG's line runs past the screen");
+      if (!after.inView) bad.push("the bars run past the screen");
+      let note = "";
+      if (name === "Main" && w >= 768) {
+        // Both themes while flipped, and reduced motion.
+        await page.evaluate(() => document.documentElement.setAttribute("data-theme", "light"));
+        const lt = await page.evaluate(() => { const i = document.querySelector("#main .intake"), b = getComputedStyle(i.querySelector(".intake-bars")), pg = getComputedStyle(document.body);
+          return { bg: b.backgroundColor, color: b.color, op: b.opacity, flip: getComputedStyle(i.querySelector(".intake-flip")).display, page: pg.backgroundColor }; });
+        if (lt.flip !== "none") bad.push("the light theme shows a button");
+        if (lt.bg !== "rgba(0, 0, 0, 0)") bad.push("a flip left a patch in the light theme: " + lt.bg);
+        const fg = rgb(lt.color), pgc = rgb(lt.page), a = +lt.op, mixed = fg.map((v, k) => v * a + pgc[k] * (1 - a));
+        const lr = ratio(mixed, pgc);
+        if (lr < 3) bad.push("the light theme's bars read " + lr.toFixed(2) + ":1");
+        note = `; light bars ${lr.toFixed(1)}:1, flipped 21:1`;
+        await page.evaluate(() => document.documentElement.setAttribute("data-theme", "dark"));
+        if (!(await page.evaluate(() => document.querySelector("#main .intake").classList.contains("scan")))) bad.push("the flip was lost across a theme change");
+        await page.click("#main .intake-flip"); await page.waitForTimeout(300);
+        await page.emulateMedia({ reducedMotion: "reduce" });
+        await page.click("#main .intake-flip");
+        const calm = await page.evaluate(() => { const i = document.querySelector("#main .intake"); return { cls: i.className, anim: getComputedStyle(i.querySelector(".intake-bars")).animationName }; });
+        if (!/(^| )scan( |$)/.test(calm.cls) || /flipping/.test(calm.cls) || calm.anim !== "none") bad.push("reduced motion still animates the flip: " + JSON.stringify(calm));
+      }
+      rows.push({ width: w, screen: `Z1: ${name} Scan button, bars ${after.barsW}px (${Math.round(after.barsW / 334 * 100)}% of 334)${note}`, layout: bad.length ? bad.join("; ") : "ok", ok: !bad.length && !errors.length });
+      if (errors.length) rows.push({ width: w, screen: "(page errors)", layout: errors.join("; "), ok: false });
+      await c.close();
+    }
+  }
+}
 async function weaponFloors(browser, file, rows) {
   const ch = weaponChar();
   // 375 is a width the table broke at on its own: the track grew to 360px, past the 343 a 375 screen leaves, where 390 leaves 358 and hides 2px of it in the gutter.
@@ -1322,6 +1406,7 @@ try {
   await weaponFloors(browser, file, rows);
   await sheetHelp(browser, file, rows);
   await printFloors(browser, file, rows);
+  await tagScanFloors(browser, file, rows);
   await nightFloors(browser, file, rows);
   await tableBeatFloors(browser, file, rows);
   await readoutFloors(browser, file, rows);

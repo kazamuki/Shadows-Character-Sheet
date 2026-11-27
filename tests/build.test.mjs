@@ -586,6 +586,24 @@ test("U4: gm.js has no inline style but a computed transform", () => {
     assert.equal(val(top, ".intake-no", "white-space"), "nowrap");
     assert.equal(val(top, ".intake", "flex-wrap"), "wrap", "nowrap without wrap pushes the page sideways");
   });
+  test("Z1 10: the Scan button's CSS (Decision 320)", () => {
+    // Hidden by opacity, not display, so its space is kept and showing it moves nothing.
+    assert.equal(val(top, ".intake-flip", "opacity"), "0");
+    assert.notEqual(val(top, ".intake-flip", "display"), "none");
+    for (const sel of [".intake:hover .intake-flip", ".intake:focus-within .intake-flip", ".intake.scan .intake-flip"]) assert.equal(val(top, sel, "opacity"), "1", sel + " doesn't show the button");
+    assert.equal(val(inBlock("@media (hover:none)"), ".intake-flip", "opacity"), ".6", "a touch screen has no hover to show the button");
+    assert.equal(val(top, ':root[data-theme="light"] .intake-flip', "display"), "none", "the light theme has a button");
+    assert.equal(val(top, ".intake.scan .intake-bars", "color"), "#000");
+    assert.equal(val(top, ".intake.scan .intake-bars", "background"), "#fff");
+    assert.equal(val(top, ".intake.scan .intake-bars", "opacity"), "1");
+    assert.notEqual(val(top, ':root[data-theme="light"] .intake.scan .intake-bars', "background"), "#fff", "a flip carried into the light theme leaves a white patch");
+    // The patch is padding with a matching negative margin, so a flip moves nothing.
+    assert.equal(val(top, ".intake-bars", "padding"), "8px");
+    assert.equal(val(top, ".intake-bars", "margin"), "-8px");
+    assert.equal(val(top, ".intake-bars", "max-width"), "100%", "the bars can't shrink on a narrow line");
+    assert.equal(val(top, ".intake-no", "white-space"), "nowrap");
+    assert.equal(val(top, ".intake", "flex-wrap"), "wrap");
+  });
   test("E7 8: every reference frame's table wraps to its frame", () => {
     assert.equal(val(top, ".ref-frame table.ref", "width"), "100%");
     const maxc = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(m => /\.ref-frame/.test(m[1]) && /max-content/.test(m[2])).map(m => m[1].trim());
