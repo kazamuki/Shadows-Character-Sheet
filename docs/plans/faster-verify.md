@@ -217,3 +217,5 @@ Use the two prompts in `WORK-ORDERS.md`, with this order's path: `docs/plans/fas
 - **Time on a quiet machine.** Another session's verify on the same cores inflates every number, so check `Get-Process node` before example 7's runs.
 - **`npm run verify` still takes 10–17 minutes until the splits land.** Watch it with a timeout over that, or run it in the foreground.
 - **Restore mutated files in a `trap` or a `finally`, and `cmp` them.**
+
+A docs-only probe for the verify workflow; this branch is closed unmerged.
