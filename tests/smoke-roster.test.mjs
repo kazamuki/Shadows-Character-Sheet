@@ -448,7 +448,7 @@ test("Z1 6: Main's TAG has a flip button, and it flips every TAG", () => {
   assert.ok(btn() && btn().tagName === "BUTTON", "no real button beside the bars");
   assert.equal(btn().textContent, D.appCopy.tagScan.button);
   assert.equal(btn().getAttribute("aria-pressed"), "false");
-  assert.equal(btn().title, flipWords(false)); assert.equal(btn().getAttribute("aria-label"), flipWords(false));
+  assert.equal(btn().title, flipWords(false)); assert.equal(btn().getAttribute("aria-label"), null, "the name must stay the visible word, Scan (label-in-name)");
   btn().focus();
   btn().click();
   assert.equal(btn().getAttribute("aria-pressed"), "true");

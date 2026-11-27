@@ -6098,7 +6098,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - Dark bars on a light patch all the time, or saving the flip: a rare scan isn't worth either.
      - **Replaces:** Decision 128 in part: its "a scannable Code 39 barcode, until a decoder can verify it; the bars are decoration". A decoder now verifies it.
      - **Revisit if:** a phone fails to read the flipped bars at the shipped size, or a page on shadowsrpg.com takes a TAG (then ZQ1's alternative is worth a look).
-     - **Built:** app 0.81.0 (unreleased), PR (this one), log entry 2026-11-26.
+     - **Built:** app 0.81.0 (unreleased), PR #404, log entry 2026-11-26.
 
 
 ## 5. Open Flags

@@ -1366,7 +1366,7 @@ let tagScanOn=false;
 const tagScanWords = on => { const T=(D.appCopy||{}).tagScan||{}; return on ? T.back : T.flip; };
 function intakeHtml(ch){
   const id = intakeOf(ch), r = Engine.tagReading(ch), T = (D.appCopy||{}).tagScan||{}, w = esc(tagScanWords(tagScanOn));
-  return id ? `<div class="intake${issuedNow?" issued":""}${tagScanOn?" scan":""}" title="${esc(r ? `${r.label}. ${r.text}` : (D.tag||{}).text||"")}">${r?`<span class="intake-label">${esc(r.label)}</span>`:""}${intakeBarsSvg(id)}<button type="button" class="intake-flip" aria-pressed="${tagScanOn}" title="${w}" aria-label="${w}">${esc(T.button)}</button><span class="intake-no">${esc(Engine.tagNumber(ch))}</span></div>` : "";
+  return id ? `<div class="intake${issuedNow?" issued":""}${tagScanOn?" scan":""}" title="${esc(r ? `${r.label}. ${r.text}` : (D.tag||{}).text||"")}">${r?`<span class="intake-label">${esc(r.label)}</span>`:""}${intakeBarsSvg(id)}<button type="button" class="intake-flip" aria-pressed="${tagScanOn}" title="${w}">${esc(T.button)}</button><span class="intake-no">${esc(Engine.tagNumber(ch))}</span></div>` : "";
 }
 document.addEventListener("click", e=>{
   const b = e.target && e.target.closest ? e.target.closest(".intake-flip") : null;
@@ -1375,7 +1375,7 @@ document.addEventListener("click", e=>{
   for (const el of document.querySelectorAll(".intake")){
     el.classList.toggle("scan", tagScanOn);
     const f = el.querySelector(".intake-flip");
-    if (f){ f.setAttribute("aria-pressed", String(tagScanOn)); f.title = tagScanWords(tagScanOn); f.setAttribute("aria-label", tagScanWords(tagScanOn)); }
+    if (f){ f.setAttribute("aria-pressed", String(tagScanOn)); f.title = tagScanWords(tagScanOn); }
     if (!calm()){   // one short wipe, on a press only; a re-render that keeps the flip never plays it
       el.classList.remove("flipping"); void el.offsetWidth; el.classList.add("flipping");
       el.addEventListener("animationend", ()=>el.classList.remove("flipping"), { once:true });
