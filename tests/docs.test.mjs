@@ -496,3 +496,20 @@ test("test runs: the docs-only rule", () => {
   assert.equal(docsOnly([""]), false);
   assert.equal(docsOnly(), false);
 });
+
+test("test runs: a repo .md path a test reads counts as code, not docs", () => {
+  // The docs-only run skips every test but docs.test and build.test, so a doc another test reads must not be a docs path
+  // (finding 6 missed crb-catch-up.md, read by rules.test.mjs). Scans each test file's string literals for an existing repo .md.
+  // It can't see a path built from pieces, join(ROOT, "docs", "x.md"): write those as one literal.
+  const bad = [];
+  let seen = 0;
+  for (const f of readdirSync(join(ROOT, "tests")).filter(f => f.endsWith(".mjs") && f !== "docs.test.mjs")) {
+    for (const [, lit] of readFileSync(join(ROOT, "tests", f), "utf8").matchAll(/["'`]([^"'`\n]*\.md)["'`]/g)) {
+      if (lit.startsWith("private/") || !existsSync(join(ROOT, lit))) continue;
+      seen++;
+      if (TR.isDocsOnly([lit])) bad.push(`tests/${f} reads ${lit}, which isDocsOnly counts as docs: add it to CODE_DOCS in tools/test-run.mjs`);
+    }
+  }
+  assert.ok(seen >= 2, `found only ${seen} repo .md literals in tests/ (CHANGELOG.md, crb-catch-up.md): did the scan break?`);
+  assert.deepEqual(bad, []);
+});

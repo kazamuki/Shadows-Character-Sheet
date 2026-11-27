@@ -6109,7 +6109,7 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
        - Node's own `--test-shard`: it deals files out by name, and the measured times came out 1431/1086/1107/281s.
        - Skipping CI on docs-only PRs entirely: `docs.test` catches a ledger or an index out of step, and a silent skip is what Decision 167 refused.
      - **Replaces:** nothing numbered. It amends `CLAUDE.md`'s "after a change, the full verify, always" and WORK-ORDERS' per-step verify.
-     - **Revisit if:** a docs-only PR breaks `main` (a new test reads a doc); or a code PR passes its area run and fails the whole suite often enough that the per-step run misleads.
+     - **Revisit if:** a docs-only PR breaks `main` (a test reads a doc by a path no test can see, such as one built from pieces: `docs.test.mjs` checks every literal `.md` path in `tests/`); or a code PR passes its area run and fails the whole suite often enough that the per-step run misleads.
      - **Built:** no app, data or schema change. PR (this one), log entry 2026-11-26.
 
 
