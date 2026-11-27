@@ -1114,7 +1114,7 @@ A GM who wants to post jobs, see which the crew has taken and keep the ones nobo
 **W178 — Why the sheet tests are slow.** *Ken + Claude, from the faster-verify order (ZQ5), 2026-11-26 · 💡 · Fix*\
 **Plan:** none yet
 
-Profile `smoke-sheet-help-lines` (three tests, about 70s each) and the other sheet smoke files: one `boot()` parses the 2.7 MB page in under a second, so the time goes into drawing the sheet again and again. Find what each test redraws, fix the setup without dropping a check, and re-time with `npm run test:time`. Decision 321 split the six slowest files in two as a first cut and left this open.
+Profile `smoke-sheet-help-lines` (three tests, about 55s each) and the other sheet smoke files: one `boot()` parses the 2.7 MB page in under a second, so the time goes into drawing the sheet again and again. Find what each test redraws, fix the setup without dropping a check, and re-time with `npm run test:time`. Decision 321 split the six slowest files in two as a first cut and left this open.
 
 ## 2. Notes for whoever picks these up
 
