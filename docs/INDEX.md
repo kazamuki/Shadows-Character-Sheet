@@ -43,7 +43,7 @@ authority and is never read front to back; §1 below says which section to open.
 | Whether the current WIP text already answers an open flag | `../private/crb/README.md` (a private submodule, Decision 167) — mirrors of CRB documents, **never edited here**; re-pull instead |
 | What shipped in a release | `../CHANGELOG.md` — backward-looking only, in player voice |
 | How to work on this repo at all | `../CLAUDE.md` |
-| The commands and scripts (bump, release, test:fast, phone-check, dev server) | `../CLAUDE.md`, *Commands* |
+| The commands and scripts (bump, release, test:fast, the area runs, verify:docs, phone-check, dev server) | `../CLAUDE.md`, *Commands* |
 | A procedure step by step: close a session, number a decision, open or close a flag, cut a release | `../.claude/skills/` (the rules they follow stay in `CLAUDE.md`) |
 | How a release reaches players and the live site | `../CLAUDE.md`, *Working rhythm*, and `../.github/workflows/release.yml` (Decision 138) |
 | What a PR body says, section by section | `../.github/pull_request_template.md`; what each tier must touch stays in `../CLAUDE.md` |

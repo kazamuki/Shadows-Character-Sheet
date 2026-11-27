@@ -25,6 +25,7 @@ only where it says you may. "None" is a fine answer.
 Every claim about how the code behaves names the command or test that shows it.
 A claim with no evidence will come back as a review finding.
 - `npm run verify`: N tests, 0 fail, N todo (the todo count matches STATE).
+  A docs-only change runs `npm run verify:docs` instead (Decision 321).
   If something couldn't run, say what and why, e.g. "no access to the private
   CRB mirror, so CI is the gate".
 - The new tests, by name, and how each failed on `main`.
@@ -54,7 +55,7 @@ an approval this needs. "Nothing" is fine.
 
 <!-- Tick what the tier requires, and strike through or delete the rest. CLAUDE.md "Change tiers" is the rule, and the close-the-session skill walks it. -->
 
-- [ ] `npm run verify` passes (or the Evidence section says what couldn't run, and why)
+- [ ] `npm run verify` passes, or `npm run verify:docs` for a docs-only change (or the Evidence section says what couldn't run, and why)
 - [ ] **Fix, if a player can see it:** a `CHANGELOG.md` line in player voice, `npm run changelog`, and `npm run bump`
 - [ ] **Fix:** the finding's status in `docs/INDEX.md` §2
 - [ ] **Content:** `gamedataVersion` per Decision 68, a closed flag's three edits, and an entry in `docs/log/2026.md`
