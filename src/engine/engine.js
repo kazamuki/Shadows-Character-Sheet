@@ -9403,6 +9403,10 @@ const Engine = (() => {
   const _refCap = s => { s = _str(s); return s.charAt(0).toUpperCase() + s.slice(1); };
   const _refNum = v => Number.isFinite(v) ? String(v) : _str(v);
   const _refNameJoin = (name, note) => [_str(name), _str(note).trim()].filter(Boolean).join(" — ");
+  const _refList = v => (Array.isArray(v) ? v : [v]).map(_str).filter(x=>x.trim()).join(", ");
+  // A grenade's blast and what it does as it climbs (Decision 248), beside the weapon's own notes.
+  const _refWeaponNotes = w => [_str(w.notes), _str(w.radius).trim() ? `Radius ${_str(w.radius)}` : "", _str(w.defense).trim() ? `Defense ${_str(w.defense)}` : "",
+    _isObj(w.escalation) ? Object.entries(w.escalation).map(([k, v])=>`${k}: ${_str(v)}`).join("; ") : ""].filter(x=>x.trim()).join(" · ");
   function _refSkills(){
     const r = _isObj(D().skillCheckRules) ? D().skillCheckRules : {}, skills = _list(D().skills);
     const roll = [r.trained && `Trained: ${_str(r.trained).replace(/\.$/, "")}.`, r.untrained && `Untrained: ${_str(r.untrained).replace(/\.$/, "")}.`].filter(Boolean).join(" ");
@@ -9414,11 +9418,21 @@ const Engine = (() => {
   function _refPowers(){
     const sfr = _isObj((D().resources||{}).sfr) ? D().resources.sfr : {};
     const lead = _refPart("", { text:_str(sfr.description) });
-    const parts = _list(D().archetypes).filter(a=>Array.isArray(a.powers) && a.powers.length).map(a=>_refPart(_str(a.name), {
-      items:_list(a.powers).map(p=>_refItem(p.name, p.effect, [
-        _str(p.cost).trim() ? `Cost: ${_str(p.cost)}` : "",
-        _str(p.perRank).trim() && !/^none$/i.test(_str(p.perRank).trim()) ? `Per rank: ${_str(p.perRank)}` : "",
-        p.playerNote])) }));
+    const item = p=>_refItem(p.name, p.effect, [
+      _str(p.cost).trim() ? `Cost: ${_str(p.cost)}` : "",
+      _str(p.perRank).trim() && !/^none$/i.test(_str(p.perRank).trim()) ? `Per rank: ${_str(p.perRank)}` : "",
+      p.playerNote]);
+    // As the sheet groups them: the archetype's innate powers, then each specialization's, in the data's order.
+    const parts = [];
+    for (const a of _list(D().archetypes)){
+      const powers = _list(a.powers); if (!powers.length) continue;
+      const opts = _isObj(a.specialization) ? _list(a.specialization.options) : [];
+      const known = new Set(opts.map(o=>o.id));
+      parts.push(_refPart(_str(a.name), { items:powers.filter(p=>!p.origin).map(item) }));
+      for (const o of opts) parts.push(_refPart(`${_str(a.name)}: ${_str(o.name)}`, { items:powers.filter(p=>p.origin===o.id).map(item) }));
+      const stray = powers.filter(p=>p.origin && !known.has(p.origin));
+      if (stray.length) parts.push(_refPart(`${_str(a.name)}: other`, { items:stray.map(item) }));
+    }
     return [lead, ...parts];
   }
   function _refEquipment(){
@@ -9430,13 +9444,13 @@ const Engine = (() => {
       rows:gear.filter(e=>e.category===c.id).map(e=>[_refNameJoin(e.name, e.playerNote), _str(e.availability), _refCost(e), _str(e.notes).trim() ? _str(e.notes) : _str(e.spellName).trim() ? `Holds ${_str(e.spellName)}` : ""]) }));
     const weapons = _list(d.weapons);
     for (const c of _list(d.weaponCategories)) parts.push(_refPart(`Weapons: ${_str(c.name)}`, {
-      text:_str(c.note), columns:["Name", "Skill", "Damage", "Reach", "Cost", "Tags"],
+      text:_str(c.note), columns:["Name", "Skill", "Damage", "Reach / Range", "Cost", "Tags", "Notes"],
       rows:weapons.filter(w=>w.category===c.id).map(w=>[_refNameJoin(w.name, w.playerNote), skillName(w.skill) || _str(w.skill),
         [_refNum(w.damage), _str(w.damageType) && w.damageType!=="Normal" ? _str(w.damageType) : ""].filter(x=>x!=="").join(" "),
-        _str(w.reach) || _str(w.range), _refCost(w), (Array.isArray(w.tags) ? w.tags : []).map(_str).filter(x=>x.trim()).join(", ")]) }));
+        _str(w.reach) || _str(w.range), _refCost(w), (Array.isArray(w.tags) ? w.tags : []).map(_str).filter(x=>x.trim()).join(", "), _refWeaponNotes(w)]) }));
     parts.push(_refPart("Armor", {
-      columns:["Name", "Slot", "PROT", "RES", "Integrity", "Cost"],
-      rows:_list(d.armor).map(a=>[_refNameJoin(a.name, a.playerNote), _refCap(a.slot), _str(a.prot), _refNum(a.res), _refNum(a.integrity), _refCost(a)]) }));
+      columns:["Name", "Slot", "PROT", "RES", "Integrity", "Cost", "Notes"],
+      rows:_list(d.armor).map(a=>[_refNameJoin(a.name, a.playerNote), _refCap(a.slot), _str(a.prot), _refNum(a.res), _refNum(a.integrity), _refCost(a), [a.feature, a.preInstalledFeatures, a.notes].map(_refList).filter(Boolean).join(" · ")]) }));
     return parts.filter(p=>p.rows.length);   // a category with nothing in it (or a note on nothing) isn't a table
   }
   const _REF_READERS = {

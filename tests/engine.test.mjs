@@ -14623,7 +14623,14 @@ test("322: Powers lists the Vampire's and the Werewolf's, with cost and effect, 
   const v = Engine.gmReference([], {}), parts = refPanel(v, "powers").parts;
   assert.equal(parts[0].text, D.resources.sfr.description);
   const withPowers = D.archetypes.filter(a => Array.isArray(a.powers) && a.powers.length);
-  refEq(parts.slice(1).map(p => p.title), withPowers.map(a => a.name));
+  // Each archetype: its innate powers, then one part per specialization, in the data's order (as the sheet groups them).
+  const titles = withPowers.flatMap(a => [a.name, ...a.specialization.options.map(o => `${a.name}: ${o.name}`)]);
+  refEq(parts.slice(1).map(p => p.title), titles);
+  for (const a of withPowers) {
+    const innate = parts.find(p => p.title === a.name).items.map(i => i.term), mine = a.powers.filter(p => !p.origin).map(p => p.name);
+    refEq(innate, mine, `${a.name}'s innate powers`);
+    for (const o of a.specialization.options) refEq(parts.find(p => p.title === `${a.name}: ${o.name}`).items.map(i => i.term), a.powers.filter(p => p.origin === o.id).map(p => p.name), `${a.name}: ${o.name}`);
+  }
   const items = refPartItems(v, "powers");
   assert.equal(items.length, withPowers.reduce((n, a) => n + a.powers.length, 0), "every power, counted from the data");
   for (const a of withPowers) for (const p of a.powers) {
@@ -14659,19 +14666,27 @@ test("322: Equipment lists gear, weapons and armor, counted from the data", () =
   assert.equal(count("Gear: "), D.equipment.length);
   assert.equal(count("Weapons: "), D.weapons.length);
   assert.equal(parts.find(p => p.title === "Armor").rows.length, D.armor.length);
-  refEq(parts.find(p => p.title === "Armor").columns, ["Name", "Slot", "PROT", "RES", "Integrity", "Cost"]);
-  refEq(parts.find(p => p.title.startsWith("Weapons: ")).columns, ["Name", "Skill", "Damage", "Reach", "Cost", "Tags"]);
+  refEq(parts.find(p => p.title === "Armor").columns, ["Name", "Slot", "PROT", "RES", "Integrity", "Cost", "Notes"]);
+  refEq(parts.find(p => p.title.startsWith("Weapons: ")).columns, ["Name", "Skill", "Damage", "Reach / Range", "Cost", "Tags", "Notes"]);
   refEq(parts.find(p => p.title.startsWith("Gear: ")).columns, ["Name", "Availability", "Cost", "What it does"]);
   const rows = parts.flatMap(p => p.rows), cr = D.resources.credits.symbol;
   const row = name => rows.find(r => r[0] === name);
   const knife = D.weapons.find(w => w.id === "combat-knife");
-  refEq(row(knife.name), [knife.name, "Melee", "BOD+3", "1m", `100${cr}`, "Conceal"]);
+  refEq(row(knife.name), [knife.name, "Melee", "BOD+3", "1m", `100${cr}`, "Conceal", ""]);
   const brace = D.equipment.find(e => e.costText && e.cost === null);
   assert.equal(row(brace.name)[2], brace.costText, "a costText reads as the sheet prints it");
   const worded = D.weapons.filter(w => typeof w.cost === "string");
   assert.ok(worded.length, "a weapon whose cost is words");
   for (const w of worded) assert.equal(rows.find(r => r[0] === w.name || r[0].startsWith(w.name + " — "))[4], w.cost, `${w.id}: a cost in words reads as written, not a dash`);
   assert.ok(rows.every(r => r.every(c => typeof c === "string")));
+  // Notes: an armor piece's features and notes, a weapon's notes, and a grenade's blast.
+  const helm = D.armor.find(x => !x.prot && (x.feature || x.notes));
+  assert.ok(helm, "a piece with no PROT and a feature");
+  assert.equal(rows.find(r => r[0] === helm.name || r[0].startsWith(helm.name + " — "))[6], [helm.feature, helm.preInstalledFeatures, helm.notes].map(v => [].concat(v || []).join(", ")).filter(Boolean).join(" · "), "a helmet's effect reads in Notes");
+  const nade = D.weapons.find(x => x.escalation);
+  const nr = rows.find(r => r[0] === nade.name || r[0].startsWith(nade.name + " — "))[6];
+  for (const bit of [nade.notes, `Radius ${nade.radius}`, `Defense ${nade.defense}`, ...Object.entries(nade.escalation).map(([k, v]) => `${k}: ${v}`)]) assert.ok(nr.includes(bit), `a grenade's Notes has "${bit}"`);
+  assert.ok(D.weapons.filter(x => x.notes).every(x => rows.find(r => r[0] === x.name || r[0].startsWith(x.name + " — "))[6].includes(x.notes)), "a weapon's notes read in Notes");
   const gear = parts.filter(p => p.title.startsWith("Gear: ")).flatMap(p => p.rows);
   assert.ok(gear.every(r => r[3].trim()), `a gear row says nothing about what it does: ${gear.filter(r => !r[3].trim()).map(r => r[0])}`);
 });
