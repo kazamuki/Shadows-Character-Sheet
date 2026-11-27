@@ -98,7 +98,7 @@ economics) are in `plans/archive/`.
 **The audit plan is done**, and `npm run phone-check` passes (140). rev 9's
 `C1`–`C3` are still forward notes.
 
-**A faster verify** (`plans/faster-verify.md`): order drafted, waiting on Ken (ZQ1–ZQ5).
+**A faster verify** (`plans/faster-verify.md`, Decision 321): built. A docs-only PR runs `npm run verify:docs`; any other runs the whole suite as four CI jobs. Why the sheet tests are slow is W178.
 
 ---
 

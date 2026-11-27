@@ -1111,9 +1111,14 @@ Today `seatView.name` falls back to the raw TAG. Change it in the engine so the 
 
 A GM who wants to post jobs, see which the crew has taken and keep the ones nobody did could use a board on the Sessions tab. S11b (Decision 302) settles a job at the close-out and keeps no jobs record: a contract is a thread, and Next session lists the open ones. A board would point at the same threads, adding a posted, taken and done state, and who the crew took it for. Worth building if Scott's play (S22) asks for it.
 
+**W178 — Why the sheet tests are slow.** *Ken + Claude, from the faster-verify order (ZQ5), 2026-11-26 · 💡 · Fix*\
+**Plan:** none yet
+
+Profile `smoke-sheet-help-lines` (three tests, about 70s each) and the other sheet smoke files: one `boot()` parses the 2.7 MB page in under a second, so the time goes into drawing the sheet again and again. Find what each test redraws, fix the setup without dropping a check, and re-time with `npm run test:time`. Decision 321 split the six slowest files in two as a first cut and left this open.
+
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W178.** Everything above is open. What was built is in
+- **Next free number: W179.** Everything above is open. What was built is in
   [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)

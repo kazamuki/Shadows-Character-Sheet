@@ -11,7 +11,7 @@ applies, and nothing above it does.
 
 ## Every tier
 
-- [ ] `npm run verify` passes. Any `todo` count matches `docs/STATE.md`'s
+- [ ] `npm run verify` passes (a *Docs* change runs `npm run verify:docs`). Any `todo` count matches `docs/STATE.md`'s
       suite line; a new `todo` is a confirmed defect, so say so.
 - [ ] A new guard was mutation-tested: put the old code back and watch it fail.
 - [ ] Ideas that came up and weren't done went to `docs/WISHLIST.md` as `W` ids,

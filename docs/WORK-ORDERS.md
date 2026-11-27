@@ -370,8 +370,9 @@ rewrites the **Plan** line of every wish it takes up or sets aside
     failing on `main`, or says why one already passes.
 11. **Tests beyond the examples.** Totality, hostile cases, voice, and which
     guards to mutation-test.
-12. **Steps.** In order, with a `npm run verify` checkpoint after each, and a
-    run in the dev preview for anything a player sees.
+12. **Steps.** In order, with an area run after each (`test:fast` plus
+    `test:sheet`, `test:table` or `test:wizard`) and the full `npm run verify`
+    at the end, and a run in the dev preview for anything a player sees.
 13. **Stop and ask.** The conditions that end the session early, and the
     expected breaks that don't.
 14. **Close-out.** The `close-the-session` skill's items for this tier, the

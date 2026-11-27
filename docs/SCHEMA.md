@@ -6100,6 +6100,18 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Revisit if:** a phone fails to read the flipped bars at the shipped size, or a page on shadowsrpg.com takes a TAG (then ZQ1's alternative is worth a look).
      - **Built:** app 0.81.0 (unreleased), PR #404, log entry 2026-11-26.
 
+321. **Verify checks what a change can break, and runs it in parallel: a docs-only change runs the docs checks, a code change the whole suite in four jobs.**
+     *2026-11-26 · Ken + Claude · Touches: npm run verify, verify:docs, test:fast, test:sheet, test:table, test:wizard, test:time, tools/test-run.mjs, tests/timings.json, verify.yml, CI shards, docs-only, CLAUDE.md Commands, WORK-ORDERS steps, ZQ1–ZQ5*
+     - **Decided:** A PR that changes only docs (`docs/`, and `.md` files other than `CHANGELOG.md` and `docs/plans/crb-catch-up.md`, which tests read) runs `npm run check`, `docs.test` and `build.test`, and says it skipped the rest. Any other PR, every push to `main` and every release run the whole suite. CI runs it as four jobs balanced by measured times. A builder runs its area's tests after each step, and the whole suite before the PR and after review fixes. No test file takes more than about five minutes on its own.
+     - **Why:** Ken, 2026-11-26. The suite was 65 minutes of work. CI ran it on 3 lanes for 16–20 minutes on every push, docs included, and a builder ran it after every step, so most of a build was waiting.
+     - **Rejected:**
+       - Choosing tests by what a change touches: the five UI scripts share one scope, and `shared.js` feeds every screen. The guess is the risk.
+       - Node's own `--test-shard`: it deals files out by name, and the measured times came out 1431/1086/1107/281s.
+       - Skipping CI on docs-only PRs entirely: `docs.test` catches a ledger or an index out of step, and a silent skip is what Decision 167 refused.
+     - **Replaces:** nothing numbered. It amends `CLAUDE.md`'s "after a change, the full verify, always" and WORK-ORDERS' per-step verify.
+     - **Revisit if:** a docs-only PR breaks `main` (a new test reads a doc); or a code PR passes its area run and fails the whole suite often enough that the per-step run misleads.
+     - **Built:** no app, data or schema change. PR (this one), log entry 2026-11-26.
+
 
 ## 5. Open Flags
 

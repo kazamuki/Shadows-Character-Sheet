@@ -2,7 +2,7 @@
 
 **Plan:** none. A one-session order, like W143's. **Source:** Ken, 2026-11-26, in I4's conductor session. He asked why verify keeps getting longer and whether it could check only what changed. He also asked for a quicker run for docs-only changes, since a plan or an order changes no code.
 
-**Status: drafted 2026-11-26** by Claude (Opus), I4's conductor. **Approved by Ken 2026-11-26**, in the conductor's session: "Approve, all Default", so ZQ1–ZQ5 are Default, with one change to ZQ1 for a miss the conductor found at the re-check: `rules.test.mjs:1580` reads `docs/plans/crb-catch-up.md` (Decision 288's book-debt check), and Ken chose "Count it as code": that plan joins `CHANGELOG.md` as a code path.
+**Status: built 2026-11-26** (Decision 321). Drafted by Claude (Opus), I4's conductor. **Approved by Ken 2026-11-26**, in the conductor's session: "Approve, all Default", so ZQ1–ZQ5 are Default, with one change to ZQ1 for a miss the conductor found at the re-check: `rules.test.mjs:1580` reads `docs/plans/crb-catch-up.md` (Decision 288's book-debt check), and Ken chose "Count it as code": that plan joins `CHANGELOG.md` as a code path.
 
 **Branch:** cut from `origin/main` at the pre-flight commit. PR to `main`. Nothing a player sees changes.
 

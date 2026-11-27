@@ -297,3 +297,88 @@ export const crewSet = (app, which, names) => {
     crewBox(app, which).querySelector("[data-crew-go]").click();
   }
 };
+
+export function newCharacterApp() {
+  const app = boot();
+  app.$$("#main button").find(b => /New character/.test(b.textContent))
+    .dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  return app;
+}
+
+export const typed = (app, key) => app.$(`#main [data-val="${key}"]`);
+
+export const statsDraft = (set = {}) => onStep("professional", "street", "stats", ch => {
+  for (const id of Object.keys(ch.stats)) ch.stats[id].base = D.statRules.base;
+  for (const [k, v] of Object.entries(set)) ch.stats[k].base = v;
+});
+
+export const sName = id => D.stats.find(s => s.id === id).name;
+
+export const later = app => new Promise(r => app.window.setTimeout(r, 60));
+
+export function setHit(app, key, value) {
+  const el = app.$(`[data-hit="${key}"]`);
+  assert.ok(el, `the hit form has no ${key} control`);
+  if (el.type === "checkbox") el.checked = value; else el.value = value;
+  // A number redraws the modal as it is typed (W6); the rest on change.
+  el.dispatchEvent(new app.window.Event(el.getAttribute("inputmode") === "numeric" ? "input" : "change", { bubbles: true }));
+}
+
+export const press = (app, sel) => { const el = app.$(sel); assert.ok(el, `no ${sel}`); el.focus(); el.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true })); };
+
+export const tick = (app, sel, on) => { const el = app.$(sel); assert.ok(el, `no ${sel}`); el.checked = on; el.dispatchEvent(new app.window.Event("change", { bubbles: true })); };
+
+export function streetVampire() {
+  const ch = lockedVampire("strigoi");
+  ch.creation.powerLevel = "street";
+  return ch;
+}
+
+export function l2Character(zip = {}) {
+  const ch = lockedCharacter();
+  ch.skills.handguns = { rank: 3, ipe: 0 };
+  Engine.addLoadout(ch, "weapons", "cheapshot");
+  ch.weapons.push(Object.assign({ custom: true, name: "Zip gun", damage: "BOD+3", rof: "S", capacity: "4", ammo: "", features: "", notes: "", roundsSpent: 0 }, zip));
+  return ch;
+}
+
+export const l2Typed = { category: "handguns", damageType: "ballistic", range: "Short", acc: 1 };
+
+export const rowOf = (app, i) => app.$(`#main [data-weaponrow="${i}"]`);
+
+export const cellsOf = row => [...row.querySelectorAll("td")].map(td => td.textContent.replace(/\s+/g, " ").trim());
+
+export const strigoi = (extra = {}) => {
+  const ch = lockedVampire("strigoi");
+  ch.archetypeChoices.basePowers = { "shadow-play": 1, "veil-of-night": 1 };
+  ch.archetypeChoices.optionPicks = {}; ch.archetypeChoices.powerCp = {};
+  ch.progression.milestonePoints = 100;
+  Object.assign(ch.progression, extra);
+  return ch;
+};
+
+export const p6Char = (arch = "professional", mp = 100) => { const c = lockedCharacter(); c.identity.archetype = arch; c.progression.milestonePoints = mp; return c; };
+
+export const p12Char = (arch = "professional") => {
+  const c = lockedCharacter(); c.identity.archetype = arch;
+  c.meta.gamedataVersion = D.meta.gamedataVersion;
+  c.progression.ip.earned = 400;
+  return c;
+};
+
+export function wolf(origin) {
+  const ch = lockedCharacter();
+  ch.identity.archetype = "werewolf";
+  ch.archetypeChoices.specialization = [origin];
+  for (const id of Object.keys(ch.stats)) ch.stats[id].base = 8;
+  ch.progression.ip.earned = 200;
+  return ch;
+}
+
+export const sheet = (section, opts = {}) => openSheet(lockedCharacter(), section, opts);
+
+export const SG = () => D.sheetGuide;
+
+export const SECTIONS = ["main", "skills", "character", "trackers", "progression", "loadout", "notes"];
+
+export const PIN = "shadows.ui.vitalsPinned", SGUIDE = "shadows.ui.sheetGuide", GMGUIDE = "shadows.ui.gmGuide", GMHELP = "shadows.ui.gmHelp", KEYS = "shadows.ui.keys";
