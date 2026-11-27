@@ -32,8 +32,9 @@ jobs:
           HEAD: ${{ github.event.pull_request.head.sha }}
         run: |
           docs_only=false
+          # --no-renames: a moved file must list its old path too (archiving crb-catch-up.md would otherwise show only the new, docs-looking one).
           paths=""
-          if [ "$EVENT" = "pull_request" ] && files=$(git diff --name-only "$BASE...$HEAD") && [ -n "$files" ]; then
+          if [ "$EVENT" = "pull_request" ] && files=$(git diff --no-renames --name-only "$BASE...$HEAD") && [ -n "$files" ]; then
             paths=$(printf '%s\n' "$files" | head -n 30 | paste -sd, - | sed 's/,/, /g')
             if printf '%s\n' "$files" | tr '\n' '\0' | xargs -0 node tools/test-run.mjs docs-only; then
               docs_only=true
