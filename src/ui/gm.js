@@ -579,33 +579,31 @@ const proseHtml = (label, text) => String(text||"").trim() ? `<h2 class="ref-sub
 // Edit puts the keyboard in the form's first field; Done puts it back on Edit.
 function bindEdit(main, kind, id){
   main.querySelectorAll(`[data-edit="${kind}|${id}"]`).forEach(b=>b.onclick=()=>{
-    S.editing={ kind, id }; renderTable();
+    S.editing={ kind, id };
+    // Edit is never a new note: New note doesn't come through here, so a note made earlier and left without Done holds its group too.
+    if (kind==="note"){ const n=S.table.notes.find(x=>x.id===id); S.noteNew=null; S.noteHold = n ? { id, category:n.category, session:n.session } : null; }
+    renderTable();
     // A member's form opens with Status above Name; Edit lands on Name (S23).
     const first=(kind==="member" && $("main").querySelector('[data-cf="name"]')) || Array.from($("main").querySelectorAll("input, select, textarea")).find(el=>!el.closest(".tbl-bar") && el.type!=="hidden");
     if (first) first.focus();
   });
   main.querySelectorAll(`[data-edit-done="${kind}|${id}"]`).forEach(b=>b.onclick=()=>{
-    S.editing=null; renderTable();
+    S.editing=null; if (kind==="note"){ unhideNote(id); S.noteHold=null; S.noteNew=null; } renderTable();
     const e=$("main").querySelector(`[data-edit="${kind}|${id}"]`); if (e) e.focus();
   });
 }
-// A note's title, or its first line when it has none.
-const noteName = n => String(n.title||"").trim() || String(n.text||"").split(/\r?\n/).map(x=>x.trim()).find(Boolean) || "Untitled note";
-function noteCardHtml(n){
-  const id=esc(n.id), open=S.noteOpen===n.id, editing=open && editingNow("note", n.id), sess=sessionById(n.session);
-  const row=`<button type="button" class="cast-open note-open" data-nopen="${id}" aria-expanded="${open}">${esc(noteName(n))}</button>${sess ? ` <span class="tag plain">${esc(Engine.sessionTitle(sess))}</span>` : ""}`;
-  if (!open) return `<li class="tbl-note" data-note="${id}"><div class="note-head">${row}</div></li>`;
-  if (!editing) return `<li class="tbl-note open" data-note="${id}"><div class="note-head">${row} ${editBtnHtml("note", n.id, noteName(n))}</div>
-    ${String(n.text||"").trim() ? `<p class="dos-p note-text">${esc(n.text)}</p>` : ""}</li>`;
-  return `<li class="tbl-note open editing" data-note="${id}"><div class="note-head">${row}</div>
-    <label class="field"><span>Title</span><input type="text" data-ntitle="${id}" value="${esc(n.title)}" placeholder="Untitled note" autocomplete="off"></label>
-    <label class="field"><span>Note</span><textarea data-ntext="${id}" placeholder="Leads, debts, names to remember.">${esc(n.text)}</textarea></label>
-    <label class="field"><span>Session</span><select data-nsess="${id}"><option value="">None</option>${Engine.sessionList(S.table).map(s=>`<option value="${esc(s.id)}"${s.id===n.session ? " selected" : ""}>${esc(Engine.sessionTitle(s))}${s.date ? ` · ${esc(dayText(s.date))}` : ""}</option>`).join("")}</select></label>
-    <p class="note-acts">${doneBtnHtml("note", n.id, noteName(n))} <button class="btn sm danger" data-ndel="${id}">Delete</button></p></li>`;
-}
+// The notes list is shared.js's (Decision 323): the table says who edits, how a session reads and what its buttons are.
+// Group by and the tag filter are view state (S.noteGroup, S.noteTag): nothing about them is stored.
+const notesViewNow = () => ({ by:S.noteGroup, tag:S.noteTag });
 function notesTabHtml(t){
-  return `${t.notes.length ? `<ul class="int-list note-list">${t.notes.map(noteCardHtml).join("")}</ul>`
-      : emptyHtml("notes", true)}
+  if (!t.notes.length) return `${emptyHtml("notes", true)}
+    <p><button class="btn primary" data-tnew>New note</button></p>`;
+  const sessions = Engine.sessionList(t);
+  if (S.noteTag && !Engine.noteTagsInUse(t.notes).some(x=>x.toLowerCase()===S.noteTag.toLowerCase())) S.noteTag=null;   // the last note holding it let go
+  return `${notesListHtml(t.notes, t.sessions, notesViewNow(), { open:S.noteOpen, editing:S.editing && S.editing.kind==="note" ? S.editing.id : null, editable:true, pin:S.noteNew, held:S.noteHold,
+      sessions:sessions.map(s=>({ id:s.id, label:Engine.sessionTitle(s) + (s.date ? ` · ${dayText(s.date)}` : "") })),
+      sessionLabel:id=>{ const s=sessionById(id); return s ? Engine.sessionTitle(s) : ""; },
+      editBtn:n=>editBtnHtml("note", n.id, noteName(n)), doneBtn:n=>doneBtnHtml("note", n.id, noteName(n)) })}
     <p><button class="btn primary" data-tnew>New note</button></p>`;
 }
 // ── Tonight (Decision 270) ───────────────────────────────────────────────
@@ -770,6 +768,37 @@ function bindNotes(main){
     tableChange(()=>Engine.editTableNote(S.table, el.dataset.ntext, { text:el.value }), false); });
   main.querySelectorAll("[data-nsess]").forEach(el=>el.onchange=()=>{
     tableChange(()=>Engine.editTableNote(S.table, el.dataset.nsess, { session:el.value || null }), false); });
+  main.querySelectorAll("[data-ncat]").forEach(el=>el.oninput=()=>{
+    tableChange(()=>Engine.editTableNote(S.table, el.dataset.ncat, { category:el.value }), false); });
+  // A tag is a press: one entry, its own words (Decision 212). Enter or a comma in the field adds it, so does Add.
+  const tagsOf = id => (S.table.notes.find(n=>n.id===id) || { tags:[] }).tags;
+  const addTags = id => {
+    const inp=main.querySelector(`[data-ntagin="${id}"]`), typed=inp ? inp.value.split(",").map(x=>x.trim()).filter(Boolean) : [];
+    if (!typed.length) return;
+    tableChange(()=>Engine.editTableNote(S.table, id, { tags:tagsOf(id).concat(typed) }));
+    const again=$("main").querySelector(`[data-ntagin="${id}"]`); if (again){ again.value=""; again.focus(); }
+  };
+  main.querySelectorAll("[data-ntagadd]").forEach(b=>b.onclick=()=>addTags(b.dataset.ntagadd));
+  main.querySelectorAll("[data-ntagin]").forEach(el=>el.onkeydown=ev=>{
+    if (ev.key==="Enter" || ev.key===","){ ev.preventDefault(); addTags(el.dataset.ntagin); } });
+  main.querySelectorAll("[data-ntagrm]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.ntagrm, at=Number(b.dataset.ntagi);
+    tableChange(()=>Engine.editTableNote(S.table, id, { tags:tagsOf(id).filter((x, i)=>i!==at) }));
+    const m=$("main"), next=m.querySelector(`[data-ntagrm="${id}"][data-ntagi="${at}"]`) || m.querySelector(`[data-ntagin="${id}"]`);
+    if (next) next.focus();
+  });
+  // Group by and the tag filter change what is shown, never the table: a note the filter hides shuts.
+  const reshow = focusAttr => {
+    const v=notesViewNow(), shown=new Set(Engine.noteGroups(S.table.notes, S.table.sessions, v).flatMap(g=>g.notes.map(n=>n.id)));
+    if (S.noteOpen && !shown.has(S.noteOpen)){ S.noteOpen=null; S.editing=null; }
+    renderTable();
+    const el=$("main").querySelector(focusAttr); if (el) el.focus();
+  };
+  main.querySelectorAll("[data-ngroup]").forEach(b=>b.onclick=()=>{ S.noteGroup=b.dataset.ngroup; reshow(attrSel("data-ngroup", S.noteGroup)); });
+  main.querySelectorAll("[data-ntag]").forEach(b=>b.onclick=()=>{
+    const tag=b.dataset.ntag, same=S.noteTag && S.noteTag.toLowerCase()===tag.toLowerCase();
+    S.noteTag = same ? null : tag; reshow(attrSel("data-ntag", tag));
+  });
   // One note open at a time: a press opens that note and shuts the other; pressing the open one shuts it. Focus stays on the row.
   main.querySelectorAll("[data-nopen]").forEach(b=>b.onclick=()=>{
     const id=b.dataset.nopen; S.noteOpen = S.noteOpen===id ? null : id; S.editing=null; renderTable();
@@ -779,16 +808,18 @@ function bindNotes(main){
   main.querySelectorAll("[data-edit-done^='note|']").forEach(b=>bindEdit(main, "note", b.dataset.editDone.split("|")[1]));
   main.querySelector("[data-tnew]").onclick=()=>{
     let id; tableChange(()=>{ id=Engine.addTableNote(S.table, { title:"", text:"" }).id; });
-    S.noteOpen=id; S.editing={ kind:"note", id }; renderTable();
+    S.noteOpen=id; S.editing={ kind:"note", id }; S.noteNew=id; S.noteHold=null; renderTable();
     const el=titleOf(id); if (el) el.focus();
   };
   main.querySelectorAll("[data-ndel]").forEach(b=>b.onclick=()=>{
-    const id=b.dataset.ndel, at=S.table.notes.findIndex(n=>n.id===id), n=S.table.notes[at];
+    const id=b.dataset.ndel, n=S.table.notes.find(x=>x.id===id);
+    // The next note is the next one in its group as the list groups it (under the filter), not the next one stored.
+    const shown=Engine.noteGroups(S.table.notes, S.table.sessions, notesViewNow()).flatMap(g=>g.notes.map(x=>x.id)), at=shown.indexOf(id), nextId=at<0 ? null : shown[at + 1];
     askFirst({ title:`Delete "${noteName(n)}"?`, text:UNDO_ASK, yes:"Delete",
       then(){
         S.noteOpen=null; S.editing=null;
         tableChange(()=>Engine.removeTableNote(S.table, id));
-        const next=S.table.notes[at], el=next && $("main").querySelector(attrSel("data-nopen", next.id)) || $("main").querySelector("[data-tnew]");
+        const el=nextId && $("main").querySelector(attrSel("data-nopen", nextId)) || $("main").querySelector("[data-tnew]");
         if (el) el.focus();
       } });
   });
@@ -916,8 +947,13 @@ function openFound(kind, id, field){
   }
 }
 // The Notes tab with that note open to read and its row focused (Decision 271).
+// A tag filter the note doesn't hold would hide it: clear it, so a note opened (or finished) is a note drawn (Decision 323).
+function unhideNote(id){
+  const n=(S.table.notes||[]).find(x=>x.id===id);
+  if (n && S.noteTag && !(n.tags||[]).some(x=>x.toLowerCase()===S.noteTag.toLowerCase())) S.noteTag=null;
+}
 function openNote(id){
-  S.tsection="notes"; S.noteOpen=id; S.editing=null; scrollPageTop(); update();
+  unhideNote(id); S.tsection="notes"; S.noteOpen=id; S.editing=null; scrollPageTop(); update();
   const el=$("main").querySelector(attrSel("data-nopen", id)); if (el){ el.focus(); if (el.scrollIntoView) el.scrollIntoView({ block:"center" }); }
 }
 // Where a jot would go, said before it is saved: the session being played, whatever day it is dated (Decision 270).

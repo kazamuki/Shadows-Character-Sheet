@@ -3,7 +3,7 @@
     "kind": "shadows-table",
     "id": "TBL-8E8Z-R2TG-6C8Z",
     "name": "Dead Air",
-    "tableSchemaVersion": "0.22",
+    "tableSchemaVersion": "0.23",
     "created": "2026-07-18T17:00:00.000Z",
     "updated": "2026-10-31T21:10:00.000Z"
   },
@@ -62,6 +62,10 @@
       "id": "N-X61R9SCS",
       "title": "Campaign pitch: Dead Air",
       "text": "THE HOOK\nA dead man's last day, recorded on a shard the crew can't hand over. Eleven minutes of dead air at the end of it. Something was listening.\n\nTONE\nCyberpunk-noir with the sound turned down. Paranoia, tabs owed, the Park after dark. Horror in the second act. Violence short and costly. The crew are not heroes; they are people with a package.\n\nSHAPE\nAct 1 (S1 to S3): who wants the shard. Act 2 (S4 to S6): what is on it. Act 3 (S7 on): what to do when it answers.\n\nTHE BIG SECRET\nThe Listener is a Genius Loci in the Phantom Ports, waking. Wren heard it and it learned his voice. His body sat upright because he had been told to wait. See 'The Listener' note.",
+      "category": "Table",
+      "tags": [
+        "pitch"
+      ],
       "session": null,
       "created": "2026-07-18T18:00:00.000Z",
       "updated": "2026-10-17T23:00:00.000Z"
@@ -70,6 +74,10 @@
       "id": "N-2GMB45F3",
       "title": "Safety and table notes",
       "text": "Lines: harm to children on screen, sexual violence.\nVeils: torture (fade), the Listener's voice (kept quiet, described not performed).\nJuno's player prefers a slower pace and more NPC conversation. Dex's player likes a good fight every second session. Mara's player likes puzzles and deniable lies.\nCheck-in at the end of S6: everyone good with the horror ramp. Yes.",
+      "category": "Table",
+      "tags": [
+        "safety"
+      ],
       "session": null,
       "created": "2026-07-18T18:00:00.000Z",
       "updated": "2026-10-17T23:00:00.000Z"
@@ -78,6 +86,11 @@
       "id": "N-D79R2KHY",
       "title": "The Listener (spoilers)",
       "text": "WHAT IT IS\nA Genius Loci in the Phantom Ports, a place that woke up. A century of quiet. It listens, repeats, collects voices. Wren was its first conversation in a hundred years.\n\nWHAT IT WANTS\nTo be spoken to. Not to harm. Everyone who speaks becomes a little behind, in how they talk, in how they sleep.\n\nHOW IT SPREADS\nThrough recordings. The shard is a vector; the more it is played the more of it exists elsewhere. The crew should learn this before they sell.\n\nWHAT FENN KNOWS\nShe heard it once, in Maine, thirty years back. Her tape is of that. She does not say so until the shard has been opened in front of her.",
+      "category": "Secrets",
+      "tags": [
+        "listener",
+        "spoilers"
+      ],
       "session": "SE-PJB1ZXSS",
       "created": "2026-07-18T18:00:00.000Z",
       "updated": "2026-10-17T23:20:00.000Z"
@@ -86,6 +99,10 @@
       "id": "N-T9PSS4G7",
       "title": "House rulings so far",
       "text": "Wave initiative for three-sided fights. 1 IP per hour played, rounded to the half; Milestones awarded for choices that cost something. Hitting the Park after sunset costs a segment on the Park clock, automatically. Mara's Interface checks against NeuroNet are at +2 TN: their SMARTLink is a tier up.\nDex's moon: tracked by a clock, not a calendar. Roll when the clock fills.",
+      "category": "Table",
+      "tags": [
+        "ruling"
+      ],
       "session": null,
       "created": "2026-07-18T18:00:00.000Z",
       "updated": "2026-09-26T23:15:00.000Z"
@@ -94,6 +111,11 @@
       "id": "N-DV9PH96S",
       "title": "Session 6: loose ends",
       "text": "- Cord: alive, speaking in the Listener's voice. Joss can find him; Teo wants him; the cleaners want him more.\n- Ibarra's invitation (Friday, the Velvet Lung). The crew owes him an answer on Nine.\n- Fenn's tape. She'll lend it if the crew promises to return it.\n- Rook's text. He is watching. He will not shoot at Wharf 17 again.\n- Pearl is packing. Joss is not telling her where she's going.\n- Dex's moon clock is at 6 of 8. S7 needs to hit the clinic once.",
+      "category": "Leads",
+      "tags": [
+        "listener",
+        "cord"
+      ],
       "session": "SE-PJB1ZXSS",
       "created": "2026-07-18T18:00:00.000Z",
       "updated": "2026-10-17T23:30:00.000Z"
@@ -102,6 +124,10 @@
       "id": "N-ESDRQJYG",
       "title": "Rumors table (d6, Metro Core)",
       "text": "1. The Park's Ramble has more trees at night than in the day.\n2. NeuroNet stopped the Gateway night shift last month; no reason given.\n3. A man in a gray coat has been seen at three different hotels with the same book.\n4. Eclipse is hiring bodyguards for a man who doesn't leave the Velvet Lung.\n5. Pier 9's tug goes out every morning and comes back with a different crew.\n6. Someone has been leaving cassette tapes in the lockers of Ranger Station Nine.",
+      "category": "Leads",
+      "tags": [
+        "rumor"
+      ],
       "session": null,
       "created": "2026-07-18T18:00:00.000Z",
       "updated": "2026-08-22T23:00:00.000Z"
@@ -110,6 +136,8 @@
       "id": "N-NYC2N9ZW",
       "title": "Session 4: what the crew told Oyelaran",
       "text": "They told him they found Wren's file in a cleaning cart. Oyelaran did not write that down. He knows the story is false and the cart is real; he said he could live with it.",
+      "category": "Leads",
+      "tags": [],
       "session": "SE-FC4H16S3",
       "created": "2026-07-18T18:00:00.000Z",
       "updated": "2026-09-12T23:10:00.000Z"
@@ -118,6 +146,8 @@
       "id": "N-MMWWHN67",
       "title": "The pilot (before S1)",
       "text": "A one-shot the week before S1, to try the system. Sam's Hollis Reyes died in it, on purpose, to see how dying works. Priya's Ruth Adair retired at the end of it: Priya wanted someone who talks to machines. Marcus keeps Kit Moreau benched, ready for the night Dex has to sit one out.",
+      "category": "",
+      "tags": [],
       "session": null,
       "created": "2026-07-11T23:00:00.000Z",
       "updated": "2026-07-18T18:00:00.000Z"

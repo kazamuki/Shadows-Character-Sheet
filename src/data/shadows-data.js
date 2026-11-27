@@ -5619,7 +5619,7 @@ window.SHADOWS_DATA = {
           "after"
         ],
         "intro": "Your notes, kept with the table.",
-        "for": "Anything you want to keep for yourself: a campaign pitch, safety notes, spoilers, rulings you've made, a rumor table.",
+        "for": "Anything you want to keep for yourself: a campaign pitch, safety notes, spoilers, rulings you've made, a rumor table. Give a note a category and a few tags, and the list groups and filters by them.",
         "words": [
           "note",
           "jot",

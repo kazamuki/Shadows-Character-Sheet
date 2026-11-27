@@ -33,6 +33,7 @@ own in the footer.
 ### GM mode
 
 - **Skills, Powers and Equipment are on the Reference.** The skills with their stats, the Vampire's and Werewolf's powers with what they cost, and every piece of gear, weapon and armor, searched like the rest.
+- **Notes have categories and tags.** File a note under a category, tag it, and the Notes tab groups them by category or session, or shows one tag's notes.
 
 ## v0.80.0 — 2026-11-26
 
