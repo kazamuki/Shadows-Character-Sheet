@@ -9393,9 +9393,11 @@ const Engine = (() => {
   }
   // Skills, Powers and Equipment (Decision 322): read off the data the sheet reads, on every draw, never typed
   // into a panel. A `flagNote` is for the maintainers and isn't read here; a `playerNote` is the player's. A cost
-  // reads as the sheet prints it: the entry's `costText`, else its number with the Çredit symbol, else a dash.
+  // reads as the sheet prints it: the entry's `costText`, else its number with the Çredit symbol, else a dash. A
+  // cost the data writes as words ("By Contract") reads as written: the weapon tables have no Availability column.
   const _refCost = e => {
     if (typeof e.costText==="string" && e.costText.trim()) return e.costText;
+    if (typeof e.cost==="string" && e.cost.trim()) return e.cost;
     return Number.isFinite(e.cost) && e.cost>0 ? `${e.cost.toLocaleString("en-US")}${creditSymbol()}` : "—";
   };
   const _refCap = s => { s = _str(s); return s.charAt(0).toUpperCase() + s.slice(1); };

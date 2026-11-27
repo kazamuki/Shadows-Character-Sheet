@@ -14668,6 +14668,9 @@ test("322: Equipment lists gear, weapons and armor, counted from the data", () =
   refEq(row(knife.name), [knife.name, "Melee", "BOD+3", "1m", `100${cr}`, "Conceal"]);
   const brace = D.equipment.find(e => e.costText && e.cost === null);
   assert.equal(row(brace.name)[2], brace.costText, "a costText reads as the sheet prints it");
+  const worded = D.weapons.filter(w => typeof w.cost === "string");
+  assert.ok(worded.length, "a weapon whose cost is words");
+  for (const w of worded) assert.equal(rows.find(r => r[0] === w.name || r[0].startsWith(w.name + " — "))[4], w.cost, `${w.id}: a cost in words reads as written, not a dash`);
   assert.ok(rows.every(r => r.every(c => typeof c === "string")));
 });
 

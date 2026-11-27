@@ -84,7 +84,7 @@ is the authority on a flag's full text.
 | **Cyborg** — F6, F19 | ⏸ **cut and retired from the picker** (277): a saved one opens and plays as before; cybernetics become a list and a mini-game, Professionals only | **W90** holds the six questions before a plan. Then W61 folds saved Cyborgs into Custom and F6, F19 and F5 close |
 | **Vampire** — `0413` · **Werewolf** — `0414` | ✅ built as the 2026-10-22 book prints | Nobody. Whether they leave `draft` is Ken's (the chapters dropped "Under Construction") |
 | **Arcanist / Magic** | 🔶 built · Origins still `draft` | Deighton: **F43** (the held spell's check). Deighton + Scott + Bill + Ken: Origins and spheres/implements; not blocking |
-| **GM mode** — `plans/gm-mode-next.md` | 🔶 launched; built through S28 (the plan says what each session built) | Scott: a session on the live version first (S22), then his to-dos (the plan's §4). Then Ken's pick. **Deighton's read of Help's words** (GQ39) arrives as edits to `gmGuide` |
+| **GM mode** — `plans/gm-mode-next.md` | 🔶 launched; built through S28, and S27 (the plan says what each session built) | Scott: a session on the live version first (S22), then his to-dos (the plan's §4). Then Ken's pick. **Deighton's read of Help's words** (GQ39) arrives as edits to `gmGuide` |
 | **The book** — `plans/crb-catch-up.md` | 📋 what the CRB still needs from the sheet, by chapter, against the mirror at `c99bb58` | Ken: the EMP *names* wait on the book. Scott: confirm the four inscribed Cantrips' TN 7 is his change. Deighton: whether a power that prints its own action keeps it under the free-SFR ruling, and FG-1's Injured / Maimed |
 | **Print sheet — visual system** — `plans/print-sheet-scotts-look.md` | 📋 front-page restyle proposed and mocked up | Ken: approve the plan. Scott: send the files (PQ1, PQ2). Deighton: PQ3 |
 
@@ -112,6 +112,7 @@ economics) are in `plans/archive/`.
 - **Loadout and gear** (`plans/loadout-and-gear-v2.md`; the first plan, L1–L5b, is archived): what's left is the natural-weapon follow-ons, each waiting on an answer: L8 the Werewolf's damage (LQ40), L9 a trained weapon as natural (W160), L10 hand cyberware (W90). Bone Spines' grappling waits on Deighton (F55).
 - **Closed plans** are in `plans/archive/`; finding-things left W152–W157 and W159, powers-that-run W132's last two powers (`plans/crb-catch-up.md`), pools-and-numbers (J1–J4, 312–315, released in 0.76.0) F56 for Deighton, motion (I1–I4, 316–319, released in 0.80.0) W124, W129, W134 and W128 once their rules exist, and help-on-the-sheet (K1–K5) W177, removing Burned without Admin mode (with Scott), and Deighton's read of the sheet's Help copy.
 - **A TAG that scans** (`plans/archive/tag-that-scans.md`, Decision 320) is built in 0.81.0, unreleased: a real Code 128 under the name, and a Scan button that flips it for a phone on the dark theme.
+- **Reference+** (S27, Decision 322) is built in 0.81.0, unreleased: the GM's Reference gains Skills, Powers and Equipment, read off the game data. Entries 08 and 10's TOL differ between `2612` and the Stat Audit (`audits/2026-11-20_reference-and-codex-pack-vs-mirror.md`): Ken's and Deighton's.
 - **W90**, cybernetics: six questions before a plan.
 
 **Ken alone:** F12 and F32, W38's plan (`plans/two-tabs-one-character.md`,
