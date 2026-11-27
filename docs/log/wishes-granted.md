@@ -420,7 +420,7 @@ P11 (Decision 225) counts the SFR a player spends each round, but a sustained po
 ### Loadout & catalog
 
 **W136 — A Major or a power changes one weapon or armor row.** *Claude, from closing the sheet-wishlist plan · → Decision 263 (Majors, L5) and Decision 292 (powers, L5b, app 0.71.0)*\
-**Plan:** [loadout-and-gear L5 and L5b](plans/loadout-and-gear.md): split by Ken 2026-11-01. The Majors are L5 (built, Decision 263: [L5-major-on-a-row](plans/loadout-and-gear/L5-major-on-a-row.md)); the powers are L5b, its order drafted 2026-11-15: [L5b-powers-on-natural-weapons](plans/loadout-and-gear/L5b-powers-on-natural-weapons.md)
+**Plan:** [loadout-and-gear L5 and L5b](../plans/archive/loadout-and-gear.md): split by Ken 2026-11-01. The Majors are L5 (built, Decision 263: [L5-major-on-a-row](../plans/archive/loadout-and-gear/L5-major-on-a-row.md)); the powers are L5b, its order drafted 2026-11-15: [L5b-powers-on-natural-weapons](../plans/archive/loadout-and-gear/L5b-powers-on-natural-weapons.md)
 
 P21's inventory listed these as "later orders" (`plans/archive/sheet-wishlist/P21-inventory.md`, c20 and c22–c34), and the plan closed without them, so nothing covered them. Each is printed on its card and the player does it by hand on the weapon or armor:
 - **A Major on one row the player picks:** Tuned Edge ("it gains +1 to damage", that weapon only), Custom Fit (that armor's damage reduction die a step up, d4 to d6, never past d12), Signature, Iconic and Legendary Weapon (Mod Slots and free Upgrades on one weapon), Weapon Expert ("+1d4 kicker to combat rolls using it; if a +1d4 already applies, it increases to +1d6").
@@ -599,7 +599,7 @@ A weapon the player writes in is eight text boxes (name, type, damage, rof, capa
 *Built as loadout-and-gear L2 (2026-10-25): character schema 0.29, game data 0.49. A saved free-text `type` is kept as text and shown until a type is picked.*
 
 **W107 — An unarmed strike line, and Death Touch's AP on it.** *Ken, with Claude · → Decision 290, app 0.70.0: Fists for every character, one natural count, Death Touch as a conditional AP · raised 2026-10-15*
-**Plan:** [loadout-and-gear L4](../plans/loadout-and-gear.md), built: [`L4-natural-attacks.md`](../plans/loadout-and-gear/L4-natural-attacks.md)
+**Plan:** [loadout-and-gear L4](../plans/archive/loadout-and-gear.md), built: [`L4-natural-attacks.md`](../plans/archive/loadout-and-gear/L4-natural-attacks.md)
 
 **Natural attacks, 2026-10-23** (the design meeting, `reference/meeting-2026-10-23.md`): fists, claws and teeth are **natural attacks**, two a round by default in any mix, stopping at two. So the fists' line this item asks for also says that, as do a Vampire's or Werewolf's claws and fangs. Five details are still Deighton's.
 
@@ -1620,3 +1620,56 @@ today (TOL, SFR). A third, **Uses another pool**, would give a tracker whose
 title and max the player types. Tracker titles come from the data today, so
 this needs a little code.
 
+**W77 — A cast member's page, laid out for the table.** → *S28, app 0.75.0, Decisions 258 and 308–310 (2026-11-20)* *Ken · 🔎 · Fix (UI) · raised 2026-10-08*\
+**Plan:** [gm-mode-next](../plans/gm-mode-next.md) closed as built by S28 ([order](../plans/gm-mode-next/S28-cast-at-a-glance.md), nothing left to build, 2026-11-20): the first plan's S18 built the bar, the status under the name and the docked stat block (Decision 258) · **Goes with:** W78, W80, W81
+
+Three things about the page a GM opens mid-scene:
+- **Back and Add to <encounter> always in reach.** They sit at the top today
+  and scroll away on a long page. Keep them in a bar that stays put while the
+  page scrolls (with W75's always-shown Add).
+- **Status near the top.** Alive, dead, missing or gone sits in the middle
+  of the Codex fields (after Origin, NPC roles, Enemy role and Tier). It's the
+  first thing a GM checks; put it under the name.
+- **The stat block as a pinned panel on the right**, at widths that have
+  room, like a PC's pinned vitals (Decision 160, `(min-width:1280px)`), so the
+  numbers stay beside the description, motivation and interactions while the
+  page scrolls. Below that width it stays where it is now, at the bottom.
+*To respect:* constraint 3 (the shell stays a shell: the panel is built by
+`gm.js` into existing chrome, or by markup the shell already has); the pin is
+a preference of this browser as 160's is, not of the table.
+*Always in reach* is W80's action rail (Ken, 2026-10-08): Back and Add to
+<encounter> live there, and stay put while the page scrolls.
+
+**W78 — The cast list shows each member's stat block, to read.** → *S28, app 0.75.0, Decision 308 (2026-11-20)* *Ken · 🔎 · Fix (UI) · raised 2026-10-08*\
+**Plan:** [gm-mode-next](../plans/gm-mode-next.md) S28, [order](../plans/gm-mode-next/S28-cast-at-a-glance.md): built in app 0.75.0 (Decision 308) · **Goes with:** W77
+
+A GM scanning the cast for who to throw at the crew opens each member to
+see their numbers. The wish: each card on the Cast tab shows the block as it
+stands now, however partial (a quick-added member with only BOD shows BOD),
+read-only. It's a quick reference; editing stays on the member's page.
+*To respect:* `Engine.npc(block)` computes everything shown (constraint 7);
+`blockHasNumber` (Decision 204) says whether there's anything to show; a long
+cast still has to scroll well on a tablet, so the shape (every card, a fold,
+or a toggle like *Who knows what*) needs a look.
+
+**W81 — Origin and Enemy role look like what they do.** → *S28, app 0.75.0, Decision 309 (2026-11-20)* *Ken · ⏭ · Fix (UI) · raised 2026-10-08*\
+**Plan:** [gm-mode-next](../plans/gm-mode-next.md) S28, [order](../plans/gm-mode-next/S28-cast-at-a-glance.md): built in app 0.75.0 (Decision 309) · **Goes with:** W77
+
+On a cast member's page, **Origin** and **Enemy role** are text fields with a
+list of suggestions from the slotted packs (a `datalist`). They behave like a
+dropdown when tapped, but look like a plain box, so nothing says there's a
+list. The wish: a visible affordance (a ▾ on the field) that still lets the
+GM type a name the packs don't have.
+*To respect:* free text stays allowed (a member can have an origin or role
+no slotted pack lists); the browser's own datalist styling varies, so check it
+on a tablet.
+
+**W142 — The cast's crew lines as buttons too.** → *S28, app 0.75.0, Decision 310 (2026-11-20)* *Ken · 🔎 · Rule or shape · raised 2026-10-31*\
+**Plan:** [gm-mode-next](../plans/gm-mode-next.md) S28, [order](../plans/gm-mode-next/S28-cast-at-a-glance.md): built in app 0.75.0 (Decision 310); set aside by S21 §7 until it landed
+
+S21 turns an encounter's Add a PC and a session's Who was there into a row of buttons, one per active
+seat, with Add a player for anyone else. A line between the crew and the cast (**Between them and the
+crew**, on a member's page and its quick add) still takes its crew as a typed list on `crew-names`. The
+wish: the same buttons there, if a GM using S21 finds the typed list the odd one out. *To respect:* a line's
+`crew` stays typed names, read as seats (254); the quick add saves as it's typed today; one rule for
+"answers to a seat", the engine's (`seatPicks`, `seatFor`).

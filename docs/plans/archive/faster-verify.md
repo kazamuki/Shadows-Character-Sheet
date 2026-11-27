@@ -6,7 +6,7 @@
 
 **Branch:** cut from `origin/main` at the pre-flight commit. PR to `main`. Nothing a player sees changes.
 
-**Cadence:** the three-session loop in [`../WORK-ORDERS.md`](../WORK-ORDERS.md). The conductor starts the builder (Sonnet), then a fresh reviewer (Opus) once the PR is open. §15 is the hand-over.
+**Cadence:** the three-session loop in [`../WORK-ORDERS.md`](../../WORK-ORDERS.md). The conductor starts the builder (Sonnet), then a fresh reviewer (Opus) once the PR is open. §15 is the hand-over.
 
 **Runs alone.** It touches `package.json`, `.github/workflows/verify.yml`, a new `tools/test-run.mjs` and `tests/timings.json`, the six slowest test files (split, not changed), one guard, `CLAUDE.md` (*Commands* and *The baseline before a change*), `docs/WORK-ORDERS.md`, and the skills that name verify. It changes no `src/`, data, engine or schema.
 

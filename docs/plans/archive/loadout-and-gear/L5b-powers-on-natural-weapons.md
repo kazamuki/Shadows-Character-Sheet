@@ -1,12 +1,12 @@
 # Work order L5b: powers that change natural weapons and melee
 
-**Plan:** [`../loadout-and-gear.md`](../loadout-and-gear.md) §3, row L5b, and its *What each order settles* bullet. **Wish:** [W136](../../WISHLIST.md), its powers half (L5 built the Majors half, Decision 263). **Builds on:** L4's natural group and `kind` (Decision 290), L3's weapon class and `bonuses` (Decision 248), H1's running powers (Decision 266). **The book:** `0413` (Upyr, Strigoi and Draugur powers, ~197–391) and `0414` (Wildblood and Forge Fang powers, ~290–323). Decisions 104, 237, 248, 266, 290.
+**Plan:** [`../loadout-and-gear.md`](../loadout-and-gear.md) §3, row L5b, and its *What each order settles* bullet. **Wish:** [W136](../../../WISHLIST.md), its powers half (L5 built the Majors half, Decision 263). **Builds on:** L4's natural group and `kind` (Decision 290), L3's weapon class and `bonuses` (Decision 248), H1's running powers (Decision 266). **The book:** `0413` (Upyr, Strigoi and Draugur powers, ~197–391) and `0414` (Wildblood and Forge Fang powers, ~290–323). Decisions 104, 237, 248, 266, 290.
 
 **Status: built 2026-11-16 (Decision 292). Drafted 2026-11-15** by Claude (Opus), the L4 reviewer, from `main` with L4 merged. **Approved by Ken 2026-11-15**, in the conductor session: "Defaults, no grenades". Every default in LQ43–LQ48 stands, except that grenades are left out of LQ44's melee reach (§4, *Ken's answers*). Two book questions go to Deighton (§4, *For Deighton*); neither blocks the build.
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
-**Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../WORK-ORDERS.md). The conductor starts **L5b build** (Sonnet), then a fresh **L5b review** (Opus) once the PR is open. Builder and reviewer message each other directly. Anything for Ken goes to the conductor. §15 is the hand-over.
+**Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../../WORK-ORDERS.md). The conductor starts **L5b build** (Sonnet), then a fresh **L5b review** (Opus) once the PR is open. Builder and reviewer message each other directly. Anything for Ken goes to the conductor. §15 is the hand-over.
 
 **Runs alone.** It touches `engine.js` (one new reader beside `naturalAttacks`, and the lines it feeds: `naturalAttacks`, `archetypeWeapons`, `weaponLine`), `shadows-data.js` (eight powers' `grants`, one `weaponRules` sibling), `sheet.js` (six line renderers, §5) and the docs. GM mode can run beside it: collisions only in versions, CHANGELOG's heading and decision numbers. **Say N everywhere and expect it to move** (*Carried over*).
 

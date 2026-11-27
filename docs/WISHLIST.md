@@ -147,7 +147,7 @@ encounter starts and ends.
 uses counters as P18-shaped data on the effect. Its own plan, probably two orders.
 
 **W160 — A trained weapon that counts as natural.** *Deighton, at the 2026-11-12 meeting · 💡 · Rule or shape · raised 2026-11-15*\
-**Plan:** [loadout-and-gear L9](plans/loadout-and-gear.md), waiting on Deighton's ruling
+**Plan:** [loadout-and-gear-v2 L9](plans/loadout-and-gear-v2.md), waiting on Deighton's ruling
 
 Deighton floated that a weapon a character is trained with (his eskrima sticks) could count as a natural weapon, so it joins the group of natural attacks. Not ruled. L4 builds the group by a data `kind` (Decision 290); a trained weapon would need a rule for which weapons qualify and where the sheet reads the training. Ask him before any plan.
 
@@ -256,7 +256,7 @@ Once a Burned character earns CRANK rep back to 0, the sheet says "Burned is pai
 ### Loadout & catalog
 
 **W69 — Gear that changes what you can do while you wear it.** *Ken, from Deighton · ⏭ · Rule or shape · raised 2026-10-08 · answered by Deighton 2026-10-10*\
-**Plan:** set aside by [loadout-and-gear §4](plans/loadout-and-gear.md): L1 and L3 built the worn half (PR #252, PR #257: [L3-worn-modifiers](plans/loadout-and-gear/L3-worn-modifiers.md)); the suit half (was L7, Powered Armor's enhancements, PA5–PA8 answered) left the plan 2026-11-15 with vehicles, since a suit is one. It follows W91, whose shelved order is [L6-vehicles](plans/loadout-and-gear/L6-vehicles.md) · **Goes with:** W91
+**Plan:** set aside by [loadout-and-gear-v2 §4](plans/loadout-and-gear-v2.md): L1 and L3 built the worn half (PR #252, PR #257: `plans/archive/loadout-and-gear/L3-worn-modifiers.md`); the suit half (was L7, Powered Armor's enhancements, PA5–PA8 answered) left the plan 2026-11-15 with vehicles, since a suit is one. It follows W91, whose shelved order is `plans/archive/loadout-and-gear/L6-vehicles.md` · **Goes with:** W91
 
 Deighton's ask: powered armor worn over the body should show its bonuses where
 they land. Armor giving +5 to BOD skills and damage should raise Melee and
@@ -293,7 +293,7 @@ and caps (`ipCost`, `canBoost`) must keep reading the rank without the worn
 bonus, or taking armor off would change what the next rank costs.
 
 **W91 — Vehicles you can buy and own, Powered Armor among them.** *Ken, from Brogan · 🔎 · Content, then Rule or shape · raised 2026-10-10*\
-**Plan:** set aside by [loadout-and-gear §4](plans/loadout-and-gear.md) on 2026-11-15 (Ken): it waits on Deighton's vehicle follow-ups. Its shelved order is [L6-vehicles](plans/loadout-and-gear/L6-vehicles.md) (was sheet-wishlist's P14), to be re-pre-flighted against `main` if it's revived · **Goes with:** W69, W90
+**Plan:** set aside by [loadout-and-gear-v2 §4](plans/loadout-and-gear-v2.md) on 2026-11-15 (Ken): it waits on Deighton's vehicle follow-ups. Its shelved order is `plans/archive/loadout-and-gear/L6-vehicles.md` (was sheet-wishlist's P14), to be re-pre-flighted against `main` if it's revived · **Goes with:** W69, W90
 
 There are no vehicles in the app: only the Pilot skill and Machindo. `0460`
 has the chapter: **Grounders** and **Jumpers** (Seats, PROT, RES, INT, Speed,
@@ -312,7 +312,7 @@ entry's. One MD of Massive damage is 10 Integrity off it, or 1 Health Level to
 the wearer once it gets through (Q6).
 
 **W108 — Magazines sized by the weapon, and combining part-used ones.** *Ken · 💡 · Rule or shape · raised 2026-10-15 with P9b's PQ3 · wants thinking time*\
-**Plan:** set aside by [loadout-and-gear §4](plans/loadout-and-gear.md): starts with Ken's CRB change to how magazines fit
+**Plan:** set aside by [loadout-and-gear-v2 §4](plans/loadout-and-gear-v2.md): starts with Ken's CRB change to how magazines fit
 
 Gear sells rounds by the magazine and Weapon Type, so one Rifle Rounds magazine fills a
 3+1 VR-50 "Verdict" or a 30+1 AR-9X (Decision 145). P9b keeps a part-used magazine
@@ -336,7 +336,7 @@ The Cyborg archetype was cut, and cybernetics are gear, Professionals only
 (W90). Everything here waits on that design, and on F6 and F19.
 
 **W61 — A retired archetype folds its characters into Custom.** *Ken · 🔎 · raised 2026-10-01 with the Cyborg cut; Rule or shape*\
-**Plan:** set aside by [loadout-and-gear §4](plans/loadout-and-gear.md): waits on the cybernetics design (F6, F19), with W90 · **Goes with:** W90
+**Plan:** set aside by [loadout-and-gear-v2 §4](plans/loadout-and-gear-v2.md): waits on the cybernetics design (F6, F19), with W90 · **Goes with:** W90
 
 The team has cut the Cyborg (`plans/crb-catch-up.md`), and an id can never
 just be deleted (constraint 6). Today a removed archetype leaves a character
@@ -395,7 +395,7 @@ buy doesn't change under it). Lands with the Cyborg's retirement, which needs
 its own numbered decision.
 
 **W90 — Cybernetics.** *Ken, from Brogan; rewritten 2026-10-22 with Deighton's system · 🔎 · Rule or shape · raised 2026-10-10 · needs its own plan; Deighton for the questions below*\
-**Plan:** set aside by [loadout-and-gear §4](plans/loadout-and-gear.md): waits on the cybernetics design (F6, F19) and Deighton's six questions; it needs a plan of its own. Its hand cyberware joins the natural group as [loadout-and-gear L10](plans/loadout-and-gear.md), after that plan · **Goes with:** W61, W91, W127, W134
+**Plan:** set aside by [loadout-and-gear-v2 §4](plans/loadout-and-gear-v2.md): waits on the cybernetics design (F6, F19) and Deighton's six questions; it needs a plan of its own. Its hand cyberware joins the natural group as loadout-and-gear-v2 L10, after that plan · **Goes with:** W61, W91, W127, W134
 *Natural weapons (L4, Decision 290):* cyberware on the hands is a natural weapon by the 2026-11-12 ruling, so it joins the natural group through a data `kind`, and a worn melee bonus already reaches it. The tri-claws' ladder is +3 / +6 / +8 (the +12 → +8 change), and stacking adds to BOD once.
 
 Playtesters want chrome, and as of 2026-10-22 there is something to build from. The Cyborg archetype was
@@ -446,7 +446,7 @@ choice on that check. Issued Hardware, which `0412` leaves as a placeholder, is 
 
 *To respect:* store inputs, compute everything else (constraint 7): a part is a catalog reference on a
 loadout row, never its bonuses copied in. Ids are immutable (constraint 6), so parts get ids before
-anything ships. **Sequence after loadout-and-gear's L6** (vehicles, the first new loadout row) and build on its row shape. Retiring
+anything ships. **Sequence after loadout-and-gear's L6 (archived)** (vehicles, the first new loadout row) and build on its row shape. Retiring
 `cyborg` is W61's question and closes F6; the install cost closes F19. Vampires, Werewolves and Arcanists
 can't take chrome. A rules question stays a flag, never a guess in code.
 
@@ -457,7 +457,7 @@ it, but the write stays for the next one. Make the draw read `ch.panelData[key] 
 handler create the key. Ken chose this over a separate Fix (2026-10-30).
 
 **W127 — Cyber-Prophetical, once cybernetics are gear.** *Ken, from P18's sign-off · 💡 · Rule or shape · raised 2026-10-16*\
-**Plan:** set aside by [loadout-and-gear §4](plans/loadout-and-gear.md): waits on cybernetics as gear, with W90 · **Goes with:** W90
+**Plan:** set aside by [loadout-and-gear-v2 §4](plans/loadout-and-gear-v2.md): waits on cybernetics as gear, with W90 · **Goes with:** W90
 
 Cyber-Prophetical means no Sanity loss from cybernetics, and the sheet can't apply it until it knows a character has them. When cybernetics are gear with
 a Sanity cost, this becomes a computed effect that zeroes it.
@@ -507,7 +507,7 @@ A custom archetype has no Major Milestones of its own; the general Majors are
 open to it. The Adjustments ledger covers a GM's custom reward meanwhile.
 
 **W109 — A custom row can opt into what a book row does.** *Ken · 🔎 · Rule or shape · raised 2026-10-15 with P10's PQ7*\
-**Plan:** a written-in weapon's part in [loadout-and-gear](plans/loadout-and-gear.md) L2b ([order](plans/loadout-and-gear/L2b-custom-weapon-fire-and-reload.md)): its fire modes and its reload from carried ammo. The rest is set aside by the plan's §4: wider than gear; L2 gave a custom weapon the catalog's fields, and L3's LQ6 kept custom modifiers out · **Goes with:** W48
+**Plan:** a written-in weapon's part in loadout-and-gear (archived) L2b (`plans/archive/loadout-and-gear/L2b-custom-weapon-fire-and-reload.md`): its fire modes and its reload from carried ammo. The rest is set aside by [loadout-and-gear-v2 §4](plans/loadout-and-gear-v2.md): wider than gear; L2 gave a custom weapon the catalog's fields, and L3's LQ6 kept custom modifiers out · **Goes with:** W48
 
 A written-in spell, piece of gear, weapon or power is text to the engine: the sheet can't
 hold a custom Concentration spell (P10's PQ7), and no other custom row can switch on
@@ -730,40 +730,8 @@ advantage (`0430`/`0432`) now only sets starting CRANK rep; its old "people
 occasionally recognize you" line is gone (checked 2026-11-19, S28's GQ31). Crew are
 typed names, read as the seat that answers to them (Decision 254).
 
-**W77 — A cast member's page, laid out for the table.** *Ken · 🔎 · Fix (UI) · raised 2026-10-08*\
-**Plan:** [gm-mode-next](plans/gm-mode-next.md) closed as built by S28 ([order](plans/gm-mode-next/S28-cast-at-a-glance.md), nothing left to build, 2026-11-20): the first plan's S18 built the bar, the status under the name and the docked stat block (Decision 258) · **Goes with:** W78, W80, W81
-
-Three things about the page a GM opens mid-scene:
-- **Back and Add to <encounter> always in reach.** They sit at the top today
-  and scroll away on a long page. Keep them in a bar that stays put while the
-  page scrolls (with W75's always-shown Add).
-- **Status near the top.** Alive, dead, missing or gone sits in the middle
-  of the Codex fields (after Origin, NPC roles, Enemy role and Tier). It's the
-  first thing a GM checks; put it under the name.
-- **The stat block as a pinned panel on the right**, at widths that have
-  room, like a PC's pinned vitals (Decision 160, `(min-width:1280px)`), so the
-  numbers stay beside the description, motivation and interactions while the
-  page scrolls. Below that width it stays where it is now, at the bottom.
-*To respect:* constraint 3 (the shell stays a shell: the panel is built by
-`gm.js` into existing chrome, or by markup the shell already has); the pin is
-a preference of this browser as 160's is, not of the table.
-*Always in reach* is W80's action rail (Ken, 2026-10-08): Back and Add to
-<encounter> live there, and stay put while the page scrolls.
-
-**W78 — The cast list shows each member's stat block, to read.** *Ken · 🔎 · Fix (UI) · raised 2026-10-08*\
-**Plan:** [gm-mode-next](plans/gm-mode-next.md) S28, [order](plans/gm-mode-next/S28-cast-at-a-glance.md): built in app 0.75.0 (Decision 308) · **Goes with:** W77
-
-A GM scanning the cast for who to throw at the crew opens each member to
-see their numbers. The wish: each card on the Cast tab shows the block as it
-stands now, however partial (a quick-added member with only BOD shows BOD),
-read-only. It's a quick reference; editing stays on the member's page.
-*To respect:* `Engine.npc(block)` computes everything shown (constraint 7);
-`blockHasNumber` (Decision 204) says whether there's anything to show; a long
-cast still has to scroll well on a tablet, so the shape (every card, a fold,
-or a toggle like *Who knows what*) needs a look.
-
 **W80 — The left column: the page's actions, or gone.** *Ken · 🔎 · Fix (UI) · raised 2026-10-08*\
-**Plan:** [gm-mode-next](plans/gm-mode-next.md) S29: Home's empty rail (a table's screens lost theirs in S18, Decision 258) · **Goes with:** W77
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S29: Home's empty rail (a table's screens lost theirs in S18, Decision 258)
 
 Outside the wizard the left column is empty on **every** screen: Home, every
 GM table tab, and the pages under them (Ken's screenshot, 2026-10-08: a
@@ -788,18 +756,6 @@ is the place; no new markup in `index.html` beyond what's there); Decision 164
 (Decision 160), which take the right side from 1280px, so a GM screen with a
 pinned stat block (W77) and the rail leaves the page the middle.
 
-**W81 — Origin and Enemy role look like what they do.** *Ken · ⏭ · Fix (UI) · raised 2026-10-08*\
-**Plan:** [gm-mode-next](plans/gm-mode-next.md) S28, [order](plans/gm-mode-next/S28-cast-at-a-glance.md): built in app 0.75.0 (Decision 309) · **Goes with:** W77
-
-On a cast member's page, **Origin** and **Enemy role** are text fields with a
-list of suggestions from the slotted packs (a `datalist`). They behave like a
-dropdown when tapped, but look like a plain box, so nothing says there's a
-list. The wish: a visible affordance (a ▾ on the field) that still lets the
-GM type a name the packs don't have.
-*To respect:* free text stays allowed (a member can have an origin or role
-no slotted pack lists); the browser's own datalist styling varies, so check it
-on a tablet.
-
 **W140 — Notes that organise themselves: tags, categories, and the session they came from.** *Ken · 🔎 · Rule or shape · raised 2026-10-30*\
 **Plan:** [gm-mode-next](plans/gm-mode-next.md) S30 (no order yet); U3 (Decision 271) made Notes a list of titles, the screen this will fill
 
@@ -816,16 +772,6 @@ their tags; the activity log and undo cover every change (212); a table
 schema bump with a `migrateTable()` step if the note's shape moves (170).
 Look first at how much of this the cast's and threads' links already give
 before inventing a new kind of link.
-
-**W142 — The cast's crew lines as buttons too.** *Ken · 🔎 · Rule or shape · raised 2026-10-31*\
-**Plan:** [gm-mode-next](plans/gm-mode-next.md) S28, [order](plans/gm-mode-next/S28-cast-at-a-glance.md): built in app 0.75.0 (Decision 310); set aside by S21 §7 until it landed
-
-S21 turns an encounter's Add a PC and a session's Who was there into a row of buttons, one per active
-seat, with Add a player for anyone else. A line between the crew and the cast (**Between them and the
-crew**, on a member's page and its quick add) still takes its crew as a typed list on `crew-names`. The
-wish: the same buttons there, if a GM using S21 finds the typed list the odd one out. *To respect:* a line's
-`crew` stays typed names, read as seats (254); the quick add saves as it's typed today; one rule for
-"answers to a seat", the engine's (`seatPicks`, `seatFor`).
 
 **W146 — The dispatch: a GM sends a player changes to accept.** *Ken, from re-vetting GM mode's plan · 💡 · Rule or shape · raised 2026-11-06*\
 **Plan:** none yet
@@ -1066,7 +1012,7 @@ tests. Point them at `0432_Advantages.md` and `0431_Disadvantages.md`, check eac
 **W164 — A command that shows which weapon numbers a change moved.** *Ken, from L5b's build · 💡 · Docs, tooling · raised 2026-11-16*\
 **Plan:** none yet
 
-L5b's order asked for a fixture diff: every archetype, specialization and form, holding every power plus a knife, a pistol and a grenade, with `naturalAttacks`, `archetypeWeapons` and `weaponLine` read on `origin/main` and on the branch, and the fields that moved listed. The builder wrote it as a throwaway script, and the next order that touches a weapon line would write it again (the [loadout-and-gear](plans/loadout-and-gear.md) follow-ons, L8 to L10, each do). The ask: a tool in `tools/`, beside `phone-check`, that does it (`node tools/weapon-diff.mjs`) and prints which fields moved and in how many cases, with a switch to run the running powers too. It reads `origin/main` through a `git worktree` and loads the engine by `vm`, as `tests/harness.mjs` does, so it needs no `node_modules` in the second tree.
+L5b's order asked for a fixture diff: every archetype, specialization and form, holding every power plus a knife, a pistol and a grenade, with `naturalAttacks`, `archetypeWeapons` and `weaponLine` read on `origin/main` and on the branch, and the fields that moved listed. The builder wrote it as a throwaway script, and the next order that touches a weapon line would write it again (the [loadout-and-gear-v2](plans/loadout-and-gear-v2.md) follow-ons, L8 to L10, each do). The ask: a tool in `tools/`, beside `phone-check`, that does it (`node tools/weapon-diff.mjs`) and prints which fields moved and in how many cases, with a switch to run the running powers too. It reads `origin/main` through a `git worktree` and loads the engine by `vm`, as `tests/harness.mjs` does, so it needs no `node_modules` in the second tree.
 *To respect:* it's a report, not a guard; an order says which moves are expected.
 
 **W165 — An unnamed character seats under its TAG.** *Ken + Claude, from S23's build and review · 💡 · Rule or shape · raised 2026-11-19*\

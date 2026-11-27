@@ -1,12 +1,12 @@
 # Work order L2b: Custom weapons pick their fire modes and reload from carried ammo
 
-**Plan:** [`../loadout-and-gear.md`](../loadout-and-gear.md) §3, row L2b. **Wish:** [W109](../../WISHLIST.md), the part about a written-in weapon (a custom row doing what a book row does). **Ken, 2026-10-28, to the conductor:** "I noticed that custom weapon rows don't let me choose the types of firing modes for ammo-using weapons (S, B, F). Also, a bug: when reloading a weapon, the ammo is not being reduced. … we should fold it into the next work order in this plan." Ken confirmed that the reload was a **written-in** weapon's, and chose a new order, L2b, ahead of L4. **It reopens LQ14** ("Not in L2… Ken, 2026-10-24: Default"), which Decision 247's *Revisit if* names. Decisions 120, 145, 149, 222, 247.
+**Plan:** [`../loadout-and-gear.md`](../loadout-and-gear.md) §3, row L2b. **Wish:** [W109](../../../WISHLIST.md), the part about a written-in weapon (a custom row doing what a book row does). **Ken, 2026-10-28, to the conductor:** "I noticed that custom weapon rows don't let me choose the types of firing modes for ammo-using weapons (S, B, F). Also, a bug: when reloading a weapon, the ammo is not being reduced. … we should fold it into the next work order in this plan." Ken confirmed that the reload was a **written-in** weapon's, and chose a new order, L2b, ahead of L4. **It reopens LQ14** ("Not in L2… Ken, 2026-10-24: Default"), which Decision 247's *Revisit if* names. Decisions 120, 145, 149, 222, 247.
 
 **Status: drafted 2026-10-28 by Claude (Opus), L3's reviewer, as the plan's orchestrator. Approved by Ken 2026-10-28 ("Approve it").** Ken answered LQ23–LQ28 on 2026-10-28 (§4), Default on each, recorded on PR #258 (comment 6484215080). Ready for **L2b build**, in a fresh session.
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
-**Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../WORK-ORDERS.md): **L2b build** (Sonnet), then a fresh **L2b review** (Opus) once the PR is open.
+**Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../../WORK-ORDERS.md): **L2b build** (Sonnet), then a fresh **L2b review** (Opus) once the PR is open.
 
 **Carried over from L3** (PR #257):
 - **The order's misses.**

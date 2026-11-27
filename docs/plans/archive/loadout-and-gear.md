@@ -1,7 +1,7 @@
 # Plan — vehicles and worn gear, in sessions
 
-**Status:** proposed 2026-10-24 by Claude (Opus), when the player sheet's plan
-closed ([`archive/sheet-wishlist.md`](archive/sheet-wishlist.md)). **Approved by
+**Status:** **closed 2026-11-27, kept as history** (Ken): L1–L5b are built; L8–L10 are what is left, in [`../loadout-and-gear-v2.md`](../loadout-and-gear-v2.md). The orders below are archived with it; their `Plan:` links to this file still resolve. Earlier: proposed 2026-10-24 by Claude (Opus), when the player sheet's plan
+closed ([`archive/sheet-wishlist.md`](sheet-wishlist.md)). **Approved by
 Ken 2026-10-24**, with LQ1–LQ7 on their defaults (§5) and W136 kept. **Widened
 the same day** (Ken): custom weapons that read like the catalog's (W137, now
 L2), and the meeting's natural attacks in the unarmed strike's session (now
@@ -28,7 +28,7 @@ Sessions are `L1`… (L for Loadout). Questions are `LQ`_n_.
 
 ## 1. How it runs
 
-The loop every plan uses, written once in [`../WORK-ORDERS.md`](../WORK-ORDERS.md):
+The loop every plan uses, written once in [`../WORK-ORDERS.md`](../../WORK-ORDERS.md):
 a work order, pre-flighted against the code and approved by Ken, then a Sonnet
 builder and a fresh Opus reviewer, with a conductor between them and Ken.
 Orders live in [`loadout-and-gear/`](loadout-and-gear/), one per session,
@@ -83,7 +83,7 @@ need a vehicle,** so this plan splits it:
   change claws, fangs and melee damage. It's the same job as W69, a source
   changing a weapon line, so it's raised as **W136** and taken here.
 - **The unarmed strike (W107)** is a missing line in the same attack list.
-  **The 2026-10-23 meeting** ([`../reference/meeting-2026-10-23.md`](../reference/meeting-2026-10-23.md),
+  **The 2026-10-23 meeting** ([`../reference/meeting-2026-10-23.md`](../../reference/meeting-2026-10-23.md),
   Bill approved the transcript 2026-10-24) made **natural attacks** (claws,
   teeth, fists) a default of **two a round**, so the session that adds the
   fists' line also says it for the claws and fangs `archetypeWeapons` gives

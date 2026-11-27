@@ -8,7 +8,7 @@
 
 **Branch:** cut from `origin/main` at the pre-flight commit. PR to `main`. Nothing ships switched off. **Runs alone**: it touches `engine.js`, `shared.js`, `shadows.css`, `shadows-data.js` (`appCopy`), `package.json` (a dev dependency), the tests, `tools/phone-check.mjs` and the docs. No schema moves and no saved file changes.
 
-**Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../WORK-ORDERS.md). The conductor starts **Z1 build** (Sonnet), then a fresh **Z1 review** (Opus). §15 is the hand-over.
+**Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../../WORK-ORDERS.md). The conductor starts **Z1 build** (Sonnet), then a fresh **Z1 review** (Opus). §15 is the hand-over.
 
 **Pre-flight against `main` at `afb4220`** (#401; the working tree carries the uncommitted motion-archive docs, which touch nothing this order reads). Read, not run, unless it says "run". **Six things the order's picture needed corrected:**
 
@@ -241,7 +241,7 @@ Run the `close-the-session` skill for this tier. In particular:
 
 ## 15. Handing it over
 
-The two prompts are in [`../../WORK-ORDERS.md`](../../WORK-ORDERS.md), *The prompts*, with this order's path: `docs/plans/tag-that-scans/Z1-a-tag-that-scans.md`, plan `tag-that-scans`. This order's own traps:
+The two prompts are in [`../../WORK-ORDERS.md`](../../../WORK-ORDERS.md), *The prompts*, with this order's path: `docs/plans/tag-that-scans/Z1-a-tag-that-scans.md`, plan `tag-that-scans`. This order's own traps:
 
 - **A decoder isn't a camera.** The tests prove the bars encode the text. They don't prove a phone reads the screen. Step 8 is Ken's phone, and no test stands in for it.
 - **Don't re-render on a press.** Toggle the class on the existing `.intake`s. A render drops focus off the button, and the screen reader loses its place.

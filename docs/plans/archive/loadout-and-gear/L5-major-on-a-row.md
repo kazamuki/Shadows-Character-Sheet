@@ -1,6 +1,6 @@
 # Work order L5: a Major on one weapon or armor row
 
-**Plan:** [`../loadout-and-gear.md`](../loadout-and-gear.md) §3, row L5, and its *What each order settles* bullet. **Wish:** [W136](../../WISHLIST.md), its Majors half. **The book:** `0412` *Professional*, the General Majors: Custom Fit and Tuned Edge (no Major required), Signature Weapon and Weapon Expert (1 required), Iconic Weapon (3), Legendary Weapon (5) (`private/crb/0412_Professional.md` ~410–560). Decisions 120, 217, 223, 233, 237, 247, 248.
+**Plan:** [`../loadout-and-gear.md`](../loadout-and-gear.md) §3, row L5, and its *What each order settles* bullet. **Wish:** [W136](../../../WISHLIST.md), its Majors half. **The book:** `0412` *Professional*, the General Majors: Custom Fit and Tuned Edge (no Major required), Signature Weapon and Weapon Expert (1 required), Iconic Weapon (3), Legendary Weapon (5) (`private/crb/0412_Professional.md` ~410–560). Decisions 120, 217, 223, 233, 237, 247, 248.
 
 **The split (Ken's ruling, 2026-11-01, in the conductor session).** W136 had two halves: the six General Majors that change one carried weapon or armor row, and eight Vampire and Werewolf powers that change claws, fangs and melee damage while they run (LQ5). The powers can't be drafted without L4. A natural line has only a display name today ("Bite", "Claws", "Fangs"), so nothing says which line a power that names "your bite" reaches. And whether "+3 melee damage" reaches natural attacks is the question L4's handoff put to the 2026-10-29 meeting. Ken picked **"Split it"** over "hold all of L5" and "S13b instead". **L5 is the six Majors. The eight powers are L5b, after L4,** drafted from the meeting's notes, and LQ5's answer (conditional marks, never summed) stays with them.
 
@@ -11,7 +11,7 @@
 
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 
-**Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../WORK-ORDERS.md). The conductor starts **L5 build** (Sonnet), then a fresh **L5 review** (Opus) once the PR is open. Builder and reviewer message each other directly. Anything for Ken goes to the conductor. §15 is the hand-over.
+**Cadence:** the three-session loop in [`../../WORK-ORDERS.md`](../../../WORK-ORDERS.md). The conductor starts **L5 build** (Sonnet), then a fresh **L5 review** (Opus) once the PR is open. Builder and reviewer message each other directly. Anything for Ken goes to the conductor. §15 is the hand-over.
 
 **Runs alone.** It touches `engine.js` (the loadout readers, `migrate()`, `untakeMilestone`), `shadows-data.js` (six Majors, `armorRules`), `sheet.js` (Loadout's weapon rows and armor cards, Main, print, Progression's Major journal), `shadows.css` (one rule at most), and the docs.
 
