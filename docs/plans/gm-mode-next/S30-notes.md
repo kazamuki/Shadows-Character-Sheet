@@ -9,7 +9,7 @@ order, two PRs**: this order designs **one note shape and one list** for both si
 - **PR 2** brings it to the sheet's Notes tab (W55 folds in; character schema and `migrate()`).
 
 **Status:** **drafted 2026-11-27** by Claude (Opus, the S27 reviewer), from `main` at `b711c3a` (S27 merged, #408).
-Not approved.
+**Approved by Ken 2026-11-27**, in the conductor session, every question on its default: GQ95 "Stays below list", GQ96 "Yes, link a session", GQ97 "Presses, not typing", GQ98–GQ100 "All three defaults".
 **Branch:** PR 1 and PR 2 each from `main`, PR 2 cut after PR 1 merges. Each PR goes to `main`. Nothing ships switched
 off: GM mode is on for everyone (Decision 260), and the sheet has no switch.
 **Runs beside:** nothing. One build at a time (Ken). **Say N everywhere.** Two decisions (**N** in PR 1, **N+1** in PR 2),
