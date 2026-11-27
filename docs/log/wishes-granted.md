@@ -1131,6 +1131,33 @@ Reading Night Eyes' attack line ("In Dark, your attacks take −1 instead of −
 The shape: a list of game terms in the data, each with the rule it opens (a sentence, or a table such as `visibility`, drawn with its numbers). The renderer wraps each known term it finds in a Skill-row mark, an attack or check note, a rest line or a `playerNote` as a tip trigger. Hover or focus shows the tip, and a tap pins it, as Decision 139's do.
 *To respect:* the engine still returns text and never markup (constraint 5), so the UI finds the terms; or the engine returns `{ text, terms }` and the UI wraps them (decide in the order). Decision 139's primitive, not a second one: hover, focus, tap to pin, and it works inside a modal. Terms come from data and are never typed in code (Decision 135), and a term's tip reads the same table the number came from, so it can't drift. Print gets no tips. On a phone a 44px tap target can't fit a word inside a sentence, so check `phone-check`'s floor and how a tapped word reads before choosing (an underline, or a ⓘ after the line). Not every capitalised word is a term: the list is explicit, and a term inside a book quote or a `whenText` stays a match on the list, never a guess.
 
+**W62 — Slotting a file in reads it on screen, like a script loading in NYTE City.** → *motion I4, Decision 319, app 0.80.0 (2026-11-26)* *Ken · 💡 · raised 2026-10-02 with GQ10's packs*\
+**Plan:** [motion I4](../plans/archive/motion/I4-a-file-reads-in.md), closed 2026-11-26 · **Goes with:** W63
+
+*Set aside by the player sheet's plan when it closed (2026-10-24, `plans/archive/sheet-wishlist.md` §4): an idea, not shaped.*
+
+Today a character file imports with a toast that names it, and a Codex pack
+(GQ10) would do the same. Ken's idea: a terminal opens, reads through what's
+in the file, and closes on what landed, so loading a character or slotting in
+the Codex feels like jacking a script into a deck rather than opening a file.
+*What the shape has to respect,* as Claude sees it:
+- **It reads what's really there.** The lines are the file's own contents as
+  the gate checks them (the character's name, archetype and TAG; the pack's
+  entries and traits by name), and the last line is the real outcome: counts,
+  what was repaired. Not a canned script on a timer.
+- **Short and skippable.** About a second, any key or tap finishes it, and it
+  never sits between a GM and a fight. Repeating the same load in one sitting
+  goes straight to the summary.
+- **Reduced motion gets the summary only** (the app already honours
+  `prefers-reduced-motion`), and a screen reader hears the outcome once, not
+  every line.
+- **A refused file drops the fiction.** That's the player being stuck, so it
+  speaks in tool voice (`VOICE-APP.md`) and says what to do.
+- **The copy is data** (`appCopy`, Decision 76) and gets a voice pass; the
+  mono font is already embedded, so nothing touches the network (137).
+- One primitive in `shared.js`, used by every import: a character, a table,
+  a pack, and a dispatch once that exists.
+
 ### Docs
 
 **W18 — `CHANGELOG.md` stopped at 0.7.0.** *Claude · → caught up through v0.15.0 in `CHANGELOG.md`; `docs.test.mjs` now fails without a section for the current version*
