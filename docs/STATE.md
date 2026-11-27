@@ -109,7 +109,7 @@ economics) are in `plans/archive/`.
 - **GM mode, what's next** (`plans/gm-mode-next.md`): Scott's play report first (S22), then Ken's pick.
 - **Loadout and gear** (`plans/loadout-and-gear.md`): ends with natural-weapon follow-ons, each waiting on an answer: L8 the Werewolf's damage (LQ40), L9 a trained weapon as natural (W160), L10 hand cyberware (W90). Bone Spines' grappling waits on Deighton (F55).
 - **Closed plans** are in `plans/archive/`; finding-things left W152–W157 and W159, powers-that-run W132's last two powers (`plans/crb-catch-up.md`), pools-and-numbers (J1–J4, 312–315, released in 0.76.0) F56 for Deighton, motion (I1–I4, 316–319, released in 0.80.0) W124, W129, W134 and W128 once their rules exist, and help-on-the-sheet (K1–K5) W177, removing Burned without Admin mode (with Scott), and Deighton's read of the sheet's Help copy.
-- **A TAG that scans** (`plans/tag-that-scans.md`): the barcode becomes a real Code 128 and a Scan button flips it for a phone on the dark theme. Its one order, Z1, is drafted and waits on Ken's approval (ZQ1–ZQ8, all with defaults).
+- **A TAG that scans** (`plans/tag-that-scans.md`): the barcode becomes a real Code 128 and a Scan button flips it for a phone on the dark theme. Its one order, Z1, is approved (ZQ1–ZQ8, all defaults) and ready to build.
 - **W90**, cybernetics: six questions before a plan.
 
 **Ken alone:** F12 and F32, W38's plan (`plans/two-tabs-one-character.md`,
