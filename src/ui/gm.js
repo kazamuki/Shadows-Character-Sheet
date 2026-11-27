@@ -579,13 +579,15 @@ const proseHtml = (label, text) => String(text||"").trim() ? `<h2 class="ref-sub
 // Edit puts the keyboard in the form's first field; Done puts it back on Edit.
 function bindEdit(main, kind, id){
   main.querySelectorAll(`[data-edit="${kind}|${id}"]`).forEach(b=>b.onclick=()=>{
-    S.editing={ kind, id }; renderTable();
+    S.editing={ kind, id };
+    if (kind==="note"){ const n=S.table.notes.find(x=>x.id===id); S.noteHold = n && S.noteNew!==id ? { id, category:n.category, session:n.session } : null; }
+    renderTable();
     // A member's form opens with Status above Name; Edit lands on Name (S23).
     const first=(kind==="member" && $("main").querySelector('[data-cf="name"]')) || Array.from($("main").querySelectorAll("input, select, textarea")).find(el=>!el.closest(".tbl-bar") && el.type!=="hidden");
     if (first) first.focus();
   });
   main.querySelectorAll(`[data-edit-done="${kind}|${id}"]`).forEach(b=>b.onclick=()=>{
-    S.editing=null; if (kind==="note") unhideNote(id); renderTable();
+    S.editing=null; if (kind==="note"){ unhideNote(id); S.noteHold=null; S.noteNew=null; } renderTable();
     const e=$("main").querySelector(`[data-edit="${kind}|${id}"]`); if (e) e.focus();
   });
 }
@@ -597,7 +599,7 @@ function notesTabHtml(t){
     <p><button class="btn primary" data-tnew>New note</button></p>`;
   const sessions = Engine.sessionList(t);
   if (S.noteTag && !Engine.noteTagsInUse(t.notes).some(x=>x.toLowerCase()===S.noteTag.toLowerCase())) S.noteTag=null;   // the last note holding it let go
-  return `${notesListHtml(t.notes, t.sessions, notesViewNow(), { open:S.noteOpen, editing:S.editing && S.editing.kind==="note" ? S.editing.id : null, editable:true,
+  return `${notesListHtml(t.notes, t.sessions, notesViewNow(), { open:S.noteOpen, editing:S.editing && S.editing.kind==="note" ? S.editing.id : null, editable:true, pin:S.noteNew, held:S.noteHold,
       sessions:sessions.map(s=>({ id:s.id, label:Engine.sessionTitle(s) + (s.date ? ` · ${dayText(s.date)}` : "") })),
       sessionLabel:id=>{ const s=sessionById(id); return s ? Engine.sessionTitle(s) : ""; },
       editBtn:n=>editBtnHtml("note", n.id, noteName(n)), doneBtn:n=>doneBtnHtml("note", n.id, noteName(n)) })}
@@ -805,7 +807,7 @@ function bindNotes(main){
   main.querySelectorAll("[data-edit-done^='note|']").forEach(b=>bindEdit(main, "note", b.dataset.editDone.split("|")[1]));
   main.querySelector("[data-tnew]").onclick=()=>{
     let id; tableChange(()=>{ id=Engine.addTableNote(S.table, { title:"", text:"" }).id; });
-    S.noteOpen=id; S.editing={ kind:"note", id }; renderTable();
+    S.noteOpen=id; S.editing={ kind:"note", id }; S.noteNew=id; S.noteHold=null; renderTable();
     const el=titleOf(id); if (el) el.focus();
   };
   main.querySelectorAll("[data-ndel]").forEach(b=>b.onclick=()=>{

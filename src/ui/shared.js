@@ -1779,9 +1779,14 @@ function notesListHtml(notes, sessions, view, o){
   // A filter on a tag no note holds any more filters nothing.
   const tag = v.tag && tagsInUse.some(x=>x.toLowerCase()===v.tag.toLowerCase()) ? v.tag : null;
   const opts = { ...o, categories:Engine.noteCategoriesInUse(all), tagsInUse };
-  // The note being edited sits above the groups until Done: a category or tag typed into it never moves it under the GM's hands.
-  const pinned = o.editable ? all.find(n=>n.id===o.editing && n.id===o.open) : null;
-  const groups = Engine.noteGroups(all.filter(n=>n!==pinned), sessions, { by:v.by, tag });
+  // A new note (o.pin) sits above the groups until Done. A note in Edit stays in the group it was in when Edit was pressed
+  // (o.held: its category and session then, a snapshot) and moves to its new one on Done, so typing a category or removing a
+  // tag never moves it under the GM's hands. It is also shown whatever the tag filter says, until Done.
+  const pinned = o.editable && o.pin ? all.find(n=>n.id===o.pin && n.id===o.editing && n.id===o.open) : null;
+  const held = o.editable && !pinned && o.held ? all.find(n=>n.id===o.held.id && n.id===o.editing && n.id===o.open) : null;
+  const proxy = held ? { ...held, category:o.held.category, session:o.held.session, tags:tag && !(held.tags||[]).some(x=>x.toLowerCase()===tag.toLowerCase()) ? (held.tags||[]).concat(tag) : held.tags } : null;
+  const groups = Engine.noteGroups(all.filter(n=>n!==pinned).map(n=>n===held ? proxy : n), sessions, { by:v.by, tag })
+    .map(g=>({ ...g, notes:g.notes.map(n=>n===proxy ? held : n) }));
   const bar = `<div class="form-toggle note-by" role="group" aria-label="Group by">${NOTE_BYS.map(([k, name])=>
       `<button type="button" data-ngroup="${k}" class="${k===v.by?"on":""}" aria-pressed="${k===v.by}">${esc(name)}</button>`).join("")}</div>
     ${tagsInUse.length ? `<div class="note-tagrow" role="group" aria-label="Filter by tag">${tagsInUse.map(x=>{ const on = tag!==null && x.toLowerCase()===tag.toLowerCase();

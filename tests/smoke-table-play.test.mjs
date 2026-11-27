@@ -3345,8 +3345,11 @@ test("323: a tag is a press with its own entry; a category typed is one entry; D
   const log = () => app.window.eval("S.table.audit").map(e => e.label);
   const before = log().length;
   editNote(app, id);
-  assert.equal(app.$("#main .note-pinned [data-ntitle]").dataset.ntitle, id, "the note in edit sits above the groups");
-  assert.equal(app.$$("#main .note-group [data-nopen]").length, 0);
+  // Ken's ruling on review: an existing note in Edit stays in the group it was in; it moves on Done.
+  const inGroup = () => { const h = [...app.$$("#main .note-group")].find(x => x.nextElementSibling.querySelector(`[data-note="${id}"]`)); return h && h.textContent; };
+  assert.equal(app.$("#main .note-pinned"), null, "Edit doesn't lift an existing note out of its group");
+  assert.ok(app.$(`[data-ntitle="${id}"]`), "it is in its form");
+  assert.equal(inGroup(), "Table", "and still under its heading");
   // Add tags with Enter: one entry, the field cleared and kept, the note still in edit.
   type(app, `[data-ntagin="${id}"]`, " Lead , Debt ");
   press(app, app.$(`[data-ntagin="${id}"]`), "Enter");
@@ -3368,7 +3371,9 @@ test("323: a tag is a press with its own entry; a category typed is one entry; D
   type(app, `[data-ncat="${id}"]`, "H"); type(app, `[data-ncat="${id}"]`, "Hooks");
   assert.equal(log().length, n + 1, "one entry for the burst");
   assert.equal(log().pop(), 'Filed "House rulings so far" under Hooks');
-  assert.equal(app.$("#main .note-pinned [data-ntitle]").dataset.ntitle, id, "typing moves nothing");
+  assert.equal(inGroup(), "Table", "typing a category moves nothing");
+  app.click(`[data-ntagrm="${id}"][data-ntagi="0"]`);
+  assert.equal(inGroup(), "Table", "nor does a tag press");
   done(app);
   assert.ok(noteHeads(app).includes("Hooks"), "Done files it under its category");
   assert.equal(app.window.eval("S.noteOpen"), id, "and it reads, open, in its group");
