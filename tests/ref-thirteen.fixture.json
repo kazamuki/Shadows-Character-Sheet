@@ -1,0 +1,1297 @@
+[
+ {
+  "id": "conditions",
+  "title": "Conditions",
+  "parts": [
+   {
+    "title": "",
+    "text": "",
+    "columns": [],
+    "rows": [],
+    "items": [
+     {
+      "term": "Agonized",
+      "text": "Operate at 1 Pain Level higher, to a max of Pain Level 3.",
+      "more": [
+       "Medical (Difficulty 15) or a Nanomed Kit."
+      ]
+     },
+     {
+      "term": "Bleeding",
+      "text": "−1 HP per round.",
+      "more": [
+       "BOD Essence TN 8 TH 1, Medical (Difficulty 15), or a Nanomed Kit."
+      ]
+     },
+     {
+      "term": "Blinded",
+      "text": "Can't see. Autofail any check requiring sight. Attack/Defense at −5.",
+      "more": [
+       "BOD Essence TN 8 TH 1, or end of scene if temporary."
+      ]
+     },
+     {
+      "term": "Burning",
+      "text": "Ongoing damage based on the source. −1 to all rolls.",
+      "more": [
+       "Remove the source, then treat as Bleeding."
+      ]
+     },
+     {
+      "term": "Deafened",
+      "text": "Can't hear. Autofail any check requiring hearing. Can't hear instructions or comms.",
+      "more": [
+       "BOD Essence TN 8 TH 1, or end of scene if temporary."
+      ]
+     },
+     {
+      "term": "DeSynced",
+      "text": "Cybernetic systems in a body part (limbs, head, torso) aren't talking, or are offline. Note which.",
+      "more": [
+       "TECH Essence TN 8 TH 2, or 1d4 rounds for a system reboot."
+      ]
+     },
+     {
+      "term": "Disarmed",
+      "text": "You aren't holding your weapon and can't use it.",
+      "more": [
+       "Recover the weapon, spending a Move, Fast, or Standard action."
+      ]
+     },
+     {
+      "term": "Disoriented",
+      "text": "−1 to all rolls.",
+      "more": [
+       "BOD Essence TN 8 TH 1, or end of scene if temporary."
+      ]
+     },
+     {
+      "term": "Frightened",
+      "text": "−1 to all rolls while the source is present. Can't willingly move toward the source.",
+      "more": [
+       "Remove the source, or WILL Essence TN 8 TH 2 with the source present."
+      ]
+     },
+     {
+      "term": "Grappled",
+      "text": "−5 to anything requiring sophisticated movement.",
+      "more": [
+       "Remove the source, or a BOD or REF Essence Check opposed by the grappler (your choice)."
+      ]
+     },
+     {
+      "term": "Injured",
+      "text": "This body part is damaged and doesn't work.",
+      "more": [
+       "Focused Healing, or 1 week of downtime."
+      ]
+     },
+     {
+      "term": "Maimed",
+      "text": "This body part is gone.",
+      "more": [
+       "Buy or build a replacement."
+      ]
+     },
+     {
+      "term": "Paralyzed",
+      "text": "Helpless.",
+      "more": [
+       "Remove the source, or a Nanomed Kit."
+      ]
+     },
+     {
+      "term": "Poisoned",
+      "text": "Inflicts a Condition based on the specific poison. Note which one.",
+      "more": [
+       "BOD Essence TN 8 TH 2-4 (depending on the poison), an antidote, or a Nanomed Kit."
+      ]
+     },
+     {
+      "term": "Prone",
+      "text": "Movement halved. Attack/Defense at −3.",
+      "more": [
+       "Spend a Move to stand."
+      ]
+     },
+     {
+      "term": "Restrained",
+      "text": "Movement reduced to 0. −5 to all Actions. Cannot Dodge.",
+      "more": [
+       "Remove the source, or BOD or REF Essence TN 8 TH 2 (your choice)."
+      ]
+     },
+     {
+      "term": "Shocked",
+      "text": "Ongoing damage based on the source. −1 to all rolls.",
+      "more": [
+       "Remove the source, then treat as Bleeding."
+      ]
+     },
+     {
+      "term": "Stunned",
+      "text": "Helpless.",
+      "more": [
+       "BOD Essence TN 8 TH 2."
+      ]
+     },
+     {
+      "term": "Unconscious",
+      "text": "Helpless.",
+      "more": [
+       "Depends on what put you down. From a Shock Check, it ends at the start of your next turn. At zero Health Levels, you're down until you regain health."
+      ]
+     },
+     {
+      "term": "Dying",
+      "text": "Helpless. Make a WILL Essence Check TN 8 TH 2 at every Reset, and Pain doesn't apply to it. A failure, or any damage you take, is a Death Mark. Three Death Marks and you die.",
+      "more": [
+       "Medical (Difficulty 20) or a Nanomed Kit ends it. Death Marks clear when you're no longer Dying."
+      ]
+     }
+    ],
+    "footText": ""
+   },
+   {
+    "title": "How Conditions work",
+    "text": "",
+    "columns": [],
+    "rows": [],
+    "items": [
+     {
+      "term": "",
+      "text": "You have it or you don't. A Condition doesn't stack with itself, but different Conditions stack with each other.",
+      "more": []
+     },
+     {
+      "term": "",
+      "text": "Helpless — you can't move or react. Any attack roll of 2 or better hits you.",
+      "more": []
+     },
+     {
+      "term": "",
+      "text": "Pain Level never goes below 0 or above 3.",
+      "more": []
+     },
+     {
+      "term": "",
+      "text": "A Condition's penalty comes off Skill Checks only. It doesn't cost Essence dice or Breaker percentage.",
+      "more": []
+     },
+     {
+      "term": "",
+      "text": "Different Conditions stack. All the penalties on one roll together (Conditions, range, cover, visibility) never go past −8.",
+      "more": []
+     }
+    ],
+    "footText": ""
+   }
+  ]
+ },
+ {
+  "id": "codex",
+  "title": "The Codex",
+  "parts": []
+ },
+ {
+  "id": "defense",
+  "title": "Defense",
+  "parts": [
+   {
+    "title": "",
+    "text": "free, unlimited, no penalty for being outnumbered",
+    "columns": [
+     "The threat",
+     "The answer"
+    ],
+    "rows": [
+     [
+      "Aimed at you",
+      "Dodge — REF Skill"
+     ],
+     [
+      "In reach, hand to hand",
+      "Parry — Melee Skill plus the weapon's bonus"
+     ],
+     [
+      "Filling the space",
+      "Scramble — MOB Essence, TN 8 TH 2"
+     ],
+     [
+      "In your body",
+      "BOD Essence — poison, current, pressure"
+     ],
+     [
+      "In your head",
+      "WILL Essence — fear, compulsion, magical illusions"
+     ],
+     [
+      "You aren't defending",
+      "Difficulty 10"
+     ],
+     [
+      "Helpless",
+      "Hit on 2 or better, natural 1 still botches"
+     ]
+    ],
+    "items": [],
+    "footText": ""
+   }
+  ]
+ },
+ {
+  "id": "checks",
+  "title": "Checks",
+  "parts": [
+   {
+    "title": "",
+    "text": "",
+    "columns": [
+     "Check Type",
+     "What It Measures",
+     "How to Succeed",
+     "Default / Escalation"
+    ],
+    "rows": [
+     [
+      "Skill Check (Unopposed)",
+      "Skill use against environment",
+      "Meet or exceed the Difficulty",
+      "10 (Easy) · 15 (Average) · 20 (Challenging) · +5 per difficulty level"
+     ],
+     [
+      "Skill Check (Opposed)",
+      "Skilled action against another character, physical combat",
+      "Higher total wins · (tie favors defender)",
+      "No fixed difficulty"
+     ],
+     [
+      "Essence Check (Unopposed)",
+      "Raw capacity against the environment",
+      "Meet or exceed the Threshold (TH)",
+      "Default TN 8, TH 2 · (TN ≤ 10, TH ≥ 1)"
+     ],
+     [
+      "Essence Check (Opposed)",
+      "Raw capacity against another character",
+      "Higher net Hits wins (tie favors defender)",
+      "Default TN 8, no fixed TH"
+     ],
+     [
+      "Breaker Check",
+      "Stability under stress",
+      "Roll equal to or below listed %",
+      "Character Sheet value (adjust sparingly)"
+     ],
+     [
+      "Extended Check",
+      "Prolonged contest between two characters",
+      "Higher net Hits after countdown wins. · (tie favors defender)",
+      "Default TN 8, no fixed TH"
+     ]
+    ],
+    "items": [],
+    "footText": ""
+   }
+  ]
+ },
+ {
+  "id": "modifiers",
+  "title": "Modifiers and range",
+  "parts": [
+   {
+    "title": "Modifiers",
+    "text": "penalties to the attacker. They add, and they stop at −8.",
+    "columns": [
+     "Cover",
+     "Visibility",
+     "Distance",
+     "Moving"
+    ],
+    "rows": [
+     [
+      "None —",
+      "Bright —",
+      "In band —",
+      "Walk —"
+     ],
+     [
+      "Partial −1",
+      "Dim −1",
+      "One band past −3",
+      "Run −1"
+     ],
+     [
+      "Heavy −3",
+      "Dark −3",
+      "Two past — no shot",
+      "Sprint −3"
+     ],
+     [
+      "Full — no shot*",
+      "Blind −5",
+      "",
+      ""
+     ]
+    ],
+    "items": [],
+    "footText": "*Area attacks reach Full Cover. Nothing else does."
+   },
+   {
+    "title": "Range bands",
+    "text": "",
+    "columns": [
+     "Close",
+     "Short",
+     "Medium",
+     "Long",
+     "Extreme"
+    ],
+    "rows": [
+     [
+      "0–3m",
+      "3–40m",
+      "40–120m",
+      "120–400m",
+      "400m+"
+     ]
+    ],
+    "items": [],
+    "footText": ""
+   }
+  ]
+ },
+ {
+  "id": "actions",
+  "title": "Actions",
+  "parts": [
+   {
+    "title": "Movement",
+    "text": "break it up freely around your other actions",
+    "columns": [
+     "Pace",
+     "Distance",
+     "Attacking"
+    ],
+    "rows": [
+     [
+      "Walk",
+      "MOB",
+      "No penalty"
+     ],
+     [
+      "Run",
+      "MOB ×3",
+      "−1"
+     ],
+     [
+      "Sprint",
+      "MOB ×6",
+      "−3"
+     ]
+    ],
+    "items": [],
+    "footText": ""
+   },
+   {
+    "title": "Free Action",
+    "text": "as many as make sense, on anybody's turn",
+    "columns": [],
+    "rows": [],
+    "items": [
+     {
+      "term": "Talk",
+      "text": "four words, not four sentences",
+      "more": []
+     },
+     {
+      "term": "Drop prone",
+      "text": "standing up later costs your Move",
+      "more": []
+     },
+     {
+      "term": "Let go of something",
+      "text": "",
+      "more": []
+     },
+     {
+      "term": "Look",
+      "text": "",
+      "more": []
+     },
+     {
+      "term": "Activate a Power",
+      "text": "on your turn, SFR on a utility or support power, up to your Rate of Use",
+      "more": []
+     }
+    ],
+    "footText": ""
+   },
+   {
+    "title": "Fast Action",
+    "text": "one on your turn, one at Reset",
+    "columns": [],
+    "rows": [],
+    "items": [
+     {
+      "term": "Reload",
+      "text": "fresh magazine, grenade off the belt, arrow from the quiver; swap ammo type once per turn",
+      "more": []
+     },
+     {
+      "term": "Inject",
+      "text": "battle chem or Nanomed Kit, yourself or somebody in reach",
+      "more": []
+     },
+     {
+      "term": "Activate an item",
+      "text": "silver card, detonator, lights",
+      "more": []
+     },
+     {
+      "term": "Quick check",
+      "text": "Tactics, Occult Lore, anything that doesn't need your hands",
+      "more": []
+     },
+     {
+      "term": "Shout",
+      "text": "four words, not four sentences",
+      "more": []
+     }
+    ],
+    "footText": ""
+   },
+   {
+    "title": "Standard Action",
+    "text": "one per turn",
+    "columns": [],
+    "rows": [],
+    "items": [
+     {
+      "term": "Attack",
+      "text": "anything from a fist to a Hammerlock",
+      "more": []
+     },
+     {
+      "term": "Combat Maneuver",
+      "text": "Martial Arts skill to Grapple, Knockdown, Disarm, Stun",
+      "more": []
+     },
+     {
+      "term": "Cast a spell",
+      "text": "Spellcraft check, then an attack roll if it's aimed",
+      "more": []
+     },
+     {
+      "term": "Attack with a Power",
+      "text": "SFR, up to your Rate of Use",
+      "more": []
+     },
+     {
+      "term": "Full-attention work",
+      "text": "breach, hack, drag somebody clear",
+      "more": []
+     }
+    ],
+    "footText": ""
+   },
+   {
+    "title": "Stunt",
+    "text": "once per round, replaces your entire turn",
+    "columns": [],
+    "rows": [],
+    "items": [
+     {
+      "term": "",
+      "text": "Natural 4 or better and beat the opposed roll",
+      "more": []
+     },
+     {
+      "term": "",
+      "text": "Fall short on the die and it resolves as an ordinary roll",
+      "more": []
+     }
+    ],
+    "footText": ""
+   }
+  ]
+ },
+ {
+  "id": "rof",
+  "title": "Rate of fire",
+  "parts": [
+   {
+    "title": "",
+    "text": "",
+    "columns": [
+     "Mode",
+     "Rounds",
+     "Roll",
+     "Result"
+    ],
+    "rows": [
+     [
+      "Single",
+      "1",
+      "+ACC",
+      "Hit or miss. Kicker die. Called Shot available."
+     ],
+     [
+      "Burst",
+      "3",
+      "flat",
+      "All three or none, as one packet."
+     ],
+     [
+      "Full Auto",
+      "10",
+      "−3",
+      "One hit per point of differential, as one packet."
+     ]
+    ],
+    "items": [],
+    "footText": ""
+   }
+  ]
+ },
+ {
+  "id": "armor",
+  "title": "Armor and damage",
+  "parts": [
+   {
+    "title": "",
+    "text": "",
+    "columns": [],
+    "rows": [],
+    "items": [
+     {
+      "term": "Total the damage first.",
+      "text": "Burst and Full Auto arrive as one packet.",
+      "more": []
+     },
+     {
+      "term": "Then armor answers.",
+      "text": "Roll PROT, add RES where the damage type allows. AP skips RES. Enemy armor is static.",
+      "more": []
+     },
+     {
+      "term": "",
+      "text": "What’s left comes off Health Levels, left to right.",
+      "more": []
+     },
+     {
+      "term": "Withering",
+      "text": "heals only with rest and medicine, and not until you're clear of the source. Armor works as normal.",
+      "more": []
+     },
+     {
+      "term": "Massive",
+      "text": "skips all of the above. Strips Integrity equal to the weapon's damage and takes 1 Health Level per 10 points of it, plus another if the armor drops to 0 or there was none. Those Levels don't come back with rest.",
+      "more": []
+     },
+     {
+      "term": "Integrity",
+      "text": "1 point for every hit the armor stops outright. Anyone hit at all rolls once for wear at the end of the encounter, 1d4 to 1d10, depending on difficulty.",
+      "more": []
+     },
+     {
+      "term": "At Integrity 0",
+      "text": "RES gone, PROT remains. Armor taken to 0 by Massive is scrap.",
+      "more": []
+     }
+    ],
+    "footText": ""
+   }
+  ]
+ },
+ {
+  "id": "hits",
+  "title": "When a hit lands hard",
+  "parts": [
+   {
+    "title": "Shock",
+    "text": "",
+    "columns": [],
+    "rows": [],
+    "items": [
+     {
+      "term": "",
+      "text": "That hit took half your Health Levels or more. Fail and you're Unconscious and Prone until the start of your next turn.",
+      "more": [
+       "BOD Essence Check TN 8 TH 2"
+      ]
+     }
+    ],
+    "footText": ""
+   },
+   {
+    "title": "At zero",
+    "text": "",
+    "columns": [],
+    "rows": [],
+    "items": [
+     {
+      "term": "",
+      "text": "Your last Health Level is gone. Pain doesn't apply to this check. Pass and you're Unconscious and Prone. Fail and you're Dying.",
+      "more": [
+       "WILL Essence Check TN 8 TH 2",
+       "Nine Lives can pass this check for you without a roll."
+      ]
+     }
+    ],
+    "footText": ""
+   },
+   {
+    "title": "Massive",
+    "text": "",
+    "columns": [],
+    "rows": [],
+    "items": [
+     {
+      "term": "",
+      "text": "Massive strips Integrity equal to the damage and removes 1 Health Level per 10 points of it, plus one more if the armor ends at 0 or there was none. Those Levels are gone, not emptied. Rest and chems don't bring them back. It takes Focused Healing and a replacement: a prosthetic, or something stranger.",
+      "more": []
+     }
+    ],
+    "footText": ""
+   },
+   {
+    "title": "Dying",
+    "text": "",
+    "columns": [],
+    "rows": [],
+    "items": [
+     {
+      "term": "",
+      "text": "Damage while Dying is an automatic Death Mark.",
+      "more": [
+       "You're Dying. Make the check at every Reset, and Pain doesn't apply to it. Fail and it's a Death Mark. Pass and you've bought the round, nothing more. Each source that ticks is a Death Mark too."
+      ]
+     }
+    ],
+    "footText": ""
+   }
+  ]
+ },
+ {
+  "id": "pain",
+  "title": "Pain Levels",
+  "parts": [
+   {
+    "title": "",
+    "text": "Each Pain Level: −1 to Skill Checks, −1 Essence die, −5% on Breaker Checks.",
+    "columns": [
+     "Pain Level",
+     "What it means"
+    ],
+    "rows": [
+     [
+      "Pain Level 0",
+      "Shock, adrenaline, surface wounds (0-1 HL lost)."
+     ],
+     [
+      "Pain Level 1",
+      "Deep bruising, bleeding, compromised movement (2+ HL lost)."
+     ],
+     [
+      "Pain Level 2",
+      "Fractures, internal damage, failing strength (5+ HL lost)."
+     ],
+     [
+      "Pain Level 3",
+      "Catastrophic injury, survival is uncertain (8+ HL lost)."
+     ]
+    ],
+    "items": [],
+    "footText": "Essence Checks can never drop below 1 die. Breaker percentages cannot be reduced below 10%."
+   }
+  ]
+ },
+ {
+  "id": "recovery",
+  "title": "Recovery",
+  "parts": [
+   {
+    "title": "Natural healing",
+    "text": "",
+    "columns": [],
+    "rows": [],
+    "items": [
+     {
+      "term": "",
+      "text": "With food, shelter and real rest, you recover HP equal to your BOD each day. Push on instead of resting and your GM may halve that.",
+      "more": [
+       "Speed Heal doubles it for 24 hours."
+      ]
+     }
+    ],
+    "footText": ""
+   },
+   {
+    "title": "Focused healing",
+    "text": "",
+    "columns": [],
+    "rows": [],
+    "items": [
+     {
+      "term": "",
+      "text": "Med kits, chems, nanites, or real care in a clinic. How much comes back depends on the care. It also clears Injured.",
+      "more": [
+       "A Health Level lost to Massive damage comes back with Focused Healing and a replacement: a prosthetic, or something stranger."
+      ]
+     }
+    ],
+    "footText": ""
+   },
+   {
+    "title": "Nanomed Kit",
+    "text": "",
+    "columns": [],
+    "rows": [],
+    "items": [
+     {
+      "term": "",
+      "text": "Nanites in the bloodstream. It clears Agonized, Bleeding, Paralyzed and Poisoned, stabilizes the Dying, and regenerates 1 HP a round for BOD rounds.",
+      "more": [
+       "Another kit inside a day still clears and stabilizes, but regenerates slower: 1 HP every two rounds for the second, every three for the third."
+      ]
+     }
+    ],
+    "footText": ""
+   }
+  ]
+ },
+ {
+  "id": "tags",
+  "title": "Weapon tags",
+  "parts": [
+   {
+    "title": "",
+    "text": "",
+    "columns": [],
+    "rows": [],
+    "items": [
+     {
+      "term": "AP",
+      "text": "Armor Piercing. The weapon or round bypasses the target's RES entirely. PROT still rolls -- AP does not make armor irrelevant; it makes the flat damage reduction irrelevant.",
+      "more": []
+     },
+     {
+      "term": "Area",
+      "text": "The weapon affects all targets within the listed radius of the point of impact rather than a single target. One attack roll affects everyone in range. Does not benefit from ACC bonuses.",
+      "more": []
+     },
+     {
+      "term": "Bleeding",
+      "text": "The weapon causes the Bleeding condition on a successful hit.",
+      "more": []
+     },
+     {
+      "term": "Burning",
+      "text": "The weapon sets the target on fire: ongoing damage each round until extinguished or the source is removed. Stacks with Energy damage when both are present.",
+      "more": []
+     },
+     {
+      "term": "Conceal",
+      "text": "Can be concealed on the person without detection by visual inspection or standard security checks. Specialized scanning or a successful Perception check against a defined threshold may reveal it.",
+      "more": []
+     },
+     {
+      "term": "Concussive",
+      "text": "Causes the Disoriented condition across its area of effect. Deals no damage. Affects all targets in range including allies.",
+      "more": []
+     },
+     {
+      "term": "Disarming",
+      "text": "Can perform a Disarm maneuver instead of dealing damage. Declare before the attack roll; a hit knocks the target's weapon free, automatically. Choose damage or disarm, not both.",
+      "more": []
+     },
+     {
+      "term": "Disintegration",
+      "text": "On a killing blow, the target leaves no recoverable remains. The damage itself is not necessarily greater -- the permanence of the outcome is.",
+      "more": []
+     },
+     {
+      "term": "EMP",
+      "text": "Disrupts electronic systems and cybernetic implants on hit. Minimal against standard targets; against heavily augmented targets or electronics, the EM pulse effect triggers separately from the damage.",
+      "more": []
+     },
+     {
+      "term": "Incendiary",
+      "text": "Sets the impact area on fire, causing Burning to all targets in the affected zone until extinguished.",
+      "more": []
+     },
+     {
+      "term": "Knockdown",
+      "text": "Can knock a target prone instead of dealing damage. Declare before the attack roll; a hit knocks the target down, automatically. Choose damage or knockdown, not both.",
+      "more": []
+     },
+     {
+      "term": "Mounted",
+      "text": "Requires a bipod, hardpoint, or vehicle mount for effective use. Firing without one: BOD Essence Check, success fires at −4 ACC, failure means the weapon is uncontrollable.",
+      "more": []
+     },
+     {
+      "term": "No Recoil",
+      "text": "Produces no recoil on discharge. The ACC bonus applies to both Single and Burst fire, not just Single.",
+      "more": []
+     },
+     {
+      "term": "Non-lethal",
+      "text": "Designed for incapacitation rather than harm. Descriptor only -- the weapon's damage value (or lack of one) determines the mechanical effect.",
+      "more": []
+     },
+     {
+      "term": "Payload",
+      "text": "The weapon's effect is determined by the equipped arrowhead or bolt type rather than the platform itself.",
+      "more": []
+     },
+     {
+      "term": "Siege",
+      "text": "Deals Massive damage, to vehicles and structures and to people alike.",
+      "more": []
+     },
+     {
+      "term": "Silent",
+      "text": "Produces no ballistic or acoustic signature detectable by standard means. Firing from hidden does not automatically reveal the attacker; the ambush bonus applies every round they remain undetected.",
+      "more": []
+     },
+     {
+      "term": "Smoke",
+      "text": "Creates an obscurement cloud blocking line of sight within its area for a GM-determined number of rounds.",
+      "more": []
+     },
+     {
+      "term": "Spread",
+      "text": "Discharges across a cone, affecting multiple targets with one roll. Treated as an Area attack; no ACC bonus.",
+      "more": []
+     },
+     {
+      "term": "Stunning",
+      "text": "Causes the Stunned/Shocked condition on a successful hit.",
+      "more": []
+     },
+     {
+      "term": "UV Burst (Undead)",
+      "text": "Emits a burst of ultraviolet radiation dealing Withering damage specifically to undead and vampiric targets. Non-supernatural targets in range are unaffected by the UV component.",
+      "more": []
+     },
+     {
+      "term": "Unstable",
+      "text": "Does not behave predictably. Roll 1d4 to determine the actual effect when used.",
+      "more": []
+     },
+     {
+      "term": "Volatile",
+      "text": "Experimental or hybrid systems carry a risk of malfunction. On a botched attack roll, roll on the Volatile Misfire table (1: no effect; 2-3: jam, one Action to clear; 4: misfire, 5 damage ignoring armor, then jams).",
+      "more": []
+     },
+     {
+      "term": "Wither Cloud (Lycanthropes)",
+      "text": "Creates a zone of particulate matter converting all damage dealt to lycanthropes and their kindred within the area into Withering damage for the duration. Non-supernatural targets are unaffected by the cloud itself.",
+      "more": []
+     },
+     {
+      "term": "Withering",
+      "text": "Damage of this type cannot be regenerated supernaturally -- it must heal at the natural rate regardless of the target's normal recovery. The damage amount is not necessarily greater; the permanence is.",
+      "more": []
+     },
+     {
+      "term": "Suppression",
+      "text": "Sustained fire across an area rather than at a target. Declare the zone: until the start of the firer's next turn, that ground is Difficult Terrain. No attack roll and no damage; the rounds are aimed at the space, not at anyone in it. Whether a target gets hit is a matter of cover and line of sight, as ever. What it costs them is the ability to get anywhere useful.",
+      "more": []
+     },
+     {
+      "term": "Blast",
+      "text": "The weapon detonates at a point and catches everything within the radius: allies, enemies, bystanders and objects alike. The attack is made against the place, at Difficulty 10. Everyone caught Scrambles on a REF Essence Check at TN 8, TH 2, and the Threshold rises by one for every five meters of radius beyond the first five. Damage is the same for all of them; the Scramble decides what it costs. A lobbed blast needs no line of sight and reaches a target in Full Cover. A cone starts at the wielder and reaches only what the wielder can see.",
+      "more": []
+     },
+     {
+      "term": "Anti-Materiel",
+      "text": "Vehicle armor doesn't stop it, so it deals full damage to vehicles. Against a person it's the weapon's AP and damage that count, nothing extra.",
+      "more": []
+     },
+     {
+      "term": "Reach",
+      "text": "The weapon reaches as far as its Reach column says. The tag marks a reach that's unusual for its kind; it adds nothing to the number.",
+      "more": []
+     }
+    ],
+    "footText": ""
+   }
+  ]
+ },
+ {
+  "id": "crank",
+  "title": "CRANK",
+  "parts": [
+   {
+    "title": "",
+    "text": "CRANK is the gray market's job board, on every device in NYTE City. Your rep is your record there: one job at a time, and it doesn't fade. Abandoning a contract is the one thing that follows you. Walking away from a client who broke it first isn't abandoning it, and costs nothing.",
+    "columns": [
+     "Tier",
+     "Rep",
+     "Pays",
+     "Off-screen job"
+    ],
+    "rows": [
+     [
+      "Novice",
+      "0",
+      "Ç50–200",
+      "Ç50"
+     ],
+     [
+      "Competent",
+      "5",
+      "Ç300–800",
+      "Ç300"
+     ],
+     [
+      "Skilled",
+      "12",
+      "Ç1,000–3,000",
+      "Ç1,000"
+     ],
+     [
+      "Expert",
+      "20",
+      "Ç4,000–8,000",
+      "Ç4,000"
+     ],
+     [
+      "Legendary",
+      "30",
+      "Ç10,000+",
+      "—"
+     ]
+    ],
+    "items": [],
+    "footText": ""
+   },
+   {
+    "title": "The Job Generator",
+    "text": "Roll d10 on each column or choose manually. Five rolls give you a complete contract — a job type, a client, a target, a location, and a complication that will make it interesting. Not every element needs to drive the scene equally. Sometimes the complication is the whole job. Sometimes the location tells you everything.",
+    "columns": [],
+    "rows": [],
+    "items": [],
+    "footText": "The tables don't know the crew's tier, but you do, and the client column does most of the scaling for you. A small business owner's extraction pulls a cousin out of a bad apartment; a megacorp executive's pulls a defector out of a tower. Read every entry at the size the client can afford, and reroll anything that doesn't fit."
+   },
+   {
+    "title": "Job Type",
+    "text": "",
+    "columns": [
+     "d10",
+     "Job Type",
+     "Notes"
+    ],
+    "rows": [
+     [
+      "1",
+      "Courier",
+      "Move something from one place to another. Legal, illegal, or dangerous — the package doesn't come with a label."
+     ],
+     [
+      "2",
+      "Extraction",
+      "Get someone out. Whether they want to come is a separate question."
+     ],
+     [
+      "3",
+      "Espionage",
+      "Steal data, sabotage a facility, or gather intelligence without being noticed."
+     ],
+     [
+      "4",
+      "Cyberwarfare",
+      "Hack a system, plant something in it, or wipe something out of it."
+     ],
+     [
+      "5",
+      "Smuggling",
+      "Move illegal goods across a border or through territory that doesn't want them moved."
+     ],
+     [
+      "6",
+      "Security",
+      "Keep something or someone safe. The threat isn't always obvious at the start."
+     ],
+     [
+      "7",
+      "Heist",
+      "Take something from somewhere it's being kept."
+     ],
+     [
+      "8",
+      "Assassination",
+      "Remove a target. The contract specifies low-profile or high-profile. The target rarely cooperates with either."
+     ],
+     [
+      "9",
+      "Investigation",
+      "Find a missing person, locate an item, or uncover something someone wants buried."
+     ],
+     [
+      "10",
+      "Blacksite Raid",
+      "Get into a high-risk facility and come back out. Whatever's inside is worth the attempt — probably."
+     ]
+    ],
+    "items": [],
+    "footText": ""
+   },
+   {
+    "title": "Client",
+    "text": "",
+    "columns": [
+     "d10",
+     "Client",
+     "Notes"
+    ],
+    "rows": [
+     [
+      "1",
+      "Small Business Owner",
+      "Wants protection, a debt collected, or a competitor handled. Budget is limited; desperation is not."
+     ],
+     [
+      "2",
+      "Street Gang",
+      "Needs muscle, product moved, or a message delivered. Will pay in Skrip if they pay at all."
+     ],
+     [
+      "3",
+      "Crime Syndicate",
+      "Wants it handled quietly and completely. No loose ends."
+     ],
+     [
+      "4",
+      "Corrupt Official",
+      "Needs evidence buried, a rival framed, or something retrieved before anyone asks questions."
+     ],
+     [
+      "5",
+      "Megacorp Executive",
+      "High pay, high risk. Expect at least one layer of deception built into the contract."
+     ],
+     [
+      "6",
+      "Underground Resistance",
+      "Aims to disrupt corporate or government control. Pays what they can. Believes in what they're doing."
+     ],
+     [
+      "7",
+      "Government Agency",
+      "Black ops framing, minimal details, complete deniability. The paperwork doesn't exist."
+     ],
+     [
+      "8",
+      "Wealthy Socialite",
+      "Needs something done discreetly. The stakes are personal, which makes them unpredictable."
+     ],
+     [
+      "9",
+      "Rogue VI or Program",
+      "Unusual requests, unconventional payment methods, and ethical complications the client may not recognize as such."
+     ],
+     [
+      "10",
+      "Unknown Entity",
+      "Every posting is anonymous, but most give their client away through what they want and how they ask. This one doesn't. The job is real. The client is a question mark."
+     ]
+    ],
+    "items": [],
+    "footText": ""
+   },
+   {
+    "title": "Target",
+    "text": "",
+    "columns": [
+     "d10",
+     "Target",
+     "Notes"
+    ],
+    "rows": [
+     [
+      "1",
+      "Corporate Executive",
+      "Well-guarded, well-connected, and carrying information worth more than the posted rate."
+     ],
+     [
+      "2",
+      "Rival Fixer",
+      "Experienced and paranoid. Has their own crew."
+     ],
+     [
+      "3",
+      "Underground Hacker",
+      "Hard to find, harder to trust, and probably already knows you're coming."
+     ],
+     [
+      "4",
+      "High-Tech Prototype",
+      "Cyberware, weapon system, or AI component. Multiple parties want it."
+     ],
+     [
+      "5",
+      "Encrypted Data",
+      "The contents are unknown until they're not. Could be worth more than the contract."
+     ],
+     [
+      "6",
+      "Political Figure",
+      "Enormous fallout if the job goes loud. The client is counting on it not going loud."
+     ],
+     [
+      "7",
+      "Gang Leader",
+      "Armed, dangerous, and backed by people who will take the loss personally."
+     ],
+     [
+      "8",
+      "Contraband Shipment",
+      "High demand from multiple directions. Someone else is already moving on it."
+     ],
+     [
+      "9",
+      "Automated Security System",
+      "The obstacle is digital. Getting through it is a technical problem until it isn't."
+     ],
+     [
+      "10",
+      "Unknown Package",
+      "No description. No manifest. Just a location and a pickup."
+     ]
+    ],
+    "items": [],
+    "footText": ""
+   },
+   {
+    "title": "Location",
+    "text": "",
+    "columns": [
+     "d10",
+     "Location",
+     "Notes"
+    ],
+    "rows": [
+     [
+      "1",
+      "Corporate Office Tower",
+      "High-tech security, layered access, and staff trained to notice things that don't belong."
+     ],
+     [
+      "2",
+      "Underground Research Lab",
+      "Off the books. Biological or chemical risk is possible. Nobody official knows it exists."
+     ],
+     [
+      "3",
+      "Slum Territory",
+      "Gang-controlled, unpredictable, and full of people who've learned to stay out of other people's business."
+     ],
+     [
+      "4",
+      "Detention Facility",
+      "Getting in requires a plan. Getting out requires a better one."
+     ],
+     [
+      "5",
+      "Neon Nightclub",
+      "Loud, chaotic, and full of eyes. The noise is cover. So is everyone else."
+     ],
+     [
+      "6",
+      "Private Penthouse",
+      "Elite security, controlled access, and an owner who expects to be untouchable."
+     ],
+     [
+      "7",
+      "Black Market Bazaar",
+      "Traders, fixers, and competing interests in a space where everyone is watching everyone else."
+     ],
+     [
+      "8",
+      "Cargo Ship or Warehouse",
+      "Plenty of cover. Time pressure is almost always a factor."
+     ],
+     [
+      "9",
+      "The LINK",
+      "The job happens in the digital layer. Physical security is someone else's problem — until it isn't."
+     ],
+     [
+      "10",
+      "Abandoned Facility",
+      "Empty on paper. Rarely empty in practice."
+     ]
+    ],
+    "items": [],
+    "footText": ""
+   },
+   {
+    "title": "Complication",
+    "text": "",
+    "columns": [
+     "d10",
+     "Complication",
+     "Notes"
+    ],
+    "rows": [
+     [
+      "1",
+      "Double-Cross",
+      "The client is setting the crew up. The question is whether they figure it out before or after."
+     ],
+     [
+      "2",
+      "Unexpected Security",
+      "The location is locked down in ways the intel didn't mention."
+     ],
+     [
+      "3",
+      "Rival Crew",
+      "Another team is working the same job. Their contract may or may not align with the crew's."
+     ],
+     [
+      "4",
+      "Corrupt Law Enforcement",
+      "Someone with a badge shows up at exactly the wrong moment."
+     ],
+     [
+      "5",
+      "Bad Intel",
+      "The job isn't what the posting described. The gap between what was promised and what's true is the real problem."
+     ],
+     [
+      "6",
+      "Hidden Agenda",
+      "The client wants something beyond what the contract states. Whether that's a problem depends on what it is."
+     ],
+     [
+      "7",
+      "Hard Deadline",
+      "The window is hours, not days. Everything else adjusts accordingly."
+     ],
+     [
+      "8",
+      "Heavier Resistance",
+      "More opposition than the tier suggested. Someone upgraded the threat level and didn't update the posting."
+     ],
+     [
+      "9",
+      "Collateral Stakes",
+      "Completing the job cleanly means making a choice about who else gets caught in it."
+     ],
+     [
+      "10",
+      "Paranormal Element",
+      "Something not human is involved. It may be incidental. It may be the whole job."
+     ]
+    ],
+    "items": [],
+    "footText": ""
+   }
+  ]
+ }
+]

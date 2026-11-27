@@ -3800,3 +3800,28 @@ test("Decision 302: a job's rep is the book's", () => {
   assert.deepEqual([o.failed.rep, o.broken.rep], [0, 0]);
   assert.deepEqual(Object.values(o).map(e => e.paid), [true, false, false, false]);
 });
+
+// S27 (GQ94, Decision 288): a weapon tag whose words say a ruling the book hasn't caught up with is marked, so the
+// Reference's Weapon tags panel doesn't pass it off as the book's, and the debt is written down in the catch-up plan.
+test("CRB: a weapon tag that says a ruling the book doesn't is marked with a rulingSource, and named in crb-catch-up", () => {
+  const norm = s => String(s).replace(/<[^>]*>/g, " ").replace(/\*\*|\*|\\/g, "").replace(/[‘’]/g, "'").replace(/−/g, "-").replace(/\s+/g, " ").trim();
+  const marked = D.weaponTagGlossary.filter(t => t.rulingSource);
+  assert.deepEqual([...marked.map(t => t.id)].sort(), ["Anti-Materiel", "Reach"], "the two tags Deighton's 2026-10-10 rulings define");
+  const names = readdirSync(join(ROOT, "private/crb")), gearFile = names.find(n => n.startsWith("0460"));
+  const book = norm(crb(gearFile));
+  const catchUp = [];
+  let section = null;
+  for (const line of readFileSync(join(ROOT, "docs/plans/crb-catch-up.md"), "utf8").split(/\r?\n/)) {
+    if (line.startsWith("## ")) section = (/^## (\d{4})/.exec(line) || [])[1] || null;
+    else if (line.startsWith("- ☐")) catchUp.push({ section, line });
+  }
+  for (const t of marked) {
+    assert.ok(!book.includes(norm(t.description)), `${t.id}: its words are the book's now: take off its rulingSource`);
+    const cites = /Decision (\d+)/.exec(t.rulingSource);
+    assert.ok(cites, `${t.id}'s rulingSource names no Decision`);
+    const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const named = new RegExp(`(^|[^*])\\*${esc(t.id)}\\*(?!\\*)`);
+    const owed = catchUp.filter(l => l.section === "0460" && named.test(l.line) && new RegExp(`Decision ${cites[1]}\\b`).test(l.line));
+    assert.ok(owed.length, `${t.id} is ahead of the book, and no open line under 0460 in plans/crb-catch-up.md names it in italics and cites Decision ${cites[1]}`);
+  }
+});

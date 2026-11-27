@@ -698,3 +698,90 @@ test("250: the builder guesses nothing: a levels track with no starting level, o
   const b = B.buildPack({ ...sources, sites: noFill, ledger, Engine, D });
   assert.equal(b.pack, null); assert.ok(b.problems.some(x => /When it fills/.test(x)));
 });
+
+// ── The pack against the mirror, read without the builder (S27, GQ93) ───────
+// Every check above shares the builder's parser, so a builder bug would pass them. This one re-reads 2612's
+// ENTRY blocks, its groups' Composition lines and 2610's origin rows with its own small parsers, and compares
+// them with the finished pack. It came out of the 2026-11-20 audit (docs/audits/2026-11-20_reference-and-codex-pack-vs-mirror.md).
+const normName = s => String(s).toLowerCase().replace(/<[^>]+>/g, " ").replace(/[‘’ʼ]/g, "'").replace(/[−–—]/g, "-").replace(/\*\*?|__?|`|\\/g, " ").replace(/\s+/g, " ").trim();
+const TOL_TWO_FILES = { 8: [2, 1], 10: [3, 2] };   // entry number: [2612's stat row, the pack's (the Stat Audit's)]
+function auditPack(pack, mt, oc) {
+  const bad = [], ids = ["BOD", "REF", "MOB", "INT", "TECH", "COOL", "MAG", "EMP", "TOL", "WILL"];
+  const blocks = mt.split(/\n\*\*ENTRY (\d+)\*\*/).slice(1), seen = new Set();
+  let statRows = 0, skillLines = 0;
+  const twoFiles = new Set();
+  for (let i = 0; i < blocks.length; i += 2) {
+    const n = blocks[i], body = blocks[i + 1]; seen.add("Entry " + n);
+    const e = pack.entries.find(x => x.ref === "Entry " + n);
+    if (!e) { bad.push(`Entry ${n}: in the mirror, not in the pack`); continue; }
+    // The stat table: a header row of the ten ids, then one row of the ten numbers.
+    const row = /\|\s*\*\*BOD\*\*[^\n]*\n\|([^\n]*)\|/.exec(body);
+    const vals = row ? row[1].split("|").map(s => Number(s.trim())) : [];
+    if (vals.length === ids.length) statRows++; else bad.push(`Entry ${n}: no stat row in the mirror`);
+    ids.forEach((id, j) => {
+      const got = j < 8 ? e.block.stats[id] : e.block.authored[id];
+      if (vals[j] === undefined || got === undefined || got === null || got === vals[j]) return;
+      // Two TOL figures the mirror's own files disagree on: 2612's stat row prints one, its Stat Audit the other,
+      // and the builder takes the Stat Audit's. Known and named; a third value, or the pair moving, still fails.
+      const known = id === "TOL" && TOL_TWO_FILES[Number(n)];
+      if (known && known[0] === vals[j] && known[1] === got) { twoFiles.add(Number(n)); return; }
+      bad.push(`Entry ${n} ${id}: book ${vals[j]}, pack ${got}`);
+    });
+    const tier = /\*\*Tier:\*\*\s*(\d+)/.exec(body); if (tier && Number(tier[1]) !== e.tier) bad.push(`Entry ${n} tier: book ${tier[1]}, pack ${e.tier}`);
+    const sk = /\*\*SKILLS\*\*\s*\n+([^\n]+)/.exec(body);
+    if (sk) {
+      skillLines++;
+      const want = sk[1].split(/,\s*(?![^()]*\))/).map(s => /^(.*?)\s*\((\d+)\)/.exec(s.trim())).filter(Boolean).map(m => normName(m[1]) + ":" + m[2]);
+      const got = e.block.skills.map(s => normName(s.name) + ":" + s.total);
+      if (want.join("|") !== got.join("|")) bad.push(`Entry ${n} skills: book [${want}], pack [${got}]`);
+    }
+    const tn = [...body.matchAll(/^\d+\.\s+\*\*([^*]+?)\.?\*\*/gm)].map(m => normName(m[1]).replace(/\.$/, ""));
+    const pn = e.block.traits.map(t => normName(t.name).replace(/\.$/, ""));
+    if (tn.length && tn.join("|") !== pn.join("|")) bad.push(`Entry ${n} traits: book [${tn}], pack [${pn}]`);
+  }
+  for (const e of pack.entries) if (e.kind === "threat" && !seen.has(e.ref)) bad.push(`${e.ref}: in the pack, not an ENTRY in 2612`);
+  const refOf = slug => (pack.entries.find(e => e.id === slug) || {}).ref;
+  const groups = [...mt.matchAll(/\*\*(EG-\d+)[^\n]*\n(?:[\s\S]*?)\*\*Composition:\*\*\s*([^\n]+)/g)];
+  for (const [, ref, comp] of groups) {
+    const g = pack.groups.find(x => x.ref === ref); if (!g) { bad.push(`${ref}: in the mirror, not in the pack`); continue; }
+    const want = comp.split("+").map(s => /(\d+)×[^(]*\(Entry (\d+)/.exec(s)).filter(Boolean).map(m => `${m[1]}xEntry ${Number(m[2])}`).sort();
+    const got = g.members.map(m => `${m.count}x${(refOf(m.entry) || "?").replace(/Entry 0*/, "Entry ")}`).sort();
+    if (want.join("|") !== got.join("|")) bad.push(`${ref} composition: book [${want}], pack [${got}]`);
+  }
+  let originRows = 0;
+  for (const [, name, cell] of oc.matchAll(/<tr>\s*<td>([A-Za-z]+)<\/td>\s*<td>([\s\S]*?)<\/td>/g)) {
+    const o = pack.origins.find(x => x.name === name); if (!o) continue;
+    originRows++;
+    const mods = {}; for (const m of cell.matchAll(/([A-Z]{3,4})\s*([+–−-])\s*(\d)/g)) mods[m[1]] = (m[2] === "+" ? 1 : -1) * Number(m[3]);
+    const a = JSON.stringify(Object.entries(mods).sort()), b = JSON.stringify(Object.entries(o.modifiers || {}).sort());
+    if (a !== b) bad.push(`origin ${name}: book ${a}, pack ${b}`);
+  }
+  return { bad, twoFiles, entries: seen.size, statRows, skillLines, groups: groups.length, originRows };
+}
+const mirrorText = name => file(join(ROOT, "private/crb", name));
+
+test("S27: the pack's threats, groups and origins agree with the mirror, read independently of the builder", () => {
+  const pack = JSON.parse(file(PACK)), r = auditPack(pack, mirrorText("2612_Mortal_Threats.md"), mirrorText("2610_Threat_Codex.md"));
+  assert.deepEqual(r.bad, [], "the pack differs from the mirror");
+  // The guard only means something if it read what it should: every threat's stats and skills, every group, every origin.
+  const threats = pack.entries.filter(e => e.kind === "threat").length;
+  assert.equal(r.entries, threats, "the mirror's ENTRY blocks and the pack's threats");
+  assert.equal(r.statRows, threats, "a stat row read for every threat");
+  assert.equal(r.skillLines, threats, "a skill line read for every threat");
+  assert.deepEqual([...r.twoFiles], Object.keys(TOL_TWO_FILES).map(Number), "the two TOL figures the mirror's files disagree on are still the ones named (if the book moved, drop the name)");
+  assert.equal(r.groups, pack.groups.length, "the mirror's compositions and the pack's groups");
+  assert.equal(r.originRows, pack.origins.length, "the mirror's origin rows and the pack's origins");
+});
+
+test("S27: the pack guard fails when the pack or the mirror moves (a stat, a skill total, a group count, an origin modifier)", () => {
+  const pack = JSON.parse(file(PACK)), mt = mirrorText("2612_Mortal_Threats.md"), oc = mirrorText("2610_Threat_Codex.md");
+  const once = (text, re, to) => { assert.ok(re.test(text), `${re} found nothing to change`); return text.replace(re, to); };
+  const fails = (p, m, o, what) => assert.ok(auditPack(p, m, o).bad.length > 0, `${what}: the guard passed`);
+  const up = (_, a, n, rest) => a + (Number(n) + 1) + (rest || "");
+  fails(pack, once(mt, /(\|\s*\*\*BOD\*\*[^\n]*\n\|\s*)(\d+)/, up), oc, "a stat in the mirror");
+  fails(pack, once(mt, /(\*\*SKILLS\*\*\s*\n+[^\n]*?\()(\d+)/, up), oc, "a skill total in the mirror");
+  fails(pack, once(mt, /(\*\*Composition:\*\*\s*)(\d+)(×)/, up), oc, "a group count in the mirror");
+  fails(pack, mt, once(oc, /(<tr>\s*<td>[A-Za-z]+<\/td>\s*<td>[^<]*?[A-Z]{3,4}\s*[+–−-]\s*)(\d)/, (_, a, n) => a + ((Number(n) % 9) + 1)), "an origin modifier in the mirror");
+  const bent = JSON.parse(JSON.stringify(pack)); bent.entries.find(e => e.kind === "threat").block.stats.BOD += 1;
+  fails(bent, mt, oc, "a stat in the pack");
+});
