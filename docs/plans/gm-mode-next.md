@@ -82,7 +82,7 @@ The first plan's GQ table stays in `archive/gm-mode.md` §9 with every answer as
 | **GQ81–GQ85** | S28's: what a cast card shows, Health on a hurt member's card, Origin and Enemy role as buttons, a line's crew as buttons alone, and the add row's crew after Add | Ken | **Answered** 2026-11-19, each on its default (Ken): [`gm-mode-next/S28-cast-at-a-glance.md`](gm-mode-next/S28-cast-at-a-glance.md) §4 |
 | **GQ86–GQ94** | S27's: a newer mirror than `c99bb58` (answered: no), what Powers covers, how much Equipment and in how many panels, "has this gear" per character, a flagged entry, the panels' order, the Recovery panel's missing With Skill actions, keeping the audit's scripts as guards, and marking two weapon tags as rulings ahead of the book | Ken | **Answered** 2026-11-20, all defaults: [`gm-mode-next/S27-reference-plus.md`](gm-mode-next/S27-reference-plus.md) §4 |
 | **GQ95–GQ100** | S30's: the sheet's free notes, a player's note's session, what the sheet logs, whether the GM reads a player's notes, Group by's default, and what prints | Ken | Answered, every default (2026-11-27): [`gm-mode-next/S30-notes.md`](gm-mode-next/S30-notes.md) §4 |
-| **GQ101–GQ102** | S29's: Home's empty column, used for a rail or removed (W80), and whether Home's lists widen into a grid on a wide screen | Ken | Open: [`gm-mode-next/S29-home-rest.md`](gm-mode-next/S29-home-rest.md) §4. Defaults: remove it; the 560px column, centred |
+| **GQ101–GQ102** | S29's: Home's empty column, used for a rail or removed (W80), and whether Home's lists widen into a grid on a wide screen | Ken | Answered, both defaults (2026-11-27): remove it; the 560px column, centred. [`gm-mode-next/S29-home-rest.md`](gm-mode-next/S29-home-rest.md) §4 |
 
 ## 6. S23's leads
 
