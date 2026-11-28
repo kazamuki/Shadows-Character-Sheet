@@ -114,8 +114,8 @@ economics) are in `plans/archive/`.
 - **The book's TOL for Entries 08 and 10** prints 2 and 3 in `2612`; the Stat Audit, the pack and the book's own formula give 1 and 2 (`audits/2026-11-20_reference-and-codex-pack-vs-mirror.md`). Ken's, in the CRB; the pack test names the pair until it lands.
 - **W90**, cybernetics: six questions before a plan.
 
-**Ken alone:** F12 and F32, W38's plan (`plans/two-tabs-one-character.md`,
-TQ1–TQ3), and the print plan (`plans/print-sheet-scotts-look.md`).
+**Ken alone:** F12 and F32, the characters-you-can-trust plan (`plans/two-tabs-one-character.md`:
+W38 two tabs, W147 old files, W122 Copy; TQ1–TQ7), and the print plan (`plans/print-sheet-scotts-look.md`).
 
 **Waiting on others:**
 - **Deighton:** what a rank of Educated bought in play gives (F44: the IP buy refuses it until then), the held spell's WILL check (F43), and whether a Supernatural's Skills and Powers share its stats' headroom past 10. **One ruling on kickers may clear F46 and F47 together:** do dice stack, and which one is "your Kicker Die". F45 is Concierge's appraising Skill. Burned's buy-off against `0450` and Redeemed waits on the book.

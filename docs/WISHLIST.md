@@ -42,11 +42,19 @@ and that Goes with is mutual.
 ### Wizard
 
 **W122 — Make a copy of a character, from Home.** *Claude, from P13 · 💡 · Rule or shape · raised 2026-10-16*\
-**Plan:** none yet
+**Plan:** [two-tabs-one-character](plans/two-tabs-one-character.md) T3 (TQ6, TQ7) · **Goes with:** W38, W147, W181
 
 Home offers Open, Export and Remove, and no copy, so a second character of the same archetype, or a variant of one, starts from nothing.
 *To respect:* Decision 128 (a TAG is issued once: a copy gets a new one). Whether copying a locked character gives a locked one or an unlocked draft is a
-choice someone could make differently: a numbered decision.
+choice someone could make differently: a numbered decision. *Ken (TQ6, 2026-11-27): an exact copy now; the draft copy is W181.*
+
+**W181 — Copy as a draft: a variant of a character, from its creation choices.** *Ken, from the characters-you-can-trust plan (TQ6), 2026-11-27 · 💡 · Rule or shape*\
+**Plan:** none yet · **Goes with:** W122
+
+W122's Copy (T3) makes an exact copy, play and all. For "Mara, if she'd taken Hacking", a player wants the wizard reopened at
+Review with the original's creation choices and none of its play. *To respect:* the sheet keeps no creation snapshot apart
+from play (IP buys, Milestones and Admin edits change the same fields), so it starts as a design: what a creation snapshot is,
+and whether `lock` should keep one. A new TAG, as W122's (Decision 128).
 
 **W131 — Expert mode as one long page.** *Ken, after P13 · 💡 · Rule or shape · raised 2026-10-17*\
 **Plan:** none yet
@@ -524,7 +532,7 @@ then grow the list kind by kind as each behaviour is made data-driven.
 ### Files, tabs & the hosted site
 
 **W38 — Two tabs open on one character overwrite each other.** *Claude, raised in S6c · ⏭*\
-**Plan:** [two-tabs-one-character](plans/two-tabs-one-character.md), waiting on Ken's TQ1–TQ3
+**Plan:** [two-tabs-one-character](plans/two-tabs-one-character.md) T1, widened 2026-11-27 to tables (TQ4); waiting on Ken's TQ1–TQ7 · **Goes with:** W147, W122
 
 Open the same character in two browser tabs, play in one, then touch anything
 in the other: the second tab saves its older copy over the first's, and the
@@ -615,7 +623,7 @@ never needs it, and can't sign in), the player owning the character, and
 `migrate()` as the gate on every copy that comes down.
 
 **W147 — An old file with no TAG opens as a new character every time.** *Claude, from the sheet critique with the TestCharacters · 🔎 · Fix · raised 2026-11-11*\
-**Plan:** none yet
+**Plan:** [two-tabs-one-character](plans/two-tabs-one-character.md) T2 (TQ5) · **Goes with:** W38, W122
 
 A file saved before characters carried a TAG has no `meta.id`, so `migrate()`
 mints a fresh one on each load (`engine.js`, `newIntakeId()`). Import the same
@@ -1019,7 +1027,7 @@ Profile `smoke-sheet-help-lines` (three tests, about 55s each) and the other she
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W181.** Everything above is open. What was built is in
+- **Next free number: W182.** Everything above is open. What was built is in
   [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)
