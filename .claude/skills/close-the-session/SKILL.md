@@ -52,7 +52,10 @@ applies, and nothing above it does.
 
 ## The PR
 
-- [ ] One row in `docs/log/shipped.md`, added in the PR itself.
+- [ ] One row in `docs/log/shipped.md`, added in the PR itself. Its
+      *Merged* cell is the PR's number (`#412`): open the PR, then commit the
+      number into the row and push. Never leave `PR (this one)`, `—` or `#…`
+      there: 49 rows were left that way and filled in after the fact (2026-11-27).
 - [ ] Commit subjects in the imperative, naming the finding or decision:
       `fix(ui): render aberrations once (A1)`.
 - [ ] The PR title names the batch; the body gives Ken the 50,000-foot view
