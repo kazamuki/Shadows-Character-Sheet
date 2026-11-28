@@ -1,8 +1,9 @@
 # Plan — Characters you can trust: two tabs, old files, a copy (W38, W147, W122)
 
 **Status:** proposed 2026-09-25 for W38 alone; **widened 2026-11-27** by Claude (Opus, the conductor) at Ken's
-request ("Widen it"), to W147 and W122, and to tables, which save the same way and didn't exist in September. Not
-approved. Nothing here is a decision until the session that builds it numbers it in `SCHEMA.md` §4. Its questions
+request ("Widen it"), to W147 and W122, and to tables, which save the same way and didn't exist in September.
+**Approved by Ken 2026-11-27**, in the conductor session, every question on its default: TQ4 "Tables too", TQ5 "TAG
+from its created date", TQ6 "Exact copy, draft later" (the draft copy is W181), TQ1–TQ3 and TQ7 "All four defaults". Nothing here is a decision until the session that builds it numbers it in `SCHEMA.md` §4. Its questions
 are `TQ`_n_ (§5), its sessions `T`_n_ (§6). **The path keeps its old name** so W38's and INDEX's links still land.
 **Covers:** `WISHLIST.md` W38, W147 and W122, and Decision 141's **Revisit if** ("a player loses play to two tabs on
 one character").
@@ -128,7 +129,7 @@ sees which one they're in. A table seat that names the original's TAG keeps nami
 **For a copy:**
 - **A draft copy** that re-opens the wizard from the original's creation choices. It's the better tool for "Mara with
   Hacking", but the sheet doesn't keep a creation snapshot apart from play, so building one is its own design. **Not
-  now** (TQ6 (b) makes it a wish).
+  now**: W181 (TQ6 (b)).
 
 ## 5. Open questions for Ken
 

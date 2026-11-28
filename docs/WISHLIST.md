@@ -42,11 +42,19 @@ and that Goes with is mutual.
 ### Wizard
 
 **W122 — Make a copy of a character, from Home.** *Claude, from P13 · 💡 · Rule or shape · raised 2026-10-16*\
-**Plan:** [two-tabs-one-character](plans/two-tabs-one-character.md) T3 (TQ6, TQ7) · **Goes with:** W38, W147
+**Plan:** [two-tabs-one-character](plans/two-tabs-one-character.md) T3 (TQ6, TQ7) · **Goes with:** W38, W147, W181
 
 Home offers Open, Export and Remove, and no copy, so a second character of the same archetype, or a variant of one, starts from nothing.
 *To respect:* Decision 128 (a TAG is issued once: a copy gets a new one). Whether copying a locked character gives a locked one or an unlocked draft is a
-choice someone could make differently: a numbered decision.
+choice someone could make differently: a numbered decision. *Ken (TQ6, 2026-11-27): an exact copy now; the draft copy is W181.*
+
+**W181 — Copy as a draft: a variant of a character, from its creation choices.** *Ken, from the characters-you-can-trust plan (TQ6), 2026-11-27 · 💡 · Rule or shape*\
+**Plan:** none yet · **Goes with:** W122
+
+W122's Copy (T3) makes an exact copy, play and all. For "Mara, if she'd taken Hacking", a player wants the wizard reopened at
+Review with the original's creation choices and none of its play. *To respect:* the sheet keeps no creation snapshot apart
+from play (IP buys, Milestones and Admin edits change the same fields), so it starts as a design: what a creation snapshot is,
+and whether `lock` should keep one. A new TAG, as W122's (Decision 128).
 
 **W131 — Expert mode as one long page.** *Ken, after P13 · 💡 · Rule or shape · raised 2026-10-17*\
 **Plan:** none yet
@@ -1019,7 +1027,7 @@ Profile `smoke-sheet-help-lines` (three tests, about 55s each) and the other she
 
 ## 2. Notes for whoever picks these up
 
-- **Next free number: W181.** Everything above is open. What was built is in
+- **Next free number: W182.** Everything above is open. What was built is in
   [`log/wishes-granted.md`](log/wishes-granted.md).
 - **The primitives worth reusing.** A modal (`openModal`, Decision 111) for
   anything that takes the screen; a popover (`openPopover`, Decision 119)
