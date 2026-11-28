@@ -42,7 +42,7 @@ and that Goes with is mutual.
 ### Wizard
 
 **W122 — Make a copy of a character, from Home.** *Claude, from P13 · 💡 · Rule or shape · raised 2026-10-16*\
-**Plan:** none yet
+**Plan:** [two-tabs-one-character](plans/two-tabs-one-character.md) T3 (TQ6, TQ7) · **Goes with:** W38, W147
 
 Home offers Open, Export and Remove, and no copy, so a second character of the same archetype, or a variant of one, starts from nothing.
 *To respect:* Decision 128 (a TAG is issued once: a copy gets a new one). Whether copying a locked character gives a locked one or an unlocked draft is a
@@ -524,7 +524,7 @@ then grow the list kind by kind as each behaviour is made data-driven.
 ### Files, tabs & the hosted site
 
 **W38 — Two tabs open on one character overwrite each other.** *Claude, raised in S6c · ⏭*\
-**Plan:** [two-tabs-one-character](plans/two-tabs-one-character.md), waiting on Ken's TQ1–TQ3
+**Plan:** [two-tabs-one-character](plans/two-tabs-one-character.md) T1, widened 2026-11-27 to tables (TQ4); waiting on Ken's TQ1–TQ7 · **Goes with:** W147, W122
 
 Open the same character in two browser tabs, play in one, then touch anything
 in the other: the second tab saves its older copy over the first's, and the
@@ -615,7 +615,7 @@ never needs it, and can't sign in), the player owning the character, and
 `migrate()` as the gate on every copy that comes down.
 
 **W147 — An old file with no TAG opens as a new character every time.** *Claude, from the sheet critique with the TestCharacters · 🔎 · Fix · raised 2026-11-11*\
-**Plan:** none yet
+**Plan:** [two-tabs-one-character](plans/two-tabs-one-character.md) T2 (TQ5) · **Goes with:** W38, W122
 
 A file saved before characters carried a TAG has no `meta.id`, so `migrate()`
 mints a fresh one on each load (`engine.js`, `newIntakeId()`). Import the same
