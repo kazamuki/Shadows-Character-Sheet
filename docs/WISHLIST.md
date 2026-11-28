@@ -719,7 +719,7 @@ occasionally recognize you" line is gone (checked 2026-11-19, S28's GQ31). Crew 
 typed names, read as the seat that answers to them (Decision 254).
 
 **W80 — The left column: the page's actions, or gone.** *Ken · 🔎 · Fix (UI) · raised 2026-10-08*\
-**Plan:** [gm-mode-next](plans/gm-mode-next.md) S29: Home's empty rail (a table's screens lost theirs in S18, Decision 258)
+**Plan:** [gm-mode-next](plans/gm-mode-next.md) S29, [order drafted](plans/gm-mode-next/S29-home-rest.md): Home's empty rail (a table's screens lost theirs in S18, Decision 258)
 
 Outside the wizard the left column is empty on **every** screen: Home, every
 GM table tab, and the pages under them (Ken's screenshot, 2026-10-08: a
