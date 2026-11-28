@@ -12,23 +12,42 @@ import { readFileSync } from "node:fs";
 import { boot } from "./harness.mjs";
 import { Engine, GM_ON, lockedCharacter, runTable, tableHome, tableCard, packStored, type, withDownloads, edit, done, editNote, deadAirApp } from "./smokekit.mjs";
 
-const cls = app => [...app.$("#app").classList].filter(c => c === "table-mode" || c === "sheet-mode").sort().join(" ");
+const cls = app => [...app.$("#app").classList].filter(c => c === "table-mode" || c === "sheet-mode" || c === "home-mode").sort().join(" ");
 
-test("258: a table's frame is table-mode, and Home, the wizard and the sheet aren't", () => {
+test("S29: Home is home-mode at every door, and the wizard, the sheet and a table aren't", () => {
   const app = boot({ storage: { ...GM_ON, "shadows.active.v1": { ch: lockedCharacter(), section: "main" } } });
-  assert.equal(cls(app), "", "Home has neither class");
+  assert.equal(cls(app), "home-mode", "Home at boot is home-mode");
   runTable(app, "Frame", { stay: true });
-  assert.equal(cls(app), "table-mode", "a table is table-mode, and not the sheet's");
+  assert.equal(cls(app), "table-mode", "a table is table-mode, and not the sheet's or Home's");
   tableHome(app);
-  assert.equal(cls(app), "", "Home after a table has neither class");
+  assert.equal(cls(app), "home-mode", "Home after a table is home-mode only");
   app.click("[data-open]");
   assert.equal(cls(app), "sheet-mode", "a character's sheet is sheet-mode only");
   app.click("[data-menu-toggle]"); app.click("[data-home]");
+  assert.equal(cls(app), "home-mode", "Home from a sheet is home-mode only");
   app.click("#btn-new");
-  assert.equal(cls(app), "", "the wizard has neither class");
+  assert.equal(cls(app), "", "the wizard has no frame class");
   app.click("header [data-home]");
+  assert.equal(cls(app), "home-mode", "Home from the wizard is home-mode");
   tableCard(app, "Frame").querySelector("[data-topen]").click();
-  assert.equal(cls(app), "table-mode", "a table opened from Home is table-mode again");
+  assert.equal(cls(app), "table-mode", "a table opened from Home is table-mode only");
+  tableHome(app);
+  app.$$("[data-remove]")[0].click();
+  app.click("#modal [data-removego]");
+  assert.equal(cls(app), "home-mode", "Remove on Home leaves it home-mode");
+});
+
+test("S29: Home's frame rules hide the rail and the vitals column, uncap main, and come after the narrow block", () => {
+  const css = readFileSync(new URL("../src/styles/shadows.css", import.meta.url), "utf8");
+  const narrow = css.lastIndexOf(".app:not(.sheet-mode) nav.ledger");
+  assert.ok(narrow > 0, "the narrow block's rule is there");
+  for (const rule of [/\.app\.home-mode\s*\{\s*grid-template-columns:\s*1fr\s*\}/,
+                      /\.app\.home-mode nav\.ledger\s*,\s*\.app\.home-mode aside\.vitals\s*\{\s*display:\s*none\s*\}/,
+                      /\.app\.home-mode main\s*\{\s*max-width:\s*none\s*\}/]) {
+    const m = rule.exec(css);
+    assert.ok(m, `${rule} exists`);
+    assert.ok(m.index > narrow, `${rule} comes after the last .app:not(.sheet-mode) nav.ledger rule`);
+  }
 });
 
 // ── The bar (Decision 258) ───────────────────────────────────────────────

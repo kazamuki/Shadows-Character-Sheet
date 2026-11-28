@@ -718,32 +718,6 @@ advantage (`0430`/`0432`) now only sets starting CRANK rep; its old "people
 occasionally recognize you" line is gone (checked 2026-11-19, S28's GQ31). Crew are
 typed names, read as the seat that answers to them (Decision 254).
 
-**W80 — The left column: the page's actions, or gone.** *Ken · 🔎 · Fix (UI) · raised 2026-10-08*\
-**Plan:** [gm-mode-next](plans/gm-mode-next.md) S29, [order drafted](plans/gm-mode-next/S29-home-rest.md): Home's empty rail (a table's screens lost theirs in S18, Decision 258)
-
-Outside the wizard the left column is empty on **every** screen: Home, every
-GM table tab, and the pages under them (Ken's screenshot, 2026-10-08: a
-table's Cast tab, 218px of nothing beside the page). During the wizard it holds
-the eight steps, and that's the only screen that uses it.
-**Ken's direction:** use it or remove it. Using it means an **action rail**:
-the buttons a GM always wants, held there while the page scrolls. On a cast
-member's page, Back and **Add to <encounter>** (W75, W77). On a session's page,
-Back. On a tab, its one primary action (New session, quick-add, New
-encounter). A screen with nothing to put there gives the column back to the
-page.
-*The catch, and what the fix has to answer:* the rail exists only from
-**1060px** up. Below that, the wizard's steps become a strip across the top and
-the column is gone. A tablet, the device GM mode is built for (plan §1a), is
-below 1060px in portrait and usually in landscape. So the rail can't be the
-only home for "always in reach": the same actions need a bar that stays at the
-top of the page below 1060px. Build it once and place it in the rail or the bar
-by width, the way the wizard's steps already do.
-*To respect:* constraint 3 (the `<nav class="ledger">` the shell already has
-is the place; no new markup in `index.html` beyond what's there); Decision 164
-(focus keeps its place when the rail redraws); and the pinned vitals
-(Decision 160), which take the right side from 1280px, so a GM screen with a
-pinned stat block (W77) and the rail leaves the page the middle.
-
 **W146 — The dispatch: a GM sends a player changes to accept.** *Ken, from re-vetting GM mode's plan · 💡 · Rule or shape · raised 2026-11-06*\
 **Plan:** none yet
 

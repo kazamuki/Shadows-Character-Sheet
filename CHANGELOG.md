@@ -24,6 +24,12 @@ Four versions move independently — app, game data, character schema, ruleset. 
 for each are in `CLAUDE.md`; current values are in `docs/STATE.md` and the app prints its
 own in the footer.
 
+## [Unreleased] — app 0.81.1
+
+### Character sheet
+
+- **Home sits in the middle of the screen.** The empty column down its left side is gone, and so is the empty band under the header on a phone.
+
 ## v0.81.0 — 2026-11-27
 
 ### Character sheet

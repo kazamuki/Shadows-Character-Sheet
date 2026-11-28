@@ -1392,6 +1392,13 @@ details.pick.trait .desc{padding:0 14px 12px; margin-top:0}
 .app.table-mode nav.ledger,
 .app.table-mode aside.vitals{display:none}
 .app.table-mode main{max-width:none}
+/* Home's frame (S29, W80). Home has nothing for the rail or the vitals column, so it is one column too, and its own
+   560px column (.home-hero) centres itself on the screen. Same reason as above: these tie the narrow block's
+   `.app:not(.sheet-mode)` rules on specificity and win by coming after them. */
+.app.home-mode{grid-template-columns:1fr}
+.app.home-mode nav.ledger,
+.app.home-mode aside.vitals{display:none}
+.app.home-mode main{max-width:none}
 /* The measures. Fields stop at 36rem (a textarea 48rem), prose at 75ch, cards fill 20–36rem columns, and an encounter's
    rows stay one 64rem column. The read-only sheet (Decision 256) takes none of them: it lays out as the player's own.
    Several forms cap their fields at 100% of their container, which this has to beat, so a field's rule has a

@@ -907,7 +907,7 @@ function askRemove(e){
     } });
 }
 function renderHome(){
-  const app=$("app"); if (app) app.classList.remove("sheet-mode", "table-mode");
+  const app=$("app"); if (app){ app.classList.remove("sheet-mode", "table-mode"); app.classList.add("home-mode"); }
   renderTopChrome(); closeVitals(); renderDrawer();   // a pinned panel goes with the sheet
   syncHelp();   // and a table's Help goes with the table (gm.js, Decision 278)
   releaseMain();
