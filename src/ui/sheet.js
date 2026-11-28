@@ -3418,8 +3418,9 @@ function pArchetypePage(ch){
 function pNoteCardsHtml(ch){
   const cards = ch && Array.isArray(ch.noteCards) ? ch.noteCards.filter(n=>n && typeof n==="object") : [];
   if (!cards.length) return "";
-  const groups = Engine.noteGroups(cards, [], { by:"category" });
-  return `<div class="p-ncards">${groups.map(g=>`${groups.length>1 ? `<div class="p-ncat">${esc(g.title===null ? "No category" : g.title)}</div>` : ""}${g.notes.map(n=>{
+  // A heading names each category; only a list with no category at all goes without one.
+  const groups = Engine.noteGroups(cards, [], { by:"category" }), heads = groups.length>1 || groups[0].title!==null;
+  return `<div class="p-ncards">${groups.map(g=>`${heads ? `<div class="p-ncat">${esc(g.title===null ? "No category" : g.title)}</div>` : ""}${g.notes.map(n=>{
     const tags = Array.isArray(n.tags) ? n.tags : [];
     return `<div class="p-ncard"><b>${esc(noteName(n))}</b>${tags.length ? ` <span class="p-ntags">${tags.map(esc).join(", ")}</span>` : ""}${String(n.text||"").trim() ? `<div class="p-ntext">${esc(n.text)}</div>` : ""}</div>`;
   }).join("")}`).join("")}</div>`;

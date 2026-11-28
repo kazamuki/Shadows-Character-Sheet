@@ -174,6 +174,16 @@ test("324: the printed sheet lists the notes before the free notes", () => {
   const bare = openSheet(lockedCharacter(), "main"); bare.window.print = () => {};
   bare.click("[data-menu-toggle]"); bare.click("[data-print]");
   assert.equal(bare.$("#printSheet .p-ncards"), null);
+  // One category still names itself; a list with none prints no heading.
+  const printed = cards => {
+    const ch = lockedCharacter();
+    for (const c of cards) Engine.addNoteCard(ch, c);
+    const one = openSheet(ch, "main"); one.window.print = () => {};
+    one.click("[data-menu-toggle]"); one.click("[data-print]");
+    return [...one.$("#printSheet .p-ncards").querySelectorAll(".p-ncat")].map(x => x.textContent);
+  };
+  assert.deepEqual(printed([{ title: "Ibarra", category: "Leads" }, { title: "The cord", category: "Leads" }]), ["Leads"]);
+  assert.deepEqual(printed([{ title: "Ibarra" }, { title: "The cord" }]), []);
   assert.deepEqual(app.errors, []);
 });
 
