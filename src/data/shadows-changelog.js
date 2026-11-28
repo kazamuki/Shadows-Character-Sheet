@@ -3,7 +3,7 @@
 window.SHADOWS_CHANGELOG = [
   {
     "version": "0.81.0",
-    "date": null,
+    "date": "2026-11-27",
     "intro": [],
     "items": [],
     "groups": [
