@@ -12,7 +12,7 @@
 //   minor — a capability a player can use that wasn't there before
 //   major — existing character files or the workflow break
 // The other three versions have their own triggers; see CLAUDE.md.
-const APP_VERSION = "0.81.0";
+const APP_VERSION = "0.81.1";
 
 // ── Main render + events ─────────────────────────────────────────────
 // Header chrome: brand context + the section tabs (which now live in the
@@ -190,7 +190,7 @@ function renderMain(){
   // Decision 316: a beat is taken on every screen, so a commit made where nothing plays it can't replay on the next sheet.
   const beat=S.beats||null; S.beats=null; beatsNow=S.screen==="sheet" ? beat : null;
   const app=$("app");
-  if (app){ app.classList.toggle("sheet-mode", S.screen==="sheet"); app.classList.toggle("table-mode", S.screen==="table"); }
+  if (app){ app.classList.toggle("sheet-mode", S.screen==="sheet"); app.classList.toggle("table-mode", S.screen==="table"); app.classList.toggle("home-mode", S.screen==="home"); }
   keepPlace(document.querySelector("header.top"), renderTopChrome, ["[data-menu-toggle]"]);
   const same=sameView(), main=$("main");
   if (!same){ S.specAll=false; S.natAll=false; S.cpAll=null; S.demandsOpen=null; }   // Decision 276: browser state, gone when the step is left

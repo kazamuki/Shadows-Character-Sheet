@@ -2,6 +2,20 @@
 // run `npm run changelog`. tests/docs.test.mjs fails if this falls behind.
 window.SHADOWS_CHANGELOG = [
   {
+    "version": "0.81.1",
+    "date": null,
+    "intro": [],
+    "items": [],
+    "groups": [
+      {
+        "title": "Character sheet",
+        "items": [
+          "**Home sits in the middle of the screen.** The empty column down its left side is gone, and so is the empty band under the header on a phone."
+        ]
+      }
+    ]
+  },
+  {
     "version": "0.81.0",
     "date": "2026-11-27",
     "intro": [],
