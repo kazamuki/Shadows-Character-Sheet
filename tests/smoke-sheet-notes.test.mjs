@@ -224,3 +224,37 @@ test("324: the GM's read-only seat shows a player's notes, and Group by still wo
   assert.equal(app.window.eval("JSON.stringify(S.table)"), before, "nothing the table holds changed");
   assert.deepEqual(app.errors, []);
 });
+
+test("324: letting go of a category records it without a redraw, so the click on Done that follows lands", () => {
+  const app = openSheet(noted(), "notes");
+  const id = app.window.eval(`S.ch.noteCards.find(n => n.title === "House rule").id`);
+  app.click(`[data-nopen="${id}"]`); app.click(`[data-nedit="${id}"]`);
+  const cat = app.$(`[data-ncat="${id}"]`); cat.focus(); type(app, `[data-ncat="${id}"]`, "Hooks");
+  const done = app.$(`[data-ndone="${id}"]`);
+  cat.dispatchEvent(new app.window.Event("change", { bubbles: true }));
+  assert.deepEqual(log(app), ['Filed "House rule" under Hooks']);
+  assert.ok(done.isConnected && cat.isConnected, "the form was not redrawn under the pointer");
+  assert.match(app.$("#undotoast").textContent, /Filed "House rule" under Hooks/);
+  done.dispatchEvent(new app.window.MouseEvent("click", { bubbles: true }));
+  assert.equal(app.window.eval("S.snEdit"), null);
+  assert.equal(app.doc.activeElement, app.$(`[data-nedit="${id}"]`));
+  assert.deepEqual(app.errors, []);
+});
+
+test("324: a half-written note is gone after a trip to another tab, and another character opens clean", () => {
+  const app = openSheet(noted(), "notes");
+  app.click("[data-snew]");
+  const id = app.window.eval("S.snNew");
+  assert.ok(id && app.$(`[data-ntitle="${id}"]`));
+  app.click('[data-sec="main"]'); app.click('[data-sec="notes"]');
+  assert.equal(app.$(`[data-ntitle="${id}"]`), null, "no form left open");
+  assert.equal(app.$("#main .note-pinned"), null);
+  assert.equal(app.window.eval("[S.snOpen, S.snEdit, S.snNew, S.snHold].join()"), ",,,");
+  // A tag filter and an open note belong to one character.
+  const ibarra = app.window.eval(`S.ch.noteCards.find(n => n.title === "Ibarra").id`);
+  app.click('[data-ntag="lead"]'); app.click(`[data-nopen="${ibarra}"]`);
+  assert.equal(app.window.eval("S.snOpen"), ibarra);
+  app.window.eval(`S.ch.meta.id = "TAG-ZZZZ-ZZZZ-ZZZZ"; update();`);
+  assert.equal(app.window.eval("[S.snTag, S.snOpen].join()"), ",");
+  assert.deepEqual(app.errors, []);
+});

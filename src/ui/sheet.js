@@ -2963,6 +2963,9 @@ function shNotesListHtml(ch, ro){
 }
 function renderShNotes(){
   const ch = S.ch, ro = S.screen==="table";
+  // What's open is the view of one character's Notes tab: another character starts clean (the section's own exit is in app.js).
+  const who = ch.meta && ch.meta.id;
+  if (S.snFor!==who){ S.snFor=who; S.snOpen=S.snEdit=S.snNew=S.snHold=S.snTag=null; }
   let h = sheetHeader("Notes");
   h += shNotesListHtml(ch, ro);
   h += `<label class="field"><span>Free notes</span>
@@ -5047,9 +5050,14 @@ function bindSheet(){
       const n=card(id), now=n ? n.category : "", from=was; was=null;
       if (!n || from===null || from===now) return;
       const label = now ? `Filed "${noteName(n)}" under ${now}` : `Filed "${noteName(n)}" under no category`, kept=document.activeElement===el;
+      // The entry is made without a redraw: this fires while focus is leaving the field, and a redraw would swallow the click
+      // (or the Tab) that caused it. Done redraws anyway. It goes where commit() puts it: the log, meta.updated, the toast.
       Engine.editNoteCard(ch, id, { category:from });   // back to what it was, so the entry holds the change
-      commit("notes", label, ()=>{ Engine.editNoteCard(ch, id, { category:now }); });
-      if (kept) refocus(attrSel("data-ncat", id));
+      const before=clone(ch);
+      Engine.editNoteCard(ch, id, { category:now });
+      const r=Engine.recordAction(ch, "notes", label, before);
+      if (r && r.ok){ ch.meta.updated=new Date().toISOString(); update(false); showUndoToast(ch, ch.audit[ch.audit.length-1], label); }
+      else update(false);
     };
   });
   main.querySelectorAll("[data-nsess]").forEach(el=>el.onchange=()=>{
