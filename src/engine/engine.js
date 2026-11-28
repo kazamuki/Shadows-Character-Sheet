@@ -22,7 +22,7 @@ const Engine = (() => {
   const INTAKE_RE = new RegExp(`^TAG-${INTAKE_BODY}$`);
   const OLD_INTAKE_RE = new RegExp(`^NCR-(${INTAKE_BODY})$`);
   // The character file's shape. A bump needs a migrate() step in the same change.
-  const SCHEMA_VERSION = "0.35";
+  const SCHEMA_VERSION = "0.36";
   const isIntakeId = v => typeof v==="string" && INTAKE_RE.test(v);
   function randomChars(n){
     const c = typeof globalThis!=="undefined" && globalThis.crypto && typeof globalThis.crypto.getRandomValues==="function" ? globalThis.crypto : null;
@@ -102,6 +102,9 @@ const Engine = (() => {
                     // `mp` is the Milestone Points it started at; when it lands is read from the cadence.
                     training:null },
       sessions:[], notes:"",
+      // Schema 0.36 (Decision 324): the Notes tab's list, in Decision 323's shape. `notes` stays the free text, a string: an
+      // older copy of the app sets a `notes` that isn't one to "", so the list lives under its own key.
+      noteCards:[],
       audit:[]                                 // reversible action log
     };
   }
@@ -4018,6 +4021,7 @@ const Engine = (() => {
     const stopped = runningPowers(ch).map(r=>r.id);   // Decision 266 (HQ3): a session ending stops every running power
     ch.trackers.running = [];
     ch.sessions.push({
+      id: newLogSessionId(new Set((ch.sessions||[]).map(e=>e && e.id))),
       date: s.date || localDay(),
       title: s.title||"",
       ipEarned: Math.max(0, Number(s.ipEarned)||0),
@@ -5675,7 +5679,9 @@ const Engine = (() => {
   function diffChar(before, after){
     const ops=[];
     const keys = new Set([...Object.keys(before||{}), ...Object.keys(after||{})]);
-    for (const k of keys){ if (k==="audit"||k==="meta") continue; _walk((before||{})[k], (after||{})[k], [k], ops); }
+    // `noteCards` is walked as the table's lists are (Decision 324): a tag, a category or a session is that field of that note, so
+    // undoing it leaves the title and text typed since, which no entry holds. Every other key's ops stay as they were.
+    for (const k of keys){ if (k==="audit"||k==="meta") continue; _walk((before||{})[k], (after||{})[k], [k], ops, k==="noteCards"); }
     return ops;
   }
   // A patch path is only ever the character's own keys. The audit rides in a
@@ -5958,6 +5964,19 @@ const Engine = (() => {
     pr.specializationsGained = [...new Set((Array.isArray(pr.specializationsGained) ? pr.specializationsGained : [])
       .filter(x=>typeof x==="string" && x).map(x=>x.slice(0, 64)))].slice(0, 20);
     if (!Array.isArray(c.sessions)) c.sessions=[];
+    // Schema 0.36 (Decision 324): a Log entry keeps an id, and a listed note's session is one of them. A file from before gets
+    // an id on every entry; one that holds a bad or repeated id gets a new one. A note naming no entry is unfiled.
+    {
+      const usedLog = new Set();
+      c.sessions = c.sessions.filter(isPlainObj);
+      for (const e of c.sessions){
+        if (!(typeof e.id==="string" && LOG_SESSION_ID_RE.test(e.id)) || usedLog.has(e.id)) e.id = newLogSessionId(usedLog);
+        usedLog.add(e.id);
+      }
+      const usedNote = new Set();
+      c.noteCards = (Array.isArray(c.noteCards) ? c.noteCards : []).filter(isPlainObj);
+      for (const n of c.noteCards) _note(n, usedNote, usedLog);
+    }
     c.gear=c.gear||[]; c.weapons=c.weapons||[]; c.armor=c.armor||[];
     // Schema 0.16 (Decision 153): a power is the player's own row, every
     // field text, with an id local to the character. A row with no id, or one
@@ -6851,6 +6870,7 @@ const Engine = (() => {
   const ENCOUNTER_ID_RE = /^EN-[0-9A-HJKMNP-TV-Z]{8}$/;
   const ROW_ID_RE = /^R-[0-9A-HJKMNP-TV-Z]{8}$/;
   const SESSION_ID_RE = /^SE-[0-9A-HJKMNP-TV-Z]{8}$/;
+  const LOG_SESSION_ID_RE = /^S-[0-9A-HJKMNP-TV-Z]{8}$/;   // a player's Session Log entry (Decision 324), apart from a table's SE-
   const THREAD_ID_RE = /^TH-[0-9A-HJKMNP-TV-Z]{8}$/;
   const PLACE_ID_RE = /^PL-[0-9A-HJKMNP-TV-Z]{8}$/;
   const FACTION_ID_RE = /^FA-[0-9A-HJKMNP-TV-Z]{8}$/;
@@ -6918,6 +6938,11 @@ const Engine = (() => {
   function newInteractionId(used){
     let id;
     do id = `I-${randomChars(8)}`; while (used.has(id));
+    return id;
+  }
+  function newLogSessionId(used){
+    let id;
+    do id = `S-${randomChars(8)}`; while (used.has(id));
     return id;
   }
   function newSessionId(used){
@@ -7704,6 +7729,47 @@ const Engine = (() => {
     if (i < 0) return { ok:false, why:"No such note." };
     t.notes.splice(i, 1);
     _tableStamp(t);
+    return { ok:true };
+  }
+
+  // ── A player's notes (Decision 324): Decision 323's shape on the sheet, under `noteCards` ────────────────────────────────
+  // A note's session is the id of an entry in the Session Log. Typed text, so each is a stored input (constraint 7).
+  const _cards = ch => Array.isArray(ch && ch.noteCards) ? ch.noteCards : (ch && typeof ch==="object" ? (ch.noteCards = []) : []);
+  const _logIds = ch => new Set((Array.isArray(ch && ch.sessions) ? ch.sessions : []).filter(_isObj).map(e=>e.id).filter(x=>typeof x==="string"));
+  function addNoteCard(ch, f){
+    if (!ch || typeof ch!=="object") return { ok:false, why:"No character." };
+    f = _isObj(f) ? f : {};
+    const list = _cards(ch), used = new Set(list.filter(_isObj).map(n=>n.id));
+    const now = new Date().toISOString();
+    const n = { id:newTableNoteId(used), title:_str(f.title), text:_str(f.text), category:_noteCategory(f.category), tags:_noteTags(f.tags),
+      session:typeof f.session==="string" && _logIds(ch).has(f.session) ? f.session : null, created:now, updated:now };
+    list.unshift(n);
+    return { ok:true, id:n.id };
+  }
+  function editNoteCard(ch, id, f){
+    const n = _cards(ch).find(x=>_isObj(x) && x.id===id);
+    if (!n) return { ok:false, why:"No such note." };
+    if (_isObj(f)){
+      if ("title" in f) n.title = _str(f.title);
+      if ("text" in f) n.text = _str(f.text);
+      if ("category" in f) n.category = _noteCategory(f.category);
+      if ("tags" in f) n.tags = _noteTags(f.tags);
+      if ("session" in f && (f.session===null || _logIds(ch).has(f.session))) n.session = f.session;
+    }
+    n.updated = new Date().toISOString();
+    return { ok:true };
+  }
+  function removeNoteCard(ch, id){
+    const list = _cards(ch), i = list.findIndex(x=>_isObj(x) && x.id===id);
+    if (i < 0) return { ok:false, why:"No such note." };
+    list.splice(i, 1);
+    return { ok:true };
+  }
+  // Deletes a Session Log entry, and unfiles the notes that named it, in one change (Decision 324).
+  function removeSessionEntry(ch, i){
+    if (!ch || !Array.isArray(ch.sessions) || !Number.isInteger(i) || i < 0 || i >= ch.sessions.length) return { ok:false, why:"No such session." };
+    const [gone] = ch.sessions.splice(i, 1), id = _isObj(gone) ? gone.id : null;
+    if (typeof id==="string") for (const n of _cards(ch)) if (_isObj(n) && n.session===id) n.session = null;
     return { ok:true };
   }
 
@@ -10916,7 +10982,7 @@ const Engine = (() => {
     // Audit trail and undo
     diffChar, recordAction, undoLastAction,
     // The table file (GM mode): create, tell its kind, load, check, edit notes
-    newTable, isTableId, fileKind, migrateTable, tableCheck, diffTable, tableActionLabel, recordTableAction, undoTableAction, clearTableActivity, addTableNote, editTableNote, removeTableNote, sessionNotes, noteGroups, noteTagsInUse, noteCategoriesInUse, tableSearch,
+    newTable, isTableId, fileKind, migrateTable, tableCheck, diffTable, tableActionLabel, recordTableAction, undoTableAction, clearTableActivity, addTableNote, editTableNote, removeTableNote, addNoteCard, editNoteCard, removeNoteCard, removeSessionEntry, sessionNotes, noteGroups, noteTagsInUse, noteCategoriesInUse, tableSearch,
     // Players and seats: a table's characters, kept as copies (Decisions 254, 255)
     addPlayer, editPlayer, removePlayer, importSeat, setSeat, removeSeat, seatFor, seatPicks, seatView, seatCharacter, playerList,
     // The pack file (GM mode): load, check, read, and copy an entry into the cast

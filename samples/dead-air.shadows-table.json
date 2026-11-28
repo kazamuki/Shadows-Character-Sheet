@@ -5392,7 +5392,7 @@
       "importedAt": "2026-10-17T23:58:00.000Z",
       "character": {
         "meta": {
-          "schemaVersion": "0.35",
+          "schemaVersion": "0.36",
           "id": "TAG-6909-DCC1-2V6T",
           "gamedataVersion": "0.60",
           "created": "2026-07-18T16:00:00.000Z",
@@ -5691,6 +5691,7 @@
         },
         "sessions": [
           {
+            "id": "S-4VKD82AE",
             "date": "2026-07-18",
             "title": "Session 1",
             "ipEarned": 4,
@@ -5698,6 +5699,7 @@
             "notes": "Read the shard's header; kept it."
           },
           {
+            "id": "S-4A2HHTT0",
             "date": "2026-08-01",
             "title": "Session 2",
             "ipEarned": 4,
@@ -5705,6 +5707,7 @@
             "notes": ""
           },
           {
+            "id": "S-SHAVD85Q",
             "date": "2026-08-22",
             "title": "Session 3",
             "ipEarned": 3,
@@ -5712,6 +5715,7 @@
             "notes": ""
           },
           {
+            "id": "S-11RSH88W",
             "date": "2026-09-12",
             "title": "Session 4",
             "ipEarned": 5,
@@ -5719,6 +5723,7 @@
             "notes": "Found the log."
           },
           {
+            "id": "S-V7SF239G",
             "date": "2026-09-26",
             "title": "Session 5",
             "ipEarned": 5,
@@ -5726,6 +5731,7 @@
             "notes": ""
           },
           {
+            "id": "S-PEMTY1JS",
             "date": "2026-10-17",
             "title": "Session 6",
             "ipEarned": 4,
@@ -5734,6 +5740,7 @@
           }
         ],
         "notes": "",
+        "noteCards": [],
         "audit": []
       }
     },
@@ -5742,7 +5749,7 @@
       "importedAt": "2026-10-17T23:58:00.000Z",
       "character": {
         "meta": {
-          "schemaVersion": "0.35",
+          "schemaVersion": "0.36",
           "id": "TAG-N4NA-A7JD-99HS",
           "gamedataVersion": "0.60",
           "created": "2026-07-18T16:00:00.000Z",
@@ -6009,6 +6016,7 @@
         },
         "sessions": [
           {
+            "id": "S-R1PED1XQ",
             "date": "2026-07-18",
             "title": "Session 1",
             "ipEarned": 4,
@@ -6016,6 +6024,7 @@
             "notes": ""
           },
           {
+            "id": "S-8V3YVD36",
             "date": "2026-08-01",
             "title": "Session 2",
             "ipEarned": 4,
@@ -6023,6 +6032,7 @@
             "notes": ""
           },
           {
+            "id": "S-WF4R7DV8",
             "date": "2026-08-22",
             "title": "Session 3",
             "ipEarned": 3,
@@ -6030,6 +6040,7 @@
             "notes": "Held back and a friend of Ibarra's died anyway."
           },
           {
+            "id": "S-48XN5AAW",
             "date": "2026-09-12",
             "title": "Session 4",
             "ipEarned": 5,
@@ -6037,6 +6048,7 @@
             "notes": ""
           },
           {
+            "id": "S-N08B22FM",
             "date": "2026-09-26",
             "title": "Session 5",
             "ipEarned": 5,
@@ -6044,6 +6056,7 @@
             "notes": ""
           },
           {
+            "id": "S-2NDKG99K",
             "date": "2026-10-17",
             "title": "Session 6",
             "ipEarned": 4,
@@ -6052,6 +6065,7 @@
           }
         ],
         "notes": "",
+        "noteCards": [],
         "audit": []
       }
     },
@@ -6060,7 +6074,7 @@
       "importedAt": "2026-09-26T23:58:00.000Z",
       "character": {
         "meta": {
-          "schemaVersion": "0.35",
+          "schemaVersion": "0.36",
           "id": "TAG-TJPT-T8MA-HWNW",
           "gamedataVersion": "0.60",
           "created": "2026-07-18T16:00:00.000Z",
@@ -6331,6 +6345,7 @@
         },
         "sessions": [
           {
+            "id": "S-SD49AAHG",
             "date": "2026-07-18",
             "title": "Session 1",
             "ipEarned": 4,
@@ -6338,6 +6353,7 @@
             "notes": ""
           },
           {
+            "id": "S-MRYNK00R",
             "date": "2026-08-01",
             "title": "Session 2",
             "ipEarned": 5,
@@ -6345,6 +6361,7 @@
             "notes": "Cast in the Park after dusk."
           },
           {
+            "id": "S-55HM7HCB",
             "date": "2026-08-22",
             "title": "Session 3",
             "ipEarned": 3,
@@ -6352,6 +6369,7 @@
             "notes": ""
           },
           {
+            "id": "S-X8XYCFBF",
             "date": "2026-09-26",
             "title": "Session 5",
             "ipEarned": 5,
@@ -6360,6 +6378,7 @@
           }
         ],
         "notes": "",
+        "noteCards": [],
         "audit": []
       }
     },
@@ -6368,7 +6387,7 @@
       "importedAt": "2026-08-22T23:50:00.000Z",
       "character": {
         "meta": {
-          "schemaVersion": "0.35",
+          "schemaVersion": "0.36",
           "id": "TAG-BQEH-V2QQ-EP8P",
           "gamedataVersion": "0.60",
           "created": "2026-07-11T16:00:00.000Z",
@@ -6557,6 +6576,7 @@
         },
         "sessions": [],
         "notes": "",
+        "noteCards": [],
         "audit": []
       }
     },
@@ -6565,7 +6585,7 @@
       "importedAt": "2026-07-11T23:30:00.000Z",
       "character": {
         "meta": {
-          "schemaVersion": "0.35",
+          "schemaVersion": "0.36",
           "id": "TAG-W7BN-RVS2-XDT0",
           "gamedataVersion": "0.60",
           "created": "2026-07-11T16:00:00.000Z",
@@ -6752,6 +6772,7 @@
         },
         "sessions": [],
         "notes": "",
+        "noteCards": [],
         "audit": []
       }
     }

@@ -200,6 +200,7 @@ function renderMain(){
   if (S.screen==="table") return renderTable();   // gm.js (Decision 172)
   if (S.screen==="sheet"){
     S.section = normSection(S.section);
+    if (S.section!=="notes"){ S.snOpen=S.snEdit=S.snNew=S.snHold=null; }   // the Notes tab's open note is view state: leaving the tab ends it (as GM mode's does)
     // W58: the flyout is a look from the tab it opened on; a move to another
     // tab closes it (Main has no toggle to hand focus back to).
     if (S.vitalsOpen && S.vitalsFrom!==S.section) S.vitalsOpen=false;

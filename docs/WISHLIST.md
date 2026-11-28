@@ -76,16 +76,6 @@ W45 it also fails on a vitals bar or a sheet's jump bar of two rows, and on a
 phone's Health card below 30% of the screen. A new control inherits those
 floors rather than re-arguing them.
 
-**W55 — Sticky notes on the Notes tab.** *Ken · 💡*\
-**Plan:** [gm-mode-next](plans/gm-mode-next.md) S30, order drafted (PR 2, the sheet; Ken, 2026-11-27): [`S30-notes.md`](plans/gm-mode-next/S30-notes.md) · **Goes with:** W140
-
-Small notes a player pins as cards at the top of Notes (a contact's number,
-a debt, tonight's lead), with the free-form page still below them. A note is
-added, edited and removed like a gear row, and logged. Raised 2026-10-01 while
-locking a power's words (Decision 154), whose Notes field stays free.
-*To respect:* the free-form page stays as it is; cards are the player's, not
-derived from anything.
-
 **W100 — Distances in meters or feet.** *Ken · 💡 · Fix (UI) · raised 2026-10-10 with F31's ruling*\
 **Plan:** none yet
 
@@ -753,23 +743,6 @@ is the place; no new markup in `index.html` beyond what's there); Decision 164
 (focus keeps its place when the rail redraws); and the pinned vitals
 (Decision 160), which take the right side from 1280px, so a GM screen with a
 pinned stat block (W77) and the rail leaves the page the middle.
-
-**W140 — Notes that organise themselves: tags, categories, and the session they came from.** *Ken · 🔎 · Rule or shape · raised 2026-10-30*\
-**Plan:** [gm-mode-next](plans/gm-mode-next.md) S30, PR 1 built (GM mode, Decision 323; the sheet is PR 2): [`S30-notes.md`](plans/gm-mode-next/S30-notes.md) · **Goes with:** W55
-
-A GM takes notes for many reasons: a name to remember, a rule to look up, a
-hook for later, what a player promised. Today a table note is a dated line
-with an optional session (Jot gives it the session dated today, Decision
-208), listed on the Notes tab and on its session's page. The wish, after how
-note-taking apps do it: tag a note, group notes under a category, and see
-every note from session X beside session Y's, since the session is already a
-soft tag.
-*To respect:* store inputs (constraint 7), so a tag is typed text or an id,
-and the groupings are computed; Find already reads notes and should read
-their tags; the activity log and undo cover every change (212); a table
-schema bump with a `migrateTable()` step if the note's shape moves (170).
-Look first at how much of this the cast's and threads' links already give
-before inventing a new kind of link.
 
 **W146 — The dispatch: a GM sends a player changes to accept.** *Ken, from re-vetting GM mode's plan · 💡 · Rule or shape · raised 2026-11-06*\
 **Plan:** none yet

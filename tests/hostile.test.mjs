@@ -118,8 +118,13 @@ function hostileCharacter({ locked = true, archetype = "arcanist" } = {}) {
     milestones: { minor: [{ id: P("minor.id"), date: P("minor.date") }], major: [{ id: P("major.id"), date: P("major.date") }, { id: "swift-change", date: P("major2.date") }, { id: "hardline-shift", date: P("major3.date") }] },
     powerIpe: { evocation: P("pipe"), [P("pipe.key")]: 2, enchantment: "1e999", alchemy: -4, [P("pw.id")]: "3",
                 "steel-fangs": P("pipe.ww"), "apex-fury": 2 } };
-  ch.sessions = [{ date: P("s.date"), title: P("s.title"), ipEarned: P("s.ip"), milestonePoint: true, notes: P("s.notes") }];
+  ch.sessions = [{ id: "S-AAAAAAAA", date: P("s.date"), title: P("s.title"), ipEarned: P("s.ip"), milestonePoint: true, notes: P("s.notes") },
+    { id: P("s.id2"), date: P("s.date2"), title: P("s.title2"), ipEarned: 1, milestonePoint: true, notes: "" }];
   ch.notes = P("notes");
+  // S30 PR 2 (Decision 324): the list's every field is a payload, a session id aimed at the Log and at __proto__
+  ch.noteCards = [{ id: "N-AAAAAAAA", title: P("nc.title"), text: P("nc.text"), category: P("nc.cat"), tags: [P("nc.tag"), P("nc.tag2")], session: "S-AAAAAAAA", created: P("nc.created"), updated: P("nc.updated") },
+    { id: P("nc.id"), title: "", text: P("nc.text2"), category: P("nc.cat"), tags: P("nc.tags"), session: "__proto__" },
+    { id: "N-AAAAAAAA", title: P("nc.title3"), tags: [{ x: 1 }, 5, null], session: { x: 1 } }];
   ch.audit = [
     { seq: P("audit.seq"), date: P("audit.date"), kind: P("audit.kind"), label: P("audit.label"),
       patch: [{ path: ["notes"], type: "scalar", before: "earlier notes" }] },
@@ -1151,7 +1156,7 @@ test("Decision 216: powerIpe naming another Bloodline's or a nonexistent power h
 const same = (a, b, msg) => assert.equal(JSON.stringify(a), JSON.stringify(b), msg);
 test("P12b 10: migrate keeps the house rule, a running training and a landed entry's fields, and nothing else", () => {
   const mk = patch => { const c = Engine.newCharacter(); patch(c); return Engine.migrate(JSON.parse(JSON.stringify(c))); };
-  assert.equal(Engine.newCharacter().meta.schemaVersion, "0.35");
+  assert.equal(Engine.newCharacter().meta.schemaVersion, "0.36");
   assert.equal(mk(c => { c.houseRules.training = true; }).houseRules.training, true, "true survives");
   for (const junk of ["yes", 1, "true", {}, [], null])
     assert.equal(mk(c => { c.houseRules.training = junk; }).houseRules.training, false, `houseRules.training ${JSON.stringify(junk)}`);
@@ -1170,7 +1175,7 @@ test("P12b 10: migrate keeps the house rule, a running training and a landed ent
   assert.equal(log({ via: "training", mp: 3 }).mp, 3);
   for (const via of ["x", {}, 7, null, ["training"]]) assert.equal("via" in log({ via }), false, `via ${JSON.stringify(via)}`);
   for (const mp of ["3", -1, {}, 1.5, null, NaN]) assert.equal("mp" in log({ via: "training", mp }), false, `mp ${JSON.stringify(mp)}`);
-  assert.equal(Engine.migrate({}).meta.schemaVersion, "0.35");
+  assert.equal(Engine.migrate({}).meta.schemaVersion, "0.36");
 });
 
 test("a rule's text of markup renders as text on the CP step and a folded Character card (Decision 231)", () => {

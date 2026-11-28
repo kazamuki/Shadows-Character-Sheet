@@ -1654,6 +1654,7 @@ label.check{display:inline-flex; align-items:center; gap:6px; min-height:24px}
 .note-tagx:hover, .note-tagx:focus-visible{color:var(--magenta-text)}
 .note-tagadd{display:flex; gap:8px; align-items:center}
 .note-tagadd input{flex:1 1 auto; min-width:0}
+.note-add{margin:1em 0}
 .note-acts{margin:8px 0 0; display:flex; flex-wrap:wrap; gap:8px}
 .thread-name{min-width:0; overflow-wrap:anywhere; flex:1 1 12rem; font-weight:600}
 .thread-notes{margin:8px 0 2px}
