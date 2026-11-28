@@ -882,7 +882,7 @@ function character(key, f){
     const date = ts(s.date, 23, 40 + at++ % 10);
     // A session logged carries its own IP; only an off-screen job is a grant (ipState counts both).
     if (l.ip && !l.present) ch.progression.ip.log.push({ date, kind: "grant", amount: l.ip, note: `Session ${s.number}, an off-screen job` });
-    if (l.present) ch.sessions.push({ date: s.date, title: `Session ${s.number}`, ipEarned: l.ip || 0, milestonePoint: !!l.milestone, notes: l.note || "" });
+    if (l.present) ch.sessions.push({ id: id("S", `${f.name}:s${s.number}`), date: s.date, title: `Session ${s.number}`, ipEarned: l.ip || 0, milestonePoint: !!l.milestone, notes: l.note || "" });
     if (l.credits){ ch.trackers.credits.current += l.credits; ch.trackers.credits.ledger.push({ date, amount: l.credits, note: `Session ${s.number}` }); }
     // A CRANK job's share is Çredits the player entered too (Decision 302).
     for (const j of s.close.jobs || []){ const m = j.crew.find(x => x.name === f.name); if (m && m.share){ ch.trackers.credits.current += m.share; ch.trackers.credits.ledger.push({ date, amount: m.share, note: `Session ${s.number}` }); } }

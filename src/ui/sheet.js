@@ -2940,10 +2940,33 @@ function feedPanelHtml(ch, p){
 }
 
 // ── Sheet: notes ─────────────────────────────────────────────────────
+// The listed notes are Decision 323's list over `noteCards`, drawn by shared.js's renderer (Decision 324); the free text under them
+// is `notes`, as it was. Group by, the tag filter and what's open are view state (S.snBy, S.snTag, S.snOpen...): never saved.
+// The GM's read-only seat draws the same page (S.screen is "table"): no Add, no Edit, but Group by, the tags and a note stay live.
+const shSessionLabel = s => (String(s.title||"").trim() || "Session") + (s.date ? ` · ${s.date}` : "");
+// Newest session first on a tie: the Log is oldest first, and sessionList keeps a tie in the order it's given.
+const shLogSessions = ch => (Array.isArray(ch.sessions) ? ch.sessions : []).filter(s=>s && typeof s==="object" && typeof s.id==="string").slice().reverse();
+const shNotesView = () => ({ by:S.snBy, tag:S.snTag });
+const shNoteBtn = (kind, n) => kind==="edit"
+  ? `<button type="button" class="btn sm" data-nedit="${esc(n.id)}" aria-label="Edit ${esc(noteName(n))}">Edit</button>`
+  : `<button type="button" class="btn sm primary" data-ndone="${esc(n.id)}" aria-label="Done editing ${esc(noteName(n))}">Done</button>`;
+function shNotesListHtml(ch, ro){
+  const cards = (Array.isArray(ch.noteCards) ? ch.noteCards : []).filter(n=>n && typeof n==="object");
+  if (S.snTag && !Engine.noteTagsInUse(cards).some(x=>x.toLowerCase()===S.snTag.toLowerCase())) S.snTag=null;   // the last note holding it let go
+  const logs = shLogSessions(ch), sessions = Engine.sessionList({ sessions:logs });
+  const add = ro ? "" : `<div class="note-add"><button class="btn primary" data-snew>New note</button></div>`;   // not a <p>: the read-only copy has none, and phone-check holds the two to one width
+  if (!cards.length) return `<p class="step-note">No notes yet.</p>${add}`;
+  return notesListHtml(cards, logs, shNotesView(), { open:S.snOpen, editing:S.snEdit, editable:!ro, pin:S.snNew, held:S.snHold,
+    sessions:sessions.map(s=>({ id:s.id, label:shSessionLabel(s) })),
+    sessionLabel:id=>{ const s=logs.find(x=>x.id===id); return s ? shSessionLabel(s) : ""; },
+    editBtn:n=>shNoteBtn("edit", n), doneBtn:n=>shNoteBtn("done", n) }) + add;
+}
 function renderShNotes(){
+  const ch = S.ch, ro = S.screen==="table";
   let h = sheetHeader("Notes");
-  h += `<label class="field"><span>Character notes</span>
-    <textarea data-notes style="min-height:340px" placeholder="Contacts. Debts. The thing you saw that no one believes.">${esc(S.ch.notes)}</textarea></label>`;
+  h += shNotesListHtml(ch, ro);
+  h += `<label class="field"><span>Free notes</span>
+    <textarea data-notes style="min-height:340px" placeholder="Contacts. Debts. The thing you saw that no one believes.">${esc(ch.notes)}</textarea></label>`;
   return h;
 }
 
@@ -3362,7 +3385,7 @@ function renderPrintView(ch){
           ["Armor","PROT","RES","Integrity","Worn"], gearBlanks)}</div></div>`;
   p3 += `<div class="p-cols2"><div><div class="p-section">Advantages</div>${pTraitsTableHtml(ch&&ch.advantages, Engine.advById, "Advantage", 5)}</div>` +
         `<div><div class="p-section">Disadvantages</div>${pTraitsTableHtml(ch&&ch.disadvantages, Engine.disById, "Disadvantage", 5)}</div></div>`;
-  p3 += `<div class="p-section">Notes</div><div class="p-notes small">${ch&&ch.notes?esc(ch.notes):""}</div>`;
+  p3 += `<div class="p-section">Notes</div>${pNoteCardsHtml(ch)}<div class="p-notes small">${ch&&ch.notes?esc(ch.notes):""}</div>`;
 
   return `<div class="p-page">${p1}</div><div class="p-page">${p2}</div><div class="p-page">${p3}</div><div class="p-page">${pArchetypePage(ch)}</div>`;
 }
@@ -3389,6 +3412,17 @@ function pArchetypePage(ch){
   }
   h += `<div class="p-section">Vulnerabilities</div>${pRowsTableHtml(textRows(content && content.vulnerabilities), ["name","description"], ["Vulnerability","What it does"], 4, "p-archtable")}`;
   return h;
+}
+
+// The listed notes, printed before the free text (Decision 324): a heading per category, each note's title, its tags and its text.
+function pNoteCardsHtml(ch){
+  const cards = ch && Array.isArray(ch.noteCards) ? ch.noteCards.filter(n=>n && typeof n==="object") : [];
+  if (!cards.length) return "";
+  const groups = Engine.noteGroups(cards, [], { by:"category" });
+  return `<div class="p-ncards">${groups.map(g=>`${groups.length>1 ? `<div class="p-ncat">${esc(g.title===null ? "No category" : g.title)}</div>` : ""}${g.notes.map(n=>{
+    const tags = Array.isArray(n.tags) ? n.tags : [];
+    return `<div class="p-ncard"><b>${esc(noteName(n))}</b>${tags.length ? ` <span class="p-ntags">${tags.map(esc).join(", ")}</span>` : ""}${String(n.text||"").trim() ? `<div class="p-ntext">${esc(n.text)}</div>` : ""}</div>`;
+  }).join("")}`).join("")}</div>`;
 }
 
 const SHEET_RENDER = { main:renderShMain, skills:renderShSkills, character:renderShCharacter,
@@ -4203,6 +4237,24 @@ function bindSheetReaders(main, goTab){
   // A button that goes to another tab, the way the header's tabs do.
   main.querySelectorAll("[data-gotab]").forEach(b=>b.onclick=()=>goTab(b.dataset.gotab));
   main.querySelectorAll("[data-jump]").forEach(b=>b.onclick=()=>jumpTo(b.dataset.jump));
+  // The Notes tab's view (Decision 324): Group by, a tag, and which note is open. Nothing is written; the GM's read-only seat runs these too.
+  const notesChar = () => S.screen==="table" ? readOnlyChar : S.ch;
+  const reshowNotes = focusAttr => {
+    const c = notesChar(), logs = c ? shLogSessions(c) : [];
+    const shown = new Set(Engine.noteGroups(c && c.noteCards, logs, shNotesView()).flatMap(g=>g.notes.map(n=>n.id)));
+    if (S.snOpen && !shown.has(S.snOpen)){ S.snOpen=null; S.snEdit=null; }
+    update();
+    const el = $("main").querySelector(focusAttr); if (el) takeFocus(el);
+  };
+  main.querySelectorAll("[data-ngroup]").forEach(b=>b.onclick=()=>{ S.snBy=b.dataset.ngroup; reshowNotes(attrSel("data-ngroup", S.snBy)); });
+  main.querySelectorAll("[data-ntag]").forEach(b=>b.onclick=()=>{
+    const tag=b.dataset.ntag, same=S.snTag && S.snTag.toLowerCase()===tag.toLowerCase();
+    S.snTag = same ? null : tag; reshowNotes(attrSel("data-ntag", tag));
+  });
+  main.querySelectorAll("[data-nopen]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.nopen; S.snOpen = S.snOpen===id ? null : id; S.snEdit=null; S.snNew=null; S.snHold=null; update();
+    const el=$("main").querySelector(attrSel("data-nopen", id)); if (el) takeFocus(el);
+  });
   // The natural group's rules (Decision 290): on a phone they sit behind the heading, a tap away; wider screens show them always.
   main.querySelectorAll("[data-natmore]").forEach(b=>b.onclick=()=>{
     const el=main.querySelector("#"+b.getAttribute("aria-controls")), open=!(el && el.classList.contains("open"));
@@ -4515,7 +4567,7 @@ function bindSheet(){
   main.querySelectorAll("[data-sesdel]").forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.sesdel), s=ch.sessions[i]||{};
     askFirst({ title:"Delete this session?", text:"Its IP and Milestone Point come off the totals. If you've spent that IP, what you have left can go negative.",
-      yes:"Delete the session", then:()=>commit("session", `Delete session${s.title?`: ${s.title}`:""}`, ()=>{ ch.sessions.splice(i,1); }) });
+      yes:"Delete the session", then:()=>commit("session", `Delete session${s.title?`: ${s.title}`:""}`, ()=>{ Engine.removeSessionEntry(ch, i); }) });
   });
 
   // Editable tables (weapons / gear / panel tables)
@@ -4976,7 +5028,78 @@ function bindSheet(){
     commit("admin", `Admin: CRANK rep ${d>0?"+":"−"}${Math.abs(d)}`, ()=>{ Engine.addCrankRep(ch, d, "Admin correction", { free:true }); });
   });
 
-  // Notes
+  // Notes: the free text, then the list (Decision 324). Typing a title, a note or a category is stored as it goes and isn't logged
+  // (the sheet has no fold, and an entry a keystroke would bury Activity); an Add, a Delete, a tag, a category and a session are one
+  // entry each, and a category's is made when the field is let go.
   const nt=main.querySelector("[data-notes]");
   if (nt) nt.oninput=()=>{ ch.notes=nt.value; lite(); };
+  const card = id => (ch.noteCards||[]).find(n=>n && n.id===id);
+  const cardName = id => { const n=card(id); return n ? noteName(n) : "a note"; };
+  const refocus = sel => { const el=$("main").querySelector(sel); return el ? takeFocus(el) : false; };
+  main.querySelectorAll("[data-ntitle]").forEach(el=>el.oninput=()=>{ Engine.editNoteCard(ch, el.dataset.ntitle, { title:el.value }); lite(); });
+  main.querySelectorAll("[data-ntext]").forEach(el=>el.oninput=()=>{ Engine.editNoteCard(ch, el.dataset.ntext, { text:el.value }); lite(); });
+  main.querySelectorAll("[data-ncat]").forEach(el=>{
+    const id=el.dataset.ncat; let was=null;
+    el.onfocus=()=>{ const n=card(id); was = n ? n.category : null; };
+    el.oninput=()=>{ if (was===null){ const n=card(id); was = n ? n.category : ""; } Engine.editNoteCard(ch, id, { category:el.value }); lite(); };
+    el.onchange=()=>{
+      const n=card(id), now=n ? n.category : "", from=was; was=null;
+      if (!n || from===null || from===now) return;
+      const label = now ? `Filed "${noteName(n)}" under ${now}` : `Filed "${noteName(n)}" under no category`, kept=document.activeElement===el;
+      Engine.editNoteCard(ch, id, { category:from });   // back to what it was, so the entry holds the change
+      commit("notes", label, ()=>{ Engine.editNoteCard(ch, id, { category:now }); });
+      if (kept) refocus(attrSel("data-ncat", id));
+    };
+  });
+  main.querySelectorAll("[data-nsess]").forEach(el=>el.onchange=()=>{
+    const id=el.dataset.nsess, to=el.value || null, s=to && (ch.sessions||[]).find(x=>x && x.id===to);
+    commit("notes", s ? `Put "${cardName(id)}" in ${shSessionLabel(s)}` : `Took "${cardName(id)}" out of its session`, ()=>{ Engine.editNoteCard(ch, id, { session:to }); });
+    refocus(attrSel("data-nsess", id));
+  });
+  // A tag is a press. Enter or a comma in the field adds it, so does Add.
+  const tagsOf = id => (card(id) || { tags:[] }).tags;
+  const addTags = id => {
+    const inp=main.querySelector(`[data-ntagin="${id}"]`), typed=inp ? inp.value.split(",").map(x=>x.trim()).filter(Boolean) : [];
+    if (!typed.length) return;
+    const was=tagsOf(id).map(x=>x.toLowerCase()), fresh=typed.filter((x, i)=>!was.includes(x.toLowerCase()) && typed.findIndex(y=>y.toLowerCase()===x.toLowerCase())===i);
+    if (fresh.length) commit("notes", `Tagged "${cardName(id)}" ${fresh.join(", ")}`, ()=>{ Engine.editNoteCard(ch, id, { tags:tagsOf(id).concat(typed) }); });
+    const again=$("main").querySelector(`[data-ntagin="${id}"]`); if (again){ again.value=""; again.focus(); }
+  };
+  main.querySelectorAll("[data-ntagadd]").forEach(b=>b.onclick=()=>addTags(b.dataset.ntagadd));
+  main.querySelectorAll("[data-ntagin]").forEach(el=>el.onkeydown=ev=>{
+    if (ev.key==="Enter" || ev.key===","){ ev.preventDefault(); addTags(el.dataset.ntagin); } });
+  main.querySelectorAll("[data-ntagrm]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.ntagrm, at=Number(b.dataset.ntagi), gone=tagsOf(id)[at];
+    commit("notes", `Untagged "${cardName(id)}" ${gone}`, ()=>{ Engine.editNoteCard(ch, id, { tags:tagsOf(id).filter((x, i)=>i!==at) }); });
+    refocus(`[data-ntagrm="${id}"][data-ntagi="${at}"]`) || refocus(`[data-ntagin="${id}"]`);
+  });
+  // Edit holds the note in the group it was in until Done; a new note sits above the groups until Done (Decision 323).
+  main.querySelectorAll("[data-nedit]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.nedit, n=card(id);
+    S.snEdit=id; S.snNew=null; S.snHold = n ? { id, category:n.category, session:n.session } : null; update();
+    const first=$("main").querySelector(`[data-ntitle="${id}"]`); if (first) takeFocus(first);
+  });
+  main.querySelectorAll("[data-ndone]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.ndone, n=card(id);
+    // A tag filter the note doesn't hold would hide it: clear it, so a note finished is a note drawn.
+    if (n && S.snTag && !(n.tags||[]).some(x=>x.toLowerCase()===S.snTag.toLowerCase())) S.snTag=null;
+    S.snEdit=null; S.snHold=null; S.snNew=null; update();
+    refocus(`[data-nedit="${id}"]`);
+  });
+  const newBtn = main.querySelector("[data-snew]");
+  if (newBtn) newBtn.onclick=()=>{
+    let id; commit("notes", "Added a note", ()=>{ id=Engine.addNoteCard(ch, {}).id; S.snOpen=id; S.snEdit=id; S.snNew=id; S.snHold=null; });
+    refocus(`[data-ntitle="${id}"]`);
+  };
+  main.querySelectorAll("[data-ndel]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.ndel, n=card(id); if (!n) return;
+    // The next note is the next one in its group as the list groups it, not the next one stored.
+    const shown=Engine.noteGroups(ch.noteCards, shLogSessions(ch), shNotesView()).flatMap(g=>g.notes.map(x=>x.id)), at=shown.indexOf(id), nextId=at<0 ? null : shown[at + 1];
+    askFirst({ title:`Delete "${noteName(n)}"?`, text:"Undo brings it back, from the toast or in Activity.", yes:"Delete",
+      then(){
+        S.snOpen=null; S.snEdit=null; S.snNew=null; S.snHold=null;
+        commit("notes", `Deleted "${noteName(n)}"`, ()=>{ Engine.removeNoteCard(ch, id); });
+        refocus(nextId ? attrSel("data-nopen", nextId) : "[data-snew]");
+      } });
+  });
 }

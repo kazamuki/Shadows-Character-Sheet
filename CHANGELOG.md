@@ -28,6 +28,7 @@ own in the footer.
 
 ### Character sheet
 
+- **Notes you can sort.** The Notes tab keeps notes with a category and tags, grouped and filtered like a GM's. Your free notes are still there, below them.
 - **The barcode under your name is a real one.** Point a phone at your TAG and it reads. On the dark theme, hover the barcode and press **Scan** to flip it to black on white, which phones read, and press it again to flip it back. Characters you've already made keep the same TAG.
 
 ### GM mode

@@ -208,6 +208,12 @@
   background-image:repeating-linear-gradient(to bottom, transparent, transparent 6.5mm, var(--p-rule) 6.5mm, var(--p-rule) calc(6.5mm + .5pt));
   padding:6px 8px }
 #printSheet .p-notes.small{ min-height:25mm }
+/* The listed notes (Decision 324), above the free text. */
+#printSheet .p-ncards{ margin:0 0 8px }
+#printSheet .p-ncat{ font-size:8pt; font-weight:600; color:var(--p-violet); margin:4px 0 2px }
+#printSheet .p-ncard{ font-size:8.5pt; margin:0 0 4px; break-inside:avoid }
+#printSheet .p-ntags{ color:var(--p-dim); font-size:7.5pt }
+#printSheet .p-ntext{ white-space:pre-wrap; overflow-wrap:anywhere }
 
 #printSheet .p-note{ font-size:8pt; color:var(--p-dim); margin:0 0 8px }
 /* The archetype page (Decision 153): fields long enough to write a name in

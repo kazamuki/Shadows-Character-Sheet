@@ -292,7 +292,7 @@
    0,
    88.2,
    390,
-   729.3
+   828.5
   ],
   "vitals": [
    0,
@@ -305,9 +305,11 @@
    "1 div.import-issues 16,182.1,358,64",
    "2 h1.step-title 16,260.2,358,32.2",
    "3 p.step-note.guide-line 16,296.4,358,46.5",
-   "4 label.field 16,364.9,358,368.6"
+   "4 p.step-note 16,364.9,358,23.3",
+   "5 div.note-add 16,410.2,358,39",
+   "6 label.field 16,464.2,358,368.6"
   ],
-  "deep": "81 boxes, aafaf7a7"
+  "deep": "84 boxes, c165c1da"
  },
  "wizard: power-level @390": {
   "header": [
@@ -1145,7 +1147,7 @@
    0,
    88.2,
    768,
-   694.9
+   794.2
   ],
   "vitals": [
    0,
@@ -1158,9 +1160,11 @@
    "1 div.import-issues 16,196.1,736,27",
    "2 h1.step-title 16,237.1,736,42.2",
    "3 p.step-note.guide-line 16,285.3,586.7,23.3",
-   "4 label.field 16,330.5,736,368.6"
+   "4 p.step-note 16,330.5,586.7,23.3",
+   "5 div.note-add 16,375.8,736,39",
+   "6 label.field 16,429.8,736,368.6"
   ],
-  "deep": "81 boxes, df29579f"
+  "deep": "84 boxes, b0197859"
  },
  "wizard: power-level @768": {
   "header": [
@@ -2011,9 +2015,11 @@
    "1 div.import-issues 30,202.1,1240,27",
    "2 h1.step-title 30,243.1,1240,42.2",
    "3 p.step-note.guide-line 30,291.3,586.7,23.3",
-   "4 label.field 30,336.5,1240,368.6"
+   "4 p.step-note 30,336.5,586.7,23.3",
+   "5 div.note-add 30,381.8,1240,39",
+   "6 label.field 30,435.8,1240,368.6"
   ],
-  "deep": "81 boxes, c17c943b"
+  "deep": "84 boxes, 44cf43d8"
  },
  "sheet: main @1300 pinned": {
   "header": [
@@ -2291,9 +2297,11 @@
    "1 div.import-issues 30,114.2,940,27",
    "2 h1.step-title 30,155.2,940,42.2",
    "3 p.step-note.guide-line 30,203.4,586.7,23.3",
-   "4 label.field 30,248.6,940,368.6"
+   "4 p.step-note 30,248.6,586.7,23.3",
+   "5 div.note-add 30,293.9,940,39",
+   "6 label.field 30,347.9,940,368.6"
   ],
-  "deep": "9 boxes, 3073b1d9"
+  "deep": "12 boxes, 293e38fa"
  },
  "wizard: power-level @1300": {
   "header": [
@@ -3144,9 +3152,11 @@
    "1 div.import-issues 30,202.1,1920,27",
    "2 h1.step-title 30,243.1,1920,42.2",
    "3 p.step-note.guide-line 30,291.3,586.7,23.3",
-   "4 label.field 30,336.5,1920,368.6"
+   "4 p.step-note 30,336.5,586.7,23.3",
+   "5 div.note-add 30,381.8,1920,39",
+   "6 label.field 30,435.8,1920,368.6"
   ],
-  "deep": "81 boxes, 3f084bf4"
+  "deep": "84 boxes, d6448596"
  },
  "sheet: main @1980 pinned": {
   "header": [
@@ -3424,9 +3434,11 @@
    "1 div.import-issues 30,114.2,1620,27",
    "2 h1.step-title 30,155.2,1620,42.2",
    "3 p.step-note.guide-line 30,203.4,586.7,23.3",
-   "4 label.field 30,248.6,1620,368.6"
+   "4 p.step-note 30,248.6,586.7,23.3",
+   "5 div.note-add 30,293.9,1620,39",
+   "6 label.field 30,347.9,1620,368.6"
   ],
-  "deep": "9 boxes, 397d7bc9"
+  "deep": "12 boxes, ad38bc58"
  },
  "wizard: power-level @1980": {
   "header": [

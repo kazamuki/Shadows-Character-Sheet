@@ -5154,7 +5154,7 @@ window.SHADOWS_DATA = {
       "notes": {
         "title": "Notes",
         "intro": "Freeform. The city keeps receipts — so should you.",
-        "for": "Free text for what the sheet has no place for: names, debts, what you saw. It's saved with your character.",
+        "for": "Notes for what the sheet has no place for, each with a category and tags to find it again. The free notes below are for anything else. It's all saved with your character.",
         "when": ["during", "between"],
         "words": [],
         "tips": []

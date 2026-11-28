@@ -801,7 +801,7 @@ It renders on the Character tab (Decision 158).
 ```js
 {
   meta: {
-    schemaVersion: "0.35",
+    schemaVersion: "0.36",
     // (0.11, Decisions 128 and 133) The character's TAG, its permanent
     // identity: TAG- + 12 Crockford base-32 characters. Issued by
     // newCharacter(), backfilled by migrate(), never reissued. 0.12 renamed
@@ -1092,9 +1092,12 @@ It renders on the Character tab (Decision 158).
   // (0.3) Logging a session grants ipEarned (default 10, overridable),
   // 1 Milestone Point (toggleable), and refreshes LUCK (spent → 0).
   sessions: [
-    { date: "", title: "", ipEarned: 10, milestonePoint: true, notes: "" }
+    { id: "S-XXXXXXXX", date: "", title: "", ipEarned: 10, milestonePoint: true, notes: "" }   // 0.36: an id (Decision 324), unique in the Log
   ],
-  notes: "",                         // freeform character notes
+  notes: "",                         // freeform character notes, a string (older apps blank anything else)
+  // (0.36, Decision 324) The Notes tab's list, in Decision 323's shape: { id: "N-XXXXXXXX", title, text, category, tags, session,
+  // created, updated }; `session` is the id of a Log entry above, else null. migrate() cleans it as migrateTable() cleans a table's notes.
+  noteCards: [],
 
   // (0.4) Audit trail — a reversible record of every play/admin action. Each
   // entry: { seq, date, kind, label, patch }, where patch is a compact diff
@@ -6139,6 +6142,18 @@ entry's name because the pack lives outside the table (Decisions 178, 182).
      - **Replaces:** Decision 271 in part (Notes lists titles, now in groups); Decision 208 in part (Find reads a note's category and tags).
      - **Revisit if:** a GM wants a note tied to a record (then a note gains links, and the line is reconsidered), or the tag row is too long at 375px.
      - **Built:** app 0.81.0, table schema 0.22 → 0.23, no data-version move (Decision 68), PR (this one), log 2026-11-27 (S30 PR 1).
+
+324. **The sheet's Notes tab keeps the player's notes as a list, the same shape and list as the table's, above the free notes.**
+     *2026-11-27 · Ken + Claude · Touches: noteCards, notes, Notes tab, renderShNotes, notesListHtml, note category, note tags, note session, Session Log id, logSession, removeSessionEntry, diffChar, migrate, character schema 0.36, print, read-only sheet, RO_READERS, sheetGuide, Decision 323, Decision 256, W55*
+     - **Decided:** a character gains `noteCards`, a list of notes in Decision 323's shape whose `session` is the id of a Session Log entry; each entry gains an `id` (`S-` and eight, given by `migrate()`; Delete session clears the notes that named it, in the same change). The Notes tab draws 323's list above the free `notes`, which stays a string. A press (Add, Delete, a tag, a session) is one entry; a category is one when the field is let go; typing a title or text isn't logged. Undo of a note's press leaves what was typed after it, because `diffChar` walks `noteCards` by record. The print lists the notes before the free text; a GM's read-only seat shows the list, with Group by, the tags and a note's open and close live.
+     - **Why:** Ken (2026-11-27): the Notes tab is a big text box, and a player sorts notes as a GM does. One shape and one list is one set of rules.
+     - **Rejected:**
+       - The list under `notes`: an older app sets a `notes` that isn't a string to "" and would lose every note.
+       - A session as the entry's index or date: Delete shifts indexes, and two sessions can share a day.
+       - Logging every keystroke: the sheet's undo has no fold.
+     - **Replaces:** nothing. 323's shape and list are used as merged.
+     - **Revisit if:** players stop using the free notes (fold them in, by a migrate step that keeps the text), or a player wants a note shared with the GM.
+     - **Built:** app 0.81.0, character schema 0.35 → 0.36 (`migrate()` step), no game-data move (Decision 68), PR (this one), log 2026-11-27 (S30 PR 2).
 
 ## 5. Open Flags
 

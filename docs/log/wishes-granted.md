@@ -1303,6 +1303,31 @@ Disadvantage's buy-off follows it.
 
 ### GM mode
 
+**W140 — Notes that organise themselves: tags, categories, and the session they came from.** *Ken · → S30, Decisions 323 and 324, app 0.81.0 (unreleased): a note has a category and tags, grouped and filtered by them and by session, at the table (323) and on the sheet (324). Order: [S30-notes](plans/gm-mode-next/S30-notes.md)*
+
+A GM takes notes for many reasons: a name to remember, a rule to look up, a
+hook for later, what a player promised. Today a table note is a dated line
+with an optional session (Jot gives it the session dated today, Decision
+208), listed on the Notes tab and on its session's page. The wish, after how
+note-taking apps do it: tag a note, group notes under a category, and see
+every note from session X beside session Y's, since the session is already a
+soft tag.
+*To respect:* store inputs (constraint 7), so a tag is typed text or an id,
+and the groupings are computed; Find already reads notes and should read
+their tags; the activity log and undo cover every change (212); a table
+schema bump with a `migrateTable()` step if the note's shape moves (170).
+Look first at how much of this the cast's and threads' links already give
+before inventing a new kind of link.
+
+**W55 — Sticky notes on the Notes tab.** *Ken · → S30 PR 2, Decision 324, app 0.81.0 (unreleased): the Notes tab lists the player's notes with a category, tags and a session, above the free notes. Order: [S30-notes](plans/gm-mode-next/S30-notes.md)*
+
+Small notes a player pins as cards at the top of Notes (a contact's number,
+a debt, tonight's lead), with the free-form page still below them. A note is
+added, edited and removed like a gear row, and logged. Raised 2026-10-01 while
+locking a power's words (Decision 154), whose Notes field stays free.
+*To respect:* the free-form page stays as it is; cards are the player's, not
+derived from anything.
+
 **W139 — Keyboard shortcuts on a table: Find and Jot a key away.** *Ken · → Decisions 259 and 272, app 0.66.0: F and J, then 1–8, N, Ctrl/⌘+Z, A and ? on a table*
 Find and Jot sit in the header on every table screen (Decision 208), but a
 GM at a laptop mid-session still has to reach for the mouse. The wish: a key
