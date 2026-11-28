@@ -5,7 +5,7 @@ the page's actions, or gone", **use it or remove it**. S18 removed the column fr
 left Home as it was (S18's SQ5, Ken 2026-10-30: "Home stays", with "W80 keeps a line for Home's layout"). Home is the last
 screen with an empty column, and it is the first screen every player and every GM sees.
 **Status:** **drafted 2026-11-27** by Claude (Opus, the S30 PR 2 reviewer), at the conductor's request (Ken chose S29 on
-2026-11-27). **Not yet approved.**
+2026-11-27). **Approved by Ken 2026-11-27**, in the conductor session, both questions on their default: GQ101 "Remove it", GQ102 "560px column, centred".
 **Branch:** from `main`; PR to `main`. Nothing ships switched off.
 **Runs beside:** nothing.
 
