@@ -104,7 +104,7 @@ economics) are in `plans/archive/`.
 
 ## 5. Where to start
 
-**The live site is v0.80.0** (data 0.60, schema 0.35), released 2026-11-26.
+**The live site is v0.81.0** (data 0.60, schema 0.35), released 2026-11-27.
 
 **Next is Ken's pick**, each built through a work order (`WORK-ORDERS.md`):
 - **The `/impeccable audit`** of the whole app is its own read-only session; Ken triages its report.
